@@ -31,6 +31,7 @@ use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
 use App\Services\HealthProfileSnapshotService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
@@ -2295,6 +2296,134 @@ class AppointmentController extends Controller
             ->get();
     }
 
+    private function studentHealthFormCategoryForType(?string $studentType): ?HealthFormCategory
+    {
+        $studentType = strtolower(trim((string) $studentType));
+        if ($studentType === '' || $studentType === 'regular') {
+            return null;
+        }
+
+        $query = HealthFormCategory::query()->where('is_active', true);
+
+        if (Schema::hasColumn('health_form_categories', 'student_types')) {
+            $mappedCategory = DB::connection()->getDriverName() === 'sqlite'
+                ? $this->activeStudentHealthFormCategories()->first(function (HealthFormCategory $category) use ($studentType): bool {
+                    return in_array($studentType, (array) $category->student_types, true);
+                })
+                : (clone $query)
+                    ->availableFor('student')
+                    ->whereJsonContains('student_types', $studentType)
+                    ->orderBy('id')
+                    ->first();
+
+            if ($mappedCategory) {
+                return $mappedCategory;
+            }
+        }
+
+        // Keep older OJT and student-transfer categories usable after the
+        // student-type mapping is introduced.
+        $legacyNames = match ($studentType) {
+            'ojt' => ['ojt', 'on the job training', 'on-the-job training', 'on-the-job training (ojt)'],
+            'transferee' => ['transfer student', 'transfer students', 'transferee'],
+            'returnee' => ['return to school', 'returning student', 'returning students', 'returnee'],
+            default => [],
+        };
+
+        if ($legacyNames === []) {
+            return null;
+        }
+
+        return $this->activeStudentHealthFormCategories()->first(function (HealthFormCategory $category) use ($legacyNames): bool {
+            return in_array(strtolower(trim((string) $category->name)), $legacyNames, true);
+        });
+    }
+
+    private function activeStudentHealthFormCategories()
+    {
+        $query = HealthFormCategory::query()->where('is_active', true);
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            return $query->availableFor('student')->orderBy('id')->get();
+        }
+
+        return $query->orderBy('id')->get()->filter(function (HealthFormCategory $category): bool {
+            return in_array('student', (array) $category->available_for, true);
+        })->values();
+    }
+
+    private function activeStudentHealthFormCategoryByValue(?string $value): ?HealthFormCategory
+    {
+        $value = trim((string) $value);
+        $normalized = strtolower($value);
+        if ($value === '' || $normalized === 'general') {
+            return null;
+        }
+
+        $category = $this->activeStudentHealthFormCategories()->first(function (HealthFormCategory $category) use ($normalized): bool {
+            return strtolower(trim((string) $category->name)) === $normalized;
+        });
+
+        if ($category) {
+            return $category;
+        }
+
+        if (str_contains($normalized, 'ojt') || str_contains($normalized, 'on-the-job')) {
+            return $this->studentHealthFormCategoryForType('ojt');
+        }
+
+        return null;
+    }
+
+    private function resolvedStudentHealthFormCategory(
+        ?User $user,
+        ?HealthFormSubmission $pendingHealthFormRequest = null,
+        ?HealthProfile $existingHealthProfile = null
+    ): string {
+        foreach ([
+            optional($pendingHealthFormRequest)->category,
+            optional($existingHealthProfile)->health_form_category,
+        ] as $storedCategory) {
+            $storedCategory = trim((string) $storedCategory);
+            if ($storedCategory === '' || strtolower($storedCategory) === 'general') {
+                continue;
+            }
+
+            if (strtolower($storedCategory) === 'student') {
+                return 'Student';
+            }
+
+            $category = $this->activeStudentHealthFormCategoryByValue($storedCategory);
+            if ($category) {
+                return (string) $category->name;
+            }
+        }
+
+        $studentType = strtolower(trim((string) ($user?->student_type ?? '')));
+        if ($studentType === '' || $studentType === 'regular') {
+            return 'Student';
+        }
+
+        return (string) ($this->studentHealthFormCategoryForType($studentType)?->name ?? '');
+    }
+
+    private function studentDeclarationCategoryForUser(User $user, string $category): string
+    {
+        if (trim($category) !== '') {
+            return $category;
+        }
+
+        $studentType = strtolower(trim((string) $user->student_type));
+
+        return match ($studentType) {
+            'ojt' => 'OJT',
+            'ladderized' => 'Ladderized',
+            'transferee' => 'Transferee',
+            'returnee' => 'Returnee',
+            'shiftee' => 'Shiftee',
+            default => 'Student',
+        };
+    }
+
     private function employeeHealthFormCategoryAudience(User $user): string
     {
         return $user->clinicAccountTypeKey() === 'faculty' ? 'faculty' : 'admin';
@@ -2344,7 +2473,7 @@ class AppointmentController extends Controller
             ];
         }
 
-        if (strtolower($category) === 'student') {
+        if (in_array(strtolower($category), ['student', 'regular'], true)) {
             return [
                 'purpose' => 'currently enrolled student',
                 'endorsement' => 'status as a currently enrolled student',
@@ -4602,13 +4731,18 @@ public function showHealthForm()
     $displayLastName = $healthFormPrefill['last_name'] ?? '';
     $displayReferenceNumber = $healthFormPrefill['reference_number'] ?? '';
     $prefill = $healthFormPrefill;
-    $studentHealthFormCategories = $isDedicatedStudentForm
-        ? $this->healthFormCategoriesForAudience('student')
-        : collect();
+    $studentHealthFormCategory = $isDedicatedStudentForm
+        ? $this->resolvedStudentHealthFormCategory($user, $pendingHealthFormRequest, $existingHealthProfile)
+        : '';
+    $studentDeclarationCategory = $isDedicatedStudentForm
+        ? $this->studentDeclarationCategoryForUser($user, $studentHealthFormCategory)
+        : 'Student';
+    $studentDeclarationPurpose = $this->studentDeclarationPurposeText($studentDeclarationCategory);
+    $studentHealthFormCategoryConfigured = $studentHealthFormCategory !== '';
 
     return view(
         $isDedicatedStudentForm ? 'student.health_form_student' : 'student.health_form',
-        compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill', 'pendingHealthFormRequest', 'studentHealthFormCategories')
+        compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill', 'pendingHealthFormRequest', 'studentHealthFormCategory', 'studentDeclarationPurpose', 'studentHealthFormCategoryConfigured')
     );
 }
 
@@ -5962,6 +6096,23 @@ public function storeHealthForm(Request $request)
         ? ['required', 'string', 'max:120', 'regex:/^\d{4}-\d{5}-[A-Za-z]{2}-\d+$/']
         : ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$/'];
 
+    $resolvedStudentHealthFormCategory = $isDedicatedStudentForm
+        ? $this->resolvedStudentHealthFormCategory($user, $pendingHealthFormRequest, $existingHealthProfile)
+        : '';
+    if ($isDedicatedStudentForm) {
+        if ($resolvedStudentHealthFormCategory === '') {
+            throw ValidationException::withMessages([
+                'health_form_category' => 'No Health Form Category is configured for your selected student type. Please contact the clinic administrator.',
+            ]);
+        }
+
+        // The category comes from the saved initial student-type selection,
+        // not from a client-editable purpose field.
+        $request->merge([
+            'health_form_category' => $resolvedStudentHealthFormCategory,
+        ]);
+    }
+
     $studentHealthFormCategoryValues = ['Student'];
     if ($isDedicatedStudentForm) {
         $studentHealthFormCategoryValues = array_values(array_unique(array_merge(
@@ -5969,8 +6120,8 @@ public function storeHealthForm(Request $request)
             $this->healthFormCategoriesForAudience('student')->pluck('name')->all()
         )));
 
-        $pendingStudentCategory = $this->normalizeStudentHealthFormCategory(optional($pendingHealthFormRequest)->category);
-        if ($pendingStudentCategory !== '') {
+        $pendingStudentCategory = $this->activeStudentHealthFormCategoryByValue(optional($pendingHealthFormRequest)->category)?->name;
+        if (is_string($pendingStudentCategory) && $pendingStudentCategory !== '') {
             $studentHealthFormCategoryValues[] = $pendingStudentCategory;
             $studentHealthFormCategoryValues = array_values(array_unique($studentHealthFormCategoryValues));
         }
@@ -6312,7 +6463,7 @@ public function storeHealthForm(Request $request)
             $submittedHealthFormCategory = optional($pendingHealthFormRequest)->category ?: ($isDedicatedStudentForm ? 'Student' : 'General');
         }
         if ($isDedicatedStudentForm) {
-            $submittedHealthFormCategory = $this->normalizeStudentHealthFormCategory($submittedHealthFormCategory) ?: 'Student';
+            $submittedHealthFormCategory = $resolvedStudentHealthFormCategory ?: 'Student';
         }
 
         $healthProfileData = [
