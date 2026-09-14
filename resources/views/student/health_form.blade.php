@@ -2670,9 +2670,9 @@
                     @if($courseApplicable)
                         <div class="form-field personal-email-field">
                             <label class="form-label" for="course_code">Course / Program <span class="required">*</span></label>
-                            <div class="clinic-select-wrap course-select-wrap" data-clinic-select data-select-placeholder="Select course">
+                            <div class="clinic-select-wrap course-select-wrap" data-clinic-select data-select-placeholder="Select program">
                                 <select id="course_code" class="form-select clinic-select-native field-maroon" name="course_code" required>
-                                    <option value="">Select course</option>
+                                    <option value="">Select program</option>
                                     @foreach($courseOptions as $courseOption)
                                         <option
                                             value="{{ $courseOption['code'] }}"
@@ -2683,7 +2683,7 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select course</button>
+                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select program</button>
                                 <div class="clinic-select-menu" role="listbox" aria-label="Course options">
                                     @foreach($courseOptions as $courseOption)
                                         <button

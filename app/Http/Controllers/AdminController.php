@@ -77,14 +77,25 @@ class AdminController extends Controller
             && trim((string) ($healthProfile?->student_number ?? '')) !== '';
     }
 
-    private function studentDeclarationPurposeText(?string $category): array
+    private function studentDeclarationPurposeText(?string $category, ?string $studentType = null): array
     {
         $category = trim((string) $category);
         $normalized = strtolower($category);
+        $normalizedStudentType = strtolower(trim((string) $studentType));
 
         if ($normalized === '' || $normalized === 'general') {
             $category = 'Student';
             $normalized = 'student';
+        }
+
+        if (
+            $normalizedStudentType === 'ladderized'
+            || ($normalizedStudentType === '' && $normalized === 'ladderized')
+        ) {
+            return [
+                'purpose' => 'Ladderized Program',
+                'endorsement' => 'Ladderized Program',
+            ];
         }
 
         if (str_contains($normalized, 'ojt') || str_contains($normalized, 'on-the-job')) {
@@ -4532,7 +4543,7 @@ class AdminController extends Controller
             if ($categorySelected === '') {
                 $categorySelected = 'Student';
             }
-            $declarationPurpose = $this->studentDeclarationPurposeText($categorySelected);
+            $declarationPurpose = $this->studentDeclarationPurposeText($categorySelected, $user?->student_type);
             $purposeUnderline1 = $declarationPurpose['purpose'];
             $purposeUnderline2 = $declarationPurpose['endorsement'];
 

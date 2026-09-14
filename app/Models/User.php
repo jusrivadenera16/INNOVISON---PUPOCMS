@@ -295,6 +295,7 @@ class User extends Authenticatable
         'api_pin_token_action_enabled' => 'boolean',
         'api_pin_emergency_credentials_enabled' => 'boolean',
         'api_pin_disabled' => 'boolean',
+        'ladderized_student_number_updated_at' => 'datetime',
         'notification_read_map' => 'array',
         'notification_email_enabled' => 'boolean',
         'notification_system_enabled' => 'boolean',

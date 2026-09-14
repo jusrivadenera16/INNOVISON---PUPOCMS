@@ -2419,16 +2419,20 @@
                 $referenceMode = 'student_number';
                 $manualStudentNumberAllowed = (bool) ($prefill['manual_student_number_allowed'] ?? true);
                 $selectedReferenceMode = 'student_number';
-                $manualStudentModeSelected = true;
+                $manualStudentModeSelected = $manualStudentNumberAllowed;
                 $referenceRequiresValidation = (bool) ($prefill['reference_requires_validation'] ?? true);
                 $referenceVerificationUnavailable = false;
-                $stepOneTitle = 'Student ID';
+                $stepOneTitle = 'Student ID Number';
                 $stepOneDescription = 'Enter your Student ID, then complete your health information.';
-                $referenceLabel = 'Student ID / Student Number';
-                $referenceDisplayFallback = 'Enter Student ID';
-                $referenceStatusDefault = $displayReferenceNumber !== ''
-                    ? 'Student ID is ready for use inside the clinic system.'
-                    : 'Enter your Student ID, then click the check icon.';
+                $referenceLabel = 'Student ID Number';
+                $referenceDisplayFallback = 'Enter Student ID Number';
+                $referenceStatusDefault = $manualStudentNumberAllowed
+                    ? ($displayReferenceNumber !== ''
+                        ? 'Review your Student ID, then click the check icon.'
+                        : 'Enter your Student ID, then click the check icon.')
+                    : ($displayReferenceNumber !== ''
+                        ? 'Student ID is ready for use inside the clinic system.'
+                        : 'Enter your Student ID, then click the check icon.');
                 $courseOptions = $prefill['course_options'] ?? [];
                 $courseApplicable = (bool) ($prefill['course_applicable'] ?? false);
                 $selectedCourseCode = old('course_code', $prefill['course_code'] ?? '');
@@ -2510,9 +2514,9 @@
                             </div>
                         </div>
                         <div
-                            class="reference-panel {{ $displayReferenceNumber === '' ? 'is-missing' : '' }}"
+                            class="reference-panel {{ $displayReferenceNumber === '' ? 'is-missing' : '' }}{{ $manualStudentNumberAllowed ? ' is-editing' : '' }}"
                             id="referencePanel"
-                            data-reference-locked="{{ $displayReferenceNumber !== '' ? 'true' : 'false' }}"
+                            data-reference-locked="{{ $manualStudentNumberAllowed ? 'false' : ($displayReferenceNumber !== '' ? 'true' : 'false') }}"
                             data-reference-mode="{{ $referenceMode }}"
                             data-reference-requires-validation="{{ $referenceRequiresValidation ? 'true' : 'false' }}"
                             data-manual-student-mode-allowed="{{ $manualStudentNumberAllowed ? 'true' : 'false' }}"
@@ -2646,10 +2650,10 @@
                     </div>
                     @if($courseApplicable)
                         <div class="form-field personal-email-field">
-                            <label class="form-label" for="course_code">Course / Program <span class="required">*</span></label>
-                            <div class="clinic-select-wrap course-select-wrap" data-clinic-select data-select-placeholder="Select course">
+                            <label class="form-label" for="course_code">Program <span class="required">*</span></label>
+                            <div class="clinic-select-wrap course-select-wrap" data-clinic-select data-select-placeholder="Select program">
                                 <select id="course_code" class="form-select clinic-select-native field-maroon" name="course_code" required>
-                                    <option value="">Select course</option>
+                                    <option value="">Select program</option>
                                     @foreach($courseOptions as $courseOption)
                                         <option
                                             value="{{ $courseOption['code'] }}"
@@ -2660,7 +2664,7 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select course</button>
+                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select program</button>
                                 <div class="clinic-select-menu" role="listbox" aria-label="Course options">
                                     @foreach($courseOptions as $courseOption)
                                         <button
@@ -4810,6 +4814,9 @@
             });
             referenceEditorInput?.addEventListener('input', () => {
                 referenceEditorInput.value = referenceEditorInput.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
+                if (manualStudentNumberAllowed && !isReferenceLocked() && referenceInput) {
+                    referenceInput.value = referenceEditorInput.value;
+                }
                 referenceEditorInput.setCustomValidity('');
                 if (!isReferenceLocked()) {
                     setReferenceStatus('Enter your Student ID, then click the check icon.');
@@ -4891,7 +4898,7 @@
                 stepPanels[2]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
 
-            nextToStep2Btn?.addEventListener('click', () => {
+            nextToStep2Btn?.addEventListener('click', async () => {
                 const normalizedReference = (referenceInput?.value || '').trim();
 
                 if (referenceInput) {
@@ -4907,6 +4914,13 @@
                         showValidationBubble(referenceInput);
                     }
                     return;
+                }
+
+                if (manualStudentNumberAllowed && !isReferenceLocked()) {
+                    await validateReferenceNumber();
+                    if (!isReferenceLocked()) {
+                        return;
+                    }
                 }
 
                 if (!validateStep(1)) {

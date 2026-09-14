@@ -1242,7 +1242,7 @@
         pointer-events: none;
     }
 
-    .health-profile-wrap button.employee-action-select-trigger {
+    .employee-action-select-wrap button.employee-action-select-trigger {
         position: relative;
         width: 100%;
         min-height: 48px;
@@ -1260,7 +1260,7 @@
         transition: border-color .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease;
     }
 
-    .health-profile-wrap button.employee-action-select-trigger::after {
+    .employee-action-select-wrap button.employee-action-select-trigger::after {
         content: "";
         position: absolute;
         right: 15px;
@@ -1321,7 +1321,7 @@
         background: #8f2230;
     }
 
-    .health-profile-wrap button.employee-action-select-option {
+    .employee-action-select-wrap button.employee-action-select-option {
         position: relative;
         isolation: isolate;
         overflow: hidden;
@@ -1342,7 +1342,7 @@
         transition: border-color .2s ease, background .2s ease, color .2s ease, transform .2s ease;
     }
 
-    .health-profile-wrap button.employee-action-select-option::after {
+    .employee-action-select-wrap button.employee-action-select-option::after {
         content: "";
         position: absolute;
         z-index: 0;
@@ -1356,13 +1356,13 @@
         pointer-events: none;
     }
 
-    .health-profile-wrap button.employee-action-select-option > span {
+    .employee-action-select-wrap button.employee-action-select-option > span {
         position: relative;
         z-index: 1;
     }
 
-    .health-profile-wrap button.employee-action-select-option:hover,
-    .health-profile-wrap button.employee-action-select-option:focus-visible {
+    .employee-action-select-wrap button.employee-action-select-option:hover,
+    .employee-action-select-wrap button.employee-action-select-option:focus-visible {
         transform: translateY(-1px);
         border-color: #facc15;
         background: #facc15;
@@ -1371,12 +1371,12 @@
         box-shadow: 0 8px 18px rgba(250, 204, 21, .22);
     }
 
-    .health-profile-wrap button.employee-action-select-option:hover::after,
-    .health-profile-wrap button.employee-action-select-option:focus-visible::after {
+    .employee-action-select-wrap button.employee-action-select-option:hover::after,
+    .employee-action-select-wrap button.employee-action-select-option:focus-visible::after {
         left: 125%;
     }
 
-    .health-profile-wrap button.employee-action-select-option.is-selected {
+    .employee-action-select-wrap button.employee-action-select-option.is-selected {
         border-color: #70131B;
         background: #70131B;
         color: #ffffff;
@@ -1488,7 +1488,7 @@
         color: #f8fafc;
     }
 
-    [data-theme="dark"] .health-profile-wrap button.employee-action-select-trigger {
+    [data-theme="dark"] .employee-action-select-wrap button.employee-action-select-trigger {
         border-color: #475569;
         background: #182334;
         color: #f8fafc;
@@ -1500,22 +1500,22 @@
         box-shadow: 0 18px 38px rgba(0, 0, 0, .48);
     }
 
-    [data-theme="dark"] .health-profile-wrap button.employee-action-select-option {
+    [data-theme="dark"] .employee-action-select-wrap button.employee-action-select-option {
         border-color: #475569;
         background: #182334;
         color: #f8fafc;
     }
 
-    [data-theme="dark"] .health-profile-wrap button.employee-action-select-option.is-selected {
+    [data-theme="dark"] .employee-action-select-wrap button.employee-action-select-option.is-selected {
         border-color: #9f1d2d;
         background: #9f1d2d;
         color: #ffffff;
     }
 
-    [data-theme="dark"] .health-profile-wrap button.employee-action-select-option:hover,
-    [data-theme="dark"] .health-profile-wrap button.employee-action-select-option:focus-visible,
-    [data-theme="dark"] .health-profile-wrap button.employee-action-select-option.is-selected:hover,
-    [data-theme="dark"] .health-profile-wrap button.employee-action-select-option.is-selected:focus-visible {
+    [data-theme="dark"] .employee-action-select-wrap button.employee-action-select-option:hover,
+    [data-theme="dark"] .employee-action-select-wrap button.employee-action-select-option:focus-visible,
+    [data-theme="dark"] .employee-action-select-wrap button.employee-action-select-option.is-selected:hover,
+    [data-theme="dark"] .employee-action-select-wrap button.employee-action-select-option.is-selected:focus-visible {
         border-color: #facc15;
         background: #facc15;
         color: #70131B;
