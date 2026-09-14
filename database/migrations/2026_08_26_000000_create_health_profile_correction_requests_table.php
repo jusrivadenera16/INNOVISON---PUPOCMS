@@ -35,7 +35,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['user_id', 'status']);
-            $table->index(['health_profile_id', 'status']);
+            $table->index(['health_profile_id', 'status'], 'hpcr_health_profile_status_idx');
             $table->index(['employee_health_profile_id', 'status'], 'hpcr_employee_status_idx');
             $table->index(['type', 'status']);
         });
