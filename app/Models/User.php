@@ -69,9 +69,37 @@ class User extends Authenticatable
         'ojt',
     ];
 
+    public function hasExistingClinicHealthRecord(): bool
+    {
+        if ((bool) ($this->is_health_profile_completed ?? false)) {
+            return true;
+        }
+
+        $hasStudentProfile = Schema::hasTable('health_profiles')
+            && ($this->relationLoaded('healthProfile')
+                ? $this->healthProfile !== null
+                : $this->healthProfile()->exists());
+        $hasEmployeeProfile = Schema::hasTable('health_profile_emp')
+            && ($this->relationLoaded('employeeHealthProfile')
+                ? $this->employeeHealthProfile !== null
+                : $this->employeeHealthProfile()->exists());
+        $hasDependentProfile = Schema::hasTable('dependents_profiles')
+            && ($this->relationLoaded('dependentProfile')
+                ? $this->dependentProfile !== null
+                : $this->dependentProfile()->exists());
+
+        return $hasStudentProfile || $hasEmployeeProfile || $hasDependentProfile;
+    }
+
     public function needsClinicAccountTypeSelection(): bool
     {
         if (self::normalizeRole($this->user_role) !== self::ROLE_STUDENT) {
+            return false;
+        }
+
+        // Account selection belongs to the first setup only. Existing clinic
+        // records must never be sent back through the selector.
+        if ($this->hasExistingClinicHealthRecord()) {
             return false;
         }
 
@@ -133,6 +161,11 @@ class User extends Authenticatable
         $profile = $this->relationLoaded('healthProfile') ? $this->healthProfile : (
             \Illuminate\Support\Facades\Schema::hasTable('health_profiles') ? $this->healthProfile()->first() : null
         );
+        if (trim((string) ($this->student_number ?? '')) !== ''
+            || trim((string) ($profile?->student_number ?? '')) !== '') {
+            return false;
+        }
+
         if (in_array(strtolower(trim((string) ($profile?->clearance_status ?? ''))), ['issued', 'fully cleared'], true)) {
             return false;
         }
@@ -166,7 +199,9 @@ class User extends Authenticatable
             $profile = $this->relationLoaded('healthProfile') ? $this->healthProfile : (
                 \Illuminate\Support\Facades\Schema::hasTable('health_profiles') ? $this->healthProfile()->first() : null
             );
-            if (in_array(strtolower(trim((string) ($profile?->clearance_status ?? ''))), ['issued', 'fully cleared'], true)) {
+            if (trim((string) ($this->student_number ?? '')) !== ''
+                || trim((string) ($profile?->student_number ?? '')) !== ''
+                || in_array(strtolower(trim((string) ($profile?->clearance_status ?? ''))), ['issued', 'fully cleared'], true)) {
                 return 'student';
             }
         }

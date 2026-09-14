@@ -1644,8 +1644,18 @@ class LoginController extends Controller
                 $resolvedUserType = $normalizedLocalRole === User::ROLE_STUDENT
                     ? $existingUser->clinicUserType()
                     : $this->defaultUserTypeForIdpRole($idpRole, $role);
+                $hasAdmissionReference = trim((string) ($existingUser->reference_number ?? '')) !== '';
+                $isApplicantToEnrolledStudent = $normalizedLocalRole === User::ROLE_STUDENT
+                    && trim((string) ($existingUser->student_number ?? '')) !== ''
+                    && $hasAdmissionReference
+                    && ($currentUserType === 'applicant' || $idpRole === 'applicant');
 
-                if ($normalizedLocalRole === User::ROLE_SUPERADMIN) {
+                if ($isApplicantToEnrolledStudent) {
+                    $existingUser->user_type = 'Student';
+                    if (!in_array($existingUser->student_type, User::STUDENT_TYPES, true)) {
+                        $existingUser->student_type = 'regular';
+                    }
+                } elseif ($normalizedLocalRole === User::ROLE_SUPERADMIN) {
                     $existingUser->user_type = 'Regular';
                 } elseif (
                     $normalizedLocalRole === User::ROLE_STUDENT
@@ -1703,6 +1713,15 @@ class LoginController extends Controller
             $user->user_type = User::normalizeRole($role) === User::ROLE_STUDENT
                 ? $user->clinicUserType()
                 : $this->defaultUserTypeForIdpRole($idpRole, $role);
+            if (
+                User::normalizeRole($role) === User::ROLE_STUDENT
+                && $studentNumberSeed !== ''
+                && $referenceNumberSeed !== ''
+                && $idpRole === 'applicant'
+            ) {
+                $user->user_type = 'Student';
+                $user->student_type = 'regular';
+            }
             $user->save();
         }
 
@@ -1848,6 +1867,7 @@ class LoginController extends Controller
         $this->enrichUserWithPuptasData($user);
         $this->enrichUserWithFlssFacultyData($user);
         $this->enrichUserWithGuisisData($user);
+        $this->promoteEnrolledApplicantToRegularStudent($user);
     }
 
     private function enrichUserWithFlssFacultyData(User $user): void
@@ -2065,6 +2085,31 @@ class LoginController extends Controller
                 'error' => $exception->getMessage(),
             ]);
         }
+    }
+
+    private function promoteEnrolledApplicantToRegularStudent(User $user): bool
+    {
+        if (User::normalizeRole((string) ($user->user_role ?? '')) !== User::ROLE_STUDENT
+            || strtolower(trim((string) ($user->user_type ?? ''))) !== 'applicant'
+            || trim((string) ($user->reference_number ?? '')) === ''
+            || trim((string) ($user->student_number ?? '')) === '') {
+            return false;
+        }
+
+        $changed = $user->user_type !== 'Student';
+        $user->user_type = 'Student';
+
+        if (Schema::hasColumn('users', 'student_type')
+            && !in_array($user->student_type, User::STUDENT_TYPES, true)) {
+            $user->student_type = 'regular';
+            $changed = true;
+        }
+
+        if ($changed) {
+            $user->save();
+        }
+
+        return $changed;
     }
 
     public function checkSession(Request $request)

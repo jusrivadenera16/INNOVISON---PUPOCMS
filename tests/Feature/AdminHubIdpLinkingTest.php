@@ -588,6 +588,32 @@ class AdminHubIdpLinkingTest extends TestCase
         $this->assertSame('applicant', $user->clinicHealthFormAudience());
     }
 
+    public function test_applicant_with_student_number_becomes_regular_student_without_selector(): void
+    {
+        $user = $this->upsertFromIdp([
+            'id' => 'applicant-transition',
+            'email' => 'applicant-transition@example.test',
+            'roles' => 'applicant',
+            'reference_number' => 'ARN-2026-0001',
+        ]);
+        $this->saveClinicType($user, 'applicant');
+
+        $this->upsertFromIdp([
+            'id' => 'applicant-transition',
+            'email' => 'applicant-transition@example.test',
+            'roles' => 'applicant',
+            'reference_number' => 'ARN-2026-0001',
+            'student_number' => '2026-00001-TG-0',
+        ]);
+
+        $updated = $user->fresh();
+        $this->assertSame('Student', $updated->user_type);
+        $this->assertSame('regular', $updated->student_type);
+        $this->assertFalse($updated->hasPendingAdmissionReference());
+        $this->assertSame('student', $updated->clinicHealthFormAudience());
+        $this->assertFalse($updated->needsClinicAccountTypeSelection());
+    }
+
     public function test_unselected_users_cannot_open_or_submit_any_health_form_directly(): void
     {
         $user = $this->upsertFromIdp(['id' => 'unselected', 'email' => 'unselected@example.test', 'roles' => 'faculty']);
@@ -669,7 +695,7 @@ class AdminHubIdpLinkingTest extends TestCase
         $this->assertFalse($savedUser->needsClinicAccountTypeSelection());
     }
 
-    public function test_existing_student_without_student_type_cannot_open_health_form_directly(): void
+    public function test_existing_student_without_student_type_does_not_require_selector(): void
     {
         $user = $this->upsertFromIdp([
             'id' => 'student-type-missing',
@@ -679,12 +705,13 @@ class AdminHubIdpLinkingTest extends TestCase
         $user->user_type = 'Student';
         $user->student_type = null;
         $user->save();
+        \App\Models\HealthProfile::create([
+            'user_id' => $user->id,
+            'clearance_status' => 'Pending',
+        ]);
 
-        $this->assertTrue($user->fresh()->needsClinicAccountTypeSelection());
-        $this->assertSame(
-            route('student.home'),
-            $this->checkFormRoute($user->fresh(), 'health.form.student')->getTargetUrl()
-        );
+        $this->assertFalse($user->fresh()->needsClinicAccountTypeSelection());
+        $this->assertSame(204, $this->checkFormRoute($user->fresh(), 'health.form.student')->getStatusCode());
     }
 
     public function test_recognized_idp_roles_restrict_options_and_reject_tampered_choices(): void
