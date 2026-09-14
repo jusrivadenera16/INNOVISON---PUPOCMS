@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
-use App\Models\AdminHub;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -23,21 +22,16 @@ class RegisterController extends Controller
         'first_name' => 'required|string|max:255',
         'middle_name' => 'nullable|string|max:255',
         'last_name'  => 'required|string|max:255',
+        'suffix_name' => 'nullable|string|max:50',
         'email'      => 'required|email|unique:users',
-        'clinic_role' => 'required|string|in:student,faculty,guest,admin_clinic_staff,admin_designee,student_assistant,super_admin',
+        'clinic_role' => 'required|string|in:applicant,student,faculty,admin,guest',
         'password'   => 'required|min:6|confirmed',
     ]);
 
     $selectedRole = (string) $request->input('clinic_role');
-    $isStudentSideUser = in_array($selectedRole, ['student', 'faculty', 'guest'], true);
-    $isClinicAdmin = $selectedRole === 'admin_clinic_staff';
-    $isAdminDesignee = $selectedRole === 'admin_designee';
-    $isStudentAssistant = $selectedRole === 'student_assistant';
-    $userRole = match (true) {
-        $selectedRole === 'super_admin' => User::ROLE_SUPERADMIN,
-        $isStudentSideUser => User::ROLE_STUDENT,
-        default => User::ROLE_ADMIN,
-    };
+    $isStudentSideUser = in_array($selectedRole, ['applicant', 'student', 'faculty', 'guest'], true);
+    $isClinicAdmin = $selectedRole === 'admin';
+    $userRole = $isStudentSideUser ? User::ROLE_STUDENT : User::ROLE_ADMIN;
 
     $studentId = 'LOC-' . strtoupper(Str::random(10));
     while (User::where('student_id', $studentId)->exists()) {
@@ -52,6 +46,7 @@ class RegisterController extends Controller
             $request->first_name,
             $request->input('middle_name'),
             $request->last_name,
+            $request->input('suffix_name'),
         ]))),
         'student_id' => $studentId,
         'email'      => $request->email,
@@ -64,49 +59,35 @@ class RegisterController extends Controller
         'password'   => Hash::make($request->password),
     ];
 
+    if (Schema::hasColumn('users', 'suffix_name')) {
+        $payload['suffix_name'] = $request->input('suffix_name');
+    }
+
     if (Schema::hasColumn('users', 'user_type')) {
         $payload['user_type'] = match (true) {
+            $selectedRole === 'applicant' => 'Applicant',
             $selectedRole === 'student' => 'Student',
             $selectedRole === 'faculty' => 'Faculty',
             $selectedRole === 'guest' => 'Guest',
-            $isStudentAssistant => 'Assistant',
-            default => 'Regular',
+            default => 'Admin',
         };
     }
 
     $user = User::create($payload);
 
-    if ($isAdminDesignee && Schema::hasTable('admin_hub')) {
-        $adminHubPayload = [
-            'user_id' => $user->id,
-            'first_name' => $user->first_name,
-            'middle_name' => $user->middle_name,
-            'last_name' => $user->last_name,
-            'name' => $user->name,
-            'email' => $user->email,
-            'role' => 'admin_designee',
-            'status' => 'active',
-        ];
-
-        AdminHub::create(array_filter(
-            $adminHubPayload,
-            fn ($value, $column) => AdminHub::hasColumn($column),
-            ARRAY_FILTER_USE_BOTH
-        ));
-    }
-
-    if (($isClinicAdmin || $selectedRole === 'super_admin') && Schema::hasTable('admins')) {
+    if ($isClinicAdmin && Schema::hasTable('admins')) {
         $adminPayload = [
             'first_name' => $user->first_name,
             'middle_name' => $user->middle_name,
             'last_name' => $user->last_name,
             'name' => $user->name,
             'email' => $user->email,
-            'access_level' => match (true) {
-                $selectedRole === 'super_admin' => 'superadmin',
-                default => 'clinic_staff',
-            },
+            'access_level' => 'clinic_staff',
         ];
+
+        if (Admin::hasColumn('suffix_name')) {
+            $adminPayload['suffix_name'] = $user->suffix_name;
+        }
 
         if (Admin::hasColumn('user_id')) {
             $adminPayload['user_id'] = $user->id;
@@ -124,16 +105,8 @@ class RegisterController extends Controller
     Auth::guard($guard)->login($user);
     $request->session()->regenerate();
 
-    if ($isStudentSideUser || $isAdminDesignee) {
+    if ($isStudentSideUser) {
         return redirect('/student/home');
-    }
-
-    if ($userRole === User::ROLE_SUPERADMIN) {
-        return redirect('/admin/dashboard');
-    }
-
-    if ($isStudentAssistant) {
-        return redirect('/assistant/choose-portal');
     }
 
     return redirect('/assistant/dashboard');

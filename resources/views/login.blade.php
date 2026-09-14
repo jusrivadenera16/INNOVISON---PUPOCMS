@@ -602,6 +602,11 @@
         .modal-content .form-row {
             gap: 16px;
         }
+        .modal-content .register-name-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+        }
         .modal-content .form-group {
             margin-bottom: 18px;
         }
@@ -776,6 +781,11 @@
 
             .form-row,
             .mini-form-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .modal-content .register-name-grid {
                 grid-template-columns: 1fr;
                 gap: 10px;
             }
@@ -1023,47 +1033,49 @@
               </div>
               <form action="{{ url('/register-action') }}" method="POST">
                   @csrf
-                  <div class="form-row">
+                  <div class="register-name-grid">
                       <div class="form-group">
                           <label>FIRST NAME</label>
-                          <input type="text" name="first_name" required>
+                          <input type="text" name="first_name" value="{{ old('first_name') }}" autocomplete="given-name" required>
+                      </div>
+                      <div class="form-group">
+                          <label>MIDDLE NAME</label>
+                          <input type="text" name="middle_name" value="{{ old('middle_name') }}" autocomplete="additional-name">
                       </div>
                       <div class="form-group">
                           <label>LAST NAME</label>
-                          <input type="text" name="last_name" required>
+                          <input type="text" name="last_name" value="{{ old('last_name') }}" autocomplete="family-name" required>
+                      </div>
+                      <div class="form-group">
+                          <label>SUFFIX</label>
+                          <input type="text" name="suffix_name" value="{{ old('suffix_name') }}" placeholder="e.g., Jr., III" autocomplete="honorific-suffix">
                       </div>
                   </div>
 
                   <div class="register-grid">
                       <div class="form-group">
                           <label>EMAIL ADDRESS</label>
-                          <input type="email" name="email" required>
+                          <input type="email" name="email" value="{{ old('email') }}" autocomplete="email" required>
                       </div>
 
                       <div class="form-group">
                           <label>CLINIC ROLE</label>
                           <select name="clinic_role" required>
                               <option value="" disabled {{ old('clinic_role') ? '' : 'selected' }}>Select clinic role</option>
+                              <option value="applicant" {{ old('clinic_role') === 'applicant' ? 'selected' : '' }}>
+                                  Applicant
+                              </option>
                               <option value="student" {{ old('clinic_role') === 'student' ? 'selected' : '' }}>
                                   Student
                               </option>
                               <option value="faculty" {{ old('clinic_role') === 'faculty' ? 'selected' : '' }}>
                                   Faculty
                               </option>
+                              <option value="admin" {{ old('clinic_role') === 'admin' ? 'selected' : '' }}>
+                                  Admin
+                              </option>
                               <option value="guest" {{ old('clinic_role') === 'guest' ? 'selected' : '' }}>
                                   Guest
-                              </option>
-                              <option value="admin_clinic_staff" {{ old('clinic_role') === 'admin_clinic_staff' ? 'selected' : '' }}>
-                                  Admin - Clinic Staff
-                              </option>
-                              <option value="admin_designee" {{ old('clinic_role') === 'admin_designee' ? 'selected' : '' }}>
-                                  Admin - Designee
-                              </option>
-                              <option value="student_assistant" {{ old('clinic_role') === 'student_assistant' ? 'selected' : '' }}>
-                                  Admin - Student Assistant
-                              </option>
-                              <option value="super_admin" {{ old('clinic_role') === 'super_admin' ? 'selected' : '' }}>
-                                  Superadmin
                               </option>
                           </select>
                       </div>
