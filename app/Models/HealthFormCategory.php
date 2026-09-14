@@ -15,15 +15,34 @@ class HealthFormCategory extends Model
         'dependent' => 'Dependents',
     ];
 
+    public const STUDENT_TYPE_LABELS = [
+        'regular' => 'Regular',
+        'ojt' => 'OJT',
+        'ladderized' => 'Ladderized',
+        'transferee' => 'Transferee',
+        'returnee' => 'Returnee',
+        'shiftee' => 'Shiftee',
+    ];
+
+    public const CONFIGURABLE_STUDENT_TYPES = [
+        'ojt',
+        'ladderized',
+        'transferee',
+        'returnee',
+        'shiftee',
+    ];
+
     protected $fillable = [
         'name',
         'is_active',
         'available_for',
+        'student_types',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'available_for' => 'array',
+        'student_types' => 'array',
     ];
 
     public function scopeAvailableFor(Builder $query, string $audience): Builder

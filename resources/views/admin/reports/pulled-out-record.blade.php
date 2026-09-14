@@ -96,6 +96,10 @@
 
 @section('content')
 @php
+    $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
+    $reportsRootUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
+    $digitalLogbookUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/digital-logbook') : url('/admin/reports/digital-logbook');
+    $pulledOutRecordsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/digital-logbook/pulled-out-records') : url('/admin/reports/digital-logbook/pulled-out-records');
     $recordUser = $profile->user;
     $documentLabels = [
         'student_photo' => '2x2 Photo',
@@ -107,6 +111,12 @@
     ];
 @endphp
 <div class="pulled-record-page">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Reports', 'url' => $reportsRootUrl],
+        ['label' => 'Digital Logbook', 'url' => $digitalLogbookUrl],
+        ['label' => 'Pulled Out', 'url' => $pulledOutRecordsUrl],
+        ['label' => 'Record'],
+    ]])
     <section class="pulled-record-card">
         <header class="pulled-record-head">
             <div class="pulled-record-title">
@@ -116,7 +126,6 @@
                     <p>Archived record retained for audit, review, and authorized restoration.</p>
                 </div>
             </div>
-            <a class="pulled-record-back" href="{{ route('reports.pulled-out-records') }}">Back to Pulled Out Logbook</a>
         </header>
         <div class="pulled-record-body">
             @if(session('success'))

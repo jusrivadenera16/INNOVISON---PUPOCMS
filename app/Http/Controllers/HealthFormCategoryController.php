@@ -19,6 +19,7 @@ class HealthFormCategoryController extends Controller
         return view('admin.reports.manage-health-form-categories', [
             'categories' => $categories,
             'audienceLabels' => HealthFormCategory::AUDIENCE_LABELS,
+            'studentTypeLabels' => HealthFormCategory::STUDENT_TYPE_LABELS,
         ]);
     }
 
@@ -28,9 +29,20 @@ class HealthFormCategoryController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'audiences' => ['required', 'array', 'min:1'],
             'audiences.*' => ['string', Rule::in(array_keys(HealthFormCategory::AUDIENCE_LABELS))],
+            'student_types' => ['nullable', 'array'],
+            'student_types.*' => ['string', Rule::in(HealthFormCategory::CONFIGURABLE_STUDENT_TYPES)],
         ]);
 
         $name = trim((string) $request->name);
+        $audiences = array_values(array_unique($request->input('audiences', [])));
+        $studentTypes = $this->studentTypesFor($request, $audiences);
+
+        if (in_array('student', $audiences, true) && $studentTypes === []) {
+            return back()->withInput()->withErrors([
+                'student_types' => 'Select at least one configurable student type for this category.',
+            ]);
+        }
+
         $duplicateExists = HealthFormCategory::query()
             ->whereRaw('LOWER(TRIM(name)) = ?', [mb_strtolower($name)])
             ->exists();
@@ -42,7 +54,8 @@ class HealthFormCategoryController extends Controller
         HealthFormCategory::create([
             'name' => $name,
             'is_active' => true,
-            'available_for' => array_values(array_unique($request->input('audiences', []))),
+            'available_for' => $audiences,
+            'student_types' => $studentTypes,
         ]);
 
         return back()->with('success', 'Health Form category added.');
@@ -56,9 +69,20 @@ class HealthFormCategoryController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'audiences' => ['required', 'array', 'min:1'],
             'audiences.*' => ['string', Rule::in(array_keys(HealthFormCategory::AUDIENCE_LABELS))],
+            'student_types' => ['nullable', 'array'],
+            'student_types.*' => ['string', Rule::in(HealthFormCategory::CONFIGURABLE_STUDENT_TYPES)],
         ]);
 
         $name = trim((string) $request->name);
+        $audiences = array_values(array_unique($request->input('audiences', [])));
+        $studentTypes = $this->studentTypesFor($request, $audiences);
+
+        if (in_array('student', $audiences, true) && $studentTypes === []) {
+            return back()->withInput()->withErrors([
+                'student_types' => 'Select at least one configurable student type for this category.',
+            ]);
+        }
+
         $duplicateExists = HealthFormCategory::query()
             ->where('id', '<>', $category->id)
             ->whereRaw('LOWER(TRIM(name)) = ?', [mb_strtolower($name)])
@@ -82,7 +106,8 @@ class HealthFormCategoryController extends Controller
 
         $category->update([
             'name' => $name,
-            'available_for' => array_values(array_unique($request->input('audiences', []))),
+            'available_for' => $audiences,
+            'student_types' => $studentTypes,
         ]);
 
         return back()->with('success', 'Health Form category updated.');
@@ -108,5 +133,17 @@ class HealthFormCategoryController extends Controller
         $category->delete();
 
         return back()->with('success', 'Health Form category removed.');
+    }
+
+    private function studentTypesFor(Request $request, array $audiences): array
+    {
+        if (!in_array('student', $audiences, true)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter(
+            array_map('strtolower', (array) $request->input('student_types', [])),
+            fn (string $type): bool => in_array($type, HealthFormCategory::CONFIGURABLE_STUDENT_TYPES, true)
+        )));
     }
 }

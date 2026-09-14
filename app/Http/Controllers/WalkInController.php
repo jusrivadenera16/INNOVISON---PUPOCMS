@@ -8,12 +8,14 @@ use App\Models\Appointment;
 use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
 use App\Models\EmployeeHealthProfile;
+use App\Models\HealthProfileCorrectionRequest;
 use App\Models\HealthProfileStaff;
 use App\Models\DependentsProfile;
 use App\Models\AdminHub;
 use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\ActivityLog;
+use App\Models\ClinicServiceOption;
 use App\Models\Consultation;
 use App\Models\ConsultationDraft;
 use App\Models\ConsultationMedicine;
@@ -24,6 +26,7 @@ use App\Services\MarClearanceIssuanceService;
 use App\Services\PuptasWebhookService;
 use App\Services\StudentNotificationMailer;
 use App\Services\EmployeeHealthFormPdfService;
+use App\Services\EmployeeHealthFormHistoryService;
 use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -247,30 +250,32 @@ class WalkInController extends Controller
         $normalizedIdentifier = strtoupper($identifier);
 
         $user = User::with(['healthProfile', 'dependentProfile'])
-            ->where(function ($query) use ($identifier) {
-                if (\Schema::hasColumn('users', 'employee_number')) {
-                    $query->orWhere('employee_number', $identifier);
-                }
+            ->visibleForAdminHubRecords()
+            ->where(function ($query) use ($identifier, $normalizedIdentifier) {
+                $query->where(function ($exactQuery) use ($identifier) {
+                    if (\Schema::hasColumn('users', 'employee_number')) {
+                        $exactQuery->orWhere('employee_number', $identifier);
+                    }
 
-                if (\Schema::hasColumn('users', 'student_number')) {
-                    $query->orWhere('student_number', $identifier);
-                }
+                    if (\Schema::hasColumn('users', 'student_number')) {
+                        $exactQuery->orWhere('student_number', $identifier);
+                    }
 
-                if (\Schema::hasColumn('users', 'reference_number')) {
-                    $query->orWhere('reference_number', $identifier);
-                }
+                    if (\Schema::hasColumn('users', 'reference_number')) {
+                        $exactQuery->orWhere('reference_number', $identifier);
+                    }
 
-                $query->orWhere('barcode', $identifier)
-                    ->orWhere('student_id', $identifier);
-            })
-            ->orWhere(function ($query) use ($normalizedIdentifier) {
-                if (\Schema::hasColumn('users', 'employee_number')) {
-                    $query->orWhereRaw('UPPER(TRIM(employee_number)) = ?', [$normalizedIdentifier]);
-                }
+                    $exactQuery->orWhere('barcode', $identifier)
+                        ->orWhere('student_id', $identifier);
+                })->orWhere(function ($normalizedQuery) use ($normalizedIdentifier) {
+                    if (\Schema::hasColumn('users', 'employee_number')) {
+                        $normalizedQuery->orWhereRaw('UPPER(TRIM(employee_number)) = ?', [$normalizedIdentifier]);
+                    }
 
-                if (\Schema::hasColumn('users', 'student_number')) {
-                    $query->orWhereRaw('UPPER(TRIM(student_number)) = ?', [$normalizedIdentifier]);
-                }
+                    if (\Schema::hasColumn('users', 'student_number')) {
+                        $normalizedQuery->orWhereRaw('UPPER(TRIM(student_number)) = ?', [$normalizedIdentifier]);
+                    }
+                });
             })
             ->first();
 
@@ -297,23 +302,25 @@ class WalkInController extends Controller
         $normalizedIdentifier = strtoupper($identifier);
 
         $user = User::with(['healthProfile', 'dependentProfile'])
-            ->where(function ($query) use ($identifier) {
-                if (\Schema::hasColumn('users', 'employee_number')) {
-                    $query->orWhere('employee_number', $identifier);
-                }
+            ->visibleForAdminHubRecords()
+            ->where(function ($query) use ($identifier, $normalizedIdentifier) {
+                $query->where(function ($exactQuery) use ($identifier) {
+                    if (\Schema::hasColumn('users', 'employee_number')) {
+                        $exactQuery->orWhere('employee_number', $identifier);
+                    }
 
-                if (\Schema::hasColumn('users', 'student_number')) {
-                    $query->orWhere('student_number', $identifier);
-                }
-            })
-            ->orWhere(function ($query) use ($normalizedIdentifier) {
-                if (\Schema::hasColumn('users', 'employee_number')) {
-                    $query->orWhereRaw('UPPER(TRIM(employee_number)) = ?', [$normalizedIdentifier]);
-                }
+                    if (\Schema::hasColumn('users', 'student_number')) {
+                        $exactQuery->orWhere('student_number', $identifier);
+                    }
+                })->orWhere(function ($normalizedQuery) use ($normalizedIdentifier) {
+                    if (\Schema::hasColumn('users', 'employee_number')) {
+                        $normalizedQuery->orWhereRaw('UPPER(TRIM(employee_number)) = ?', [$normalizedIdentifier]);
+                    }
 
-                if (\Schema::hasColumn('users', 'student_number')) {
-                    $query->orWhereRaw('UPPER(TRIM(student_number)) = ?', [$normalizedIdentifier]);
-                }
+                    if (\Schema::hasColumn('users', 'student_number')) {
+                        $normalizedQuery->orWhereRaw('UPPER(TRIM(student_number)) = ?', [$normalizedIdentifier]);
+                    }
+                });
             })
             ->first();
 
@@ -428,6 +435,12 @@ class WalkInController extends Controller
 
         return AdminHub::query()
             ->when(AdminHub::hasColumn('user_id'), fn ($query) => $query->with('user'))
+            ->when(AdminHub::hasColumn('status'), function ($query) {
+                $query->where(function ($statusQuery) {
+                    $statusQuery->whereNull('status')
+                        ->orWhere('status', 'active');
+                });
+            })
             ->where(function ($query) use ($identifier, $normalizedIdentifier) {
                 foreach (['employee_number', 'admin_uuid', 'email'] as $column) {
                     if (AdminHub::hasColumn($column)) {
@@ -725,7 +738,7 @@ class WalkInController extends Controller
         }
 
         $parts = array_values(array_filter(explode(' ', $name)));
-        $query = User::with('healthProfile');
+        $query = User::with('healthProfile')->visibleForAdminHubRecords();
 
         foreach (array_slice($parts, 0, 3) as $part) {
             $query->where(function ($inner) use ($part) {
@@ -756,7 +769,7 @@ class WalkInController extends Controller
         return $candidate;
     }
 
-    private function resolveLocalUserFromApplicant(array $applicant, bool $persist = true, ?string $referenceNumber = null): User
+    private function resolveLocalUserFromApplicant(array $applicant, bool $persist = true, ?string $referenceNumber = null): ?User
     {
         \Log::debug('PUPTAS applicant data', ['applicant' => $applicant, 'referenceNumber' => $referenceNumber]);
 
@@ -792,6 +805,10 @@ class WalkInController extends Controller
             ->when($resolvedReferenceNumber !== '' && \Schema::hasColumn('users', 'reference_number'), fn ($query) => $query->orWhere('reference_number', $resolvedReferenceNumber))
             ->when($email !== '', fn ($query) => $query->orWhere('email', $email))
             ->first();
+
+        if ($user && !$user->isVisibleForAdminHubRecords()) {
+            return null;
+        }
 
         // Try multiple field name variations for first and last name
         $firstName = trim((string) data_get($applicant, 'user.firstname'));
@@ -2121,6 +2138,18 @@ class WalkInController extends Controller
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
+        $referralOptions = ClinicServiceOption::query()
+            ->forGroup(ClinicServiceOption::GROUP_REFERRAL)
+            ->active()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+        $otherServiceOptions = ClinicServiceOption::query()
+            ->forGroup(ClinicServiceOption::GROUP_OTHER_SERVICE)
+            ->active()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
         $studentDocuments = $this->healthProfileDocuments($request, $student->healthProfile);
         $studentDocumentVersions = $this->healthProfileDocumentVersions($request, $student->healthProfile);
         $studentTreatments = Consultation::query()
@@ -2155,6 +2184,8 @@ class WalkInController extends Controller
             'items',
             'conditions',
             'clearanceTypes',
+            'referralOptions',
+            'otherServiceOptions',
             'latestAppointment',
             'appointmentNumber',
             'user_source',
@@ -2236,6 +2267,10 @@ class WalkInController extends Controller
                 // PUPTAS response. The medical endpoint may stop listing an
                 // applicant after their workflow status changes.
                 $student = $this->resolveLocalUserFromApplicant($applicant, true, $lookup);
+                if (!$student) {
+                    $lookupStatus = 'inactive_account';
+                    $lookupMessage = 'This patient account is inactive and is unavailable in clinic records.';
+                }
             } elseif (!$student) {
                 $localProfile = $this->findHealthProfileByReference($lookup);
                 if ($localProfile) {
@@ -2795,6 +2830,11 @@ PROMPT;
             ))
             ->pluck('code')
             ->all();
+        $referralCodes = ClinicServiceOption::query()
+            ->forGroup(ClinicServiceOption::GROUP_REFERRAL)
+            ->active()
+            ->pluck('code')
+            ->all();
 
         $request->validate([
             'student_number' => 'required',
@@ -2816,7 +2856,7 @@ PROMPT;
                 $clearanceSubcategoryCodes,
                 $clearanceTypeCodes
             ))],
-            'referral_type' => 'nullable|in:none,hospital_without_nurse,hospital_with_nurse,general,others',
+            'referral_type' => ['nullable', Rule::in(array_merge(['none'], $referralCodes, ['hospital_without_nurse', 'hospital_with_nurse', 'general', 'others']))],
             'referral_details' => 'required_if:referral_type,others|nullable|string|max:500',
             'item_id' => 'nullable|array|max:5',
             // Empty medicine rows are allowed; duplicate selected medicines are checked below.
@@ -3293,6 +3333,12 @@ PROMPT;
 
             if ($applicantData) {
                 $student = $this->resolveLocalUserFromApplicant($applicantData, true, $referenceNumber);
+                if (!$student) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This patient account is inactive and cannot be encoded in clinic records.',
+                    ], 404);
+                }
                 $studentId = trim((string) ($applicantData['idp_user_id'] ?? $student->student_id ?? ''));
             } else {
                 $localOnlyProfile = $this->findHealthProfileByReference($referenceNumber);
@@ -3597,6 +3643,21 @@ PROMPT;
             return $employeeProfile->fresh('user');
         });
 
+        if (!$hasPendingFinding) {
+            app(EmployeeHealthFormHistoryService::class)->finalizeLatestSubmission($employeeProfile->fresh(['user', 'approvedBy']));
+            HealthProfileCorrectionRequest::query()
+                ->where('employee_health_profile_id', $employeeProfile->id)
+                ->whereIn('status', [
+                    HealthProfileCorrectionRequest::STATUS_PENDING,
+                    HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+                    HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW,
+                ])
+                ->update([
+                    'status' => HealthProfileCorrectionRequest::STATUS_APPROVED,
+                    'reviewed_at' => now(),
+                ]);
+        }
+
         try {
             $employeeIssuanceService = app(MarClearanceIssuanceService::class);
             $employeeIssuanceService->syncApprovedEmployeeHealthProfile(
@@ -3834,6 +3895,12 @@ PROMPT;
                 $idpStudentId = trim((string) ($applicantData['idp_user_id'] ?? ''));
                 $studentId = $idpStudentId !== '' ? $idpStudentId : $referenceNumber;
                 $student = $this->resolveLocalUserFromApplicant($applicantData, true, $referenceNumber);
+                if (!$student) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This patient account is inactive and cannot be approved in clinic records.',
+                    ], 404);
+                }
             } else {
                 $idpStudentId = trim((string) ($student->student_id ?? $localOnlyProfile?->student_id ?? ''));
                 $studentId = $idpStudentId !== '' ? $idpStudentId : $referenceNumber;

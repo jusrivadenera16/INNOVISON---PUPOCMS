@@ -24,6 +24,11 @@ class ClinicAccountTypeController extends Controller
         abort_unless($user instanceof User && User::normalizeRole($user->user_role) === User::ROLE_STUDENT, 403);
         $validated = $request->validate([
             'clinic_account_type' => ['required', Rule::in(array_keys(User::CLINIC_ACCOUNT_TYPES))],
+            'student_type' => [
+                'nullable',
+                Rule::requiredIf(fn () => $request->input('clinic_account_type') === 'student'),
+                Rule::in(User::STUDENT_TYPES),
+            ],
         ]);
 
         $user = DB::transaction(function () use ($user, $validated) {
@@ -47,6 +52,7 @@ class ClinicAccountTypeController extends Controller
             }
 
             $user->user_type = User::userTypeForClinicAccountType($type);
+            $user->student_type = $type === 'student' ? $validated['student_type'] : null;
             $user->save();
 
             return $user;

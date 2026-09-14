@@ -5710,7 +5710,7 @@
     }
 
     html[data-theme="dark"] body.admin-inventory-page .inventory-modern-card.is-clickable {
-        border-color: rgba(250, 204, 21, .55) !important;
+        border-color: rgba(143, 34, 48, .78) !important;
         background: linear-gradient(135deg, #7f1725, #97182a) !important;
         color: #ffffff !important;
         box-shadow:
@@ -5723,6 +5723,21 @@
         border-color: #facc15 !important;
         background: #facc15 !important;
         color: #70131B !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-title > svg,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-modern-card.is-total .inventory-action-icon,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-modern-card.is-low .inventory-action-icon {
+        background: #182334 !important;
+        border: 1px solid rgba(250, 204, 21, .34) !important;
+        color: #facc15 !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-title > svg *,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-modern-card.is-total .inventory-action-icon svg *,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-modern-card.is-low .inventory-action-icon svg * {
+        color: #facc15 !important;
+        stroke: #facc15 !important;
     }
 
     html[data-theme="dark"] body.admin-inventory-page .inventory-search-wrap,

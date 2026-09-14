@@ -474,14 +474,16 @@
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
     $reportsHomeUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
 @endphp
-
 <div class="feedback-report-shell">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Reports', 'url' => $reportsHomeUrl],
+        ['label' => 'Feedback'],
+    ]])
     <div class="feedback-report-head">
         <div>
             <h1 class="feedback-report-title">Feedback Reports</h1>
             <p class="feedback-report-copy">Review all submitted clinic feedback, monitor the overall patient experience, and keep a simple clinic score out of 10 based on the ratings students and staff gave after consultations.</p>
         </div>
-        <a href="{{ $reportsHomeUrl }}" class="feedback-report-back">&larr; Back to Reports</a>
     </div>
 
     <div class="feedback-stat-grid">

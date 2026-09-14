@@ -288,14 +288,20 @@
 @php
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
     $reportsHomeUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/digital-logbook') : url('/admin/reports/digital-logbook');
+    $reportsRootUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
+    $healthFormsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/health-forms') : url('/admin/reports/health-forms');
     $rangeStartLabel = $dateFrom->format('d M Y');
     $rangeEndLabel = $dateTo->format('d M Y');
     $selectedRangeLabel = $dateFrom->isSameDay($dateTo)
         ? $rangeStartLabel
         : $rangeStartLabel . ' to ' . $rangeEndLabel;
 @endphp
-
 <div class="hf-logbook-shell">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Reports', 'url' => $reportsRootUrl],
+        ['label' => 'Health Forms', 'url' => $healthFormsUrl],
+        ['label' => 'Logbook'],
+    ]])
     <header class="hf-logbook-header">
         <div>
             <h1 class="hf-logbook-title">Health Forms Logbook</h1>
@@ -306,7 +312,6 @@
                 <x-outline-icon name="calendar-days" />
                 Filter
             </button>
-            <a href="{{ $reportsHomeUrl }}" class="hf-logbook-btn">&larr; Back</a>
         </div>
     </header>
 

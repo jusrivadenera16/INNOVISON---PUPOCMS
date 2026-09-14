@@ -5,122 +5,117 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminGlobalSearchController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\ClinicServiceOptionController;
 use App\Http\Controllers\Auth\EmergencyAuthController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\HealthFormCategoryController;
+use App\Http\Controllers\LandingWeatherController;
 use App\Http\Controllers\MedicalConditionController;
 use App\Http\Controllers\MarClearanceTypeController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\MedicineTypeController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\StudentAssistantController;
+use App\Http\Controllers\TriageSurveyController;
 use App\Http\Controllers\WalkInController;
 use App\Models\Announcement;
-use App\Models\SystemSetting;
 use App\Models\User;
+use App\Support\ClinicRoutes;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 
-if (!function_exists('resolveWorkspaceRedirectForUser')) {
-    function resolveWorkspaceRedirectForUser(User $user): string
-    {
-        $normalizedRole = User::normalizeRole((string) ($user->user_role ?? ''));
-
-        if ($normalizedRole === User::ROLE_SUPERADMIN) {
-            return '/admin/dashboard';
-        }
-
-        $rawRole = strtolower(trim((string) ($user->user_role ?? '')));
-        $userType = strtolower(trim((string) ($user->user_type ?? '')));
-        $isStudentAssistant = in_array($userType, ['assistant', 'student assistant', 'student_assistant'], true)
-            || in_array($rawRole, ['student_assistant', 'studentassistant', 'assistant'], true);
-
-        if ($normalizedRole === User::ROLE_ADMIN && $isStudentAssistant) {
-            return '/assistant/choose-portal';
-        }
-
-        if ($normalizedRole === User::ROLE_ADMIN) {
-            return '/student/home';
-        }
-
-        return '/student/home';
-    }
-}
-
-if (!function_exists('clinicMaintenanceModeEnabled')) {
-    function clinicMaintenanceModeEnabled(): bool
-    {
-        return Schema::hasTable('system_settings')
-            && SystemSetting::booleanValue('maintenance_mode_enabled', false);
-    }
-}
-
 // --- PUBLIC ROUTES (No login required) ---
-Route::get('/', function () {
-    if (clinicMaintenanceModeEnabled()) {
+Route::get('/landing/weather', LandingWeatherController::class)
+    ->middleware('throttle:60,1')
+    ->name('landing.weather');
+
+Route::get('/', function (\Illuminate\Http\Request $request) {
+    if ($request->has('weather-preview')) {
+        $remainingQuery = $request->except('weather-preview');
+        $cleanUrl = $request->url();
+
+        if ($remainingQuery !== []) {
+            $cleanUrl .= '?' . http_build_query($remainingQuery);
+        }
+
+        return redirect()->to($cleanUrl);
+    }
+
+    if (ClinicRoutes::maintenanceModeEnabled()) {
         return redirect()->route('maintenance');
     }
 
     $user = Auth::guard('admin')->user() ?? Auth::guard('student')->user();
     if ($user instanceof User) {
-        return redirect(resolveWorkspaceRedirectForUser($user));
+        return redirect(ClinicRoutes::workspaceRedirectForUser($user));
     }
 
     $landingAnnouncements = collect();
 
-    if (Schema::hasTable('announcements')) {
-        $landingAnnouncements = Announcement::query()
-            ->where('status', Announcement::STATUS_ACTIVE)
-            ->when(
-                Schema::hasColumn('announcements', 'show_on_landing'),
-                fn ($query) => $query->where('show_on_landing', true)
-            )
-            ->where(function ($query) {
-                $query->whereNull('expires_at')
-                    ->orWhereDate('expires_at', '>=', now()->toDateString());
-            })
-            ->latest()
-            ->take(6)
-            ->get();
+    try {
+        if (Schema::hasTable('announcements')) {
+            $landingAnnouncements = Announcement::query()
+                ->where('status', Announcement::STATUS_ACTIVE)
+                ->when(
+                    Schema::hasColumn('announcements', 'show_on_landing'),
+                    fn ($query) => $query->where('show_on_landing', true)
+                )
+                ->where(function ($query) {
+                    $query->whereNull('expires_at')
+                        ->orWhereDate('expires_at', '>=', now()->toDateString());
+                })
+                ->latest()
+                ->take(6)
+                ->get();
+        }
+    } catch (\Throwable) {
+        $landingAnnouncements = collect();
     }
 
     return view('landing', compact('landingAnnouncements'));
 })->name('landing');
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::view('/loader-preview', 'dev.loader-preview')->name('dev.loader-preview');
+Route::get('/preview/student-account-type-selector', function () {
+    abort_unless(app()->environment('local'), 404);
+
+    return view('dev.student-account-type-selector-preview');
+})->name('dev.student-account-type-selector-preview');
 Route::get('/login/portal', [LoginController::class, 'redirectToIdpPortal'])->name('login.portal');
 Route::get('/auth/callback', [LoginController::class, 'handleIdpCallback'])->name('auth.callback');
 Route::post('/login-action', [LoginController::class, 'login']);
 Route::post('/post-login-terms/acknowledge', [LoginController::class, 'acknowledgePostLoginTerms'])->name('post-login-terms.acknowledge');
-Route::get('/system-admin/emergency-login', [EmergencyAuthController::class, 'showLoginForm'])->name('system-admin.emergency-login');
-Route::post('/system-admin/emergency-login', [EmergencyAuthController::class, 'login'])
-    ->name('system-admin.emergency-login.submit');
-Route::get('/system-admin/emergency-login/enroll', [EmergencyAuthController::class, 'showEnrollment'])
-    ->name('system-admin.emergency-login.enroll');
-Route::post('/system-admin/emergency-login/enroll/continue', [EmergencyAuthController::class, 'continueEnrollment'])
-    ->middleware('throttle:5,15')
-    ->name('system-admin.emergency-login.enroll.continue');
-Route::get('/system-admin/emergency-login/enroll/backup-codes', [EmergencyAuthController::class, 'showBackupCodes'])
-    ->name('system-admin.emergency-login.enroll.backup-codes');
-Route::post('/system-admin/emergency-login/enroll/backup-codes', [EmergencyAuthController::class, 'confirmBackupCodes'])
-    ->name('system-admin.emergency-login.enroll.backup-codes.confirm');
-Route::get('/system-admin/emergency-login/enroll/verify', [EmergencyAuthController::class, 'showEnrollmentVerification'])
-    ->name('system-admin.emergency-login.enroll.verify');
-Route::post('/system-admin/emergency-login/enroll', [EmergencyAuthController::class, 'confirmEnrollment'])
-    ->middleware('throttle:10,1')
-    ->name('system-admin.emergency-login.enroll.confirm');
-Route::get('/system-admin/emergency-login/method', [EmergencyAuthController::class, 'showMethodChoice'])
-    ->name('system-admin.emergency-login.method');
-Route::post('/system-admin/emergency-login/method', [EmergencyAuthController::class, 'chooseMethod'])
-    ->middleware('throttle:5,1')
-    ->name('system-admin.emergency-login.method.select');
-Route::get('/system-admin/emergency-login/verify', [EmergencyAuthController::class, 'showVerification'])
-    ->name('system-admin.emergency-login.verify');
-Route::post('/system-admin/emergency-login/verify', [EmergencyAuthController::class, 'verify'])
-    ->middleware('throttle:5,15')
-    ->name('system-admin.emergency-login.verify.submit');
+Route::middleware('emergency.enabled')->group(function () {
+    Route::get('/system-admin/emergency-login', [EmergencyAuthController::class, 'showLoginForm'])->name('system-admin.emergency-login');
+    Route::post('/system-admin/emergency-login', [EmergencyAuthController::class, 'login'])
+        ->name('system-admin.emergency-login.submit');
+    Route::get('/system-admin/emergency-login/enroll', [EmergencyAuthController::class, 'showEnrollment'])
+        ->name('system-admin.emergency-login.enroll');
+    Route::post('/system-admin/emergency-login/enroll/continue', [EmergencyAuthController::class, 'continueEnrollment'])
+        ->middleware('throttle:5,15')
+        ->name('system-admin.emergency-login.enroll.continue');
+    Route::get('/system-admin/emergency-login/enroll/backup-codes', [EmergencyAuthController::class, 'showBackupCodes'])
+        ->name('system-admin.emergency-login.enroll.backup-codes');
+    Route::post('/system-admin/emergency-login/enroll/backup-codes', [EmergencyAuthController::class, 'confirmBackupCodes'])
+        ->name('system-admin.emergency-login.enroll.backup-codes.confirm');
+    Route::get('/system-admin/emergency-login/enroll/verify', [EmergencyAuthController::class, 'showEnrollmentVerification'])
+        ->name('system-admin.emergency-login.enroll.verify');
+    Route::post('/system-admin/emergency-login/enroll', [EmergencyAuthController::class, 'confirmEnrollment'])
+        ->middleware('throttle:10,1')
+        ->name('system-admin.emergency-login.enroll.confirm');
+    Route::get('/system-admin/emergency-login/method', [EmergencyAuthController::class, 'showMethodChoice'])
+        ->name('system-admin.emergency-login.method');
+    Route::post('/system-admin/emergency-login/method', [EmergencyAuthController::class, 'chooseMethod'])
+        ->middleware('throttle:5,1')
+        ->name('system-admin.emergency-login.method.select');
+    Route::get('/system-admin/emergency-login/verify', [EmergencyAuthController::class, 'showVerification'])
+        ->name('system-admin.emergency-login.verify');
+    Route::post('/system-admin/emergency-login/verify', [EmergencyAuthController::class, 'verify'])
+        ->middleware('throttle:5,15')
+        ->name('system-admin.emergency-login.verify.submit');
+});
 Route::get('/maintenance', [MaintenanceController::class, 'show'])->name('maintenance');
 Route::post('/register-action', [RegisterController::class, 'register']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -258,6 +253,9 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
     Route::get('/health-profile/{id}', [AdminController::class, 'showHealth'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
         ->name('admin.show_health');
+    Route::get('/employee-health-profile/{employeeProfile}', [AdminController::class, 'showEmployeeHealthProfile'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
+        ->name('admin.employee_health_profile.show');
     Route::get('/health-profile/{id}/plain', [AdminController::class, 'showHealthPlain'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
         ->name('admin.show_health_plain');
@@ -273,6 +271,12 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
     Route::post('/employee-health-profile/{employeeProfile}/request-resubmission', [AdminController::class, 'requestEmployeeHealthProfileResubmission'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
         ->name('admin.employee_health_profile.request_resubmission');
+    Route::post('/employee-health-profile/{employeeProfile}/request-health-form', [AdminController::class, 'requestNewEmployeeHealthForm'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
+        ->name('admin.employee_health_profile.request_health_form');
+    Route::post('/health-records/bulk-request-health-form', [AdminController::class, 'requestBulkEmployeeHealthForms'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
+        ->name('admin.health_records.bulk_request_health_form');
     Route::post('/health-profile/{id}/request-health-form', [AdminController::class, 'requestNewHealthForm'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
         ->name('admin.health_profile.request_health_form');
@@ -446,6 +450,23 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::delete('/admin/student-assistants/{assistant}', [StudentAssistantController::class, 'destroy'])->name('admin.student-assistants.destroy');
     });
 
+    Route::get('/admin/settings/my-health-profile/health-form', [AppointmentController::class, 'showAdminEmployeeHealthForm'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.settings.health-profile.form');
+    Route::post('/admin/settings/my-health-profile/health-form', [AppointmentController::class, 'storeAdminEmployeeHealthForm'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.settings.health-profile.form.store');
+    Route::post('/admin/settings/my-health-profile/documents/{document}', [AdminController::class, 'uploadMyHealthProfileDocument'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.settings.health-profile.document.upload');
+    Route::get('/admin/settings/my-health-profile/documents/{document}/download', [AdminController::class, 'downloadMyHealthProfileDocument'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.settings.health-profile.document.download');
+
+    Route::get('/admin/settings/my-health-profile', [AdminController::class, 'myHealthProfile'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.settings.health-profile');
+
     Route::middleware('module.permission:settings.view')->group(function () {
         Route::get('/admin/settings', [AdminController::class, 'settings'])->name('admin.settings');
         Route::get('/admin/settings/personal-information', [AdminController::class, 'settingsPersonal'])->middleware('module.permission:settings.personal')->name('admin.settings.personal');
@@ -480,6 +501,19 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::get('/admin/reports/manage-mar', [ReportsController::class, 'manageMar'])->name('admin.reports.manage-mar');
         Route::get('/admin/reports/manage-medicine-types', [MedicineTypeController::class, 'index'])->name('admin.reports.manage-medicine-types');
         Route::get('/admin/reports/manage-health-form-categories', [HealthFormCategoryController::class, 'index'])->name('admin.reports.manage-health-form-categories');
+        Route::get('/admin/reports/manage-referral-services', [ClinicServiceOptionController::class, 'referrals'])->name('clinic-service-options.referrals');
+        Route::get('/admin/reports/manage-other-services', [ClinicServiceOptionController::class, 'otherServices'])->name('clinic-service-options.other-services');
+        Route::get('/admin/reports/manage-online-consultations', [ClinicServiceOptionController::class, 'onlineConsultations'])->name('clinic-service-options.online-consultations');
+        Route::get('/admin/reports/manage-triage-survey', [TriageSurveyController::class, 'index'])->name('triage-survey.index');
+        Route::post('/admin/clinic-service-options/{optionGroup}', [ClinicServiceOptionController::class, 'store'])
+            ->where('optionGroup', 'referral|other_service|online_consultation')
+            ->name('clinic-service-options.store');
+        Route::put('/admin/clinic-service-options/{optionGroup}/{option}', [ClinicServiceOptionController::class, 'update'])
+            ->where('optionGroup', 'referral|other_service|online_consultation')
+            ->name('clinic-service-options.update');
+        Route::delete('/admin/clinic-service-options/{optionGroup}/{option}', [ClinicServiceOptionController::class, 'destroy'])
+            ->where('optionGroup', 'referral|other_service|online_consultation')
+            ->name('clinic-service-options.destroy');
         Route::put('/admin/conditions/{id}', [ReportsController::class, 'update'])->name('conditions.update');
         Route::post('/admin/medical-conditions', [MedicalConditionController::class, 'store'])->name('conditions.store');
         Route::delete('/admin/medical-conditions/{id}', [MedicalConditionController::class, 'destroy'])->name('conditions.destroy');
@@ -582,7 +616,7 @@ Route::get('/dev-login/{id}', function ($id) {
             return redirect('/admin/dashboard')->with('success', 'Logged in as ' . $user->name);
         }
         if ($normalizedRole === User::ROLE_ADMIN) {
-            $redirectPath = resolveWorkspaceRedirectForUser($user);
+            $redirectPath = ClinicRoutes::workspaceRedirectForUser($user);
 
             if ($redirectPath === '/student/home') {
                 Auth::guard('student')->login($user);
@@ -594,7 +628,7 @@ Route::get('/dev-login/{id}', function ($id) {
         }
 
         Auth::guard('student')->login($user);
-        return redirect(resolveWorkspaceRedirectForUser($user))->with('success', 'Logged in as ' . $user->name);
+        return redirect(ClinicRoutes::workspaceRedirectForUser($user))->with('success', 'Logged in as ' . $user->name);
     }
 
     return 'User not found!';

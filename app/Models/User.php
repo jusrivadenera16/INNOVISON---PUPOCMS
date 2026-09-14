@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class User extends Authenticatable
@@ -53,16 +54,59 @@ class User extends Authenticatable
 
     public const CLINIC_ACCOUNT_TYPES = [
         'applicant' => 'Applicant',
-        'student' => 'Student / OJT',
+        'student' => 'Student',
         'faculty' => 'Faculty',
         'non_teaching_staff' => 'Non-teaching Staff / Admins',
         'dependent' => 'Guest',
     ];
 
+    public const STUDENT_TYPES = [
+        'regular',
+        'ladderized',
+        'transferee',
+        'returnee',
+        'shiftee',
+        'ojt',
+    ];
+
+    public function hasExistingClinicHealthRecord(): bool
+    {
+        if ((bool) ($this->is_health_profile_completed ?? false)) {
+            return true;
+        }
+
+        $hasStudentProfile = Schema::hasTable('health_profiles')
+            && ($this->relationLoaded('healthProfile')
+                ? $this->healthProfile !== null
+                : $this->healthProfile()->exists());
+        $hasEmployeeProfile = Schema::hasTable('health_profile_emp')
+            && ($this->relationLoaded('employeeHealthProfile')
+                ? $this->employeeHealthProfile !== null
+                : $this->employeeHealthProfile()->exists());
+        $hasDependentProfile = Schema::hasTable('dependents_profiles')
+            && ($this->relationLoaded('dependentProfile')
+                ? $this->dependentProfile !== null
+                : $this->dependentProfile()->exists());
+
+        return $hasStudentProfile || $hasEmployeeProfile || $hasDependentProfile;
+    }
+
     public function needsClinicAccountTypeSelection(): bool
     {
-        return self::normalizeRole($this->user_role) === self::ROLE_STUDENT
-            && $this->clinicAccountTypeKey() === null;
+        if (self::normalizeRole($this->user_role) !== self::ROLE_STUDENT) {
+            return false;
+        }
+
+        // Account selection belongs to the first setup only. Existing clinic
+        // records must never be sent back through the selector.
+        if ($this->hasExistingClinicHealthRecord()) {
+            return false;
+        }
+
+        $accountType = $this->clinicAccountTypeKey();
+
+        return $accountType === null
+            || ($accountType === 'student' && !in_array($this->student_type, self::STUDENT_TYPES, true));
     }
 
     public static function userTypeForClinicAccountType(string $type): ?string
@@ -117,6 +161,11 @@ class User extends Authenticatable
         $profile = $this->relationLoaded('healthProfile') ? $this->healthProfile : (
             \Illuminate\Support\Facades\Schema::hasTable('health_profiles') ? $this->healthProfile()->first() : null
         );
+        if (trim((string) ($this->student_number ?? '')) !== ''
+            || trim((string) ($profile?->student_number ?? '')) !== '') {
+            return false;
+        }
+
         if (in_array(strtolower(trim((string) ($profile?->clearance_status ?? ''))), ['issued', 'fully cleared'], true)) {
             return false;
         }
@@ -150,7 +199,9 @@ class User extends Authenticatable
             $profile = $this->relationLoaded('healthProfile') ? $this->healthProfile : (
                 \Illuminate\Support\Facades\Schema::hasTable('health_profiles') ? $this->healthProfile()->first() : null
             );
-            if (in_array(strtolower(trim((string) ($profile?->clearance_status ?? ''))), ['issued', 'fully cleared'], true)) {
+            if (trim((string) ($this->student_number ?? '')) !== ''
+                || trim((string) ($profile?->student_number ?? '')) !== ''
+                || in_array(strtolower(trim((string) ($profile?->clearance_status ?? ''))), ['issued', 'fully cleared'], true)) {
                 return 'student';
             }
         }
@@ -208,6 +259,7 @@ class User extends Authenticatable
     'user_role',
     'idp_role',
     'user_type',
+    'student_type',
     'status',
     'password',
     'api_pin',
@@ -243,6 +295,7 @@ class User extends Authenticatable
         'api_pin_token_action_enabled' => 'boolean',
         'api_pin_emergency_credentials_enabled' => 'boolean',
         'api_pin_disabled' => 'boolean',
+        'ladderized_student_number_updated_at' => 'datetime',
         'notification_read_map' => 'array',
         'notification_email_enabled' => 'boolean',
         'notification_system_enabled' => 'boolean',
@@ -328,6 +381,45 @@ class User extends Authenticatable
     public function adminHubProfile()
     {
         return $this->hasOne(AdminHub::class, 'user_id', 'id');
+    }
+
+    /**
+     * Scope users that remain visible to clinic records after an Admin Hub action.
+     */
+    public function scopeVisibleForAdminHubRecords($query)
+    {
+        if (!Schema::hasTable('admin_hub')
+            || !Schema::hasColumn('admin_hub', 'status')
+            || !Schema::hasColumn('users', 'status')) {
+            return $query;
+        }
+
+        $statusColumn = $query->getModel()->qualifyColumn('status');
+
+        return $query->where(function ($visibilityQuery) use ($statusColumn) {
+            $visibilityQuery->whereNull($statusColumn)
+                ->orWhere($statusColumn, 'active')
+                ->orWhereDoesntHave('adminHubProfile', function ($adminHubQuery) {
+                    $adminHubQuery->where('status', 'inactive');
+                });
+        });
+    }
+
+    public function isVisibleForAdminHubRecords(): bool
+    {
+        if (!Schema::hasTable('admin_hub')
+            || !Schema::hasColumn('admin_hub', 'status')
+            || !Schema::hasColumn('users', 'status')) {
+            return true;
+        }
+
+        if (strtolower(trim((string) $this->status)) !== 'inactive') {
+            return true;
+        }
+
+        return !$this->adminHubProfile()
+            ->where('status', 'inactive')
+            ->exists();
     }
 
     /**

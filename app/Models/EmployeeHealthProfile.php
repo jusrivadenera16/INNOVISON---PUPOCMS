@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Concerns\ExcludesInactiveUserRecords;
 
 class EmployeeHealthProfile extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, ExcludesInactiveUserRecords;
 
     protected $table = 'health_profile_emp';
 
@@ -158,6 +159,11 @@ class EmployeeHealthProfile extends Model
     public function correctionRequests()
     {
         return $this->hasMany(HealthProfileCorrectionRequest::class, 'employee_health_profile_id');
+    }
+
+    public function healthFormSubmissions()
+    {
+        return $this->hasMany(HealthFormSubmission::class, 'employee_health_profile_id');
     }
 
     public function activeCorrectionRequest()

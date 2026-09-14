@@ -585,6 +585,70 @@
         accent-color: var(--clinic-maroon);
     }
 
+    .health-category-student-types {
+        grid-column: 1 / -1;
+        display: grid;
+        gap: 8px;
+        margin-top: -2px;
+        padding: 10px;
+        border: 1px dashed #ead4d7;
+        border-radius: 7px;
+        background: #fff8f9;
+    }
+
+    .health-category-student-types[hidden] {
+        display: none;
+    }
+
+    .health-category-student-types-title {
+        color: var(--clinic-deep);
+        font-size: .76rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .health-category-student-types-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+    }
+
+    .health-category-student-type {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 32px;
+        padding: 6px 8px;
+        border: 1px solid #ead4d7;
+        border-radius: 6px;
+        color: #2c1820;
+        background: #fff;
+        font-size: .78rem;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .health-category-student-type input {
+        width: 15px;
+        height: 15px;
+        margin: 0;
+        accent-color: var(--clinic-maroon);
+    }
+
+    .health-category-student-type--fixed {
+        color: #64748b;
+        background: #f1f5f9;
+        cursor: not-allowed;
+    }
+
+    .health-category-student-type--fixed small {
+        margin-left: auto;
+        color: #94a3b8;
+        font-size: .68rem;
+        font-weight: 800;
+    }
+
     .health-category-audiences {
         display: flex;
         flex-wrap: wrap;
@@ -651,6 +715,34 @@
         background: linear-gradient(180deg, rgba(112, 19, 27, .75), rgba(55, 20, 30, .86));
     }
 
+    html[data-theme="dark"] .health-category-pill,
+    body.dark-mode .health-category-pill {
+        color: #e2e8f0;
+        border: 1px solid rgba(148, 163, 184, .24);
+        background: #1e293b;
+    }
+
+    html[data-theme="dark"] .health-category-status.is-active,
+    body.dark-mode .health-category-status.is-active {
+        color: #bbf7d0;
+        border: 1px solid rgba(74, 222, 128, .28);
+        background: #14532d;
+    }
+
+    html[data-theme="dark"] .health-category-status.is-archived,
+    body.dark-mode .health-category-status.is-archived {
+        color: #fecaca;
+        border: 1px solid rgba(248, 113, 113, .28);
+        background: #7f1d1d;
+    }
+
+    html[data-theme="dark"] .health-category-btn--edit,
+    body.dark-mode .health-category-btn--edit {
+        color: #f8fafc;
+        border-color: rgba(148, 163, 184, .34);
+        background: #1e293b;
+    }
+
     html[data-theme="dark"] .health-category-toggle,
     body.dark-mode .health-category-toggle {
         color: var(--clinic-maroon);
@@ -697,6 +789,31 @@
     body.dark-mode .health-category-audience-option {
         border-color: rgba(255,255,255,.14);
         background: rgba(255,255,255,.05);
+    }
+
+    html[data-theme="dark"] .health-category-student-types,
+    body.dark-mode .health-category-student-types {
+        border-color: rgba(255,255,255,.16);
+        background: rgba(255,255,255,.04);
+    }
+
+    html[data-theme="dark"] .health-category-student-types-title,
+    body.dark-mode .health-category-student-types-title,
+    html[data-theme="dark"] .health-category-student-type,
+    body.dark-mode .health-category-student-type {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .health-category-student-type,
+    body.dark-mode .health-category-student-type {
+        border-color: rgba(255,255,255,.14);
+        background: rgba(255,255,255,.05);
+    }
+
+    html[data-theme="dark"] .health-category-student-type--fixed,
+    body.dark-mode .health-category-student-type--fixed {
+        color: #94a3b8;
+        background: rgba(148,163,184,.12);
     }
 
     html[data-theme="dark"] .health-category-audience-note,
@@ -766,6 +883,11 @@
 @endphp
 
 <div class="health-categories-page">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Settings', 'url' => route('admin.settings')],
+        ['label' => 'Medical Configuration', 'url' => route('admin.settings.medical')],
+        ['label' => 'Health Form Categories'],
+    ], 'class' => 'report-breadcrumb--settings-medical'])
     <div class="health-categories-header">
         <div class="health-categories-title-wrap">
             <span class="health-categories-title-icon" aria-hidden="true">
@@ -824,6 +946,7 @@
                         data-edit-action="{{ route('health-form-categories.update', $category->id) }}"
                         data-edit-name="{{ $category->name }}"
                         data-edit-audiences='@json($category->available_for ?? [])'
+                        data-edit-student-types='@json($category->student_types ?? [])'
                     >
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16 9.5-9.5a2.12 2.12 0 0 1 3 3L7 19H4v-3Z"></path><path d="m13.5 6.5 3 3"></path></svg>
                     </button>
@@ -862,6 +985,24 @@
                             </span>
                         </div>
                     </div>
+                    @if(is_array($category->available_for) && in_array('student', $category->available_for, true))
+                        <div class="health-category-detail-row">
+                            <div class="health-category-detail">
+                                <span>
+                                    Student types:
+                                    @if(is_array($category->student_types) && count($category->student_types) > 0)
+                                        <span class="health-category-audiences">
+                                            @foreach($category->student_types as $studentType)
+                                                <span class="health-category-audience-pill">{{ $studentTypeLabels[$studentType] ?? $studentType }}</span>
+                                            @endforeach
+                                        </span>
+                                    @else
+                                        <span>Not configured</span>
+                                    @endif
+                                </span>
+                            </div>
+                        </div>
+                    @endif
                     <div class="health-category-detail-row">
                         <div class="health-category-detail">Status: {{ $category->is_active ? 'Active' : 'Archived' }}</div>
                     </div>
@@ -911,9 +1052,28 @@
                     <div class="health-category-audience-grid">
                         @foreach($audienceLabels as $audience => $label)
                             <label class="health-category-audience-option">
-                                <input type="checkbox" name="audiences[]" value="{{ $audience }}" {{ in_array($audience, old('audiences', []), true) ? 'checked' : '' }}>
+                                <input type="checkbox" name="audiences[]" value="{{ $audience }}" data-category-audience="{{ $audience }}" {{ in_array($audience, old('audiences', []), true) ? 'checked' : '' }}>
                                 <span>{{ $label }}</span>
                             </label>
+                            @if($audience === 'student')
+                                <div class="health-category-student-types" data-student-types-section hidden>
+                                    <div class="health-category-student-types-title">Student types</div>
+                                    <div class="health-category-student-types-grid">
+                                        <label class="health-category-student-type health-category-student-type--fixed">
+                                            <input type="checkbox" disabled aria-label="Regular is fixed">
+                                            <span>Regular</span>
+                                            <small>Fixed</small>
+                                        </label>
+                                        @foreach($studentTypeLabels as $studentType => $studentTypeLabel)
+                                            @continue($studentType === 'regular')
+                                            <label class="health-category-student-type">
+                                                <input type="checkbox" name="student_types[]" value="{{ $studentType }}" {{ in_array($studentType, old('student_types', []), true) ? 'checked' : '' }}>
+                                                <span>{{ $studentTypeLabel }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                         @endforeach
                     </div>
                 </fieldset>
@@ -961,9 +1121,28 @@
                     <div class="health-category-audience-grid">
                         @foreach($audienceLabels as $audience => $label)
                             <label class="health-category-audience-option">
-                                <input type="checkbox" name="audiences[]" value="{{ $audience }}">
+                                <input type="checkbox" name="audiences[]" value="{{ $audience }}" data-category-audience="{{ $audience }}">
                                 <span>{{ $label }}</span>
                             </label>
+                            @if($audience === 'student')
+                                <div class="health-category-student-types" data-student-types-section hidden>
+                                    <div class="health-category-student-types-title">Student types</div>
+                                    <div class="health-category-student-types-grid">
+                                        <label class="health-category-student-type health-category-student-type--fixed">
+                                            <input type="checkbox" disabled aria-label="Regular is fixed">
+                                            <span>Regular</span>
+                                            <small>Fixed</small>
+                                        </label>
+                                        @foreach($studentTypeLabels as $studentType => $studentTypeLabel)
+                                            @continue($studentType === 'regular')
+                                            <label class="health-category-student-type">
+                                                <input type="checkbox" name="student_types[]" value="{{ $studentType }}">
+                                                <span>{{ $studentTypeLabel }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                         @endforeach
                     </div>
                 </fieldset>
@@ -1040,6 +1219,36 @@ function closeAddHealthCategoryModal() {
     addHealthCategoryModal?.setAttribute('aria-hidden', 'true');
 }
 
+function syncStudentTypeSection(form) {
+    if (!form) {
+        return;
+    }
+
+    const studentAudienceInput = form.querySelector('input[data-category-audience="student"]');
+    const studentTypesSection = form.querySelector('[data-student-types-section]');
+    if (!studentAudienceInput || !studentTypesSection) {
+        return;
+    }
+
+    const isStudentAudience = studentAudienceInput.checked;
+    studentTypesSection.hidden = !isStudentAudience;
+    studentTypesSection.querySelectorAll('input[name="student_types[]"]').forEach(function(input) {
+        input.disabled = !isStudentAudience;
+        if (!isStudentAudience) {
+            input.checked = false;
+        }
+    });
+}
+
+document.querySelectorAll('.modal-stack').forEach(function(form) {
+    form.querySelectorAll('input[data-category-audience]').forEach(function(input) {
+        input.addEventListener('change', function() {
+            syncStudentTypeSection(form);
+        });
+    });
+    syncStudentTypeSection(form);
+});
+
 function openEditHealthCategoryModal(button) {
     if (!editHealthCategoryModal || !editHealthCategoryForm || !editHealthCategoryName) {
         return;
@@ -1055,9 +1264,20 @@ function openEditHealthCategoryModal(button) {
         selectedAudiences = [];
     }
 
+    let selectedStudentTypes = [];
+    try {
+        selectedStudentTypes = JSON.parse(button.dataset.editStudentTypes || '[]');
+    } catch (error) {
+        selectedStudentTypes = [];
+    }
+
     editHealthCategoryForm.querySelectorAll('input[name="audiences[]"]').forEach(function(input) {
         input.checked = selectedAudiences.includes(input.value);
     });
+    editHealthCategoryForm.querySelectorAll('input[name="student_types[]"]').forEach(function(input) {
+        input.checked = selectedStudentTypes.includes(input.value);
+    });
+    syncStudentTypeSection(editHealthCategoryForm);
 
     editHealthCategoryModal.classList.add('is-open');
     editHealthCategoryModal.setAttribute('aria-hidden', 'false');
@@ -1102,5 +1322,7 @@ document.addEventListener('keydown', function(event) {
 });
 
 updateHealthCategoriesView();
+syncStudentTypeSection(document.querySelector('#addHealthCategoryModal .modal-stack'));
+syncStudentTypeSection(editHealthCategoryForm);
 </script>
 @endpush

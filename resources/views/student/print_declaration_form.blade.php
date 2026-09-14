@@ -9,6 +9,10 @@
 
     $purpose1 = $purposeUnderline1 ?? 'currently enrolled student';
     $purpose2 = $purposeUnderline2 ?? 'status as a currently enrolled student';
+    if (strtolower(trim((string) ($user?->student_type ?? ''))) === 'ladderized') {
+        $purpose1 = 'Ladderized Program';
+        $purpose2 = 'Ladderized Program';
+    }
     $fullName = trim((string) ($studentFullName ?? ''));
     $sigDate = $signatureDate ?? now()->format('m/d/Y');
     $guardian = trim((string) ($guardianName ?? ''));

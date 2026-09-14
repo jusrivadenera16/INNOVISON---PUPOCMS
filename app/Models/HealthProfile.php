@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ExcludesInactiveUserRecords;
 
 class HealthProfile extends Model
 {
+    use ExcludesInactiveUserRecords;
+
     public const PULLOUT_PENDING = 'pending';
     public const PULLOUT_COMPLETED = 'pulled_out';
     public const PULLOUT_RESTORED = 'restored';

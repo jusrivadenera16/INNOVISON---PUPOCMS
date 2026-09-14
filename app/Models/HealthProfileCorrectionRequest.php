@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ExcludesInactiveUserRecords;
 
 class HealthProfileCorrectionRequest extends Model
 {
+    use ExcludesInactiveUserRecords;
+
     public const TYPE_FILE_CORRECTION = 'file_correction';
     public const TYPE_HEALTH_FORM_CORRECTION = 'health_form_correction';
     public const TYPE_NEW_HEALTH_FORM = 'new_health_form';

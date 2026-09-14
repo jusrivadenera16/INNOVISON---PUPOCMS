@@ -509,33 +509,52 @@
         /* --- 4. MODAL STYLES --- */
         .modal-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            inset: 0;
             background: rgba(0,0,0,0.8);
             display: none;
             justify-content: center;
             align-items: center;
+            padding: 24px;
             z-index: 1000;
             backdrop-filter: blur(8px);
+            overflow-y: auto;
         }
         .modal-content {
             background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98));
             color: var(--text-dark);
             width: 95%;
-            max-width: 600px;
-            padding: 40px;
-            border-radius: 26px;
+            max-width: 748px;
+            padding: 0;
+            border-radius: 22px;
             position: relative;
-            max-height: none;
-            overflow-y: visible;
+            max-height: calc(100vh - 48px);
+            overflow: hidden;
             border: 1px solid rgba(139, 0, 0, 0.12);
             box-shadow: 0 28px 70px rgba(0,0,0,0.28);
+            display: flex;
+            flex-direction: column;
         }
-        .modal-close { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 28px; color: var(--text-light); }
+        .modal-close {
+            position: absolute;
+            top: 28px;
+            right: 28px;
+            z-index: 2;
+            cursor: pointer;
+            font-size: 30px;
+            line-height: 1;
+            color: rgba(255, 255, 255, 0.62);
+            transition: color 0.18s ease, transform 0.18s ease;
+        }
+        .modal-close:hover,
+        .modal-close:focus {
+            color: #ffffff;
+            transform: scale(1.04);
+        }
         .register-hero {
             display: grid;
             gap: 10px;
-            padding: 18px 18px 16px;
-            margin: -40px -40px 22px;
+            padding: 22px 24px 24px;
+            margin: 0;
             background: linear-gradient(135deg, rgba(91,0,0,0.98), rgba(127,29,29,0.98) 55%, rgba(168,18,18,0.98));
             color: #ffffff;
             border-bottom: 1px solid rgba(255,255,255,0.12);
@@ -576,9 +595,46 @@
             max-width: 50ch;
             text-align: left;
         }
+        .modal-content form {
+            padding: 28px 50px 32px;
+            overflow-y: auto;
+        }
+        .modal-content .form-row {
+            gap: 16px;
+        }
+        .modal-content .form-group {
+            margin-bottom: 18px;
+        }
+        .modal-content .form-group label {
+            color: #7b1113;
+            text-shadow: none;
+            margin-bottom: 8px;
+            letter-spacing: 0.07em;
+        }
+        .modal-content .form-group input,
+        .modal-content .form-group select {
+            min-height: 58px;
+            color: #111827;
+            background: #ffffff;
+            border: 1px solid rgba(139, 0, 0, 0.22);
+            border-radius: 15px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+        .modal-content .form-group input::placeholder {
+            color: #9ca3af;
+        }
+        .modal-content .form-group select {
+            cursor: pointer;
+        }
+        .modal-content .form-group input:focus,
+        .modal-content .form-group select:focus {
+            border-color: #8b0000;
+            background: #fffdfb;
+            box-shadow: 0 0 0 4px rgba(139, 0, 0, 0.09);
+        }
         .register-grid {
             display: grid;
-            gap: 14px;
+            gap: 2px;
         }
         .register-submit {
             width: 100%;
@@ -587,7 +643,7 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            margin-top: 12px;
+            margin-top: 16px;
             padding: 14px 18px;
             border: 1px solid rgba(250, 204, 21, 0.38);
             border-radius: 16px;
@@ -731,15 +787,23 @@
             .modal-content {
                 width: 100%;
                 max-width: 100%;
-                padding: 24px 16px 20px;
+                padding: 0;
                 border-radius: 18px 18px 0 0;
-                max-height: none;
-                overflow-y: visible;
+                max-height: calc(100vh - 28px);
+                overflow: hidden;
             }
 
             .modal-close {
-                top: 10px;
-                right: 14px;
+                top: 20px;
+                right: 18px;
+            }
+
+            .register-hero {
+                padding: 20px 18px 22px;
+            }
+
+            .modal-content form {
+                padding: 22px 16px 24px;
             }
         }
 

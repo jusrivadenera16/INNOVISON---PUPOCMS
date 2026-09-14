@@ -325,6 +325,9 @@
         font-size: 15px;
         font-weight: 900;
     }
+    html[data-theme="dark"] .preferences-settings-page .preferences-subheading {
+        color: #ffffff;
+    }
     .preferences-settings-page .preferences-general-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
         padding: 0;
@@ -832,6 +835,10 @@
     $closureEndsValue = optional($settings->clinic_closure_ends_at)->format('Y-m-d\\TH:i');
 @endphp
 <div class="settings-section-page preferences-settings-page">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Settings', 'url' => route('admin.settings')],
+        ['label' => 'System Preferences'],
+    ]])
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -851,7 +858,6 @@
             <h1 class="settings-section-title"><span class="preferences-title-icon"><x-outline-icon name="code-bracket-square" /></span><span>System Preferences</span></h1>
             <p>Configure live alerts, email delivery, reminders, and clinic closures.</p>
         </div>
-        <a href="{{ route('admin.settings') }}" class="settings-back-link"><x-outline-icon name="chevron-right" /> Settings Hub</a>
     </section>
 
     <section class="settings-panel preferences-workflow-panel">

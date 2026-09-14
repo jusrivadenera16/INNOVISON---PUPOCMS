@@ -17,7 +17,7 @@ class EnsureClinicAccountType
 
         if ($user->needsClinicAccountTypeSelection()) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Please select your clinic account type.', 'redirect' => route('student.home')], 409);
+                return response()->json(['message' => 'Please select your clinic account type and student type.', 'redirect' => route('student.home')], 409);
             }
 
             return redirect()->route('student.home')->with('show_health_profile_prompt', true);

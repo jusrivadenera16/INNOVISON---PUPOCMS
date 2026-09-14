@@ -71,5 +71,6 @@ class Kernel extends HttpKernel
         'assistant.schedule' => \App\Http\Middleware\EnsureStudentAssistantWorkspaceAvailable::class,
         'superadmin.export' => \App\Http\Middleware\EnsureSuperAdminExportAccess::class,
         'module.permission' => \App\Http\Middleware\EnsureModulePermission::class,
+        'emergency.enabled' => \App\Http\Middleware\EnsureEmergencyAccessEnabled::class,
     ];
 }

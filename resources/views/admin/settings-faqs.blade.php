@@ -847,6 +847,10 @@
 @endphp
 
 <div class="faq-admin" id="faqAdmin">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Settings', 'url' => route('admin.settings')],
+        ['label' => 'FAQs'],
+    ]])
     <section class="faq-hero">
         <div class="faq-title-wrap">
             <span class="faq-title-icon"><x-outline-icon name="question-mark-circle" /></span>

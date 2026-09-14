@@ -23,6 +23,7 @@ use App\Services\AnnouncementContent;
 use App\Services\GuisisApiService;
 use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
+use App\Services\EmployeeHealthFormHistoryService;
 use App\Services\HealthProfileSnapshotService;
 use App\Services\InventoryImportAnalyzer;
 use App\Services\InventoryDataNormalizer;
@@ -76,14 +77,25 @@ class AdminController extends Controller
             && trim((string) ($healthProfile?->student_number ?? '')) !== '';
     }
 
-    private function studentDeclarationPurposeText(?string $category): array
+    private function studentDeclarationPurposeText(?string $category, ?string $studentType = null): array
     {
         $category = trim((string) $category);
         $normalized = strtolower($category);
+        $normalizedStudentType = strtolower(trim((string) $studentType));
 
         if ($normalized === '' || $normalized === 'general') {
             $category = 'Student';
             $normalized = 'student';
+        }
+
+        if (
+            $normalizedStudentType === 'ladderized'
+            || ($normalizedStudentType === '' && $normalized === 'ladderized')
+        ) {
+            return [
+                'purpose' => 'Ladderized Program',
+                'endorsement' => 'Ladderized Program',
+            ];
         }
 
         if (str_contains($normalized, 'ojt') || str_contains($normalized, 'on-the-job')) {
@@ -330,6 +342,17 @@ class AdminController extends Controller
         });
     }
 
+    private function employeeHealthFormCategoryAudience(?User $user): string
+    {
+        $markers = strtolower(trim(implode(' ', array_filter([
+            (string) ($user?->user_type ?? ''),
+            (string) ($user?->user_role ?? ''),
+            (string) ($user?->idp_role ?? ''),
+        ]))));
+
+        return str_contains($markers, 'faculty') ? 'faculty' : 'admin';
+    }
+
     private function recordInventoryMovement(Item $item, string $type, float $quantity, float $stockBefore, float $stockAfter, ?string $notes = null, ?string $movementDate = null, ?string $reason = null): void
     {
         $movementData = [
@@ -425,7 +448,7 @@ class AdminController extends Controller
 
     private function emergencyAccessSettings(): array
     {
-        $configEnabled = true;
+        $configEnabled = (bool) config('services.emergency.enabled', false);
         $configEmail = (string) config('services.emergency.email', '');
         $configHash = trim((string) config('services.emergency.password_hash', ''));
         $configPassword = (string) config('services.emergency.password', '');
@@ -678,12 +701,17 @@ class AdminController extends Controller
         $isStudentAssistant = $this->isStudentAssistantAccount($user);
         $isSuperadmin = $this->isSuperadminAccount($user);
         $linkedAdmin = $isSuperadmin ? $this->findLinkedAdminProfile($user) : null;
+        $employeeHealthProfile = $user->relationLoaded('employeeHealthProfile')
+            ? $user->employeeHealthProfile
+            : $user->employeeHealthProfile()->first();
 
-        $birthday = $linkedAdmin?->birthday;
+        $birthday = $employeeHealthProfile?->birthday ?: ($linkedAdmin?->birthday ?: $user->DOB);
         $age = null;
         if ($birthday) {
             try {
-                $age = Carbon::parse($birthday)->age;
+                $birthdayCarbon = Carbon::parse($birthday);
+                $birthday = $birthdayCarbon->format('Y-m-d');
+                $age = $birthdayCarbon->age;
             } catch (\Throwable $exception) {
                 $age = null;
             }
@@ -693,12 +721,22 @@ class AdminController extends Controller
             ?? ($isStudentAssistant ? 'student_assistant' : User::normalizeRole($user->user_role));
 
         $resolvedStatus = $linkedAdmin?->status ?? ($isStudentAssistant ? null : 'active');
-        $resolvedAddress = $linkedAdmin?->address;
-        $resolvedContactNumber = $linkedAdmin?->contact_no ?? $linkedAdmin?->emergency_contact_no;
-        $resolvedFirstName = $linkedAdmin?->first_name ?: ($user->first_name ?? '');
-        $resolvedMiddleName = $linkedAdmin?->middle_name;
-        $resolvedLastName = $linkedAdmin?->last_name ?: ($user->last_name ?? '');
-        $resolvedSuffixName = $linkedAdmin?->suffix_name;
+        $resolvedAddress = $employeeHealthProfile?->home_address ?: $linkedAdmin?->address;
+        $resolvedContactNumber = $employeeHealthProfile?->contact_no
+            ?: ($linkedAdmin?->contact_no ?? $linkedAdmin?->emergency_contact_no ?? $user->contact_no);
+        $resolvedFirstName = $employeeHealthProfile?->first_name
+            ?: ($linkedAdmin?->first_name ?: ($user->first_name ?? ''));
+        $resolvedMiddleName = $employeeHealthProfile?->middle_name ?: $linkedAdmin?->middle_name;
+        $resolvedLastName = $employeeHealthProfile?->last_name
+            ?: ($linkedAdmin?->last_name ?: ($user->last_name ?? ''));
+        $resolvedSuffixName = $employeeHealthProfile?->suffix_name ?: $linkedAdmin?->suffix_name;
+        $resolvedGender = $employeeHealthProfile?->sex ?: ($linkedAdmin?->gender ?: $user->gender);
+        $resolvedCivilStatus = $employeeHealthProfile?->civil_status ?: $linkedAdmin?->civil_status;
+        $resolvedEmergencyContactPerson = $employeeHealthProfile?->emergency_contact_person
+            ?: $linkedAdmin?->emergency_contact_person;
+        $resolvedEmergencyContactNo = $employeeHealthProfile?->emergency_contact_no
+            ?: $linkedAdmin?->emergency_contact_no;
+        $resolvedOffice = $employeeHealthProfile?->office ?: $linkedAdmin?->office;
         $resolvedName = trim(implode(' ', array_filter([
             $resolvedFirstName,
             $resolvedMiddleName,
@@ -718,14 +756,16 @@ class AdminController extends Controller
             'age' => $age,
             'address' => $resolvedAddress,
             'contact_number' => $resolvedContactNumber,
-            'emergency_contact_person' => $linkedAdmin?->emergency_contact_person,
-            'emergency_contact_no' => $linkedAdmin?->emergency_contact_no,
-            'office' => $linkedAdmin?->office,
-            'gender' => $linkedAdmin?->gender,
-            'civil_status' => $linkedAdmin?->civil_status,
+            'emergency_contact_person' => $resolvedEmergencyContactPerson,
+            'emergency_contact_no' => $resolvedEmergencyContactNo,
+            'office' => $resolvedOffice,
+            'gender' => $resolvedGender,
+            'civil_status' => $resolvedCivilStatus,
             'role' => $resolvedRole,
             'status' => $resolvedStatus,
-            'source' => $isSuperadmin ? 'admins' : ($isStudentAssistant ? 'external_pending' : 'display_only'),
+            'source' => $employeeHealthProfile
+                ? 'health_profile_emp'
+                : ($isSuperadmin ? 'admins' : ($isStudentAssistant ? 'external_pending' : 'display_only')),
             'is_student_assistant' => $isStudentAssistant,
             'is_superadmin' => $isSuperadmin,
             'has_local_admin_profile' => (bool) $linkedAdmin,
@@ -3026,7 +3066,13 @@ class AdminController extends Controller
             try {
                 $approvedDate = Carbon::createFromFormat('Y-m-d', $dateFilter);
                 if ($approvedDate->format('Y-m-d') === $dateFilter) {
-                    $employeeQuery->whereDate('verified_at', $dateFilter);
+                    $employeeQuery->where(function ($builder) use ($dateFilter) {
+                        $builder->whereDate('verified_at', $dateFilter)
+                            ->orWhereHas('healthFormSubmissions', function ($submissionQuery) use ($dateFilter) {
+                                $submissionQuery->where('status', HealthFormSubmission::STATUS_APPROVED)
+                                    ->whereDate('approved_at', $dateFilter);
+                            });
+                    });
                 }
             } catch (\Throwable $e) {
                 $dateFilter = '';
@@ -3083,6 +3129,42 @@ class AdminController extends Controller
             });
         $issuedEmployeeRecords = $issuedEmployeeQuery->get()
             ->map(fn ($record) => $decorateHealthRecord($record, 'employee'));
+        $issuedEmployeeIds = $issuedEmployeeRecords->pluck('id')->all();
+        $historicalEmployeeRecords = (clone $employeeQuery)
+            ->whereNotIn('id', $issuedEmployeeIds)
+            ->get()
+            ->map(function (EmployeeHealthProfile $record) use ($decorateHealthRecord) {
+                $submission = app(EmployeeHealthFormHistoryService::class)->latestApproved($record);
+                if (!$submission || $submission->snapshotProfile() === []) {
+                    return null;
+                }
+
+                return $decorateHealthRecord(
+                    $this->employeeProfileFromSubmission($record, $submission),
+                    'employee'
+                );
+            })
+            ->filter()
+            ->values();
+        $issuedEmployeeRecords = $issuedEmployeeRecords->merge($historicalEmployeeRecords);
+        $bulkHealthFormRequestRecords = collect();
+        $bulkHealthFormRequestCategories = collect();
+        if (in_array($userTypeFilter, ['faculty', 'admin'], true)) {
+            $bulkEmployeeQuery = EmployeeHealthProfile::with('user')
+                ->whereIn('clearance_status', ['Approved', 'Issued', 'Fully Cleared', 'Cleared'])
+                ->orderBy('last_name')
+                ->orderBy('first_name')
+                ->orderBy('id');
+
+            $this->applyStaffHealthProfileUserTypeFilter($bulkEmployeeQuery, $userTypeFilter);
+            $bulkHealthFormRequestRecords = $bulkEmployeeQuery->get();
+            $bulkHealthFormRequestCategories = HealthFormCategory::query()
+                ->where('is_active', true)
+                ->availableFor($userTypeFilter)
+                ->orderBy('name')
+                ->pluck('name')
+                ->values();
+        }
         $healthRecordName = static function ($record): string {
             $user = optional($record->user);
             $lastName = trim((string) $user->last_name);
@@ -3203,7 +3285,9 @@ class AdminController extends Controller
             'userTypeOptions',
             'issuedPerPage',
             'issuedWithConditions',
-            'issuedLatestApprovedAt'
+            'issuedLatestApprovedAt',
+            'bulkHealthFormRequestRecords',
+            'bulkHealthFormRequestCategories'
         ));
     }
 
@@ -3330,7 +3414,13 @@ class AdminController extends Controller
             try {
                 $approvedDate = Carbon::createFromFormat('Y-m-d', $dateFilter);
                 if ($approvedDate->format('Y-m-d') === $dateFilter) {
-                    $employeeQuery->whereDate('verified_at', $dateFilter);
+                    $employeeQuery->where(function ($builder) use ($dateFilter) {
+                        $builder->whereDate('verified_at', $dateFilter)
+                            ->orWhereHas('healthFormSubmissions', function ($submissionQuery) use ($dateFilter) {
+                                $submissionQuery->where('status', HealthFormSubmission::STATUS_APPROVED)
+                                    ->whereDate('approved_at', $dateFilter);
+                            });
+                    });
                 }
             } catch (\Throwable $e) {
                 $dateFilter = '';
@@ -3353,6 +3443,21 @@ class AdminController extends Controller
         $issuedHealthRecords = $issuedQuery->get()
             ->map(fn ($record) => $this->applyHistoricalApprovedHealthFormSnapshot($record));
         $issuedEmployeeRecords = $issuedEmployeeQuery->get();
+        $issuedEmployeeIds = $issuedEmployeeRecords->pluck('id')->all();
+        $historicalEmployeeRecords = (clone $employeeQuery)
+            ->whereNotIn('id', $issuedEmployeeIds)
+            ->get()
+            ->map(function (EmployeeHealthProfile $record) {
+                $submission = app(EmployeeHealthFormHistoryService::class)->latestApproved($record);
+                if (!$submission || $submission->snapshotProfile() === []) {
+                    return null;
+                }
+
+                return $this->employeeProfileFromSubmission($record, $submission);
+            })
+            ->filter()
+            ->values();
+        $issuedEmployeeRecords = $issuedEmployeeRecords->merge($historicalEmployeeRecords);
 
         $records = $query->get()
             ->map(function ($record) {
@@ -3418,9 +3523,13 @@ class AdminController extends Controller
             ->where('status', HealthFormSubmission::STATUS_REQUESTED)
             ->latest('requested_at')
             ->first();
-        $healthFormAudience = $profile->user?->clinicHealthFormAudience() === 'student'
-            ? 'student'
-            : 'applicant';
+        $healthFormAudience = $profile->user?->clinicHealthFormAudience();
+        if (!in_array($healthFormAudience, ['applicant', 'student', 'dependent'], true)) {
+            $profileUserType = strtolower(trim((string) ($profile->user?->user_type ?: $profile->user?->idp_role ?: '')));
+            $healthFormAudience = str_contains($profileUserType, 'dependent')
+                ? 'dependent'
+                : (str_contains($profileUserType, 'student') ? 'student' : 'applicant');
+        }
         $healthFormCategories = HealthFormCategory::query()
             ->where('is_active', true)
             ->availableFor($healthFormAudience)
@@ -3487,6 +3596,162 @@ class AdminController extends Controller
             'healthFormSubmissions',
             'healthProfileHistory',
             'currentHealthFormSubmission'
+        ));
+    }
+
+    private function employeeProfileFromSubmission(
+        EmployeeHealthProfile $currentProfile,
+        HealthFormSubmission $submission
+    ): EmployeeHealthProfile {
+        $profile = new EmployeeHealthProfile();
+        $profile->forceFill($submission->snapshotProfile());
+        $profile->exists = true;
+        $profile->setAttribute('id', $currentProfile->id);
+        $snapshotUser = $submission->snapshotUser();
+        if ($snapshotUser !== []) {
+            $user = new User();
+            $user->forceFill(array_merge(
+                $currentProfile->user?->attributesToArray() ?? [],
+                $snapshotUser
+            ));
+            $user->exists = true;
+            $user->setAttribute('id', $currentProfile->user?->id);
+            $profile->setRelation('user', $user);
+        } else {
+            $profile->setRelation('user', $currentProfile->user);
+        }
+        $profile->setAttribute('verified_at', $submission->approved_at ?: $profile->verified_at);
+
+        return $profile;
+    }
+
+    public function showEmployeeHealthProfile(EmployeeHealthProfile $employeeProfile)
+    {
+        $employeeProfile->loadMissing(['user', 'approvedBy']);
+        abort_unless($employeeProfile->user, 404);
+
+        $employeeHealthFormAudience = $this->employeeHealthFormCategoryAudience($employeeProfile->user);
+        $employeeHealthFormCategories = HealthFormCategory::query()
+            ->where('is_active', true)
+            ->availableFor($employeeHealthFormAudience)
+            ->orderBy('name')
+            ->pluck('name')
+            ->values();
+        $canRequestEmployeeHealthActions = optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false;
+
+        $employeeSubmissions = HealthFormSubmission::query()
+            ->where('employee_health_profile_id', $employeeProfile->id)
+            ->orderByRaw('COALESCE(submitted_at, approved_at, created_at) asc')
+            ->orderBy('id')
+            ->get();
+        $latestApprovedEmployeeSubmission = $employeeSubmissions
+            ->where('status', HealthFormSubmission::STATUS_APPROVED)
+            ->sortByDesc(fn (HealthFormSubmission $submission) => [
+                optional($submission->approved_at)->timestamp ?: 0,
+                optional($submission->submitted_at)->timestamp ?: 0,
+                $submission->id,
+            ])
+            ->first();
+        $displaySubmission = $latestApprovedEmployeeSubmission
+            && $latestApprovedEmployeeSubmission->snapshotProfile() !== []
+            ? $latestApprovedEmployeeSubmission
+            : null;
+        $employeeProfileForDisplay = $displaySubmission
+            ? $this->employeeProfileFromSubmission($employeeProfile, $displaySubmission)
+            : $employeeProfile;
+
+        $healthFiles = $this->healthFiles();
+        $buildEmployeeDocuments = function (
+            EmployeeHealthProfile $profile,
+            ?HealthFormSubmission $submission = null
+        ) use ($healthFiles): \Illuminate\Support\Collection {
+            return collect($this->myHealthProfileDocumentDefinitions($profile))
+                ->map(function (array $definition, string $key) use ($profile, $submission, $healthFiles): array {
+                $path = $healthFiles->normalizePath($profile->{$definition['field']} ?? null);
+                $fileName = basename($path);
+                $isHealthForm = $key === 'health_form';
+                $isUploaded = $path !== '' && (
+                    $path !== ''
+                    && $fileName !== ''
+                    && $fileName !== '.'
+                    && $fileName !== DIRECTORY_SEPARATOR
+                    && $healthFiles->exists($path)
+                );
+                $viewUrl = null;
+                if ($isUploaded) {
+                    $viewUrl = $submission
+                        ? ($isHealthForm
+                            ? route('admin.health_form_submissions.pdf', $submission)
+                            : route('admin.health_form_submissions.document', [$submission, $key]))
+                        : ($isHealthForm
+                            ? route('walkin.employeeHealthForm', ['employeeProfile' => $profile->id])
+                            : route('walkin.employeeDocument', [
+                                'employeeProfile' => $profile->id,
+                                'document' => $key,
+                            ]));
+                }
+
+                return [
+                    'key' => $key,
+                    'type' => $definition['type'],
+                    'name' => $isHealthForm
+                        ? ($fileName !== '' && $fileName !== '.' ? $fileName : 'Health Form')
+                        : ($isUploaded ? $fileName : 'Missing'),
+                    'uploaded' => $isUploaded,
+                    'view_url' => $viewUrl,
+                    'uploaded_at' => $isUploaded
+                        ? (optional($profile->updated_at)->format('M j, Y') ?: 'Date unavailable')
+                        : '-',
+                ];
+                })
+                ->values();
+        };
+
+        $employeeDocuments = $buildEmployeeDocuments($employeeProfileForDisplay, $displaySubmission);
+        $employeeVersionHistory = $employeeSubmissions
+            ->filter(fn (HealthFormSubmission $submission) => $submission->snapshotProfile() !== [])
+            ->map(function (HealthFormSubmission $submission) use (
+                $employeeProfile,
+                $latestApprovedEmployeeSubmission,
+                $buildEmployeeDocuments
+            ): array {
+                $versionProfile = $this->employeeProfileFromSubmission($employeeProfile, $submission);
+                $isCurrent = $latestApprovedEmployeeSubmission
+                    && (int) $latestApprovedEmployeeSubmission->id === (int) $submission->id;
+
+                return [
+                    'submission' => $submission,
+                    'version' => 0,
+                    'is_current' => $isCurrent,
+                    'documents' => $buildEmployeeDocuments($versionProfile, $submission),
+                ];
+            })
+            ->values()
+            ->map(function (array $version, int $index): array {
+                $version['version'] = $index + 1;
+
+                return $version;
+            });
+
+        if ($employeeVersionHistory->isEmpty()) {
+            $employeeVersionHistory = collect([[
+                'submission' => null,
+                'version' => 1,
+                'is_current' => true,
+                'documents' => $employeeDocuments,
+            ]]);
+        }
+
+        $employeeProfile = $employeeProfileForDisplay;
+
+        return view('admin.show_employee_health', compact(
+            'employeeProfile',
+            'employeeDocuments',
+            'employeeVersionHistory',
+            'displaySubmission',
+            'employeeHealthFormCategories',
+            'employeeHealthFormAudience',
+            'canRequestEmployeeHealthActions'
         ));
     }
 
@@ -3562,6 +3827,249 @@ class AdminController extends Controller
 
         return redirect()->route('admin.show_health', $profile->id)
             ->with('success', 'New Health Form request sent to the student.');
+    }
+
+    public function requestNewEmployeeHealthForm(Request $request, EmployeeHealthProfile $employeeProfile)
+    {
+        $employeeProfile->loadMissing('user');
+        abort_unless($employeeProfile->user, 404);
+
+        $employeeHealthFormAudience = $this->employeeHealthFormCategoryAudience($employeeProfile->user);
+        $validated = $request->validate([
+            'category' => [
+                'required',
+                'string',
+                'max:120',
+                Rule::exists('health_form_categories', 'name')
+                    ->where(function ($query) use ($employeeHealthFormAudience) {
+                        $query->where('is_active', true)
+                            ->whereJsonContains('available_for', $employeeHealthFormAudience);
+                    }),
+            ],
+            'remarks' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $adminUser = Auth::guard('admin')->user() ?: auth()->user();
+        $category = trim((string) $validated['category']);
+        $remarks = trim((string) ($validated['remarks'] ?? ''));
+        $pendingReason = 'Health Form Correction requested: New Health Form for ' . $category;
+        if ($remarks !== '') {
+            $pendingReason .= ': ' . $remarks;
+        }
+
+        $wasAlreadyIssued = in_array($employeeProfile->clearance_status, ['Approved', 'Issued', 'Fully Cleared', 'Cleared'], true)
+            || !empty($employeeProfile->verified_at);
+
+        if ($wasAlreadyIssued) {
+            app(EmployeeHealthFormHistoryService::class)->ensureApprovedSnapshot($employeeProfile);
+        } else {
+            $employeeProfile->health_form_category = $category;
+            $employeeProfile->pending_reason = $pendingReason;
+            $employeeProfile->documents_valid = false;
+            $employeeProfile->resubmission_required_fields = [];
+            $employeeProfile->resubmission_requested_at = now();
+            $employeeProfile->pending_compliance_reminder_sent_at = null;
+            $employeeProfile->pending_compliance_reminder_count = 0;
+            $employeeProfile->resubmitted_at = null;
+            $employeeProfile->clearance_status = 'Pending Resubmission';
+            $employeeProfile->submission_status = 'pending';
+            $employeeProfile->verified_at = null;
+            $employeeProfile->approved_by_user_id = null;
+            $employeeProfile->save();
+        }
+
+        HealthProfileCorrectionRequest::query()->updateOrCreate(
+            [
+                'user_id' => $employeeProfile->user_id,
+                'employee_health_profile_id' => $employeeProfile->id,
+                'type' => HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION,
+                'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
+            ],
+            [
+                'profile_kind' => 'employee',
+                'required_documents' => [],
+                'admin_note' => $pendingReason,
+                'requested_by_user_id' => $adminUser?->id,
+                'requested_at' => now(),
+                'metadata' => [
+                    'request_kind' => 'new_health_form',
+                    'category' => $category,
+                    'remarks' => $remarks !== '' ? $remarks : null,
+                    'was_already_issued' => $wasAlreadyIssued,
+                ],
+            ]
+        );
+
+        ActivityLog::create([
+            'user_id' => $adminUser?->id,
+            'user_name' => $adminUser?->name ?? $adminUser?->email ?? 'System',
+            'user_role' => strtolower((string) ($adminUser?->user_role ?? '')),
+            'action' => 'New Employee Health Form Requested',
+            'module' => 'Health Records',
+            'event_type' => 'employee_new_health_form_requested',
+            'description' => 'Requested a new Health Form for employee health profile #' . $employeeProfile->id . ' under ' . $category . '.',
+            'route_name' => optional($request->route())->getName(),
+            'http_method' => $request->method(),
+            'request_path' => '/' . ltrim((string) $request->path(), '/'),
+            'status_code' => 200,
+            'subject_type' => EmployeeHealthProfile::class,
+            'subject_id' => (string) $employeeProfile->id,
+            'metadata' => [
+                'employee_profile_id' => $employeeProfile->id,
+                'employee_number' => $employeeProfile->employee_number,
+                'category' => $category,
+                'request_kind' => 'new_health_form',
+            ],
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 255),
+        ]);
+
+        $emailStatus = 'skipped';
+        if ($employeeProfile->user) {
+            $emailStatus = app(StudentNotificationMailer::class)
+                ->sendHealthRecordNotice($employeeProfile->user, 'health_form_correction')['status'];
+        }
+
+        $message = 'New Health Form request sent to the employee.';
+        if ($emailStatus === 'sent') {
+            $message .= ' Email notification sent.';
+        } elseif ($emailStatus === 'failed') {
+            $message .= ' The employee will still see the request in the portal, but email delivery could not be confirmed.';
+        }
+
+        return redirect()->route('admin.employee_health_profile.show', $employeeProfile->id)
+            ->with('success', $message);
+    }
+
+    public function requestBulkEmployeeHealthForms(Request $request)
+    {
+        $validated = $request->validate([
+            'user_type' => ['required', Rule::in(['faculty', 'admin'])],
+            'category' => [
+                'required',
+                'string',
+                'max:120',
+                Rule::exists('health_form_categories', 'name')
+                    ->where(function ($query) use ($request) {
+                        $query->where('is_active', true)
+                            ->whereJsonContains('available_for', strtolower((string) $request->input('user_type')));
+                    }),
+            ],
+            'employee_profile_ids' => ['required', 'array', 'min:1', 'max:500'],
+            'employee_profile_ids.*' => ['integer', 'distinct', 'exists:health_profile_emp,id'],
+        ]);
+
+        $userType = strtolower((string) $validated['user_type']);
+        $category = trim((string) $validated['category']);
+        $selectedProfileIds = array_values(array_unique(array_map('intval', $validated['employee_profile_ids'])));
+        $employeeQuery = EmployeeHealthProfile::query()
+            ->with('user')
+            ->whereIn('id', $selectedProfileIds)
+            ->whereIn('clearance_status', ['Approved', 'Issued', 'Fully Cleared', 'Cleared'])
+            ->whereHas('user');
+        $this->applyStaffHealthProfileUserTypeFilter($employeeQuery, $userType);
+
+        $employeeProfiles = $employeeQuery->get()->keyBy('id');
+        if ($employeeProfiles->isEmpty()) {
+            return back()
+                ->withInput()
+                ->with('error', 'No selected approved employees are available for this request.');
+        }
+
+        $adminUser = Auth::guard('admin')->user() ?: auth()->user();
+        $emailCounts = [
+            'sent' => 0,
+            'failed' => 0,
+            'skipped' => 0,
+        ];
+
+        foreach ($employeeProfiles as $employeeProfile) {
+            $pendingReason = 'Health Form Correction requested: New Health Form for ' . $category;
+            $wasAlreadyIssued = in_array($employeeProfile->clearance_status, ['Approved', 'Issued', 'Fully Cleared', 'Cleared'], true)
+                || !empty($employeeProfile->verified_at);
+
+            if ($wasAlreadyIssued) {
+                app(EmployeeHealthFormHistoryService::class)->ensureApprovedSnapshot($employeeProfile);
+            }
+
+            HealthProfileCorrectionRequest::query()->updateOrCreate(
+                [
+                    'user_id' => $employeeProfile->user_id,
+                    'employee_health_profile_id' => $employeeProfile->id,
+                    'type' => HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION,
+                    'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
+                ],
+                [
+                    'profile_kind' => 'employee',
+                    'required_documents' => [],
+                    'admin_note' => $pendingReason,
+                    'requested_by_user_id' => $adminUser?->id,
+                    'requested_at' => now(),
+                    'metadata' => [
+                        'request_kind' => 'bulk_new_health_form',
+                        'category' => $category,
+                        'audience' => $userType,
+                        'was_already_issued' => $wasAlreadyIssued,
+                    ],
+                ]
+            );
+
+            ActivityLog::create([
+                'user_id' => $adminUser?->id,
+                'user_name' => $adminUser?->name ?? $adminUser?->email ?? 'System',
+                'user_role' => strtolower((string) ($adminUser?->user_role ?? '')),
+                'action' => 'Bulk Employee Health Form Requested',
+                'module' => 'Health Records',
+                'event_type' => 'employee_bulk_new_health_form_requested',
+                'description' => 'Requested a new Health Form for employee health profile #' . $employeeProfile->id . ' under ' . $category . '.',
+                'route_name' => optional($request->route())->getName(),
+                'http_method' => $request->method(),
+                'request_path' => '/' . ltrim((string) $request->path(), '/'),
+                'status_code' => 200,
+                'subject_type' => EmployeeHealthProfile::class,
+                'subject_id' => (string) $employeeProfile->id,
+                'metadata' => [
+                    'employee_profile_id' => $employeeProfile->id,
+                    'employee_number' => $employeeProfile->employee_number,
+                    'category' => $category,
+                    'audience' => $userType,
+                    'request_kind' => 'bulk_new_health_form',
+                ],
+                'ip_address' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 255),
+            ]);
+
+            if (!$employeeProfile->user) {
+                $emailCounts['skipped']++;
+                continue;
+            }
+
+            try {
+                $emailStatus = app(StudentNotificationMailer::class)
+                    ->sendHealthRecordNotice($employeeProfile->user, 'health_form_correction')['status'];
+                $emailCounts[$emailStatus] = ($emailCounts[$emailStatus] ?? 0) + 1;
+            } catch (\Throwable $exception) {
+                report($exception);
+                $emailCounts['failed']++;
+            }
+        }
+
+        $processedCount = $employeeProfiles->count();
+        $skippedCount = count($selectedProfileIds) - $processedCount;
+        $message = $processedCount . ' bulk Health Form request' . ($processedCount === 1 ? '' : 's') . ' sent.';
+        if ($skippedCount > 0) {
+            $message .= ' ' . $skippedCount . ' selected record' . ($skippedCount === 1 ? '' : 's') . ' was no longer eligible and was skipped.';
+        }
+        if ($emailCounts['sent'] > 0) {
+            $message .= ' Email notifications sent: ' . $emailCounts['sent'] . '.';
+        }
+        if ($emailCounts['failed'] > 0) {
+            $message .= ' Email notifications failed: ' . $emailCounts['failed'] . '; the requests remain available in the portal.';
+        }
+
+        return redirect()
+            ->route('admin.health_records', ['tab' => 'approved', 'user_type' => $userType])
+            ->with('success', $message);
     }
 
     public function returnHealthProfileToPending(Request $request, $id)
@@ -3948,9 +4456,46 @@ class AdminController extends Controller
 
     public function showHealthFormSubmissionDocument(HealthFormSubmission $submission, string $document)
     {
-        abort_unless(in_array($document, HealthProfileSnapshotService::DOCUMENT_FIELDS, true), 404);
+        $employeeDocumentFields = [
+            'student_photo',
+            'health_declaration',
+            'medical_certificate',
+            'chest_xray_document',
+            'pwd_id_proof',
+        ];
+        $isEmployeeSubmission = filled($submission->employee_health_profile_id);
+        abort_unless(
+            $isEmployeeSubmission
+                ? in_array($document, $employeeDocumentFields, true)
+                : in_array($document, HealthProfileSnapshotService::DOCUMENT_FIELDS, true),
+            404
+        );
 
         $profileData = $submission->snapshotProfile();
+        if ($isEmployeeSubmission) {
+            if ($profileData === []) {
+                $profileData = $submission->employeeHealthProfile?->attributesToArray() ?? [];
+            }
+
+            $path = $document === 'student_photo'
+                ? ($profileData['student_photo'] ?? $profileData['employee_photo'] ?? '')
+                : ($profileData[$document] ?? '');
+            $path = ltrim((string) $path, '/');
+            $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+            abort_if($path === '' || !$this->healthFiles()->exists($path), 404, 'Historical document not found.');
+
+            $disk = $this->healthFiles();
+            $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
+
+            return response()->file($disk->path($path), [
+                'Content-Type' => $mimeType,
+                'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
+                'X-Content-Type-Options' => 'nosniff',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma' => 'no-cache',
+            ]);
+        }
+
         if ($profileData === []) {
             $latestSubmission = HealthFormSubmission::query()
                 ->where('user_id', $submission->user_id)
@@ -3998,7 +4543,7 @@ class AdminController extends Controller
             if ($categorySelected === '') {
                 $categorySelected = 'Student';
             }
-            $declarationPurpose = $this->studentDeclarationPurposeText($categorySelected);
+            $declarationPurpose = $this->studentDeclarationPurposeText($categorySelected, $user?->student_type);
             $purposeUnderline1 = $declarationPurpose['purpose'];
             $purposeUnderline2 = $declarationPurpose['endorsement'];
 
@@ -5031,12 +5576,184 @@ public function updateClearance(Request $request, $id)
         $admin = Auth::user();
         $settings = Setting::first();
         if(!$settings) { $settings = new Setting(); }
+        $admin?->loadMissing(['adminProfile', 'employeeHealthProfile']);
         $cmsProfile = $admin ? $this->buildCmsAdminProfile($admin) : [];
         $reportIdentity = $admin && Schema::hasTable('admins')
             ? $this->findLinkedAdminProfile($admin)
             : null;
 
         return view('admin.settings-personal', compact('admin', 'settings', 'cmsProfile', 'reportIdentity'));
+    }
+
+    private function myHealthProfileDocumentDefinitions(?EmployeeHealthProfile $employeeProfile = null): array
+    {
+        $definitions = [
+            'health_form' => ['field' => 'staff_health_form_pdf_path', 'type' => 'Health Form'],
+            'health_declaration' => ['field' => 'health_declaration', 'type' => 'Health Declaration'],
+            'medical_certificate' => ['field' => 'medical_certificate', 'type' => 'Medical Certificate'],
+            'chest_xray_document' => ['field' => 'chest_xray_document', 'type' => 'Chest Xray'],
+        ];
+
+        if ($employeeProfile && (bool) $employeeProfile->has_disability) {
+            $definitions['pwd_id_proof'] = ['field' => 'pwd_id_proof', 'type' => 'PWD'];
+        }
+
+        return $definitions;
+    }
+
+    private function canUseMyHealthProfile(?User $admin): bool
+    {
+        if (!$admin) {
+            return false;
+        }
+
+        $currentRole = User::normalizeRole((string) ($admin->user_role ?? ''));
+        $accessLevel = strtolower(trim((string) ($admin->adminProfile?->access_level ?? '')));
+        $isClinicStaff = $currentRole === User::ROLE_ADMIN
+            && in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff'], true);
+
+        return $currentRole === User::ROLE_SUPERADMIN || $isClinicStaff;
+    }
+
+    public function myHealthProfile()
+    {
+        $admin = Auth::user();
+        abort_unless($admin, 403);
+
+        $admin->loadMissing(['adminProfile', 'employeeHealthProfile']);
+        $currentRole = User::normalizeRole((string) ($admin->user_role ?? ''));
+        $accessLevel = strtolower(trim((string) ($admin->adminProfile?->access_level ?? '')));
+        $isClinicStaff = $currentRole === User::ROLE_ADMIN
+            && in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff'], true);
+
+        abort_unless($currentRole === User::ROLE_SUPERADMIN || $isClinicStaff, 403);
+
+        $employeeProfile = $admin->employeeHealthProfile;
+        $documentDefinitions = $this->myHealthProfileDocumentDefinitions($employeeProfile);
+        $healthFiles = $this->healthFiles();
+        $documentRows = collect($documentDefinitions)
+            ->map(function (array $definition, string $key) use ($employeeProfile, $healthFiles): array {
+                $path = $employeeProfile
+                    ? $healthFiles->normalizePath($employeeProfile->{$definition['field']} ?? null)
+                    : '';
+                $fileName = basename($path);
+                $isUploaded = $path !== ''
+                    && $fileName !== ''
+                    && $fileName !== '.'
+                    && $fileName !== DIRECTORY_SEPARATOR
+                    && $healthFiles->exists($path);
+
+                return [
+                    'key' => $key,
+                    'type' => $definition['type'],
+                    'name' => $isUploaded ? $fileName : 'Missing',
+                    'uploaded' => $isUploaded,
+                    'view_url' => $isUploaded && $employeeProfile
+                        ? ($key === 'health_form'
+                            ? route('walkin.employeeHealthForm', ['employeeProfile' => $employeeProfile->id])
+                            : route('walkin.employeeDocument', [
+                                'employeeProfile' => $employeeProfile->id,
+                                'document' => $key,
+                            ]))
+                        : null,
+                    'download_url' => $isUploaded
+                        ? route('admin.settings.health-profile.document.download', ['document' => $key])
+                        : null,
+                    'uploaded_at' => $isUploaded
+                        ? (optional($employeeProfile?->updated_at)->format('M j, Y') ?: 'Date unavailable')
+                        : '-',
+                ];
+            })
+            ->values()
+            ->all();
+        $healthFormVersions = [];
+
+        if ($employeeProfile) {
+            $healthFormStatus = trim((string) ($employeeProfile->clearance_status ?: $employeeProfile->submission_status ?: 'Submitted'));
+            $healthFormVersions[] = [
+                'version' => 1,
+                'label' => 'Version 1',
+                'is_current' => true,
+                'status' => ucwords(str_replace(['_', '-'], ' ', $healthFormStatus)),
+                'submitted_at' => optional($employeeProfile->form_date)->format('M j, Y')
+                    ?: optional($employeeProfile->created_at)->format('M j, Y')
+                    ?: 'Date unavailable',
+                'documents' => $documentRows,
+            ];
+        }
+
+        return view('admin.my_health_profile', [
+            'admin' => $admin,
+            'employeeProfile' => $employeeProfile,
+            'healthFormVersions' => $healthFormVersions,
+            'documentRows' => $documentRows,
+        ]);
+    }
+
+    public function uploadMyHealthProfileDocument(Request $request, string $document)
+    {
+        $admin = Auth::user();
+        $admin?->loadMissing(['adminProfile', 'employeeHealthProfile']);
+        abort_unless($this->canUseMyHealthProfile($admin), 403);
+
+        $employeeProfile = $admin->employeeHealthProfile;
+        abort_unless($employeeProfile, 404);
+
+        $definitions = $this->myHealthProfileDocumentDefinitions($employeeProfile);
+        abort_unless(isset($definitions[$document]), 404);
+
+        $validated = $request->validate([
+            'document' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
+        ], [
+            'document.max' => 'The document must not be larger than 1 MB.',
+        ]);
+
+        $storageFolders = [
+            'health_form' => 'health_profile_employees/health_forms',
+            'health_declaration' => 'health_profile_employees/health_declarations',
+            'medical_certificate' => 'health_profile_employees/medical_certificates',
+            'chest_xray_document' => 'health_profile_employees/chest_xray_documents',
+            'pwd_id_proof' => 'health_profile_employees/pwd_id_proofs',
+        ];
+        $field = $definitions[$document]['field'];
+        $healthFiles = $this->healthFiles();
+        $oldPath = $healthFiles->normalizePath($employeeProfile->{$field} ?? null);
+        $newPath = $healthFiles->store($validated['document'], $storageFolders[$document]);
+
+        $employeeProfile->{$field} = $newPath;
+        $employeeProfile->save();
+
+        if ($oldPath !== '' && $oldPath !== $newPath) {
+            $healthFiles->delete($oldPath);
+        }
+
+        return redirect()
+            ->route('admin.settings.health-profile')
+            ->with('success', $definitions[$document]['type'] . ' uploaded successfully.');
+    }
+
+    public function downloadMyHealthProfileDocument(string $document)
+    {
+        $admin = Auth::user();
+        $admin?->loadMissing(['adminProfile', 'employeeHealthProfile']);
+        abort_unless($this->canUseMyHealthProfile($admin), 403);
+
+        $employeeProfile = $admin->employeeHealthProfile;
+        abort_unless($employeeProfile, 404);
+
+        $definitions = $this->myHealthProfileDocumentDefinitions($employeeProfile);
+        abort_unless(isset($definitions[$document]), 404);
+
+        $healthFiles = $this->healthFiles();
+        $path = $healthFiles->normalizePath($employeeProfile->{$definitions[$document]['field']} ?? null);
+        abort_if($path === '' || !$healthFiles->exists($path), 404, 'Uploaded document not found.');
+
+        return $healthFiles->download($path, basename($path), [
+            'Content-Type' => $healthFiles->mimeType($path) ?: 'application/octet-stream',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+        ]);
     }
 
     public function settingsClinic()
@@ -7149,7 +7866,7 @@ public function inventorySummary()
         }
 
         $environmentValues = [
-            'EMERGENCY_ACCESS_ENABLED' => 'true',
+            'EMERGENCY_ACCESS_ENABLED' => ($settings['enabled'] ?? false) ? 'true' : 'false',
             'EMERGENCY_ADMIN_EMAIL' => strtolower(trim((string) $validated['emergency_email'])),
             'EMERGENCY_ADMIN_ROLE' => $role,
             'EMERGENCY_ADMIN_ADDITIONAL_ACCOUNTS' => '',

@@ -1494,6 +1494,13 @@
         font-weight: 800;
     }
 
+    .student-number-update-note {
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
     .profile-edit-modal-footer {
         display: flex;
         justify-content: flex-end;
@@ -7574,6 +7581,10 @@
     $isEnrolled = (bool) ($isEnrolled ?? false);
     $accountView = in_array(($accountView ?? 'profile'), ['profile', 'health-record', 'notifications'], true) ? $accountView : 'profile';
     $usesEmployeeHealthForm = $studentUsesEmployeeHealthForm ?? false;
+    $canUpdateLadderizedStudentNumber = (bool) ($canUpdateLadderizedStudentNumber ?? false);
+    $isLadderizedStudent = !$usesEmployeeHealthForm
+        && $user->clinicAccountTypeKey() === 'student'
+        && strtolower(trim((string) ($user->student_type ?? ''))) === 'ladderized';
     $profileRoleMarkers = strtolower(trim(implode(' ', array_filter([
         (string) ($user->user_role ?? ''),
         (string) ($user->user_type ?? ''),
@@ -7599,6 +7610,12 @@
         $displayStudentNumber = $showsEmployeeActiveStatus
             ? trim((string) ($user->employee_number ?? ''))
             : trim((string) ($user->student_number ?? $user->student_id ?? ''));
+    }
+    if ($isLadderizedStudent) {
+        $localLadderizedStudentNumber = trim((string) ($user->student_number ?? optional($user->healthProfile)->student_number ?? ''));
+        if ($localLadderizedStudentNumber !== '') {
+            $displayStudentNumber = $localLadderizedStudentNumber;
+        }
     }
     $looksLikeReferenceNumber = function ($value): bool {
         $value = strtoupper(trim((string) $value));
@@ -7662,6 +7679,7 @@
             : \App\Models\HealthProfile::where('user_id', $user->id)->first());
     $clinicProfileApprovalStatus = strtolower(trim((string) optional($clinicMeasurementProfile)->clearance_status));
     $canEditClinicProfileInfo = in_array($clinicProfileApprovalStatus, ['approved', 'issued', 'fully cleared', 'cleared'], true);
+    $canOpenProfileEditModal = $canEditClinicProfileInfo || $canUpdateLadderizedStudentNumber;
     $heightRaw = old('height', optional($clinicMeasurementProfile)->height ?? '');
     $weightRaw = old('weight', optional($clinicMeasurementProfile)->weight ?? '');
     $bloodTypeDisplay = trim((string) ($accountProfileData['blood_type'] ?? optional($clinicMeasurementProfile)->blood_type ?? ''));
@@ -7671,7 +7689,7 @@
     $heightDisplay = $heightMatch[0] ?? trim((string) $heightRaw);
     $weightDisplay = $weightMatch[0] ?? trim((string) $weightRaw);
     $showClinicMeasurements = trim((string) $heightRaw) !== '' && trim((string) $weightRaw) !== '';
-    $profileEditErrorFields = ['contact_no', 'address', 'emergency_contact_person', 'emergency_contact_no', 'civil_status', 'height', 'weight'];
+    $profileEditErrorFields = ['student_number', 'contact_no', 'address', 'emergency_contact_person', 'emergency_contact_no', 'civil_status', 'height', 'weight'];
     $hasProfileEditErrors = isset($errors)
         && collect($profileEditErrorFields)->contains(fn ($field) => $errors->has($field));
     $profileEditCivilStatus = old('civil_status', $accountProfileData['civil_status'] ?? optional($linkedAdminProfile)->civil_status ?? '');
@@ -7866,7 +7884,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <p class="profile-card-description">Review your personal account details and keep your clinic information up to date.</p>
         </div>
         @if($isEnrolled)
-            <button type="button" id="editBtn" class="profile-edit-btn" onclick="openProfileEditModal({{ $canEditClinicProfileInfo ? 'true' : 'false' }})">
+            <button type="button" id="editBtn" class="profile-edit-btn" onclick="openProfileEditModal({{ $canOpenProfileEditModal ? 'true' : 'false' }})">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                 </svg>
@@ -8203,7 +8221,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </label>
                                 <label class="profile-edit-field">
                                     <span>Civil Status</span>
-                                    <select name="civil_status">
+                                    <select name="civil_status" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
                                         <option value="" {{ trim((string) $profileEditCivilStatus) === '' ? 'selected' : '' }}>Select civil status</option>
                                         @if(trim((string) $profileEditCivilStatus) !== '' && !in_array($profileEditCivilStatus, $profileEditCivilOptions, true))
                                             <option value="{{ $profileEditCivilStatus }}" selected>{{ $profileEditCivilStatus }}</option>
@@ -8216,12 +8234,12 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </label>
                                 <label class="profile-edit-field">
                                     <span>Height (ft)</span>
-                                    <input type="text" name="height" inputmode="decimal" value="{{ old('height', $heightDisplay) }}" placeholder="{{ $guisisPendingText }}">
+                                    <input type="text" name="height" inputmode="decimal" value="{{ old('height', $heightDisplay) }}" placeholder="{{ $guisisPendingText }}" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
                                     @error('height')<em>{{ $message }}</em>@enderror
                                 </label>
                                 <label class="profile-edit-field">
                                     <span>Weight (lbs)</span>
-                                    <input type="text" name="weight" inputmode="decimal" value="{{ old('weight', $weightDisplay) }}" placeholder="{{ $guisisPendingText }}">
+                                    <input type="text" name="weight" inputmode="decimal" value="{{ old('weight', $weightDisplay) }}" placeholder="{{ $guisisPendingText }}" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
                                     @error('weight')<em>{{ $message }}</em>@enderror
                                 </label>
                                 <label class="profile-edit-field">
@@ -8234,10 +8252,28 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="profile-edit-section">
                             <h3>{{ $usesEmployeeHealthForm ? 'Employment Information' : 'Academic Information' }}</h3>
                             <div class="profile-edit-grid">
-                                <label class="profile-edit-field">
-                                    <span>{{ $idNumberHeading }}</span>
-                                    <input type="text" value="{{ $profileModalIdNumber }}" disabled>
-                                </label>
+                                @if($isLadderizedStudent && $canUpdateLadderizedStudentNumber)
+                                    <label class="profile-edit-field profile-edit-field-wide student-number-update-field">
+                                        <span>Student Number</span>
+                                        <input
+                                            type="text"
+                                            name="student_number"
+                                            value="{{ old('student_number', $profileModalIdNumber !== $guisisPendingText ? $profileModalIdNumber : ($user->student_number ?? '')) }}"
+                                            inputmode="text"
+                                            autocomplete="off"
+                                            pattern="\d{4}-\d{5}-[A-Za-z]{2}-\d+"
+                                            maxlength="120"
+                                            required
+                                        >
+                                        <small class="student-number-update-note">You can update your student number only once. Make sure the new number is correct before saving.</small>
+                                        @error('student_number')<em>{{ $message }}</em>@enderror
+                                    </label>
+                                @else
+                                    <label class="profile-edit-field">
+                                        <span>{{ $idNumberHeading }}</span>
+                                        <input type="text" value="{{ $profileModalIdNumber }}" disabled>
+                                    </label>
+                                @endif
                                 @if($usesEmployeeHealthForm)
                                     <label class="profile-edit-field">
                                         <span>Office / Department</span>
@@ -8271,12 +8307,12 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </label>
                                 <label class="profile-edit-field">
                                     <span>Contact Number</span>
-                                    <input type="text" name="contact_no" inputmode="tel" value="{{ $profileEditContactNo }}" placeholder="{{ $guisisPendingText }}">
+                                    <input type="text" name="contact_no" inputmode="tel" value="{{ $profileEditContactNo }}" placeholder="{{ $guisisPendingText }}" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
                                     @error('contact_no')<em>{{ $message }}</em>@enderror
                                 </label>
                                 <label class="profile-edit-field profile-edit-field-wide">
                                     <span>Address</span>
-                                    <textarea name="address" rows="3" placeholder="{{ $guisisPendingText }}">{{ $profileEditAddress }}</textarea>
+                                    <textarea name="address" rows="3" placeholder="{{ $guisisPendingText }}" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>{{ $profileEditAddress }}</textarea>
                                     @error('address')<em>{{ $message }}</em>@enderror
                                 </label>
                             </div>
@@ -8287,12 +8323,12 @@ document.addEventListener('DOMContentLoaded', function () {
                             <div class="profile-edit-grid">
                                 <label class="profile-edit-field">
                                     <span>Emergency Contact Person</span>
-                                    <input type="text" name="emergency_contact_person" value="{{ $profileEditEmergencyPerson }}" placeholder="{{ $guisisPendingText }}">
+                                    <input type="text" name="emergency_contact_person" value="{{ $profileEditEmergencyPerson }}" placeholder="{{ $guisisPendingText }}" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
                                     @error('emergency_contact_person')<em>{{ $message }}</em>@enderror
                                 </label>
                                 <label class="profile-edit-field">
                                     <span>Emergency Contact Number</span>
-                                    <input type="text" name="emergency_contact_no" inputmode="tel" value="{{ $profileEditEmergencyNo }}" placeholder="{{ $guisisPendingText }}">
+                                    <input type="text" name="emergency_contact_no" inputmode="tel" value="{{ $profileEditEmergencyNo }}" placeholder="{{ $guisisPendingText }}" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
                                     @error('emergency_contact_no')<em>{{ $message }}</em>@enderror
                                 </label>
                                 @if($showOfficeField)
@@ -9927,7 +9963,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    const shouldOpenProfileEditModal = @json($accountView === 'profile' && $isEnrolled && $canEditClinicProfileInfo && $hasProfileEditErrors);
+    const shouldOpenProfileEditModal = @json($accountView === 'profile' && $isEnrolled && $canOpenProfileEditModal && $hasProfileEditErrors);
     if (shouldOpenProfileEditModal) {
         openProfileEditModal();
     }

@@ -2527,7 +2527,12 @@
             </div>
             <div class="stepper-spacer"></div>
 
-            <form action="{{ route('store.health.form.employee') }}" method="POST" enctype="multipart/form-data" id="employeeHealthForm">
+            <form
+                action="{{ ($adminForm ?? false) ? route('admin.settings.health-profile.form.store') : route('store.health.form.employee') }}"
+                method="POST"
+                enctype="multipart/form-data"
+                id="employeeHealthForm"
+            >
                 @csrf
                 <input type="hidden" name="employee_consent_acknowledged" id="employeeConsentAcknowledged" value="{{ old('employee_consent_acknowledged') ? '1' : '' }}">
 

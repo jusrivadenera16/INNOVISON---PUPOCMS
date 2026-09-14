@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ExcludesInactiveUserRecords;
 
 class HealthFormSubmission extends Model
 {
+    use ExcludesInactiveUserRecords;
+
     public const STATUS_REQUESTED = 'requested';
     public const STATUS_SUBMITTED = 'submitted';
     public const STATUS_APPROVED = 'approved';
@@ -14,6 +17,7 @@ class HealthFormSubmission extends Model
     protected $fillable = [
         'user_id',
         'health_profile_id',
+        'employee_health_profile_id',
         'category',
         'school_year',
         'status',
@@ -43,6 +47,11 @@ class HealthFormSubmission extends Model
     public function healthProfile()
     {
         return $this->belongsTo(HealthProfile::class);
+    }
+
+    public function employeeHealthProfile()
+    {
+        return $this->belongsTo(EmployeeHealthProfile::class);
     }
 
     public function requestedBy()

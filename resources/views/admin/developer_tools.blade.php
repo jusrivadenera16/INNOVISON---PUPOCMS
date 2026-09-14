@@ -2101,7 +2101,7 @@
                         $configEmergencyHash = trim((string) config('services.emergency.password_hash', ''));
                         $configEmergencyPassword = (string) config('services.emergency.password', '');
                         $configEmergencyRole = (string) config('services.emergency.role', 'admin');
-                        $emergencyEnabled = true;
+                        $emergencyEnabled = (bool) config('services.emergency.enabled', false);
                         $emergencyEmail = $configEmergencyEmail;
                         $emergencyRole = $configEmergencyRole;
                         $emergencyConfigured = $configEmergencyHash !== '' || $configEmergencyPassword !== '';

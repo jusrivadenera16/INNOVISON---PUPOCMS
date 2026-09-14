@@ -468,6 +468,10 @@
 @endphp
 
 <div class="settings-section-page personal-settings-page">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Settings', 'url' => route('admin.settings')],
+        ['label' => 'Personal Information'],
+    ]])
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -487,7 +491,6 @@
             <h1 class="settings-section-title"><span class="personal-title-icon"><x-outline-icon name="user-circle" /></span><span>Personal Information</span></h1>
             <p>View and manage your personal details and account credentials used in the clinic management workspace.</p>
         </div>
-        <a href="{{ route('admin.settings') }}" class="settings-back-link"><x-outline-icon name="chevron-right" /> Back to Settings</a>
     </section>
 
     <form id="personalSettingsForm" action="{{ route('admin.profile.update') }}" method="POST" class="settings-editable-form personal-settings-form">

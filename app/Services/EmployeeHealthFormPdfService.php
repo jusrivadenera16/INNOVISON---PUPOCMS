@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\EmployeeHealthProfile;
+use App\Models\HealthFormSubmission;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class EmployeeHealthFormPdfService
@@ -55,6 +56,10 @@ class EmployeeHealthFormPdfService
             && $previousPath !== $path
             && str_starts_with($previousPath, 'health_profile_employees/health_forms/')
             && $this->healthFiles->exists($previousPath)
+            && !HealthFormSubmission::query()
+                ->where('employee_health_profile_id', $profile->id)
+                ->where('pdf_path', $previousPath)
+                ->exists()
         ) {
             $this->healthFiles->delete($previousPath);
         }

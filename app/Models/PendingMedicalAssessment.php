@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ExcludesInactiveUserRecords;
 
 class PendingMedicalAssessment extends Model
 {
-    use HasFactory;
+    use HasFactory, ExcludesInactiveUserRecords;
 
     protected $fillable = [
         'reference_number',

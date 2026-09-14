@@ -251,6 +251,10 @@
         color: #ffffff;
     }
 
+    html[data-theme="dark"] .export-hub-kicker {
+        color: #ffffff !important;
+    }
+
     html[data-theme="dark"] .export-hub-copy {
         color: #cbd5e1;
     }
@@ -344,8 +348,11 @@
        
     ];
 @endphp
-
 <div class="export-hub-shell">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Reports', 'url' => $reportsHomeUrl],
+        ['label' => 'Export Reports'],
+    ]])
     <section class="export-hub-frame">
         <header class="export-hub-header">
             <div>
@@ -353,7 +360,6 @@
                 <h1 class="export-hub-title">Choose the report export workspace you want to open.</h1>
                 <p class="export-hub-copy">Each export now opens a dedicated preview page with date filtering and the existing generated report output.</p>
             </div>
-            <a href="{{ $reportsHomeUrl }}" class="export-hub-back">&larr; Back to Reports</a>
         </header>
 
         <div class="export-hub-grid">

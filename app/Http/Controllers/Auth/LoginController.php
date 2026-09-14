@@ -404,6 +404,20 @@ class LoginController extends Controller
         return in_array($userType, ['assistant', 'student assistant', 'student_assistant'], true);
     }
 
+    private function isClinicStaffAccount(User $user): bool
+    {
+        if (User::normalizeRole((string) $user->user_role) !== User::ROLE_ADMIN) {
+            return false;
+        }
+
+        $linkedAdmin = $this->findLinkedAdminProfile($user);
+        $accessLevel = strtolower(trim((string) ($linkedAdmin?->access_level ?? '')));
+        $status = strtolower(trim((string) ($linkedAdmin?->status ?? 'active')));
+
+        return $status === 'active'
+            && in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff'], true);
+    }
+
     private function isAdminDesigneeAccount(User $user): bool
     {
         if (User::normalizeRole((string) $user->user_role) !== User::ROLE_ADMIN) {
@@ -638,6 +652,10 @@ class LoginController extends Controller
         if ($normalizedRole === User::ROLE_ADMIN) {
             if ($this->isStudentAssistantAccount($user)) {
                 return '/assistant/choose-portal';
+            }
+
+            if ($this->isClinicStaffAccount($user)) {
+                return '/admin/dashboard';
             }
 
             if ($this->isAdminDesigneeAccount($user)) {
@@ -1620,8 +1638,18 @@ class LoginController extends Controller
                 $resolvedUserType = $normalizedLocalRole === User::ROLE_STUDENT
                     ? $existingUser->clinicUserType()
                     : $this->defaultUserTypeForIdpRole($idpRole, $role);
+                $hasAdmissionReference = trim((string) ($existingUser->reference_number ?? '')) !== '';
+                $isApplicantToEnrolledStudent = $normalizedLocalRole === User::ROLE_STUDENT
+                    && trim((string) ($existingUser->student_number ?? '')) !== ''
+                    && $hasAdmissionReference
+                    && ($currentUserType === 'applicant' || $idpRole === 'applicant');
 
-                if ($normalizedLocalRole === User::ROLE_SUPERADMIN) {
+                if ($isApplicantToEnrolledStudent) {
+                    $existingUser->user_type = 'Student';
+                    if (!in_array($existingUser->student_type, User::STUDENT_TYPES, true)) {
+                        $existingUser->student_type = 'regular';
+                    }
+                } elseif ($normalizedLocalRole === User::ROLE_SUPERADMIN) {
                     $existingUser->user_type = 'Regular';
                 } elseif (
                     $normalizedLocalRole === User::ROLE_STUDENT
@@ -1679,6 +1707,15 @@ class LoginController extends Controller
             $user->user_type = User::normalizeRole($role) === User::ROLE_STUDENT
                 ? $user->clinicUserType()
                 : $this->defaultUserTypeForIdpRole($idpRole, $role);
+            if (
+                User::normalizeRole($role) === User::ROLE_STUDENT
+                && $studentNumberSeed !== ''
+                && $referenceNumberSeed !== ''
+                && $idpRole === 'applicant'
+            ) {
+                $user->user_type = 'Student';
+                $user->student_type = 'regular';
+            }
             $user->save();
         }
 
@@ -1824,6 +1861,7 @@ class LoginController extends Controller
         $this->enrichUserWithPuptasData($user);
         $this->enrichUserWithFlssFacultyData($user);
         $this->enrichUserWithGuisisData($user);
+        $this->promoteEnrolledApplicantToRegularStudent($user);
     }
 
     private function enrichUserWithFlssFacultyData(User $user): void
@@ -2041,6 +2079,31 @@ class LoginController extends Controller
                 'error' => $exception->getMessage(),
             ]);
         }
+    }
+
+    private function promoteEnrolledApplicantToRegularStudent(User $user): bool
+    {
+        if (User::normalizeRole((string) ($user->user_role ?? '')) !== User::ROLE_STUDENT
+            || strtolower(trim((string) ($user->user_type ?? ''))) !== 'applicant'
+            || trim((string) ($user->reference_number ?? '')) === ''
+            || trim((string) ($user->student_number ?? '')) === '') {
+            return false;
+        }
+
+        $changed = $user->user_type !== 'Student';
+        $user->user_type = 'Student';
+
+        if (Schema::hasColumn('users', 'student_type')
+            && !in_array($user->student_type, User::STUDENT_TYPES, true)) {
+            $user->student_type = 'regular';
+            $changed = true;
+        }
+
+        if ($changed) {
+            $user->save();
+        }
+
+        return $changed;
     }
 
     public function checkSession(Request $request)

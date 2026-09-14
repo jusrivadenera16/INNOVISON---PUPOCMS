@@ -766,7 +766,13 @@
     }
     html[data-theme="dark"] .clearance-subcategory-row,
     html[data-theme="dark"] .clearance-subcategory-empty { border-top-color: rgba(255, 255, 255, .1); }
-    html[data-theme="dark"] .clearance-data-source-meta { border-top-color: rgba(255, 255, 255, .1); }
+    html[data-theme="dark"] .clearance-parent-direct-meta,
+    html[data-theme="dark"] .clearance-data-source-meta {
+        color: #f8fafc;
+        border-top-color: rgba(255, 255, 255, .1);
+    }
+    html[data-theme="dark"] .clearance-parent-direct-meta strong,
+    html[data-theme="dark"] .clearance-data-source-meta strong { color: #ffffff; }
     html[data-theme="dark"] .clearance-data-source-meta.is-unconfigured { color: #fbbf24; }
     html[data-theme="dark"] .clearance-data-source-help { color: #cbd5e1; }
     html[data-theme="dark"] .clearance-applicant-filter-fields { background: rgba(35, 17, 25, .78); }
@@ -844,6 +850,11 @@
 @endphp
 
 <div class="clearance-page" id="clearance-types">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Settings', 'url' => route('admin.settings')],
+        ['label' => 'Medical Configuration', 'url' => route('admin.settings.medical')],
+        ['label' => 'Clearance Types'],
+    ], 'class' => 'report-breadcrumb--settings-medical'])
     <div class="clearance-header">
         <div class="clearance-title-wrap">
             <span class="clearance-title-icon" aria-hidden="true">

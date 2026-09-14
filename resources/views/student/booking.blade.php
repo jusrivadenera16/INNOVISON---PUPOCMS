@@ -2357,14 +2357,24 @@
                         <select name="service" class="form-control service-select" id="serviceTypeSelect" required>
                             <option value="" disabled selected>Select a Service...</option>
                             <option value="General Consultation">General Consultation</option>
-                            <option value="Blood Pressure Monitoring">Blood Pressure Monitoring</option>
+                            @foreach(($otherServiceOptions ?? []) as $serviceOption)
+                                <option value="{{ $serviceOption->serviceLabel() }}">{{ $serviceOption->serviceLabel() }}</option>
+                            @endforeach
+                            @foreach(($onlineConsultationOptions ?? []) as $providerOption)
+                                <option value="{{ $providerOption->serviceLabel() }}">{{ $providerOption->serviceLabel() }}</option>
+                            @endforeach
                         </select>
                         <button type="button" class="service-select-display" id="serviceTypeDisplay" aria-haspopup="listbox" aria-expanded="false">
                             Select a Service...
                         </button>
                         <div class="service-select-menu" id="serviceTypeMenu" role="listbox" aria-label="Service Type options">
                             <button type="button" class="service-select-option" data-service-value="General Consultation">General Consultation</button>
-                            <button type="button" class="service-select-option" data-service-value="Blood Pressure Monitoring">Blood Pressure Monitoring</button>
+                            @foreach(($otherServiceOptions ?? []) as $serviceOption)
+                                <button type="button" class="service-select-option" data-service-value="{{ $serviceOption->serviceLabel() }}">{{ $serviceOption->serviceLabel() }}</button>
+                            @endforeach
+                            @foreach(($onlineConsultationOptions ?? []) as $providerOption)
+                                <button type="button" class="service-select-option" data-service-value="{{ $providerOption->serviceLabel() }}">{{ $providerOption->serviceLabel() }}</button>
+                            @endforeach
                         </div>
                     </div>
                 </div>

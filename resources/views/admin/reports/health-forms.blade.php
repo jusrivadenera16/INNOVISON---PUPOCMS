@@ -775,6 +775,10 @@
     };
 @endphp
 <div class="health-forms-shell">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Reports', 'url' => $reportsUrl],
+        ['label' => 'Health Forms'],
+    ]])
     <div class="health-forms-head">
         <div>
             <h1 class="health-forms-title">Health Forms</h1>
@@ -786,7 +790,6 @@
                 <span>Filter</span>
             </button>
             <a href="{{ $applicantsListUrl }}" class="health-forms-action">List</a>
-            <a href="{{ $reportsUrl }}" class="health-forms-action">&larr; Back to Reports</a>
         </div>
     </div>
 

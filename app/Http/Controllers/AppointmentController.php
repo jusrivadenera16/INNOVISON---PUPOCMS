@@ -10,6 +10,7 @@ use App\Models\ActivityLog;
 use App\Services\AnnouncementContent;
 use App\Models\Appointment;
 use App\Models\AppointmentFeedback;
+use App\Models\ClinicServiceOption;
 use App\Models\Consultation;
 use App\Models\DependentsProfile;
 use App\Models\HealthFormCategory;
@@ -25,10 +26,12 @@ use App\Services\GuisisApiService;
 use App\Services\PuptasWebhookService;
 use App\Services\ClinicWorkflowService;
 use App\Services\EmployeeHealthFormPdfService;
+use App\Services\EmployeeHealthFormHistoryService;
 use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
 use App\Services\HealthProfileSnapshotService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
@@ -884,6 +887,63 @@ class AppointmentController extends Controller
         return substr($value, 0, 120);
     }
 
+    private function looksLikeStudentNumberValue(?string $value): bool
+    {
+        return (bool) preg_match(
+            '/^\d{4}-\d{5}-[A-Z]{2}-\d+$/i',
+            trim((string) $value)
+        );
+    }
+
+    private function hasAdmissionReferenceIdentity(User $user, ?HealthProfile $healthProfile = null): bool
+    {
+        foreach ([
+            $user->reference_number ?? null,
+            optional($healthProfile)->reference_number,
+        ] as $referenceNumber) {
+            $referenceNumber = trim((string) $referenceNumber);
+            if (
+                $referenceNumber === ''
+                || $this->looksLikeIdpIdentifier($referenceNumber, $user)
+                || $this->isClinicReference($referenceNumber)
+                || $this->looksLikeStudentNumberValue($referenceNumber)
+            ) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private function canEnterInitialDirectLadderizedStudentNumber(
+        ?User $user,
+        ?HealthProfile $healthProfile = null
+    ): bool {
+        if (!$user instanceof User
+            || !$this->isStudentAccount($user)
+            || $user->clinicAccountTypeKey() !== 'student'
+            || strtolower(trim((string) $user->student_type)) !== 'ladderized'
+            || $healthProfile
+            || $user->hasExistingClinicHealthRecord()
+        ) {
+            return false;
+        }
+
+        return !$this->hasAdmissionReferenceIdentity($user, $healthProfile);
+    }
+
+    private function canUpdateLadderizedStudentNumber(?User $user): bool
+    {
+        return $user instanceof User
+            && Schema::hasColumn('users', 'ladderized_student_number_updated_at')
+            && $this->isStudentAccount($user)
+            && $user->clinicAccountTypeKey() === 'student'
+            && strtolower(trim((string) ($user->student_type ?? ''))) === 'ladderized'
+            && blank($user->getAttribute('ladderized_student_number_updated_at'));
+    }
+
     private function wantsManualStudentNumberMode(Request $request): bool
     {
         return trim((string) $request->input('reference_mode_selected')) === 'student_number';
@@ -955,19 +1015,31 @@ class AppointmentController extends Controller
         return '';
     }
 
-    private function persistResolvedStudentNumber(User $user, ?HealthProfile $healthProfile, ?string $studentNumber): void
+    private function persistResolvedStudentNumber(
+        User $user,
+        ?HealthProfile $healthProfile,
+        ?string $studentNumber,
+        bool $replaceExisting = false
+    ): void
     {
         $studentNumber = trim((string) $studentNumber);
         if ($studentNumber === '' || $this->looksLikeIdpIdentifier($studentNumber, $user) || $this->looksLikeReferenceIdentifier($studentNumber)) {
             return;
         }
 
-        if (trim((string) $user->student_number) === '') {
+        if (
+            ($replaceExisting || trim((string) $user->student_number) === '')
+            && trim((string) $user->student_number) !== $studentNumber
+        ) {
             $user->student_number = $studentNumber;
             $user->save();
         }
 
-        if ($healthProfile && trim((string) $healthProfile->student_number) === '') {
+        if (
+            $healthProfile
+            && ($replaceExisting || trim((string) $healthProfile->student_number) === '')
+            && trim((string) $healthProfile->student_number) !== $studentNumber
+        ) {
             $healthProfile->student_number = $studentNumber;
             $healthProfile->save();
         }
@@ -1451,10 +1523,24 @@ class AppointmentController extends Controller
     private function buildHealthFormPrefill(User $user, ?Admin $linkedAdminProfile = null, ?HealthProfile $healthProfile = null): array
     {
         $linkedAdminProfile = $linkedAdminProfile ?: $this->resolveLinkedAdminProfile($user);
-        $guisisAccountData = $this->isStudentAccount($user) ? $this->buildGuisisAccountData($user) : ['available' => false];
+        $isInitialDirectLadderizedStudent = $this->canEnterInitialDirectLadderizedStudentNumber($user, $healthProfile);
+        $guisisAccountData = $this->isStudentAccount($user) && !$isInitialDirectLadderizedStudent
+            ? $this->buildGuisisAccountData($user)
+            : ['available' => false];
         $studentNumberReference = $this->enrolledStudentReferenceNumber($user, $healthProfile, $guisisAccountData);
         $storedAdmissionReference = $this->resolveReferenceNumber($user, $healthProfile);
-        if ($studentNumberReference !== '') {
+        if ($isInitialDirectLadderizedStudent) {
+            $applicantLookup = [
+                'success' => false,
+                'outcome' => 'skipped_direct_student',
+                'status' => null,
+                'message' => 'Direct Ladderized student setup does not require applicant verification.',
+                'data' => null,
+            ];
+            $applicantData = null;
+            $lookupOutcome = 'skipped_direct_student';
+            $referenceMode = 'student_number';
+        } elseif ($studentNumberReference !== '') {
             $applicantLookup = [
                 'success' => false,
                 'outcome' => 'skipped_student_number',
@@ -2293,6 +2379,137 @@ class AppointmentController extends Controller
             ->get();
     }
 
+    private function studentHealthFormCategoryForType(?string $studentType): ?HealthFormCategory
+    {
+        $studentType = strtolower(trim((string) $studentType));
+        if ($studentType === '' || $studentType === 'regular') {
+            return null;
+        }
+
+        $query = HealthFormCategory::query()->where('is_active', true);
+
+        if (Schema::hasColumn('health_form_categories', 'student_types')) {
+            $mappedCategory = DB::connection()->getDriverName() === 'sqlite'
+                ? $this->activeStudentHealthFormCategories()->first(function (HealthFormCategory $category) use ($studentType): bool {
+                    return in_array($studentType, (array) $category->student_types, true);
+                })
+                : (clone $query)
+                    ->availableFor('student')
+                    ->whereJsonContains('student_types', $studentType)
+                    ->orderBy('id')
+                    ->first();
+
+            if ($mappedCategory) {
+                return $mappedCategory;
+            }
+        }
+
+        // Keep older OJT and student-transfer categories usable after the
+        // student-type mapping is introduced.
+        $legacyNames = match ($studentType) {
+            'ojt' => ['ojt', 'on the job training', 'on-the-job training', 'on-the-job training (ojt)'],
+            'transferee' => ['transfer student', 'transfer students', 'transferee'],
+            'returnee' => ['return to school', 'returning student', 'returning students', 'returnee'],
+            default => [],
+        };
+
+        if ($legacyNames === []) {
+            return null;
+        }
+
+        return $this->activeStudentHealthFormCategories()->first(function (HealthFormCategory $category) use ($legacyNames): bool {
+            return in_array(strtolower(trim((string) $category->name)), $legacyNames, true);
+        });
+    }
+
+    private function activeStudentHealthFormCategories()
+    {
+        $query = HealthFormCategory::query()->where('is_active', true);
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            return $query->availableFor('student')->orderBy('id')->get();
+        }
+
+        return $query->orderBy('id')->get()->filter(function (HealthFormCategory $category): bool {
+            return in_array('student', (array) $category->available_for, true);
+        })->values();
+    }
+
+    private function activeStudentHealthFormCategoryByValue(?string $value): ?HealthFormCategory
+    {
+        $value = trim((string) $value);
+        $normalized = strtolower($value);
+        if ($value === '' || $normalized === 'general') {
+            return null;
+        }
+
+        $category = $this->activeStudentHealthFormCategories()->first(function (HealthFormCategory $category) use ($normalized): bool {
+            return strtolower(trim((string) $category->name)) === $normalized;
+        });
+
+        if ($category) {
+            return $category;
+        }
+
+        if (str_contains($normalized, 'ojt') || str_contains($normalized, 'on-the-job')) {
+            return $this->studentHealthFormCategoryForType('ojt');
+        }
+
+        return null;
+    }
+
+    private function resolvedStudentHealthFormCategory(
+        ?User $user,
+        ?HealthFormSubmission $pendingHealthFormRequest = null,
+        ?HealthProfile $existingHealthProfile = null
+    ): string {
+        foreach ([
+            optional($pendingHealthFormRequest)->category,
+            optional($existingHealthProfile)->health_form_category,
+        ] as $storedCategory) {
+            $storedCategory = trim((string) $storedCategory);
+            if ($storedCategory === '' || strtolower($storedCategory) === 'general') {
+                continue;
+            }
+
+            if (strtolower($storedCategory) === 'student') {
+                return 'Student';
+            }
+
+            $category = $this->activeStudentHealthFormCategoryByValue($storedCategory);
+            if ($category) {
+                return (string) $category->name;
+            }
+        }
+
+        $studentType = strtolower(trim((string) ($user?->student_type ?? '')));
+        if ($studentType === '' || $studentType === 'regular') {
+            return 'Student';
+        }
+
+        return (string) ($this->studentHealthFormCategoryForType($studentType)?->name ?? '');
+    }
+
+    private function studentDeclarationCategoryForUser(User $user, string $category): string
+    {
+        $studentType = strtolower(trim((string) $user->student_type));
+
+        if ($studentType === 'ladderized') {
+            return 'Ladderized Program';
+        }
+
+        if (trim($category) !== '') {
+            return $category;
+        }
+
+        return match ($studentType) {
+            'ojt' => 'OJT',
+            'transferee' => 'Transferee',
+            'returnee' => 'Returnee',
+            'shiftee' => 'Shiftee',
+            default => 'Student',
+        };
+    }
+
     private function employeeHealthFormCategoryAudience(User $user): string
     {
         return $user->clinicAccountTypeKey() === 'faculty' ? 'faculty' : 'admin';
@@ -2331,9 +2548,20 @@ class AppointmentController extends Controller
         return $category;
     }
 
-    private function studentDeclarationPurposeText(?string $category): array
+    private function studentDeclarationPurposeText(?string $category, ?string $studentType = null): array
     {
+        $normalizedStudentType = strtolower(trim((string) $studentType));
         $category = $this->normalizeStudentHealthFormCategory($category) ?: 'Student';
+
+        if (
+            $normalizedStudentType === 'ladderized'
+            || ($normalizedStudentType === '' && strtolower(trim($category)) === 'ladderized')
+        ) {
+            return [
+                'purpose' => 'Ladderized Program',
+                'endorsement' => 'Ladderized Program',
+            ];
+        }
 
         if ($category === 'OJT') {
             return [
@@ -2342,7 +2570,7 @@ class AppointmentController extends Controller
             ];
         }
 
-        if (strtolower($category) === 'student') {
+        if (in_array(strtolower($category), ['student', 'regular'], true)) {
             return [
                 'purpose' => 'currently enrolled student',
                 'endorsement' => 'status as a currently enrolled student',
@@ -2697,8 +2925,28 @@ class AppointmentController extends Controller
         $workflow = app(ClinicWorkflowService::class);
         $clinicClosure = $workflow->activeClosure();
         $clinicHours = $workflow->clinicHoursStatus();
+        $otherServiceOptions = ClinicServiceOption::query()
+            ->forGroup(ClinicServiceOption::GROUP_OTHER_SERVICE)
+            ->active()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+        $onlineConsultationOptions = ClinicServiceOption::query()
+            ->forGroup(ClinicServiceOption::GROUP_ONLINE_CONSULTATION)
+            ->active()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
 
-        return view('student.booking', compact('user', 'appointments', 'studentContext', 'clinicClosure', 'clinicHours'));
+        return view('student.booking', compact(
+            'user',
+            'appointments',
+            'studentContext',
+            'clinicClosure',
+            'clinicHours',
+            'otherServiceOptions',
+            'onlineConsultationOptions'
+        ));
     }
 
     // -------------------------------
@@ -2715,10 +2963,31 @@ class AppointmentController extends Controller
             );
         }
 
+        $activeConfiguredOptions = ClinicServiceOption::query()
+            ->active()
+            ->whereIn('option_group', [
+                ClinicServiceOption::GROUP_OTHER_SERVICE,
+                ClinicServiceOption::GROUP_ONLINE_CONSULTATION,
+            ])
+            ->get();
+        $configuredServices = $activeConfiguredOptions
+            ->map(fn (ClinicServiceOption $option) => $option->serviceLabel())
+            ->prepend('General Consultation')
+            ->unique()
+            ->values()
+            ->all();
+        if ($activeConfiguredOptions->contains(function (ClinicServiceOption $option): bool {
+            return $option->option_group === ClinicServiceOption::GROUP_OTHER_SERVICE
+                && in_array(strtolower(trim($option->name)), ['blood pressure monitoring', 'bp monitoring'], true);
+        })) {
+            $configuredServices[] = 'BP Monitoring';
+        }
+        $configuredServices = array_values(array_unique($configuredServices));
+
         $request->validate([
             'date' => 'required|date',
             'time' => 'required',
-            'service' => 'required',
+            'service' => ['required', Rule::in($configuredServices)],
             'remarks' => 'nullable|string',
         ]);
 
@@ -3013,6 +3282,7 @@ public function account(Request $request)
     $hasSubmittedHealthProfile = $studentUsesEmployeeHealthForm
         ? $hasSubmittedEmployeeHealthProfile
         : ($studentUsesDependentProfile ? $hasSubmittedDependentProfile : $this->hasSubmittedHealthProfile($user));
+    $canUpdateLadderizedStudentNumber = $this->canUpdateLadderizedStudentNumber($user);
     $pendingHealthFormRequest = HealthFormSubmission::query()
         ->where('user_id', $user->id)
         ->where('status', HealthFormSubmission::STATUS_REQUESTED)
@@ -3185,6 +3455,7 @@ public function account(Request $request)
         'hasSubmittedHealthProfile',
         'hasSubmittedEmployeeHealthProfile',
         'studentUsesEmployeeHealthForm',
+        'canUpdateLadderizedStudentNumber',
         'accountProfileData',
         'guisisAccountData',
         'isEnrolled',
@@ -3345,7 +3616,7 @@ public function account(Request $request)
             if ($categorySelected === '') {
                 $categorySelected = 'Student';
             }
-            $declarationPurpose = $this->studentDeclarationPurposeText($categorySelected);
+            $declarationPurpose = $this->studentDeclarationPurposeText($categorySelected, $user?->student_type);
             $purposeUnderline1 = $declarationPurpose['purpose'];
             $purposeUnderline2 = $declarationPurpose['endorsement'];
 
@@ -4185,8 +4456,22 @@ public function updateContact(Request $request)
         return redirect()->back()->with('error', 'User session not found.');
     }
 
+    $hasStudentNumberField = $request->has('student_number');
+    $canUpdateStudentNumber = $this->canUpdateLadderizedStudentNumber($user);
+    if ($hasStudentNumberField && !$canUpdateStudentNumber) {
+        throw ValidationException::withMessages([
+            'student_number' => 'Only a ladderized student may update the student number, and only once.',
+        ]);
+    }
+
+    if ($hasStudentNumberField) {
+        $request->merge([
+            'student_number' => strtoupper(trim((string) $request->input('student_number'))),
+        ]);
+    }
+
     // 2. Save only clinic-controlled personal information from the student profile page.
-    $validated = $request->validate([
+    $validationRules = [
         'contact_no' => ['nullable', 'string', 'max:50'],
         'address' => ['nullable', 'string', 'max:500'],
         'emergency_contact_person' => ['nullable', 'string', 'max:255'],
@@ -4194,9 +4479,22 @@ public function updateContact(Request $request)
         'civil_status' => ['nullable', 'string', 'max:80'],
         'height' => ['nullable', 'string', 'max:20', 'regex:/^\s*\d+(\.\d+)?(\s*ft)?\s*$/i'],
         'weight' => ['nullable', 'string', 'max:20', 'regex:/^\s*\d+(\.\d+)?(\s*lbs?)?\s*$/i'],
-    ], [
+    ];
+    if ($hasStudentNumberField) {
+        $validationRules['student_number'] = [
+            'required',
+            'string',
+            'max:120',
+            'regex:/^\d{4}-\d{5}-[A-Za-z]{2}-\d+$/',
+            Rule::unique('users', 'student_number')->ignore($user->id),
+        ];
+    }
+
+    $validated = $request->validate($validationRules, [
         'height.regex' => 'Height must be a valid number (optional unit: ft).',
         'weight.regex' => 'Weight must be a valid number (optional unit: lbs).',
+        'student_number.regex' => 'Enter a valid Student Number in the format YYYY-#####-TG-#.',
+        'student_number.unique' => 'That Student Number is already assigned to another account.',
     ]);
 
     $heightNumeric = $this->extractMeasurementNumber($validated['height'] ?? null);
@@ -4207,9 +4505,36 @@ public function updateContact(Request $request)
         : null;
     $hasField = fn (string $key): bool => $request->has($key);
 
+    $healthProfileForStudentNumber = $hasStudentNumberField
+        ? HealthProfile::query()->where('user_id', $user->id)->first()
+        : null;
+    $requestedStudentNumber = $hasStudentNumberField
+        ? trim((string) ($validated['student_number'] ?? ''))
+        : '';
+    $currentStudentNumber = trim((string) ($user->student_number ?? ''))
+        ?: trim((string) ($healthProfileForStudentNumber?->student_number ?? ''));
+    $studentNumberChanged = $hasStudentNumberField
+        && $requestedStudentNumber !== ''
+        && strcasecmp($currentStudentNumber, $requestedStudentNumber) !== 0;
+
     // 3. Keep the student account table in sync for fields it already owns.
     if ($hasField('contact_no')) {
         $user->contact_no = $clean('contact_no');
+    }
+    if ($studentNumberChanged) {
+        $user->student_number = $requestedStudentNumber;
+        $user->ladderized_student_number_updated_at = now();
+
+        if (
+            Schema::hasColumn('users', 'reference_number')
+            && (
+                trim((string) ($user->reference_number ?? '')) === ''
+                || strcasecmp(trim((string) ($user->reference_number ?? '')), $currentStudentNumber) === 0
+                || $this->looksLikeStudentNumberValue($user->reference_number)
+            )
+        ) {
+            $user->reference_number = $requestedStudentNumber;
+        }
     }
     $user->height = $heightNumeric ?? $user->height;
     $user->weight = $weightNumeric ?? $user->weight;
@@ -4244,6 +4569,20 @@ public function updateContact(Request $request)
     } else {
         $healthProfile = $user->healthProfile()->first();
         if ($healthProfile) {
+            if ($studentNumberChanged) {
+                $healthProfile->student_number = $requestedStudentNumber;
+
+                if (
+                    Schema::hasColumn('health_profiles', 'reference_number')
+                    && (
+                        trim((string) ($healthProfile->reference_number ?? '')) === ''
+                        || strcasecmp(trim((string) ($healthProfile->reference_number ?? '')), $currentStudentNumber) === 0
+                        || $this->looksLikeStudentNumberValue($healthProfile->reference_number)
+                    )
+                ) {
+                    $healthProfile->reference_number = $requestedStudentNumber;
+                }
+            }
             if ($hasField('address')) {
                 $healthProfile->home_address = $clean('address');
             }
@@ -4290,7 +4629,9 @@ public function updateContact(Request $request)
         'user_id'     => $user->id,
         'user_name'   => $user->name,
         'action'      => 'Profile Update',
-        'description' => 'Updated clinic personal information fields.',
+        'description' => $studentNumberChanged
+            ? 'Updated the ladderized student number through the one-time account update.'
+            : 'Updated clinic personal information fields.',
         'ip_address'  => $request->ip(),
         'user_agent'  => $request->userAgent(),
     ]);
@@ -4450,7 +4791,9 @@ public function updateContact(Request $request)
     // -------------------------------
     public function fetchUser($student_id)
     {
-        $user = User::where('student_id', $student_id)->first();
+        $user = User::visibleForAdminHubRecords()
+            ->where('student_id', $student_id)
+            ->first();
 
         if ($user) {
             return response()->json([
@@ -4530,8 +4873,13 @@ public function showHealthForm()
         ));
         $healthFormPrefill['reference_mode'] = 'student_number';
         $healthFormPrefill['reference_number'] = $requestedStudentReference;
-        $healthFormPrefill['manual_student_number_allowed'] = true;
-        $healthFormPrefill['reference_requires_validation'] = $requestedStudentReference === '';
+        $manualStudentNumberAllowed = $this->canEnterInitialDirectLadderizedStudentNumber(
+            $user,
+            $existingHealthProfile
+        );
+        $healthFormPrefill['manual_student_number_allowed'] = $manualStudentNumberAllowed;
+        $healthFormPrefill['reference_requires_validation'] = $manualStudentNumberAllowed
+            || $requestedStudentReference === '';
         $healthFormPrefill['step_1_title'] = 'Student ID';
         $healthFormPrefill['step_1_description'] = 'Enter your Student ID, then complete your health information.';
         $healthFormPrefill['reference_label'] = 'Student ID / Student Number';
@@ -4557,13 +4905,18 @@ public function showHealthForm()
     $displayLastName = $healthFormPrefill['last_name'] ?? '';
     $displayReferenceNumber = $healthFormPrefill['reference_number'] ?? '';
     $prefill = $healthFormPrefill;
-    $studentHealthFormCategories = $isDedicatedStudentForm
-        ? $this->healthFormCategoriesForAudience('student')
-        : collect();
+    $studentHealthFormCategory = $isDedicatedStudentForm
+        ? $this->resolvedStudentHealthFormCategory($user, $pendingHealthFormRequest, $existingHealthProfile)
+        : '';
+    $studentDeclarationCategory = $isDedicatedStudentForm
+        ? $this->studentDeclarationCategoryForUser($user, $studentHealthFormCategory)
+        : 'Student';
+    $studentDeclarationPurpose = $this->studentDeclarationPurposeText($studentDeclarationCategory, $user->student_type);
+    $studentHealthFormCategoryConfigured = $studentHealthFormCategory !== '';
 
     return view(
         $isDedicatedStudentForm ? 'student.health_form_student' : 'student.health_form',
-        compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill', 'pendingHealthFormRequest', 'studentHealthFormCategories')
+        compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill', 'pendingHealthFormRequest', 'studentHealthFormCategory', 'studentDeclarationPurpose', 'studentHealthFormCategoryConfigured')
     );
 }
 
@@ -4748,6 +5101,18 @@ public function showEmployeeHealthForm()
 {
     /** @var \App\Models\User|null $user */
     $user = Auth::guard('student')->user() ?: Auth::user();
+    return $this->renderEmployeeHealthForm($user, false);
+}
+
+public function showAdminEmployeeHealthForm()
+{
+    /** @var \App\Models\User|null $user */
+    $user = Auth::guard('admin')->user() ?: Auth::user();
+    return $this->renderEmployeeHealthForm($user, true);
+}
+
+private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
+{
     if ($user) {
         $user = User::with(['adminProfile', 'adminHubProfile', 'employeeHealthProfile'])->find($user->id);
     }
@@ -4756,16 +5121,32 @@ public function showEmployeeHealthForm()
         return redirect('/login')->with('error', 'Please login first.');
     }
 
-    if (!$this->shouldUseEmployeeHealthForm($user)) {
+    if ($adminForm) {
+        abort_unless($this->canUseAdminEmployeeHealthForm($user), 403);
+    } elseif (!$this->shouldUseEmployeeHealthForm($user)) {
         return redirect()->route('health.form');
     }
 
-    if ($this->hasSubmittedEmployeeHealthProfile($user)) {
+    $employeeProfile = $user->employeeHealthProfile;
+    $activeEmployeeHealthFormRequest = $employeeProfile
+        ? HealthProfileCorrectionRequest::query()
+            ->where('user_id', $user->id)
+            ->where('employee_health_profile_id', $employeeProfile->id)
+            ->whereIn('type', [
+                HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION,
+                HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM,
+            ])
+            ->active()
+            ->latest('requested_at')
+            ->latest('id')
+            ->first()
+        : null;
+
+    if (!$adminForm && $this->hasSubmittedEmployeeHealthProfile($user) && !$activeEmployeeHealthFormRequest) {
         return redirect('/student/account?view=health-record')
             ->with('info', 'Your health examination record has already been submitted for clinic review.');
     }
 
-    $employeeProfile = $user->employeeHealthProfile;
     $employeePrefill = $this->buildEmployeeHealthFormPrefill($user, $employeeProfile);
     $displayName = trim((string) ($user->name ?? ''));
 
@@ -4790,8 +5171,19 @@ public function showEmployeeHealthForm()
         'displayName',
         'employeeCourseOptions',
         'healthFormCategories',
-        'defaultEmployeeHealthFormCategory'
+        'defaultEmployeeHealthFormCategory',
+        'adminForm'
     ));
+}
+
+private function canUseAdminEmployeeHealthForm(User $user): bool
+{
+    $currentRole = User::normalizeRole((string) ($user->user_role ?? ''));
+    $accessLevel = strtolower(trim((string) ($user->adminProfile?->access_level ?? '')));
+    $isClinicStaff = $currentRole === User::ROLE_ADMIN
+        && in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff'], true);
+
+    return $currentRole === User::ROLE_SUPERADMIN || $isClinicStaff;
 }
 
 private function generateEmployeeHealthFormPdf(EmployeeHealthProfile $profile): string
@@ -5024,27 +5416,58 @@ private function normalizeDateValue($value): string
     }
 }
 
-public function storeEmployeeHealthForm(Request $request)
+public function storeAdminEmployeeHealthForm(Request $request)
+{
+    return $this->storeEmployeeHealthForm($request, true);
+}
+
+public function storeEmployeeHealthForm(Request $request, bool $adminForm = false)
 {
     /** @var \App\Models\User|null $user */
-    $user = Auth::guard('student')->user() ?: Auth::user();
+    $user = $adminForm
+        ? (Auth::guard('admin')->user() ?: Auth::user())
+        : (Auth::guard('student')->user() ?: Auth::user());
     if ($user) {
-        $user = User::with(['adminProfile', 'employeeHealthProfile'])->find($user->id);
+        $user = User::with(['adminProfile', 'adminHubProfile', 'employeeHealthProfile'])->find($user->id);
     }
 
     if (!$user) {
         return redirect('/login')->with('error', 'Please login first.');
     }
 
-    if (!$this->shouldUseEmployeeHealthForm($user)) {
+    if ($adminForm) {
+        abort_unless($this->canUseAdminEmployeeHealthForm($user), 403);
+    } elseif (!$this->shouldUseEmployeeHealthForm($user)) {
         return redirect()->route('health.form')
             ->with('info', 'Please use the student/applicant Health Information Form.');
     }
 
     $existingEmployeeProfile = $user->employeeHealthProfile;
-    if ($existingEmployeeProfile) {
+    $employeeHistory = app(EmployeeHealthFormHistoryService::class);
+    $activeEmployeeHealthFormRequest = $existingEmployeeProfile
+        ? HealthProfileCorrectionRequest::query()
+            ->where('user_id', $user->id)
+            ->where('employee_health_profile_id', $existingEmployeeProfile->id)
+            ->whereIn('type', [
+                HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION,
+                HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM,
+            ])
+            ->active()
+            ->latest('requested_at')
+            ->latest('id')
+            ->first()
+        : null;
+
+    if ($existingEmployeeProfile && !$adminForm && !$activeEmployeeHealthFormRequest) {
         return redirect('/student/account?view=health-record')
             ->with('info', 'Your health examination record has already been submitted for clinic review.');
+    }
+
+    if ($existingEmployeeProfile && (
+        in_array($existingEmployeeProfile->clearance_status, ['Approved', 'Issued', 'Fully Cleared', 'Cleared'], true)
+        || $existingEmployeeProfile->verified_at
+    )) {
+        $employeeHistory->ensureApprovedSnapshot($existingEmployeeProfile);
     }
 
     $employeeCategoryAudience = $this->employeeHealthFormCategoryAudience($user);
@@ -5056,13 +5479,18 @@ public function storeEmployeeHealthForm(Request $request)
         ]);
     }
 
+    $employeeNumberRule = Rule::unique('health_profile_emp', 'employee_number')
+        ->where(fn ($query) => $query->whereNull('deleted_at'));
+    if ($adminForm && $existingEmployeeProfile) {
+        $employeeNumberRule->ignore($existingEmployeeProfile->id);
+    }
+
     $validated = $request->validate([
         'employee_number' => [
             'nullable',
             'string',
             'max:120',
-            Rule::unique('health_profile_emp', 'employee_number')
-                ->where(fn ($query) => $query->whereNull('deleted_at')),
+            $employeeNumberRule,
         ],
         'first_name' => ['required', 'string', 'max:120'],
         'middle_name' => ['nullable', 'string', 'max:120'],
@@ -5219,7 +5647,9 @@ public function storeEmployeeHealthForm(Request $request)
     foreach ($employeeRequirementFiles as $field => $directory) {
         $employeeRequirementPaths[$field] = $request->hasFile($field)
             ? $this->healthFiles()->store($request->file($field), $directory)
-            : null;
+            : ($field === 'student_photo'
+                ? ($existingEmployeeProfile?->student_photo ?: null)
+                : ($existingEmployeeProfile?->{$field} ?: null));
     }
 
     $employeeHealthDeclarationPath = $employeeRequirementPaths['health_declaration'];
@@ -5258,7 +5688,8 @@ public function storeEmployeeHealthForm(Request $request)
         $this->healthFiles()->put($employeeHealthDeclarationPath, $declarationPdf->output());
     }
 
-    $profile = EmployeeHealthProfile::create([
+    $profile = $existingEmployeeProfile ?: new EmployeeHealthProfile();
+    $profile->fill([
         'user_id' => $user->id,
         'employee_number' => $validated['employee_number'] ?? null,
         ...(\Schema::hasColumn('health_profile_emp', 'health_form_category') ? [
@@ -5350,10 +5781,40 @@ public function storeEmployeeHealthForm(Request $request)
         'uploaded_signature_path' => $signaturePath,
         'signature_type' => $signatureType,
         'certified_at' => now(),
-        'submission_status' => 'submitted',
-        'clearance_status' => 'For Verification',
-        'documents_valid' => null,
+        'submission_status' => $adminForm ? 'approved' : 'submitted',
+        'clearance_status' => $adminForm ? 'Approved' : 'For Verification',
+        'documents_valid' => $adminForm ? true : null,
+        'verified_at' => $adminForm ? now() : null,
+        'approved_by_user_id' => $adminForm ? $user->id : null,
     ]);
+    $profile->save();
+
+    if (!$adminForm) {
+        $this->generateEmployeeHealthFormPdf($profile);
+        $employeeSubmission = $employeeHistory->createSubmittedSnapshot(
+            $profile->fresh(['user', 'approvedBy']),
+            $activeEmployeeHealthFormRequest
+        );
+    } else {
+        $this->generateEmployeeHealthFormPdf($profile);
+        $employeeHistory->ensureApprovedSnapshot($profile->fresh(['user', 'approvedBy']));
+        $employeeSubmission = null;
+    }
+
+    if (!$adminForm && $activeEmployeeHealthFormRequest) {
+        $requestMetadata = is_array($activeEmployeeHealthFormRequest->metadata)
+            ? $activeEmployeeHealthFormRequest->metadata
+            : [];
+        $requestMetadata['submitted_category'] = $profile->health_form_category;
+        $requestMetadata['health_form_submission_id'] = $employeeSubmission->id;
+
+        $activeEmployeeHealthFormRequest->forceFill([
+            'status' => HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+            'submitted_at' => now(),
+            'health_form_submission_id' => $employeeSubmission->id,
+            'metadata' => $requestMetadata,
+        ])->save();
+    }
 
     $user->contact_no = $validated['contact_no'];
     $user->DOB = $validated['birthday'];
@@ -5366,17 +5827,26 @@ public function storeEmployeeHealthForm(Request $request)
     $user->name = $fullName;
     $user->gender = $validated['sex'];
     $user->employee_number = $validated['employee_number'] ?? null;
-    $user->is_health_profile_completed = 0;
+    $user->is_health_profile_completed = $adminForm ? 1 : 0;
     $user->save();
 
     \App\Models\ActivityLog::create([
         'user_id' => $user->id,
         'user_name' => $user->name,
-        'action' => 'Employee Health Examination Submitted',
-        'description' => 'Faculty/administrative employee/dependent submitted a Health Examination Record.',
+        'action' => $adminForm
+            ? 'Employee Health Examination Approved'
+            : 'Employee Health Examination Submitted',
+        'description' => $adminForm
+            ? 'Super Admin/Clinic Staff saved an automatically approved Health Examination Record.'
+            : 'Faculty/administrative employee/dependent submitted a Health Examination Record.',
         'ip_address' => $request->ip(),
         'user_agent' => $request->userAgent(),
     ]);
+
+    if ($adminForm) {
+        return redirect()->route('admin.settings.health-profile')
+            ->with('success', 'Health Examination Record saved successfully.');
+    }
 
     return redirect('/student/account?view=health-record')
         ->with('success', 'Health Examination Record submitted successfully.')
@@ -5451,7 +5921,16 @@ public function validateHealthFormReference(Request $request)
         ]);
 
         $studentNumberReference = $this->normalizeManualStudentNumber($validated['reference_number']);
-        $this->persistResolvedStudentNumber($user, $existingHealthProfile, $studentNumberReference);
+        $replaceInitialLadderizedNumber = $this->canEnterInitialDirectLadderizedStudentNumber(
+            $user,
+            $existingHealthProfile
+        );
+        $this->persistResolvedStudentNumber(
+            $user,
+            $existingHealthProfile,
+            $studentNumberReference,
+            $replaceInitialLadderizedNumber
+        );
         $this->persistResolvedReferenceNumber($user, $studentNumberReference, $existingHealthProfile);
         $guisisResult = app(GuisisApiService::class)->getStudentByStudentNumberDetailed($studentNumberReference);
         $guisisMessage = ($guisisResult['ok'] ?? false)
@@ -5800,6 +6279,23 @@ public function storeHealthForm(Request $request)
         ? ['required', 'string', 'max:120', 'regex:/^\d{4}-\d{5}-[A-Za-z]{2}-\d+$/']
         : ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$/'];
 
+    $resolvedStudentHealthFormCategory = $isDedicatedStudentForm
+        ? $this->resolvedStudentHealthFormCategory($user, $pendingHealthFormRequest, $existingHealthProfile)
+        : '';
+    if ($isDedicatedStudentForm) {
+        if ($resolvedStudentHealthFormCategory === '') {
+            throw ValidationException::withMessages([
+                'health_form_category' => 'No Health Form Category is configured for your selected student type. Please contact the clinic administrator.',
+            ]);
+        }
+
+        // The category comes from the saved initial student-type selection,
+        // not from a client-editable purpose field.
+        $request->merge([
+            'health_form_category' => $resolvedStudentHealthFormCategory,
+        ]);
+    }
+
     $studentHealthFormCategoryValues = ['Student'];
     if ($isDedicatedStudentForm) {
         $studentHealthFormCategoryValues = array_values(array_unique(array_merge(
@@ -5807,8 +6303,8 @@ public function storeHealthForm(Request $request)
             $this->healthFormCategoriesForAudience('student')->pluck('name')->all()
         )));
 
-        $pendingStudentCategory = $this->normalizeStudentHealthFormCategory(optional($pendingHealthFormRequest)->category);
-        if ($pendingStudentCategory !== '') {
+        $pendingStudentCategory = $this->activeStudentHealthFormCategoryByValue(optional($pendingHealthFormRequest)->category)?->name;
+        if (is_string($pendingStudentCategory) && $pendingStudentCategory !== '') {
             $studentHealthFormCategoryValues[] = $pendingStudentCategory;
             $studentHealthFormCategoryValues = array_values(array_unique($studentHealthFormCategoryValues));
         }
@@ -6012,6 +6508,10 @@ public function storeHealthForm(Request $request)
         if ($manualStudentDocumentsRequired) {
             $this->persistResolvedStudentNumber($user, $existingHealthProfile, $officialReference);
         }
+
+        if ($this->canEnterInitialDirectLadderizedStudentNumber($user, $existingHealthProfile)) {
+            $this->persistResolvedStudentNumber($user, $existingHealthProfile, $officialReference, true);
+        }
     } elseif ($referenceMode === 'admission') {
         $officialReference = strtoupper(trim((string) ($user->reference_number ?? '')));
         if ($this->isClinicReference($officialReference)) {
@@ -6080,7 +6580,7 @@ public function storeHealthForm(Request $request)
             if ($categorySelected === '') {
                 $categorySelected = $this->normalizeStudentHealthFormCategory(optional($pendingHealthFormRequest)->category) ?: 'Student';
             }
-            $declarationPurpose = $this->studentDeclarationPurposeText($categorySelected);
+            $declarationPurpose = $this->studentDeclarationPurposeText($categorySelected, $user->student_type);
             $purposeUnderline1 = $declarationPurpose['purpose'];
             $purposeUnderline2 = $declarationPurpose['endorsement'];
 
@@ -6150,7 +6650,7 @@ public function storeHealthForm(Request $request)
             $submittedHealthFormCategory = optional($pendingHealthFormRequest)->category ?: ($isDedicatedStudentForm ? 'Student' : 'General');
         }
         if ($isDedicatedStudentForm) {
-            $submittedHealthFormCategory = $this->normalizeStudentHealthFormCategory($submittedHealthFormCategory) ?: 'Student';
+            $submittedHealthFormCategory = $resolvedStudentHealthFormCategory ?: 'Student';
         }
 
         $healthProfileData = [
@@ -6526,7 +7026,7 @@ public function showHealthFormSubmissionDocument(HealthFormSubmission $submissio
         if ($categorySelected === '') {
             $categorySelected = 'Student';
         }
-        $declarationPurpose = $this->studentDeclarationPurposeText($categorySelected);
+        $declarationPurpose = $this->studentDeclarationPurposeText($categorySelected, $submissionUser?->student_type);
         $purposeUnderline1 = $declarationPurpose['purpose'];
         $purposeUnderline2 = $declarationPurpose['endorsement'];
         $studentFullName = trim(implode(' ', array_filter([

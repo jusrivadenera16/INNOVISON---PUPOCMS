@@ -3175,6 +3175,17 @@
         .home-announcement-view-all {
             bottom: 24px;
         }
+        .home-announcement-card,
+        .home-announcement-card.is-current,
+        .home-announcement-shell.is-static .home-announcement-card {
+            padding-bottom: 28px;
+        }
+        .announcement-date {
+            flex: 0 0 auto;
+            margin-top: 12px;
+            padding: 12px 6px 0;
+            line-height: 1.35;
+        }
     }
 /*phone css*/
 .phonecard {
