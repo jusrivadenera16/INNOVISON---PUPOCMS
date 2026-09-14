@@ -44,6 +44,19 @@ class AdminAssistantController extends Controller
             ]);
         }
 
+        $assistantScopeReply = $this->answerAssistantScope($normalized);
+        if ($assistantScopeReply !== null) {
+            return response()->json([
+                'type' => 'answer',
+                'message' => $assistantScopeReply,
+                'source' => 'local',
+            ]);
+        }
+
+        if (!$this->isClinicHealthOrMedicalRequest($normalized)) {
+            return response()->json($this->offTopicResponse());
+        }
+
         $aiReply = $this->askAi($text);
         if ($aiReply !== null) {
             return response()->json([
@@ -195,6 +208,105 @@ class AdminAssistantController extends Controller
         return null;
     }
 
+    private function answerAssistantScope(string $text): ?string
+    {
+        $scopeQuestions = [
+            'what can you do',
+            'what do you do',
+            'help',
+            'how can you help',
+            'available commands',
+            'shortcuts',
+        ];
+
+        $simpleGreetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening'];
+
+        if (in_array($text, $simpleGreetings, true) || $this->containsAny($text, $scopeQuestions)) {
+            return 'Hello. I can help only with clinic workflows, health-form guidance, appointments, reports, inventory, and basic symptom triage. I cannot handle unrelated requests such as coding, homework, entertainment, finance, or general web questions.';
+        }
+
+        return null;
+    }
+
+    private function isClinicHealthOrMedicalRequest(string $text): bool
+    {
+        return $this->containsAny($text, [
+            'clinic',
+            'medical',
+            'medicine',
+            'medication',
+            'health',
+            'symptom',
+            'triage',
+            'diagnosis',
+            'doctor',
+            'nurse',
+            'patient',
+            'emergency',
+            'first aid',
+            'fever',
+            'cough',
+            'cold',
+            'flu',
+            'headache',
+            'migraine',
+            'dizzy',
+            'dizziness',
+            'nausea',
+            'vomit',
+            'diarrhea',
+            'stomach pain',
+            'abdominal pain',
+            'sore throat',
+            'rash',
+            'allergy',
+            'asthma',
+            'blood pressure',
+            'bp',
+            'pulse',
+            'temperature',
+            'covid',
+            'vaccine',
+            'xray',
+            'x-ray',
+            'clearance',
+            'health form',
+            'medical assessment',
+            'physical assessment',
+            'appointment',
+            'booking',
+            'walk in',
+            'walk-in',
+            'walkin',
+            'consultation',
+            'logbook',
+            'mar',
+            'medical accomplishment',
+            'inventory',
+            'stock',
+            'reports',
+            'student record',
+            'health record',
+            'applicant',
+            'faculty',
+            'dependent',
+            'portal',
+            'login',
+            'pup',
+            'puptas',
+            'guisis',
+        ]);
+    }
+
+    private function offTopicResponse(): array
+    {
+        return [
+            'type' => 'answer',
+            'message' => 'I can only help with medical, health, and clinic-system requests. Please ask about clinic workflows, appointments, health forms, inventory, reports, or basic symptom triage.',
+            'source' => 'scope_guard',
+        ];
+    }
+
     private function askAi(string $text): ?string
     {
         $provider = strtolower(trim((string) config('services.ai.provider', 'auto')));
@@ -218,9 +330,10 @@ class AdminAssistantController extends Controller
 
         $prompt = <<<PROMPT
 You are the Clinic AI Assistant inside a campus clinic management system.
-You can answer general questions, friendly greetings, system help questions, and basic health triage questions.
+Only answer requests about medical, health, patient triage, clinic operations, or this clinic management system.
+If the request is unrelated, briefly refuse and redirect the user to clinic, health-form, appointment, inventory, report, or triage topics.
+Do not write code, solve homework, provide entertainment, answer general trivia, give financial/legal advice, or handle unrelated productivity tasks.
 For medical or symptom questions, give concise safety-first triage guidance, do not provide a definitive diagnosis, and mention urgent red flags when relevant.
-For non-medical general questions, answer normally and briefly.
 
 User question:
 {$text}
@@ -253,7 +366,7 @@ PROMPT;
                     'messages' => [
                         [
                             'role' => 'system',
-                            'content' => 'You are a campus clinic triage assistant for admin use. Give concise, safe triage guidance. Do not provide a definitive diagnosis. Always mention urgent red flags and when to escalate to emergency care.',
+                            'content' => 'You are the Clinic AI Assistant for a campus clinic management system. Only answer requests about medical, health, patient triage, clinic operations, appointments, health forms, inventory, reports, or this clinic system. If the request is unrelated, briefly refuse and redirect to clinic/health topics. Do not write code, solve homework, provide entertainment, answer general trivia, or handle unrelated productivity tasks. For symptom questions, give concise safety-first triage guidance, do not provide a definitive diagnosis, and mention urgent red flags and when to escalate to emergency care.',
                         ],
                         [
                             'role' => 'user',
