@@ -5469,6 +5469,24 @@
             width: 132px;
         }
     }
+
+    html[data-theme="dark"] .appointments-page-title > svg,
+    html[data-theme="dark"] .appointments-modern-card.is-total .appointments-modern-icon,
+    html[data-theme="dark"] .appointments-modern-card.is-condition .appointments-modern-icon {
+        background: #182334 !important;
+        border: 1px solid rgba(250, 204, 21, .34) !important;
+        color: #facc15 !important;
+    }
+
+    html[data-theme="dark"] .appointments-page-title > svg,
+    html[data-theme="dark"] .appointments-modern-card.is-total .appointments-modern-icon svg,
+    html[data-theme="dark"] .appointments-modern-card.is-condition .appointments-modern-icon svg,
+    html[data-theme="dark"] .appointments-page-title > svg * ,
+    html[data-theme="dark"] .appointments-modern-card.is-total .appointments-modern-icon svg *,
+    html[data-theme="dark"] .appointments-modern-card.is-condition .appointments-modern-icon svg * {
+        color: #facc15 !important;
+        stroke: #facc15 !important;
+    }
 </style>
 @endpush
 

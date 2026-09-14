@@ -362,6 +362,127 @@
         box-shadow: 0 0 0 4px rgba(112, 19, 27, 0.08);
     }
 
+    .announcement-select-wrap {
+        position: relative;
+        display: block;
+        width: 100%;
+    }
+
+    .announcement-select-native {
+        position: absolute;
+        width: 1px !important;
+        height: 1px !important;
+        opacity: 0;
+        pointer-events: none;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+
+    .announcement-select-display {
+        position: relative;
+        width: 100%;
+        min-height: 46px;
+        padding: 0 42px 0 14px;
+        border: 1px solid rgba(148, 163, 184, 0.42);
+        border-radius: 8px;
+        color: #0f172a;
+        background: #ffffff;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .announcement-select-display::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: 16px;
+        width: 8px;
+        height: 8px;
+        border-right: 2px solid #70131B;
+        border-bottom: 2px solid #70131B;
+        transform: translateY(-65%) rotate(45deg);
+        transition: transform .18s ease;
+    }
+
+    .announcement-select-display:hover,
+    .announcement-select-display:focus-visible,
+    .announcement-select-wrap.is-open .announcement-select-display {
+        outline: none;
+        border-color: rgba(112, 19, 27, 0.58);
+        box-shadow: 0 0 0 4px rgba(112, 19, 27, 0.08);
+    }
+
+    .announcement-select-wrap.is-open .announcement-select-display::after {
+        transform: translateY(-25%) rotate(225deg);
+    }
+
+    .announcement-select-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        z-index: 1500;
+        display: none;
+        flex-direction: column;
+        gap: 7px;
+        max-height: 210px;
+        overflow-y: auto;
+        padding: 10px;
+        border: 1px solid rgba(139, 0, 0, .12);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, .98);
+        box-shadow: 0 18px 34px rgba(15, 23, 42, .18);
+    }
+
+    .announcement-select-wrap.is-open .announcement-select-menu {
+        display: flex;
+    }
+
+    .announcement-select-wrap.is-open-up .announcement-select-menu {
+        top: auto;
+        bottom: calc(100% + 8px);
+    }
+
+    .announcement-select-option {
+        position: relative;
+        width: 100%;
+        min-height: 36px;
+        overflow: hidden;
+        padding: 8px 11px;
+        border: 1px solid #efcfd4;
+        border-radius: 7px;
+        color: #70131B;
+        background: #ffffff;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        text-align: left;
+        cursor: pointer;
+        transition: color .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
+    }
+
+    .announcement-select-option:hover,
+    .announcement-select-option.is-selected {
+        color: #ffffff;
+        border-color: #70131B;
+        background: linear-gradient(135deg, #70131B, #4f0b12);
+    }
+
+    .announcement-select-option:hover {
+        color: #70131B;
+        border-color: rgba(250, 204, 21, .9);
+        background: #facc15;
+        transform: translateY(-1px);
+    }
+
+    .announcement-card:has(.announcement-select-wrap.is-open) {
+        overflow: visible;
+    }
+
     .announcement-editor {
         overflow: hidden;
         border-radius: 8px;
@@ -1417,6 +1538,111 @@
         color: #cbd5e1;
     }
 
+    html[data-theme="dark"] .announcement-select-display {
+        color: #f8fafc;
+        border-color: rgba(255, 255, 255, .22);
+        background: rgba(30, 41, 59, .94);
+    }
+
+    html[data-theme="dark"] .announcement-select-display::after {
+        border-color: #facc15;
+    }
+
+    html[data-theme="dark"] .announcement-select-display:hover,
+    html[data-theme="dark"] .announcement-select-display:focus-visible,
+    html[data-theme="dark"] .announcement-select-wrap.is-open .announcement-select-display {
+        border-color: rgba(250, 204, 21, .7);
+        box-shadow: 0 0 0 4px rgba(250, 204, 21, .12);
+    }
+
+    html[data-theme="dark"] .announcement-select-menu {
+        border-color: rgba(250, 204, 21, .2);
+        background: rgba(30, 18, 25, .98);
+    }
+
+    html[data-theme="dark"] .announcement-select-option {
+        color: #f8fafc;
+        border-color: rgba(255, 255, 255, .12);
+        background: rgba(30, 41, 59, .94);
+    }
+
+    html[data-theme="dark"] .announcement-select-option.is-selected {
+        color: #ffffff;
+        border-color: rgba(250, 204, 21, .28);
+        background: linear-gradient(135deg, #70131B, #4f0b12);
+    }
+
+    html[data-theme="dark"] .announcement-select-option:hover {
+        color: #70131B;
+        border-color: rgba(250, 204, 21, .9);
+        background: #facc15;
+    }
+
+    html[data-theme="dark"] .announcement-hero-icon,
+    html[data-theme="dark"] .announcement-form-icon,
+    html[data-theme="dark"] .announcement-last-updated-icon {
+        color: #facc15;
+        background: #1e293b;
+        border-color: rgba(250, 204, 21, .72);
+    }
+
+    html[data-theme="dark"] .announcement-archive-badge {
+        color: #facc15;
+        background: #1e293b;
+        border-color: rgba(250, 204, 21, .72);
+    }
+
+    html[data-theme="dark"] .announcement-archive-close {
+        color: #facc15;
+        background: #1e293b;
+        border-color: rgba(250, 204, 21, .72);
+    }
+
+    html[data-theme="dark"] .announcement-archive-close:hover,
+    html[data-theme="dark"] .announcement-archive-close:focus-visible {
+        color: #facc15;
+        background: #70131B;
+        border-color: #facc15;
+    }
+
+    html[data-theme="dark"] .announcement-edit,
+    html[data-theme="dark"] .announcement-restore {
+        color: #facc15;
+        background: #1e293b;
+        border-color: rgba(250, 204, 21, .72);
+    }
+
+    html[data-theme="dark"] .announcement-stat-card .announcement-stat-icon {
+        color: #facc15;
+        background: #1e293b;
+        border: 1px solid rgba(250, 204, 21, .36);
+    }
+
+    html[data-theme="dark"] .announcement-delete,
+    html[data-theme="dark"] .announcement-archive,
+    html[data-theme="dark"] .announcement-view,
+    html[data-theme="dark"] .announcement-edit,
+    html[data-theme="dark"] .announcement-restore {
+        color: #facc15;
+        background: #1e293b;
+        border-color: rgba(250, 204, 21, .28);
+    }
+
+    html[data-theme="dark"] .announcement-delete:hover,
+    html[data-theme="dark"] .announcement-delete:focus-visible,
+    html[data-theme="dark"] .announcement-archive:hover,
+    html[data-theme="dark"] .announcement-archive:focus-visible,
+    html[data-theme="dark"] .announcement-view:hover,
+    html[data-theme="dark"] .announcement-view:focus-visible,
+    html[data-theme="dark"] .announcement-edit:hover,
+    html[data-theme="dark"] .announcement-edit:focus-visible,
+    html[data-theme="dark"] .announcement-restore:hover,
+    html[data-theme="dark"] .announcement-restore:focus-visible {
+        color: #70131B;
+        background: #facc15;
+        border-color: #facc15;
+    }
+
     html[data-theme="dark"] .announcement-detail-meta {
         color: #cbd5e1;
     }
@@ -1854,11 +2080,19 @@
 
                 <label class="announcement-field">
                     <span class="announcement-label">Priority Level</span>
-                    <select class="announcement-select" name="priority" required>
-                        @foreach($priorityLabels as $value => $label)
-                            <option value="{{ $value }}" @selected(old('priority', 'urgent') === $value)>{{ $label }}</option>
-                        @endforeach
-                    </select>
+                    <span class="announcement-select-wrap" data-announcement-select data-select-placeholder="Select priority level">
+                        <select class="announcement-select announcement-select-native" name="priority" required>
+                            @foreach($priorityLabels as $value => $label)
+                                <option value="{{ $value }}" @selected(old('priority', 'urgent') === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <button type="button" class="announcement-select-display" aria-haspopup="listbox" aria-expanded="false">Select priority level</button>
+                        <span class="announcement-select-menu" role="listbox" aria-label="Priority level options">
+                            @foreach($priorityLabels as $value => $label)
+                                <button type="button" class="announcement-select-option" data-select-value="{{ $value }}" role="option">{{ $label }}</button>
+                            @endforeach
+                        </span>
+                    </span>
                 </label>
 
                 <div class="announcement-field">
@@ -2131,11 +2365,19 @@
                 </label>
                 <label class="announcement-field">
                     <span class="announcement-label">Priority Level</span>
-                    <select class="announcement-select" name="priority" id="announcementEditPriority" required>
-                        @foreach($priorityLabels as $value => $label)
-                            <option value="{{ $value }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
+                    <span class="announcement-select-wrap" data-announcement-select data-select-placeholder="Select priority level">
+                        <select class="announcement-select announcement-select-native" name="priority" id="announcementEditPriority" required>
+                            @foreach($priorityLabels as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <button type="button" class="announcement-select-display" aria-haspopup="listbox" aria-expanded="false">Select priority level</button>
+                        <span class="announcement-select-menu" role="listbox" aria-label="Priority level options">
+                            @foreach($priorityLabels as $value => $label)
+                                <button type="button" class="announcement-select-option" data-select-value="{{ $value }}" role="option">{{ $label }}</button>
+                            @endforeach
+                        </span>
+                    </span>
                 </label>
                 <div class="announcement-field">
                     <span class="announcement-label">Message Content</span>
@@ -2340,6 +2582,79 @@
         let editTrigger = null;
         let detailTrigger = null;
 
+        const closeAnnouncementSelect = (wrap) => {
+            wrap?.classList.remove('is-open', 'is-open-up');
+            wrap?.querySelector('.announcement-select-display')?.setAttribute('aria-expanded', 'false');
+        };
+
+        const syncAnnouncementSelect = (wrap) => {
+            const select = wrap?.querySelector('.announcement-select-native');
+            const display = wrap?.querySelector('.announcement-select-display');
+            const options = Array.from(wrap?.querySelectorAll('.announcement-select-option') || []);
+            if (!select || !display) return;
+
+            const selectedOption = select.options[select.selectedIndex];
+            display.textContent = selectedOption && selectedOption.value
+                ? selectedOption.text.trim()
+                : (wrap.dataset.selectPlaceholder || 'Select option');
+            options.forEach(function(option) {
+                const isSelected = option.dataset.selectValue === select.value;
+                option.classList.toggle('is-selected', isSelected);
+                option.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+            });
+        };
+
+        const initializeAnnouncementSelect = (wrap) => {
+            const select = wrap?.querySelector('.announcement-select-native');
+            const display = wrap?.querySelector('.announcement-select-display');
+            const options = Array.from(wrap?.querySelectorAll('.announcement-select-option') || []);
+            if (!select || !display) return;
+
+            display.addEventListener('click', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                const isOpen = wrap.classList.contains('is-open');
+                document.querySelectorAll('[data-announcement-select]').forEach(function(otherWrap) {
+                    if (otherWrap !== wrap) closeAnnouncementSelect(otherWrap);
+                });
+
+                if (isOpen) {
+                    closeAnnouncementSelect(wrap);
+                    return;
+                }
+
+                const rect = wrap.getBoundingClientRect();
+                const menuHeight = Math.min(240, Math.max(48, options.length * 43 + 20));
+                const spaceBelow = window.innerHeight - rect.bottom;
+                wrap.classList.toggle('is-open-up', spaceBelow < menuHeight && rect.top > spaceBelow);
+                wrap.classList.add('is-open');
+                display.setAttribute('aria-expanded', 'true');
+            });
+
+            options.forEach(function(option) {
+                option.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    select.value = option.dataset.selectValue || '';
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                    syncAnnouncementSelect(wrap);
+                    closeAnnouncementSelect(wrap);
+                });
+            });
+
+            select.addEventListener('change', function() {
+                syncAnnouncementSelect(wrap);
+            });
+            syncAnnouncementSelect(wrap);
+        };
+
+        document.querySelectorAll('[data-announcement-select]').forEach(initializeAnnouncementSelect);
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('[data-announcement-select]')) {
+                document.querySelectorAll('[data-announcement-select]').forEach(closeAnnouncementSelect);
+            }
+        });
+
         const decodeAnnouncementMessage = (value) => {
             try {
                 return decodeURIComponent(escape(window.atob(value || '')));
@@ -2423,6 +2738,7 @@
             editForm.action = trigger.dataset.updateUrl || '';
             editTitle.value = trigger.dataset.title || '';
             editPriority.value = trigger.dataset.priority || 'info';
+            editPriority.dispatchEvent(new Event('change', { bubbles: true }));
             editMessage.innerHTML = decodeAnnouncementMessage(trigger.dataset.message);
             editMessageInput.value = editMessage.innerHTML;
             editLanding.checked = trigger.dataset.showOnLanding === '1';

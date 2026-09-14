@@ -1225,6 +1225,168 @@
         outline: none;
     }
 
+    .employee-action-select-wrap {
+        position: relative;
+        width: 100%;
+    }
+
+    .employee-action-select-source {
+        position: absolute !important;
+        inset: auto auto 0 0;
+        width: 1px !important;
+        min-height: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        border: 0 !important;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .health-profile-wrap button.employee-action-select-trigger {
+        position: relative;
+        width: 100%;
+        min-height: 48px;
+        padding: 0 42px 0 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        background: #f8fafc;
+        color: #172033;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.35;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease;
+    }
+
+    .health-profile-wrap button.employee-action-select-trigger::after {
+        content: "";
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        width: 9px;
+        height: 9px;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: translateY(-68%) rotate(45deg);
+        transition: transform .18s ease;
+        pointer-events: none;
+    }
+
+    .employee-action-select-wrap.is-open .employee-action-select-trigger {
+        border-color: #8f2230;
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, .12);
+        outline: none;
+    }
+
+    .employee-action-select-wrap.is-open .employee-action-select-trigger::after {
+        transform: translateY(-30%) rotate(225deg);
+    }
+
+    .employee-action-select-menu {
+        position: absolute;
+        z-index: 90;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        display: none;
+        gap: 7px;
+        max-height: 220px;
+        overflow-y: auto;
+        padding: 8px;
+        border: 1px solid #efcaca;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 18px 36px rgba(58, 12, 18, .2);
+        scrollbar-width: thin;
+        scrollbar-color: #8f2230 transparent;
+    }
+
+    .employee-action-select-wrap.is-open .employee-action-select-menu {
+        display: grid;
+        animation: employeeActionDropdownIn .18s ease both;
+    }
+
+    .employee-action-select-menu::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .employee-action-select-menu::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .employee-action-select-menu::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: #8f2230;
+    }
+
+    .health-profile-wrap button.employee-action-select-option {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        width: 100%;
+        min-height: 40px;
+        padding: 9px 12px;
+        border: 1px solid #efcaca;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #70131B;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.3;
+        text-align: left;
+        cursor: pointer;
+        box-shadow: none;
+        transition: border-color .2s ease, background .2s ease, color .2s ease, transform .2s ease;
+    }
+
+    .health-profile-wrap button.employee-action-select-option::after {
+        content: "";
+        position: absolute;
+        z-index: 0;
+        top: -45%;
+        left: -130%;
+        width: 120%;
+        height: 190%;
+        background: linear-gradient(115deg, rgba(255, 247, 181, 0) 0%, rgba(255, 247, 181, .78) 46%, rgba(255, 247, 181, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left .9s ease;
+        pointer-events: none;
+    }
+
+    .health-profile-wrap button.employee-action-select-option > span {
+        position: relative;
+        z-index: 1;
+    }
+
+    .health-profile-wrap button.employee-action-select-option:hover,
+    .health-profile-wrap button.employee-action-select-option:focus-visible {
+        transform: translateY(-1px);
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        outline: none;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .22);
+    }
+
+    .health-profile-wrap button.employee-action-select-option:hover::after,
+    .health-profile-wrap button.employee-action-select-option:focus-visible::after {
+        left: 125%;
+    }
+
+    .health-profile-wrap button.employee-action-select-option.is-selected {
+        border-color: #70131B;
+        background: #70131B;
+        color: #ffffff;
+    }
+
+    @keyframes employeeActionDropdownIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
     .employee-action-checks {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1324,6 +1486,39 @@
         border-color: #475569;
         background: #1e293b;
         color: #f8fafc;
+    }
+
+    [data-theme="dark"] .health-profile-wrap button.employee-action-select-trigger {
+        border-color: #475569;
+        background: #182334;
+        color: #f8fafc;
+    }
+
+    [data-theme="dark"] .employee-action-select-menu {
+        border-color: #475569;
+        background: #111827;
+        box-shadow: 0 18px 38px rgba(0, 0, 0, .48);
+    }
+
+    [data-theme="dark"] .health-profile-wrap button.employee-action-select-option {
+        border-color: #475569;
+        background: #182334;
+        color: #f8fafc;
+    }
+
+    [data-theme="dark"] .health-profile-wrap button.employee-action-select-option.is-selected {
+        border-color: #9f1d2d;
+        background: #9f1d2d;
+        color: #ffffff;
+    }
+
+    [data-theme="dark"] .health-profile-wrap button.employee-action-select-option:hover,
+    [data-theme="dark"] .health-profile-wrap button.employee-action-select-option:focus-visible,
+    [data-theme="dark"] .health-profile-wrap button.employee-action-select-option.is-selected:hover,
+    [data-theme="dark"] .health-profile-wrap button.employee-action-select-option.is-selected:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
     }
 
     [data-theme="dark"] .employee-action-cancel {
@@ -1654,12 +1849,14 @@
                 @csrf
                 <div class="employee-action-field">
                     <label for="newEmployeeHealthFormCategory">Category / Purpose</label>
-                    <select id="newEmployeeHealthFormCategory" name="category" required>
-                        <option value="">Select category</option>
-                        @foreach(($employeeHealthFormCategories ?? collect()) as $category)
-                            <option value="{{ $category }}">{{ $category }}</option>
-                        @endforeach
-                    </select>
+                    <div class="employee-action-select-wrap">
+                        <select id="newEmployeeHealthFormCategory" name="category" class="employee-action-select-source" required>
+                            <option value="">Select category</option>
+                            @foreach(($employeeHealthFormCategories ?? collect()) as $category)
+                                <option value="{{ $category }}">{{ $category }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="employee-action-field">
                     <label for="newEmployeeHealthFormRemarks">Remarks</label>
@@ -1750,6 +1947,112 @@
         modal.classList.toggle('is-open', isOpen);
         modal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
     }
+
+    function setEmployeeActionSelectOpen(wrapper, isOpen) {
+        if (!wrapper) return;
+
+        wrapper.classList.toggle('is-open', isOpen);
+        const trigger = wrapper.querySelector('.employee-action-select-trigger');
+        if (trigger) trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    function closeEmployeeActionSelects(exceptWrapper) {
+        document.querySelectorAll('.employee-action-select-wrap.is-open').forEach(function (wrapper) {
+            if (wrapper !== exceptWrapper) {
+                setEmployeeActionSelectOpen(wrapper, false);
+            }
+        });
+    }
+
+    function initializeEmployeeActionSelect(select) {
+        if (!select || select.dataset.customDropdownReady === 'true') return;
+
+        const wrapper = select.closest('.employee-action-select-wrap');
+        if (!wrapper) return;
+
+        select.dataset.customDropdownReady = 'true';
+        const trigger = document.createElement('button');
+        const menu = document.createElement('div');
+        const menuId = (select.id || 'employee-action-select') + '-custom-menu';
+
+        trigger.type = 'button';
+        trigger.className = 'employee-action-select-trigger';
+        trigger.setAttribute('aria-haspopup', 'listbox');
+        trigger.setAttribute('aria-expanded', 'false');
+        trigger.setAttribute('aria-controls', menuId);
+
+        menu.id = menuId;
+        menu.className = 'employee-action-select-menu';
+        menu.setAttribute('role', 'listbox');
+
+        function syncEmployeeActionSelect() {
+            const selectedOption = select.options[select.selectedIndex] || select.options[0];
+            trigger.textContent = selectedOption?.textContent?.trim() || 'Select an option';
+            menu.querySelectorAll('.employee-action-select-option').forEach(function (optionButton) {
+                const isSelected = optionButton.dataset.value === select.value;
+                optionButton.classList.toggle('is-selected', isSelected);
+                optionButton.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+            });
+        }
+
+        Array.from(select.options).forEach(function (option) {
+            const optionButton = document.createElement('button');
+            const optionLabel = document.createElement('span');
+
+            optionButton.type = 'button';
+            optionButton.className = 'employee-action-select-option';
+            optionButton.dataset.value = option.value;
+            optionButton.setAttribute('role', 'option');
+            optionLabel.textContent = option.textContent.trim();
+            optionButton.appendChild(optionLabel);
+            optionButton.addEventListener('click', function (event) {
+                event.stopPropagation();
+                select.value = option.value;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                syncEmployeeActionSelect();
+                setEmployeeActionSelectOpen(wrapper, false);
+                trigger.focus();
+            });
+            menu.appendChild(optionButton);
+        });
+
+        trigger.addEventListener('click', function (event) {
+            event.stopPropagation();
+            const willOpen = !wrapper.classList.contains('is-open');
+            closeEmployeeActionSelects(wrapper);
+            setEmployeeActionSelectOpen(wrapper, willOpen);
+        });
+        trigger.addEventListener('keydown', function (event) {
+            if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                closeEmployeeActionSelects(wrapper);
+                setEmployeeActionSelectOpen(wrapper, true);
+                menu.querySelector('.employee-action-select-option.is-selected, .employee-action-select-option')?.focus();
+            }
+        });
+        select.addEventListener('change', syncEmployeeActionSelect);
+        select.addEventListener('invalid', function () {
+            trigger.focus();
+        });
+
+        wrapper.appendChild(trigger);
+        wrapper.appendChild(menu);
+        syncEmployeeActionSelect();
+    }
+
+    document.querySelectorAll('.employee-action-select-source').forEach(initializeEmployeeActionSelect);
+
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('.employee-action-select-wrap')) {
+            closeEmployeeActionSelects();
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeEmployeeActionSelects();
+        }
+    });
 
     function syncEmployeeCorrectionReason() {
         if (!employeeCorrectionReason) return;

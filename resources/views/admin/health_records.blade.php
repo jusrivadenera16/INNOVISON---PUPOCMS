@@ -6677,6 +6677,29 @@
         stroke: #70131B !important;
     }
 
+    html[data-theme="dark"] .health-summary-modern-card.is-pending,
+    html[data-theme="dark"] .health-summary-modern-card.is-compliance {
+        border-color: rgba(143, 34, 48, .78) !important;
+    }
+
+    html[data-theme="dark"] .health-records-title-icon,
+    html[data-theme="dark"] .health-summary-modern-card.is-approved .health-summary-modern-icon-wrap,
+    html[data-theme="dark"] .health-summary-modern-card.is-condition .health-summary-modern-icon-wrap {
+        background: #182334 !important;
+        border: 1px solid rgba(250, 204, 21, .34) !important;
+        color: #facc15 !important;
+    }
+
+    html[data-theme="dark"] .health-records-title-icon svg,
+    html[data-theme="dark"] .health-summary-modern-card.is-approved .health-summary-modern-icon-wrap svg,
+    html[data-theme="dark"] .health-summary-modern-card.is-condition .health-summary-modern-icon-wrap svg,
+    html[data-theme="dark"] .health-records-title-icon svg *,
+    html[data-theme="dark"] .health-summary-modern-card.is-approved .health-summary-modern-icon-wrap svg *,
+    html[data-theme="dark"] .health-summary-modern-card.is-condition .health-summary-modern-icon-wrap svg * {
+        color: #facc15 !important;
+        stroke: #facc15 !important;
+    }
+
     @media (max-width: 680px) {
         .health-bulk-request-modal {
             align-items: flex-start;

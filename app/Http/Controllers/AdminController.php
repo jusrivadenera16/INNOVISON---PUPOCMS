@@ -3689,7 +3689,7 @@ class AdminController extends Controller
                     'uploaded' => $isUploaded,
                     'view_url' => $viewUrl,
                     'uploaded_at' => $isUploaded
-                        ? (optional($employeeProfile->updated_at)->format('M j, Y') ?: 'Date unavailable')
+                        ? (optional($profile->updated_at)->format('M j, Y') ?: 'Date unavailable')
                         : '-',
                 ];
                 })
