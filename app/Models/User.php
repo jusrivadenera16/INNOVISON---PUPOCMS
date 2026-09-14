@@ -60,10 +60,25 @@ class User extends Authenticatable
         'dependent' => 'Guest',
     ];
 
+    public const STUDENT_TYPES = [
+        'regular',
+        'ladderized',
+        'transferee',
+        'returnee',
+        'shiftee',
+        'ojt',
+    ];
+
     public function needsClinicAccountTypeSelection(): bool
     {
-        return self::normalizeRole($this->user_role) === self::ROLE_STUDENT
-            && $this->clinicAccountTypeKey() === null;
+        if (self::normalizeRole($this->user_role) !== self::ROLE_STUDENT) {
+            return false;
+        }
+
+        $accountType = $this->clinicAccountTypeKey();
+
+        return $accountType === null
+            || ($accountType === 'student' && !in_array($this->student_type, self::STUDENT_TYPES, true));
     }
 
     public static function userTypeForClinicAccountType(string $type): ?string
@@ -209,6 +224,7 @@ class User extends Authenticatable
     'user_role',
     'idp_role',
     'user_type',
+    'student_type',
     'status',
     'password',
     'api_pin',

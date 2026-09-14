@@ -62,6 +62,7 @@
                             @endforeach
                         </div>
                     </div>
+                    <input type="hidden" id="healthRoleSelectedStudentType" name="student_type" value="">
                 @endif
             </div>
             @endforeach
@@ -456,7 +457,8 @@
         const options = Array.from(roleModal?.querySelectorAll('[data-health-role-option]') || []);
         const optionsContainer = roleModal?.querySelector('.health-role-options');
         const studentTypeField = roleModal?.querySelector('#healthRoleStudentType');
-        const studentTypeInputs = Array.from(roleModal?.querySelectorAll('input[name="student_type"]') || []);
+        const studentTypeInputs = Array.from(roleModal?.querySelectorAll('input[type="radio"][name="student_type"]') || []);
+        const selectedStudentTypeInput = roleModal?.querySelector('#healthRoleSelectedStudentType');
         const studentOption = options.find(option => option.querySelector('input[name="clinic_account_type"]')?.value === 'student');
         const studentLabel = studentOption?.querySelector('.health-role-copy strong');
         const defaultStudentLabel = studentLabel?.textContent?.trim() || 'Student';
@@ -480,6 +482,7 @@
 
         function resetStudentType() {
             selectedStudentType = '';
+            if (selectedStudentTypeInput) selectedStudentTypeInput.value = '';
             studentTypeInputs.forEach(input => {
                 input.checked = false;
                 input.disabled = true;
@@ -493,6 +496,7 @@
         function collapseStudentTypeSelection() {
             if (!studentOption || !studentTypeField) return;
             studentTypeField.hidden = true;
+            if (selectedStudentTypeInput) selectedStudentTypeInput.value = selectedStudentType;
             studentTypeInputs.forEach(input => input.disabled = true);
             studentOption.classList.add('is-student-closing');
             window.setTimeout(() => {
@@ -652,6 +656,7 @@
             input.addEventListener('change', function () {
                 if (!input.value || input.disabled || saving || !studentLabel) return;
                 selectedStudentType = input.value;
+                if (selectedStudentTypeInput) selectedStudentTypeInput.value = selectedStudentType;
                 const selectedLabel = `Student - ${studentTypeLabel(selectedStudentType)}`;
                 window.setTimeout(() => {
                     collapseStudentTypeSelection();

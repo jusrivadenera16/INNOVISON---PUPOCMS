@@ -45,6 +45,7 @@ class AdminHubIdpLinkingTest extends TestCase
             $table->string('user_role')->default('student');
             $table->string('idp_role')->nullable();
             $table->string('user_type')->nullable();
+            $table->string('student_type')->nullable();
             $table->string('status')->default('active');
             $table->string('password');
             $table->rememberToken();
@@ -491,7 +492,7 @@ class AdminHubIdpLinkingTest extends TestCase
         $this->assertDatabaseHas('users', [
                 'id' => $user->id, 'user_type' => 'Faculty', 'user_role' => 'student', 'idp_role' => 'superadmin',
         ]);
-        $this->postJson('/student/account-type', ['clinic_account_type' => 'student'])
+        $this->postJson('/student/account-type', ['clinic_account_type' => 'student', 'student_type' => 'regular'])
             ->assertUnprocessable()->assertJsonValidationErrors('clinic_account_type');
         $this->actingAs($user->fresh(), 'student')->get('/student/health-form/student')
             ->assertRedirect(route('health.form.employee'));
@@ -627,15 +628,63 @@ class AdminHubIdpLinkingTest extends TestCase
     public function test_selector_renders_five_choices_and_loads_available_options(): void
     {
         $html = view('student.partials.clinic_account_type_selector', ['studentPendingAdmission' => false])->render();
-        $this->assertSame(5, substr_count($html, 'name="clinic_account_type"'));
+        $this->assertSame(5, preg_match_all('/<input[^>]+name="clinic_account_type"/', $html));
+        $this->assertStringContainsString('Returnee', $html);
         $this->assertStringContainsString('Non-teaching Staff / Admins', $html);
         $this->assertStringContainsString('Guest', $html);
         $this->assertStringNotContainsString('Guest / Dependent', $html);
         $this->assertStringContainsString('Confirm your account type', $html);
         $this->assertStringContainsString('Proceeding...', $html);
         $locked = view('student.partials.clinic_account_type_selector', ['studentPendingAdmission' => true])->render();
-        $this->assertSame(5, preg_match_all('/<input[^>]+type="radio"[^>]+disabled[^>]*>/', $locked));
+        $this->assertSame(11, preg_match_all('/<input[^>]+type="radio"[^>]+disabled[^>]*>/', $locked));
         $this->assertStringContainsString(route('student.account_type.options'), $html);
+    }
+
+    public function test_student_account_type_requires_and_saves_student_type(): void
+    {
+        $user = $this->upsertFromIdp([
+            'id' => 'student-type-required',
+            'email' => 'student-type-required@example.test',
+            'roles' => 'student',
+        ]);
+
+        $this->actingAs($user, 'student')
+            ->postJson('/student/account-type', ['clinic_account_type' => 'student'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('student_type');
+
+        $this->assertTrue($user->fresh()->needsClinicAccountTypeSelection());
+
+        $this->actingAs($user->fresh(), 'student')
+            ->postJson('/student/account-type', [
+                'clinic_account_type' => 'student',
+                'student_type' => 'returnee',
+            ])
+            ->assertOk()
+            ->assertJson(['redirect' => route('health.form.student')]);
+
+        $savedUser = $user->fresh();
+        $this->assertSame('Student', $savedUser->user_type);
+        $this->assertSame('returnee', $savedUser->student_type);
+        $this->assertFalse($savedUser->needsClinicAccountTypeSelection());
+    }
+
+    public function test_existing_student_without_student_type_cannot_open_health_form_directly(): void
+    {
+        $user = $this->upsertFromIdp([
+            'id' => 'student-type-missing',
+            'email' => 'student-type-missing@example.test',
+            'roles' => 'student',
+        ]);
+        $user->user_type = 'Student';
+        $user->student_type = null;
+        $user->save();
+
+        $this->assertTrue($user->fresh()->needsClinicAccountTypeSelection());
+        $this->assertSame(
+            route('student.home'),
+            $this->checkFormRoute($user->fresh(), 'health.form.student')->getTargetUrl()
+        );
     }
 
     public function test_recognized_idp_roles_restrict_options_and_reject_tampered_choices(): void
@@ -685,7 +734,11 @@ class AdminHubIdpLinkingTest extends TestCase
 
     private function saveClinicType(User $user, string $type, array $extra = [])
     {
-        $request = \Illuminate\Http\Request::create('/student/account-type', 'POST', ['clinic_account_type' => $type] + $extra);
+        $payload = ['clinic_account_type' => $type];
+        if ($type === 'student') {
+            $payload['student_type'] = 'regular';
+        }
+        $request = \Illuminate\Http\Request::create('/student/account-type', 'POST', $payload + $extra);
         $request->headers->set('Accept', 'application/json');
         $request->setUserResolver(fn () => $user);
         return (new \App\Http\Controllers\ClinicAccountTypeController())->store($request);
