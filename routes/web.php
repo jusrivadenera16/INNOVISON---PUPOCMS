@@ -20,45 +20,11 @@ use App\Http\Controllers\StudentAssistantController;
 use App\Http\Controllers\TriageSurveyController;
 use App\Http\Controllers\WalkInController;
 use App\Models\Announcement;
-use App\Models\SystemSetting;
 use App\Models\User;
+use App\Support\ClinicRoutes;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
-
-if (!function_exists('resolveWorkspaceRedirectForUser')) {
-    function resolveWorkspaceRedirectForUser(User $user): string
-    {
-        $normalizedRole = User::normalizeRole((string) ($user->user_role ?? ''));
-
-        if ($normalizedRole === User::ROLE_SUPERADMIN) {
-            return '/admin/dashboard';
-        }
-
-        $rawRole = strtolower(trim((string) ($user->user_role ?? '')));
-        $userType = strtolower(trim((string) ($user->user_type ?? '')));
-        $isStudentAssistant = in_array($userType, ['assistant', 'student assistant', 'student_assistant'], true)
-            || in_array($rawRole, ['student_assistant', 'studentassistant', 'assistant'], true);
-
-        if ($normalizedRole === User::ROLE_ADMIN && $isStudentAssistant) {
-            return '/assistant/choose-portal';
-        }
-
-        if ($normalizedRole === User::ROLE_ADMIN) {
-            return '/student/home';
-        }
-
-        return '/student/home';
-    }
-}
-
-if (!function_exists('clinicMaintenanceModeEnabled')) {
-    function clinicMaintenanceModeEnabled(): bool
-    {
-        return Schema::hasTable('system_settings')
-            && SystemSetting::booleanValue('maintenance_mode_enabled', false);
-    }
-}
 
 // --- PUBLIC ROUTES (No login required) ---
 Route::get('/landing/weather', LandingWeatherController::class)
@@ -77,31 +43,35 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
         return redirect()->to($cleanUrl);
     }
 
-    if (clinicMaintenanceModeEnabled()) {
+    if (ClinicRoutes::maintenanceModeEnabled()) {
         return redirect()->route('maintenance');
     }
 
     $user = Auth::guard('admin')->user() ?? Auth::guard('student')->user();
     if ($user instanceof User) {
-        return redirect(resolveWorkspaceRedirectForUser($user));
+        return redirect(ClinicRoutes::workspaceRedirectForUser($user));
     }
 
     $landingAnnouncements = collect();
 
-    if (Schema::hasTable('announcements')) {
-        $landingAnnouncements = Announcement::query()
-            ->where('status', Announcement::STATUS_ACTIVE)
-            ->when(
-                Schema::hasColumn('announcements', 'show_on_landing'),
-                fn ($query) => $query->where('show_on_landing', true)
-            )
-            ->where(function ($query) {
-                $query->whereNull('expires_at')
-                    ->orWhereDate('expires_at', '>=', now()->toDateString());
-            })
-            ->latest()
-            ->take(6)
-            ->get();
+    try {
+        if (Schema::hasTable('announcements')) {
+            $landingAnnouncements = Announcement::query()
+                ->where('status', Announcement::STATUS_ACTIVE)
+                ->when(
+                    Schema::hasColumn('announcements', 'show_on_landing'),
+                    fn ($query) => $query->where('show_on_landing', true)
+                )
+                ->where(function ($query) {
+                    $query->whereNull('expires_at')
+                        ->orWhereDate('expires_at', '>=', now()->toDateString());
+                })
+                ->latest()
+                ->take(6)
+                ->get();
+        }
+    } catch (\Throwable) {
+        $landingAnnouncements = collect();
     }
 
     return view('landing', compact('landingAnnouncements'));
@@ -646,7 +616,7 @@ Route::get('/dev-login/{id}', function ($id) {
             return redirect('/admin/dashboard')->with('success', 'Logged in as ' . $user->name);
         }
         if ($normalizedRole === User::ROLE_ADMIN) {
-            $redirectPath = resolveWorkspaceRedirectForUser($user);
+            $redirectPath = ClinicRoutes::workspaceRedirectForUser($user);
 
             if ($redirectPath === '/student/home') {
                 Auth::guard('student')->login($user);
@@ -658,7 +628,7 @@ Route::get('/dev-login/{id}', function ($id) {
         }
 
         Auth::guard('student')->login($user);
-        return redirect(resolveWorkspaceRedirectForUser($user))->with('success', 'Logged in as ' . $user->name);
+        return redirect(ClinicRoutes::workspaceRedirectForUser($user))->with('success', 'Logged in as ' . $user->name);
     }
 
     return 'User not found!';

@@ -34,7 +34,11 @@ class ClinicRoutes
 
     public static function maintenanceModeEnabled(): bool
     {
-        return Schema::hasTable('system_settings')
-            && SystemSetting::booleanValue('maintenance_mode_enabled', false);
+        try {
+            return Schema::hasTable('system_settings')
+                && SystemSetting::booleanValue('maintenance_mode_enabled', false);
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }
