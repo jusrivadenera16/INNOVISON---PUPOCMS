@@ -6754,10 +6754,16 @@
                 ?: ''
             )));
 
-            if (str_contains($rawType, 'dependent')) {
-                return 'Dependent';
+            if (str_contains($rawType, 'dependent') || str_contains($rawType, 'guest')) {
+                return 'Guest';
             }
-            if (str_contains($rawType, 'admin') || str_contains($rawType, 'nurse') || str_contains($rawType, 'clinic staff') || str_contains($rawType, 'clinic_staff')) {
+            if (str_contains($rawType, 'admin')
+                || str_contains($rawType, 'nurse')
+                || str_contains($rawType, 'clinic staff')
+                || str_contains($rawType, 'clinic_staff')
+                || str_contains($rawType, 'employee')
+                || str_contains($rawType, 'non_teaching')
+                || str_contains($rawType, 'staff')) {
                 return 'Admin';
             }
             if (str_contains($rawType, 'applicant')) {
@@ -6778,20 +6784,6 @@
                     && preg_match('/^\d{4}-\d{5}-[A-Z]{2}-\d+$/', $studentNumber) === 1;
             };
 
-            $isApproved = in_array(trim((string) ($record->clearance_status ?? '')), ['Issued', 'Fully Cleared'], true);
-            $referenceNumber = strtoupper(trim((string) ($record->reference_number ?? '')));
-            if (!$isApproved
-                && $referenceNumber !== ''
-                && !\Illuminate\Support\Str::startsWith($referenceNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
-                && !$isOfficialStudentNumber($referenceNumber)) {
-                return 'Applicant';
-            }
-
-            $explicitUserType = strtolower(trim((string) ($user->user_type ?? '')));
-            if (str_contains($explicitUserType, 'student')) {
-                return 'Student';
-            }
-
             $referenceNumbers = collect([
                 $record->reference_number ?? null,
                 $user->reference_number,
@@ -6808,7 +6800,89 @@
                         && ($isOfficialStudentNumber($studentNumber) || !$referenceNumbers->contains($studentNumber));
                 });
 
+            if (str_contains($rawType, 'applicant')) {
+                return $hasStudentNumber ? 'Student' : 'Applicant';
+            }
+
+            $isApproved = in_array(trim((string) ($record->clearance_status ?? '')), ['Issued', 'Fully Cleared'], true);
+            $referenceNumber = strtoupper(trim((string) ($record->reference_number ?? '')));
+            if (!$isApproved
+                && $referenceNumber !== ''
+                && !\Illuminate\Support\Str::startsWith($referenceNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
+                && !$isOfficialStudentNumber($referenceNumber)) {
+                return 'Applicant';
+            }
+
+            $explicitUserType = strtolower(trim((string) ($user->user_type ?? '')));
+            if (str_contains($explicitUserType, 'student')) {
+                return $hasStudentNumber ? 'Student' : 'Applicant';
+            }
+
             return $hasStudentNumber ? 'Student' : 'Applicant';
+        };
+
+        $resolveHealthRecordIdentifier = function ($record) use ($resolveHealthRecordUserType) {
+            $user = optional($record->user);
+            $userType = strtolower(trim((string) $resolveHealthRecordUserType($record)));
+            $dependentProfile = optional($user)->dependentProfile;
+            $firstIdentifier = static function (array $values): string {
+                foreach ($values as $value) {
+                    $value = trim((string) $value);
+                    if ($value !== '') {
+                        return $value;
+                    }
+                }
+
+                return '-';
+            };
+
+            if (in_array($userType, ['faculty', 'admin', 'employee', 'staff'], true)) {
+                return [
+                    'label' => 'Employee Number',
+                    'value' => $firstIdentifier([
+                        $record->employee_number,
+                        $user->employee_number,
+                        $record->reference_number,
+                        $record->student_number,
+                        $user->student_number,
+                    ]),
+                ];
+            }
+
+            if (in_array($userType, ['guest', 'dependent'], true)) {
+                return [
+                    'label' => 'ID Number',
+                    'value' => $firstIdentifier([
+                        optional($dependentProfile)->id_number,
+                        $record->id_number,
+                        $record->student_number,
+                        $user->student_number,
+                        $record->reference_number,
+                    ]),
+                ];
+            }
+
+            if ($userType === 'student') {
+                return [
+                    'label' => 'Student Number',
+                    'value' => $firstIdentifier([
+                        $record->student_number,
+                        $user->student_number,
+                        $record->student_id,
+                        $user->student_id,
+                        $record->reference_number,
+                    ]),
+                ];
+            }
+
+            return [
+                'label' => 'Reference Number',
+                'value' => $firstIdentifier([
+                    $record->reference_number,
+                    $record->student_number,
+                    $user->student_number,
+                ]),
+            ];
         };
 
         foreach ($records as $summaryRecord) {
@@ -7440,6 +7514,7 @@
                         $readonlyHasCondition = $readonlyRecord->hasMedicalCondition();
                         $readonlyUserType = $resolveHealthRecordUserType($readonlyRecord);
                         $readonlyUserTypeClass = strtolower($readonlyUserType);
+                        $readonlyIdentifier = $resolveHealthRecordIdentifier($readonlyRecord);
                         $readonlyMedicalHistory = is_array($readonlyRecord->medical_history)
                             ? implode(', ', array_filter($readonlyRecord->medical_history))
                             : trim((string) $readonlyRecord->medical_history);
@@ -7478,7 +7553,7 @@
                         } else {
                             $readonlyConditionItems['Condition'] = 'No Medical Condition';
                         }
-                        $readonlyReference = $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-';
+                        $readonlyReference = $readonlyIdentifier['value'];
                         $readonlyCourseName = trim((string) ($readonlyRecord->course_college ?: optional($readonlyRecord->user)->course ?: ''));
                         $readonlyYearSection = trim((string) implode('-', array_filter([
                             trim((string) optional($readonlyRecord->user)->year),
@@ -7490,6 +7565,7 @@
                             'name' => optional($readonlyRecord->user)->name ?: '-',
                             'email' => optional($readonlyRecord->user)->email ?: '-',
                             'reference_number' => $readonlyReference,
+                            'reference_label' => $readonlyIdentifier['label'],
                             'student_id' => $readonlyRecord->student_id ?: optional($readonlyRecord->user)->student_id ?: '-',
                             'student_number' => optional($readonlyRecord->user)->student_number ?: optional($readonlyRecord->user)->student_id ?: '-',
                             'course' => $readonlyCourseDisplay !== '' ? $readonlyCourseDisplay : '-',
@@ -7563,11 +7639,11 @@
                             </div>
                             <div class="readonly-record-meta">
                                 <div class="readonly-record-pill reference-pill">
-                                    <span>Reference Number</span>
+                                    <span>{{ $readonlyIdentifier['label'] }}</span>
                                     <strong class="readonly-reference-value">
                                         <span>{{ $readonlyReference }}</span>
                                         @if($readonlyReference !== '-')
-                                            <button type="button" class="readonly-copy-btn" data-copy-reference="{{ $readonlyReference }}" aria-label="Copy reference number">
+                                            <button type="button" class="readonly-copy-btn" data-copy-reference="{{ $readonlyReference }}" aria-label="Copy {{ strtolower($readonlyIdentifier['label']) }}">
                                                 <x-outline-icon name="clipboard-document-list" />
                                             </button>
                                         @endif
@@ -7584,6 +7660,7 @@
                                         data-review-name="{{ optional($readonlyRecord->user)->name ?: 'Unnamed Student' }}"
                                         data-review-email="{{ optional($readonlyRecord->user)->email ?: '-' }}"
                                         data-review-reference="{{ $readonlyReference }}"
+                                        data-review-reference-label="{{ $readonlyIdentifier['label'] }}"
                                         data-review-course="{{ $readonlyCourseDisplay !== '' ? $readonlyCourseDisplay : '-' }}"
                                         data-review-student-id="{{ $readonlyRecord->student_id ?: optional($readonlyRecord->user)->student_id ?: optional($readonlyRecord->user)->student_number ?: '-' }}"
                                         data-review-approve-url="{{ $readonlyIsEmployee ? '' : route('admin.update_clearance', $readonlyRecord->id) }}"
@@ -7730,7 +7807,8 @@
                                 : route('walkin.document', ['healthProfile' => $readonlyRecord->id, 'document' => $documentKey]);
                         };
                         $readonlyHasCondition = $readonlyRecord->hasMedicalCondition();
-                        $readonlyReference = $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-';
+                        $readonlyIdentifier = $resolveHealthRecordIdentifier($readonlyRecord);
+                        $readonlyReference = $readonlyIdentifier['value'];
                         $pendingComplianceDocs = [
                             '2x2 Student Photo' => ['key' => 'student_photo', 'path' => $readonlyRecord->student_photo],
                             'Health Declaration' => ['key' => 'health_declaration', 'path' => $readonlyRecord->health_declaration],
@@ -7752,11 +7830,11 @@
                             </div>
                             <div class="readonly-record-meta">
                                 <div class="readonly-record-pill reference-pill">
-                                    <span>Reference Number</span>
+                                    <span>{{ $readonlyIdentifier['label'] }}</span>
                                     <strong class="readonly-reference-value">
                                         <span>{{ $readonlyReference }}</span>
                                         @if($readonlyReference !== '-')
-                                            <button type="button" class="readonly-copy-btn" data-copy-reference="{{ $readonlyReference }}" aria-label="Copy reference number">
+                                            <button type="button" class="readonly-copy-btn" data-copy-reference="{{ $readonlyReference }}" aria-label="Copy {{ strtolower($readonlyIdentifier['label']) }}">
                                                 <x-outline-icon name="clipboard-document-list" />
                                             </button>
                                         @endif
@@ -7783,7 +7861,7 @@
                                 <div class="readonly-field"><span>Status Flag</span><strong>Conditional / Flagged</strong></div>
                                 <div class="readonly-field"><span>Previous Nurse Disapproval Notes</span><strong>{{ $readonlyRecord->pending_reason ?: '-' }}</strong></div>
                                 <div class="readonly-field"><span>Student Full Name</span><strong>{{ optional($readonlyRecord->user)->name ?: 'Unnamed Student' }}</strong></div>
-                                <div class="readonly-field"><span>Submission Reference Number</span><strong>{{ $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-' }}</strong></div>
+                                <div class="readonly-field"><span>{{ $readonlyIdentifier['label'] }}</span><strong>{{ $readonlyReference }}</strong></div>
                                 <div class="readonly-field"><span>Last Updated Nurse Tracking Remarks</span><strong>{{ $readonlyRecord->medical_condition_remarks ?: $readonlyRecord->pending_reason ?: '-' }}</strong></div>
                                 <div class="readonly-field readonly-doc-preview-field">
                                     <span>Uploaded Documents</span>
@@ -7907,7 +7985,7 @@
                     <div class="verify-approval-meta-v" id="verifyApprovalStudentCourse">-</div>
                 </div>
                 <div class="verify-approval-meta">
-                    <div class="verify-approval-meta-k">Reference Number</div>
+                    <div class="verify-approval-meta-k" id="verifyApprovalReferenceLabel">Reference Number</div>
                     <div class="verify-approval-meta-v" id="verifyApprovalReferenceNumber">-</div>
                 </div>
             </div>
@@ -8319,6 +8397,7 @@
             payload.name = filledValue(payload.name, button.getAttribute('data-review-name'));
             payload.email = filledValue(payload.email, button.getAttribute('data-review-email'));
             payload.reference_number = filledValue(payload.reference_number, button.getAttribute('data-review-reference'));
+            payload.reference_label = filledValue(payload.reference_label, button.getAttribute('data-review-reference-label'));
             payload.course = filledValue(payload.course, button.getAttribute('data-review-course'));
             payload.student_id = filledValue(payload.student_id, button.getAttribute('data-review-student-id'));
             payload.approve_url = filledActionUrl(payload.approve_url, button.getAttribute('data-review-approve-url'));
@@ -8327,6 +8406,7 @@
             setText('verifyApprovalStudentName', payload.name || '-');
             setText('verifyApprovalStudentNumber', payload.email || '-');
             setText('verifyApprovalStudentCourse', payload.course || '-');
+            setText('verifyApprovalReferenceLabel', payload.reference_label || 'Reference Number');
             setText('verifyApprovalReferenceNumber', payload.reference_number || '-');
 
             if (form) {
@@ -9420,6 +9500,7 @@
             payload.name = reviewFallbackValue(payload.name, button.getAttribute('data-review-name'));
             payload.email = reviewFallbackValue(payload.email, button.getAttribute('data-review-email'));
             payload.reference_number = reviewFallbackValue(payload.reference_number, button.getAttribute('data-review-reference'));
+            payload.reference_label = reviewFallbackValue(payload.reference_label, button.getAttribute('data-review-reference-label'));
             payload.course = reviewFallbackValue(payload.course, button.getAttribute('data-review-course'));
             payload.student_id = reviewFallbackValue(payload.student_id, button.getAttribute('data-review-student-id'));
             payload.approve_url = reviewActionUrl(payload.approve_url, button.getAttribute('data-review-approve-url'));
@@ -9434,6 +9515,10 @@
         }
         if (verifyApprovalStudentCourse) {
             verifyApprovalStudentCourse.textContent = payload.course || '-';
+        }
+        const verifyApprovalReferenceLabel = document.getElementById('verifyApprovalReferenceLabel');
+        if (verifyApprovalReferenceLabel) {
+            verifyApprovalReferenceLabel.textContent = payload.reference_label || 'Reference Number';
         }
         if (verifyApprovalReferenceNumber) {
             verifyApprovalReferenceNumber.textContent = payload.reference_number || '-';

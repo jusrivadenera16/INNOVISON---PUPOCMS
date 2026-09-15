@@ -3417,6 +3417,7 @@
         border-radius: 8px;
         background: #273145 !important;
         color: #ffffff !important;
+        font-weight: 900;
         box-shadow: 0 7px 16px rgba(0, 0, 0, .16);
         cursor: pointer;
         transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
@@ -4631,9 +4632,17 @@
                     </div>
                     <div class="form-group visit-field">
                         <label for="consultService">Purpose of Visit / Service</label>
+                        @php
+                            $hasConfiguredBpMonitoring = collect($otherServiceOptions ?? [])->contains(function ($serviceOption) {
+                                return strtolower(trim((string) $serviceOption->serviceLabel())) === 'bp monitoring';
+                            });
+                        @endphp
                         <select id="consultService" class="form-control" data-clinic-select @if(($user_source ?? '') === 'online') disabled @else name="service" @endif required>
                             <option value="" disabled {{ !$draftValue('service', optional($latestAppointment)->service) ? 'selected' : '' }}>Select clinic service</option>
                             <option value="General Consultation" {{ $draftValue('service', optional($latestAppointment)->service) === 'General Consultation' ? 'selected' : '' }}>General Consultation</option>
+                            @if(!$hasConfiguredBpMonitoring)
+                                <option value="BP Monitoring" {{ $draftValue('service', optional($latestAppointment)->service) === 'BP Monitoring' ? 'selected' : '' }}>BP Monitoring</option>
+                            @endif
                             @foreach(($otherServiceOptions ?? []) as $serviceOption)
                                 <option value="{{ $serviceOption->serviceLabel() }}" {{ $draftValue('service', optional($latestAppointment)->service) === $serviceOption->serviceLabel() ? 'selected' : '' }}>{{ $serviceOption->serviceLabel() }}</option>
                             @endforeach
@@ -4656,7 +4665,7 @@
                             <option value="" disabled {{ $draftValue('condition_id') ? '' : 'selected' }}>Select diagnosis / classification</option>
                             @foreach($conditions as $condition)
                                 <option value="{{ $condition->id }}" {{ (string) $draftValue('condition_id') === (string) $condition->id ? 'selected' : '' }}>
-                                    Category {{ optional($condition->category)->code }}: {{ $condition->name }}
+                                    {{ $condition->name }}
                                 </option>
                             @endforeach
                         </select>

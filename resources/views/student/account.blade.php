@@ -5574,6 +5574,14 @@
             linear-gradient(90deg, rgba(43,0,14,.99) 0%, rgba(55,0,18,.97) 52%, rgba(14,8,18,.82) 100%),
             url('{{ asset("images/PUPBG.jpg") }}') right 42% / 58% auto no-repeat;
     }
+    html[data-theme="dark"] .health-record-dashboard .health-record-hero-emblem {
+        background: #121b2a;
+        border-color: rgba(250,204,21,.46);
+        color: #facc15;
+        box-shadow:
+            0 14px 30px rgba(0,0,0,.34),
+            0 0 0 1px rgba(250,204,21,.08) inset;
+    }
     html[data-theme="dark"] .health-record-dashboard .health-status-card,
     html[data-theme="dark"] .health-record-side-card {
         border-color: rgba(250,204,21,.16);
@@ -6032,6 +6040,9 @@
         overflow: visible;
         white-space: pre-line;
         -webkit-line-clamp: unset;
+    }
+    .notification-feed-item.is-announcements.is-expanded .notification-feed-message {
+        display: none;
     }
     .notification-announcement-content {
         display: grid;
@@ -6618,6 +6629,88 @@
     html[data-theme="dark"] .notification-quick-actions button { border-color: rgba(255,255,255,.09); }
     html[data-theme="dark"] .notification-quick-actions a,
     html[data-theme="dark"] .notification-quick-actions button { color: #e5e7eb; }
+    html[data-theme="dark"] .notification-hero .health-record-hero-emblem {
+        background: #121b2a;
+        border-color: rgba(250,204,21,.46);
+        color: #facc15;
+        box-shadow:
+            0 14px 30px rgba(0,0,0,.34),
+            0 0 0 1px rgba(250,204,21,.08) inset;
+    }
+    html[data-theme="dark"] .notification-hero .page-hero-step svg {
+        color: #facc15 !important;
+    }
+    html[data-theme="dark"] .notification-stat-icon {
+        background: rgba(250,204,21,.12);
+        color: #facc15;
+        border: 1px solid rgba(250,204,21,.24);
+    }
+    html[data-theme="dark"] .notification-stat-card.is-appointments .notification-stat-icon {
+        background: rgba(250,204,21,.12);
+        color: #facc15;
+    }
+    html[data-theme="dark"] .notification-stat-card.is-health .notification-stat-icon {
+        background: rgba(34,197,94,.14);
+        color: #86efac;
+    }
+    html[data-theme="dark"] .notification-stat-card.is-announcements .notification-stat-icon {
+        background: rgba(96,165,250,.16);
+        color: #93c5fd;
+    }
+    html[data-theme="dark"] .notification-letter-icon {
+        background: #182233;
+        color: #facc15;
+        border: 1px solid rgba(250,204,21,.24);
+    }
+    html[data-theme="dark"] .notification-feed-item.is-appointments .notification-letter-icon {
+        background: rgba(250,204,21,.12);
+        color: #facc15;
+    }
+    html[data-theme="dark"] .notification-feed-item.is-health-records .notification-letter-icon {
+        background: rgba(34,197,94,.14);
+        color: #86efac;
+    }
+    html[data-theme="dark"] .notification-feed-item.is-announcements .notification-letter-icon {
+        background: rgba(96,165,250,.16);
+        color: #93c5fd;
+    }
+    html[data-theme="dark"] .notification-category-badge {
+        background: rgba(250,204,21,.14);
+        color: #fde68a;
+    }
+    html[data-theme="dark"] .notification-feed-item.is-appointments .notification-category-badge {
+        background: rgba(250,204,21,.14);
+        color: #fde68a;
+    }
+    html[data-theme="dark"] .notification-feed-item.is-health-records .notification-category-badge {
+        background: rgba(34,197,94,.16);
+        color: #bbf7d0;
+    }
+    html[data-theme="dark"] .notification-feed-item.is-announcements .notification-category-badge {
+        background: rgba(96,165,250,.18);
+        color: #bfdbfe;
+    }
+    html[data-theme="dark"] .notification-side-title > span {
+        background: rgba(250,204,21,.12);
+        color: #facc15;
+        border: 1px solid rgba(250,204,21,.24);
+    }
+    html[data-theme="dark"] .notification-center-list dt i.is-unread {
+        border-color: #facc15;
+        background: #facc15;
+    }
+    html[data-theme="dark"] .notification-quick-actions svg {
+        color: #facc15 !important;
+    }
+    html[data-theme="dark"] .notification-quick-actions a svg:last-child,
+    html[data-theme="dark"] .notification-quick-actions button svg:last-child {
+        color: #94a3b8 !important;
+    }
+    html[data-theme="dark"] .notification-empty-icon {
+        background: rgba(250,204,21,.12);
+        border-color: rgba(250,204,21,.24);
+        color: #facc15;
+    }
     html[data-theme="dark"] .notification-settings-body { background: #101722; }
     html[data-theme="dark"] .notification-settings-option {
         border-color: rgba(148,163,184,.22);

@@ -9746,8 +9746,8 @@
     }
     .consultation-drafts-dialog {
         display: grid;
-        width: min(680px, 100%);
-        max-height: min(720px, calc(100vh - 40px));
+        width: min(760px, 100%);
+        max-height: min(760px, calc(100vh - 40px));
         overflow: hidden;
         border: 1px solid #ead0d2;
         border-radius: 16px;
@@ -9864,6 +9864,10 @@
         background: #ffffff;
         color: #8b0000;
     }
+    .consultation-drafts-search-wrap:focus-within {
+        border-color: #facc15;
+        box-shadow: none;
+    }
     .consultation-drafts-search-wrap svg {
         width: 17px;
         height: 17px;
@@ -9874,11 +9878,12 @@
         min-width: 0;
         height: 36px;
         padding: 0;
-        border: 0;
-        outline: 0;
+        border: 0 !important;
+        outline: 0 !important;
         background: transparent;
         color: #1e293b;
         font-size: 11px;
+        box-shadow: none !important;
     }
     .consultation-drafts-refresh {
         width: 38px;
@@ -12217,11 +12222,11 @@
 
             const person = document.createElement('div');
             person.className = isDialogRow ? 'consultation-drafts-dialog-person' : 'ocr-consultation-draft-person';
-            const identifier = document.createElement('strong');
-            identifier.textContent = draft.identifier || 'No ID number';
-            const name = document.createElement('span');
+            const name = document.createElement('strong');
             name.textContent = draft.name || 'Patient';
-            person.append(identifier, name);
+            const identifier = document.createElement('span');
+            identifier.textContent = draft.identifier || 'No ID number';
+            person.append(name, identifier);
 
             const savedAt = document.createElement('span');
             savedAt.className = isDialogRow ? 'consultation-drafts-dialog-time' : 'ocr-consultation-draft-time';

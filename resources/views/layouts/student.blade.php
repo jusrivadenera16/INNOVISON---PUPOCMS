@@ -971,6 +971,18 @@
             border-top-color: #facc15;
         }
 
+        html[data-theme="light"] .student-quick-actions-panel::before,
+        html[data-theme="dark"] .student-quick-actions-panel::before {
+            border-top-color: rgba(15, 23, 42, 0.34);
+            filter: drop-shadow(0 3px 4px rgba(15, 23, 42, 0.32));
+        }
+
+        html[data-theme="light"] .student-quick-actions-panel::after,
+        html[data-theme="dark"] .student-quick-actions-panel::after {
+            border-bottom-color: rgba(15, 23, 42, 0.18);
+            filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.28));
+        }
+
         html[data-theme="light"] .student-quick-action-btn,
         html[data-theme="dark"] .student-quick-action-btn {
             border-width: 1px;
@@ -3219,17 +3231,20 @@
                 <span class="student-quick-action-tooltip">Theme Mode</span>
             </div>
 
-            <div class="student-quick-action-item is-notifications">
-                <button type="button" id="studentNotifToggleBtn" class="student-quick-action-btn student-quick-action-bell" aria-label="Notifications" aria-expanded="false">
-                    <x-outline-icon name="bell" />
-                    @if($notificationCount > 0)
-                        <span class="student-quick-actions-badge">{{ $notificationCount }}</span>
-                    @endif
-                </button>
-                <span class="student-quick-action-tooltip">Notifications</span>
-            </div>
+            @auth('student')
+                <div class="student-quick-action-item is-notifications">
+                    <button type="button" id="studentNotifToggleBtn" class="student-quick-action-btn student-quick-action-bell" aria-label="Notifications" aria-expanded="false">
+                        <x-outline-icon name="bell" />
+                        @if($notificationCount > 0)
+                            <span class="student-quick-actions-badge">{{ $notificationCount }}</span>
+                        @endif
+                    </button>
+                    <span class="student-quick-action-tooltip">Notifications</span>
+                </div>
+            @endauth
         </div>
 
+        @auth('student')
         <section class="student-notif-panel" id="studentNotifPanel" aria-live="polite">
             <div class="student-notif-head">
                 <div>
@@ -3316,6 +3331,7 @@
                 </div>
             </div>
         </section>
+        @endauth
     </div>
 
     @if(

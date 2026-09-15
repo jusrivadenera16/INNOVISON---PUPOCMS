@@ -1132,83 +1132,6 @@
         height: 15px;
         color: #8b0b24;
     }
-    .announcement-all-card {
-        width: min(760px, 100%);
-        max-height: min(780px, calc(100vh - 48px));
-        display: flex;
-        flex-direction: column;
-    }
-    .announcement-all-list {
-        min-height: 0;
-        flex: 1 1 auto;
-        display: grid;
-        gap: 12px;
-        padding: 20px;
-        overflow-y: auto;
-    }
-    .announcement-all-item {
-        width: 100%;
-        display: grid;
-        grid-template-columns: 46px minmax(0, 1fr) auto;
-        gap: 14px;
-        align-items: center;
-        padding: 16px;
-        border: 1px solid rgba(112, 19, 27, .16);
-        border-radius: 8px;
-        background: #ffffff;
-        color: #111827;
-        text-align: left;
-        cursor: pointer;
-        transition: border-color .2s ease, background .2s ease, transform .2s ease;
-    }
-    .announcement-all-item:hover,
-    .announcement-all-item:focus-visible {
-        border-color: rgba(250, 204, 21, .86);
-        background: #fffaf0;
-        transform: translateY(-1px);
-        outline: none;
-    }
-    .announcement-all-item-icon {
-        width: 46px;
-        height: 46px;
-        border-radius: 999px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: #8b0b24;
-        color: #facc15;
-    }
-    .announcement-all-item-icon svg {
-        width: 23px;
-        height: 23px;
-    }
-    .announcement-all-item-copy strong,
-    .announcement-all-item-copy span {
-        display: block;
-    }
-    .announcement-all-item-copy strong {
-        font-size: 14px;
-        color: #70131b;
-    }
-    .announcement-all-item-copy span,
-    .announcement-all-item-date {
-        margin-top: 4px;
-        color: #64748b;
-        font-size: 12px;
-    }
-    html[data-theme="dark"] .announcement-all-item {
-        border-color: rgba(255, 255, 255, .12);
-        background: #172033;
-        color: #f8fafc;
-    }
-    html[data-theme="dark"] .announcement-all-item:hover,
-    html[data-theme="dark"] .announcement-all-item:focus-visible {
-        background: #202b40;
-        border-color: rgba(250, 204, 21, .72);
-    }
-    html[data-theme="dark"] .announcement-all-item-copy strong {
-        color: #ffffff;
-    }
     html[data-theme="dark"] .announcement-modal-card {
         background: #111827;
         border-color: rgba(250,204,21,.26);
@@ -1239,34 +1162,34 @@
         top: 50%;
         z-index: 8;
         transform: translateY(-50%);
-        width: 38px;
-        height: 38px;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, .72);
-        background: #ffffff;
-        color: #8B0000;
+        width: 42px;
+        height: 42px;
+        border-radius: 0;
+        border: 0;
+        background: transparent;
+        color: #ffffff;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 10px 24px rgba(2, 6, 23, .28);
-        transition: transform .2s ease, background .2s ease, color .2s ease;
+        box-shadow: none;
+        transition: transform .24s ease, background .24s ease, color .24s ease;
     }
     .announcement-nav:hover,
     .announcement-nav:focus-visible {
-        background: #facc15;
-        color: #70131b;
-        transform: translateY(-50%) scale(1.08);
+        background: transparent;
+        color: #facc15;
+        transform: translateY(-50%) scale(1.16);
         outline: none;
     }
     .announcement-nav:disabled {
-        opacity: .82;
+        opacity: .42;
         cursor: default;
     }
     .announcement-nav:disabled:hover,
     .announcement-nav:disabled:focus-visible {
-        background: #ffffff;
-        color: #8B0000;
+        background: transparent;
+        color: #ffffff;
         transform: translateY(-50%);
     }
     .announcement-nav svg {
@@ -2265,24 +2188,24 @@
 
     html.home-reveal-enabled .home-scroll-reveal {
         opacity: 0;
-        filter: blur(3px);
+        filter: blur(4px);
         transition:
-            opacity 560ms cubic-bezier(.22, 1, .36, 1) var(--home-reveal-delay, 0ms),
-            filter 560ms cubic-bezier(.22, 1, .36, 1) var(--home-reveal-delay, 0ms);
+            opacity 900ms cubic-bezier(.16, 1, .3, 1) var(--home-reveal-delay, 0ms),
+            filter 900ms cubic-bezier(.16, 1, .3, 1) var(--home-reveal-delay, 0ms);
         will-change: opacity, filter;
     }
 
     html.home-reveal-enabled .home-scroll-reveal[data-reveal-motion="up"] {
-        translate: 0 18px;
+        translate: 0 26px;
         transition:
-            opacity 560ms cubic-bezier(.22, 1, .36, 1) var(--home-reveal-delay, 0ms),
-            translate 560ms cubic-bezier(.22, 1, .36, 1) var(--home-reveal-delay, 0ms),
-            filter 560ms cubic-bezier(.22, 1, .36, 1) var(--home-reveal-delay, 0ms);
+            opacity 900ms cubic-bezier(.16, 1, .3, 1) var(--home-reveal-delay, 0ms),
+            translate 900ms cubic-bezier(.16, 1, .3, 1) var(--home-reveal-delay, 0ms),
+            filter 900ms cubic-bezier(.16, 1, .3, 1) var(--home-reveal-delay, 0ms);
         will-change: opacity, translate, filter;
     }
 
     html.home-reveal-enabled .home-scroll-reveal[data-reveal-motion="up"][data-reveal-direction="up"] {
-        translate: 0 -18px;
+        translate: 0 -26px;
     }
 
     html.home-reveal-enabled .home-scroll-reveal.is-visible {
@@ -2294,16 +2217,82 @@
         translate: 0 0;
     }
 
+    /* Give the first viewport a slower, gentle pop-in on page load. */
+    html.home-reveal-enabled .PUPBG .hero-copy > *,
+    html.home-reveal-enabled .PUPBG .hero-actions-phone-wrapper {
+        scale: .9;
+        transition:
+            opacity 1050ms cubic-bezier(.16, 1, .3, 1) var(--home-reveal-delay, 0ms),
+            scale 1050ms cubic-bezier(.16, 1, .3, 1) var(--home-reveal-delay, 0ms),
+            filter 1050ms cubic-bezier(.16, 1, .3, 1) var(--home-reveal-delay, 0ms);
+        will-change: opacity, scale, filter;
+    }
+
+    html.home-reveal-enabled .PUPBG .hero-copy > *.is-visible,
+    html.home-reveal-enabled .PUPBG .hero-actions-phone-wrapper.is-visible {
+        scale: 1;
+    }
+
+    html.home-reveal-enabled .home-announcement-heading.home-scroll-reveal,
+    html.home-reveal-enabled .home-announcement-shell.home-scroll-reveal,
+    html.home-reveal-enabled .home-announcement-list-item.home-scroll-reveal,
+    html.home-reveal-enabled .home-announcement-featured.home-scroll-reveal,
+    html.home-reveal-enabled .home-announcement-view-all.home-scroll-reveal,
+    html.home-reveal-enabled #about .about-heading.home-scroll-reveal,
+    html.home-reveal-enabled #about .why-item.home-scroll-reveal,
+    html.home-reveal-enabled #about .about-learn-more.home-scroll-reveal,
+    html.home-reveal-enabled .feedback-showcase .feedback-heading.home-scroll-reveal,
+    html.home-reveal-enabled .feedback-showcase .feedback-stage.home-scroll-reveal {
+        transition-duration: 1250ms;
+    }
+
+    @keyframes homeInitialHeroPopup {
+        0% {
+            opacity: 0;
+            filter: blur(7px);
+            scale: .88;
+        }
+        68% {
+            opacity: 1;
+            filter: blur(0);
+            scale: 1.025;
+        }
+        100% {
+            opacity: 1;
+            filter: blur(0);
+            scale: 1;
+        }
+    }
+
+    html.home-initial-load .PUPBG .hero-copy > *,
+    html.home-initial-load .PUPBG .hero-actions-phone-wrapper {
+        animation: homeInitialHeroPopup 1050ms cubic-bezier(.16, 1, .3, 1) both;
+        animation-delay: var(--home-reveal-delay, 0ms);
+    }
+
     @media (prefers-reduced-motion: reduce) {
         html.home-reveal-enabled .home-scroll-reveal,
         html.home-reveal-enabled .home-scroll-reveal[data-reveal-motion="up"] {
-            opacity: 1 !important;
             filter: none !important;
             transition: none !important;
         }
 
+        html.home-reveal-enabled .home-scroll-reveal.is-visible {
+            opacity: 1 !important;
+        }
+
         html.home-reveal-enabled .home-scroll-reveal[data-reveal-motion="up"] {
             translate: none !important;
+        }
+
+        html.home-reveal-enabled .PUPBG .hero-copy > *,
+        html.home-reveal-enabled .PUPBG .hero-actions-phone-wrapper {
+            scale: 1 !important;
+        }
+
+        html.home-initial-load .PUPBG .hero-copy > *,
+        html.home-initial-load .PUPBG .hero-actions-phone-wrapper {
+            animation: none !important;
         }
     }
 
@@ -3793,6 +3782,630 @@
   0%, 100% { transform: scale(0.9); opacity: 0.7; }
   50% { transform: scale(1.05); opacity: 1; }
 }
+
+/* Keep the home carousel aligned with the landing announcement composition. */
+html.home-reveal-enabled .home-announcement-card.home-scroll-reveal {
+  transition:
+    left .48s cubic-bezier(.22, .8, .24, 1),
+    width .48s ease,
+    min-height .48s ease,
+    opacity 1.25s cubic-bezier(.16, 1, .3, 1),
+    translate 1.25s cubic-bezier(.16, 1, .3, 1),
+    transform .48s cubic-bezier(.22, .8, .24, 1),
+    visibility .35s ease,
+    filter 1.25s cubic-bezier(.16, 1, .3, 1),
+    border-color .2s ease,
+    box-shadow .2s ease;
+}
+
+html.home-reveal-enabled .home-announcement-card.home-scroll-reveal.is-prev,
+html.home-reveal-enabled .home-announcement-card.home-scroll-reveal.is-next-far {
+  opacity: .28;
+}
+
+@media (min-width: 921px) {
+  .home-announcement-card.is-prev,
+  .home-announcement-card.is-next-far,
+  .home-announcement-shell.carousel-count-3 .home-announcement-card.is-prev {
+    z-index: 2;
+    width: 405px;
+    min-height: 255px;
+    left: -417px;
+    opacity: .28;
+    visibility: visible;
+    filter: blur(1.7px) brightness(.72);
+    transform: translate(-50%, -50%) scale(.94);
+    pointer-events: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .home-announcement-card.is-prev,
+  .home-announcement-shell.carousel-count-3 .home-announcement-card.is-prev {
+    left: calc(50% - 430px);
+    clip-path: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, .22) 28%, rgba(0, 0, 0, .58) 62%, #000 100%);
+    mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, .22) 28%, rgba(0, 0, 0, .58) 62%, #000 100%);
+  }
+
+  .home-announcement-card.is-next-far {
+    left: calc(50% + 430px);
+    clip-path: none;
+    -webkit-mask-image: linear-gradient(90deg, #000 0%, rgba(0, 0, 0, .72) 38%, rgba(0, 0, 0, .28) 70%, transparent 100%);
+    mask-image: linear-gradient(90deg, #000 0%, rgba(0, 0, 0, .72) 38%, rgba(0, 0, 0, .28) 70%, transparent 100%);
+  }
+
+  .home-announcement-shell.carousel-count-3 .home-announcement-card.is-current {
+    left: calc(50% - 215px);
+    width: 405px;
+    min-height: 255px;
+    opacity: 1;
+    visibility: visible;
+    filter: none;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
+  }
+
+  .home-announcement-shell.carousel-count-3 .home-announcement-card.is-next {
+    left: calc(50% + 215px);
+    width: 405px;
+    min-height: 255px;
+    opacity: 1;
+    visibility: visible;
+    filter: none;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
+  }
+
+  .announcement-nav {
+    width: 56px;
+    height: 56px;
+    transition: transform .2s ease, color .2s ease, filter .2s ease;
+  }
+
+  .announcement-nav:hover,
+  .announcement-nav:focus-visible {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .26));
+  }
+
+  .announcement-nav svg {
+    width: 32px;
+    height: 32px;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+/* Home announcements: selectable list plus a focused detail panel. */
+.home-announcement-shell {
+  position: relative;
+  width: min(1200px, calc(100% - 80px));
+  height: 380px;
+  margin: 18px auto 0;
+  display: block;
+  overflow: visible;
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+.home-announcement-layout {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(330px, 430px) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.home-announcement-list-panel,
+.home-announcement-featured {
+  position: relative;
+  height: 380px;
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(250, 204, 21, .36);
+  border-radius: 16px;
+  background: linear-gradient(150deg, rgba(95, 13, 35, .72), rgba(50, 5, 19, .84));
+  box-shadow: 0 20px 42px rgba(27, 0, 8, .28), inset 0 1px rgba(255, 255, 255, .08);
+}
+
+.home-announcement-list-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 12px 10px;
+}
+
+.home-announcement-list {
+  min-height: 0;
+  min-width: 0;
+  flex: 0 0 289px;
+  height: 289px;
+  max-height: 289px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+  scrollbar-width: thin;
+}
+
+.home-announcement-list-item {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  flex: 0 0 70px;
+  height: 70px;
+  min-height: 70px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 18px;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 10px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .24s ease, background .24s ease, box-shadow .24s ease;
+}
+
+.home-announcement-list-item::before {
+  display: none;
+}
+
+.home-announcement-list-item + .home-announcement-list-item {
+  border-top: 1px solid rgba(148, 163, 184, .28);
+}
+
+.home-announcement-list-item.is-current,
+.home-announcement-list-item:hover,
+.home-announcement-list-item:focus-visible {
+  background: rgba(126, 8, 35, .55);
+  outline: none;
+}
+
+.home-announcement-list-item.is-current {
+  border-color: rgba(250, 204, 21, .66);
+  box-shadow: inset 0 0 0 1px rgba(250, 204, 21, .08);
+}
+
+.home-announcement-list-item:hover {
+  transform: translateX(3px);
+}
+
+.home-announcement-list-item.is-extra {
+  display: none;
+}
+
+.home-announcement-list.is-expanded .home-announcement-list-item.is-extra {
+  display: grid;
+  animation: homeAnnouncementListItemIn .42s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.home-announcement-list-icon {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(250, 204, 21, .75);
+  border-radius: 999px;
+  color: #facc15;
+  background: rgba(72, 3, 12, .5);
+}
+
+.home-announcement-list-icon svg {
+  width: 23px;
+  height: 23px;
+}
+
+.home-announcement-list-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.home-announcement-list-date {
+  color: #f8d85e;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.home-announcement-list-copy strong,
+.home-announcement-list-copy > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-announcement-list-copy strong {
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.home-announcement-list-copy > span:last-child {
+  color: rgba(255, 255, 255, .76);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.home-announcement-list-arrow {
+  color: #fff;
+}
+
+.home-announcement-list-arrow svg {
+  width: 20px;
+  height: 20px;
+}
+
+.home-announcement-list-all {
+  position: static;
+  align-self: center;
+  min-width: 0;
+  width: max-content;
+  height: 38px;
+  margin: 8px auto 0;
+  padding: 0;
+  background: transparent;
+  color: #facc15;
+  box-shadow: none;
+  transform: none;
+  font-size: 13px;
+  font-weight: 800;
+  justify-content: flex-start;
+}
+
+.home-announcement-list-all:hover,
+.home-announcement-list-all:focus-visible {
+  background: transparent;
+  color: #fff;
+  box-shadow: none;
+  transform: translateX(3px);
+  outline: none;
+}
+
+.home-announcement-shell.is-expanded {
+  height: 380px;
+}
+
+.home-announcement-shell.is-expanded .home-announcement-layout {
+  height: 100%;
+  min-height: 0;
+}
+
+.home-announcement-shell.is-expanded .home-announcement-list-panel {
+  height: 380px;
+  min-height: 0;
+}
+
+.home-announcement-shell.is-expanded .home-announcement-list {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.home-announcement-featured {
+  padding: 34px 38px 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.home-announcement-featured-content {
+  position: relative;
+  z-index: 2;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  max-width: 650px;
+}
+
+.home-announcement-featured-watermark {
+  position: absolute;
+  right: 45px;
+  top: 70px;
+  color: rgba(50, 5, 19, .5);
+  transform: rotate(-12deg);
+  pointer-events: none;
+}
+
+.home-announcement-featured-watermark svg {
+  width: 220px;
+  height: 220px;
+  stroke-width: 1;
+}
+
+.home-announcement-featured-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  width: max-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid rgba(250, 204, 21, .8);
+  border-radius: 999px;
+  color: #facc15;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.home-announcement-featured-badge svg {
+  width: 17px;
+  height: 17px;
+}
+
+.home-announcement-featured-icons,
+.home-announcement-featured-icons > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+}
+
+.home-announcement-featured-icons > span[hidden] {
+  display: none;
+}
+
+.home-announcement-featured h3 {
+  margin: 18px 0 10px;
+  color: #fff;
+  font-size: 34px;
+  line-height: 1.12;
+  font-weight: 950;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.home-announcement-featured-date {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, .88);
+  font-size: 13px;
+}
+
+.home-announcement-featured-date svg {
+  width: 19px;
+  height: 19px;
+}
+
+.home-announcement-featured-divider {
+  height: 1px;
+  margin: 16px 0;
+  background: rgba(255, 255, 255, .28);
+}
+
+.home-announcement-featured-message {
+  max-width: 620px;
+  color: rgba(255, 255, 255, .82);
+  font-size: 15px;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  max-height: 4.65em;
+  overflow: hidden;
+}
+
+.home-announcement-featured-message p {
+  margin: 0;
+}
+
+.home-announcement-read-details {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  min-height: 34px;
+  margin-top: auto;
+  padding: 0 17px;
+  border: 0;
+  border-radius: 999px;
+  background: #facc15;
+  color: #70131b;
+  font-size: 12px;
+  font-weight: 950;
+  cursor: pointer;
+  transition: transform .24s ease, box-shadow .24s ease, background .24s ease;
+}
+
+.home-announcement-read-details:hover,
+.home-announcement-read-details:focus-visible {
+  transform: translateY(-2px);
+  background: #ffe67a;
+  box-shadow: 0 12px 24px rgba(250, 204, 21, .24);
+  outline: none;
+}
+
+.home-announcement-read-details svg {
+  width: 16px;
+  height: 16px;
+}
+
+.home-announcement-featured-meta {
+  position: absolute;
+  right: 36px;
+  bottom: 25px;
+  color: rgba(255, 255, 255, .46);
+  font-size: 9px;
+  letter-spacing: 3px;
+}
+
+.home-announcement-featured.is-switching .home-announcement-featured-content {
+  animation: homeAnnouncementDetailIn .78s cubic-bezier(.22, .8, .24, 1) both;
+}
+
+.home-announcement-featured.is-switching {
+  animation: homeAnnouncementCardIn .9s cubic-bezier(.22, .8, .24, 1) both;
+}
+
+@keyframes homeAnnouncementListItemIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes homeAnnouncementDetailIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes homeAnnouncementCardIn {
+  0% { opacity: 0; transform: translateY(14px) scale(.985); filter: blur(4px); }
+  48% { opacity: .64; transform: translateY(4px) scale(.992); filter: blur(1.5px); }
+  78% { opacity: .94; transform: translateY(-1px) scale(1.002); filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@media (max-width: 920px) {
+  .home-announcement-shell {
+    width: min(680px, calc(100% - 32px));
+    height: auto;
+    margin-top: 18px;
+  }
+
+  .home-announcement-layout {
+    height: auto;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .home-announcement-list-panel {
+    height: 360px;
+    max-height: 360px;
+    min-height: 360px;
+  }
+
+  .home-announcement-list {
+    flex-basis: 289px;
+    height: 289px;
+    max-height: 289px;
+  }
+
+  .home-announcement-featured {
+    min-height: 340px;
+    padding: 28px 26px;
+  }
+
+  .home-announcement-featured h3 {
+    font-size: 28px;
+  }
+
+  .home-announcement-featured-meta {
+    right: 22px;
+    bottom: 18px;
+  }
+
+  .home-announcement-shell.is-expanded .home-announcement-list-panel {
+    height: 360px;
+    min-height: 360px;
+    max-height: 360px;
+  }
+
+  .home-announcement-shell.is-expanded .home-announcement-list {
+    flex-basis: 289px;
+    height: 289px;
+    max-height: 289px;
+  }
+}
+
+@media (max-width: 680px) {
+  .home-announcement-band {
+    min-height: 720px;
+    padding: 96px 0 50px;
+  }
+
+  .home-announcement-shell {
+    width: calc(100% - 24px);
+    margin: 0 auto;
+  }
+
+  .home-announcement-list-panel {
+    height: 350px;
+    max-height: 350px;
+    min-height: 350px;
+    padding: 10px 8px;
+  }
+
+  .home-announcement-list-item {
+    grid-template-columns: 46px minmax(0, 1fr) 16px;
+    gap: 10px;
+    flex-basis: 66px;
+    height: 66px;
+    min-height: 66px;
+    padding: 10px 7px;
+  }
+
+  .home-announcement-list {
+    flex-basis: 273px;
+    height: 273px;
+    max-height: 273px;
+  }
+
+  .home-announcement-list-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .home-announcement-list-copy strong {
+    font-size: 13px;
+  }
+
+  .home-announcement-list-copy > span:last-child {
+    font-size: 11px;
+  }
+
+  .home-announcement-featured {
+    min-height: 330px;
+    padding: 24px 20px 46px;
+  }
+
+  .home-announcement-featured h3 {
+    margin-top: 18px;
+    font-size: 26px;
+  }
+
+  .home-announcement-featured-message {
+    font-size: 13px;
+  }
+
+  .home-announcement-featured-watermark {
+    right: -35px;
+    top: 85px;
+  }
+
+  .home-announcement-featured-meta {
+    left: 20px;
+    right: auto;
+  }
+
+  .home-announcement-shell.is-expanded .home-announcement-list-panel {
+    height: 350px;
+    min-height: 350px;
+    max-height: 350px;
+  }
+
+  .home-announcement-shell.is-expanded .home-announcement-list {
+    flex-basis: 273px;
+    height: 273px;
+    max-height: 273px;
+  }
+}
 </style>
 @endpush
 
@@ -4017,7 +4630,7 @@
                 'date' => now(config('app.timezone'))->format('M j, Y'),
             ]]);
         $announcementCount = $announcementSlides->count();
-      @endphp
+        @endphp
 
       <div id="announcements" class="home-announcement-band" aria-label="Clinic announcements" style="scroll-margin-top: 86px;">
         <header class="home-announcement-heading">
@@ -4025,100 +4638,111 @@
           <h2>Announcements &amp; Advisories</h2>
           <span class="home-announcement-title-line" aria-hidden="true"></span>
         </header>
-        <div class="home-announcement-shell {{ $announcementCount < 2 ? 'is-static static-count-' . $announcementCount : 'is-carousel carousel-count-' . $announcementCount }}" data-home-announcements>
-          <div class="home-announcement-track">
-            @foreach($announcementSlides as $index => $announcement)
-            @php
-              $announcementSearch = strtolower(($announcement['priority'] ?? '') . ' ' . ($announcement['title'] ?? ''));
-              $announcementIcon = str_contains($announcementSearch, 'schedule') || str_contains($announcementSearch, 'service')
-                  ? 'calendar-days'
-                  : (str_contains($announcementSearch, 'health') || str_contains($announcementSearch, 'reminder')
-                      ? 'heart-pulse'
-                      : (str_contains($announcementSearch, 'form') || str_contains($announcementSearch, 'document')
-                          ? 'document-text'
-                          : 'megaphone'));
-              $announcementPosition = match (true) {
-                  $index === 0 => 'is-current',
-                  $index === 1 => 'is-next',
-                  $announcementCount > 2 && $index === $announcementCount - 1 => 'is-prev',
-                  $announcementCount > 3 && $index === 2 => 'is-next-far',
-                  default => '',
-              };
-            @endphp
-            <article
-              class="home-announcement-card {{ $announcementPosition }}"
-              data-announcement-slide
-              data-announcement-detail
-              data-announcement-id="{{ $announcement['id'] ?? '' }}"
-              data-priority="{{ e($announcement['priority'] ?: 'ANNOUNCEMENT') }}"
-              data-title="{{ e($announcement['title']) }}"
-              data-message-html="{!! e($announcement['message_html'] ?? nl2br(e($announcement['message'] ?? ''))) !!}"
-              data-image-urls='@json($announcement['image_urls'] ?? [])'
-              data-date="{{ e($announcement['date'] ?? now(config('app.timezone'))->format('M j, Y')) }}"
-              role="button"
-              tabindex="0"
-              aria-label="View announcement: {{ $announcement['title'] }}"
-            >
-              <div class="announcement-card-head">
-                <span class="announcement-icon" aria-hidden="true">
-                  <x-outline-icon :name="$announcementIcon" />
-                </span>
-                <div>
-                  <p class="announcement-eyebrow">{{ $announcement['priority'] ?: 'ANNOUNCEMENT' }}</p>
-                  <h3 class="announcement-title">{{ $announcement['title'] }}</h3>
-                </div>
+        @php
+          $featuredAnnouncement = $announcementSlides->first();
+          $featuredMessage = $featuredAnnouncement['message_html'] ?? nl2br(e($featuredAnnouncement['message'] ?? ''));
+          $announcementIconByPriority = [
+              'urgent' => 'exclamation-circle',
+              'info' => 'information-circle',
+              'warning' => 'exclamation-triangle',
+              'health' => 'heart',
+              'event' => 'calendar-days',
+              'events' => 'calendar-days',
+          ];
+          $featuredPriorityKey = strtolower(trim((string) ($featuredAnnouncement['priority'] ?? '')));
+          $featuredAnnouncementIcon = $announcementIconByPriority[$featuredPriorityKey] ?? 'megaphone';
+        @endphp
+        <div class="home-announcement-shell {{ $announcementCount < 2 ? 'is-static' : 'is-carousel' }}" data-home-announcements>
+          <div class="home-announcement-layout">
+            <section class="home-announcement-list-panel" aria-label="Announcement list">
+              <div class="home-announcement-list" id="homeAnnouncementList" role="list">
+                @foreach($announcementSlides as $index => $announcement)
+                  @php
+                    $announcementSearch = strtolower(($announcement['priority'] ?? '') . ' ' . ($announcement['title'] ?? ''));
+                    $announcementPriorityKey = strtolower(trim((string) ($announcement['priority'] ?? '')));
+                    $announcementIcon = $announcementIconByPriority[$announcementPriorityKey] ?? (
+                        str_contains($announcementSearch, 'schedule') || str_contains($announcementSearch, 'service')
+                            ? 'calendar-days'
+                            : (str_contains($announcementSearch, 'health') || str_contains($announcementSearch, 'reminder')
+                                ? 'heart'
+                                : (str_contains($announcementSearch, 'form') || str_contains($announcementSearch, 'document')
+                                    ? 'document-text'
+                                    : 'megaphone'))
+                    );
+                    $announcementSummary = \Illuminate\Support\Str::limit(strip_tags($announcement['message_html'] ?? $announcement['message'] ?? ''), 82);
+                  @endphp
+                  <button
+                    type="button"
+                    class="home-announcement-list-item {{ $index === 0 ? 'is-current' : '' }}{{ $index >= 4 ? ' is-extra' : '' }}"
+                    data-announcement-slide
+                    data-announcement-id="{{ $announcement['id'] ?? '' }}"
+                    data-priority="{{ e($announcement['priority'] ?: 'ANNOUNCEMENT') }}"
+                    data-title="{{ e($announcement['title']) }}"
+                    data-message-html="{!! e($announcement['message_html'] ?? nl2br(e($announcement['message'] ?? ''))) !!}"
+                    data-image-urls='@json($announcement['image_urls'] ?? [])'
+                    data-date="{{ e($announcement['date'] ?? now(config('app.timezone'))->format('M j, Y')) }}"
+                    data-icon="{{ $announcementIcon }}"
+                    role="listitem"
+                    aria-label="Select announcement: {{ $announcement['title'] }}"
+                  >
+                    <span class="home-announcement-list-icon" aria-hidden="true">
+                      <x-outline-icon :name="$announcementIcon" />
+                    </span>
+                    <span class="home-announcement-list-copy">
+                      <span class="home-announcement-list-date">{{ $announcement['date'] ?? now(config('app.timezone'))->format('M j, Y') }}</span>
+                      <strong>{{ $announcement['title'] }}</strong>
+                      <span>{{ $announcementSummary }}</span>
+                    </span>
+                    <span class="home-announcement-list-arrow" aria-hidden="true">
+                      <x-outline-icon name="chevron-right" />
+                    </span>
+                  </button>
+                @endforeach
               </div>
-              <div class="announcement-message">{!! $announcement['message_html'] ?? nl2br(e(\Illuminate\Support\Str::limit($announcement['message'], 175))) !!}</div>
-              <span class="announcement-date">
-                <x-outline-icon name="calendar-days" />
-                <span>{{ $announcement['date'] ?? now(config('app.timezone'))->format('M j, Y') }}</span>
-              </span>
-              </article>
-            @endforeach
-          </div>
-
-          <button
-            type="button"
-            class="announcement-nav prev"
-            data-announcement-prev
-            aria-label="Previous announcement"
-            aria-disabled="{{ $announcementCount < 2 ? 'true' : 'false' }}"
-            @disabled($announcementCount < 2)
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 19.5-7.5-7.5 7.5-7.5" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            class="announcement-nav next"
-            data-announcement-next
-            aria-label="Next announcement"
-            aria-disabled="{{ $announcementCount < 2 ? 'true' : 'false' }}"
-            @disabled($announcementCount < 2)
-          >
-            <x-outline-icon name="chevron-right" />
-          </button>
-
-          @if($announcementCount >= 2)
-            <div class="announcement-pagination" aria-label="Choose announcement">
-              @foreach($announcementSlides as $index => $announcement)
+              @if($announcementCount > 4)
                 <button
                   type="button"
-                  class="announcement-dot {{ $index === 0 ? 'is-active' : '' }}"
-                  data-announcement-dot="{{ $index }}"
-                  aria-label="Show announcement {{ $index + 1 }}"
-                  aria-current="{{ $index === 0 ? 'true' : 'false' }}"
-                ></button>
-              @endforeach
-            </div>
-          @endif
-        </div>
+                  class="home-announcement-view-all home-announcement-list-all"
+                  id="viewAllAnnouncementsBtn"
+                  aria-expanded="false"
+                  aria-controls="homeAnnouncementList"
+                >
+                  <span data-announcement-expand-label>View More</span>
+                </button>
+              @endif
+            </section>
 
-        <button type="button" class="home-announcement-view-all" id="viewAllAnnouncementsBtn">
-          <span>View All Announcements</span>
-          <x-outline-icon name="arrow-long-right" />
-        </button>
+            <article class="home-announcement-featured" data-announcement-featured aria-live="polite">
+              <span class="home-announcement-featured-watermark" aria-hidden="true">
+                <x-outline-icon name="megaphone" />
+              </span>
+              <div class="home-announcement-featured-content">
+                <span class="home-announcement-featured-badge" data-announcement-featured-priority>
+                  <span class="home-announcement-featured-icons" aria-hidden="true">
+                    @foreach(['exclamation-circle', 'information-circle', 'exclamation-triangle', 'heart', 'calendar-days', 'megaphone'] as $featuredIcon)
+                      <span data-announcement-featured-icon="{{ $featuredIcon }}" @if($featuredAnnouncementIcon !== $featuredIcon) hidden @endif>
+                        <x-outline-icon :name="$featuredIcon" />
+                      </span>
+                    @endforeach
+                  </span>
+                  <span>{{ $featuredAnnouncement['priority'] ?: 'ANNOUNCEMENT' }}</span>
+                </span>
+                <h3 data-announcement-featured-title>{{ $featuredAnnouncement['title'] ?? 'Announcement' }}</h3>
+                <div class="home-announcement-featured-date">
+                  <x-outline-icon name="calendar-days" />
+                  <span data-announcement-featured-date>{{ $featuredAnnouncement['date'] ?? now(config('app.timezone'))->format('M j, Y') }}</span>
+                </div>
+                <div class="home-announcement-featured-divider" aria-hidden="true"></div>
+                <div class="home-announcement-featured-message" data-announcement-featured-message>{!! $featuredMessage !!}</div>
+                <button type="button" class="home-announcement-read-details" data-announcement-featured-open>
+                  <span>Read details</span>
+                  <x-outline-icon name="arrow-long-right" />
+                </button>
+              </div>
+              <span class="home-announcement-featured-meta" aria-hidden="true">MEDICAL SERVICES DEPARTMENT</span>
+            </article>
+          </div>
+        </div>
       </div>
 
       <div id="about" class="about-experience" style="scroll-margin-top: 100px;">
@@ -4329,44 +4953,6 @@
       </section>
     </div>
 
-    <div class="announcement-modal" id="allAnnouncementsModal" aria-hidden="true">
-      <section class="announcement-modal-card announcement-all-card" role="dialog" aria-modal="true" aria-labelledby="allAnnouncementsTitle">
-        <div class="announcement-modal-head">
-          <div>
-            <p class="announcement-modal-eyebrow">LATEST UPDATES</p>
-            <h3 class="announcement-modal-title" id="allAnnouncementsTitle">All Announcements</h3>
-          </div>
-          <button type="button" class="announcement-modal-close" id="allAnnouncementsClose" aria-label="Close all announcements">
-            <x-outline-icon name="x-mark" />
-          </button>
-        </div>
-        <div class="announcement-all-list">
-          @foreach($announcementSlides as $announcement)
-            <button
-              type="button"
-              class="announcement-all-item"
-              data-announcement-list-item
-              data-announcement-id="{{ $announcement['id'] ?? '' }}"
-              data-priority="{{ e($announcement['priority'] ?: 'ANNOUNCEMENT') }}"
-              data-title="{{ e($announcement['title']) }}"
-              data-message-html="{!! e($announcement['message_html'] ?? nl2br(e($announcement['message'] ?? ''))) !!}"
-              data-image-urls='@json($announcement['image_urls'] ?? [])'
-              data-date="{{ e($announcement['date'] ?? now(config('app.timezone'))->format('M j, Y')) }}"
-            >
-              <span class="announcement-all-item-icon" aria-hidden="true">
-                <x-outline-icon name="megaphone" />
-              </span>
-              <span class="announcement-all-item-copy">
-                <strong>{{ $announcement['title'] }}</strong>
-                <span>{{ \Illuminate\Support\Str::limit($announcement['message'], 100) }}</span>
-              </span>
-              <span class="announcement-all-item-date">{{ $announcement['date'] ?? now(config('app.timezone'))->format('M j, Y') }}</span>
-            </button>
-          @endforeach
-        </div>
-      </section>
-    </div>
-
     <script>
       document.addEventListener('DOMContentLoaded', function () {
         const learnMoreBtn = document.getElementById('learnMoreBtn');
@@ -4378,16 +4964,26 @@
         const announcementDetailImages = document.getElementById('announcementDetailImages');
         const announcementDetailDate = document.getElementById('announcementDetailDate');
         const viewAllAnnouncementsBtn = document.getElementById('viewAllAnnouncementsBtn');
-        const allAnnouncementsModal = document.getElementById('allAnnouncementsModal');
-        const allAnnouncementsClose = document.getElementById('allAnnouncementsClose');
         const heroRotatingWord = document.getElementById('heroRotatingWord');
         const heroScrollLink = document.querySelector('.hero-scroll');
         const announcementShell = document.querySelector('[data-home-announcements]');
+        const announcementList = announcementShell?.querySelector('.home-announcement-list');
+        const announcementExpandLabel = viewAllAnnouncementsBtn?.querySelector('[data-announcement-expand-label]');
+        const announcementFeaturedOpen = announcementShell?.querySelector('[data-announcement-featured-open]');
+        const announcementFeaturedIcons = Array.from(announcementShell?.querySelectorAll('[data-announcement-featured-icon]') || []);
+        const announcementFeaturedPriority = announcementShell?.querySelector('[data-announcement-featured-priority] > span:last-child');
+        const announcementFeaturedTitle = announcementShell?.querySelector('[data-announcement-featured-title]');
+        const announcementFeaturedDate = announcementShell?.querySelector('[data-announcement-featured-date]');
+        const announcementFeaturedMessage = announcementShell?.querySelector('[data-announcement-featured-message]');
 
         const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
         const revealDefinitions = [
+          { selector: '.PUPBG .hero-copy > *', stagger: 90 },
+          { selector: '.PUPBG .hero-actions-phone-wrapper', motion: 'fade' },
           { selector: '.home-announcement-heading' },
           { selector: '.home-announcement-shell', motion: 'fade' },
+          { selector: '.home-announcement-list-item', stagger: 90 },
+          { selector: '.home-announcement-featured', motion: 'fade' },
           { selector: '.home-announcement-view-all' },
           { selector: '#about .about-heading' },
           { selector: '#about .why-item', stagger: 90 },
@@ -4417,10 +5013,7 @@
             });
           });
 
-          if (!revealElements.length || reducedMotionQuery.matches) {
-            revealElements.forEach(function (element) {
-              element.classList.add('is-visible');
-            });
+          if (!revealElements.length) {
             return;
           }
 
@@ -4454,8 +5047,8 @@
             });
           }, {
             root: null,
-            threshold: [0, 0.08, 0.2],
-            rootMargin: '-3% 0px -3% 0px'
+            threshold: [0.12, 0.2, 0.35],
+            rootMargin: '-8% 0px -12% 0px'
           });
 
           revealElements.forEach(function (element) {
@@ -4464,6 +5057,13 @@
         }
 
         initializeHomeScrollReveal();
+
+        if (!reducedMotionQuery.matches) {
+          document.documentElement.classList.add('home-initial-load');
+          window.setTimeout(function () {
+            document.documentElement.classList.remove('home-initial-load');
+          }, 1700);
+        }
 
         const homeNavLink = document.querySelector('[data-student-nav="home"]');
         const aboutNavLink = document.querySelector('[data-student-nav="about"]');
@@ -4501,9 +5101,6 @@
         if (announcementDetailModal && announcementDetailModal.parentElement !== document.body) {
           document.body.appendChild(announcementDetailModal);
         }
-        if (allAnnouncementsModal && allAnnouncementsModal.parentElement !== document.body) {
-          document.body.appendChild(allAnnouncementsModal);
-        }
 
         if (learnMoreBtn) {
           learnMoreBtn.addEventListener('click', function (event) {
@@ -4512,10 +5109,7 @@
         }
 
         function syncAnnouncementModalLock() {
-          const hasOpenAnnouncementModal = Boolean(
-            announcementDetailModal?.classList.contains('is-open') ||
-            allAnnouncementsModal?.classList.contains('is-open')
-          );
+          const hasOpenAnnouncementModal = Boolean(announcementDetailModal?.classList.contains('is-open'));
           document.documentElement.classList.toggle('announcement-modal-open', hasOpenAnnouncementModal);
           document.body.classList.toggle('announcement-modal-open', hasOpenAnnouncementModal);
         }
@@ -4570,34 +5164,6 @@
           syncAnnouncementModalLock();
         }
 
-        function setAllAnnouncementsOpen(isOpen) {
-          if (!allAnnouncementsModal) return;
-          allAnnouncementsModal.classList.toggle('is-open', isOpen);
-          allAnnouncementsModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
-          syncAnnouncementModalLock();
-        }
-
-        viewAllAnnouncementsBtn?.addEventListener('click', function () {
-          setAllAnnouncementsOpen(true);
-        });
-
-        allAnnouncementsClose?.addEventListener('click', function () {
-          setAllAnnouncementsOpen(false);
-        });
-
-        allAnnouncementsModal?.addEventListener('click', function (event) {
-          if (event.target === allAnnouncementsModal) {
-            setAllAnnouncementsOpen(false);
-          }
-        });
-
-        document.querySelectorAll('[data-announcement-list-item]').forEach(function (announcementItem) {
-          announcementItem.addEventListener('click', function () {
-            setAllAnnouncementsOpen(false);
-            setAnnouncementDetailOpen(true, announcementItem);
-          });
-        });
-
         document.querySelectorAll('[data-announcement-detail]').forEach(function (announcementCard) {
           announcementCard.addEventListener('click', function () {
             setAnnouncementDetailOpen(true, announcementCard);
@@ -4637,10 +5203,6 @@
           if (event.key !== 'Escape') return;
           if (announcementDetailModal?.classList.contains('is-open')) {
             setAnnouncementDetailOpen(false);
-            return;
-          }
-          if (allAnnouncementsModal?.classList.contains('is-open')) {
-            setAllAnnouncementsOpen(false);
           }
         });
 
@@ -4663,54 +5225,132 @@
 
         if (announcementShell) {
           const slides = Array.from(announcementShell.querySelectorAll('[data-announcement-slide]'));
-          const prevButton = announcementShell.querySelector('[data-announcement-prev]');
-          const nextButton = announcementShell.querySelector('[data-announcement-next]');
-          const dots = Array.from(announcementShell.querySelectorAll('[data-announcement-dot]'));
-          const positionClasses = ['is-current', 'is-next', 'is-prev', 'is-next-far'];
+          const featured = announcementShell.querySelector('[data-announcement-featured]');
           let activeAnnouncement = slides.findIndex((slide) => slide.classList.contains('is-current'));
 
           if (activeAnnouncement < 0) activeAnnouncement = 0;
 
-          const showAnnouncement = function (nextIndex) {
+          const setAnnouncementListExpanded = function (isExpanded) {
+            announcementList?.classList.toggle('is-expanded', isExpanded);
+            announcementShell.classList.toggle('is-expanded', isExpanded);
+            viewAllAnnouncementsBtn?.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+
+            if (announcementExpandLabel) {
+              announcementExpandLabel.textContent = isExpanded
+                ? 'View Less'
+                : 'View More';
+            }
+          };
+
+          viewAllAnnouncementsBtn?.addEventListener('click', function () {
+            const isExpanded = announcementList?.classList.contains('is-expanded') || false;
+            setAnnouncementListExpanded(!isExpanded);
+          });
+
+          const updateFeaturedAnnouncement = function (slide) {
+            if (!slide) return;
+
+            if (announcementFeaturedPriority) {
+              announcementFeaturedPriority.textContent = slide.dataset.priority || 'ANNOUNCEMENT';
+            }
+
+
+            const iconName = slide.dataset.icon || 'megaphone';
+            announcementFeaturedIcons.forEach(function (icon) {
+              icon.hidden = icon.dataset.announcementFeaturedIcon !== iconName;
+            });
+
+            if (announcementFeaturedTitle) {
+              announcementFeaturedTitle.textContent = slide.dataset.title || 'Announcement';
+            }
+
+            if (announcementFeaturedDate) {
+              announcementFeaturedDate.textContent = slide.dataset.date || '';
+            }
+
+            if (announcementFeaturedMessage) {
+              announcementFeaturedMessage.innerHTML = slide.dataset.messageHtml || '';
+            }
+          };
+
+          const showAnnouncement = function (nextIndex, animate = true) {
             if (!slides.length) return;
             activeAnnouncement = (nextIndex + slides.length) % slides.length;
 
             slides.forEach((slide, index) => {
-              slide.classList.remove(...positionClasses);
-
-              if (index === activeAnnouncement) {
-                slide.classList.add('is-current');
-              } else if (slides.length > 1 && index === (activeAnnouncement + 1) % slides.length) {
-                slide.classList.add('is-next');
-              } else if (slides.length > 2 && index === (activeAnnouncement - 1 + slides.length) % slides.length) {
-                slide.classList.add('is-prev');
-              } else if (slides.length > 3 && index === (activeAnnouncement + 2) % slides.length) {
-                slide.classList.add('is-next-far');
-              }
+              slide.classList.toggle('is-current', index === activeAnnouncement);
             });
 
-            dots.forEach((dot, index) => {
-              const isActive = index === activeAnnouncement;
-              dot.classList.toggle('is-active', isActive);
-              dot.setAttribute('aria-current', isActive ? 'true' : 'false');
-            });
+            updateFeaturedAnnouncement(slides[activeAnnouncement]);
+
+            if (animate && featured) {
+              featured.classList.remove('is-switching');
+              void featured.offsetWidth;
+              featured.classList.add('is-switching');
+            }
           };
 
-          prevButton?.addEventListener('click', function () {
-            showAnnouncement(activeAnnouncement - 1);
-          });
+          let announcementAutoplayTimer = null;
+          const announcementAutoplayDelay = 5200;
 
-          nextButton?.addEventListener('click', function () {
-            showAnnouncement(activeAnnouncement + 1);
-          });
+          const stopAnnouncementAutoplay = function () {
+            if (announcementAutoplayTimer !== null) {
+              window.clearInterval(announcementAutoplayTimer);
+              announcementAutoplayTimer = null;
+            }
+          };
 
-          dots.forEach(function (dot) {
-            dot.addEventListener('click', function () {
-              showAnnouncement(Number(dot.dataset.announcementDot || 0));
+          const startAnnouncementAutoplay = function () {
+            stopAnnouncementAutoplay();
+
+            if (slides.length < 2 || reducedMotionQuery.matches || document.hidden) {
+              return;
+            }
+
+            announcementAutoplayTimer = window.setInterval(function () {
+              showAnnouncement(activeAnnouncement + 1);
+            }, announcementAutoplayDelay);
+          };
+
+          const restartAnnouncementAutoplay = function () {
+            startAnnouncementAutoplay();
+          };
+
+          slides.forEach(function (slide, index) {
+            slide.addEventListener('click', function () {
+              showAnnouncement(index);
+              restartAnnouncementAutoplay();
             });
           });
 
-          showAnnouncement(activeAnnouncement);
+          announcementFeaturedOpen?.addEventListener('click', function () {
+            if (slides[activeAnnouncement]) {
+              setAnnouncementDetailOpen(true, slides[activeAnnouncement]);
+            }
+          });
+
+          announcementShell.addEventListener('mouseenter', stopAnnouncementAutoplay);
+          announcementShell.addEventListener('mouseleave', startAnnouncementAutoplay);
+          announcementShell.addEventListener('focusin', stopAnnouncementAutoplay);
+          announcementShell.addEventListener('focusout', function (event) {
+            if (!announcementShell.contains(event.relatedTarget)) {
+              startAnnouncementAutoplay();
+            }
+          });
+          announcementShell.addEventListener('touchstart', stopAnnouncementAutoplay, { passive: true });
+          announcementShell.addEventListener('touchend', function () {
+            window.setTimeout(startAnnouncementAutoplay, 1800);
+          }, { passive: true });
+          document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+              stopAnnouncementAutoplay();
+            } else {
+              startAnnouncementAutoplay();
+            }
+          });
+
+          showAnnouncement(activeAnnouncement, false);
+          startAnnouncementAutoplay();
         }
 
       });

@@ -161,12 +161,8 @@ class User extends Authenticatable
         $profile = $this->relationLoaded('healthProfile') ? $this->healthProfile : (
             \Illuminate\Support\Facades\Schema::hasTable('health_profiles') ? $this->healthProfile()->first() : null
         );
-        if (trim((string) ($this->student_number ?? '')) !== ''
-            || trim((string) ($profile?->student_number ?? '')) !== '') {
-            return false;
-        }
-
-        if (in_array(strtolower(trim((string) ($profile?->clearance_status ?? ''))), ['issued', 'fully cleared'], true)) {
+        if ($this->hasOfficialStudentNumber($this->student_number)
+            || $this->hasOfficialStudentNumber($profile?->student_number)) {
             return false;
         }
 
@@ -199,9 +195,8 @@ class User extends Authenticatable
             $profile = $this->relationLoaded('healthProfile') ? $this->healthProfile : (
                 \Illuminate\Support\Facades\Schema::hasTable('health_profiles') ? $this->healthProfile()->first() : null
             );
-            if (trim((string) ($this->student_number ?? '')) !== ''
-                || trim((string) ($profile?->student_number ?? '')) !== ''
-                || in_array(strtolower(trim((string) ($profile?->clearance_status ?? ''))), ['issued', 'fully cleared'], true)) {
+            if ($this->hasOfficialStudentNumber($this->student_number)
+                || $this->hasOfficialStudentNumber($profile?->student_number)) {
                 return 'student';
             }
         }
@@ -213,6 +208,15 @@ class User extends Authenticatable
             'dependent' => 'dependent',
             default => 'unselected',
         };
+    }
+
+    private function hasOfficialStudentNumber(?string $value): bool
+    {
+        $studentNumber = strtoupper(trim((string) $value));
+
+        return $studentNumber !== ''
+            && !Str::startsWith($studentNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
+            && preg_match('/^\d{4}-\d{5}-[A-Z]{2}-\d+$/', $studentNumber) === 1;
     }
 
     public function clinicUserType(): ?string
