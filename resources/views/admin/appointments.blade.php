@@ -3461,9 +3461,18 @@
     html[data-theme="dark"] #infoModal .appointment-student-info p span,
     html[data-theme="dark"] #infoModal .appointment-info-list span,
     html[data-theme="dark"] #infoModal .appointment-notes-panel p,
-    html[data-theme="dark"] #infoModal .timeline-step small,
-    html[data-theme="dark"] #infoModal .appointment-detail-footer {
+    html[data-theme="dark"] #infoModal .timeline-step small {
         color: #cbd5e1 !important;
+    }
+    html[data-theme="dark"] #infoModal .appointment-detail-footer {
+        background: #172235 !important;
+        border: 1px solid rgba(250, 204, 21, .16) !important;
+        color: #cbd5e1 !important;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, .22) !important;
+    }
+    html[data-theme="dark"] #infoModal .appointment-detail-footer svg {
+        color: #facc15 !important;
+        stroke: #facc15 !important;
     }
 
     html[data-theme="dark"] #infoModal .appointment-info-list > div,
@@ -5543,8 +5552,13 @@
                 (string) ($user?->user_role ?? ''),
                 (string) ($user?->idp_role ?? ''),
             ]))));
-            $usesEmployeeNumber = collect(['faculty', 'admin', 'staff', 'employee', 'dependent'])
+            $isDependent = $user?->dependentProfile !== null
+                || str_contains($roleMarkers, 'dependent')
+                || str_contains($roleMarkers, 'guest');
+            $usesEmployeeNumber = !$isDependent && collect(['faculty', 'admin', 'staff', 'employee'])
                 ->contains(fn ($needle) => str_contains($roleMarkers, $needle));
+            $currentStudentNumber = trim((string) ($studentProfile?->student_number ?: $user?->student_number ?: ''));
+            $isApplicant = !$isDependent && !$usesEmployeeNumber && str_contains($roleMarkers, 'applicant');
             $profile = $usesEmployeeNumber ? ($employeeProfile ?: $studentProfile) : ($studentProfile ?: $employeeProfile);
             $firstName = trim((string) ($user?->first_name ?: $profile?->first_name ?: ''));
             $middleName = trim((string) ($user?->middle_name ?: $profile?->middle_name ?: ''));
@@ -5554,10 +5568,14 @@
                 ? $lastName . ', ' . $firstName . ($middleInitial !== '' ? ' ' . $middleInitial : '')
                 : trim(implode(' ', array_filter([$lastName, $firstName, $middleInitial])));
             $displayName = $displayName !== '' ? $displayName : trim((string) $appointment->name);
-            $idNumber = $usesEmployeeNumber
+            $idNumber = $isDependent
+                ? ($user?->dependentProfile?->id_number ?: $appointment->student_number ?: $user?->student_number)
+                : ($usesEmployeeNumber
                 ? ($employeeProfile?->employee_number ?: $user?->employee_number ?: $appointment->student_number)
-                : ($appointment->student_number ?: $studentProfile?->student_number ?: $user?->student_number);
-            $idLabel = $usesEmployeeNumber ? 'Employee Number' : 'Student Number';
+                : ($currentStudentNumber ?: $appointment->student_number ?: $studentProfile?->reference_number ?: $user?->reference_number));
+            $idLabel = $isDependent
+                ? 'ID Number'
+                : ($usesEmployeeNumber ? 'Employee Number' : ($isApplicant && $currentStudentNumber === '' ? 'Reference Number' : 'Student Number'));
             $photoPath = $profile?->student_photo;
             $photoUrl = '';
 
@@ -5580,7 +5598,9 @@
                 }
             }
 
-            $program = $usesEmployeeNumber
+            $program = $isDependent
+                ? ($user?->course ?: $studentProfile?->course_college ?: 'Guest')
+                : ($usesEmployeeNumber
                 ? ($employeeProfile?->course_college ?: $user?->department ?: 'Employee')
                 : trim(implode(' ', array_filter([
                     $user?->course ?: $studentProfile?->course_college,

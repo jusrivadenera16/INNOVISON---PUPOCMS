@@ -2419,6 +2419,8 @@
                 $puptasVerificationStatus = (int) ($prefill['puptas_verification_http_status'] ?? 0);
                 $puptasVerificationMessage = trim((string) ($prefill['puptas_verification_message'] ?? ''));
                 $applicantDocumentsRequired = $referenceMode === 'admission' || $manualStudentModeSelected;
+                $applicantDocumentDateMin = $applicantDocumentsRequired ? now()->subMonthsNoOverflow(6)->toDateString() : null;
+                $applicantDocumentDateMax = $applicantDocumentsRequired ? now()->toDateString() : null;
                 $stepOneTitle = trim((string) ($prefill['step_1_title'] ?? 'Admission Reference'));
                 $stepOneDescription = trim((string) ($prefill['step_1_description'] ?? 'Confirm your admission reference, complete your health information, then upload the required clinic documents.'));
                 $referenceLabel = trim((string) ($prefill['reference_label'] ?? 'Admission Reference Number'));
@@ -3287,7 +3289,7 @@
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="med_cert_date">Date of Certificate @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
-                                    <input id="med_cert_date" type="date" name="med_cert_date" class="form-control" value="{{ old('med_cert_date', $prefill['med_cert_date'] ?? '') }}" {{ $applicantDocumentsRequired ? 'required' : '' }} data-requirement-extra-field>
+                                    <input id="med_cert_date" type="date" name="med_cert_date" class="form-control" value="{{ old('med_cert_date', $prefill['med_cert_date'] ?? '') }}" min="{{ $applicantDocumentDateMin ?? '' }}" max="{{ $applicantDocumentDateMax ?? '' }}" {{ $applicantDocumentsRequired ? 'required' : '' }} data-requirement-extra-field>
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="med_cert_findings">Findings @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
@@ -3361,7 +3363,7 @@
                             <div class="requirement-extra">
                                 <div class="form-field">
                                     <label class="form-label" for="xray_date">Date of Examination @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
-                                    <input id="xray_date" type="date" name="xray_date" class="form-control" value="{{ old('xray_date', $prefill['xray_date'] ?? '') }}" {{ $applicantDocumentsRequired ? 'required' : '' }} data-requirement-extra-field>
+                                    <input id="xray_date" type="date" name="xray_date" class="form-control" value="{{ old('xray_date', $prefill['xray_date'] ?? '') }}" min="{{ $applicantDocumentDateMin ?? '' }}" max="{{ $applicantDocumentDateMax ?? '' }}" {{ $applicantDocumentsRequired ? 'required' : '' }} data-requirement-extra-field>
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="xray_findings">Findings @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>

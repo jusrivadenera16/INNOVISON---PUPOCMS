@@ -89,6 +89,16 @@
         color: #70131b;
         transform: translateY(-1px);
     }
+    .faq-add-btn {
+        border-color: #70131b;
+        background: #70131b;
+    }
+    .faq-add-btn:hover,
+    .faq-add-btn:focus-visible {
+        border-color: #70131b;
+        background: #8b0000;
+        color: #ffffff;
+    }
     .faq-stats {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -427,18 +437,26 @@
         display: flex;
         align-items: center;
         gap: 10px;
+        justify-self: end;
+        margin-left: auto;
+    }
+    .faq-item-actions form {
+        display: contents;
     }
     .faq-row-btn,
     .faq-delete-btn {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
         min-height: 40px;
         border: 1px solid #e2e8f0;
         border-radius: 9px;
         background: #ffffff;
         color: #1f2937;
-        padding: 0 14px;
+        padding: 0;
         font: inherit;
         font-size: 12px;
         font-weight: 850;
@@ -448,18 +466,9 @@
     }
     .faq-row-btn svg,
     .faq-delete-btn svg { width: 16px; height: 16px; }
-    .faq-row-btn:hover {
-        border-color: #a2162b;
-        background: #fff7f7;
-        color: #a2162b;
-    }
     .faq-delete-btn {
         border-color: #fecdd3;
         color: #be123c;
-    }
-    .faq-delete-btn:hover {
-        background: #fff1f2;
-        border-color: #fb7185;
     }
     .faq-empty {
         padding: 44px 18px;
@@ -813,13 +822,40 @@
             grid-template-columns: 1fr;
         }
         .faq-item-actions {
-            flex-wrap: wrap;
+            justify-content: flex-end;
         }
         .faq-row-btn,
         .faq-delete-btn {
-            flex: 1 1 140px;
-            justify-content: center;
+            flex: 0 0 40px;
         }
+    }
+
+    .faq-row-btn:hover,
+    .faq-row-btn:focus-visible,
+    .faq-delete-btn:hover,
+    .faq-delete-btn:focus-visible,
+    html[data-theme="dark"] .faq-row-btn:hover,
+    html[data-theme="dark"] .faq-row-btn:focus-visible,
+    html[data-theme="dark"] .faq-delete-btn:hover,
+    html[data-theme="dark"] .faq-delete-btn:focus-visible {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #70131b !important;
+    }
+    .faq-quick-btn:hover,
+    .faq-quick-btn:focus-visible,
+    html[data-theme="dark"] .faq-quick-btn:hover,
+    html[data-theme="dark"] .faq-quick-btn:focus-visible {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #70131b !important;
+    }
+    .faq-quick-btn:hover .faq-action-icon,
+    .faq-quick-btn:focus-visible .faq-action-icon,
+    html[data-theme="dark"] .faq-quick-btn:hover .faq-action-icon,
+    html[data-theme="dark"] .faq-quick-btn:focus-visible .faq-action-icon {
+        background: rgba(112, 19, 27, 0.1) !important;
+        color: #70131b !important;
     }
 </style>
 @endpush
@@ -1014,20 +1050,17 @@
                             </div>
                         </div>
                         <div class="faq-item-actions">
-                            <button type="button" class="faq-row-btn" data-preview-faq-id="{{ $faq->id }}">
+                            <button type="button" class="faq-row-btn" data-preview-faq-id="{{ $faq->id }}" aria-label="Preview FAQ" title="Preview FAQ">
                                 <x-outline-icon name="eye" />
-                                <span>Preview</span>
                             </button>
-                            <button type="button" class="faq-row-btn" data-edit-faq-id="{{ $faq->id }}">
+                            <button type="button" class="faq-row-btn" data-edit-faq-id="{{ $faq->id }}" aria-label="Edit FAQ" title="Edit FAQ">
                                 <x-outline-icon name="pencil-square" />
-                                <span>Edit</span>
                             </button>
                             <form method="POST" action="{{ route('admin.settings.faqs.destroy', $faq) }}" onsubmit="return confirm('Delete this FAQ?');">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="faq-delete-btn">
+                                <button type="submit" class="faq-delete-btn" aria-label="Delete FAQ" title="Delete FAQ">
                                     <x-outline-icon name="x-mark" />
-                                    <span>Delete</span>
                                 </button>
                             </form>
                         </div>

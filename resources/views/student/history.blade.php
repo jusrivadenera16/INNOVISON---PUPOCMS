@@ -1549,6 +1549,62 @@
       html[data-theme="dark"] .history-entry-dot { background: #101722; }
       html[data-theme="dark"] .history-help-card { background: #111620; }
       html[data-theme="dark"] .history-quick-actions a { border-color: rgba(255,255,255,.09); color: #e5e7eb; }
+      html[data-theme="dark"] .history-modern-emblem {
+          background: #121b2a;
+          border-color: rgba(250,204,21,.46);
+          color: #facc15;
+          box-shadow:
+              0 14px 30px rgba(0,0,0,.34),
+              0 0 0 1px rgba(250,204,21,.08) inset;
+      }
+      html[data-theme="dark"] .history-modern-chip svg,
+      html[data-theme="dark"] .history-modern-filter-btn svg,
+      html[data-theme="dark"] .history-entry-meta span svg,
+      html[data-theme="dark"] .history-contact-btn svg {
+          color: #facc15;
+      }
+      html[data-theme="dark"] .history-modern-side-title > span {
+          background: rgba(250,204,21,.12);
+          color: #facc15;
+          border: 1px solid rgba(250,204,21,.24);
+      }
+      html[data-theme="dark"] .history-modern-stat-icon {
+          background: rgba(250,204,21,.12);
+          color: #facc15;
+          border: 1px solid rgba(250,204,21,.24);
+      }
+      html[data-theme="dark"] .history-modern-stat-card.is-completed .history-modern-stat-icon {
+          background: rgba(34,197,94,.14);
+          color: #86efac;
+      }
+      html[data-theme="dark"] .history-modern-stat-card.is-missed .history-modern-stat-icon {
+          background: rgba(248,113,113,.14);
+          color: #fca5a5;
+      }
+      html[data-theme="dark"] .history-service-icon {
+          background: rgba(250,204,21,.12);
+          color: #facc15;
+          border: 1px solid rgba(250,204,21,.24);
+      }
+      html[data-theme="dark"] .history-service-icon.is-bp,
+      html[data-theme="dark"] .history-service-icon.is-status-approved {
+          background: rgba(34,197,94,.14);
+          color: #86efac;
+      }
+      html[data-theme="dark"] .history-service-icon.is-status-pending {
+          background: rgba(250,204,21,.14);
+          color: #fde68a;
+      }
+      html[data-theme="dark"] .history-service-icon.is-status-alert {
+          background: rgba(248,113,113,.14);
+          color: #fca5a5;
+      }
+      html[data-theme="dark"] .history-quick-actions a svg {
+          color: #facc15 !important;
+      }
+      html[data-theme="dark"] .history-quick-actions a svg:last-child {
+          color: #94a3b8 !important;
+      }
       @media (max-width: 900px) {
           .history-modern-hero { grid-template-columns: minmax(0, 1fr) 250px; padding: 24px; }
           .history-modern-hero-main { grid-template-columns: 86px minmax(0, 1fr); gap: 17px; }

@@ -2240,6 +2240,8 @@ class AdminController extends Controller
                 'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($id)],
                 'student_id' => 'nullable|string|max:255',
                 'student_number' => 'nullable|string|max:255',
+                'reference_number' => 'nullable|string|max:255',
+                'employee_number' => 'nullable|string|max:255',
                 'gender' => 'nullable|string|max:255',
                 'user_role' => ['required', Rule::in(['student', 'student_assistant', 'admin', 'superadmin', 'super_admin'])],
                 'status' => ['nullable', Rule::in(['active', 'inactive'])],
@@ -2253,6 +2255,12 @@ class AdminController extends Controller
             $user->student_id = $request->input('student_id');
             if (Schema::hasColumn('users', 'student_number')) {
                 $user->student_number = $request->input('student_number');
+            }
+            if (Schema::hasColumn('users', 'reference_number')) {
+                $user->reference_number = $request->input('reference_number');
+            }
+            if (Schema::hasColumn('users', 'employee_number')) {
+                $user->employee_number = $request->input('employee_number');
             }
             if (Schema::hasColumn('users', 'gender')) {
                 $user->gender = $request->input('gender');
@@ -2435,7 +2443,7 @@ class AdminController extends Controller
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
-                foreach (['id', 'student_id', 'name', 'first_name', 'last_name', 'email', 'user_role', 'status'] as $column) {
+                foreach (['id', 'student_id', 'student_number', 'reference_number', 'employee_number', 'name', 'first_name', 'last_name', 'email', 'user_role', 'status'] as $column) {
                     if (Schema::hasColumn('users', $column)) {
                         $builder->orWhere($column, 'like', '%' . $search . '%');
                     }
@@ -2455,6 +2463,9 @@ class AdminController extends Controller
                     'primary' => [
                         'User ID' => $user->id,
                         'Student ID' => $user->student_id ?? 'N/A',
+                        'Student Number' => $user->student_number ?? 'N/A',
+                        'Reference Number' => $user->reference_number ?? 'N/A',
+                        'Employee Number' => $user->employee_number ?? 'N/A',
                         'First Name' => $user->first_name ?? 'N/A',
                         'Last Name' => $user->last_name ?? 'N/A',
                         'Email' => $user->email ?? 'N/A',
@@ -5448,6 +5459,7 @@ public function updateClearance(Request $request, $id)
         $appointments = Appointment::with([
             'user.healthProfile',
             'user.healthProfileStaff',
+            'user.dependentProfile',
         ])
             ->orderByRaw("CASE LOWER(status)
                 WHEN 'pending' THEN 0

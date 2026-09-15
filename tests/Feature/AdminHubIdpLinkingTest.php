@@ -572,7 +572,7 @@ class AdminHubIdpLinkingTest extends TestCase
         $this->assertSame(204, $this->checkFormRoute($user, 'store.health.form.student')->getStatusCode());
     }
 
-    public function test_issued_applicant_clearance_allows_student_followup_forms(): void
+    public function test_issued_applicant_clearance_stays_in_applicant_flow_without_student_number(): void
     {
         $user = $this->upsertFromIdp(['id' => 'approved-applicant', 'email' => 'approved-applicant@example.test', 'reference_number' => '2026-1010-1010']);
         $this->saveClinicType($user, 'applicant');
@@ -580,9 +580,9 @@ class AdminHubIdpLinkingTest extends TestCase
             'user_id' => $user->id, 'reference_number' => $user->reference_number, 'clearance_status' => 'Issued',
         ]);
         $user->refresh();
-        $this->assertFalse($user->hasPendingAdmissionReference());
-        $this->assertSame('student', $user->clinicHealthFormAudience());
-        $this->assertSame(204, $this->checkFormRoute($user, 'store.health.form.student')->getStatusCode());
+        $this->assertTrue($user->hasPendingAdmissionReference());
+        $this->assertSame('applicant', $user->clinicHealthFormAudience());
+        $this->assertSame(route('health.form'), $this->checkFormRoute($user, 'store.health.form.student')->getTargetUrl());
         $profile->update(['clearance_status' => 'Pending/Conditional']);
         $user->refresh();
         $this->assertSame('applicant', $user->clinicHealthFormAudience());

@@ -175,6 +175,53 @@
         opacity: 0.62;
     }
 
+    .booking-form-restricted-shell {
+        position: relative;
+    }
+
+    .booking-form-restricted-shell.is-restricted .booking-disabled-fields {
+        filter: blur(3px);
+        opacity: 0.42;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .booking-restricted-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 28px;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.30);
+        backdrop-filter: blur(1px);
+    }
+
+    .booking-restricted-message {
+        width: min(100%, 460px);
+        padding: 22px 24px;
+        border: 1px solid rgba(139, 0, 0, 0.22);
+        border-radius: 14px;
+        background: rgba(255, 250, 249, 0.94);
+        box-shadow: 0 18px 34px rgba(15, 23, 42, 0.16);
+        color: #70131b;
+    }
+
+    .booking-restricted-message strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 16px;
+    }
+
+    .booking-restricted-message p {
+        margin: 0;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.55;
+    }
+
     .booking-form-section {
         flex: 2;
         padding: 32px;
@@ -262,7 +309,7 @@
         min-height: 50px;
         padding: 12px 16px;
         border: 1px solid rgba(148, 163, 184, 0.20);
-        border-radius: 18px;
+        border-radius: 8px;
         font-size: 15px;
         color: #111111;
         transition: all 0.2s ease;
@@ -447,7 +494,7 @@
         min-height: 50px;
         padding: 12px 52px 12px 16px;
         border: 1px solid rgba(148, 163, 184, 0.20);
-        border-radius: 18px;
+        border-radius: 8px;
         font-size: 15px;
         color: #111111;
         background:
@@ -461,10 +508,10 @@
         transition: all 0.2s ease;
     }
     .service-select-display:hover {
-        border-color: rgba(139, 0, 0, 0.28);
-        box-shadow:
-            0 10px 18px rgba(139, 0, 0, 0.05),
-            inset 0 1px 0 rgba(255,255,255,0.86);
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        box-shadow: 0 10px 18px rgba(112, 19, 27, 0.14);
     }
     .service-select-display.is-open,
     .service-select-display:focus {
@@ -531,7 +578,7 @@
         display: none;
         gap: 10px;
         padding: 14px;
-        border-radius: 18px;
+        border-radius: 8px;
         border: 1px solid rgba(139, 0, 0, 0.12);
         background: rgba(255, 255, 255, 0.98);
         box-shadow: 0 18px 34px rgba(15, 23, 42, 0.14);
@@ -548,7 +595,7 @@
         border: 1px solid rgba(148, 163, 184, 0.22);
         background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
         color: #1e293b;
-        border-radius: 999px;
+        border-radius: 8px;
         padding: 12px 14px;
         font-size: 13px;
         font-weight: 800;
@@ -562,16 +609,22 @@
     }
     .service-select-option:hover {
         transform: translateY(-1px);
-        border-color: #8B0000;
-        background: linear-gradient(135deg, #8B0000, #70131B);
-        color: #facc15;
-        box-shadow: 0 12px 20px rgba(139, 0, 0, 0.16);
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        box-shadow: 0 12px 20px rgba(112, 19, 27, 0.16);
     }
     .service-select-option.is-selected {
-        background: linear-gradient(135deg, #8B0000, #70131B);
+        background: #70131b;
         color: #ffffff;
         border-color: #8B0000;
         box-shadow: 0 14px 24px rgba(139, 0, 0, 0.18);
+    }
+    .service-select-display.is-open {
+        background: #70131b;
+        border-color: #70131b;
+        color: #ffffff;
+        box-shadow: 0 10px 18px rgba(112, 19, 27, 0.16);
     }
     .date-picker-panel {
         position: absolute;
@@ -1337,14 +1390,26 @@
         box-shadow: 0 10px 18px rgba(0, 0, 0, 0.22) !important;
     }
     html[data-theme="dark"] .service-select-option:hover {
-        background: linear-gradient(135deg, #8B0000, #70131B) !important;
-        color: #facc15 !important;
-        border-color: #8B0000 !important;
+        background: #facc15 !important;
+        color: #70131b !important;
+        border-color: #facc15 !important;
     }
     html[data-theme="dark"] .service-select-option.is-selected {
-        background: linear-gradient(135deg, #8B0000, #70131B) !important;
+        background: #70131b !important;
         color: #ffffff !important;
         border-color: #8B0000 !important;
+    }
+    html[data-theme="dark"] .service-select-display.is-open {
+        background: #70131b !important;
+        border-color: #70131b !important;
+        color: #ffffff !important;
+        box-shadow: 0 10px 18px rgba(0, 0, 0, 0.24) !important;
+    }
+    html[data-theme="dark"] .service-select-display:hover {
+        background: #facc15 !important;
+        color: #70131b !important;
+        border-color: #facc15 !important;
+        box-shadow: 0 10px 18px rgba(0, 0, 0, 0.24) !important;
     }
     html[data-theme="dark"] .service-select-wrap::after {
         border-right-color: #facc15;
@@ -2095,7 +2160,19 @@
         background-blend-mode: normal, luminosity !important;
         border-color: rgba(255,255,255,.12) !important;
     }
-    html[data-theme="dark"] .page-header-icon { color: #8b0b24 !important; }
+    html[data-theme="dark"] .page-header-visual {
+        background: #121b2a !important;
+        border-color: rgba(250, 204, 21, 0.46) !important;
+        box-shadow:
+            0 12px 24px rgba(0, 0, 0, 0.34),
+            0 0 0 1px rgba(250, 204, 21, 0.08) inset !important;
+    }
+    html[data-theme="dark"] .page-header-icon { color: #facc15 !important; }
+    html[data-theme="dark"] .page-header-visual-plus {
+        background: #70131b !important;
+        border-color: #121b2a !important;
+        color: #facc15 !important;
+    }
     html[data-theme="dark"] .page-kicker,
     html[data-theme="dark"] .page-step { background: transparent !important; }
     html[data-theme="dark"] .page-step.is-active { background: #ffffff !important; color: #70131b !important; }
@@ -2109,12 +2186,25 @@
     html[data-theme="dark"] .booking-subsection-title,
     html[data-theme="dark"] .info-title { border-color: rgba(148,163,184,.18); }
     html[data-theme="dark"] .booking-subsection-title,
-    html[data-theme="dark"] .booking-field-icon,
-    html[data-theme="dark"] .info-title-icon { color: #fda4af; }
+    html[data-theme="dark"] .booking-field-icon { color: #fda4af; }
+    html[data-theme="dark"] .info-title-icon {
+        color: #facc15 !important;
+        filter: drop-shadow(0 2px 4px rgba(250, 204, 21, 0.18));
+    }
     html[data-theme="dark"] .booking-empty-state,
     html[data-theme="dark"] .appt-item {
         background: #172235 !important;
         border-color: rgba(148,163,184,.18) !important;
+    }
+    html[data-theme="dark"] .booking-empty-state .empty-icon {
+        background: rgba(250, 204, 21, 0.12) !important;
+        border: 1px solid rgba(250, 204, 21, 0.34);
+        color: #facc15 !important;
+    }
+    html[data-theme="dark"] .clinic-information-icon {
+        background: rgba(250, 204, 21, 0.12) !important;
+        border: 1px solid rgba(250, 204, 21, 0.28);
+        color: #facc15 !important;
     }
     html[data-theme="dark"] .booking-empty-state strong,
     html[data-theme="dark"] .clinic-information-item strong { color: #f8fafc; }
@@ -2123,8 +2213,22 @@
     html[data-theme="dark"] .appointment-summary-notice {
         background: #182235;
         border-color: rgba(250,204,21,.18);
+        color: #ffffff;
     }
+    html[data-theme="dark"] .appointment-summary-icon {
+        background: rgba(250, 204, 21, 0.12) !important;
+        border: 1px solid rgba(250, 204, 21, 0.28);
+        color: #facc15 !important;
+    }
+    html[data-theme="dark"] .appointment-summary-notice strong { color: #ffffff !important; }
     html[data-theme="dark"] .appointment-summary-notice small { color: #cbd5e1; }
+    html[data-theme="dark"] .booking-restricted-overlay { background: rgba(15, 23, 42, 0.38); }
+    html[data-theme="dark"] .booking-restricted-message {
+        border-color: rgba(250, 204, 21, 0.36);
+        background: rgba(23, 34, 53, 0.96);
+        color: #facc15;
+    }
+    html[data-theme="dark"] .booking-restricted-message p { color: #cbd5e1; }
     html[data-theme="dark"] .booking-form-section textarea[name="remarks"]::placeholder {
         color: rgba(203, 213, 225, .48) !important;
     }
@@ -2263,9 +2367,11 @@
                 </div>
             @endif
 
+            @php($bookingRestricted = isset($bookingAccess) && empty($bookingAccess['allowed']))
             <form id="bookingForm" method="POST" action="/student/appointments/store" autocomplete="off">
                 @csrf 
-                <fieldset class="booking-disabled-fields" {{ !empty($clinicClosure) ? 'disabled' : '' }}>
+                <div class="booking-form-restricted-shell {{ $bookingRestricted ? 'is-restricted' : '' }}">
+                <fieldset class="booking-disabled-fields" {{ !empty($clinicClosure) || $bookingRestricted ? 'disabled' : '' }}>
 
                 <div class="booking-subsection-title">
                     <x-outline-icon name="identification" />
@@ -2352,11 +2458,19 @@
                 
                 <div class="input-group">
                     <label class="input-label">Service Type</label>
+                    @php
+                        $hasBloodPressureMonitoringService = collect($otherServiceOptions ?? [])->contains(function ($serviceOption) {
+                            return strtolower(trim((string) $serviceOption->serviceLabel())) === 'bp monitoring';
+                        });
+                    @endphp
                     <div class="input-wrapper service-select-wrap has-leading-icon">
                         <span class="booking-field-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
                         <select name="service" class="form-control service-select" id="serviceTypeSelect" required>
                             <option value="" disabled selected>Select a Service...</option>
                             <option value="General Consultation">General Consultation</option>
+                            @if(!$hasBloodPressureMonitoringService)
+                                <option value="BP Monitoring">BP Monitoring</option>
+                            @endif
                             @foreach(($otherServiceOptions ?? []) as $serviceOption)
                                 <option value="{{ $serviceOption->serviceLabel() }}">{{ $serviceOption->serviceLabel() }}</option>
                             @endforeach
@@ -2369,6 +2483,9 @@
                         </button>
                         <div class="service-select-menu" id="serviceTypeMenu" role="listbox" aria-label="Service Type options">
                             <button type="button" class="service-select-option" data-service-value="General Consultation">General Consultation</button>
+                            @if(!$hasBloodPressureMonitoringService)
+                                <button type="button" class="service-select-option" data-service-value="BP Monitoring">BP Monitoring</button>
+                            @endif
                             @foreach(($otherServiceOptions ?? []) as $serviceOption)
                                 <button type="button" class="service-select-option" data-service-value="{{ $serviceOption->serviceLabel() }}">{{ $serviceOption->serviceLabel() }}</button>
                             @endforeach
@@ -2397,10 +2514,10 @@
                     </span>
                 </div>
 
-                <button type="submit" class="btn-submit" aria-label="{{ !empty($clinicClosure) ? 'Booking Temporarily Closed' : 'Confirm Appointment' }}">
+                <button type="submit" class="btn-submit" aria-label="{{ !empty($clinicClosure) ? 'Booking Temporarily Closed' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment') }}">
                     <span class="btn-submit-idle">
                         <x-outline-icon name="calendar-days" />
-                        <span>{{ !empty($clinicClosure) ? 'Booking Temporarily Closed' : 'Confirm Appointment' }}</span>
+                        <span>{{ !empty($clinicClosure) ? 'Booking Temporarily Closed' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment') }}</span>
                         <x-outline-icon name="arrow-long-right" />
                     </span>
                     <span class="btn-submit-heartbeat" aria-hidden="true">
@@ -2415,6 +2532,15 @@
                     </span>
                 </button>
                 </fieldset>
+                @if($bookingRestricted)
+                    <div class="booking-restricted-overlay" role="status">
+                        <div class="booking-restricted-message">
+                            <strong>Booking Restricted</strong>
+                            <p>Applicants may book an appointment once a Student Number is available or the submitted health form has been approved and issued a clearance.</p>
+                        </div>
+                    </div>
+                @endif
+                </div>
             </form>
         </div>
 

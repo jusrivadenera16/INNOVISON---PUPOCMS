@@ -2421,6 +2421,112 @@
         color: #ffffff;
     }
 
+    .api-tab-button svg,
+    .api-control-label svg {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+    }
+
+    .api-control-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .api-db-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+    }
+
+    .api-db-action-btn svg {
+        width: 15px;
+        height: 15px;
+        flex: 0 0 auto;
+    }
+
+    .api-select-shell {
+        position: relative;
+    }
+
+    .api-select-shell > svg {
+        position: absolute;
+        z-index: 1;
+        top: 50%;
+        left: 12px;
+        width: 16px;
+        height: 16px;
+        color: #7f1d2d;
+        pointer-events: none;
+        transform: translateY(-50%);
+    }
+
+    .api-select-shell::after {
+        position: absolute;
+        top: 50%;
+        right: 14px;
+        width: 7px;
+        height: 7px;
+        border-right: 1.5px solid currentColor;
+        border-bottom: 1.5px solid currentColor;
+        color: #7f1d2d;
+        content: "";
+        pointer-events: none;
+        transform: translateY(-65%) rotate(45deg);
+    }
+
+    .api-search-form .api-select-shell select {
+        appearance: none;
+        padding-right: 38px;
+        padding-left: 36px;
+        cursor: pointer;
+        color-scheme: light;
+    }
+
+    .api-edit-select-field {
+        position: relative;
+    }
+
+    .api-edit-select-field::after {
+        position: absolute;
+        right: 16px;
+        bottom: 18px;
+        width: 7px;
+        height: 7px;
+        border-right: 1.5px solid currentColor;
+        border-bottom: 1.5px solid currentColor;
+        color: #7f1d2d;
+        content: "";
+        pointer-events: none;
+        transform: rotate(45deg);
+    }
+
+    .api-edit-select-field select {
+        appearance: none;
+        padding-right: 38px;
+        cursor: pointer;
+        color-scheme: light;
+    }
+
+    html[data-theme="dark"] .api-select-shell > svg,
+    html[data-theme="dark"] .api-select-shell::after,
+    html[data-theme="dark"] .api-edit-select-field::after {
+        color: #facc15;
+    }
+
+    html[data-theme="dark"] .api-search-form .api-select-shell select,
+    html[data-theme="dark"] .api-edit-select-field select {
+        color-scheme: dark;
+    }
+
+    html[data-theme="dark"] .api-search-form select option,
+    html[data-theme="dark"] .api-edit-field select option {
+        background: #111827;
+        color: #f8fafc;
+    }
+
     @media (max-width: 900px) {
         .api-dashboard-stats,
         .api-tabs {
@@ -2705,23 +2811,23 @@
 
         <div class="api-tabs">
             <button class="api-tab-button is-active" data-tab="tests">
-                🔍 API Tests
+                <x-outline-icon name="code-bracket-square" /> API Tests
             </button>
             <button class="api-tab-button" data-tab="health">
-                💚 Health Monitor
+                <x-outline-icon name="heart-pulse" /> Health Monitor
             </button>
             <button class="api-tab-button" data-tab="errors">
-                📋 Error Log
+                <x-outline-icon name="clipboard-document-list" /> Error Log
             </button>
             <button class="api-tab-button" data-tab="systems">
-                🔗 System Status
+                <x-outline-icon name="shield-check" /> System Status
             </button>
             <button type="button" class="api-tab-button guisis-sync-tab-button" id="guisisStudentNumberSyncTabButton" aria-controls="guisisStudentNumberSyncModal" title="Open GuiSIS student number sync">
-                GuiSIS Sync
+                <x-outline-icon name="arrow-path" /> GuiSIS Sync
                 <span class="guisis-sync-tab-count">{{ number_format((int) ($studentNumberSyncPendingCount ?? 0)) }}</span>
             </button>
             <a href="{{ route('admin.integration-tokens') }}" class="api-tab-button {{ ($integrationPinDisabled ?? false) ? 'is-disabled' : '' }}" id="integrationTokensGateButton" data-pin-disabled="{{ ($integrationPinDisabled ?? false) ? '1' : '0' }}" data-pin-enabled="{{ ($integrationPinEnabled ?? false) ? '1' : '0' }}" style="text-decoration: none; display: flex; align-items: center; justify-content: center;" aria-disabled="{{ ($integrationPinDisabled ?? false) ? 'true' : 'false' }}">
-                🔐 Integration Tokens
+                <x-outline-icon name="identification" /> Integration Tokens
             </a>
         </div>
 
@@ -2742,8 +2848,10 @@
 
         <form method="GET" class="api-search-form" id="apiTestingForm">
             <div>
-                <label for="source">API Source</label>
-                <select id="source" name="source">
+                <label for="source"><span class="api-control-label"><x-outline-icon name="code-bracket-square" /> API Source</span></label>
+                <div class="api-select-shell">
+                    <x-outline-icon name="code-bracket-square" />
+                    <select id="source" name="source">
                     <option value="faculty" {{ ($source ?? 'faculty') === 'faculty' ? 'selected' : '' }}>Faculty API (Test FLSS)</option>
                     <option value="guisis_profile" {{ ($source ?? 'faculty') === 'guisis_profile' ? 'selected' : '' }}>GuiSIS Student by Email</option>
                     <option value="guisis_profiles" {{ ($source ?? 'faculty') === 'guisis_profiles' ? 'selected' : '' }}>GuiSIS List Students</option>
@@ -2756,18 +2864,22 @@
                     <option value="admin_options" {{ ($source ?? 'faculty') === 'admin_options' ? 'selected' : '' }}>Our Admin Options API</option>
                     <option value="database_info" {{ ($source ?? 'faculty') === 'database_info' ? 'selected' : '' }}>Database Info</option>
                     <option value="custom" {{ ($source ?? 'faculty') === 'custom' ? 'selected' : '' }}>Custom Temp API</option>
-                </select>
+                    </select>
+                </div>
             </div>
             <div id="apiSystemGroup" class="api-system-group {{ in_array(($source ?? 'faculty'), ['admin_api', 'admin_options'], true) ? '' : 'is-hidden' }}">
-                <label for="system">External System</label>
-                <select id="system" name="system">
+                <label for="system"><span class="api-control-label"><x-outline-icon name="shield-check" /> External System</span></label>
+                <div class="api-select-shell">
+                    <x-outline-icon name="shield-check" />
+                    <select id="system" name="system">
                     <option value="">Choose system</option>
                     @foreach(($availableSystems ?? []) as $systemOption)
                         <option value="{{ $systemOption }}" {{ ($selectedSystem ?? '') === $systemOption ? 'selected' : '' }}>
                             {{ strtoupper(str_replace('_', ' ', $systemOption)) }}
                         </option>
                     @endforeach
-                </select>
+                    </select>
+                </div>
             </div>
             <div>
                 <label for="search">{{ $apiTestingSearchLabel ?? 'Search by name, email, or ID' }}</label>
@@ -3125,12 +3237,12 @@
                                     data-id="{{ $record['id'] }}"
                                     data-raw='@json($record["raw"])'
                                 >
-                                    Edit
+                                    <x-outline-icon name="pencil-square" /> Edit
                                 </button>
                                 <form method="POST" action="{{ route('admin.api-testing.database.delete', ['table' => $dbTable ?? 'users', 'id' => $record['id']]) }}">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="api-db-action-btn delete" onclick="return confirm('Delete this database record?')">Delete</button>
+                                    <button type="submit" class="api-db-action-btn delete" onclick="return confirm('Delete this database record?')"><x-outline-icon name="trash" /> Delete</button>
                                 </form>
                             </div>
                         @endif
@@ -3782,6 +3894,8 @@ Request: ${escapeApiLogValue(err.request_payload || 'N/A')}</pre>
                 { name: 'email', label: 'Email', type: 'email' },
                 { name: 'student_id', label: 'Student ID', type: 'text' },
                 { name: 'student_number', label: 'Student Number', type: 'text' },
+                { name: 'reference_number', label: 'Reference Number', type: 'text' },
+                { name: 'employee_number', label: 'Employee Number', type: 'text' },
                 { name: 'gender', label: 'Gender', type: 'text' },
                 { name: 'user_role', label: 'Role', type: 'select', options: ['student', 'student_assistant', 'admin', 'superadmin'] },
                 { name: 'status', label: 'Status', type: 'select', options: ['active', 'inactive'] },
@@ -3814,6 +3928,9 @@ Request: ${escapeApiLogValue(err.request_payload || 'N/A')}</pre>
                 (fieldSets[table] || []).forEach((field) => {
                     const wrap = document.createElement('div');
                     wrap.className = 'api-edit-field';
+                    if (field.type === 'select') {
+                        wrap.classList.add('api-edit-select-field');
+                    }
 
                     const label = document.createElement('label');
                     label.textContent = field.label;

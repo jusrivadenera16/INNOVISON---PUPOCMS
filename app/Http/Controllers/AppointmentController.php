@@ -2808,7 +2808,16 @@ class AppointmentController extends Controller
             ];
         }
 
-        $user->loadMissing('healthProfile', 'employeeHealthProfile', 'adminProfile');
+        $user->loadMissing('healthProfile', 'employeeHealthProfile', 'adminProfile', 'dependentProfile');
+        if ($this->isDependentProfileUser($user)) {
+            return [
+                'student_id' => trim((string) ($user->student_id ?? '')),
+                'student_number' => trim((string) (optional($user->dependentProfile)->id_number ?: $user->student_number ?: $user->reference_number)),
+                'id_number_label' => 'ID Number',
+                'uses_staff_health_form' => false,
+            ];
+        }
+
         if ($this->shouldUseEmployeeHealthForm($user)) {
             $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
             $employeeNumber = trim((string) (
@@ -2833,6 +2842,65 @@ class AppointmentController extends Controller
             'student_number' => trim((string) ($prefill['student_number'] ?? $user->student_number ?? '')),
             'id_number_label' => 'Student Number',
             'uses_staff_health_form' => false,
+        ];
+    }
+
+    private function resolveAppointmentIdentifier(User $user, array $studentContext = []): string
+    {
+        $user->loadMissing('healthProfile', 'employeeHealthProfile', 'dependentProfile');
+
+        if ($this->isDependentProfileUser($user)) {
+            return trim((string) (
+                optional($user->dependentProfile)->id_number
+                ?: ($studentContext['student_number'] ?? '')
+                ?: $user->student_number
+                ?: $user->reference_number
+            ));
+        }
+
+        if ($this->shouldUseEmployeeHealthForm($user)) {
+            return trim((string) (
+                ($studentContext['student_number'] ?? '')
+                ?: optional($user->employeeHealthProfile)->employee_number
+                ?: $user->employee_number
+            ));
+        }
+
+        $studentNumber = $this->enrolledStudentReferenceNumber($user, $user->healthProfile);
+        if ($studentNumber !== '') {
+            return $studentNumber;
+        }
+
+        return trim((string) (
+            ($studentContext['student_number'] ?? '')
+            ?: optional($user->healthProfile)->reference_number
+            ?: $user->reference_number
+        ));
+    }
+
+    private function resolveAppointmentBookingAccess(?User $user): array
+    {
+        if (!$user) {
+            return [
+                'allowed' => false,
+                'is_applicant' => false,
+                'has_student_number' => false,
+                'has_approved_health_form' => false,
+            ];
+        }
+
+        $user->loadMissing('healthProfile');
+        $healthProfile = $user->healthProfile;
+        $healthStatus = strtolower(trim((string) optional($healthProfile)->clearance_status));
+        $hasStudentNumber = $this->enrolledStudentReferenceNumber($user, $healthProfile) !== '';
+        $hasApprovedHealthForm = in_array($healthStatus, ['approved', 'issued', 'fully cleared', 'cleared'], true);
+        $isApplicant = $this->isApplicantAccount($user);
+
+        return [
+            'allowed' => !$isApplicant || $hasStudentNumber || $hasApprovedHealthForm,
+            'is_applicant' => $isApplicant,
+            'has_student_number' => $hasStudentNumber,
+            'has_approved_health_form' => $hasApprovedHealthForm,
         ];
     }
 
@@ -2921,6 +2989,8 @@ class AppointmentController extends Controller
                                    ->get();
 
         $studentContext = $this->resolveStudentContext($user);
+        $studentContext['student_number'] = $this->resolveAppointmentIdentifier($user, $studentContext);
+        $bookingAccess = $this->resolveAppointmentBookingAccess($user);
 
         $workflow = app(ClinicWorkflowService::class);
         $clinicClosure = $workflow->activeClosure();
@@ -2945,7 +3015,8 @@ class AppointmentController extends Controller
             'clinicClosure',
             'clinicHours',
             'otherServiceOptions',
-            'onlineConsultationOptions'
+            'onlineConsultationOptions',
+            'bookingAccess'
         ));
     }
 
@@ -2954,6 +3025,20 @@ class AppointmentController extends Controller
     // -------------------------------
     public function store(Request $request)
     {
+        /** @var \App\Models\User|null $user */
+        $user = $this->promoteDesigneeAdminToStudentGuard() ?? Auth::guard('student')->user() ?? Auth::user();
+        if (!$user) {
+            return redirect()->back()->withInput()->with('error', 'Please sign in before booking an appointment.');
+        }
+
+        $bookingAccess = $this->resolveAppointmentBookingAccess($user);
+        if (!$bookingAccess['allowed']) {
+            return redirect()->back()->withInput()->with(
+                'error',
+                'Appointment booking is restricted until your Student Number is available or your health form is approved and issued a clearance.'
+            );
+        }
+
         $workflow = app(ClinicWorkflowService::class);
         $closure = $workflow->activeClosure();
         if ($closure) {
@@ -2973,16 +3058,10 @@ class AppointmentController extends Controller
         $configuredServices = $activeConfiguredOptions
             ->map(fn (ClinicServiceOption $option) => $option->serviceLabel())
             ->prepend('General Consultation')
+            ->push('BP Monitoring')
             ->unique()
             ->values()
             ->all();
-        if ($activeConfiguredOptions->contains(function (ClinicServiceOption $option): bool {
-            return $option->option_group === ClinicServiceOption::GROUP_OTHER_SERVICE
-                && in_array(strtolower(trim($option->name)), ['blood pressure monitoring', 'bp monitoring'], true);
-        })) {
-            $configuredServices[] = 'BP Monitoring';
-        }
-        $configuredServices = array_values(array_unique($configuredServices));
 
         $request->validate([
             'date' => 'required|date',
@@ -3036,28 +3115,15 @@ class AppointmentController extends Controller
             return redirect()->back()->withInput()->with('error', 'Fully booked for this date.');
         }
 
-        // Get or create user
-        $user = Auth::user() ?? User::firstOrCreate(
-            ['email' => 'guest@pup.edu.ph'],
-            [
-                'first_name' => 'Guest',
-                'last_name' => 'Student',
-                'name' => 'Guest Student',
-                'password' => bcrypt('password'),
-                'is_admin' => 0
-            ]
-        );
-
         // Create appointment for student side
-  
-
         $studentContext = $this->resolveStudentContext($user);
+        $appointmentIdentifier = $this->resolveAppointmentIdentifier($user, $studentContext);
 
         $appointment = new Appointment();
         $appointment->apt_id = Appointment::generateAppointmentNumber(now(), 'online');
         $appointment->user_id = $user->id;
-        $appointment->student_id = $request->input('student_id', $studentContext['student_id'] ?: '2025-0000-TG-0');
-        $appointment->student_number = $request->input('student_number', $studentContext['student_number']);
+        $appointment->student_id = $studentContext['student_id'] ?: ($user->student_id ?: $appointmentIdentifier);
+        $appointment->student_number = $appointmentIdentifier;
         $appointment->name = $user->name;
         $appointment->email = $user->email;
         $appointment->date = $request->date;
@@ -6310,6 +6376,12 @@ public function storeHealthForm(Request $request)
         }
     }
 
+    $applicantDocumentDateMin = Carbon::today()->subMonthsNoOverflow(6)->toDateString();
+    $applicantDocumentDateMax = Carbon::today()->toDateString();
+    $applicantDocumentDateRule = $applicantDocumentsRequired
+        ? ['required', 'date', 'after_or_equal:' . $applicantDocumentDateMin, 'before_or_equal:' . $applicantDocumentDateMax]
+        : ['nullable', 'date'];
+
     $request->validate([
         'student_id'        => 'nullable|string|max:255',
         'reference_number'  => $referenceNumberRules,
@@ -6356,7 +6428,7 @@ public function storeHealthForm(Request $request)
         'vaccine_history.booster_2.brand' => 'nullable|required_with:vaccine_history.booster_2.date|string|max:100',
 
         'chest_xray_result' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'chest_xray_result', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'], $applicantDocumentsRequired),
-        'xray_date'         => $applicantDocumentsRequired ? 'required|date' : 'nullable|date',
+        'xray_date'         => $applicantDocumentDateRule,
         'xray_findings'     => $applicantDocumentsRequired ? 'required|string|in:Normal,With Findings,Not Sure / For Clinic Review' : 'nullable|string|in:Normal,With Findings,Not Sure / For Clinic Review',
         'xray_findings_details' => 'required_if:xray_findings,With Findings|nullable|string|max:1000',
         'has_disability'    => 'required|string',
@@ -6366,7 +6438,7 @@ public function storeHealthForm(Request $request)
             : ['required_if:has_disability,Yes', 'file', 'mimes:pdf', 'max:1024'],
         'medical_certificate' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'medical_certificate', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'], $applicantDocumentsRequired),
         'doctor_name'       => $applicantDocumentsRequired ? 'required|string|max:255' : 'nullable|string|max:255',
-        'med_cert_date'     => $applicantDocumentsRequired ? 'required|date' : 'nullable|date',
+        'med_cert_date'     => $applicantDocumentDateRule,
         'med_cert_findings' => $applicantDocumentsRequired ? 'required|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review' : 'nullable|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review',
         'med_cert_findings_details' => 'required_if:med_cert_findings,With Findings|nullable|string|max:1000',
         'signature_method' => 'required|in:draw,upload',
