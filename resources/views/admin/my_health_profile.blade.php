@@ -841,6 +841,66 @@
             width: 100%;
         }
 
+        .mhp-document-table-wrap {
+            padding: 0 12px 12px;
+            overflow: visible;
+        }
+
+        .mhp-document-table {
+            display: block;
+            min-width: 0;
+        }
+
+        .mhp-document-table thead {
+            display: none;
+        }
+
+        .mhp-document-table tbody {
+            display: block;
+        }
+
+        .mhp-document-table tbody tr {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 4px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--mhp-line);
+        }
+
+        .mhp-document-table td {
+            display: grid;
+            grid-template-columns: 92px minmax(0, 1fr);
+            gap: 9px;
+            min-width: 0;
+            padding: 4px 2px;
+            border-bottom: 0;
+            font-size: 12px;
+        }
+
+        .mhp-document-table td::before {
+            content: attr(data-label);
+            color: var(--mhp-muted);
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .mhp-document-name {
+            min-width: 0;
+        }
+
+        .mhp-document-name span {
+            overflow: visible;
+            text-overflow: clip;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+
+        .mhp-document-actions {
+            justify-content: flex-start;
+        }
+
     }
 </style>
 @endpush
@@ -986,15 +1046,15 @@
                         <tbody class="mhp-document-version-view" data-document-version="{{ $version['version'] }}" @if($version['version'] !== $selectedVersion) hidden @endif>
                             @foreach($version['documents'] as $document)
                                 <tr>
-                                    <td class="mhp-document-muted">{{ $document['type'] }}</td>
-                                    <td>
+                                    <td class="mhp-document-muted" data-label="Document Type">{{ $document['type'] }}</td>
+                                    <td data-label="Document Name">
                                         <span class="mhp-document-name {{ ($document['uploaded'] ?? false) ? '' : 'mhp-document-missing' }}" title="{{ $document['name'] }}">
                                             <x-outline-icon name="document-text" />
                                             <span>{{ $document['name'] }}</span>
                                         </span>
                                     </td>
-                                    <td class="mhp-document-muted">{{ $document['uploaded_at'] }}</td>
-                                    <td>
+                                    <td class="mhp-document-muted" data-label="Date Uploaded">{{ $document['uploaded_at'] }}</td>
+                                    <td data-label="Actions">
                                         @if($document['uploaded'] ?? false)
                                             <div class="mhp-document-actions">
                                                 <a
@@ -1053,15 +1113,15 @@
                     <tbody>
                         @foreach($documentRows as $document)
                             <tr>
-                                <td class="mhp-document-muted">{{ $document['type'] }}</td>
-                                <td>
+                                <td class="mhp-document-muted" data-label="Document Type">{{ $document['type'] }}</td>
+                                <td data-label="Document Name">
                                     <span class="mhp-document-name mhp-document-missing" title="Missing">
                                         <x-outline-icon name="document-text" />
                                         <span>Missing</span>
                                     </span>
                                 </td>
-                                <td class="mhp-document-muted">-</td>
-                                <td>
+                                <td class="mhp-document-muted" data-label="Date Uploaded">-</td>
+                                <td data-label="Actions">
                                     <form
                                         action="{{ route('admin.settings.health-profile.document.upload', ['document' => $document['key']]) }}"
                                         method="POST"

@@ -908,6 +908,12 @@
     html[data-theme="dark"] #lookupModal .access-onboard-modal .um-table tr { border-color: #2f3c4e; }
     html[data-theme="dark"] .access-onboard-profile__details,
     html[data-theme="dark"] .access-onboard-role-option { background: #172130; }
+    html[data-theme="dark"] #lookupModal .access-onboard-continue:disabled {
+        color: #fff !important;
+        -webkit-text-fill-color: #fff;
+        border-color: #8f1020 !important;
+        background: #8f1020 !important;
+    }
     html[data-theme="dark"] .access-onboard-role-option:has(input:checked),
     html[data-theme="dark"] #lookupModal .access-onboard-modal .um-table tr:hover,
     html[data-theme="dark"] #lookupModal .access-onboard-modal .um-table tr.is-selected { border-color: #fda4af; background: #36202a; }
@@ -970,11 +976,42 @@
         .access-console__sync { display: none; }
         .access-console__hero-copy { margin-left: 0; }
         .access-console__stats { grid-template-columns: 1fr; }
-        .access-console__filters { gap: 8px; }
-        .access-console__search { flex-basis: 100%; }
-        .access-console__add { flex: 1; }
+        .access-console__filters {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            align-items: stretch;
+            gap: 8px;
+        }
+        .access-console__search {
+            grid-column: 1 / -1;
+            width: 100%;
+            min-width: 0;
+            flex: none;
+        }
+        .access-console__filter {
+            width: 100%;
+            min-width: 0;
+            flex: none;
+        }
+        .access-console__add {
+            grid-column: 1 / -1;
+            width: 100%;
+            min-width: 0;
+            min-height: 36px;
+            height: auto;
+            padding: 7px 8px;
+            line-height: 1.1;
+            white-space: normal;
+            flex: none;
+        }
         .access-console__row { grid-template-columns: 40px minmax(0, 1fr) 82px; gap: 9px; padding: 11px; }
         .access-console__meta { gap: 5px; }
+        .access-console__name { overflow-wrap: anywhere; }
+        .access-console__manage {
+            width: 100%;
+            min-width: 82px;
+            box-sizing: border-box;
+        }
         .access-onboard-steps { padding: 12px; gap: 5px; }
         .access-onboard-step { grid-template-columns: 24px 1fr; font-size: .53rem; }
         .access-onboard-step__number { width: 24px; height: 24px; }
@@ -984,11 +1021,42 @@
             height: calc(100dvh - 16px);
             max-height: calc(100dvh - 16px) !important;
         }
-        #settingsModal .um-settings-console .um-profile-summary-card { max-height: 205px; }
+        /* Keep the settings modal on one mobile scroll path from profile to actions. */
+        #settingsModal .um-settings-console > .um-modal-body {
+            display: block;
+            flex: 1 1 auto;
+            height: auto;
+            min-height: 0;
+            overflow-y: auto !important;
+            overscroll-behavior: contain;
+        }
+        #settingsModal .um-settings-console .um-modal-grid {
+            display: block;
+            width: auto;
+            height: auto !important;
+            min-height: 0;
+        }
+        #settingsModal .um-settings-console .um-profile-summary-card,
+        #settingsModal .um-settings-console .um-settings-form-card {
+            height: auto;
+            max-height: none;
+            overflow: visible;
+        }
+        #settingsModal .um-settings-console .um-profile-summary-card {
+            border-bottom: 1px solid #eee6e8;
+        }
         #settingsModal .um-settings-console .um-profile-identity { padding: 16px; }
         #settingsModal .um-settings-console .um-profile-fields { display: block; padding: 0 14px; }
         #settingsModal .um-settings-console .um-settings-card-head,
         #settingsModal .um-settings-console .um-settings-form-body { padding-left: 14px; padding-right: 14px; }
+        #settingsModal .um-settings-console .um-settings-form-body {
+            flex: none;
+            min-height: 0;
+            overflow: visible !important;
+        }
+        #settingsModal .um-settings-console .um-settings-actions-footer {
+            position: static;
+        }
         #settingsModal .um-settings-console .um-actions {
             grid-template-columns: repeat(2, minmax(0, 1fr));
             padding: 11px 14px;

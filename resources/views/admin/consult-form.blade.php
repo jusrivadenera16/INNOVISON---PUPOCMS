@@ -4346,6 +4346,40 @@
             width: 100%;
         }
     }
+
+    @media (max-width: 760px) {
+        /* Keep the four consultation tools as centered icon buttons on mobile. */
+        .consultation-utility-rail {
+            width: 44px !important;
+            min-width: 44px;
+            right: 7px;
+        }
+
+        .consultation-utility-rail .utility-rail-button {
+            display: grid !important;
+            width: 44px !important;
+            min-width: 44px !important;
+            max-width: 44px !important;
+            min-height: 44px;
+            height: 44px;
+            padding: 0 !important;
+            place-items: center;
+            gap: 0;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .consultation-utility-rail .utility-rail-button > span:not(.utility-rail-count),
+        .consultation-utility-rail .utility-rail-count {
+            display: none !important;
+        }
+
+        .consultation-utility-rail .utility-rail-button svg {
+            width: 21px;
+            height: 21px;
+            margin: 0;
+        }
+    }
 </style>
 @endpush
 

@@ -1103,7 +1103,7 @@
                                 <span style="font-size:11px; color:#94a3b8; font-weight:400;">{{ $activity->identifier ?: ucfirst($activity->kind) }}</span>
                             </td>
                             <td>
-                                <span class="recent-activity-kind">{{ $activity->kind }}</span>
+                                <span class="recent-activity-kind">{{ $activity->kind === 'health' ? 'Health Record' : ucfirst($activity->kind) }}</span>
                                 <span style="display:block; margin-top:6px;">{{ $activity->activity }}</span>
                             </td>
                             <td>{{ $activity->date_label }}</td>

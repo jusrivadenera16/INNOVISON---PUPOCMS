@@ -6,6 +6,19 @@
     $hasGovernmentLogo = file_exists($governmentLogo);
     $hasFooterImage = file_exists($footerImage);
     $periodLabel = $dateFrom->format('M d, Y') . ' - ' . $dateTo->format('M d, Y');
+    $resolveReportIdentity = static function ($staff, string $fallbackName = 'CLINIC STAFF', string $fallbackPosition = 'Nurse / Clinic Staff'): array {
+        $profile = data_get($staff, 'adminProfile') ?: $staff;
+        $name = trim((string) (data_get($profile, 'report_name') ?: data_get($staff, 'report_name') ?: data_get($staff, 'name')));
+        $position = trim((string) (data_get($profile, 'report_position') ?: data_get($staff, 'report_position')));
+
+        return [
+            'name' => $name !== '' ? $name : $fallbackName,
+            'position' => $position !== '' ? $position : $fallbackPosition,
+        ];
+    };
+    $preparedByIdentity = $resolveReportIdentity($preparedBy ?? null);
+    $preparedByName = $preparedByIdentity['name'];
+    $preparedByPosition = $preparedByIdentity['position'];
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -15,7 +28,7 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 150px 18px 88px;
+            margin: 150px 36px 88px;
         }
 
         * {
@@ -185,6 +198,36 @@
             font-weight: 400;
         }
 
+        .health-export-meta {
+            width: 100%;
+            margin: 14px 0 10px;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .health-export-meta td {
+            border: 0;
+            padding: 2px 4px;
+            font-size: 9px;
+            vertical-align: bottom;
+        }
+
+        .health-export-meta .meta-label {
+            display: inline-block;
+            min-width: 55px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .health-export-meta .meta-value {
+            display: inline-block;
+            min-width: 150px;
+            border-bottom: 1px solid #000;
+            padding: 0 4px 1px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
         .health-export-table {
             width: 100%;
             border-collapse: collapse;
@@ -230,6 +273,39 @@
             padding: 18px 6px;
             color: #4b5563;
             font-style: italic;
+            text-align: center;
+        }
+
+        .health-export-signatures {
+            width: 100%;
+            margin-top: 25px;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .health-export-signatures td {
+            width: 50%;
+            border: 0;
+            padding: 0 28px;
+            font-size: 9px;
+            vertical-align: top;
+        }
+
+        .health-export-signature-space {
+            height: 30px;
+        }
+
+        .health-export-signature-name {
+            border-bottom: 1px solid #000;
+            padding-bottom: 2px;
+            font-size: 10px;
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .health-export-signature-role {
+            margin-top: 2px;
             text-align: center;
         }
     </style>
@@ -287,6 +363,29 @@
             <p class="report-period">Health Forms Report | {{ $periodLabel }} | Generated {{ $generatedAt->format('M d, Y g:i A') }}</p>
         </div>
 
+        <table class="health-export-meta">
+            <tr>
+                <td>
+                    <span class="meta-label">Name:</span>
+                    <span class="meta-value">{{ $preparedByName }}</span>
+                </td>
+                <td>
+                    <span class="meta-label">Date:</span>
+                    <span class="meta-value">{{ $generatedAt->format('M d, Y') }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span class="meta-label">Position:</span>
+                    <span class="meta-value">{{ $preparedByPosition }}</span>
+                </td>
+                <td>
+                    <span class="meta-label">Unit:</span>
+                    <span class="meta-value">Taguig Campus</span>
+                </td>
+            </tr>
+        </table>
+
         <table class="health-export-table">
             <colgroup>
                 <col style="width: 16%;">
@@ -330,6 +429,26 @@
                     </tr>
                 @endforelse
             </tbody>
+        </table>
+
+        <table class="health-export-signatures">
+            <tr>
+                <td>Prepared by:</td>
+                <td>Noted by:</td>
+            </tr>
+            <tr>
+                <td class="health-export-signature-space"></td>
+                <td class="health-export-signature-space"></td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="health-export-signature-name">{{ $preparedByName }}</div>
+                    <div class="health-export-signature-role">{{ $preparedByPosition }}</div>
+                </td>
+                <td>
+                    <div class="health-export-signature-name">Branch Director</div>
+                </td>
+            </tr>
         </table>
     </main>
 </body>

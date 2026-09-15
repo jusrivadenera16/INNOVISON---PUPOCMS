@@ -1173,12 +1173,11 @@ class AdminController extends Controller
                 ];
             });
 
+        $approvedHealthStatuses = ['Approved', 'Issued', 'Fully Cleared', 'Cleared'];
+
         $recentHealthActivities = HealthProfile::query()
             ->with('user')
-            ->where(function ($query) {
-                $query->whereNotNull('verified_at')
-                    ->orWhereIn('clearance_status', ['Approved', 'Issued', 'Fully Cleared', 'Cleared']);
-            })
+            ->whereIn('clearance_status', $approvedHealthStatuses)
             ->latest('verified_at')
             ->take(20)
             ->get()
@@ -1190,10 +1189,10 @@ class AdminController extends Controller
                     'kind' => 'health',
                     'name' => trim((string) ($user->name ?? $profile->full_name ?? 'Health record')),
                     'identifier' => trim((string) ($user->student_number ?? $profile->student_number ?? $user->student_id ?? '')),
-                    'activity' => 'Health Record Approved',
+                    'activity' => 'Health Form Approved',
                     'activity_at' => $activityAt,
                     'date_label' => optional($activityAt)->format('M d - g:i A') ?: 'Recently',
-                    'status' => trim((string) ($profile->clearance_status ?: 'Approved')),
+                    'status' => 'Issued',
                     'status_class' => 'st-health',
                     'url' => $healthRecordsUrl . '?tab=approved&highlight_health=' . $profile->id,
                 ];
@@ -1201,10 +1200,7 @@ class AdminController extends Controller
 
         $recentEmployeeHealthActivities = EmployeeHealthProfile::query()
             ->with('user')
-            ->where(function ($query) {
-                $query->whereNotNull('verified_at')
-                    ->orWhereIn('clearance_status', ['Approved', 'Issued', 'Fully Cleared', 'Cleared']);
-            })
+            ->whereIn('clearance_status', $approvedHealthStatuses)
             ->latest('verified_at')
             ->take(20)
             ->get()
@@ -1216,10 +1212,10 @@ class AdminController extends Controller
                     'kind' => 'health',
                     'name' => trim((string) ($user->name ?? $profile->full_name ?? 'Employee record')),
                     'identifier' => trim((string) ($user->employee_number ?? $profile->employee_number ?? $user->email ?? '')),
-                    'activity' => 'Health Record Approved',
+                    'activity' => 'Health Form Approved',
                     'activity_at' => $activityAt,
                     'date_label' => optional($activityAt)->format('M d - g:i A') ?: 'Recently',
-                    'status' => trim((string) ($profile->clearance_status ?: 'Approved')),
+                    'status' => 'Issued',
                     'status_class' => 'st-health',
                     'url' => $healthRecordsUrl . '?tab=approved&highlight_employee_health=' . $profile->id,
                 ];
