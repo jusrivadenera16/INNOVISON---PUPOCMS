@@ -5866,6 +5866,76 @@
             width: 132px;
         }
     }
+
+    @media (max-width: 560px) {
+        /* Keep the import dialog inside the viewport and prevent native file input overflow. */
+        body.admin-inventory-page #inventoryImportModal {
+            padding: 8px !important;
+        }
+
+        body.admin-inventory-page #inventoryImportModal .modal-box {
+            width: calc(100vw - 16px) !important;
+            max-width: calc(100vw - 16px) !important;
+            min-width: 0 !important;
+            max-height: calc(100dvh - 16px) !important;
+            overflow: hidden !important;
+        }
+
+        body.admin-inventory-page #inventoryImportModal .inventory-modal-head {
+            gap: 8px;
+            padding: 18px 14px !important;
+        }
+
+        body.admin-inventory-page #inventoryImportModal .inventory-modal-body {
+            min-width: 0;
+            overflow-x: hidden;
+            padding: 14px !important;
+        }
+
+        body.admin-inventory-page #inventoryImportModal .inventory-import-drop {
+            min-width: 0;
+            padding: 18px 14px;
+        }
+
+        body.admin-inventory-page #inventoryImportModal input[type="file"] {
+            display: block;
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            box-sizing: border-box;
+            overflow: hidden;
+            font-size: 12px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        body.admin-inventory-page #inventoryImportModal input[type="file"]::file-selector-button {
+            max-width: 44%;
+            margin-right: 8px;
+            padding: 0 9px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        body.admin-inventory-page #inventoryImportModal .inventory-import-note {
+            overflow-wrap: anywhere;
+        }
+
+        body.admin-inventory-page #inventoryImportModal .modal-actions-row {
+            display: flex;
+            flex-wrap: nowrap !important;
+            gap: 8px !important;
+            padding: 10px 12px !important;
+        }
+
+        body.admin-inventory-page #inventoryImportModal .modal-actions-row button {
+            flex: 1 1 0 !important;
+            width: 0;
+            min-width: 0 !important;
+            padding-inline: 8px;
+        }
+    }
 </style>
 @endpush
 

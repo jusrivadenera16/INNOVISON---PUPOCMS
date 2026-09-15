@@ -1052,6 +1052,15 @@
             pointer-events: none !important;
         }
 
+        @media (max-width: 640px) {
+            body.admin-modal-open .quick-actions-wrap {
+                opacity: 0 !important;
+                visibility: hidden !important;
+                pointer-events: none !important;
+                transform: translateY(10px) scale(.88);
+            }
+        }
+
         .quick-actions-wrap,
         .quick-actions-wrap *,
         .quick-actions-toggle {
@@ -8217,6 +8226,95 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         document.addEventListener('click', handleQuickToggleEvent, true);
     }
 
+    function initQuickActionsModalGuard() {
+        const modalSelectors = [
+            '.um-modal-backdrop',
+            '.access-summary-modal',
+            '.treatment-record-modal',
+            '.admin-logout-confirm',
+            '.modal-overlay',
+            '.modal',
+            '.modal-backdrop',
+            '.applicant-modal-backdrop',
+            '.clinic-success-overlay',
+            '[role="dialog"][aria-modal="true"]'
+        ];
+        const modalSelector = modalSelectors.join(',');
+        const statefulModalSelector = '.um-modal-backdrop, .access-summary-modal, .treatment-record-modal, .admin-logout-confirm, .modal, .modal-backdrop, .applicant-modal-backdrop, .clinic-success-overlay';
+        let syncQueued = false;
+
+        const isVisibleModal = function (element) {
+            if (element.hidden || element.getAttribute('aria-hidden') === 'true') {
+                return false;
+            }
+
+            // Modal dialog contents can keep their own dimensions while the
+            // closed wrapper is hidden, so inspect the ancestor chain too.
+            let ancestor = element.parentElement;
+            while (ancestor && ancestor !== document.body) {
+                if (ancestor.hidden || ancestor.getAttribute('aria-hidden') === 'true') {
+                    return false;
+                }
+
+                const ancestorStyles = window.getComputedStyle(ancestor);
+                if (ancestorStyles.display === 'none' || ancestorStyles.visibility === 'hidden' || ancestorStyles.opacity === '0') {
+                    return false;
+                }
+
+                ancestor = ancestor.parentElement;
+            }
+
+            if (element.matches(statefulModalSelector)) {
+                const hasOpenState = ['show', 'is-open', 'open', 'active'].some((className) => element.classList.contains(className));
+                const hasOpenAttribute = element.getAttribute('aria-hidden') === 'false' || element.dataset.open === 'true';
+                if (!hasOpenState && !hasOpenAttribute) {
+                    return false;
+                }
+            }
+
+            const styles = window.getComputedStyle(element);
+            if (styles.display === 'none' || styles.visibility === 'hidden' || styles.opacity === '0') {
+                return false;
+            }
+
+            const bounds = element.getBoundingClientRect();
+            return bounds.width > 0 && bounds.height > 0;
+        };
+
+        const sync = function () {
+            syncQueued = false;
+            const modalOpen = Array.from(document.querySelectorAll(modalSelector)).some(isVisibleModal);
+            document.body.classList.toggle('admin-modal-open', modalOpen);
+
+            if (modalOpen && window.innerWidth <= 640) {
+                const wrap = document.getElementById('headerQuickActions');
+                const toggle = wrap?.querySelector('.quick-actions-toggle');
+                wrap?.classList.remove('is-open');
+                toggle?.setAttribute('aria-expanded', 'false');
+                toggle?.setAttribute('aria-label', 'Open quick actions');
+            }
+        };
+
+        const scheduleSync = function () {
+            if (syncQueued) {
+                return;
+            }
+
+            syncQueued = true;
+            window.requestAnimationFrame(sync);
+        };
+
+        const observer = new MutationObserver(scheduleSync);
+        observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ['class', 'aria-hidden', 'data-open', 'hidden', 'style'],
+            childList: true,
+            subtree: true
+        });
+        window.addEventListener('resize', scheduleSync, { passive: true });
+        sync();
+    }
+
     function initQuickActionTooltips() {
         document.querySelectorAll('#headerQuickActions .quick-action-item').forEach(function (item) {
             if (item.dataset.quickTooltipBound === '1') {
@@ -8845,6 +8943,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         initSidebarDropdowns();
         initContentNavigationLoading();
         initHeaderQuickActionsToggle();
+        initQuickActionsModalGuard();
         initQuickActionTooltips();
         initMedicineAlerts();
         initTreatmentRecordModal();

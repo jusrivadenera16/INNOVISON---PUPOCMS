@@ -747,7 +747,7 @@ class ReportsController extends Controller
             ->get();
         $otherServiceNames = $otherOptions
             ->map(fn (ClinicServiceOption $option) => $option->serviceLabel())
-            ->push('BP Monitoring')
+            ->toBase()
             ->unique()
             ->values();
         $otherServices = $countsFor($consultations->filter(function ($consultation) use ($otherServiceNames): bool {
@@ -2998,6 +2998,11 @@ private function streamHealthFormsPdf(Collection $records, Carbon $dateFrom, Car
         ->values();
     $reportLevel = $yearSections->count() === 1 ? (string) $yearSections->first() : '';
 
+    $preparedBy = auth('admin')->user() ?? auth()->user();
+    if ($preparedBy) {
+        $preparedBy->loadMissing('adminProfile');
+    }
+
     $pdf = Pdf::loadView('admin.reports.health-forms-export-pdf', [
         'rows' => $pdfRows,
         'reportCourse' => $reportCourse,
@@ -3006,6 +3011,7 @@ private function streamHealthFormsPdf(Collection $records, Carbon $dateFrom, Car
         'dateFrom' => $dateFrom,
         'dateTo' => $dateTo,
         'generatedAt' => now(),
+        'preparedBy' => $preparedBy,
     ])->setPaper('a4', 'portrait');
 
     $filename = 'health-forms-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '-' . now()->format('His') . '.pdf';

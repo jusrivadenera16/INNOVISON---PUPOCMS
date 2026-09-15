@@ -97,6 +97,10 @@
 
             .system-footer__inner > span:first-child {
                 flex: 1 0 100%;
+                min-width: 0;
+                max-width: 100%;
+                white-space: normal;
+                overflow-wrap: anywhere;
             }
 
             .system-footer__inner > a {

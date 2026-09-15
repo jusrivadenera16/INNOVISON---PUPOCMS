@@ -736,6 +736,43 @@
     html[data-theme="dark"] .um-entry-card:hover .um-entry-chip {
         color: #70131B !important;
     }
+
+    @media (max-width: 640px) {
+        .um-entry-card,
+        .um-entry-card.is-admin,
+        html[data-theme="dark"] .um-entry-card,
+        html[data-theme="dark"] .um-entry-card.is-admin {
+            display: grid !important;
+            grid-template-columns: 58px minmax(0, 1fr) !important;
+            grid-template-areas:
+                "icon title"
+                "icon description" !important;
+            align-items: center !important;
+            column-gap: 16px !important;
+            row-gap: 4px !important;
+            min-height: 150px !important;
+            padding: 20px 56px 20px 18px !important;
+        }
+
+        .um-entry-icon,
+        .um-entry-card.is-admin .um-entry-icon {
+            grid-area: icon;
+            align-self: center;
+        }
+
+        .um-entry-card h2 {
+            grid-area: title;
+            min-width: 0;
+            margin: 0 !important;
+        }
+
+        .um-entry-card p {
+            grid-area: description;
+            min-width: 0;
+            max-width: none !important;
+            overflow-wrap: anywhere;
+        }
+    }
 </style>
 @endpush
 

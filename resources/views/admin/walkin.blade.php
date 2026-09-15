@@ -10405,6 +10405,141 @@
             display: none;
         }
     }
+
+    /* Keep Walk-in dialogs readable on narrow screens and out of the floating menu's way. */
+    @media (max-width: 760px) {
+        .applicant-modal-backdrop {
+            align-items: flex-start;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .applicant-modal-shell {
+            width: 100% !important;
+            max-width: 100%;
+            max-height: calc(100dvh - 16px);
+        }
+
+        .applicant-modal-body {
+            min-height: 0 !important;
+            max-height: calc(100dvh - 96px);
+            padding: 12px;
+        }
+
+        #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-modal-head,
+        #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .applicant-modal-head {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: start;
+            column-gap: 8px;
+            row-gap: 6px;
+        }
+
+        #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-modal-head-main,
+        #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .applicant-modal-head-main {
+            grid-column: 1;
+            grid-row: 1;
+            width: auto;
+            padding-right: 0;
+        }
+
+        #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-ref-head-actions,
+        #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .applicant-ref-head-actions {
+            display: contents;
+        }
+
+        #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-total-badge,
+        #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .applicant-final-review-total-badge {
+            position: static !important;
+            grid-column: 1;
+            grid-row: 2;
+            justify-self: start;
+            min-width: 0;
+            min-height: 30px;
+            max-width: 100%;
+            padding: 6px 9px;
+            font-size: 9px;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }
+
+        #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-total-badge strong,
+        #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .applicant-final-review-total-badge strong {
+            font-size: 12px;
+        }
+
+        #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-modal-close,
+        #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .applicant-modal-close {
+            position: static !important;
+            grid-column: 2;
+            grid-row: 1;
+            align-self: start;
+            width: 34px !important;
+            height: 34px !important;
+            min-width: 34px !important;
+            min-height: 34px !important;
+        }
+
+        #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-medical-condition-section.show {
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 12px;
+        }
+
+        #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-review-source-grid {
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 10px;
+            min-width: 0;
+            margin: 10px 0 12px;
+        }
+
+        #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-file-actions {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-file-actions .applicant-file-action {
+            min-width: 0;
+            padding: 8px 6px;
+            font-size: 11px;
+            overflow-wrap: anywhere;
+        }
+
+        #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-lookup-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-lookup-value {
+            min-width: 0;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-review-source-grid .applicant-lookup-card {
+            min-width: 0;
+            min-height: 0;
+            padding: 12px;
+        }
+
+        #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-review-source-grid .applicant-lookup-card * {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .employee-physical-assessment-panel {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            max-height: none;
+            overflow: visible;
+        }
+
+        #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .employee-physical-assessment-panel .applicant-screening-panel-title {
+            position: static;
+        }
+    }
 </style>
 @endpush
 
