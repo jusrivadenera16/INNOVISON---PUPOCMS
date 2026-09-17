@@ -2718,6 +2718,9 @@
     $canRequestFileCorrection = !$isPulloutPending && !$isPulledOut
         && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && (optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false);
+    $canRequestNewHealthForm = !$isPulloutPending && !$isPulledOut
+        && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
+        && (optional(auth()->user())->canAccessPermission('health_records.request_health_form') ?? false);
     $canReturnToPending = !$profileIsDependent && !$isPulloutPending && !$isPulledOut
         && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && (optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false);
@@ -2866,10 +2869,12 @@
                     </svg>
                 </button>
                 <div class="profile-actions-menu" id="profileActionsMenu">
-                    <button type="button" id="openNewHealthFormModal">
-                        Request New Health Form
-                        <span aria-hidden="true">+</span>
-                    </button>
+                    @if($canRequestNewHealthForm)
+                        <button type="button" id="openNewHealthFormModal">
+                            Request New Health Form
+                            <span aria-hidden="true">+</span>
+                        </button>
+                    @endif
                     @if($canRequestFileCorrection)
                         <button type="button" id="openCorrectionModal">
                             Request File Correction
@@ -3459,6 +3464,7 @@
     </div>
 </div>
 
+@if($canRequestNewHealthForm)
 <div class="correction-modal" id="newHealthFormModal" aria-hidden="true">
     <div class="correction-card">
         <div class="correction-head">
@@ -3497,6 +3503,7 @@
         </form>
     </div>
 </div>
+@endif
 
 @if($canViewPullout)
 <div class="correction-modal" id="pulloutRequestModal" aria-hidden="true">

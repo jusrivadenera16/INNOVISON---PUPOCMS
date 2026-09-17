@@ -302,12 +302,25 @@
 
     .profile-dashboard .widget-card {
         display: contents;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
     }
 
     .profile-dashboard .widget-card > form,
     .profile-dashboard .widget-card > .profile-readonly-content,
     .profile-dashboard .profile-sections-grid {
         display: contents;
+    }
+
+    .profile-dashboard .profile-readonly-content {
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
     }
 
     .profile-dashboard .profile-card-head {
@@ -734,7 +747,7 @@
     }
 
     .profile-dashboard .profile-sections-grid > .profile-column-stack:first-child {
-        grid-column: 2;
+        grid-column: 1;
         grid-row: 1;
     }
 

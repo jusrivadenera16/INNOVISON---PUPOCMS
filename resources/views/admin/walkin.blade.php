@@ -10653,6 +10653,8 @@
     $canRegisterPatient = optional(auth()->user())->canAccessPermission('walkin.register_patient') ?? false;
     $canEncodeAssessment = optional(auth()->user())->canAccessPermission('walkin.encode_assessment') ?? false;
     $canReviewFinalSubmission = optional(auth()->user())->canAccessPermission('walkin.review_submission') ?? false;
+    $canReferenceLookup = optional(auth()->user())->canAccessPermission('walkin.reference_lookup') ?? false;
+    $canEditInformation = optional(auth()->user())->canAccessPermission('walkin.edit_information') ?? false;
     $canViewEmployeeRecords = optional(auth()->user())->canAccessPermission('walkin.employee_view') ?? false;
     $canLookupEmployeeRecords = optional(auth()->user())->canAccessPermission('walkin.employee_lookup') ?? false;
     $canApproveFinalReview = optional(auth()->user())->canAccessPermission('walkin.final_review') ?? false;
@@ -10714,7 +10716,7 @@
             </a>
             @endif
 
-            @if($canEncodeAssessment || $canReviewFinalSubmission)
+            @if($canEncodeAssessment || $canReviewFinalSubmission || $canReferenceLookup)
                 {{-- Applicants card — opens the reference number modal --}}
                 <a href="#" class="intake-option-link" id="openApplicantRefModal">
                     <div class="intake-option-card intake-option-applicant {{ $currentMode === 'applicant' ? 'is-active' : '' }}">
@@ -10803,6 +10805,12 @@
                             <strong>Final Review</strong>
                         </button>
                         @endif
+                        @if($canReferenceLookup)
+                        <button type="button" class="applicant-workflow-card" id="btnStartApplicantReferenceLookup">
+                            <x-outline-icon name="magnifying-glass" />
+                            <strong>Reference Lookup</strong>
+                        </button>
+                        @endif
                     </div>
 
                     <button type="button" id="btnShowApplicantRefInput" class="applicant-ref-toggle-btn" style="max-width:360px; display:none;">
@@ -10821,10 +10829,12 @@
                                     <path d="M16 4C10.886719 4 6.617188 7.160156 4.875 11.625L6.71875 12.375C8.175781 8.640625 11.710938 6 16 6C19.242188 6 22.132813 7.589844 23.9375 10H20V12H27V5H25V8.09375C22.808594 5.582031 19.570313 4 16 4ZM25.28125 19.625C23.824219 23.359375 20.289063 26 16 26C12.722656 26 9.84375 24.386719 8.03125 22H12V20H5V27H7V23.90625C9.1875 26.386719 12.394531 28 16 28C21.113281 28 25.382813 24.839844 27.125 20.375Z"></path>
                                 </svg>
                             </button>
-                            <button type="button" class="applicant-final-review-btn" id="btnFinalReviewManualLookup">
-                                <x-outline-icon name="magnifying-glass" />
-                                <span>Reference Lookup</span>
-                            </button>
+                            @if($canReferenceLookup)
+                                <button type="button" class="applicant-final-review-btn" id="btnFinalReviewManualLookup">
+                                    <x-outline-icon name="magnifying-glass" />
+                                    <span>Reference Lookup</span>
+                                </button>
+                            @endif
                         </div>
                         <div id="applicantFinalReviewRows">
                             @forelse($finalReviewApplicants as $reviewApplicant)
@@ -10984,10 +10994,12 @@
                     </div>
 
                     <div class="applicant-file-actions" id="applicantFileActions">
-                        <button type="button" id="btnViewApplicantInformation" class="applicant-documents-trigger applicant-file-action">
-                            <x-outline-icon name="user-circle" />
-                            <span data-information-button-label>Health Information Form</span>
-                        </button>
+                        @if($canEditInformation)
+                            <button type="button" id="btnViewApplicantInformation" class="applicant-documents-trigger applicant-file-action">
+                                <x-outline-icon name="user-circle" />
+                                <span data-information-button-label>Health Information Form</span>
+                            </button>
+                        @endif
                         <button type="button" id="btnViewMedicalCondition" class="applicant-documents-trigger applicant-file-action">
                             <x-outline-icon name="clipboard-document-list" />
                             <span data-condition-button-label>Medical Condition</span>
@@ -11536,10 +11548,12 @@
                                     <h4 id="healthInfoSectionTitle">Health Information Form</h4>
                                 </div>
                                 <div class="health-info-actions">
-                                    <button type="button" id="healthInfoEditBtn" class="health-info-edit-btn">
-                                        <x-outline-icon name="pencil-square" />
-                                        <span>Edit</span>
-                                    </button>
+                                    @if($canEditInformation)
+                                        <button type="button" id="healthInfoEditBtn" class="health-info-edit-btn">
+                                            <x-outline-icon name="pencil-square" />
+                                            <span>Edit</span>
+                                        </button>
+                                    @endif
                                     <button type="button" id="healthInfoCancelBtn" class="health-info-cancel-btn" style="display: none;">Cancel</button>
                                     <button type="button" id="healthInfoSaveBtn" class="health-info-save-btn" style="display: none;">Save</button>
                                 </div>
@@ -13522,6 +13536,7 @@
         const workflowChoices = document.getElementById('applicantWorkflowChoices');
         const startEncodingBtn = document.getElementById('btnStartApplicantEncoding');
         const startFinalReviewBtn = document.getElementById('btnStartApplicantFinalReview');
+        const startReferenceLookupBtn = document.getElementById('btnStartApplicantReferenceLookup');
         const finalReviewList = document.getElementById('applicantFinalReviewList');
         const finalReviewRows = document.getElementById('applicantFinalReviewRows');
         const finalReviewSearch = document.getElementById('applicantFinalReviewSearch');
@@ -13950,19 +13965,28 @@
             currentApplicantWorkflow = workflow;
             const isEncode = workflow === 'encode';
             const isFinalReview = workflow === 'final_review';
+            const isReferenceLookup = workflow === 'reference_lookup';
 
             if (modalShell) {
                 modalShell.classList.toggle('is-encode-workflow', isEncode);
                 modalShell.classList.toggle('is-final-review-workflow', isFinalReview);
             }
-            if (lookupModalTitle) lookupModalTitle.textContent = isEncode ? 'Encode Assessment' : (isFinalReview ? 'Final Review' : 'Applicants');
+            if (lookupModalTitle) lookupModalTitle.textContent = isEncode
+                ? 'Encode Assessment'
+                : (isFinalReview ? 'Final Review' : (isReferenceLookup ? 'Reference Lookup' : 'Applicants'));
             if (lookupModalSubtitle) lookupModalSubtitle.textContent = isEncode
                 ? "Record the applicant's vital signs during the nurse review."
-                : (isFinalReview ? 'Review encoded applicants and approve or mark pending compliance.' : "Enter the applicant's reference number to look up the record.");
-            if (lookupModalEntryTitle) lookupModalEntryTitle.textContent = isEncode ? 'Assessment Encoding' : (isFinalReview ? 'Encoded Applicants' : 'Applicant Workflow');
+                : (isFinalReview
+                    ? 'Review encoded applicants and approve or mark pending compliance.'
+                    : (isReferenceLookup ? 'Look up an applicant by reference number.' : "Enter the applicant's reference number to look up the record."));
+            if (lookupModalEntryTitle) lookupModalEntryTitle.textContent = isEncode
+                ? 'Assessment Encoding'
+                : (isFinalReview ? 'Encoded Applicants' : (isReferenceLookup ? 'Reference Lookup' : 'Applicant Workflow'));
             if (lookupModalEntrySubtitle) lookupModalEntrySubtitle.textContent = isEncode
                 ? 'Use the applicant reference number to open the record for physical assessment.'
-                : (isFinalReview ? 'Select a ready applicant below or use reference lookup.' : 'Choose encoding for the first station or final review for approval.');
+                : (isFinalReview
+                    ? 'Select a ready applicant below or use reference lookup.'
+                    : (isReferenceLookup ? 'Enter the reference number from the Admission System.' : 'Choose encoding for the first station or final review for approval.'));
             if (lookupModalEntryButtonText) lookupModalEntryButtonText.textContent = isEncode ? 'Input Reference Number' : 'Reference Lookup';
             if (lookupModalHelpCopy) lookupModalHelpCopy.innerHTML = isEncode
                 ? 'Encode only the physical assessment here. Final approval and PUPTAS sync remain in <strong>Final Review</strong>.'
@@ -17297,6 +17321,12 @@
 
         if (startFinalReviewBtn) {
             startFinalReviewBtn.addEventListener('click', showFinalReviewList);
+        }
+
+        if (startReferenceLookupBtn) {
+            startReferenceLookupBtn.addEventListener('click', function () {
+                showApplicantReferenceEntry('reference_lookup');
+            });
         }
 
         if (finalReviewManualLookup) {

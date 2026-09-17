@@ -74,4 +74,22 @@ class ModulePermissionServiceTest extends TestCase
             $service->normalize(['walkin.view', 'walkin.employee_lookup'])
         );
     }
+
+    public function test_reference_lookup_edit_and_new_health_form_actions_require_their_parents(): void
+    {
+        $service = new ModulePermissionService();
+
+        $this->assertSame(
+            ['walkin.view', 'walkin.reference_lookup', 'walkin.edit_information'],
+            $service->normalize(['walkin.view', 'walkin.reference_lookup', 'walkin.edit_information'])
+        );
+        $this->assertSame(
+            ['health_records.view', 'health_records.request_health_form'],
+            $service->normalize(['health_records.view', 'health_records.request_health_form'])
+        );
+        $this->assertSame(
+            ['walkin.view'],
+            $service->normalize(['walkin.view', 'walkin.edit_information'])
+        );
+    }
 }

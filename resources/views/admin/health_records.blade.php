@@ -7355,6 +7355,7 @@
         $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
         $basePrefix = $role === \App\Models\User::ROLE_ADMIN ? '/assistant' : '/admin';
         $canSignHealth = $role === \App\Models\User::ROLE_SUPERADMIN;
+        $canRequestNewHealthForm = optional(auth()->user())->canAccessPermission('health_records.request_health_form') ?? false;
         $highlightHealthId = trim((string) request()->query('highlight_health', ''));
     @endphp
 
@@ -7668,7 +7669,7 @@
                     </svg>
                     <span>Filter</span>
                 </button>
-                @if (in_array(strtolower((string) ($userTypeFilter ?? '')), ['student', 'faculty', 'admin'], true))
+                @if ($canRequestNewHealthForm && in_array(strtolower((string) ($userTypeFilter ?? '')), ['student', 'faculty', 'admin'], true))
                     <div class="health-more-actions" id="healthMoreActions">
                         <button
                             type="button"
@@ -8766,7 +8767,7 @@
         </form>
     </div>
 </div>
-@if (in_array(strtolower((string) ($userTypeFilter ?? '')), ['student', 'faculty', 'admin'], true))
+@if ($canRequestNewHealthForm && in_array(strtolower((string) ($userTypeFilter ?? '')), ['student', 'faculty', 'admin'], true))
     @php
         $bulkRequestUserType = strtolower((string) ($userTypeFilter ?? ''));
         $bulkRequestIsStudent = $bulkRequestUserType === 'student';
