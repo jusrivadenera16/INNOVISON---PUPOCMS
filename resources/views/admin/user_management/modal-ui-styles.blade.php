@@ -216,13 +216,13 @@
     }
     #settingsModal .um-module-expand {
         display:inline-flex; width:30px; height:30px; margin-right:10px; padding:0; align-items:center; justify-content:center;
-        border:1px solid #e2e8f0; border-radius:7px; background:#fff; color:#70131b; cursor:pointer;
+        border:1px solid #e2e8f0; border-radius:7px; background:#fff; color:#facc15; cursor:pointer;
         transition:border-color .18s ease,background .18s ease,transform .18s ease;
     }
     #settingsModal .um-module-expand svg { width:15px; height:15px; transition:transform .18s ease; }
     #settingsModal .um-module-expand:hover,
     #settingsModal .um-module-expand:focus-visible {
-        border-color:#8f2230; background:#fef2f2; outline:none;
+        border-color:#facc15; background:#facc15; color:#70131b; outline:none;
     }
     #settingsModal .um-module-expand[aria-expanded="true"] svg { transform:rotate(180deg); }
     #settingsModal .um-module-expand:disabled { cursor:not-allowed; opacity:.45; }
@@ -271,7 +271,7 @@
     }
     #settingsModal .um-superadmin-access-summary {
         display:grid; grid-template-columns:30px minmax(0,1fr); gap:10px; margin-top:10px; padding:10px;
-        border:1px solid #ead8b1; border-radius:8px; background:#fffbeb;
+        border:1px solid #475569; border-radius:8px; background:#1f2937; color:#f8fafc;
     }
     #settingsModal .um-superadmin-summary-icon {
         display:inline-flex; width:30px; height:30px; align-items:center; justify-content:center;
@@ -279,12 +279,12 @@
     }
     #settingsModal .um-superadmin-summary-icon svg { width:16px; height:16px; }
     #settingsModal .um-superadmin-access-summary strong {
-        display:block; color:#70131b; font-size:10px; font-weight:900;
+        display:block; color:#ffffff; font-size:10px; font-weight:900;
     }
     #settingsModal .um-superadmin-access-list { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
     #settingsModal .um-superadmin-access-list span {
-        display:inline-flex; min-height:20px; align-items:center; padding:3px 6px; border:1px solid #f0dfbb;
-        border-radius:5px; background:#fff; color:#78350f; font-size:8px; font-weight:750;
+        display:inline-flex; min-height:20px; align-items:center; padding:3px 6px; border:1px solid #64748b;
+        border-radius:5px; background:#111827; color:#f8fafc; font-size:8px; font-weight:750;
     }
     #settingsModal .um-module-preview-note {
         margin:10px 0 0; color:#92400e; font-size:10px; font-weight:750;
@@ -405,19 +405,27 @@
     }
     html[data-theme="dark"] #settingsModal .um-module-expand,
     html[data-theme="dark"] #settingsModal .um-action-check {
-        border-color:rgba(148,163,184,.28); background:#172033; color:#fecaca;
+        border-color:rgba(148,163,184,.28); background:#172033; color:#facc15;
+    }
+    html[data-theme="dark"] #settingsModal .um-module-expand:hover,
+    html[data-theme="dark"] #settingsModal .um-module-expand:focus-visible {
+        border-color:#facc15; background:#facc15; color:#70131b;
     }
     html[data-theme="dark"] #settingsModal .um-action-permission { border-color:rgba(148,163,184,.14); }
     html[data-theme="dark"] #settingsModal .um-action-permission:has(input:checked) { background:#23171c; }
     html[data-theme="dark"] #settingsModal .um-action-permission.is-locked { background:#2a2114; }
     html[data-theme="dark"] #settingsModal .um-superadmin-access-summary,
     html[data-theme="dark"] #settingsModal .um-module-save-warning {
-        border-color:rgba(245,158,11,.28); background:#2a2114; color:#fde68a;
+        border-color:#475569; background:#1f2937; color:#f8fafc;
     }
-    html[data-theme="dark"] #settingsModal .um-superadmin-access-summary strong,
-    html[data-theme="dark"] #settingsModal .um-module-save-warning span { color:#fde68a; }
+    html[data-theme="dark"] #settingsModal .um-superadmin-access-summary strong {
+        color:#ffffff;
+    }
+    html[data-theme="dark"] #settingsModal .um-module-save-warning span {
+        color:#fde68a;
+    }
     html[data-theme="dark"] #settingsModal .um-superadmin-access-list span {
-        border-color:rgba(245,158,11,.22); background:#17130c; color:#fef3c7;
+        border-color:#64748b; background:#111827; color:#f8fafc;
     }
     html[data-theme="dark"] #settingsModal .um-actions {
         border-color:rgba(148,163,184,.18); background:rgba(17,24,39,.96);

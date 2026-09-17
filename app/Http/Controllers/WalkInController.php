@@ -67,6 +67,39 @@ class WalkInController extends Controller
         );
     }
 
+    private function hasCompletedHealthForm(?HealthProfile $healthProfile, ?User $user): bool
+    {
+        if (!$healthProfile && !$user) {
+            return false;
+        }
+
+        return HealthFormSubmission::query()
+            ->whereIn('status', [
+                HealthFormSubmission::STATUS_SUBMITTED,
+                HealthFormSubmission::STATUS_APPROVED,
+                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                'Approved',
+            ])
+            ->where(function ($query) {
+                $query->whereNotNull('submitted_at')
+                    ->orWhereNotNull('approved_at');
+            })
+            ->where(function ($query) use ($healthProfile, $user) {
+                if ($healthProfile) {
+                    $query->where('health_profile_id', $healthProfile->id);
+                }
+
+                if ($user) {
+                    if ($healthProfile) {
+                        $query->orWhere('user_id', $user->id);
+                    } else {
+                        $query->where('user_id', $user->id);
+                    }
+                }
+            })
+            ->exists();
+    }
+
     private function resolveClearanceTargetForWorkflow(
         ?string $category,
         string $sourceWorkflow,
@@ -2011,15 +2044,43 @@ class WalkInController extends Controller
             ], 404);
         }
 
-        if (!$profile->review_started_at) {
-            $profile->review_started_at = now();
-            $profile->review_started_by_user_id = auth()->id();
-            $profile->save();
-        }
+        $profile->review_started_at = now();
+        $profile->review_closed_at = null;
+        $profile->review_started_by_user_id = auth()->id();
+        $profile->save();
 
         return response()->json([
             'success' => true,
             'review_started_at' => optional($profile->review_started_at)->toIso8601String(),
+        ]);
+    }
+
+    public function markFinalReviewTimeOut(Request $request)
+    {
+        $validated = $request->validate([
+            'reference_number' => ['required', 'string', 'max:120'],
+        ]);
+
+        $referenceNumber = trim((string) $validated['reference_number']);
+
+        $profile = HealthProfile::query()
+            ->where('reference_number', $referenceNumber)
+            ->latest()
+            ->first();
+
+        if (!$profile) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Health profile not found for final review time-out.',
+            ], 404);
+        }
+
+        $profile->review_closed_at = now();
+        $profile->save();
+
+        return response()->json([
+            'success' => true,
+            'review_closed_at' => optional($profile->review_closed_at)->toIso8601String(),
         ]);
     }
 
@@ -2337,6 +2398,7 @@ class WalkInController extends Controller
             if ($healthProfile) {
                 $student->setRelation('healthProfile', $healthProfile);
             }
+            $hasCompletedHealthForm = $this->hasCompletedHealthForm($healthProfile, $student);
             $dependentProfile = $isEmployeeLookupScope && $this->isDependentHealthProfileUser($student)
                 ? $student->dependentProfile
                 : null;
@@ -2441,6 +2503,7 @@ class WalkInController extends Controller
                     'approved_at' => $resolvedApprovedAt,
                     'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
                     'health_profile_id' => optional($healthProfile)->id,
+                    'has_completed_health_form' => $hasCompletedHealthForm,
                     'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
                     'medical_certificate_result' => $medicalCertificateResult,
                     'medical_certificate_findings_details' => $medicalCertificateDetails,
@@ -2501,6 +2564,7 @@ class WalkInController extends Controller
                 'approved_at' => $resolvedApprovedAt,
                 'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
                 'health_profile_id' => optional($healthProfile)->id,
+                'has_completed_health_form' => $hasCompletedHealthForm,
                 'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
                 'medical_certificate_result' => $medicalCertificateResult,
                 'medical_certificate_findings_details' => $medicalCertificateDetails,
@@ -3905,6 +3969,15 @@ PROMPT;
                 $idpStudentId = trim((string) ($student->student_id ?? $localOnlyProfile?->student_id ?? ''));
                 $studentId = $idpStudentId !== '' ? $idpStudentId : $referenceNumber;
             }
+
+            if (!$isLocalEmployeeRequest && !$this->hasCompletedHealthForm($localOnlyProfile, $student)) {
+                return response()->json([
+                    'success' => false,
+                    'code' => 'health_form_not_completed',
+                    'message' => 'This applicant has not completed the Health Form yet. Please ask the applicant to submit the form before proceeding to Final Review.',
+                ], 422);
+            }
+
             // Save the local decision first; PUPTAS sync happens after the DB transaction.
             $webhookResult = $isLocalOnlyApproval
                 ? [
@@ -4016,6 +4089,7 @@ PROMPT;
                     : null;
                 $approvalDate = $hasPendingFinding ? null : now();
                 $profile->verified_at = $approvalDate;
+                $profile->review_closed_at = now();
                 $profile->approved_by_user_id = $hasPendingFinding ? null : auth()->id();
                 $profile->puptas_sync_status = null;
                 $profile->puptas_synced_at = null;
@@ -4325,6 +4399,7 @@ PROMPT;
                     $profile->clearance_status = 'Fully Cleared';
                     $profile->documents_valid = true;
                     $profile->verified_at = now();
+                    $profile->review_closed_at = now();
                     $profile->approved_by_user_id = auth()->id();
                     $profile->pending_reason = null;
                     $hasAssessmentValue = true;

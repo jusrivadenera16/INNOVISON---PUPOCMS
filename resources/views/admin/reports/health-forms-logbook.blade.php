@@ -510,7 +510,7 @@
 <div class="logbook-shell">
     <div class="logbook-head">
         <div>
-            <h1 class="logbook-title">Health Form Logbook</h1>
+            <h1 class="logbook-title">Health Form Record Logs</h1>
             <p class="logbook-copy">Track applicant health form visits from Final Review time-in to approval time-out.</p>
         </div>
         <div style="display: flex; gap: 10px;">

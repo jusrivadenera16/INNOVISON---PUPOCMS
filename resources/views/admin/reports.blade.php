@@ -1429,7 +1429,7 @@
             <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
             <span class="report-card-icon"><x-outline-icon name="clipboard-document-list" /></span>
             <div>
-                <div class="report-main-title">Digital Logbook</div>
+                <div class="report-main-title">Clinic Records</div>
                 <p class="report-card-copy">Monitor clinic treatments, visit logs, and submitted form activity.</p>
             </div>
         </a>

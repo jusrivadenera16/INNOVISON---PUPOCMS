@@ -2156,7 +2156,7 @@
         }
     };
 
-    const openSettingsFromRow = (row) => {
+    const openSettingsFromRow = (row, onboardingOptions = {}) => {
         if (!row) {
             return;
         }
@@ -2196,7 +2196,9 @@
             }
             return 'admin_clinic_staff';
         })();
-        detailRole.value = normalizedRole;
+        const onboardingRole = onboardingOptions.role
+            || (!canEdit && canOnboard ? 'admin_clinic_staff' : normalizedRole);
+        detailRole.value = onboardingRole;
         detailRole.dataset.displayRoleLabel = row.dataset.roleLabel === 'System Developer'
             ? 'System Developer'
             : '';
@@ -2208,9 +2210,11 @@
                 return {};
             }
         })();
-        const savedModulePermissions = Array.isArray(meta.module_permissions)
-            ? meta.module_permissions
+        const inheritedModulePermissions = Array.isArray(onboardingOptions.modulePermissions)
+            ? onboardingOptions.modulePermissions
             : null;
+        const savedModulePermissions = inheritedModulePermissions
+            ?? (Array.isArray(meta.module_permissions) ? meta.module_permissions : null);
         const originalRole = String(meta.idp_role || '').trim();
         const normalizedOriginalRole = originalRole.toLowerCase();
         const normalizedSource = String(row.dataset.source || '').toLowerCase();
@@ -2347,7 +2351,7 @@
             deleteAdminHubForm.style.display = 'none';
         }
         if (!canEdit && canOnboard) {
-            detailRole.value = 'admin_clinic_staff';
+            detailRole.value = onboardingRole;
             if (detailAccessLevel) {
                 detailAccessLevel.value = 'designee';
             }
@@ -2605,14 +2609,17 @@
     onboardContinue?.addEventListener('click', () => {
         if (!selectedLookupRow) return;
 
-        const selectedRole = document.querySelector('input[name="lookup_role"]:checked')?.value;
+        const selectedRole = document.querySelector('input[name="lookup_role"]:checked')?.value || 'admin_clinic_staff';
+        const selectedModulePermissions = moduleAccessPreview
+            ? Array.from(moduleAccessPreview.querySelectorAll('[data-module-permission]:checked, [data-module-action]:checked'))
+                .map((input) => input.value)
+            : [];
         restoreLookupModuleAccess();
         lookupModal.classList.remove('show');
-        openSettingsFromRow(selectedLookupRow);
-        if (selectedRole && detailRole) {
-            detailRole.value = selectedRole;
-            detailRole.dispatchEvent(new Event('change'));
-        }
+        openSettingsFromRow(selectedLookupRow, {
+            role: selectedRole,
+            modulePermissions: selectedModulePermissions,
+        });
     });
 
     if (lookupModal && lookupSearchField && lookupSearchField.value.trim() !== '') {

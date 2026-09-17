@@ -370,10 +370,6 @@
                     <span>Online Consultation</span>
                     <x-outline-icon name="chevron-right" />
                 </a>
-                <a href="{{ route('triage-survey.index') }}">
-                    <span>Triage Survey</span>
-                    <x-outline-icon name="chevron-right" />
-                </a>
             </div>
         </details>
 

@@ -216,8 +216,8 @@
 
     .health-profile-wrap .profile-hero-layout {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
-        gap: 18px;
+        grid-template-columns: minmax(0, 1fr) minmax(190px, 220px);
+        gap: 14px;
         margin-top: 18px;
     }
 
@@ -263,17 +263,17 @@
 
     .health-profile-wrap .profile-quick-row {
         display: grid;
-        grid-template-columns: minmax(146px, 1.25fr) minmax(86px, .8fr) minmax(72px, .65fr) minmax(188px, 1.55fr) minmax(156px, 1.25fr);
-        gap: 12px;
+        grid-template-columns: minmax(125px, 1.4fr) minmax(55px, .55fr) minmax(50px, .5fr) minmax(145px, 1.45fr) minmax(115px, 1.15fr);
+        gap: 8px;
         margin-top: 16px;
     }
 
     .health-profile-wrap .profile-quick-item {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         min-width: 0;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 800;
     }
 
@@ -288,9 +288,9 @@
     }
 
     .health-profile-wrap .profile-quick-icon {
-        width: 28px;
-        height: 28px;
-        border-radius: 9px;
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
         background: #f8fafc;
         border: 1px solid #e2e8f0;
         color: #70131B;
@@ -307,34 +307,35 @@
 
     .health-profile-wrap .profile-quick-item strong {
         display: block;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 900;
+        line-height: 1.2;
         overflow-wrap: anywhere;
     }
 
     .health-profile-wrap .profile-quick-item:nth-child(4) strong,
     .health-profile-wrap .profile-quick-item:nth-child(5) strong {
-        white-space: nowrap;
-        word-break: normal;
-        overflow-wrap: normal;
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: anywhere;
     }
 
     .health-profile-wrap .profile-status-card {
-        min-height: 82px;
+        min-height: 78px;
         border-radius: 14px;
-        padding: 12px;
+        padding: 8px 10px;
         border: 1px solid #bbf7d0;
         background: linear-gradient(135deg, #f0fdf4, #ecfeff);
         display: flex;
-        gap: 10px;
+        gap: 8px;
         align-items: center;
-        max-width: 285px;
+        max-width: 220px;
         justify-self: end;
     }
 
     .health-profile-wrap .profile-status-shield {
-        width: 38px;
-        height: 38px;
+        width: 34px;
+        height: 34px;
         border-radius: 999px;
         background: #dcfce7;
         color: #16a34a;
@@ -350,9 +351,9 @@
     }
 
     .health-profile-wrap .profile-status-card-value {
-        margin: 0;
+        margin: 0 0 4px;
         color: #16a34a;
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 900;
     }
 
@@ -1533,7 +1534,7 @@
         color: #ffffff;
     }
 
-    @media (max-width: 1024px) {
+    @media (max-width: 900px) {
         .health-profile-wrap .profile-hero-layout { grid-template-columns: 1fr; }
         .health-profile-wrap .profile-status-card { max-width: none; justify-self: stretch; }
         .health-profile-wrap .profile-quick-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }

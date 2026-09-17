@@ -385,10 +385,10 @@
     #lookupModuleAccessSlot .um-module-check { display: inline-flex; width: 17px; height: 17px; align-items: center; justify-content: center; border: 1px solid #cbd5e1; border-radius: 5px; color: transparent; background: #fff; }
     #lookupModuleAccessSlot .um-module-check svg { width: 11px !important; height: 11px !important; stroke-width: 2.5; }
     #lookupModuleAccessSlot .um-module-option input:checked ~ .um-module-check { border-color: #8f1020; color: #fff; background: #8f1020; }
-    #lookupModuleAccessSlot .um-module-expand { display: inline-flex; width: 29px; height: 29px; margin-right: 8px; padding: 0; align-items: center; justify-content: center; border: 1px solid #e2e8f0; border-radius: 6px; color: #70131b; background: #fff; cursor: pointer; }
+    #lookupModuleAccessSlot .um-module-expand { display: inline-flex; width: 29px; height: 29px; margin-right: 8px; padding: 0; align-items: center; justify-content: center; border: 1px solid #e2e8f0; border-radius: 6px; color: #facc15; background: #fff; cursor: pointer; }
     #lookupModuleAccessSlot .um-module-expand svg { width: 14px !important; height: 14px !important; transition: transform .18s ease; }
     #lookupModuleAccessSlot .um-module-expand:hover,
-    #lookupModuleAccessSlot .um-module-expand:focus-visible { border-color: #8f1020; color: #70131b; background: #ffd21f; outline: none; }
+    #lookupModuleAccessSlot .um-module-expand:focus-visible { border-color: #ffd21f; color: #70131b; background: #ffd21f; outline: none; }
     #lookupModuleAccessSlot .um-module-expand[aria-expanded="true"] svg { transform: rotate(180deg); }
     #lookupModuleAccessSlot .um-module-actions { padding: 2px 10px 10px 46px; border-top: 1px solid #f1f5f9; background: #f8fafc; }
     #lookupModuleAccessSlot .um-module-actions[hidden] { display: none; }
@@ -406,12 +406,12 @@
     #lookupModuleAccessSlot .um-action-lock { display: inline-flex; width: 19px; height: 19px; align-items: center; justify-content: center; border-radius: 50%; color: #fff; background: #70131b; }
     #lookupModuleAccessSlot .um-action-lock svg { width: 11px !important; height: 11px !important; }
     #lookupModuleAccessSlot .um-locked-badge { display: inline-flex; min-height: 19px; align-items: center; padding: 3px 5px; border-radius: 4px; color: #92400e; background: #fef3c7; font-size: .58rem; font-weight: 900; text-transform: uppercase; }
-    #lookupModuleAccessSlot .um-superadmin-access-summary { display: grid; grid-template-columns: 29px minmax(0, 1fr); gap: 9px; margin-top: 9px; padding: 9px; border: 1px solid #ead8b1; border-radius: 7px; color: #78350f; background: #fffbeb; }
+    #lookupModuleAccessSlot .um-superadmin-access-summary { display: grid; grid-template-columns: 29px minmax(0, 1fr); gap: 9px; margin-top: 9px; padding: 9px; border: 1px solid #475569; border-radius: 7px; color: #f8fafc; background: #1f2937; }
     #lookupModuleAccessSlot .um-superadmin-summary-icon { display: inline-flex; width: 29px; height: 29px; align-items: center; justify-content: center; border-radius: 7px; color: #fff; background: #70131b; }
     #lookupModuleAccessSlot .um-superadmin-summary-icon svg { width: 15px !important; height: 15px !important; }
-    #lookupModuleAccessSlot .um-superadmin-access-summary strong { display: block; color: #70131b; font-size: .7rem; font-weight: 900; }
+    #lookupModuleAccessSlot .um-superadmin-access-summary strong { display: block; color: #ffffff; font-size: .7rem; font-weight: 900; }
     #lookupModuleAccessSlot .um-superadmin-access-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
-    #lookupModuleAccessSlot .um-superadmin-access-list span { display: inline-flex; min-height: 18px; align-items: center; padding: 3px 5px; border: 1px solid #f0dfbb; border-radius: 4px; color: #78350f; background: #fff; font-size: .58rem; font-weight: 750; }
+    #lookupModuleAccessSlot .um-superadmin-access-list span { display: inline-flex; min-height: 18px; align-items: center; padding: 3px 5px; border: 1px solid #64748b; border-radius: 4px; color: #f8fafc; background: #111827; font-size: .58rem; font-weight: 750; }
     .access-onboard-footer { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 12px 17px; border-top: 1px solid #eee7e8; }
     .access-onboard-footer small { color: #818692; font-size: .71rem; }
     .access-onboard-footer__actions { display: flex; gap: 8px; }
@@ -941,9 +941,12 @@
     html[data-theme="dark"] #lookupModuleAccessSlot .um-action-permission { border-top-color: #2f3c4e; color: #e7edf6; }
     html[data-theme="dark"] #lookupModuleAccessSlot .um-module-title > span { color: #cbd5e1; background: #263347; }
     html[data-theme="dark"] #lookupModuleAccessSlot .um-module-icon { color: #fecdd3; background: #3a1d28; }
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-superadmin-access-summary { border-color: rgba(245, 158, 11, .28); color: #fde68a; background: #2a2114; }
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-superadmin-access-summary strong { color: #fde68a; }
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-superadmin-access-list span { border-color: rgba(245, 158, 11, .22); color: #fef3c7; background: #17130c; }
+    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-expand { color: #facc15; }
+    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-expand:hover,
+    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-expand:focus-visible { border-color: #ffd21f; color: #70131b; background: #ffd21f; }
+    html[data-theme="dark"] #lookupModuleAccessSlot .um-superadmin-access-summary { border-color: #475569; color: #f8fafc; background: #1f2937; }
+    html[data-theme="dark"] #lookupModuleAccessSlot .um-superadmin-access-summary strong { color: #ffffff; }
+    html[data-theme="dark"] #lookupModuleAccessSlot .um-superadmin-access-list span { border-color: #64748b; color: #f8fafc; background: #111827; }
     html[data-theme="dark"] .access-summary-modal { background: rgba(2, 6, 23, .72); }
     html[data-theme="dark"] .access-summary-modal__eyebrow { color: #fda4af; }
 

@@ -692,7 +692,7 @@
 <div class="treatment-record-shell">
     @include('admin.partials.report-breadcrumb', ['items' => [
         ['label' => 'Reports', 'url' => $reportsRootUrl],
-        ['label' => 'Digital Logbook', 'url' => $reportsHomeUrl],
+        ['label' => 'Clinic Records', 'url' => $reportsHomeUrl],
         ['label' => 'Daily Treatment'],
     ]])
     <header class="treatment-record-header">

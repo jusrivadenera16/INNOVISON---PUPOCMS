@@ -1150,6 +1150,16 @@
         white-space: nowrap;
     }
 
+    html[data-theme="dark"] .logbook-pagination .premium-select-option:hover,
+    html[data-theme="dark"] .logbook-pagination .premium-select-option:focus-visible,
+    html[data-theme="dark"] .logbook-pagination .premium-select-option.is-selected:hover,
+    html[data-theme="dark"] .logbook-pagination .premium-select-option.is-selected:focus-visible {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+    }
+
     html[data-theme="dark"] .logbook-pagination {
         border-color: rgba(250, 204, 21, .18);
         background: #111827 !important;

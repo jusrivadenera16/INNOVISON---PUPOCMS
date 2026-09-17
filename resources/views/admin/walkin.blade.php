@@ -10545,6 +10545,57 @@
             position: static;
         }
     }
+
+    .applicant-final-review-error-person {
+        display: grid;
+        gap: 4px;
+        width: min(100%, 340px);
+        margin: 14px auto 2px;
+        padding: 12px 14px;
+        border: 1px solid rgba(112, 19, 27, .18);
+        border-radius: 10px;
+        background: #fff8f8;
+        text-align: left;
+    }
+
+    .applicant-final-review-error-person[hidden] {
+        display: none;
+    }
+
+    .applicant-final-review-error-person > span {
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .applicant-final-review-error-person > strong {
+        margin: 0;
+        color: #111827;
+        font-size: 17px;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+    }
+
+    #applicantFinalReviewErrorOverlay.is-health-form-missing .clinic-error-card > p {
+        margin-top: 10px;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    html[data-theme="dark"] .applicant-final-review-error-person {
+        border-color: rgba(250, 204, 21, .28);
+        background: #182334;
+    }
+
+    html[data-theme="dark"] .applicant-final-review-error-person > span {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .applicant-final-review-error-person > strong {
+        color: #f8fafc;
+    }
 </style>
 @endpush
 
@@ -11587,6 +11638,10 @@
     <div class="clinic-success-overlay" id="applicantFinalReviewErrorOverlay" role="alertdialog" aria-modal="true" aria-labelledby="applicantFinalReviewErrorTitle" aria-describedby="applicantFinalReviewErrorMessage" aria-hidden="true">
         <div class="clinic-success-card clinic-error-card">
             <strong id="applicantFinalReviewErrorTitle">Error</strong>
+            <div class="applicant-final-review-error-person" id="applicantFinalReviewErrorPerson" hidden>
+                <span>Applicant</span>
+                <strong id="applicantFinalReviewErrorName"></strong>
+            </div>
             <p id="applicantFinalReviewErrorMessage">Please review the required fields before continuing.</p>
             <hr>
             <button type="button" class="clinic-error-continue" data-final-review-error-close><span>Continue</span></button>
@@ -13536,6 +13591,8 @@
         const approvalOverlayMessage = document.getElementById('applicantApprovalOverlayMessage');
         const finalReviewErrorOverlay = document.getElementById('applicantFinalReviewErrorOverlay');
         const finalReviewErrorMessage = document.getElementById('applicantFinalReviewErrorMessage');
+        const finalReviewErrorPerson = document.getElementById('applicantFinalReviewErrorPerson');
+        const finalReviewErrorName = document.getElementById('applicantFinalReviewErrorName');
         const finalReviewConfirmOverlay = document.getElementById('applicantFinalReviewConfirmOverlay');
         const finalReviewConfirmMessage = document.getElementById('applicantFinalReviewConfirmMessage');
         const finalReviewConfirmApprove = document.getElementById('applicantFinalReviewConfirmApprove');
@@ -13567,6 +13624,7 @@
         const finalReviewApplicantsUrl = '{{ url($basePrefix . '/walkin/final-review-applicants') }}';
         const employeeDraftsUrl = '{{ url($basePrefix . '/walkin/employee-drafts') }}';
         const finalReviewTimeInUrl = '{{ url($basePrefix . '/walkin/final-review/time-in') }}';
+        const finalReviewTimeOutUrl = '{{ url($basePrefix . '/walkin/final-review/time-out') }}';
         const saveEncodingUrl = '{{ url($basePrefix . '/walkin/applicant-encoding') }}';
         const saveStudentAssessmentUrl = '{{ url($basePrefix . '/walkin/student-assessment') }}';
         const applicantFinalReviewDraftUrl = '{{ url($basePrefix . '/walkin/applicant-final-review-draft') }}';
@@ -13689,15 +13747,42 @@
 
         function closeFinalReviewErrorModal() {
             if (!finalReviewErrorOverlay) return;
+            const returnToFinalReviewList = finalReviewErrorOverlay.dataset.returnToFinalReviewList === 'true';
             finalReviewErrorOverlay.classList.remove('is-open');
             finalReviewErrorOverlay.setAttribute('aria-hidden', 'true');
+            finalReviewErrorOverlay.classList.remove('is-health-form-missing');
+            delete finalReviewErrorOverlay.dataset.returnToFinalReviewList;
+
+            if (returnToFinalReviewList) {
+                const referenceNumber = currentLookupRef;
+                if (referenceNumber && isFinalReviewWorkflow()) {
+                    markFinalReviewTimeOut(referenceNumber);
+                }
+                resetLookupState();
+                showFinalReviewList();
+            }
         }
 
-        function showFinalReviewErrorModal(message) {
+        function showFinalReviewErrorModal(message, options = {}) {
             if (!finalReviewErrorOverlay) return;
+            const isHealthFormMissing = options.variant === 'health_form_missing';
+            const title = options.title || 'Error';
+            const applicantName = String(options.name || '').trim();
             if (finalReviewErrorMessage) {
                 finalReviewErrorMessage.textContent = String(message || 'Please review the required fields before continuing.').trim();
             }
+            const errorTitle = document.getElementById('applicantFinalReviewErrorTitle');
+            if (errorTitle) {
+                errorTitle.textContent = title;
+            }
+            if (finalReviewErrorPerson) {
+                finalReviewErrorPerson.hidden = !isHealthFormMissing;
+            }
+            if (finalReviewErrorName) {
+                finalReviewErrorName.textContent = applicantName;
+            }
+            finalReviewErrorOverlay.classList.toggle('is-health-form-missing', isHealthFormMissing);
+            finalReviewErrorOverlay.dataset.returnToFinalReviewList = options.returnToFinalReviewList ? 'true' : 'false';
             finalReviewErrorOverlay.classList.add('is-open');
             finalReviewErrorOverlay.setAttribute('aria-hidden', 'false');
             finalReviewErrorOverlay.querySelector('[data-final-review-error-close]')?.focus({ preventScroll: true });
@@ -14253,6 +14338,9 @@
         }
 
         function closeApplicantsModal() {
+            if (isFinalReviewWorkflow() && currentLookupRef) {
+                markFinalReviewTimeOut(currentLookupRef);
+            }
             if (backdrop) backdrop.classList.remove('show');
             closeHealthInfoModal();
             closeMedicalConditionModal();
@@ -15704,6 +15792,23 @@
                     const isLocalEmployeeId = ['local_employee_id', 'local_clinic_id'].includes(data.lookup_source);
                     const isLocalDependentId = data.lookup_source === 'local_dependent_id';
                     const isLocalOnlyLookup = isStudentRecord || isLocalHealthProfile || isLocalEmployeeReference || isLocalEmployeeId || isLocalDependentId;
+                    const hasCompletedHealthForm = data.has_completed_health_form === true
+                        || data.has_completed_health_form === 1
+                        || data.has_completed_health_form === '1';
+
+                    if (isFinalReviewWorkflow() && !isStudentRecord && !isAlreadyApproved && !hasCompletedHealthForm) {
+                        showFinalReviewErrorModal(
+                            'This applicant has not completed the Health Form yet. Please ask the applicant to submit the form before proceeding to Final Review.',
+                            {
+                                title: 'Result Found',
+                                name: applicantName || ref,
+                                variant: 'health_form_missing',
+                                returnToFinalReviewList: true
+                            }
+                        );
+                        return;
+                    }
+
                     const lookupFoundMessage = isLocalHealthProfile
                         ? (data.sync_warning || 'Local health profile found. PUPTAS sync will still depend on a valid Admission reference.')
                         : (isStudentRecord
@@ -16224,7 +16329,16 @@
                     finalReviewConfirmOverlay?.setAttribute('aria-hidden', 'true');
                     pendingFinalReviewApprovalData = null;
                     setFinalReviewConfirmLoading(false);
-                    setStatus('error', data.message || 'Failed to save applicant decision.');
+                    if (data.code === 'health_form_not_completed') {
+                        showFinalReviewErrorModal(data.message, {
+                            title: 'Result Found',
+                            name: currentLookupName || currentLookupRef,
+                            variant: 'health_form_missing',
+                            returnToFinalReviewList: true
+                        });
+                    } else {
+                        setStatus('error', data.message || 'Failed to save applicant decision.');
+                    }
                 }
             })
             .catch(() => {
@@ -16964,6 +17078,25 @@
             });
         }
 
+        function markFinalReviewTimeOut(referenceNumber) {
+            if (!canApproveFinalReview || !referenceNumber || !finalReviewTimeOutUrl) {
+                return Promise.resolve();
+            }
+
+            return fetch(finalReviewTimeOutUrl, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ reference_number: referenceNumber })
+            }).catch(function (error) {
+                console.warn('Unable to mark final review time-out.', error);
+            });
+        }
+
         function buildFinalReviewCard(applicant) {
             const article = document.createElement('article');
             article.className = 'applicant-final-review-card';
@@ -17130,6 +17263,9 @@
 
         if (backToFinalReviewList) {
             backToFinalReviewList.addEventListener('click', function () {
+                if (isFinalReviewWorkflow() && currentLookupRef) {
+                    markFinalReviewTimeOut(currentLookupRef);
+                }
                 resetLookupState();
                 showFinalReviewList();
             });

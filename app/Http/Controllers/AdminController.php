@@ -245,14 +245,7 @@ class AdminController extends Controller
 
         if ($userTypeFilter === 'student') {
             $query->where(function ($builder) use ($realStudentNumberQuery) {
-                $builder->where($realStudentNumberQuery)
-                    ->orWhereHas('user', function ($userQuery) {
-                        $userQuery->where(function ($builder) {
-                            foreach (['user_type', 'user_role', 'idp_role'] as $roleColumn) {
-                                $builder->orWhereRaw("LOWER(COALESCE({$roleColumn}, '')) LIKE ?", ['%student%']);
-                            }
-                        });
-                    });
+                $builder->where($realStudentNumberQuery);
             })
                 ->where(function ($builder) use ($studentNumberPattern, $issuedClearanceStatuses) {
                     $builder->whereIn('clearance_status', $issuedClearanceStatuses)
@@ -271,32 +264,26 @@ class AdminController extends Controller
             $query->where(function ($builder) use ($pendingAdmissionReferenceQuery) {
                 $builder->where($pendingAdmissionReferenceQuery)
                     ->orWhere(function ($missingNumberQuery) {
-                    $missingNumberQuery->where(function ($profileNumberQuery) {
-                        $profileNumberQuery->whereNull('student_number')
-                            ->orWhere('student_number', '')
-                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
-                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
-                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
-                            ->orWhereColumn('student_number', 'reference_number');
-                    })
+                        $missingNumberQuery
+                            ->where(function ($profileNumberQuery) {
+                                $profileNumberQuery->whereNull('student_number')
+                                    ->orWhere('student_number', '')
+                                    ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
+                                    ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
+                                    ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
+                                    ->orWhereColumn('student_number', 'reference_number');
+                            })
                             ->whereDoesntHave('user', function ($userQuery) {
                                 $userQuery->whereNotNull('student_number')
                                     ->where('student_number', '!=', '')
-                                ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
-                                ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
-                                ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%'])
-                                ->where(function ($identityQuery) {
-                                    $identityQuery->whereNull('reference_number')
-                                        ->orWhere('reference_number', '')
-                                        ->orWhereColumn('student_number', '!=', 'reference_number');
+                                    ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
+                                    ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
+                                    ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%'])
+                                    ->where(function ($identityQuery) {
+                                        $identityQuery->whereNull('reference_number')
+                                            ->orWhere('reference_number', '')
+                                            ->orWhereColumn('student_number', '!=', 'reference_number');
                                     });
-                            })
-                            ->whereDoesntHave('user', function ($userQuery) {
-                                $userQuery->where(function ($builder) {
-                                    foreach (['user_type', 'user_role', 'idp_role'] as $roleColumn) {
-                                        $builder->orWhereRaw("LOWER(COALESCE({$roleColumn}, '')) LIKE ?", ['%student%']);
-                                    }
-                                });
                             });
                     })
                     ->orWhereHas('user', function ($userQuery) {
@@ -2950,6 +2937,11 @@ class AdminController extends Controller
         $dateFilter = trim((string) $request->query('date', ''));
         $yearFilter = trim((string) $request->query('year', ''));
         $userTypeFilter = strtolower(trim((string) $request->query('user_type', '')));
+        $studentTypeFilter = strtolower(trim((string) $request->query('student_type', '')));
+        $studentTypeOptions = HealthFormCategory::STUDENT_TYPE_LABELS;
+        if ($userTypeFilter !== 'student' || !array_key_exists($studentTypeFilter, $studentTypeOptions)) {
+            $studentTypeFilter = '';
+        }
         $sortFilter = strtolower(trim((string) $request->query('sort', 'approved_date')));
         $sortFilter = in_array($sortFilter, ['approved_date', 'alphabetical', 'course'], true)
             ? $sortFilter
@@ -3003,6 +2995,12 @@ class AdminController extends Controller
         }
 
         $this->applyHealthProfileUserTypeFilter($query, $userTypeFilter);
+
+        if ($studentTypeFilter !== '') {
+            $query->whereHas('user', function ($userQuery) use ($studentTypeFilter) {
+                $userQuery->whereRaw('LOWER(student_type) = ?', [$studentTypeFilter]);
+            });
+        }
 
         if ($dateFilter !== '') {
             try {
@@ -3171,6 +3169,25 @@ class AdminController extends Controller
                 ->orderBy('name')
                 ->pluck('name')
                 ->values();
+        } elseif ($userTypeFilter === 'student') {
+            $bulkStudentQuery = HealthProfile::with('user')
+                ->notPulledOut()
+                ->orderBy('student_number')
+                ->orderBy('id');
+
+            $this->applyHealthProfileUserTypeFilter($bulkStudentQuery, 'student');
+            if ($studentTypeFilter !== '') {
+                $bulkStudentQuery->whereHas('user', function ($userQuery) use ($studentTypeFilter) {
+                    $userQuery->whereRaw('LOWER(student_type) = ?', [$studentTypeFilter]);
+                });
+            }
+            $bulkHealthFormRequestRecords = $this->issuedHealthProfilesQuery($bulkStudentQuery)->get();
+            $bulkHealthFormRequestCategories = HealthFormCategory::query()
+                ->where('is_active', true)
+                ->availableFor('student')
+                ->orderBy('name')
+                ->pluck('name')
+                ->values();
         }
         $healthRecordName = static function ($record): string {
             $user = optional($record->user);
@@ -3286,6 +3303,8 @@ class AdminController extends Controller
             'dateFilter',
             'yearFilter',
             'userTypeFilter',
+            'studentTypeFilter',
+            'studentTypeOptions',
             'sortFilter',
             'courseOptions',
             'yearOptions',
@@ -3305,6 +3324,11 @@ class AdminController extends Controller
         $dateFilter = trim((string) $request->query('date', ''));
         $yearFilter = trim((string) $request->query('year', ''));
         $userTypeFilter = strtolower(trim((string) $request->query('user_type', '')));
+        $studentTypeFilter = strtolower(trim((string) $request->query('student_type', '')));
+        $studentTypeOptions = HealthFormCategory::STUDENT_TYPE_LABELS;
+        if ($userTypeFilter !== 'student' || !array_key_exists($studentTypeFilter, $studentTypeOptions)) {
+            $studentTypeFilter = '';
+        }
 
         $query = HealthProfile::with([
             'user',
@@ -3351,6 +3375,12 @@ class AdminController extends Controller
         }
 
         $this->applyHealthProfileUserTypeFilter($query, $userTypeFilter);
+
+        if ($studentTypeFilter !== '') {
+            $query->whereHas('user', function ($userQuery) use ($studentTypeFilter) {
+                $userQuery->whereRaw('LOWER(student_type) = ?', [$studentTypeFilter]);
+            });
+        }
 
         if ($dateFilter !== '') {
             try {
@@ -3950,6 +3980,10 @@ class AdminController extends Controller
 
     public function requestBulkEmployeeHealthForms(Request $request)
     {
+        if (strtolower(trim((string) $request->input('user_type'))) === 'student') {
+            return $this->requestBulkStudentHealthForms($request);
+        }
+
         $validated = $request->validate([
             'user_type' => ['required', Rule::in(['faculty', 'admin'])],
             'category' => [
@@ -4076,6 +4110,141 @@ class AdminController extends Controller
 
         return redirect()
             ->route('admin.health_records', ['tab' => 'approved', 'user_type' => $userType])
+            ->with('success', $message);
+    }
+
+    private function requestBulkStudentHealthForms(Request $request)
+    {
+        $validated = $request->validate([
+            'user_type' => ['required', Rule::in(['student'])],
+            'category' => [
+                'required',
+                'string',
+                'max:120',
+                Rule::exists('health_form_categories', 'name')
+                    ->where(function ($query) {
+                        $query->where('is_active', true)
+                            ->whereJsonContains('available_for', 'student');
+                    }),
+            ],
+            'health_profile_ids' => ['required', 'array', 'min:1', 'max:500'],
+            'health_profile_ids.*' => ['integer', 'distinct', 'exists:health_profiles,id'],
+        ]);
+
+        $category = trim((string) $validated['category']);
+        $selectedProfileIds = array_values(array_unique(array_map('intval', $validated['health_profile_ids'])));
+        $studentQuery = HealthProfile::query()
+            ->with('user')
+            ->whereIn('id', $selectedProfileIds)
+            ->notPulledOut();
+        $this->applyHealthProfileUserTypeFilter($studentQuery, 'student');
+        $studentProfiles = $this->issuedHealthProfilesQuery($studentQuery)->get()->keyBy('id');
+
+        if ($studentProfiles->isEmpty()) {
+            return back()
+                ->withInput()
+                ->with('error', 'No selected approved students are available for this request.');
+        }
+
+        $adminUser = Auth::guard('admin')->user() ?: auth()->user();
+        $emailCounts = [
+            'sent' => 0,
+            'failed' => 0,
+            'skipped' => 0,
+        ];
+
+        foreach ($studentProfiles as $profile) {
+            $submission = HealthFormSubmission::query()->updateOrCreate(
+                [
+                    'user_id' => $profile->user_id,
+                    'status' => HealthFormSubmission::STATUS_REQUESTED,
+                ],
+                [
+                    'health_profile_id' => $profile->id,
+                    'category' => $category,
+                    'school_year' => trim((string) ($profile->school_year ?? '')) ?: null,
+                    'requested_by_user_id' => $adminUser?->id,
+                    'requested_at' => now(),
+                    'remarks' => null,
+                ]
+            );
+
+            HealthProfileCorrectionRequest::query()->updateOrCreate(
+                [
+                    'user_id' => $profile->user_id,
+                    'health_profile_id' => $profile->id,
+                    'type' => HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM,
+                    'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
+                ],
+                [
+                    'health_form_submission_id' => $submission->id,
+                    'profile_kind' => 'student',
+                    'required_documents' => [],
+                    'admin_note' => null,
+                    'requested_by_user_id' => $adminUser?->id,
+                    'requested_at' => now(),
+                    'metadata' => [
+                        'request_kind' => 'bulk_new_health_form',
+                        'category' => $category,
+                        'school_year' => trim((string) ($profile->school_year ?? '')) ?: null,
+                    ],
+                ]
+            );
+
+            ActivityLog::create([
+                'user_id' => $adminUser?->id,
+                'user_name' => $adminUser?->name ?? $adminUser?->email ?? 'System',
+                'user_role' => strtolower((string) ($adminUser?->user_role ?? '')),
+                'action' => 'Bulk Student Health Form Requested',
+                'module' => 'Health Records',
+                'event_type' => 'student_bulk_new_health_form_requested',
+                'description' => 'Requested a new Health Form for student health profile #' . $profile->id . ' under ' . $category . '.',
+                'route_name' => optional($request->route())->getName(),
+                'http_method' => $request->method(),
+                'request_path' => '/' . ltrim((string) $request->path(), '/'),
+                'status_code' => 200,
+                'subject_type' => HealthProfile::class,
+                'subject_id' => (string) $profile->id,
+                'metadata' => [
+                    'health_profile_id' => $profile->id,
+                    'student_number' => $profile->student_number ?: optional($profile->user)->student_number,
+                    'category' => $category,
+                    'request_kind' => 'bulk_new_health_form',
+                ],
+                'ip_address' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 255),
+            ]);
+
+            if (!$profile->user) {
+                $emailCounts['skipped']++;
+                continue;
+            }
+
+            try {
+                $emailStatus = app(StudentNotificationMailer::class)
+                    ->sendHealthRecordNotice($profile->user, 'new_form')['status'];
+                $emailCounts[$emailStatus] = ($emailCounts[$emailStatus] ?? 0) + 1;
+            } catch (\Throwable $exception) {
+                report($exception);
+                $emailCounts['failed']++;
+            }
+        }
+
+        $processedCount = $studentProfiles->count();
+        $skippedCount = count($selectedProfileIds) - $processedCount;
+        $message = $processedCount . ' bulk Health Form request' . ($processedCount === 1 ? '' : 's') . ' sent to students.';
+        if ($skippedCount > 0) {
+            $message .= ' ' . $skippedCount . ' selected record' . ($skippedCount === 1 ? '' : 's') . ' was no longer eligible and was skipped.';
+        }
+        if ($emailCounts['sent'] > 0) {
+            $message .= ' Email notifications sent: ' . $emailCounts['sent'] . '.';
+        }
+        if ($emailCounts['failed'] > 0) {
+            $message .= ' Email notifications failed: ' . $emailCounts['failed'] . '; the requests remain available in the portal.';
+        }
+
+        return redirect()
+            ->route('admin.health_records', ['tab' => 'approved', 'user_type' => 'student'])
             ->with('success', $message);
     }
 
@@ -4617,6 +4786,10 @@ class AdminController extends Controller
     {
         $profile = HealthProfile::with('user')->findOrFail($id);
 
+        if (in_array($profile->user?->clinicAccountTypeKey(), ['student', 'faculty', 'non_teaching_staff', 'dependent'], true)) {
+            return back()->with('error', 'Local clinic health records are issued locally and do not sync to PUPTAS.');
+        }
+
         if (!in_array((string) $profile->clearance_status, ['Issued', 'Fully Cleared'], true)) {
             return back()->with('error', 'Only issued health records can be synced to PUPTAS.');
         }
@@ -4753,7 +4926,9 @@ public function updateClearance(Request $request, $id)
         'resubmission_required_documents.*' => ['string', Rule::in(['student_photo', 'health_declaration', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])],
     ]);
 
-    $record = HealthProfile::findOrFail($id);
+    $record = HealthProfile::with('user')->findOrFail($id);
+    $recordClinicAccountType = $record->user?->clinicAccountTypeKey();
+    $recordIsLocalOnly = in_array($recordClinicAccountType, ['student', 'faculty', 'non_teaching_staff', 'dependent'], true);
     $previousStatus = (string) $record->clearance_status;
     $requestedStatus = (string) $request->input('clearance_status');
     $isApproval = in_array($requestedStatus, ['Issued', 'Fully Cleared'], true);
@@ -4886,36 +5061,40 @@ public function updateClearance(Request $request, $id)
                         'updated_at' => now(),
                     ]);
 
-                try {
-                    $puptasService = app(PuptasWebhookService::class);
-                    $referenceNumber = $this->resolvePuptasReferenceNumber($record);
-                    $idpStudentId = $this->resolvePuptasIdpStudentId($record);
+                if ($recordIsLocalOnly) {
+                    $this->updatePuptasSyncState($record, 'not_applicable', 'PUPTAS sync is not applicable to local clinic health records.');
+                } else {
+                    try {
+                        $puptasService = app(PuptasWebhookService::class);
+                        $referenceNumber = $this->resolvePuptasReferenceNumber($record);
+                        $idpStudentId = $this->resolvePuptasIdpStudentId($record);
 
-                    if ($referenceNumber === '') {
-                        $this->updatePuptasSyncState($record, 'missing_reference_number', 'PUPTAS sync skipped because the reference number is still missing.');
-                        \Log::warning("PUPTAS Sync Skipped for User {$record->user->id}: missing reference_number.");
-                        return redirect()->route('admin.health_records')
-                            ->with('success', 'Medical clearance updated, but PUPTAS sync was skipped because reference number is missing.');
+                        if ($referenceNumber === '') {
+                            $this->updatePuptasSyncState($record, 'missing_reference_number', 'PUPTAS sync skipped because the reference number is still missing.');
+                            \Log::warning("PUPTAS Sync Skipped for User {$record->user->id}: missing reference_number.");
+                            return redirect()->route('admin.health_records')
+                                ->with('success', 'Medical clearance updated, but PUPTAS sync was skipped because reference number is missing.');
+                        }
+
+                        $this->updatePuptasSyncState($record, 'syncing', 'Preparing the approved health clearance for PUPTAS.');
+                        $syncResult = $puptasService->sendWithRetry($referenceNumber, $idpStudentId, true);
+
+                        if (!$syncResult['success']) {
+                            $this->updatePuptasSyncState(
+                                $record,
+                                'failed',
+                                $syncResult['message'] ?? 'The PUPTAS sync attempt failed.',
+                            );
+                            \Log::error("PUPTAS Sync Failed for reference {$referenceNumber} / student_id {$idpStudentId}: " . ($syncResult['message'] ?? 'Unknown error'));
+                        } else {
+                            $this->updatePuptasSyncState($record, 'synced', 'Approved health clearance synced to PUPTAS.', true);
+                        }
+                    } catch (\Exception $e) {
+                        $referenceNumber = trim((string) (($record->reference_number ?? '') ?: ($record->student_number ?? '') ?: optional($record->user)->student_number));
+                        $idpStudentId = trim((string) (optional($record->user)->student_id ?: $record->student_id));
+                        $this->updatePuptasSyncState($record, 'failed', $e->getMessage());
+                        \Log::error("PUPTAS Sync Failed for reference {$referenceNumber} / student_id {$idpStudentId}: " . $e->getMessage());
                     }
-
-                    $this->updatePuptasSyncState($record, 'syncing', 'Preparing the approved health clearance for PUPTAS.');
-                    $syncResult = $puptasService->sendWithRetry($referenceNumber, $idpStudentId, true);
-
-                    if (!$syncResult['success']) {
-                        $this->updatePuptasSyncState(
-                            $record,
-                            'failed',
-                            $syncResult['message'] ?? 'The PUPTAS sync attempt failed.',
-                        );
-                        \Log::error("PUPTAS Sync Failed for reference {$referenceNumber} / student_id {$idpStudentId}: " . ($syncResult['message'] ?? 'Unknown error'));
-                    } else {
-                        $this->updatePuptasSyncState($record, 'synced', 'Approved health clearance synced to PUPTAS.', true);
-                    }
-                } catch (\Exception $e) {
-                    $referenceNumber = trim((string) (($record->reference_number ?? '') ?: ($record->student_number ?? '') ?: optional($record->user)->student_number));
-                    $idpStudentId = trim((string) (optional($record->user)->student_id ?: $record->student_id));
-                    $this->updatePuptasSyncState($record, 'failed', $e->getMessage());
-                    \Log::error("PUPTAS Sync Failed for reference {$referenceNumber} / student_id {$idpStudentId}: " . $e->getMessage());
                 }
             } else {
                 $this->updatePuptasSyncState($record, null, null);
@@ -7431,6 +7610,39 @@ public function inventorySummary()
         ->filter(fn($item) => $item->current_balance > 0 && $item->current_balance <= (float) ($item->minimum_stock ?: 10))
         ->values();
     $lowStockCount = $lowStockItems->count();
+
+    $nearExpiryStart = Carbon::today();
+    $nearExpiryEnd = $nearExpiryStart->copy()->addMonths(3)->endOfDay();
+    $nearExpiryItems = $itemPerformance
+        ->filter(function ($item) use ($nearExpiryStart, $nearExpiryEnd) {
+            return (float) $item->current_balance > 0
+                && $item->expiration_date
+                && $item->expiration_date->greaterThanOrEqualTo($nearExpiryStart)
+                && $item->expiration_date->lessThanOrEqualTo($nearExpiryEnd);
+        })
+        ->sortBy('expiration_date')
+        ->values();
+
+    $paginateInventoryCollection = static function ($items, string $pageName): LengthAwarePaginator {
+        $perPage = 5;
+        $page = max(1, (int) request()->query($pageName, 1));
+
+        return new LengthAwarePaginator(
+            $items->forPage($page, $perPage)->values(),
+            $items->count(),
+            $perPage,
+            $page,
+            [
+                'path' => request()->url(),
+                'pageName' => $pageName,
+                'query' => request()->query(),
+            ]
+        );
+    };
+
+    $itemPerformancePage = $paginateInventoryCollection($itemPerformance, 'performance_page');
+    $lowStockItemsPage = $paginateInventoryCollection($lowStockItems, 'low_stock_page');
+    $nearExpiryItemsPage = $paginateInventoryCollection($nearExpiryItems, 'near_expiry_page');
     
     $categorySummary = $itemPerformance
         ->groupBy('report_category')
@@ -7456,7 +7668,20 @@ public function inventorySummary()
     ]);
 
     return view('admin.reports.inventory-summary', compact(
-        'totalItems', 'totalStock', 'totalConsumed', 'outOfStock', 'lowStockItems', 'lowStockCount', 'categorySummary', 'itemPerformance', 'dateFrom', 'dateTo'
+        'totalItems',
+        'totalStock',
+        'totalConsumed',
+        'outOfStock',
+        'lowStockItems',
+        'lowStockCount',
+        'nearExpiryItems',
+        'itemPerformancePage',
+        'lowStockItemsPage',
+        'nearExpiryItemsPage',
+        'categorySummary',
+        'itemPerformance',
+        'dateFrom',
+        'dateTo'
     ));
 }
 

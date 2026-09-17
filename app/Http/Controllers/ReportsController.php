@@ -13,6 +13,7 @@ use App\Models\ClinicServiceOption;
 use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\HealthProfile;
+use App\Models\HealthFormSubmission;
 use App\Models\EmployeeHealthProfile;
 use App\Models\DependentsProfile;
 use App\Models\MarClearanceType;
@@ -1876,6 +1877,322 @@ class ReportsController extends Controller
         return [$query, $search, $courseFilter, $userTypeFilter, $genderFilter, $conditionFilter, $statusFilter];
     }
 
+    private function healthFormsLogbookRecords(Carbon $dateFrom, Carbon $dateTo): Collection
+    {
+        $approvedStatuses = [HealthFormSubmission::STATUS_APPROVED, 'Approved'];
+        $submissionRecords = collect();
+        $healthProfileIdsWithHistory = [];
+        $employeeProfileIdsWithHistory = [];
+
+        if (\Schema::hasTable('health_form_submissions')) {
+            $submissions = HealthFormSubmission::query()
+                ->with([
+                    'user.dependentProfile',
+                    'healthProfile.user.dependentProfile',
+                    'healthProfile.approvedBy',
+                    'employeeHealthProfile.user.dependentProfile',
+                    'employeeHealthProfile.approvedBy',
+                ])
+                ->whereIn('status', $approvedStatuses)
+                ->whereNotNull('approved_at')
+                ->whereBetween('approved_at', [$dateFrom, $dateTo])
+                ->orderBy('approved_at')
+                ->orderBy('id')
+                ->get();
+
+            $submissionRecords = $submissions
+                ->map(fn (HealthFormSubmission $submission) => $this->healthFormsLogbookSubmissionEntry($submission))
+                ->values();
+            $healthProfileIdsWithHistory = $submissions
+                ->pluck('health_profile_id')
+                ->filter()
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->values()
+                ->all();
+            $employeeProfileIdsWithHistory = $submissions
+                ->pluck('employee_health_profile_id')
+                ->filter()
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        $legacyStudentQuery = HealthProfile::query()
+            ->with(['user.dependentProfile', 'approvedBy'])
+            ->whereIn('clearance_status', ['Issued', 'Fully Cleared'])
+            ->where(function ($query) use ($dateFrom, $dateTo) {
+                $query->whereBetween('verified_at', [$dateFrom, $dateTo])
+                    ->orWhere(function ($fallback) use ($dateFrom, $dateTo) {
+                        $fallback->whereNull('verified_at')
+                            ->whereBetween('created_at', [$dateFrom, $dateTo]);
+                    });
+            });
+
+        if ($healthProfileIdsWithHistory !== []) {
+            $legacyStudentQuery->whereNotIn('id', $healthProfileIdsWithHistory);
+        }
+
+        $records = $submissionRecords->merge(
+            $legacyStudentQuery
+                ->get()
+                ->map(fn (HealthProfile $profile) => $this->healthFormsLogbookProfileEntry($profile, 'health'))
+        );
+
+        if (\Schema::hasTable('health_profile_emp')) {
+            $legacyEmployeeQuery = EmployeeHealthProfile::query()
+                ->with(['user.dependentProfile', 'approvedBy'])
+                ->whereIn('clearance_status', ['Approved', 'Issued', 'Fully Cleared', 'Cleared'])
+                ->where(function ($query) use ($dateFrom, $dateTo) {
+                    $query->whereBetween('verified_at', [$dateFrom, $dateTo])
+                        ->orWhere(function ($fallback) use ($dateFrom, $dateTo) {
+                            $fallback->whereNull('verified_at')
+                                ->whereBetween('created_at', [$dateFrom, $dateTo]);
+                        });
+                });
+
+            if ($employeeProfileIdsWithHistory !== []) {
+                $legacyEmployeeQuery->whereNotIn('id', $employeeProfileIdsWithHistory);
+            }
+
+            $records = $records->merge(
+                $legacyEmployeeQuery
+                    ->get()
+                    ->map(fn (EmployeeHealthProfile $profile) => $this->healthFormsLogbookProfileEntry($profile, 'employee'))
+            );
+        }
+
+        return $records
+            ->sortBy(fn (array $record) => $record['sort_at']?->timestamp ?? 0)
+            ->values();
+    }
+
+    private function healthFormsLogbookSubmissionEntry(HealthFormSubmission $submission): array
+    {
+        $source = $submission->employee_health_profile_id ? 'employee' : 'health';
+        $record = $source === 'employee'
+            ? $submission->employeeHealthProfile
+            : $submission->healthProfile;
+
+        return $this->healthFormsLogbookEntry($record, $source, $submission);
+    }
+
+    private function healthFormsLogbookProfileEntry($record, string $source): array
+    {
+        return $this->healthFormsLogbookEntry($record, $source);
+    }
+
+    private function healthFormsLogbookEntry($record, string $source, ?HealthFormSubmission $submission = null): array
+    {
+        $profileData = $submission?->snapshotProfile() ?? [];
+        $snapshotUser = $submission?->snapshotUser() ?? [];
+        $user = $submission?->user ?: $record?->user;
+        $resolveProfileValue = static function (string $key) use ($profileData, $record) {
+            if (array_key_exists($key, $profileData) && $profileData[$key] !== null && $profileData[$key] !== '') {
+                return $profileData[$key];
+            }
+
+            return $record?->{$key};
+        };
+        $resolveUserValue = static function (string $key) use ($snapshotUser, $user) {
+            if (array_key_exists($key, $snapshotUser) && $snapshotUser[$key] !== null && $snapshotUser[$key] !== '') {
+                return $snapshotUser[$key];
+            }
+
+            return $user?->{$key};
+        };
+        $nameFromParts = static function (array $values): string {
+            return trim(implode(' ', array_filter(array_map(
+                static fn ($value) => trim((string) $value),
+                $values
+            ))));
+        };
+
+        $patientName = trim((string) (
+            $snapshotUser['name']
+            ?? $profileData['name']
+            ?? $record?->name
+            ?? $user?->name
+            ?? ''
+        ));
+        if ($patientName === '') {
+            $patientName = $nameFromParts([
+                $snapshotUser['first_name'] ?? $profileData['first_name'] ?? $record?->first_name ?? $user?->first_name,
+                $snapshotUser['middle_name'] ?? $profileData['middle_name'] ?? $record?->middle_name ?? $user?->middle_name,
+                $snapshotUser['last_name'] ?? $profileData['last_name'] ?? $record?->last_name ?? $user?->last_name,
+                $snapshotUser['suffix_name'] ?? $profileData['suffix_name'] ?? $record?->suffix_name ?? $user?->suffix_name,
+            ]);
+        }
+        $patientName = $patientName !== '' ? $patientName : 'Unnamed Patient';
+
+        $reference = trim((string) (
+            $resolveProfileValue('reference_number')
+            ?: $resolveProfileValue('student_number')
+            ?: $resolveProfileValue('employee_number')
+            ?: $resolveProfileValue('id_number')
+            ?: $resolveUserValue('reference_number')
+            ?: $resolveUserValue('student_number')
+            ?: $resolveUserValue('employee_number')
+            ?: ''
+        ));
+        $course = trim((string) (
+            $source === 'employee'
+                ? ($resolveProfileValue('course_college') ?: $resolveProfileValue('office') ?: $resolveUserValue('course'))
+                : ($resolveProfileValue('course_college') ?: $resolveUserValue('course'))
+        ));
+        $yearSection = trim(implode(' - ', array_filter([
+            trim((string) $resolveUserValue('year')),
+            trim((string) $resolveUserValue('section')),
+        ])));
+        $courseDepartment = trim(implode(' / ', array_filter([$course, $yearSection])));
+        $audience = $user?->dependentProfile
+            ? 'Dependent'
+            : $this->healthFormsApplicantsListUserType($user, $source);
+        if ($audience === 'Student'
+            && $this->healthFormsExportLooksLikeApplicantReference(strtoupper($reference))) {
+            $audience = 'Applicant';
+        }
+        $category = trim((string) ($submission?->category ?: $resolveProfileValue('health_form_category')));
+        $studentType = strtolower(trim((string) $resolveUserValue('student_type')));
+        $approvalAt = $this->healthFormsLogbookCarbon($submission?->approved_at ?: $resolveProfileValue('verified_at'));
+        $timeIn = $this->healthFormsLogbookCarbon($resolveProfileValue('review_started_at'))
+            ?: $this->healthFormsLogbookCarbon($submission?->submitted_at)
+            ?: $this->healthFormsLogbookCarbon($submission?->created_at)
+            ?: $this->healthFormsLogbookCarbon($record?->created_at);
+        $timeOut = $this->healthFormsLogbookCarbon($resolveProfileValue('review_closed_at'))
+            ?: $approvalAt
+            ?: $this->healthFormsLogbookCarbon($resolveProfileValue('verified_at'))
+            ?: $this->healthFormsLogbookCarbon($record?->updated_at);
+        $dateValue = $timeIn ?: $approvalAt ?: $this->healthFormsLogbookCarbon($record?->created_at);
+        $snapshotReview = is_array($submission?->profile_snapshot)
+            ? (array) data_get($submission->profile_snapshot, 'review', [])
+            : [];
+        $approvedBy = trim((string) ($snapshotReview['approved_by'] ?? ''))
+            ?: trim((string) optional($record?->approvedBy)->name);
+        $referral = collect([
+            $resolveProfileValue('referred_to'),
+            $resolveProfileValue('referred_to_others'),
+            data_get($profileData, 'referral'),
+            data_get($profileData, 'referral_details'),
+        ])
+            ->flatMap(fn ($value) => is_array($value) ? collect($value)->flatten() : [$value])
+            ->map(fn ($value) => trim((string) $value))
+            ->filter(fn ($value) => $value !== '' && $value !== '[]')
+            ->unique()
+            ->implode(', ');
+        if ($referral === '') {
+            $referral = $this->healthFormsLogbookReferralFromRemarks([
+                $resolveProfileValue('med_assessment_remarks'),
+                $resolveProfileValue('assessment_remarks'),
+                $resolveProfileValue('medical_condition_remarks'),
+                $resolveProfileValue('encode_remarks'),
+                $submission?->remarks,
+            ]);
+        }
+        $pendingReason = trim((string) ($resolveProfileValue('pending_reason') ?: $submission?->remarks));
+
+        return [
+            'patient_name' => $patientName,
+            'reference' => $reference,
+            'course_department' => $courseDepartment,
+            'transaction' => $this->healthFormsLogbookTransaction($audience, $studentType, $category),
+            'pending_reason' => $pendingReason,
+            'referral' => $referral,
+            'date' => $dateValue,
+            'time_in' => $timeIn,
+            'time_out' => $timeOut,
+            'approval_date' => $approvalAt,
+            'approved_by' => $approvedBy,
+            'sort_at' => $approvalAt ?: $dateValue,
+            'search' => strtolower(implode(' ', array_filter([
+                $patientName,
+                $reference,
+                $courseDepartment,
+                $audience,
+                $category,
+            ]))),
+        ];
+    }
+
+    private function healthFormsLogbookReferralFromRemarks(array $remarks): string
+    {
+        return collect($remarks)
+            ->map(fn ($remark) => trim((string) $remark))
+            ->filter()
+            ->map(function (string $remark): string {
+                if (!preg_match('/\b(?:refer|referred)\s+to\b\s*:?[\s-]*([^,\r\n-]+)/iu', $remark, $matches)) {
+                    return '';
+                }
+
+                return trim((string) ($matches[1] ?? ''), " \t:;|.");
+            })
+            ->filter()
+            ->unique()
+            ->implode(', ');
+    }
+
+    private function healthFormsLogbookCarbon($value): ?Carbon
+    {
+        if ($value instanceof Carbon) {
+            return $value;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return Carbon::instance($value);
+        }
+
+        if (is_string($value) && trim($value) !== '') {
+            try {
+                return Carbon::parse($value);
+            } catch (\Throwable $exception) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    private function healthFormsLogbookTransaction(string $audience, string $studentType, string $category): string
+    {
+        if ($audience === 'Applicant') {
+            return 'Medical Clearance';
+        }
+
+        if ($audience === 'Faculty') {
+            return 'Faculty Member';
+        }
+
+        if ($audience === 'Admin' || $audience === 'Employee') {
+            return 'Annual Medical Clearance';
+        }
+
+        if ($audience === 'Dependent') {
+            return 'Dependent Medical Clearance';
+        }
+
+        $categoryText = strtolower(trim((string) $category));
+        $categoryText = preg_replace('/[^a-z0-9]+/', ' ', $categoryText) ?: '';
+        $categoryStudentType = match (true) {
+            str_contains($categoryText, 'ojt') || str_contains($categoryText, 'on the job') => 'ojt',
+            str_contains($categoryText, 'ladder') => 'ladderized',
+            str_contains($categoryText, 'return') => 'returnee',
+            str_contains($categoryText, 'transfer') => 'transferee',
+            str_contains($categoryText, 'shift') => 'shiftee',
+            default => '',
+        };
+        $studentType = $categoryStudentType !== '' ? $categoryStudentType : ($studentType ?: 'regular');
+
+        return match ($studentType) {
+            'ojt' => 'Medical Clearance for OJT',
+            'returnee' => 'Returning Student',
+            'transferee' => 'Transfer from other School',
+            'ladderized' => 'Medical Clearance for Ladderized',
+            'shiftee' => 'Shifting Student',
+            default => 'Currently Enrolled',
+        };
+    }
+
     public function healthFormsLogbook(Request $request)
     {
         $dateFrom = $this->parseReportDate(
@@ -1891,16 +2208,7 @@ class ReportsController extends Controller
             [$dateFrom, $dateTo] = [$dateTo->copy()->startOfDay(), $dateFrom->copy()->endOfDay()];
         }
 
-        $records = HealthProfile::query()
-            ->with(['user', 'approvedBy', 'reviewStartedBy'])
-            ->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
-
-        $this->applyHealthApprovalDateRange($records, $dateFrom, $dateTo);
-
-        $records = $records
-            ->orderBy(DB::raw($this->healthApprovalDateSql()))
-            ->orderBy('created_at')
-            ->get();
+        $records = $this->healthFormsLogbookRecords($dateFrom, $dateTo);
 
         return view('admin.reports.health_forms_logbook', compact('records', 'dateFrom', 'dateTo'));
     }
