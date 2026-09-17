@@ -6142,7 +6142,12 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     $adminLiveNotificationsEnabled = $workflowSettings->admin_live_notifications !== false;
     $apiTestingUrl = url('/admin/api-testing');
     $developerToolsUrl = url('/admin/developer-tools');
-    $canSeeDeveloperTools = $isAdminLike;
+    $systemDeveloperEmail = strtolower(trim((string) config('app.system_developer_email', 'pupocms2027@gmail.com')));
+    $authenticatedAdminEmail = strtolower(trim((string) ($authUser?->email ?? '')));
+    $canSeeDeveloperTools = $isAdminLike
+        && $systemDeveloperEmail !== ''
+        && $authenticatedAdminEmail !== ''
+        && hash_equals($systemDeveloperEmail, $authenticatedAdminEmail);
     $canViewMyHealthProfile = $authUser
         && (
             $isAdminLike

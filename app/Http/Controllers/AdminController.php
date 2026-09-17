@@ -346,9 +346,12 @@ class AdminController extends Controller
 
     private function canAccessApiTesting(User $user): bool
     {
+        $developerEmail = strtolower(trim((string) config('app.system_developer_email', 'pupocms2027@gmail.com')));
         $email = strtolower(trim((string) ($user->email ?? '')));
 
-        return $email === 'pupocms2027@gmail.com';
+        return $developerEmail !== ''
+            && $email !== ''
+            && hash_equals($developerEmail, $email);
     }
 
     private function currentAdminUser(): ?User
@@ -3641,7 +3644,9 @@ class AdminController extends Controller
             ->orderBy('name')
             ->pluck('name')
             ->values();
-        $canRequestEmployeeHealthActions = optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false;
+        $canRequestNewEmployeeHealthForm = optional(auth()->user())->canAccessPermission('health_records.request_health_form') ?? false;
+        $canRequestEmployeeFileCorrection = optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false;
+        $canRequestEmployeeHealthActions = $canRequestNewEmployeeHealthForm || $canRequestEmployeeFileCorrection;
 
         $employeeSubmissions = HealthFormSubmission::query()
             ->where('employee_health_profile_id', $employeeProfile->id)
@@ -3755,7 +3760,9 @@ class AdminController extends Controller
             'displaySubmission',
             'employeeHealthFormCategories',
             'employeeHealthFormAudience',
-            'canRequestEmployeeHealthActions'
+            'canRequestEmployeeHealthActions',
+            'canRequestNewEmployeeHealthForm',
+            'canRequestEmployeeFileCorrection'
         ));
     }
 

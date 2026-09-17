@@ -112,6 +112,16 @@
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
                             <span><strong>Final Review</strong><small>View encoded applicants awaiting final approval</small></span>
                         </label>
+                        <label class="um-action-permission">
+                            <input type="checkbox" name="module_permissions[]" value="walkin.reference_lookup" data-module-action>
+                            <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
+                            <span><strong>Reference Lookup</strong><small>Find an applicant by reference number for review</small></span>
+                        </label>
+                        <label class="um-action-permission">
+                            <input type="checkbox" name="module_permissions[]" value="walkin.edit_information" data-module-action>
+                            <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
+                            <span><strong>Edit Information</strong><small>Edit the applicant's Health Information Form</small></span>
+                        </label>
                         <div class="um-action-permission is-locked">
                             <span class="um-action-lock" aria-hidden="true"><x-outline-icon name="shield-check" /></span>
                             <span><strong>Final approval</strong><small>Restricted to Super Admin</small></span>
@@ -162,6 +172,11 @@
                             <input type="checkbox" name="module_permissions[]" value="health_records.request_resubmission" data-module-action>
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
                             <span><strong>Request resubmission</strong><small>Return incomplete or invalid documents</small></span>
+                        </label>
+                        <label class="um-action-permission">
+                            <input type="checkbox" name="module_permissions[]" value="health_records.request_health_form" data-module-action>
+                            <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
+                            <span><strong>Request New Health Form</strong><small>Ask an issued record holder to submit a fresh health form</small></span>
                         </label>
                         <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="health_records.update_assessment" data-module-action>

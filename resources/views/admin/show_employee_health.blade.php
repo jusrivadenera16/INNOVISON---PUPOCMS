@@ -1644,14 +1644,18 @@
                         </svg>
                     </button>
                     <div class="employee-profile-actions-menu" id="employeeProfileActionsMenu" role="menu" aria-hidden="true">
-                        <button type="button" id="openNewEmployeeHealthFormModal" role="menuitem">
-                            <span>Request New Health Form</span>
-                            <span aria-hidden="true">+</span>
-                        </button>
-                        <button type="button" id="openEmployeeCorrectionModal" role="menuitem">
-                            <span>Request File Correction</span>
-                            <span aria-hidden="true">&rarr;</span>
-                        </button>
+                        @if($canRequestNewEmployeeHealthForm)
+                            <button type="button" id="openNewEmployeeHealthFormModal" role="menuitem">
+                                <span>Request New Health Form</span>
+                                <span aria-hidden="true">+</span>
+                            </button>
+                        @endif
+                        @if($canRequestEmployeeFileCorrection)
+                            <button type="button" id="openEmployeeCorrectionModal" role="menuitem">
+                                <span>Request File Correction</span>
+                                <span aria-hidden="true">&rarr;</span>
+                            </button>
+                        @endif
                     </div>
                 </div>
             @endif
@@ -1832,6 +1836,7 @@
 </div>
 
 @if($canRequestEmployeeHealthActions)
+    @if($canRequestNewEmployeeHealthForm)
     <div class="employee-action-modal" id="newEmployeeHealthFormModal" aria-hidden="true">
         <div class="employee-action-card" role="dialog" aria-modal="true" aria-labelledby="newEmployeeHealthFormTitle">
             <div class="employee-action-head">
@@ -1870,7 +1875,9 @@
             </form>
         </div>
     </div>
+    @endif
 
+    @if($canRequestEmployeeFileCorrection)
     <div class="employee-action-modal" id="employeeCorrectionModal" aria-hidden="true">
         <div class="employee-action-card" role="dialog" aria-modal="true" aria-labelledby="employeeCorrectionTitle">
             <div class="employee-action-head">
@@ -1920,6 +1927,7 @@
             </form>
         </div>
     </div>
+    @endif
 @endif
 @endsection
 
