@@ -7368,7 +7368,15 @@
         $pendingApprovalRecordIds = [];
         $pendingConditionalRecordIds = [];
 
-        $resolveHealthRecordUserType = function ($record) {
+        $isOfficialStudentNumber = static function ($value): bool {
+            $studentNumber = strtoupper(trim((string) $value));
+
+            return $studentNumber !== ''
+                && !\Illuminate\Support\Str::startsWith($studentNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
+                && preg_match('/^\d{4}-\d{5}-[A-Z]{2}-\d+$/', $studentNumber) === 1;
+        };
+
+        $resolveHealthRecordUserType = function ($record) use ($isOfficialStudentNumber) {
             $user = optional($record->user);
             $rawType = strtolower(trim((string) (
                 $user->user_type
@@ -7377,12 +7385,13 @@
                 ?: ''
             )));
             $clinicAccountType = $record->user?->clinicAccountTypeKey();
+            $hasStudentNumber = collect([
+                $record->student_number ?? null,
+                $user->student_number,
+            ])->contains($isOfficialStudentNumber);
 
-            if ($clinicAccountType === 'student') {
-                return 'Student';
-            }
-            if ($clinicAccountType === 'applicant') {
-                return 'Applicant';
+            if (in_array($clinicAccountType, ['student', 'applicant'], true)) {
+                return $hasStudentNumber ? 'Student' : 'Applicant';
             }
 
             if (str_contains($rawType, 'dependent') || str_contains($rawType, 'guest')) {
@@ -7397,9 +7406,6 @@
                 || str_contains($rawType, 'staff')) {
                 return 'Admin';
             }
-            if (str_contains($rawType, 'applicant')) {
-                return 'Applicant';
-            }
             if (str_contains($rawType, 'faculty')) {
                 return 'Faculty';
             }
@@ -7407,45 +7413,7 @@
                 return 'Faculty';
             }
 
-            $isOfficialStudentNumber = function ($value): bool {
-                $studentNumber = strtoupper(trim((string) $value));
-
-                return $studentNumber !== ''
-                    && !\Illuminate\Support\Str::startsWith($studentNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
-                    && preg_match('/^\d{4}-\d{5}-[A-Z]{2}-\d+$/', $studentNumber) === 1;
-            };
-
-            $referenceNumbers = collect([
-                $record->reference_number ?? null,
-                $user->reference_number,
-            ])->map(fn ($value) => strtoupper(trim((string) $value)))
-                ->filter()
-                ->unique();
-            $hasStudentNumber = collect([
-                $record->student_number ?? null,
-                $user->student_number,
-            ])->map(fn ($value) => strtoupper(trim((string) $value)))
-                ->filter()
-                ->contains(function ($studentNumber) use ($referenceNumbers, $isOfficialStudentNumber) {
-                    return !\Illuminate\Support\Str::startsWith($studentNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
-                        && ($isOfficialStudentNumber($studentNumber) || !$referenceNumbers->contains($studentNumber));
-                });
-
-            if (str_contains($rawType, 'applicant')) {
-                return $hasStudentNumber ? 'Student' : 'Applicant';
-            }
-
-            $isApproved = in_array(trim((string) ($record->clearance_status ?? '')), ['Issued', 'Fully Cleared'], true);
-            $referenceNumber = strtoupper(trim((string) ($record->reference_number ?? '')));
-            if (!$isApproved
-                && $referenceNumber !== ''
-                && !\Illuminate\Support\Str::startsWith($referenceNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
-                && !$isOfficialStudentNumber($referenceNumber)) {
-                return 'Applicant';
-            }
-
-            $explicitUserType = strtolower(trim((string) ($user->user_type ?? '')));
-            if (str_contains($explicitUserType, 'student')) {
+            if (str_contains($rawType, 'applicant') || str_contains($rawType, 'student')) {
                 return $hasStudentNumber ? 'Student' : 'Applicant';
             }
 
@@ -7456,6 +7424,9 @@
             $user = optional($record->user);
             $userType = strtolower(trim((string) $resolveHealthRecordUserType($record)));
             $dependentProfile = optional($user)->dependentProfile;
+            $isDisplayableStudentNumber = static function ($value): bool {
+                return preg_match('/^\d{4}-\d{5}-[A-Za-z]{2}-\d+$/', trim((string) $value)) === 1;
+            };
             $firstIdentifier = static function (array $values): string {
                 foreach ($values as $value) {
                     $value = trim((string) $value);
@@ -7494,15 +7465,14 @@
             }
 
             if ($userType === 'student') {
+                $studentNumber = collect([
+                    $record->student_number,
+                    $user->student_number,
+                ])->first($isDisplayableStudentNumber);
+
                 return [
                     'label' => 'Student Number',
-                    'value' => $firstIdentifier([
-                        $record->student_number,
-                        $user->student_number,
-                        $record->student_id,
-                        $user->student_id,
-                        $record->reference_number,
-                    ]),
+                    'value' => $studentNumber !== null ? trim((string) $studentNumber) : '-',
                 ];
             }
 
@@ -7767,6 +7737,7 @@
                     );
                     $recordUserType = $resolveHealthRecordUserType($record);
                     $recordUser = $record->user;
+                    $recordIdentifier = $resolveHealthRecordIdentifier($record);
                     $recordFirstName = trim((string) optional($recordUser)->first_name);
                     $recordMiddleName = trim((string) optional($recordUser)->middle_name);
                     $recordLastName = trim((string) optional($recordUser)->last_name);
@@ -7777,10 +7748,8 @@
                     $recordFamilyName = $recordLastName !== ''
                         ? $recordLastName
                         : trim((string) optional($recordUser)->name);
-                    $recordClinicAccountType = $record->user?->clinicAccountTypeKey();
                     $recordUserTypeKey = strtolower(trim((string) $recordUserType));
                     $recordIsLocalOnly = $recordIsEmployee
-                        || in_array($recordClinicAccountType, ['student', 'faculty', 'non_teaching_staff', 'dependent'], true)
                         || in_array($recordUserTypeKey, ['student', 'faculty', 'admin', 'dependent', 'guest'], true);
                     $puptasStatusRaw = strtolower(trim((string) ($record->puptas_sync_status ?? '')));
                     $puptasReference = strtoupper(trim((string) ($record->reference_number ?: $record->student_number ?: optional($record->user)->student_number)));
@@ -7813,9 +7782,10 @@
                         'id' => $record->id,
                         'name' => optional($record->user)->name ?: '-',
                         'email' => optional($record->user)->email ?: '-',
-                        'reference_number' => $record->reference_number ?: $record->student_number ?: optional($record->user)->student_number ?: '-',
+                        'reference_number' => $recordIdentifier['value'] ?? '-',
+                        'reference_label' => $recordIdentifier['label'] ?? 'Reference Number',
                         'student_id' => $record->student_id ?: optional($record->user)->student_id ?: '-',
-                        'student_number' => optional($record->user)->student_number ?: optional($record->user)->student_id ?: '-',
+                        'student_number' => $recordIdentifier['value'] ?? '-',
                         'course' => $recordCourseDisplay !== '' ? $recordCourseDisplay : '-',
                         'status' => $recordPulloutStatus === \App\Models\HealthProfile::PULLOUT_PENDING
                             ? 'Pullout Pending'
@@ -8207,7 +8177,9 @@
                             'reference_number' => $readonlyReference,
                             'reference_label' => $readonlyIdentifier['label'],
                             'student_id' => $readonlyRecord->student_id ?: optional($readonlyRecord->user)->student_id ?: '-',
-                            'student_number' => optional($readonlyRecord->user)->student_number ?: optional($readonlyRecord->user)->student_id ?: '-',
+                            'student_number' => $readonlyIdentifier['label'] === 'Student Number'
+                                ? $readonlyReference
+                                : '-',
                             'course' => $readonlyCourseDisplay !== '' ? $readonlyCourseDisplay : '-',
                             'status' => $readonlyRecord->clearance_status ?: 'For Verification',
                             'pending_reason' => $readonlyRecord->pending_reason ?: '',
@@ -8919,7 +8891,7 @@
                                                     ])));
                                                 }
                                                 $bulkRequestIdentifier = $bulkRequestIsStudent
-                                                    ? trim((string) ($bulkRequestRecord->student_number ?: ($bulkRequestUser->student_number ?? $bulkRequestRecord->student_id ?? '')))
+                                                    ? trim((string) ($bulkRequestRecord->student_number ?: ($bulkRequestUser->student_number ?? '')))
                                                     : trim((string) ($bulkRequestRecord->employee_number ?: ($bulkRequestUser->employee_number ?? '')));
                                                 $bulkRequestEmail = trim((string) ($bulkRequestUser->email ?? ''));
                                                 $bulkRequestStudentType = strtolower(trim((string) ($bulkRequestUser->student_type ?? '')));

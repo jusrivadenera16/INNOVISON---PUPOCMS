@@ -718,7 +718,12 @@
     }
 
     .profile-dashboard .profile-sections-grid {
-        display: contents;
+        display: grid;
+        grid-column: 2 / -1;
+        grid-row: 1;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
         margin-bottom: 0;
     }
 
@@ -734,19 +739,17 @@
     }
 
     .profile-dashboard .profile-sections-grid > .profile-column-stack:last-child {
-        grid-column: 3;
+        grid-column: 2;
         grid-row: 1;
     }
 
-    .profile-dashboard .profile-personal-section,
-    .profile-dashboard .profile-academic-section,
-    .profile-dashboard .profile-contact-section {
-        grid-column: auto;
-        grid-row: auto;
+    .profile-dashboard .profile-sections-grid > .profile-form-section:first-child {
+        grid-column: 1;
+        grid-row: 1;
     }
 
-    .profile-dashboard .profile-emergency-section {
-        grid-column: auto;
+    .profile-dashboard .profile-sections-grid > .profile-form-section:not(:first-child) {
+        grid-column: 2;
         grid-row: auto;
     }
 
@@ -2180,6 +2183,12 @@
             grid-column: 1;
             grid-row: auto;
         }
+        .profile-dashboard .profile-sections-grid {
+            grid-column: 1;
+            grid-row: auto;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
         .profile-dashboard .profile-card-head {
             grid-column: 1;
             grid-row: auto;
@@ -2196,6 +2205,11 @@
         .profile-dashboard .profile-academic-section,
         .profile-dashboard .profile-contact-section,
         .profile-dashboard .profile-emergency-section {
+            grid-column: 1;
+            grid-row: auto;
+        }
+        .profile-dashboard .profile-sections-grid > .profile-form-section:first-child,
+        .profile-dashboard .profile-sections-grid > .profile-form-section:not(:first-child) {
             grid-column: 1;
             grid-row: auto;
         }
@@ -8214,6 +8228,43 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             </section>
 
+            <div class="profile-column-stack">
+            <section class="profile-form-section accent-maroon profile-frame-equal profile-academic-section">
+                <h3 class="profile-form-section-title"><x-outline-icon name="document-text" />{{ $usesEmployeeHealthForm ? 'Employment Information' : 'Academic Information' }}</h3>
+                <div class="profile-grid-3">
+                    @if($displayStudentNumber !== '')
+                        <div>
+                            <label class="input-label">{{ $idNumberHeading }}</label>
+                            <div class="form-control profile-static-field">{{ $displayStudentNumber }}</div>
+                        </div>
+                    @endif
+                    @if(!$usesEmployeeHealthForm && $displayCourse !== '')
+                        <div>
+                            <label class="input-label">Course</label>
+                            <div class="form-control profile-course-field profile-static-field">{{ $displayCourse }}</div>
+                        </div>
+                    @endif
+                    @if($usesEmployeeHealthForm && $displayOffice !== '')
+                        <div>
+                            <label class="input-label">Office / Department</label>
+                            <div class="form-control profile-static-field">{{ $displayOffice }}</div>
+                        </div>
+                    @endif
+                    @if($displayYear !== '')
+                        <div>
+                            <label class="input-label">{{ $usesEmployeeHealthForm ? 'School Year' : 'Year' }}</label>
+                            <div class="form-control profile-static-field">{{ $displayYear }}</div>
+                        </div>
+                    @endif
+                    @if($displaySection !== '')
+                        <div>
+                            <label class="input-label">Section</label>
+                            <div class="form-control profile-static-field">{{ $displaySection }}</div>
+                        </div>
+                    @endif
+                </div>
+            </section>
+
             <section class="profile-form-section accent-gold" data-profile-edit-card>
                 <h3 class="profile-form-section-title"><x-outline-icon name="envelope" />Contact Information</h3>
                 <div class="profile-grid-2">
@@ -8253,6 +8304,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 @endif
             </section>
+            </div>
             </div>
         @endif
 

@@ -197,49 +197,16 @@ class AdminController extends Controller
         $studentNumberPattern = '^[0-9]{4}-[0-9]{5}-[A-Za-z]{2}-[0-9]+$';
         $issuedClearanceStatuses = ['Issued', 'Fully Cleared'];
 
-        $pendingAdmissionReferenceQuery = function ($builder) use ($studentNumberPattern, $issuedClearanceStatuses): void {
-            $builder->where(function ($statusQuery) use ($issuedClearanceStatuses) {
-                $statusQuery->whereNull('clearance_status')
-                    ->orWhereNotIn('clearance_status', $issuedClearanceStatuses);
-            })
-                ->whereNotNull('reference_number')
-                ->where('reference_number', '!=', '')
-                ->whereRaw('UPPER(reference_number) NOT LIKE ?', ['CLN-%'])
-                ->whereRaw('UPPER(reference_number) NOT LIKE ?', ['LOC-%'])
-                ->whereRaw('UPPER(reference_number) NOT LIKE ?', ['TEST-LOCAL%'])
-                ->whereRaw('reference_number NOT REGEXP ?', [$studentNumberPattern]);
-        };
-
         $realStudentNumberQuery = function ($builder) use ($studentNumberPattern): void {
-            $builder->where(function ($numberQuery) {
+            $builder->where(function ($numberQuery) use ($studentNumberPattern) {
                 $numberQuery->whereNotNull('student_number')
                     ->where('student_number', '!=', '')
-                    ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
-                    ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
-                    ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%'])
-                    ->where(function ($identityQuery) {
-                        $identityQuery->whereNull('reference_number')
-                            ->orWhere('reference_number', '')
-                            ->orWhereColumn('student_number', '!=', 'reference_number');
-                    });
-            })
-                ->orWhere(function ($numberQuery) use ($studentNumberPattern) {
-                    $numberQuery->whereNotNull('student_number')
-                        ->where('student_number', '!=', '')
-                        ->whereRaw('student_number REGEXP ?', [$studentNumberPattern]);
+                    ->whereRaw('student_number REGEXP ?', [$studentNumberPattern]);
                 })
                 ->orWhereHas('user', function ($userQuery) use ($studentNumberPattern) {
                     $userQuery->whereNotNull('student_number')
                         ->where('student_number', '!=', '')
-                        ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
-                        ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
-                        ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%'])
-                        ->where(function ($identityQuery) use ($studentNumberPattern) {
-                            $identityQuery->whereNull('reference_number')
-                                ->orWhere('reference_number', '')
-                                ->orWhereColumn('student_number', '!=', 'reference_number')
-                                ->orWhereRaw('student_number REGEXP ?', [$studentNumberPattern]);
-                        });
+                        ->whereRaw('student_number REGEXP ?', [$studentNumberPattern]);
                 });
         };
 
@@ -261,37 +228,17 @@ class AdminController extends Controller
         }
 
         if ($userTypeFilter === 'applicant') {
-            $query->where(function ($builder) use ($pendingAdmissionReferenceQuery) {
-                $builder->where($pendingAdmissionReferenceQuery)
-                    ->orWhere(function ($missingNumberQuery) {
-                        $missingNumberQuery
-                            ->where(function ($profileNumberQuery) {
-                                $profileNumberQuery->whereNull('student_number')
-                                    ->orWhere('student_number', '')
-                                    ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
-                                    ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
-                                    ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
-                                    ->orWhereColumn('student_number', 'reference_number');
-                            })
-                            ->whereDoesntHave('user', function ($userQuery) {
-                                $userQuery->whereNotNull('student_number')
-                                    ->where('student_number', '!=', '')
-                                    ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
-                                    ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
-                                    ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%'])
-                                    ->where(function ($identityQuery) {
-                                        $identityQuery->whereNull('reference_number')
-                                            ->orWhere('reference_number', '')
-                                            ->orWhereColumn('student_number', '!=', 'reference_number');
-                                    });
-                            });
+            $query->where(function ($missingNumberQuery) use ($studentNumberPattern) {
+                $missingNumberQuery
+                    ->where(function ($profileNumberQuery) use ($studentNumberPattern) {
+                        $profileNumberQuery->whereNull('student_number')
+                            ->orWhere('student_number', '')
+                            ->orWhereRaw('student_number NOT REGEXP ?', [$studentNumberPattern]);
                     })
-                    ->orWhereHas('user', function ($userQuery) {
-                        $userQuery->where(function ($builder) {
-                            foreach (['user_type', 'user_role', 'idp_role'] as $roleColumn) {
-                                $builder->orWhereRaw("LOWER(COALESCE({$roleColumn}, '')) LIKE ?", ['%applicant%']);
-                            }
-                        });
+                    ->whereDoesntHave('user', function ($userQuery) use ($studentNumberPattern) {
+                        $userQuery->whereNotNull('student_number')
+                            ->where('student_number', '!=', '')
+                            ->whereRaw('student_number REGEXP ?', [$studentNumberPattern]);
                     });
             });
         }
@@ -2162,8 +2109,10 @@ class AdminController extends Controller
 
     private function studentNumberSyncCandidateQuery()
     {
+        $idpUuidPattern = '^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[1-5][0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$';
+
         return User::query()
-            ->where(function ($query): void {
+            ->where(function ($query) use ($idpUuidPattern): void {
                 $query->whereRaw("LOWER(COALESCE(idp_role, '')) = ?", ['student'])
                     ->orWhereRaw("LOWER(COALESCE(user_type, '')) = ?", ['student'])
                     ->orWhere(function ($fallbackQuery): void {
@@ -2173,24 +2122,26 @@ class AdminController extends Controller
                     });
             })
             ->whereHas('healthProfile')
-            ->where(function ($query): void {
+            ->where(function ($query) use ($idpUuidPattern): void {
                 $query->whereNull('student_number')
                     ->orWhere('student_number', '')
                     ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
                     ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
                     ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
                     ->orWhereRaw('UPPER(student_number) IN (?, ?, ?, ?)', ['N/A', 'NA', 'NULL', 'UNKNOWN'])
+                    ->orWhereRaw('student_number REGEXP ?', [$idpUuidPattern])
                     ->orWhereNull('year')
                     ->orWhere('year', '')
                     ->orWhereNull('section')
                     ->orWhere('section', '')
-                    ->orWhereHas('healthProfile', function ($profileQuery): void {
+                    ->orWhereHas('healthProfile', function ($profileQuery) use ($idpUuidPattern): void {
                         $profileQuery->whereNull('student_number')
                             ->orWhere('student_number', '')
                             ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
                             ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
                             ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
-                            ->orWhereRaw('UPPER(student_number) IN (?, ?, ?, ?)', ['N/A', 'NA', 'NULL', 'UNKNOWN']);
+                            ->orWhereRaw('UPPER(student_number) IN (?, ?, ?, ?)', ['N/A', 'NA', 'NULL', 'UNKNOWN'])
+                            ->orWhereRaw('student_number REGEXP ?', [$idpUuidPattern]);
                     });
             });
     }
@@ -2930,6 +2881,28 @@ class AdminController extends Controller
         return $record;
     }
 
+    private function resolveAdminHealthProfileAudience(HealthProfile $profile): string
+    {
+        $user = $profile->user;
+        $userType = strtolower(trim((string) ($user?->user_type ?: $user?->idp_role ?: $user?->user_role ?: '')));
+        $accountType = $user?->clinicAccountTypeKey();
+
+        if ($accountType === 'dependent'
+            || str_contains($userType, 'dependent')
+            || str_contains($userType, 'guest')) {
+            return 'dependent';
+        }
+
+        foreach ([$profile->student_number, $user?->student_number] as $value) {
+            $studentNumber = strtoupper(trim((string) $value));
+            if (preg_match('/^\d{4}-\d{5}-[A-Z]{2}-\d+$/', $studentNumber) === 1) {
+                return 'student';
+            }
+        }
+
+        return 'applicant';
+    }
+
     public function viewHealth(Request $request)
     {
         $search = trim((string) $request->query('q', ''));
@@ -3560,13 +3533,7 @@ class AdminController extends Controller
             ->where('status', HealthFormSubmission::STATUS_REQUESTED)
             ->latest('requested_at')
             ->first();
-        $healthFormAudience = $profile->user?->clinicHealthFormAudience();
-        if (!in_array($healthFormAudience, ['applicant', 'student', 'dependent'], true)) {
-            $profileUserType = strtolower(trim((string) ($profile->user?->user_type ?: $profile->user?->idp_role ?: '')));
-            $healthFormAudience = str_contains($profileUserType, 'dependent')
-                ? 'dependent'
-                : (str_contains($profileUserType, 'student') ? 'student' : 'applicant');
-        }
+        $healthFormAudience = $this->resolveAdminHealthProfileAudience($profile);
         $healthFormCategories = HealthFormCategory::query()
             ->where('is_active', true)
             ->availableFor($healthFormAudience)
@@ -3795,9 +3762,7 @@ class AdminController extends Controller
     public function requestNewHealthForm(Request $request, $id)
     {
         $profile = HealthProfile::with('user')->findOrFail($id);
-        $healthFormAudience = $profile->user?->clinicHealthFormAudience() === 'student'
-            ? 'student'
-            : 'applicant';
+        $healthFormAudience = $this->resolveAdminHealthProfileAudience($profile);
 
         $validated = $request->validate([
             'category' => [
