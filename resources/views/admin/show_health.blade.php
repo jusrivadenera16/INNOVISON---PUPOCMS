@@ -2648,18 +2648,20 @@
 
         return in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'], true);
     };
-    $displayStudentNumber = trim((string) optional($profile->user)->student_number);
-    if ($displayStudentNumber === '' || \Illuminate\Support\Str::startsWith(\Illuminate\Support\Str::upper($displayStudentNumber), 'CLN-')) {
-        $displayStudentNumber = 'N/A';
-    }
+    $displayStudentNumber = collect([
+        $profile->student_number,
+        optional($profile->user)->student_number,
+    ])->first(function ($value) {
+        return preg_match('/^\d{4}-\d{5}-[A-Za-z]{2}-\d+$/', trim((string) $value)) === 1;
+    });
+    $displayStudentNumber = $displayStudentNumber !== null ? trim((string) $displayStudentNumber) : 'N/A';
     $profileName = trim((string) ($profile->user->name ?? 'N/A'));
     $profileUserType = strtolower(trim((string) ($profile->user->user_type ?? $profile->user->idp_role ?? '')));
     $profileClinicAccountType = $profile->user?->clinicAccountTypeKey();
-    $profileIsDependent = $profile->user?->clinicHealthFormAudience() === 'dependent'
+    $profileIsDependent = ($healthFormAudience ?? null) === 'dependent'
         || str_contains($profileUserType, 'dependent')
         || str_contains($profileUserType, 'guest');
-    $profileIsLocalStudent = !$profileIsDependent
-        && ($profileClinicAccountType === 'student' || str_contains($profileUserType, 'student'));
+    $profileIsLocalStudent = !$profileIsDependent && ($healthFormAudience ?? null) === 'student';
     $profileIsLocalOnly = $profileIsLocalStudent
         || $profileIsDependent
         || in_array($profileClinicAccountType, ['faculty', 'non_teaching_staff'], true)
@@ -2667,7 +2669,7 @@
         || str_contains($profileUserType, 'admin')
         || str_contains($profileUserType, 'employee')
         || str_contains($profileUserType, 'staff');
-    $profileDetailLabel = str_contains($profileUserType, 'applicant')
+    $profileDetailLabel = ($healthFormAudience ?? null) === 'applicant'
         ? 'Applicant Health Profile'
         : (str_contains($profileUserType, 'dependent')
             ? 'Dependent Health Profile'

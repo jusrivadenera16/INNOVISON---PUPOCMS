@@ -7227,8 +7227,8 @@ public function testingSkipHealthForm()
         ['user_id' => $user->id],
         [
             'student_id' => $user->student_id,
-            'student_number' => $user->student_number ?: $user->student_id ?: 'TEST-STUDENT',
-            'reference_number' => $user->student_number ?: $user->student_id ?: 'TEST-REFERENCE',
+            'student_number' => $user->student_number ?: 'TEST-STUDENT',
+            'reference_number' => $user->reference_number ?: 'TEST-REFERENCE',
             'school_year' => '2025-2026',
             'home_address' => 'Testing Address',
             'zipcode' => '0000',
