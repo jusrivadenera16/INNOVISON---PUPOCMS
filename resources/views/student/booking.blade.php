@@ -2458,11 +2458,11 @@
                 
                 <div class="input-group">
                     <label class="input-label">Service Type</label>
-                    @php
+                    <?php
                         $hasBloodPressureMonitoringService = collect($otherServiceOptions ?? [])->contains(function ($serviceOption) {
                             return strtolower(trim((string) $serviceOption->serviceLabel())) === 'bp monitoring';
                         });
-                    @endphp
+                    ?>
                     <div class="input-wrapper service-select-wrap has-leading-icon">
                         <span class="booking-field-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
                         <select name="service" class="form-control service-select" id="serviceTypeSelect" required>
@@ -2553,10 +2553,10 @@
                 </h4>
                 
                 <div class="app-list">
-                    @php
+                    <?php
                         $visibleAppointments = $appointments->take(4);
                         $overflowAppointments = $appointments->slice(4);
-                    @endphp
+                    ?>
 
                     @forelse($visibleAppointments as $appt)
                         <div class="appt-item">
@@ -2676,14 +2676,14 @@
 </div>
 
 @if(session('appointment_confirmation'))
-    @php
+    <?php
         $confirmation = session('appointment_confirmation');
         $appointmentNumber = (string) ($confirmation['apt_id'] ?? 'N/A');
         $rawConfirmationStatus = trim((string) ($confirmation['status'] ?? 'Pending'));
         $confirmationStatusLabel = strtolower(str_replace('_', ' ', $rawConfirmationStatus)) === 'pending'
             ? 'Pending Review'
             : ucwords(str_replace('_', ' ', $rawConfirmationStatus));
-    @endphp
+    ?>
     <div class="confirmation-overlay" id="appointmentConfirmationOverlay">
         <div class="confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="appointmentConfirmationTitle">
             <button type="button" class="confirmation-close" id="appointmentConfirmationClose" aria-label="Close confirmation">

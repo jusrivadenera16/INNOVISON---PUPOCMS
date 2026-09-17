@@ -10302,6 +10302,50 @@
         box-shadow: 0 12px 26px rgba(0, 0, 0, .22) !important;
     }
 
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-file-actions {
+        border-color: rgba(148, 163, 184, .28) !important;
+        background: #111827 !important;
+        background-image: none !important;
+        color: #f8fafc !important;
+        box-shadow: 0 10px 22px rgba(0, 0, 0, .18) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-file-action {
+        border-color: rgba(148, 163, 184, .34) !important;
+        background: #1e293b !important;
+        color: #f8fafc !important;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, .18) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-file-action svg {
+        color: currentColor !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-file-action:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-file-action:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131b !important;
+        box-shadow: 0 10px 20px rgba(250, 204, 21, .2) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-documents-count {
+        background: rgba(250, 204, 21, .16) !important;
+        color: #fde68a !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-condition-badge {
+        border-color: rgba(147, 197, 253, .42) !important;
+        background: rgba(30, 64, 175, .28) !important;
+        color: #bfdbfe !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-condition-badge.has-condition {
+        border-color: rgba(248, 113, 113, .42) !important;
+        background: rgba(127, 29, 29, .34) !important;
+        color: #fecaca !important;
+    }
+
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-result::before {
         color: #facc15 !important;
     }
