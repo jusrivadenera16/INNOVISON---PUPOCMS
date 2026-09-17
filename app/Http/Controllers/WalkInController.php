@@ -67,6 +67,39 @@ class WalkInController extends Controller
         );
     }
 
+    private function hasCompletedHealthForm(?HealthProfile $healthProfile, ?User $user): bool
+    {
+        if (!$healthProfile && !$user) {
+            return false;
+        }
+
+        return HealthFormSubmission::query()
+            ->whereIn('status', [
+                HealthFormSubmission::STATUS_SUBMITTED,
+                HealthFormSubmission::STATUS_APPROVED,
+                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                'Approved',
+            ])
+            ->where(function ($query) {
+                $query->whereNotNull('submitted_at')
+                    ->orWhereNotNull('approved_at');
+            })
+            ->where(function ($query) use ($healthProfile, $user) {
+                if ($healthProfile) {
+                    $query->where('health_profile_id', $healthProfile->id);
+                }
+
+                if ($user) {
+                    if ($healthProfile) {
+                        $query->orWhere('user_id', $user->id);
+                    } else {
+                        $query->where('user_id', $user->id);
+                    }
+                }
+            })
+            ->exists();
+    }
+
     private function resolveClearanceTargetForWorkflow(
         ?string $category,
         string $sourceWorkflow,
@@ -2365,6 +2398,7 @@ class WalkInController extends Controller
             if ($healthProfile) {
                 $student->setRelation('healthProfile', $healthProfile);
             }
+            $hasCompletedHealthForm = $this->hasCompletedHealthForm($healthProfile, $student);
             $dependentProfile = $isEmployeeLookupScope && $this->isDependentHealthProfileUser($student)
                 ? $student->dependentProfile
                 : null;
@@ -2469,6 +2503,7 @@ class WalkInController extends Controller
                     'approved_at' => $resolvedApprovedAt,
                     'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
                     'health_profile_id' => optional($healthProfile)->id,
+                    'has_completed_health_form' => $hasCompletedHealthForm,
                     'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
                     'medical_certificate_result' => $medicalCertificateResult,
                     'medical_certificate_findings_details' => $medicalCertificateDetails,
@@ -2529,6 +2564,7 @@ class WalkInController extends Controller
                 'approved_at' => $resolvedApprovedAt,
                 'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
                 'health_profile_id' => optional($healthProfile)->id,
+                'has_completed_health_form' => $hasCompletedHealthForm,
                 'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
                 'medical_certificate_result' => $medicalCertificateResult,
                 'medical_certificate_findings_details' => $medicalCertificateDetails,
@@ -3933,6 +3969,15 @@ PROMPT;
                 $idpStudentId = trim((string) ($student->student_id ?? $localOnlyProfile?->student_id ?? ''));
                 $studentId = $idpStudentId !== '' ? $idpStudentId : $referenceNumber;
             }
+
+            if (!$isLocalEmployeeRequest && !$this->hasCompletedHealthForm($localOnlyProfile, $student)) {
+                return response()->json([
+                    'success' => false,
+                    'code' => 'health_form_not_completed',
+                    'message' => 'This applicant has not completed the Health Form yet. Please ask the applicant to submit the form before proceeding to Final Review.',
+                ], 422);
+            }
+
             // Save the local decision first; PUPTAS sync happens after the DB transaction.
             $webhookResult = $isLocalOnlyApproval
                 ? [

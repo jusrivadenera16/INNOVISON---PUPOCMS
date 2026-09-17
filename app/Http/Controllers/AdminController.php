@@ -4786,8 +4786,8 @@ class AdminController extends Controller
     {
         $profile = HealthProfile::with('user')->findOrFail($id);
 
-        if ($profile->user?->clinicAccountTypeKey() === 'student') {
-            return back()->with('error', 'Student health records are issued locally and do not sync to PUPTAS.');
+        if (in_array($profile->user?->clinicAccountTypeKey(), ['student', 'faculty', 'non_teaching_staff', 'dependent'], true)) {
+            return back()->with('error', 'Local clinic health records are issued locally and do not sync to PUPTAS.');
         }
 
         if (!in_array((string) $profile->clearance_status, ['Issued', 'Fully Cleared'], true)) {
@@ -4926,7 +4926,9 @@ public function updateClearance(Request $request, $id)
         'resubmission_required_documents.*' => ['string', Rule::in(['student_photo', 'health_declaration', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])],
     ]);
 
-    $record = HealthProfile::findOrFail($id);
+    $record = HealthProfile::with('user')->findOrFail($id);
+    $recordClinicAccountType = $record->user?->clinicAccountTypeKey();
+    $recordIsLocalOnly = in_array($recordClinicAccountType, ['student', 'faculty', 'non_teaching_staff', 'dependent'], true);
     $previousStatus = (string) $record->clearance_status;
     $requestedStatus = (string) $request->input('clearance_status');
     $isApproval = in_array($requestedStatus, ['Issued', 'Fully Cleared'], true);
@@ -5059,36 +5061,40 @@ public function updateClearance(Request $request, $id)
                         'updated_at' => now(),
                     ]);
 
-                try {
-                    $puptasService = app(PuptasWebhookService::class);
-                    $referenceNumber = $this->resolvePuptasReferenceNumber($record);
-                    $idpStudentId = $this->resolvePuptasIdpStudentId($record);
+                if ($recordIsLocalOnly) {
+                    $this->updatePuptasSyncState($record, 'not_applicable', 'PUPTAS sync is not applicable to local clinic health records.');
+                } else {
+                    try {
+                        $puptasService = app(PuptasWebhookService::class);
+                        $referenceNumber = $this->resolvePuptasReferenceNumber($record);
+                        $idpStudentId = $this->resolvePuptasIdpStudentId($record);
 
-                    if ($referenceNumber === '') {
-                        $this->updatePuptasSyncState($record, 'missing_reference_number', 'PUPTAS sync skipped because the reference number is still missing.');
-                        \Log::warning("PUPTAS Sync Skipped for User {$record->user->id}: missing reference_number.");
-                        return redirect()->route('admin.health_records')
-                            ->with('success', 'Medical clearance updated, but PUPTAS sync was skipped because reference number is missing.');
+                        if ($referenceNumber === '') {
+                            $this->updatePuptasSyncState($record, 'missing_reference_number', 'PUPTAS sync skipped because the reference number is still missing.');
+                            \Log::warning("PUPTAS Sync Skipped for User {$record->user->id}: missing reference_number.");
+                            return redirect()->route('admin.health_records')
+                                ->with('success', 'Medical clearance updated, but PUPTAS sync was skipped because reference number is missing.');
+                        }
+
+                        $this->updatePuptasSyncState($record, 'syncing', 'Preparing the approved health clearance for PUPTAS.');
+                        $syncResult = $puptasService->sendWithRetry($referenceNumber, $idpStudentId, true);
+
+                        if (!$syncResult['success']) {
+                            $this->updatePuptasSyncState(
+                                $record,
+                                'failed',
+                                $syncResult['message'] ?? 'The PUPTAS sync attempt failed.',
+                            );
+                            \Log::error("PUPTAS Sync Failed for reference {$referenceNumber} / student_id {$idpStudentId}: " . ($syncResult['message'] ?? 'Unknown error'));
+                        } else {
+                            $this->updatePuptasSyncState($record, 'synced', 'Approved health clearance synced to PUPTAS.', true);
+                        }
+                    } catch (\Exception $e) {
+                        $referenceNumber = trim((string) (($record->reference_number ?? '') ?: ($record->student_number ?? '') ?: optional($record->user)->student_number));
+                        $idpStudentId = trim((string) (optional($record->user)->student_id ?: $record->student_id));
+                        $this->updatePuptasSyncState($record, 'failed', $e->getMessage());
+                        \Log::error("PUPTAS Sync Failed for reference {$referenceNumber} / student_id {$idpStudentId}: " . $e->getMessage());
                     }
-
-                    $this->updatePuptasSyncState($record, 'syncing', 'Preparing the approved health clearance for PUPTAS.');
-                    $syncResult = $puptasService->sendWithRetry($referenceNumber, $idpStudentId, true);
-
-                    if (!$syncResult['success']) {
-                        $this->updatePuptasSyncState(
-                            $record,
-                            'failed',
-                            $syncResult['message'] ?? 'The PUPTAS sync attempt failed.',
-                        );
-                        \Log::error("PUPTAS Sync Failed for reference {$referenceNumber} / student_id {$idpStudentId}: " . ($syncResult['message'] ?? 'Unknown error'));
-                    } else {
-                        $this->updatePuptasSyncState($record, 'synced', 'Approved health clearance synced to PUPTAS.', true);
-                    }
-                } catch (\Exception $e) {
-                    $referenceNumber = trim((string) (($record->reference_number ?? '') ?: ($record->student_number ?? '') ?: optional($record->user)->student_number));
-                    $idpStudentId = trim((string) (optional($record->user)->student_id ?: $record->student_id));
-                    $this->updatePuptasSyncState($record, 'failed', $e->getMessage());
-                    \Log::error("PUPTAS Sync Failed for reference {$referenceNumber} / student_id {$idpStudentId}: " . $e->getMessage());
                 }
             } else {
                 $this->updatePuptasSyncState($record, null, null);

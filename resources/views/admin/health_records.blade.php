@@ -7777,7 +7777,11 @@
                     $recordFamilyName = $recordLastName !== ''
                         ? $recordLastName
                         : trim((string) optional($recordUser)->name);
-                    $recordIsLocalStudent = $recordUserType === 'Student' && !$recordIsEmployee;
+                    $recordClinicAccountType = $record->user?->clinicAccountTypeKey();
+                    $recordUserTypeKey = strtolower(trim((string) $recordUserType));
+                    $recordIsLocalOnly = $recordIsEmployee
+                        || in_array($recordClinicAccountType, ['student', 'faculty', 'non_teaching_staff', 'dependent'], true)
+                        || in_array($recordUserTypeKey, ['student', 'faculty', 'admin', 'dependent', 'guest'], true);
                     $puptasStatusRaw = strtolower(trim((string) ($record->puptas_sync_status ?? '')));
                     $puptasReference = strtoupper(trim((string) ($record->reference_number ?: $record->student_number ?: optional($record->user)->student_number)));
                     $isLocalPuptasReference = $puptasReference === ''
@@ -7785,12 +7789,12 @@
                     if ($puptasStatusRaw === '' && $isLocalPuptasReference) {
                         $puptasStatusRaw = 'not_applicable';
                     }
-                    if ($recordIsLocalStudent && in_array($recordStatus, ['Issued', 'Fully Cleared'], true)) {
-                        $puptasStatusRaw = 'local_student';
+                    if ($recordIsLocalOnly && in_array($recordStatus, ['Issued', 'Fully Cleared'], true)) {
+                        $puptasStatusRaw = 'local_record';
                     }
                     $puptasStatusLabel = match ($puptasStatusRaw) {
                         'synced' => 'Synced',
-                        'local_student' => 'Issued',
+                        'local_record' => 'Issued',
                         'failed' => 'Failed',
                         'syncing' => 'Syncing',
                         'pending' => 'Pending',
@@ -7799,7 +7803,7 @@
                         default => 'Not Synced',
                     };
                     $puptasStatusClass = match ($puptasStatusRaw) {
-                        'synced', 'local_student' => 'issued',
+                        'synced', 'local_record' => 'issued',
                         'failed', 'missing_reference_number' => 'review',
                         'syncing', 'pending' => 'pending',
                         'not_applicable' => 'submitted',
@@ -7939,7 +7943,7 @@
                         @elseif($recordPulloutStatus === \App\Models\HealthProfile::PULLOUT_COMPLETED)
                             <span class="status review">Pulled Out</span>
                         @elseif(in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true))
-                            @if($recordIsLocalStudent || $puptasStatusRaw === 'synced')
+                            @if($recordIsLocalOnly || $puptasStatusRaw === 'synced')
                                 <span class="status issued"><i class="fas fa-check-circle me-1"></i> Issued</span>
                             @else
                                 <span class="status pending">Not Sync</span>

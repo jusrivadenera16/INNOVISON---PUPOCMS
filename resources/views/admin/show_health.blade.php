@@ -62,8 +62,8 @@
     }
     .profile-hero-layout {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
-        gap: 18px;
+        grid-template-columns: minmax(0, 1fr) minmax(190px, 220px);
+        gap: 14px;
         margin-top: 18px;
     }
     .profile-identity {
@@ -106,17 +106,17 @@
     }
     .profile-quick-row {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
+        grid-template-columns: minmax(125px, 1.4fr) minmax(55px, .55fr) minmax(50px, .5fr) minmax(145px, 1.45fr) minmax(115px, 1.15fr);
+        gap: 8px;
         margin-top: 16px;
     }
     .profile-quick-item {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         min-width: 0;
         color: #475569;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 800;
     }
     .profile-quick-icon,
@@ -128,9 +128,9 @@
         flex: 0 0 auto;
     }
     .profile-quick-icon {
-        width: 28px;
-        height: 28px;
-        border-radius: 9px;
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
         background: #f8fafc;
         border: 1px solid #e2e8f0;
         color: #70131B;
@@ -144,7 +144,8 @@
     .profile-quick-item strong {
         display: block;
         color: #111827;
-        font-size: 11px;
+        font-size: 10px;
+        line-height: 1.2;
         font-weight: 900;
         min-width: 0;
         white-space: normal;
@@ -152,20 +153,20 @@
     }
     .profile-quick-item > span:last-child { min-width: 0; }
     .profile-status-card {
-        min-height: 82px;
+        min-height: 78px;
         border-radius: 14px;
-        padding: 10px 12px;
+        padding: 8px 10px;
         border: 1px solid #bbf7d0;
         background: linear-gradient(135deg, #f0fdf4, #ecfeff);
         display: flex;
-        gap: 10px;
+        gap: 8px;
         align-items: center;
-        max-width: 285px;
+        max-width: 220px;
         justify-self: end;
     }
     .profile-status-shield {
-        width: 38px;
-        height: 38px;
+        width: 34px;
+        height: 34px;
         border-radius: 999px;
         display: grid;
         place-items: center;
@@ -185,9 +186,9 @@
         letter-spacing: .06em;
     }
     .profile-status-card-value {
-        margin: 0 0 5px;
+        margin: 0 0 4px;
         color: #16a34a;
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 900;
     }
     .profile-correction-card {
@@ -460,19 +461,19 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 30px;
-        padding: 6px 12px;
+        min-height: 26px;
+        padding: 4px 8px;
         border-radius: 999px;
-        font-size: 12px;
+        font-size: 10px;
         font-weight: 800;
         text-transform: uppercase;
         border: 1px solid transparent;
         letter-spacing: 0.02em;
     }
     .profile-status-badge svg {
-        width: 14px;
-        height: 14px;
-        margin-right: 6px;
+        width: 13px;
+        height: 13px;
+        margin-right: 5px;
         stroke-width: 2.2;
         flex: 0 0 auto;
     }
@@ -2248,7 +2249,7 @@
         color: #cbd5e1;
     }
 
-    @media (max-width: 1024px) {
+    @media (max-width: 900px) {
         .profile-hero-layout {
             grid-template-columns: 1fr;
         }
@@ -2659,6 +2660,13 @@
         || str_contains($profileUserType, 'guest');
     $profileIsLocalStudent = !$profileIsDependent
         && ($profileClinicAccountType === 'student' || str_contains($profileUserType, 'student'));
+    $profileIsLocalOnly = $profileIsLocalStudent
+        || $profileIsDependent
+        || in_array($profileClinicAccountType, ['faculty', 'non_teaching_staff'], true)
+        || str_contains($profileUserType, 'faculty')
+        || str_contains($profileUserType, 'admin')
+        || str_contains($profileUserType, 'employee')
+        || str_contains($profileUserType, 'staff');
     $profileDetailLabel = str_contains($profileUserType, 'applicant')
         ? 'Applicant Health Profile'
         : (str_contains($profileUserType, 'dependent')
@@ -2681,12 +2689,12 @@
     if ($puptasSyncRaw === '' && $isLocalPuptasReference) {
         $puptasSyncRaw = 'not_applicable';
     }
-    if ($profileIsLocalStudent && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)) {
-        $puptasSyncRaw = 'local_student';
+    if ($profileIsLocalOnly && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)) {
+        $puptasSyncRaw = 'local_record';
     }
     $puptasSyncLabel = match ($puptasSyncRaw) {
         'synced' => 'Synced to PUPTAS',
-        'local_student' => 'Issued',
+        'local_record' => 'Issued',
         'failed' => 'Sync Failed',
         'syncing' => 'Syncing',
         'pending' => 'Pending Sync',
@@ -2695,14 +2703,13 @@
         default => 'Not Synced',
     };
     $puptasSyncClass = match ($puptasSyncRaw) {
-        'synced', 'local_student' => 'profile-status-issued',
+        'synced', 'local_record' => 'profile-status-issued',
         'failed', 'missing_reference_number' => 'profile-status-rejected',
         'syncing', 'pending' => 'profile-status-pending',
         'not_applicable' => 'profile-status-default',
         default => 'profile-status-pending',
     };
-    $canResyncPuptas = !$profileIsDependent && !$isPulloutPending && !$isPulledOut
-        && !$profileIsLocalStudent
+    $canResyncPuptas = !$profileIsLocalOnly && !$isPulloutPending && !$isPulledOut
         && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && !in_array($puptasSyncRaw, ['synced', 'not_applicable'], true)
         && (optional(auth()->user())->canAccessPermission('health_records.update_assessment') ?? false);
@@ -2808,7 +2815,7 @@
                     <p class="profile-status-card-title">Health Record Status</p>
                     <p class="profile-status-card-value">{{ $profileStatusLabel }}</p>
                     <span class="profile-status-badge {{ $puptasSyncClass }}">
-                        @if(in_array($puptasSyncRaw, ['synced', 'local_student'], true))
+                        @if(in_array($puptasSyncRaw, ['synced', 'local_record'], true))
                             <x-outline-icon name="check" />
                         @elseif(in_array($puptasSyncRaw, ['failed', 'missing_reference_number'], true))
                             <x-outline-icon name="exclamation-triangle" />
@@ -2819,7 +2826,7 @@
                         @endif
                         {{ $puptasSyncLabel }}
                     </span>
-                    @if($profile->puptas_synced_at && !$profileIsLocalStudent)
+                    @if($profile->puptas_synced_at && !$profileIsLocalOnly)
                         <p class="profile-sync-message" style="margin-top:8px;">Last synced: {{ $profile->puptas_synced_at->format('M d, Y h:i A') }}</p>
                     @endif
                     @if($canResyncPuptas)
@@ -2985,7 +2992,7 @@
                         'healthData' => $profile->attributesToArray(),
                     ])
 
-                    @if(!$profileIsLocalStudent)
+                    @if(!$profileIsLocalOnly)
                     <div class="profile-timeline-card">
                         <div class="profile-timeline-head">
                             <div>
