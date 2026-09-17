@@ -683,7 +683,7 @@
 <div class="pullout-report-shell">
     @include('admin.partials.report-breadcrumb', ['items' => [
         ['label' => 'Reports', 'url' => $reportsRootUrl],
-        ['label' => 'Digital Logbook', 'url' => $digitalLogbookUrl],
+        ['label' => 'Clinic Records', 'url' => $digitalLogbookUrl],
         ['label' => 'Pulled Out'],
     ]])
     <section class="pullout-report-header">
@@ -692,7 +692,7 @@
                 <span class="pullout-report-icon"><x-outline-icon name="document-check" /></span>
                 <div>
                     <h1>Pulled Out Records</h1>
-                    <p>Digital logbook of archived health records removed from active clinic workflows and portal access.</p>
+                    <p>Clinic record of archived health profiles removed from active clinic workflows and portal access.</p>
                 </div>
             </div>
             <div class="pullout-report-head-actions">

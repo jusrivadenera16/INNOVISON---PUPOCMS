@@ -351,6 +351,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::post('/admin/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->middleware('module.permission:walkin.encode_assessment')->name('admin.walkin.applicant_encoding');
         Route::post('/admin/walkin/student-assessment', [WalkInController::class, 'saveStudentAssessment'])->middleware('module.permission:walkin.encode_assessment|walkin.employee_lookup')->name('admin.walkin.student_assessment');
         Route::post('/admin/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('admin.walkin.final_review.time_in');
+        Route::post('/admin/walkin/final-review/time-out', [WalkInController::class, 'markFinalReviewTimeOut'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('admin.walkin.final_review.time_out');
         Route::post('/admin/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('admin.walkin.approve_applicant');
         Route::post('/admin/walkin/applicant-final-review-draft', [WalkInController::class, 'saveApplicantFinalReviewDraft'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('admin.walkin.applicant_final_review_draft');
         Route::post('/admin/walkin/employee-draft', [WalkInController::class, 'saveEmployeeDraft'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('admin.walkin.employee_draft');
@@ -560,6 +561,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::post('/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.applicant_encoding');
         Route::post('/walkin/student-assessment', [WalkInController::class, 'saveStudentAssessment'])->middleware('module.permission:walkin.encode_assessment|walkin.employee_lookup')->name('walkin.student_assessment');
         Route::post('/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('walkin.final_review.time_in');
+        Route::post('/walkin/final-review/time-out', [WalkInController::class, 'markFinalReviewTimeOut'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('walkin.final_review.time_out');
         Route::post('/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('walkin.approve_applicant');
         Route::post('/walkin/applicant-final-review-draft', [WalkInController::class, 'saveApplicantFinalReviewDraft'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('walkin.applicant_final_review_draft');
 

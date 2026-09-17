@@ -731,6 +731,21 @@
         background: rgba(148, 163, 184, 0.22);
     }
 
+    html[data-theme="dark"] .appointment-stat-card::before {
+        background: #111827 !important;
+        border-color: rgba(250, 204, 21, .48) !important;
+    }
+
+    html[data-theme="dark"] .appointment-stat-card::after,
+    html[data-theme="dark"] .appointment-stat-card.is-action-card::after {
+        background: #facc15 !important;
+    }
+
+    html[data-theme="dark"] .appointment-chart-row.is-current .appointment-chart-label,
+    html[data-theme="dark"] .appointment-chart-row.is-current .appointment-chart-value {
+        color: #ffffff !important;
+    }
+
     @media (max-width: 1100px) {
         .appointment-stats-summary {
             grid-template-columns: repeat(2, minmax(0, 1fr));

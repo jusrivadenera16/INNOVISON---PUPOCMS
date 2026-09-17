@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Digital Logbook')
+@section('title', 'Clinic Records')
 
 @push('styles')
 <style>
@@ -307,20 +307,17 @@
 @section('content')
 @php
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
-    $reportsHomeUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
     $dailyTreatmentRecordUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/daily-treatment-record') : url('/admin/reports/daily-treatment-record');
+    $healthFormsLogbookUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/health-forms-logbook') : url('/admin/reports/health-forms-logbook');
+    $canAccessHealthFormsLogbook = optional(auth()->user())->canAccessPermission('reports.health_forms') ?? false;
     $isSuperAdmin = $role === \App\Models\User::ROLE_SUPERADMIN;
 @endphp
 <div class="digital-logbook-shell">
-    @include('admin.partials.report-breadcrumb', ['items' => [
-        ['label' => 'Reports', 'url' => $reportsHomeUrl],
-        ['label' => 'Digital Logbook'],
-    ]])
     <section class="digital-logbook-frame">
         <header class="digital-logbook-header">
             <div>
-                <h1 class="digital-logbook-title">Digital Logbook</h1>
-                <p class="digital-logbook-copy">Open the clinic logbooks used to monitor consultations, treatment records, and health form review visits.</p>
+                <h1 class="digital-logbook-title">Clinic Records</h1>
+                <p class="digital-logbook-copy">Open the clinic records used to monitor consultations, treatment records, and health form review visits.</p>
             </div>
         </header>
 
@@ -335,6 +332,19 @@
                 </div>
                 <span class="digital-logbook-arrow"><x-outline-icon name="chevron-right" /></span>
             </a>
+
+            @if($canAccessHealthFormsLogbook)
+                <a href="{{ $healthFormsLogbookUrl }}" class="digital-logbook-card">
+                    <div>
+                        <span class="digital-logbook-icon"><x-outline-icon name="document-text" /></span>
+                    </div>
+                    <div>
+                        <h2 class="digital-logbook-card-title">Health Forms Record Logs</h2>
+                        <p class="digital-logbook-card-copy">Review approved health form visits, review times, medical findings, and clearance records.</p>
+                    </div>
+                    <span class="digital-logbook-arrow"><x-outline-icon name="chevron-right" /></span>
+                </a>
+            @endif
 
             @if($isSuperAdmin)
                 <a href="{{ route('reports.pulled-out-records') }}" class="digital-logbook-card">

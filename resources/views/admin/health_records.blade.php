@@ -2205,7 +2205,7 @@
         grid-template-columns: 1fr;
         align-items: end;
         gap: 16px;
-        padding: 20px;
+        padding: 8px;
     }
 
     .health-filter-field {
@@ -2213,6 +2213,10 @@
         flex-direction: column;
         gap: 9px;
         min-width: 0;
+    }
+
+    .health-filter-field[hidden] {
+        display: none !important;
     }
 
     .health-filter-actions {
@@ -6534,7 +6538,8 @@
         align-items: center;
         justify-content: flex-end;
         gap: 8px;
-        padding-top: 2px;
+        margin-top: 8px;
+        padding-top: 12px;
     }
     .health-bulk-request-modal-cancel {
         border: 1px solid #cbd5e1;
@@ -6642,6 +6647,608 @@
         color: #cbd5e1 !important;
     }
 
+    .health-bulk-request-student-card {
+        position: relative;
+        width: min(980px, 100%);
+        max-height: calc(100dvh - 16px);
+        border-radius: 12px;
+        border-color: rgba(250, 204, 21, .18);
+        background: #ffffff;
+        color: #1f2937;
+        box-shadow: 0 28px 70px rgba(15, 23, 42, .34);
+    }
+    .health-bulk-request-student-card .health-bulk-request-modal-head {
+        min-height: 64px;
+        padding: 12px 18px;
+        border-radius: 11px 11px 0 0;
+    }
+    .health-bulk-request-student-card .health-bulk-request-modal-head-main {
+        gap: 12px;
+    }
+    .health-bulk-request-student-card .health-bulk-request-modal-badge {
+        width: 40px;
+        height: 40px;
+        flex-basis: 40px;
+        border-radius: 8px;
+    }
+    .health-bulk-request-student-card .health-bulk-request-modal-badge svg {
+        width: 21px;
+        height: 21px;
+    }
+    .health-bulk-request-student-card .health-bulk-request-modal-title {
+        font-size: 20px;
+    }
+    .health-bulk-request-student-card .health-bulk-request-modal-copy {
+        margin-top: 3px;
+        font-size: 12px;
+    }
+    .health-bulk-request-student-card .health-bulk-request-modal-close {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+    }
+    .health-bulk-request-student-card .health-bulk-request-modal-close svg {
+        width: 17px;
+        height: 17px;
+    }
+    .health-bulk-request-student-card .health-bulk-request-modal-body {
+        padding: 12px 18px 10px;
+        color: #1f2937;
+    }
+    .health-bulk-request-student-card .sr-only {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+    }
+    .health-bulk-request-student-form {
+        display: grid;
+        gap: 10px;
+    }
+    .health-bulk-request-student-step {
+        display: grid;
+        gap: 6px;
+    }
+    .health-bulk-request-student-step-heading {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        min-width: 0;
+    }
+    .health-bulk-request-student-step-number {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 28px;
+        border: 1px solid rgba(250, 204, 21, .68);
+        border-radius: 999px;
+        background: rgba(250, 204, 21, .08);
+        color: #facc15;
+        font-size: 14px;
+        font-weight: 900;
+    }
+    .health-bulk-request-student-step-heading h3 {
+        margin: 1px 0 2px;
+        color: #f8fafc;
+        font-size: 14px;
+        font-weight: 900;
+        line-height: 1.2;
+    }
+    .health-bulk-request-student-step-heading p {
+        margin: 0;
+        color: #94a3b8;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+    .health-bulk-request-student-selection-heading {
+        align-items: center;
+    }
+    .health-bulk-request-student-field,
+    .health-bulk-request-student-filter-field {
+        display: grid;
+        gap: 4px;
+    }
+    .health-bulk-request-student-field label,
+    .health-bulk-request-student-filter-field label {
+        color: #94a3b8;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+    }
+    .health-bulk-request-student-field .health-filter-select-wrap,
+    .health-bulk-request-student-filter-field .health-filter-select-wrap {
+        width: 100%;
+    }
+    .health-bulk-request-student-card .health-filter-custom-trigger {
+        min-height: 41px;
+        padding: 9px 38px 9px 12px;
+        border-color: rgba(148, 163, 184, .28);
+        border-radius: 8px;
+        background: #1e293b;
+        color: #e2e8f0;
+        box-shadow: none;
+        font-size: 12px;
+    }
+    .health-bulk-request-student-card .health-filter-custom-trigger::after {
+        border-color: #facc15;
+    }
+    .health-bulk-request-student-card .health-filter-custom-menu {
+        border-color: rgba(148, 163, 184, .30);
+        border-radius: 8px;
+        background: #111827;
+        box-shadow: 0 18px 32px rgba(0, 0, 0, .42);
+    }
+    .health-bulk-request-student-card .health-filter-custom-option {
+        border: 1px solid rgba(148, 163, 184, .30);
+        background: #111827;
+        color: #e2e8f0;
+        font-size: 13px;
+    }
+    .health-bulk-request-student-card .health-filter-custom-option:hover,
+    .health-bulk-request-student-card .health-filter-custom-option:focus {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+    }
+    .health-bulk-request-student-card .health-filter-custom-option.is-selected {
+        background: #70131B;
+        color: #ffffff;
+    }
+    .health-bulk-request-student-controls {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 8px;
+    }
+    .health-bulk-request-student-search {
+        align-self: end;
+        min-height: 38px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 12px;
+        border: 1px solid rgba(148, 163, 184, .28);
+        border-radius: 8px;
+        background: #1e293b;
+        color: #94a3b8;
+    }
+    .health-bulk-request-student-search svg {
+        width: 15px;
+        height: 15px;
+        flex: 0 0 15px;
+    }
+    .health-bulk-request-student-search:focus-within {
+        border-color: #facc15;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .10);
+    }
+    .health-bulk-request-student-search input {
+        width: 100%;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: #f8fafc;
+        font: inherit;
+        font-size: 12px;
+    }
+    .health-bulk-request-student-search input::placeholder {
+        color: #94a3b8;
+        opacity: 1;
+    }
+    .health-bulk-request-student-table-wrap {
+        overflow: hidden;
+        border: 1px solid rgba(148, 163, 184, .20);
+        border-radius: 9px;
+        background: #142034;
+    }
+    .health-bulk-request-student-table-bar {
+        min-height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 4px 12px;
+        border-bottom: 1px solid rgba(148, 163, 184, .16);
+        background: #1e293b;
+    }
+    .health-bulk-request-student-select-all {
+        min-height: 26px;
+        padding: 2px 0;
+        border: 0;
+        background: transparent;
+        color: #e2e8f0;
+        font-size: 11px;
+    }
+    .health-bulk-request-student-select-all:hover,
+    .health-bulk-request-student-select-all:focus-visible {
+        border: 0;
+        background: transparent;
+        color: inherit;
+        box-shadow: none;
+        transform: none;
+    }
+    .health-bulk-request-student-select-all:not(.is-all-selected):hover .health-bulk-request-student-select-box,
+    .health-bulk-request-student-select-all:not(.is-all-selected):focus-visible .health-bulk-request-student-select-box {
+        border-color: #facc15;
+        background: rgba(250, 204, 21, .14);
+        color: #facc15;
+    }
+    .health-bulk-request-student-select-box {
+        width: 13px;
+        height: 13px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #cbd5e1;
+        border-radius: 2px;
+        color: transparent;
+    }
+    .health-bulk-request-student-select-box svg {
+        width: 10px;
+        height: 10px;
+    }
+    .health-bulk-request-student-select-all.is-all-selected .health-bulk-request-student-select-box {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+    }
+    .health-bulk-request-student-select-all .health-bulk-request-selection-label-unselect {
+        display: none;
+    }
+    .health-bulk-request-student-select-all.is-all-selected .health-bulk-request-selection-label-select {
+        display: none;
+    }
+    .health-bulk-request-student-select-all.is-all-selected .health-bulk-request-selection-label-unselect {
+        display: inline;
+    }
+    .health-bulk-request-student-selected-count,
+    .health-bulk-request-student-footer-copy span {
+        color: #94a3b8;
+        font-size: 11px;
+        font-weight: 700;
+    }
+    .health-bulk-request-student-table-scroll {
+        max-height: min(220px, 30dvh);
+        border: 0;
+        border-radius: 0;
+    }
+    .health-bulk-request-student-table {
+        min-width: 0;
+        table-layout: fixed;
+    }
+    .health-bulk-request-student-table th,
+    .health-bulk-request-student-table td {
+        padding: 9px 11px;
+        border-bottom-color: rgba(148, 163, 184, .14);
+    }
+    .health-bulk-request-student-table th:first-child,
+    .health-bulk-request-student-table td:first-child {
+        width: 38px;
+    }
+    .health-bulk-request-student-table th:nth-child(2),
+    .health-bulk-request-student-table td:nth-child(2) {
+        width: 42%;
+    }
+    .health-bulk-request-student-table th:nth-child(3),
+    .health-bulk-request-student-table td:nth-child(3) {
+        width: 31%;
+    }
+    .health-bulk-request-student-table th:nth-child(4),
+    .health-bulk-request-student-table td:nth-child(4) {
+        width: 18%;
+    }
+    .health-bulk-request-student-table th {
+        background: #182334;
+        color: #94a3b8;
+        font-size: 9px;
+    }
+    .health-bulk-request-student-table td {
+        background: #142034;
+        color: #e2e8f0;
+        font-size: 11px;
+    }
+    .health-bulk-request-student-table tbody tr:hover td {
+        background: rgba(250, 204, 21, .07);
+    }
+    .health-bulk-request-student-table td strong {
+        display: block;
+        color: #f8fafc;
+        font-size: 12px;
+    }
+    .health-bulk-request-student-email {
+        display: block;
+        margin-top: 2px;
+        color: #94a3b8;
+        font-size: 10px;
+        font-weight: 600;
+    }
+    .health-bulk-request-student-type-label {
+        color: #cbd5e1;
+        font-size: 11px;
+        font-weight: 800;
+    }
+    .health-bulk-request-student-table input[type="checkbox"] {
+        accent-color: #facc15;
+    }
+    .health-bulk-request-student-footer {
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-top: 0;
+        padding-top: 10px;
+        border-top: 1px solid rgba(148, 163, 184, .16);
+    }
+    .health-bulk-request-student-footer-copy {
+        display: grid;
+        gap: 2px;
+    }
+    .health-bulk-request-student-footer-copy strong {
+        color: #e2e8f0;
+        font-size: 12px;
+        font-weight: 900;
+    }
+    .health-bulk-request-student-footer-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 0 0 auto;
+    }
+    .health-bulk-request-student-footer-actions > button {
+        min-height: 38px;
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+    .health-bulk-request-student-footer .health-bulk-request-modal-cancel,
+    .health-bulk-request-student-footer .health-bulk-request-modal-send {
+        min-width: 84px;
+    }
+    .health-bulk-request-student-footer .health-bulk-request-modal-send {
+        min-width: 132px;
+    }
+    .health-bulk-request-student-footer .health-bulk-request-modal-cancel:hover,
+    .health-bulk-request-student-footer .health-bulk-request-modal-cancel:focus-visible,
+    .health-bulk-request-student-footer .health-bulk-request-modal-send:not(:disabled):hover,
+    .health-bulk-request-student-footer .health-bulk-request-modal-send:not(:disabled):focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .14), 0 10px 20px rgba(250, 204, 21, .16);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    .health-bulk-request-student-footer .health-bulk-request-modal-cancel {
+        background: #1e293b;
+        border-color: rgba(148, 163, 184, .32);
+        color: #e2e8f0;
+    }
+    .health-bulk-request-student-footer .health-bulk-request-modal-send {
+        min-width: 104px;
+        background: #8f0012;
+        border-color: #8f0012;
+    }
+    .health-bulk-request-student-footer .health-bulk-request-modal-send:disabled {
+        cursor: not-allowed;
+        opacity: .48;
+        box-shadow: none;
+    }
+
+    html[data-theme="dark"] .health-bulk-request-student-card {
+        background: #0f172a;
+        color: #f8fafc;
+        box-shadow: 0 28px 70px rgba(0, 0, 0, .48);
+    }
+    html[data-theme="dark"] .health-bulk-request-student-card .health-bulk-request-modal-body {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .health-bulk-request-student-step-heading h3,
+    html[data-theme="dark"] .health-bulk-request-student-footer-copy strong {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .health-bulk-request-student-step-heading p,
+    html[data-theme="dark"] .health-bulk-request-student-field label,
+    html[data-theme="dark"] .health-bulk-request-student-filter-field label {
+        color: #94a3b8;
+    }
+    html[data-theme="dark"] .health-bulk-request-student-card .health-filter-custom-trigger,
+    html[data-theme="dark"] .health-bulk-request-student-search,
+    html[data-theme="dark"] .health-bulk-request-student-footer .health-bulk-request-modal-cancel {
+        border-color: rgba(148, 163, 184, .28);
+        background: #1e293b;
+        color: #e2e8f0;
+    }
+    html[data-theme="dark"] .health-bulk-request-student-card .health-filter-custom-menu,
+    html[data-theme="dark"] .health-bulk-request-student-card .health-filter-custom-option {
+        border-color: rgba(148, 163, 184, .30);
+        background: #111827;
+        color: #e2e8f0;
+    }
+    html[data-theme="dark"] .health-bulk-request-student-table-wrap {
+        border-color: rgba(148, 163, 184, .20);
+        background: #142034;
+    }
+    html[data-theme="dark"] .health-bulk-request-student-table-bar,
+    html[data-theme="dark"] .health-bulk-request-student-table th {
+        background: #1e293b;
+    }
+    html[data-theme="dark"] .health-bulk-request-student-table td {
+        background: #142034;
+        color: #e2e8f0;
+    }
+    html[data-theme="dark"] .health-bulk-request-student-card .health-filter-custom-option:hover,
+    html[data-theme="dark"] .health-bulk-request-student-card .health-filter-custom-option:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+    html[data-theme="dark"] .health-bulk-request-student-card .health-filter-custom-option.is-selected {
+        border-color: #70131B !important;
+        background: #70131B !important;
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] .health-bulk-request-student-select-all {
+        color: #e2e8f0;
+    }
+
+    html[data-theme="light"] .health-bulk-request-student-card {
+        border-color: rgba(112, 19, 27, .22);
+        background: #ffffff;
+        color: #1f2937;
+        box-shadow: 0 28px 70px rgba(15, 23, 42, .24);
+    }
+    html[data-theme="light"] .health-bulk-request-student-card .health-bulk-request-modal-body {
+        color: #1f2937;
+    }
+    html[data-theme="light"] .health-bulk-request-student-step-heading h3,
+    html[data-theme="light"] .health-bulk-request-student-footer-copy strong {
+        color: #1f2937;
+    }
+    html[data-theme="light"] .health-bulk-request-student-step-heading p,
+    html[data-theme="light"] .health-bulk-request-student-field label,
+    html[data-theme="light"] .health-bulk-request-student-filter-field label {
+        color: #64748b;
+    }
+    html[data-theme="light"] .health-bulk-request-student-step-number {
+        border-color: #70131B;
+        background: rgba(112, 19, 27, .05);
+        color: #70131B;
+    }
+    html[data-theme="light"] .health-bulk-request-student-card .health-filter-custom-trigger,
+    html[data-theme="light"] .health-bulk-request-student-search {
+        border-color: #cbd5e1;
+        background: #f8fafc;
+        color: #1f2937;
+    }
+    html[data-theme="light"] .health-bulk-request-student-card .health-filter-custom-trigger::after {
+        border-color: #70131B;
+    }
+    html[data-theme="light"] .health-bulk-request-student-card .health-filter-custom-menu,
+    html[data-theme="light"] .health-bulk-request-student-card .health-filter-custom-option {
+        border-color: #cbd5e1;
+        background: #ffffff;
+        color: #1f2937;
+    }
+    html[data-theme="light"] .health-bulk-request-student-table-wrap {
+        border-color: #dbe2ea;
+        background: #f8fafc;
+    }
+    html[data-theme="light"] .health-bulk-request-student-table-bar,
+    html[data-theme="light"] .health-bulk-request-student-table th {
+        background: #eef2f7;
+        color: #475569;
+    }
+    html[data-theme="light"] .health-bulk-request-student-table td {
+        background: #ffffff;
+        color: #334155;
+        border-bottom-color: #e5e7eb;
+    }
+    html[data-theme="light"] .health-bulk-request-student-table-bar {
+        color: #334155;
+    }
+    html[data-theme="light"] .health-bulk-request-student-select-all {
+        color: #334155;
+    }
+    html[data-theme="light"] .health-bulk-request-student-select-box {
+        border-color: #70131B;
+    }
+    html[data-theme="light"] .health-bulk-request-student-select-all.is-all-selected .health-bulk-request-student-select-box {
+        border-color: #70131B;
+        background: #70131B;
+        color: #ffffff;
+    }
+    html[data-theme="light"] .health-bulk-request-student-select-all:not(.is-all-selected):hover .health-bulk-request-student-select-box,
+    html[data-theme="light"] .health-bulk-request-student-select-all:not(.is-all-selected):focus-visible .health-bulk-request-student-select-box {
+        border-color: #70131B;
+        background: rgba(112, 19, 27, .10);
+        color: #70131B;
+    }
+    html[data-theme="light"] .health-bulk-request-student-selected-count,
+    html[data-theme="light"] .health-bulk-request-student-footer-copy span,
+    html[data-theme="light"] .health-bulk-request-student-email {
+        color: #64748b;
+    }
+    html[data-theme="light"] .health-bulk-request-student-type-label {
+        color: #334155;
+    }
+    html[data-theme="light"] .health-bulk-request-student-table input[type="checkbox"] {
+        accent-color: #70131B;
+    }
+    html[data-theme="light"] .health-bulk-request-student-table td strong {
+        color: #111827;
+    }
+    html[data-theme="light"] .health-bulk-request-student-card .health-filter-custom-option:hover,
+    html[data-theme="light"] .health-bulk-request-student-card .health-filter-custom-option:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+    html[data-theme="light"] .health-bulk-request-student-card .health-filter-custom-option.is-selected {
+        border-color: #70131B !important;
+        background: #70131B !important;
+        color: #ffffff !important;
+    }
+    html[data-theme="light"] .health-bulk-request-student-footer .health-bulk-request-modal-cancel {
+        border-color: #cbd5e1;
+        background: #ffffff;
+        color: #475569;
+    }
+    html[data-theme="dark"] .health-bulk-request-student-footer .health-bulk-request-modal-cancel:hover,
+    html[data-theme="dark"] .health-bulk-request-student-footer .health-bulk-request-modal-cancel:focus-visible,
+    html[data-theme="dark"] .health-bulk-request-student-footer .health-bulk-request-modal-send:not(:disabled):hover,
+    html[data-theme="dark"] .health-bulk-request-student-footer .health-bulk-request-modal-send:not(:disabled):focus-visible,
+    html[data-theme="light"] .health-bulk-request-student-footer .health-bulk-request-modal-cancel:hover,
+    html[data-theme="light"] .health-bulk-request-student-footer .health-bulk-request-modal-cancel:focus-visible,
+    html[data-theme="light"] .health-bulk-request-student-footer .health-bulk-request-modal-send:not(:disabled):hover,
+    html[data-theme="light"] .health-bulk-request-student-footer .health-bulk-request-modal-send:not(:disabled):focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+
+    @media (min-width: 720px) {
+        .health-bulk-request-student-form {
+            grid-template-columns: minmax(0, .72fr) minmax(0, 1.28fr);
+            column-gap: 18px;
+            row-gap: 12px;
+            align-items: start;
+        }
+        .health-bulk-request-student-form > .health-bulk-request-student-step {
+            display: contents;
+        }
+        .health-bulk-request-student-form > .health-bulk-request-student-step:first-of-type > .health-bulk-request-student-step-heading {
+            grid-column: 1;
+            grid-row: 1;
+        }
+        .health-bulk-request-student-form > .health-bulk-request-student-step:first-of-type > .health-bulk-request-student-field {
+            grid-column: 1;
+            grid-row: 2;
+        }
+        .health-bulk-request-student-form > .health-bulk-request-student-selection-step > .health-bulk-request-student-step-heading {
+            grid-column: 2;
+            grid-row: 1;
+        }
+        .health-bulk-request-student-form > .health-bulk-request-student-selection-step > .health-bulk-request-student-controls {
+            grid-column: 2;
+            grid-row: 2;
+        }
+        .health-bulk-request-student-form > .health-bulk-request-student-selection-step > .health-bulk-request-student-table-wrap {
+            grid-column: 1 / -1;
+            grid-row: 3;
+        }
+        .health-bulk-request-student-form > .health-bulk-request-student-footer {
+            grid-column: 1 / -1;
+            grid-row: 4;
+        }
+    }
+
     #pendingApprovalInfoModal .awaiting-links-modal-close:hover,
     #pendingApprovalInfoModal .awaiting-links-modal-close:focus-visible,
     #pendingConditionalInfoModal .awaiting-links-modal-close:hover,
@@ -6717,10 +7324,26 @@
         .health-bulk-request-modal-table-wrap {
             max-height: 52dvh;
         }
+        .health-bulk-request-student-table-scroll {
+            max-height: min(220px, 30dvh);
+        }
+        .health-bulk-request-student-controls {
+            grid-template-columns: minmax(0, 1fr);
+        }
+        .health-bulk-request-student-selection-heading {
+            flex-wrap: wrap;
+        }
         .health-bulk-request-modal-footer {
             justify-content: stretch;
         }
-        .health-bulk-request-modal-footer > button {
+        .health-bulk-request-student-footer {
+            align-items: stretch;
+            flex-direction: column;
+        }
+        .health-bulk-request-student-footer-actions {
+            width: 100%;
+        }
+        .health-bulk-request-student-footer-actions > button {
             flex: 1 1 0;
         }
     }
@@ -6753,6 +7376,14 @@
                 ?: $user->user_role
                 ?: ''
             )));
+            $clinicAccountType = $record->user?->clinicAccountTypeKey();
+
+            if ($clinicAccountType === 'student') {
+                return 'Student';
+            }
+            if ($clinicAccountType === 'applicant') {
+                return 'Applicant';
+            }
 
             if (str_contains($rawType, 'dependent') || str_contains($rawType, 'guest')) {
                 return 'Guest';
@@ -7067,7 +7698,7 @@
                     </svg>
                     <span>Filter</span>
                 </button>
-                @if (in_array(strtolower((string) ($userTypeFilter ?? '')), ['faculty', 'admin'], true))
+                @if (in_array(strtolower((string) ($userTypeFilter ?? '')), ['student', 'faculty', 'admin'], true))
                     <div class="health-more-actions" id="healthMoreActions">
                         <button
                             type="button"
@@ -7146,6 +7777,7 @@
                     $recordFamilyName = $recordLastName !== ''
                         ? $recordLastName
                         : trim((string) optional($recordUser)->name);
+                    $recordIsLocalStudent = $recordUserType === 'Student' && !$recordIsEmployee;
                     $puptasStatusRaw = strtolower(trim((string) ($record->puptas_sync_status ?? '')));
                     $puptasReference = strtoupper(trim((string) ($record->reference_number ?: $record->student_number ?: optional($record->user)->student_number)));
                     $isLocalPuptasReference = $puptasReference === ''
@@ -7153,8 +7785,12 @@
                     if ($puptasStatusRaw === '' && $isLocalPuptasReference) {
                         $puptasStatusRaw = 'not_applicable';
                     }
+                    if ($recordIsLocalStudent && in_array($recordStatus, ['Issued', 'Fully Cleared'], true)) {
+                        $puptasStatusRaw = 'local_student';
+                    }
                     $puptasStatusLabel = match ($puptasStatusRaw) {
                         'synced' => 'Synced',
+                        'local_student' => 'Issued',
                         'failed' => 'Failed',
                         'syncing' => 'Syncing',
                         'pending' => 'Pending',
@@ -7163,7 +7799,7 @@
                         default => 'Not Synced',
                     };
                     $puptasStatusClass = match ($puptasStatusRaw) {
-                        'synced' => 'issued',
+                        'synced', 'local_student' => 'issued',
                         'failed', 'missing_reference_number' => 'review',
                         'syncing', 'pending' => 'pending',
                         'not_applicable' => 'submitted',
@@ -7303,7 +7939,7 @@
                         @elseif($recordPulloutStatus === \App\Models\HealthProfile::PULLOUT_COMPLETED)
                             <span class="status review">Pulled Out</span>
                         @elseif(in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true))
-                            @if($puptasStatusRaw === 'synced')
+                            @if($recordIsLocalStudent || $puptasStatusRaw === 'synced')
                                 <span class="status issued"><i class="fas fa-check-circle me-1"></i> Issued</span>
                             @else
                                 <span class="status pending">Not Sync</span>
@@ -8089,6 +8725,17 @@
                     </select>
                 </div>
             </div>
+            <div class="health-filter-field" id="studentTypeFilterField" {{ ($userTypeFilter ?? '') === 'student' ? '' : 'hidden' }}>
+                <label for="studentTypeFilter">Student Type</label>
+                <div class="health-filter-select-wrap">
+                    <select id="studentTypeFilter" name="student_type" class="health-filter-select health-filter-custom-source">
+                        <option value="">All Student Types</option>
+                        @foreach(($studentTypeOptions ?? []) as $studentTypeValue => $studentTypeLabel)
+                            <option value="{{ $studentTypeValue }}" {{ ($studentTypeFilter ?? '') === $studentTypeValue ? 'selected' : '' }}>{{ $studentTypeLabel }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
             <div class="health-filter-field">
                 <label for="courseFilter">Course</label>
                 <div class="health-filter-select-wrap">
@@ -8143,12 +8790,24 @@
         </form>
     </div>
 </div>
-@if (in_array(strtolower((string) ($userTypeFilter ?? '')), ['faculty', 'admin'], true))
+@if (in_array(strtolower((string) ($userTypeFilter ?? '')), ['student', 'faculty', 'admin'], true))
     @php
-        $bulkRequestRoleLabel = strtolower((string) ($userTypeFilter ?? '')) === 'admin' ? 'Admins' : 'Faculty';
+        $bulkRequestUserType = strtolower((string) ($userTypeFilter ?? ''));
+        $bulkRequestIsStudent = $bulkRequestUserType === 'student';
+        $bulkRequestRoleLabel = match ($bulkRequestUserType) {
+            'student' => 'Students',
+            'admin' => 'Admins',
+            default => 'Faculty',
+        };
+        $bulkRequestIdentifierLabel = $bulkRequestIsStudent ? 'Student Number' : 'Employee Number';
+        $bulkRequestIdentifierInput = $bulkRequestIsStudent ? 'health_profile_ids[]' : 'employee_profile_ids[]';
+        $bulkRequestRecordLabel = $bulkRequestIsStudent ? 'student' : 'employee';
+        $bulkRequestNounPlural = $bulkRequestIsStudent ? 'students' : 'employees';
+        $bulkRequestTypeFilterLabel = $bulkRequestIsStudent ? 'Student Type' : 'User Type';
+        $bulkRequestTypeFilterDefault = $bulkRequestIsStudent ? 'All Student Types' : 'All ' . $bulkRequestRoleLabel;
     @endphp
     <div class="health-bulk-request-modal" id="healthBulkRequestModal" role="dialog" aria-modal="true" aria-labelledby="healthBulkRequestTitle" aria-hidden="true">
-        <div class="health-bulk-request-modal-card">
+        <div class="health-bulk-request-modal-card health-bulk-request-student-card">
             <div class="health-bulk-request-modal-head">
                 <div class="health-bulk-request-modal-head-main">
                     <span class="health-bulk-request-modal-badge" aria-hidden="true">
@@ -8164,93 +8823,138 @@
                 </button>
             </div>
 
-            <div class="health-bulk-request-modal-body">
-                <form method="POST" action="{{ route('admin.health_records.bulk_request_health_form') }}" id="healthBulkRequestForm" class="health-bulk-request-form">
+            <div class="health-bulk-request-modal-body health-bulk-request-student-body">
+                <form method="POST" action="{{ route('admin.health_records.bulk_request_health_form') }}" id="healthBulkRequestForm" class="health-bulk-request-form health-bulk-request-student-form">
                     @csrf
                     <input type="hidden" name="user_type" value="{{ strtolower((string) $userTypeFilter) }}">
 
-                    <div class="health-bulk-request-modal-summary">
-                        <div>
-                            <strong>Approved {{ $bulkRequestRoleLabel }}</strong>
-                            <span>Choose who should receive the new health form request.</span>
+                    <section class="health-bulk-request-student-step">
+                        <div class="health-bulk-request-student-step-heading">
+                            <span class="health-bulk-request-student-step-number">1</span>
+                            <div>
+                                <h3>Request Purpose</h3>
+                                <p>Choose the purpose for the new health form request.</p>
+                            </div>
                         </div>
-                        <span class="health-bulk-request-modal-count" id="healthBulkRequestSelectionCount">0 of {{ $bulkHealthFormRequestRecords->count() }}</span>
-                    </div>
-
-                    <div class="health-bulk-request-modal-field">
-                        <label for="healthBulkRequestCategory">Category / Purpose</label>
-                        <div class="health-filter-select-wrap health-bulk-request-category-wrap">
-                            <select id="healthBulkRequestCategory" name="category" class="health-filter-select health-filter-custom-source" required>
-                                <option value="">Select category</option>
-                                @foreach($bulkHealthFormRequestCategories as $bulkRequestCategory)
-                                    <option value="{{ $bulkRequestCategory }}">{{ $bulkRequestCategory }}</option>
-                                @endforeach
-                            </select>
+                        <div class="health-bulk-request-student-field">
+                            <label for="healthBulkRequestCategory">Category / Purpose</label>
+                            <div class="health-filter-select-wrap health-bulk-request-category-wrap">
+                                <select id="healthBulkRequestCategory" name="category" class="health-filter-select health-filter-custom-source" required>
+                                    <option value="">Select category</option>
+                                    @foreach($bulkHealthFormRequestCategories as $bulkRequestCategory)
+                                        <option value="{{ $bulkRequestCategory }}">{{ $bulkRequestCategory }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
-                    </div>
+                    </section>
 
-                    <div class="health-bulk-request-modal-controls">
-                        <div class="health-bulk-request-modal-selection-actions">
-                            <button type="button" class="health-bulk-request-modal-select-btn" id="healthBulkRequestToggleSelection" aria-pressed="false">
-                                <span class="health-bulk-request-selection-mode health-bulk-request-selection-mode-select" aria-hidden="true">
-                                    <x-outline-icon name="check" />
-                                </span>
-                                <span class="health-bulk-request-selection-mode health-bulk-request-selection-mode-unselect" aria-hidden="true">
-                                    <x-outline-icon name="x-mark" />
-                                </span>
-                                <span class="health-bulk-request-selection-label health-bulk-request-selection-label-select">Select All</span>
-                                <span class="health-bulk-request-selection-label health-bulk-request-selection-label-unselect">Unselect All</span>
+                    <section class="health-bulk-request-student-step health-bulk-request-student-selection-step">
+                        <div class="health-bulk-request-student-step-heading health-bulk-request-student-selection-heading">
+                            <span class="health-bulk-request-student-step-number">2</span>
+                            <div>
+                                <h3>Select {{ $bulkRequestRoleLabel }}</h3>
+                                <p>Filter and choose which {{ strtolower($bulkRequestRoleLabel) }} should receive the new health form request.</p>
+                            </div>
+                        </div>
+
+                        <div class="health-bulk-request-student-controls">
+                            <div class="health-bulk-request-student-filter-field">
+                                <label for="healthBulkRequestStudentType">{{ $bulkRequestTypeFilterLabel }}</label>
+                                <div class="health-filter-select-wrap health-bulk-request-student-type-wrap">
+                                    <select id="healthBulkRequestStudentType" class="health-filter-select health-filter-custom-source">
+                                        <option value="">{{ $bulkRequestTypeFilterDefault }}</option>
+                                        @if ($bulkRequestIsStudent)
+                                            @foreach(\App\Models\HealthFormCategory::STUDENT_TYPE_LABELS as $studentTypeValue => $studentTypeLabel)
+                                                <option value="{{ $studentTypeValue }}">{{ $studentTypeLabel }}</option>
+                                            @endforeach
+                                        @else
+                                            <option value="{{ $bulkRequestUserType }}">{{ $bulkRequestRoleLabel }}</option>
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
+                            <label class="health-bulk-request-student-search" for="healthBulkRequestSearch">
+                                <span class="sr-only">Search by name or {{ strtolower($bulkRequestIdentifierLabel) }}</span>
+                                <x-outline-icon name="magnifying-glass" aria-hidden="true" />
+                                <input type="search" id="healthBulkRequestSearch" placeholder="Search by name or {{ strtolower($bulkRequestIdentifierLabel) }}" autocomplete="off">
+                            </label>
+                        </div>
+
+                        <div class="health-bulk-request-student-table-wrap">
+                            <div class="health-bulk-request-student-table-bar">
+                                <button type="button" class="health-bulk-request-modal-select-btn health-bulk-request-student-select-all" id="healthBulkRequestToggleSelection" aria-pressed="false">
+                                    <span class="health-bulk-request-student-select-box" aria-hidden="true">
+                                        <x-outline-icon name="check" />
+                                    </span>
+                                    <span class="health-bulk-request-selection-label health-bulk-request-selection-label-select">Select all</span>
+                                    <span class="health-bulk-request-selection-label health-bulk-request-selection-label-unselect">Unselect all</span>
+                                </button>
+                                <span class="health-bulk-request-student-selected-count" id="healthBulkRequestSelectionCount">0 selected</span>
+                            </div>
+                            <div class="health-bulk-request-modal-table-wrap health-bulk-request-student-table-scroll">
+                                <table class="health-bulk-request-modal-table health-bulk-request-student-table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col"><span class="sr-only">Select</span></th>
+                                            <th scope="col">{{ $bulkRequestRoleLabel === 'Students' ? 'Student' : 'Employee' }}</th>
+                                            <th scope="col">{{ $bulkRequestIdentifierLabel }}</th>
+                                            <th scope="col">Type</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($bulkHealthFormRequestRecords as $bulkRequestRecord)
+                                            @php
+                                                $bulkRequestUser = optional($bulkRequestRecord->user);
+                                                $bulkRequestName = trim((string) ($bulkRequestUser->name ?? ''));
+                                                if ($bulkRequestName === '') {
+                                                    $bulkRequestName = trim(implode(' ', array_filter([
+                                                        $bulkRequestRecord->first_name ?? $bulkRequestUser->first_name ?? '',
+                                                        $bulkRequestRecord->middle_name ?? $bulkRequestUser->middle_name ?? '',
+                                                        $bulkRequestRecord->last_name ?? $bulkRequestUser->last_name ?? '',
+                                                    ])));
+                                                }
+                                                $bulkRequestIdentifier = $bulkRequestIsStudent
+                                                    ? trim((string) ($bulkRequestRecord->student_number ?: ($bulkRequestUser->student_number ?? $bulkRequestRecord->student_id ?? '')))
+                                                    : trim((string) ($bulkRequestRecord->employee_number ?: ($bulkRequestUser->employee_number ?? '')));
+                                                $bulkRequestEmail = trim((string) ($bulkRequestUser->email ?? ''));
+                                                $bulkRequestStudentType = strtolower(trim((string) ($bulkRequestUser->student_type ?? '')));
+                                                $bulkRequestSearchText = strtolower(trim(implode(' ', [$bulkRequestName, $bulkRequestEmail, $bulkRequestIdentifier])));
+                                            @endphp
+                                            <tr data-bulk-student-type="{{ $bulkRequestStudentType }}" data-bulk-student-search="{{ $bulkRequestSearchText }}">
+                                                <td>
+                                                    <input type="checkbox" name="{{ $bulkRequestIdentifierInput }}" class="health-bulk-request-member-checkbox" value="{{ $bulkRequestRecord->id }}" aria-label="Select {{ $bulkRequestName !== '' ? $bulkRequestName : $bulkRequestRecordLabel }}">
+                                                </td>
+                                                <td>
+                                                    <strong class="health-bulk-request-student-name">{{ $bulkRequestName !== '' ? $bulkRequestName : ('Unnamed ' . ucfirst($bulkRequestRecordLabel)) }}</strong>
+                                                    <span class="health-bulk-request-student-email">{{ $bulkRequestEmail !== '' ? $bulkRequestEmail : '-' }}</span>
+                                                </td>
+                                                <td>{{ $bulkRequestIdentifier !== '' ? $bulkRequestIdentifier : '-' }}</td>
+                                                <td><span class="health-bulk-request-student-type-label">{{ $bulkRequestIsStudent ? 'Student' : ucfirst($bulkRequestRecordLabel) }}</span></td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="health-bulk-request-modal-empty">No approved {{ strtolower($bulkRequestRoleLabel) }} found.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="health-bulk-request-modal-footer health-bulk-request-student-footer">
+                        <div class="health-bulk-request-student-footer-copy">
+                            <strong id="healthBulkRequestFooterSelectionCount">0 selected</strong>
+                            <span>Select one or more {{ $bulkRequestNounPlural }} to continue.</span>
+                        </div>
+                        <div class="health-bulk-request-student-footer-actions">
+                            <button type="button" class="health-bulk-request-modal-cancel" data-health-bulk-request-close>Cancel</button>
+                            <button type="submit" class="health-bulk-request-modal-send" disabled>
+                                <span>Send Request</span>
+                                <x-outline-icon name="arrow-long-right" />
                             </button>
                         </div>
-                    </div>
-
-                    <div class="health-bulk-request-modal-table-wrap">
-                        <table class="health-bulk-request-modal-table">
-                            <thead>
-                                <tr>
-                                    <th scope="col"><span class="sr-only">Select</span></th>
-                                    <th scope="col">Full Name</th>
-                                    <th scope="col">Employee Number</th>
-                                    <th scope="col">Email</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($bulkHealthFormRequestRecords as $bulkRequestRecord)
-                                    @php
-                                        $bulkRequestUser = optional($bulkRequestRecord->user);
-                                        $bulkRequestName = trim((string) ($bulkRequestUser->name ?? ''));
-                                        if ($bulkRequestName === '') {
-                                            $bulkRequestName = trim(implode(' ', array_filter([
-                                                $bulkRequestRecord->first_name ?? $bulkRequestUser->first_name ?? '',
-                                                $bulkRequestRecord->middle_name ?? $bulkRequestUser->middle_name ?? '',
-                                                $bulkRequestRecord->last_name ?? $bulkRequestUser->last_name ?? '',
-                                            ])));
-                                        }
-                                        $bulkRequestEmployeeNumber = trim((string) ($bulkRequestRecord->employee_number ?: ($bulkRequestUser->employee_number ?? '')));
-                                        $bulkRequestEmail = trim((string) ($bulkRequestUser->email ?? ''));
-                                    @endphp
-                                    <tr>
-                                        <td>
-                                            <input type="checkbox" name="employee_profile_ids[]" class="health-bulk-request-member-checkbox" value="{{ $bulkRequestRecord->id }}" aria-label="Select {{ $bulkRequestName !== '' ? $bulkRequestName : 'employee' }}">
-                                        </td>
-                                        <td><strong>{{ $bulkRequestName !== '' ? $bulkRequestName : 'Unnamed Employee' }}</strong></td>
-                                        <td>{{ $bulkRequestEmployeeNumber !== '' ? $bulkRequestEmployeeNumber : '-' }}</td>
-                                        <td>{{ $bulkRequestEmail !== '' ? $bulkRequestEmail : '-' }}</td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="health-bulk-request-modal-empty">No approved {{ strtolower($bulkRequestRoleLabel) }} found.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="health-bulk-request-modal-footer">
-                        <button type="submit" class="health-bulk-request-modal-send">
-                            <x-outline-icon name="arrow-long-right" />
-                            <span>Send Request</span>
-                        </button>
                     </div>
                 </form>
             </div>
@@ -8577,6 +9281,9 @@
     const healthFilterModal = document.getElementById('healthFilterModal');
     const healthFilterCloseBtn = document.getElementById('healthFilterCloseBtn');
     const healthFilterForm = document.getElementById('healthFilterForm');
+    const healthUserTypeFilter = document.getElementById('userTypeFilter');
+    const healthStudentTypeFilterField = document.getElementById('studentTypeFilterField');
+    const healthStudentTypeFilter = document.getElementById('studentTypeFilter');
     const healthMoreActions = document.getElementById('healthMoreActions');
     const healthMoreActionsToggle = document.getElementById('healthMoreActionsToggle');
     const healthMoreActionsMenu = document.getElementById('healthMoreActionsMenu');
@@ -8586,8 +9293,14 @@
     const healthBulkRequestSelectionCount = document.getElementById('healthBulkRequestSelectionCount');
     const healthBulkRequestToggleSelection = document.getElementById('healthBulkRequestToggleSelection');
     const healthBulkRequestCategory = document.getElementById('healthBulkRequestCategory');
+    const healthBulkRequestStudentType = document.getElementById('healthBulkRequestStudentType');
+    const healthBulkRequestSearch = document.getElementById('healthBulkRequestSearch');
+    const healthBulkRequestFooterSelectionCount = document.getElementById('healthBulkRequestFooterSelectionCount');
     const healthBulkRequestSend = healthBulkRequestForm?.querySelector('.health-bulk-request-modal-send');
     const healthBulkRequestMembers = Array.from(document.querySelectorAll('.health-bulk-request-member-checkbox'));
+    const healthBulkRequestRows = Array.from(document.querySelectorAll('tr[data-bulk-student-type]'));
+    const healthBulkRequestMemberLabel = @json(isset($bulkRequestRecordLabel) ? $bulkRequestRecordLabel : 'employee');
+    const healthBulkRequestIsStudent = @json(isset($bulkRequestIsStudent) && $bulkRequestIsStudent);
     const healthTableTools = healthRecordsOverviewFilterBtn?.closest('.health-table-tools');
     if (healthTableTools && healthFilterModal) {
         healthTableTools.appendChild(healthFilterModal);
@@ -8660,26 +9373,55 @@
     }
 
     function syncHealthBulkRequestSelectionCount() {
-        const selectedCount = healthBulkRequestMembers.filter(function (input) {
+        const visibleMembers = healthBulkRequestMembers.filter(function (input) {
+            return !input.closest('tr')?.hidden;
+        });
+        const selectedCount = visibleMembers.filter(function (input) {
             return input.checked;
         }).length;
-        const totalCount = healthBulkRequestMembers.length;
+        const totalCount = visibleMembers.length;
         if (healthBulkRequestSelectionCount) {
-            healthBulkRequestSelectionCount.textContent = selectedCount + ' of ' + totalCount;
+            healthBulkRequestSelectionCount.textContent = selectedCount + ' selected';
+        }
+        if (healthBulkRequestFooterSelectionCount) {
+            healthBulkRequestFooterSelectionCount.textContent = selectedCount + ' selected';
         }
         if (healthBulkRequestToggleSelection) {
             const allSelected = totalCount > 0 && selectedCount === totalCount;
             healthBulkRequestToggleSelection.classList.toggle('is-all-selected', allSelected);
             healthBulkRequestToggleSelection.setAttribute('aria-pressed', allSelected ? 'true' : 'false');
-            healthBulkRequestToggleSelection.setAttribute('aria-label', allSelected ? 'Unselect all employees' : 'Select all employees');
+            healthBulkRequestToggleSelection.setAttribute('aria-label', allSelected ? 'Unselect all ' + healthBulkRequestMemberLabel + 's' : 'Select all ' + healthBulkRequestMemberLabel + 's');
             healthBulkRequestToggleSelection.disabled = totalCount === 0;
         }
-        if (healthBulkRequestMembers[0]) {
-            healthBulkRequestMembers[0].required = selectedCount === 0;
+        healthBulkRequestMembers.forEach(function (input) {
+            input.required = false;
+        });
+        if (visibleMembers[0]) {
+            visibleMembers[0].required = selectedCount === 0;
         }
         if (healthBulkRequestSend) {
-            healthBulkRequestSend.disabled = totalCount === 0;
+            healthBulkRequestSend.disabled = totalCount === 0 || selectedCount === 0 || !healthBulkRequestCategory?.value;
         }
+    }
+
+    function applyHealthBulkRequestStudentTypeFilter() {
+        if (!healthBulkRequestStudentType) return;
+
+        const selectedType = healthBulkRequestIsStudent ? healthBulkRequestStudentType.value : '';
+        const searchTerm = (healthBulkRequestSearch?.value || '').trim().toLowerCase();
+        healthBulkRequestRows.forEach(function (row) {
+            const rowSearch = String(row.dataset.bulkStudentSearch || row.textContent || '').toLowerCase();
+            const matchesType = selectedType === '' || row.dataset.bulkStudentType === selectedType;
+            const matchesSearch = searchTerm === '' || rowSearch.includes(searchTerm);
+            const matches = matchesType && matchesSearch;
+            row.hidden = !matches;
+            if (!matches) {
+                row.querySelector('.health-bulk-request-member-checkbox')?.removeAttribute('checked');
+                const checkbox = row.querySelector('.health-bulk-request-member-checkbox');
+                if (checkbox) checkbox.checked = false;
+            }
+        });
+        syncHealthBulkRequestSelectionCount();
     }
 
     function setHealthBulkRequestModalOpen(isOpen) {
@@ -8760,6 +9502,20 @@
         syncTrigger();
     });
 
+    function syncHealthStudentTypeFilterVisibility() {
+        if (!healthUserTypeFilter || !healthStudentTypeFilterField) return;
+
+        const isStudent = healthUserTypeFilter.value === 'student';
+        healthStudentTypeFilterField.hidden = !isStudent;
+        if (!isStudent && healthStudentTypeFilter && healthStudentTypeFilter.value !== '') {
+            healthStudentTypeFilter.value = '';
+            healthStudentTypeFilter.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    healthUserTypeFilter?.addEventListener('change', syncHealthStudentTypeFilterVisibility);
+    syncHealthStudentTypeFilterVisibility();
+
     document.addEventListener('click', function (event) {
         if (event.target.closest('.health-filter-select-wrap')) return;
 
@@ -8788,10 +9544,13 @@
     });
 
     healthBulkRequestToggleSelection?.addEventListener('click', function () {
-        const allSelected = healthBulkRequestMembers.length > 0 && healthBulkRequestMembers.every(function (input) {
+        const visibleMembers = healthBulkRequestMembers.filter(function (input) {
+            return !input.closest('tr')?.hidden;
+        });
+        const allSelected = visibleMembers.length > 0 && visibleMembers.every(function (input) {
             return input.checked;
         });
-        healthBulkRequestMembers.forEach(function (input) {
+        visibleMembers.forEach(function (input) {
             input.checked = !allSelected;
         });
         syncHealthBulkRequestSelectionCount();
@@ -8801,6 +9560,9 @@
         input.addEventListener('change', syncHealthBulkRequestSelectionCount);
     });
     healthBulkRequestCategory?.addEventListener('change', syncHealthBulkRequestSelectionCount);
+    healthBulkRequestStudentType?.addEventListener('change', applyHealthBulkRequestStudentTypeFilter);
+    healthBulkRequestSearch?.addEventListener('input', applyHealthBulkRequestStudentTypeFilter);
+    applyHealthBulkRequestStudentTypeFilter();
     syncHealthBulkRequestSelectionCount();
 
     healthBulkRequestForm?.addEventListener('submit', function (event) {

@@ -106,7 +106,7 @@
     }
     .profile-quick-row {
         display: grid;
-        grid-template-columns: minmax(146px, 1.25fr) minmax(86px, 0.8fr) minmax(72px, 0.65fr) minmax(188px, 1.55fr) minmax(156px, 1.25fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 12px;
         margin-top: 16px;
     }
@@ -146,14 +146,11 @@
         color: #111827;
         font-size: 11px;
         font-weight: 900;
-        word-break: break-word;
+        min-width: 0;
+        white-space: normal;
+        overflow-wrap: anywhere;
     }
-    .profile-quick-item:nth-child(4) strong,
-    .profile-quick-item:nth-child(5) strong {
-        white-space: nowrap;
-        word-break: normal;
-        overflow-wrap: normal;
-    }
+    .profile-quick-item > span:last-child { min-width: 0; }
     .profile-status-card {
         min-height: 82px;
         border-radius: 14px;
@@ -2656,9 +2653,12 @@
     }
     $profileName = trim((string) ($profile->user->name ?? 'N/A'));
     $profileUserType = strtolower(trim((string) ($profile->user->user_type ?? $profile->user->idp_role ?? '')));
+    $profileClinicAccountType = $profile->user?->clinicAccountTypeKey();
     $profileIsDependent = $profile->user?->clinicHealthFormAudience() === 'dependent'
         || str_contains($profileUserType, 'dependent')
         || str_contains($profileUserType, 'guest');
+    $profileIsLocalStudent = !$profileIsDependent
+        && ($profileClinicAccountType === 'student' || str_contains($profileUserType, 'student'));
     $profileDetailLabel = str_contains($profileUserType, 'applicant')
         ? 'Applicant Health Profile'
         : (str_contains($profileUserType, 'dependent')
@@ -2681,8 +2681,12 @@
     if ($puptasSyncRaw === '' && $isLocalPuptasReference) {
         $puptasSyncRaw = 'not_applicable';
     }
+    if ($profileIsLocalStudent && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)) {
+        $puptasSyncRaw = 'local_student';
+    }
     $puptasSyncLabel = match ($puptasSyncRaw) {
         'synced' => 'Synced to PUPTAS',
+        'local_student' => 'Issued',
         'failed' => 'Sync Failed',
         'syncing' => 'Syncing',
         'pending' => 'Pending Sync',
@@ -2691,13 +2695,14 @@
         default => 'Not Synced',
     };
     $puptasSyncClass = match ($puptasSyncRaw) {
-        'synced' => 'profile-status-issued',
+        'synced', 'local_student' => 'profile-status-issued',
         'failed', 'missing_reference_number' => 'profile-status-rejected',
         'syncing', 'pending' => 'profile-status-pending',
         'not_applicable' => 'profile-status-default',
         default => 'profile-status-pending',
     };
     $canResyncPuptas = !$profileIsDependent && !$isPulloutPending && !$isPulledOut
+        && !$profileIsLocalStudent
         && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && !in_array($puptasSyncRaw, ['synced', 'not_applicable'], true)
         && (optional(auth()->user())->canAccessPermission('health_records.update_assessment') ?? false);
@@ -2803,7 +2808,7 @@
                     <p class="profile-status-card-title">Health Record Status</p>
                     <p class="profile-status-card-value">{{ $profileStatusLabel }}</p>
                     <span class="profile-status-badge {{ $puptasSyncClass }}">
-                        @if($puptasSyncRaw === 'synced')
+                        @if(in_array($puptasSyncRaw, ['synced', 'local_student'], true))
                             <x-outline-icon name="check" />
                         @elseif(in_array($puptasSyncRaw, ['failed', 'missing_reference_number'], true))
                             <x-outline-icon name="exclamation-triangle" />
@@ -2814,7 +2819,7 @@
                         @endif
                         {{ $puptasSyncLabel }}
                     </span>
-                    @if($profile->puptas_synced_at)
+                    @if($profile->puptas_synced_at && !$profileIsLocalStudent)
                         <p class="profile-sync-message" style="margin-top:8px;">Last synced: {{ $profile->puptas_synced_at->format('M d, Y h:i A') }}</p>
                     @endif
                     @if($canResyncPuptas)
@@ -2980,6 +2985,7 @@
                         'healthData' => $profile->attributesToArray(),
                     ])
 
+                    @if(!$profileIsLocalStudent)
                     <div class="profile-timeline-card">
                         <div class="profile-timeline-head">
                             <div>
@@ -3020,6 +3026,7 @@
                             </div>
                         </div>
                     </div>
+                    @endif
                 </section>
 
                 @foreach($previousProfileHistory as $history)

@@ -5605,7 +5605,7 @@
                 : trim(implode(' ', array_filter([
                     $user?->course ?: $studentProfile?->course_college,
                     trim(implode('-', array_filter([$user?->year, $user?->section]))),
-                ])));
+                ]))));
             $scheduledAt = in_array(strtolower(trim((string) $appointment->status)), $consultationStatuses, true)
                 ? \Carbon\Carbon::parse($appointment->date . ' ' . $appointment->time)
                 : null;

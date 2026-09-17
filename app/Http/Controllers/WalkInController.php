@@ -2011,15 +2011,43 @@ class WalkInController extends Controller
             ], 404);
         }
 
-        if (!$profile->review_started_at) {
-            $profile->review_started_at = now();
-            $profile->review_started_by_user_id = auth()->id();
-            $profile->save();
-        }
+        $profile->review_started_at = now();
+        $profile->review_closed_at = null;
+        $profile->review_started_by_user_id = auth()->id();
+        $profile->save();
 
         return response()->json([
             'success' => true,
             'review_started_at' => optional($profile->review_started_at)->toIso8601String(),
+        ]);
+    }
+
+    public function markFinalReviewTimeOut(Request $request)
+    {
+        $validated = $request->validate([
+            'reference_number' => ['required', 'string', 'max:120'],
+        ]);
+
+        $referenceNumber = trim((string) $validated['reference_number']);
+
+        $profile = HealthProfile::query()
+            ->where('reference_number', $referenceNumber)
+            ->latest()
+            ->first();
+
+        if (!$profile) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Health profile not found for final review time-out.',
+            ], 404);
+        }
+
+        $profile->review_closed_at = now();
+        $profile->save();
+
+        return response()->json([
+            'success' => true,
+            'review_closed_at' => optional($profile->review_closed_at)->toIso8601String(),
         ]);
     }
 
@@ -4016,6 +4044,7 @@ PROMPT;
                     : null;
                 $approvalDate = $hasPendingFinding ? null : now();
                 $profile->verified_at = $approvalDate;
+                $profile->review_closed_at = now();
                 $profile->approved_by_user_id = $hasPendingFinding ? null : auth()->id();
                 $profile->puptas_sync_status = null;
                 $profile->puptas_synced_at = null;
@@ -4325,6 +4354,7 @@ PROMPT;
                     $profile->clearance_status = 'Fully Cleared';
                     $profile->documents_valid = true;
                     $profile->verified_at = now();
+                    $profile->review_closed_at = now();
                     $profile->approved_by_user_id = auth()->id();
                     $profile->pending_reason = null;
                     $hasAssessmentValue = true;

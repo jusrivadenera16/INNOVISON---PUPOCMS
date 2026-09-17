@@ -551,6 +551,32 @@
         background: rgba(250, 204, 21, .12);
         color: #fde68a;
     }
+    html[data-theme="dark"] .health-forms-filter-icon {
+        background: #facc15;
+    }
+    html[data-theme="dark"] .health-status-badge,
+    html[data-theme="dark"] .health-condition-badge,
+    html[data-theme="dark"] .health-condition-badge.none,
+    html[data-theme="dark"] .health-condition-badge.pending {
+        border: 1px solid rgba(250, 204, 21, .20);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+    }
+    html[data-theme="dark"] .health-status-badge {
+        background: rgba(22, 101, 52, .28);
+        color: #bbf7d0;
+    }
+    html[data-theme="dark"] .health-condition-badge {
+        background: rgba(127, 29, 45, .42);
+        color: #fecdd3;
+    }
+    html[data-theme="dark"] .health-condition-badge.none {
+        background: rgba(30, 64, 175, .28);
+        color: #bfdbfe;
+    }
+    html[data-theme="dark"] .health-condition-badge.pending {
+        background: rgba(146, 64, 14, .30);
+        color: #fde68a;
+    }
     html[data-theme="dark"] .health-forms-table tbody tr:hover td {
         background: rgba(127, 29, 45, .18);
     }
@@ -640,9 +666,9 @@
         border-radius: 999px;
         grid-column: 1;
         grid-row: 1 / span 2;
-        background: #fff1f2;
-        border: 1px solid rgba(127, 29, 45, .08);
-        box-shadow: inset 0 0 0 8px rgba(127, 29, 45, .03);
+        background: #111827;
+        border: 1px solid rgba(250, 204, 21, .48);
+        box-shadow: inset 0 0 0 8px rgba(250, 204, 21, .04);
     }
 
     .health-forms-stat-card::after {
@@ -653,60 +679,60 @@
         width: 18px;
         height: 18px;
         transform: translateY(-50%);
-        background: #ef4444;
+        background: #facc15;
         -webkit-mask: var(--health-forms-stat-icon) center / contain no-repeat;
         mask: var(--health-forms-stat-icon) center / contain no-repeat;
     }
 
     .health-forms-stat-card:nth-child(1) {
-        border-color: rgba(37, 99, 235, .30) !important;
+        border-color: rgba(250, 204, 21, .28) !important;
     }
 
     .health-forms-stat-card:nth-child(1)::before {
-        background: #dbeafe;
+        background: #111827;
     }
 
     .health-forms-stat-card:nth-child(1)::after {
-        background: #2563eb;
+        background: #facc15;
         --health-forms-stat-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 5h16v14H4zM8 9h8M8 13h5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     }
 
     .health-forms-stat-card:nth-child(2) {
-        border-color: rgba(34, 197, 94, .32) !important;
+        border-color: rgba(250, 204, 21, .28) !important;
     }
 
     .health-forms-stat-card:nth-child(2)::before {
-        background: #dcfce7;
+        background: #111827;
     }
 
     .health-forms-stat-card:nth-child(2)::after {
-        background: #22c55e;
+        background: #facc15;
         --health-forms-stat-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m5 13 4 4L19 7' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     }
 
     .health-forms-stat-card:nth-child(3) {
-        border-color: rgba(217, 119, 6, .38) !important;
+        border-color: rgba(250, 204, 21, .28) !important;
     }
 
     .health-forms-stat-card:nth-child(3)::before {
-        background: #fef3c7;
+        background: #111827;
     }
 
     .health-forms-stat-card:nth-child(3)::after {
-        background: #d97706;
+        background: #facc15;
         --health-forms-stat-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='8' stroke='black' stroke-width='2'/%3E%3Cpath d='M12 7v5l3 2' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
     }
 
     .health-forms-stat-card:nth-child(4) {
-        border-color: rgba(127, 29, 45, .28) !important;
+        border-color: rgba(250, 204, 21, .28) !important;
     }
 
     .health-forms-stat-card:nth-child(4)::before {
-        background: #fee2e2;
+        background: #111827;
     }
 
     .health-forms-stat-card:nth-child(4)::after {
-        background: #7f1d2d;
+        background: #facc15;
         --health-forms-stat-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 21s-7-4.4-7-11a4 4 0 0 1 7-2.65A4 4 0 0 1 19 10c0 6.6-7 11-7 11Z' stroke='black' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     }
 

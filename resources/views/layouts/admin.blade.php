@@ -5959,7 +5959,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         ['label' => 'Inventory Summary', 'url' => $reportNavUrl('inventory-summary'), 'active' => request()->routeIs('reports.inventory-summary'), 'icon' => 'cube', 'permission' => 'reports.inventory_summary'],
         ['label' => 'Health Forms', 'url' => $reportNavUrl('health-forms'), 'active' => request()->routeIs('reports.health-forms') || request()->routeIs('reports.health-forms.applicants-list'), 'icon' => 'document-text', 'permission' => 'reports.health_forms'],
         ['label' => 'Appointment Statistics', 'url' => $reportNavUrl('appointment-statistics'), 'active' => request()->routeIs('reports.appointment-statistics'), 'icon' => 'calendar-days', 'permission' => 'reports.appointment_statistics'],
-        ['label' => 'Digital Logbook', 'url' => $reportNavUrl('digital-logbook'), 'active' => request()->routeIs('reports.digital-logbook') || request()->routeIs('assistant.reports.digital-logbook') || request()->routeIs('reports.daily-treatment-record') || request()->routeIs('assistant.reports.daily-treatment-record') || request()->routeIs('reports.pulled-out-records*'), 'icon' => 'clipboard-document-list', 'permission' => 'reports.digital_logbook'],
+        ['label' => 'Clinic Records', 'url' => $reportNavUrl('digital-logbook'), 'active' => request()->routeIs('reports.digital-logbook') || request()->routeIs('assistant.reports.digital-logbook') || request()->routeIs('reports.daily-treatment-record') || request()->routeIs('assistant.reports.daily-treatment-record') || request()->routeIs('reports.pulled-out-records*'), 'icon' => 'clipboard-document-list', 'permission' => 'reports.digital_logbook'],
         ['label' => 'Feedbacks', 'url' => $reportNavUrl('feedbacks'), 'active' => request()->routeIs('reports.feedbacks'), 'icon' => 'megaphone', 'permission' => 'reports.feedbacks'],
         ['label' => 'Export Reports', 'url' => $reportNavUrl('export-hub'), 'active' => request()->routeIs('reports.exportHub*'), 'icon' => 'arrow-down-tray', 'permission' => 'reports.export_reports'],
         ['label' => 'Audit Trail', 'url' => $isStudentAssistant ? url('/assistant/logs') : url('/admin/activity-logs'), 'active' => request()->routeIs('admin.logs') || Request::is('admin/activity-logs') || Request::is('assistant/logs'), 'icon' => 'clock', 'superadmin' => true],
@@ -6071,7 +6071,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                             ->orWhere('student_number', '')
                             ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
                             ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
-                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%']);
+                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
+                            ->orWhereColumn('student_number', 'reference_number');
                     })
                         ->whereDoesntHave('user', function ($userQuery) {
                             $userQuery->whereNotNull('student_number')

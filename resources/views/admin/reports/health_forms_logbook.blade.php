@@ -29,12 +29,6 @@
         font-size: 14px;
         line-height: 1.6;
     }
-    .hf-logbook-actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-    }
     .hf-logbook-btn {
         display: inline-flex;
         align-items: center;
@@ -42,7 +36,7 @@
         gap: 8px;
         min-height: 42px;
         padding: 10px 16px;
-        border-radius: 999px;
+        border-radius: 10px;
         border: 1px solid rgba(112, 19, 27, 0.28);
         background: #ffffff;
         color: #70131b;
@@ -54,8 +48,15 @@
     }
     .hf-logbook-btn.primary {
         background: #70131b;
-        color: #facc15;
+        color: #ffffff;
         border-color: #70131b;
+    }
+    .hf-logbook-btn:hover,
+    .hf-logbook-btn:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131b;
+        outline: none;
     }
     .hf-form-b-panel {
         background: #ffffff;
@@ -107,6 +108,8 @@
         text-transform: uppercase;
     }
     .hf-logbook-search-wrap {
+        flex: 1;
+        min-width: 0;
         display: flex;
         align-items: center;
         gap: 9px;
@@ -122,6 +125,7 @@
         color: #70131b;
     }
     .hf-logbook-search-wrap input {
+        min-width: 0;
         width: 100%;
         border: 0;
         outline: 0;
@@ -130,13 +134,22 @@
         font-size: 13px;
         font-weight: 700;
     }
+    .hf-logbook-search-actions {
+        position: relative;
+        display: flex;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .hf-logbook-search-actions > .hf-logbook-btn {
+        flex: 0 0 auto;
+    }
     .hf-form-b-table-wrap {
         overflow-x: auto;
     }
     .hf-form-b-table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 1080px;
+        min-width: 1480px;
     }
     .hf-form-b-table th,
     .hf-form-b-table td {
@@ -200,76 +213,186 @@
         font-size: 12px;
         font-weight: 800;
     }
-    .hf-filter-modal {
-        position: fixed;
-        inset: 0;
+    .hf-filter-popover {
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
         display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        background: rgba(15, 23, 42, 0.55);
+        width: min(310px, calc(100vw - 40px));
+        border: 1px solid #ead1d1;
+        border-radius: 14px;
+        background: #ffffff;
+        box-shadow: 0 18px 38px rgba(15, 23, 42, 0.2);
+        overflow: hidden;
         z-index: 1000;
     }
-    .hf-filter-modal.is-open {
-        display: flex;
-    }
-    .hf-filter-card {
-        width: min(520px, 100%);
-        border-radius: 18px;
-        background: #ffffff;
-        box-shadow: 0 28px 70px rgba(15, 23, 42, 0.28);
-        overflow: hidden;
+    .hf-filter-popover.is-open {
+        display: block;
     }
     .hf-filter-head {
         display: flex;
+        align-items: center;
         justify-content: space-between;
         gap: 12px;
-        padding: 18px 20px;
-        background: #70131b;
-        color: #ffffff;
+        padding: 14px;
+        background: #ffffff;
+        color: #70131b;
+        border-bottom: 1px solid #f0dddd;
     }
     .hf-filter-head h2 {
         margin: 0;
-        font-size: 18px;
+        color: #70131b;
+        font-size: 12px;
         font-weight: 900;
+        letter-spacing: .05em;
+        text-transform: uppercase;
     }
     .hf-filter-close {
-        border: 0;
-        background: rgba(255,255,255,0.14);
-        color: #ffffff;
-        border-radius: 999px;
-        width: 36px;
-        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: 1px solid #e5c6c6;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #70131b;
         cursor: pointer;
-        font-size: 22px;
+    }
+    .hf-filter-close:hover,
+    .hf-filter-close:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131b;
+        outline: none;
+    }
+    .hf-filter-close svg {
+        width: 16px;
+        height: 16px;
     }
     .hf-filter-form {
         display: grid;
-        gap: 14px;
-        padding: 20px;
+        gap: 12px;
+        padding: 14px;
+        background: #ffffff;
     }
     .hf-filter-field label {
         display: block;
-        margin-bottom: 7px;
-        color: #475569;
-        font-size: 12px;
+        margin-bottom: 6px;
+        color: #70131b;
+        font-size: 11px;
         font-weight: 900;
+        letter-spacing: .04em;
         text-transform: uppercase;
     }
     .hf-filter-field input {
         width: 100%;
-        height: 44px;
-        border: 1px solid #cbd5e1;
-        border-radius: 12px;
-        padding: 0 13px;
+        height: 42px;
+        border: 1px solid #e5c6c6;
+        border-radius: 9px;
+        padding: 0 11px;
+        background: #ffffff;
         color: #111827;
+        font-size: 13px;
         font-weight: 800;
+        outline: none;
+    }
+    .hf-filter-field input:focus {
+        border-color: #70131b;
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, 0.10);
     }
     .hf-filter-actions {
         display: flex;
         justify-content: flex-end;
-        gap: 10px;
-        padding-top: 4px;
+        gap: 8px;
+        padding-top: 2px;
+    }
+    .hf-filter-actions .hf-logbook-btn {
+        min-height: 38px;
+        padding: 8px 13px;
+        font-size: 12px;
+    }
+    html[data-theme="dark"] .hf-filter-popover {
+        border-color: rgba(250, 204, 21, 0.25);
+        background: #111827;
+        box-shadow: 0 20px 42px rgba(0, 0, 0, 0.42);
+    }
+    html[data-theme="dark"] .hf-filter-head,
+    html[data-theme="dark"] .hf-filter-form {
+        background: #111827;
+        border-bottom-color: rgba(255, 255, 255, 0.10);
+    }
+    html[data-theme="dark"] .hf-filter-head h2,
+    html[data-theme="dark"] .hf-filter-field label {
+        color: #facc15;
+    }
+    html[data-theme="dark"] .hf-filter-close {
+        border-color: rgba(250, 204, 21, 0.35);
+        background: #1e293b;
+        color: #facc15;
+    }
+    html[data-theme="dark"] .hf-filter-field input {
+        border-color: rgba(250, 204, 21, 0.28);
+        background: #1e293b;
+        color: #ffffff;
+        color-scheme: dark;
+    }
+    html[data-theme="dark"] .hf-filter-field input:focus {
+        border-color: #facc15;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.12);
+    }
+    html[data-theme="dark"] .hf-filter-actions .hf-logbook-btn:not(.primary) {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, 0.18);
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .hf-logbook-title,
+    html[data-theme="dark"] .hf-form-b-title,
+    html[data-theme="dark"] .hf-form-b-table td {
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .hf-logbook-subtitle,
+    html[data-theme="dark"] .hf-form-b-month,
+    html[data-theme="dark"] .hf-logbook-search label,
+    html[data-theme="dark"] .hf-patient-number,
+    html[data-theme="dark"] .hf-empty {
+        color: #cbd5e1 !important;
+    }
+    html[data-theme="dark"] .hf-form-b-panel {
+        border-color: rgba(250, 204, 21, 0.22);
+        background: #111827;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+    }
+    html[data-theme="dark"] .hf-form-b-heading {
+        border-bottom-color: rgba(255, 255, 255, 0.10);
+        background: #111827;
+    }
+    html[data-theme="dark"] .hf-form-b-kicker,
+    html[data-theme="dark"] .hf-form-b-table th,
+    html[data-theme="dark"] .hf-entry-label {
+        color: #facc15;
+    }
+    html[data-theme="dark"] .hf-logbook-search-wrap {
+        border-color: rgba(250, 204, 21, 0.28);
+        background: #1e293b;
+    }
+    html[data-theme="dark"] .hf-logbook-search-wrap svg {
+        color: #facc15;
+    }
+    html[data-theme="dark"] .hf-logbook-search-wrap input {
+        color: #ffffff;
+        color-scheme: dark;
+    }
+    html[data-theme="dark"] .hf-form-b-table th {
+        background: #1e293b;
+    }
+    html[data-theme="dark"] .hf-form-b-table td {
+        border-bottom-color: rgba(255, 255, 255, 0.10);
+    }
+    html[data-theme="dark"] .hf-form-b-footer {
+        background: #0f172a;
+        color: #cbd5e1;
     }
     @media (max-width: 780px) {
         .hf-logbook-header,
@@ -277,7 +400,15 @@
             flex-direction: column;
             align-items: stretch;
         }
-        .hf-logbook-btn {
+        .hf-logbook-search-actions {
+            flex-direction: column;
+        }
+        .hf-logbook-search-actions .hf-logbook-btn {
+            width: 100%;
+        }
+        .hf-filter-popover {
+            right: 0;
+            left: 0;
             width: 100%;
         }
     }
@@ -287,9 +418,8 @@
 @section('content')
 @php
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
-    $reportsHomeUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/digital-logbook') : url('/admin/reports/digital-logbook');
     $reportsRootUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
-    $healthFormsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/health-forms') : url('/admin/reports/health-forms');
+    $clinicRecordsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/digital-logbook') : url('/admin/reports/digital-logbook');
     $rangeStartLabel = $dateFrom->format('d M Y');
     $rangeEndLabel = $dateTo->format('d M Y');
     $selectedRangeLabel = $dateFrom->isSameDay($dateTo)
@@ -299,7 +429,7 @@
 <div class="hf-logbook-shell">
     @include('admin.partials.report-breadcrumb', ['items' => [
         ['label' => 'Reports', 'url' => $reportsRootUrl],
-        ['label' => 'Health Forms', 'url' => $healthFormsUrl],
+        ['label' => 'Clinic Records', 'url' => $clinicRecordsUrl],
         ['label' => 'Logbook'],
     ]])
     <header class="hf-logbook-header">
@@ -307,26 +437,51 @@
             <h1 class="hf-logbook-title">Health Forms Logbook</h1>
             <p class="hf-logbook-subtitle">Approved health form clinic visit logbook using Final Review time-in and approval time-out.</p>
         </div>
-        <div class="hf-logbook-actions">
-            <button type="button" class="hf-logbook-btn primary" id="openHealthFormsLogbookFilter">
-                <x-outline-icon name="calendar-days" />
-                Filter
-            </button>
-        </div>
     </header>
 
     <section class="hf-form-b-panel">
         <div class="hf-form-b-heading">
             <div>
                 <p class="hf-form-b-kicker">PUP Taguig Medical Clinic · Health Form</p>
-                <h2 class="hf-form-b-title">Digital Health Form Logbook</h2>
+                <h2 class="hf-form-b-title">Health Form Record Logs</h2>
                 <p class="hf-form-b-month">{{ $selectedRangeLabel }}</p>
             </div>
             <div class="hf-logbook-search">
                 <label for="healthFormsLogbookSearch">Search Patient</label>
-                <div class="hf-logbook-search-wrap">
-                    <x-outline-icon name="magnifying-glass" />
-                    <input id="healthFormsLogbookSearch" type="search" placeholder="Name or reference number" autocomplete="off">
+                <div class="hf-logbook-search-actions">
+                    <div class="hf-logbook-search-wrap">
+                        <x-outline-icon name="magnifying-glass" />
+                        <input id="healthFormsLogbookSearch" type="search" placeholder="Name or reference number" autocomplete="off">
+                    </div>
+                    <button type="button" class="hf-logbook-btn primary" id="openHealthFormsLogbookFilter" aria-controls="healthFormsLogbookFilterPopover" aria-expanded="false">
+                        <x-outline-icon name="calendar-days" />
+                        Filter
+                    </button>
+                    <div class="hf-filter-popover" id="healthFormsLogbookFilterPopover" role="dialog" aria-modal="false" aria-labelledby="healthFormsLogbookFilterTitle" aria-hidden="true">
+                        <div class="hf-filter-head">
+                            <h2 id="healthFormsLogbookFilterTitle">Date Filter</h2>
+                            <button type="button" class="hf-filter-close" id="closeHealthFormsLogbookFilter" aria-label="Close date filter">
+                                <x-outline-icon name="chevron-up" />
+                            </button>
+                        </div>
+                        <form method="GET" class="hf-filter-form">
+                            <div class="hf-filter-field">
+                                <label for="healthFormsLogbookDateFrom">From</label>
+                                <input id="healthFormsLogbookDateFrom" type="date" name="date_from" value="{{ $dateFrom->format('Y-m-d') }}" required>
+                            </div>
+                            <div class="hf-filter-field">
+                                <label for="healthFormsLogbookDateTo">To</label>
+                                <input id="healthFormsLogbookDateTo" type="date" name="date_to" value="{{ $dateTo->format('Y-m-d') }}" required>
+                            </div>
+                            <div class="hf-filter-actions">
+                                <button type="button" class="hf-logbook-btn" id="cancelHealthFormsLogbookFilter">Cancel</button>
+                                <button type="submit" class="hf-logbook-btn primary">
+                                    <x-outline-icon name="check" />
+                                    Apply Filter
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -338,66 +493,39 @@
                         <th>Date</th>
                         <th>Time In</th>
                         <th>Time Out</th>
-                        <th>Patient Name</th>
+                        <th>Full Name</th>
                         <th>Course-Yr &amp; Sec / Dept</th>
-                        <th>Complaints / Impression</th>
-                        <th>Treatment / Medicines</th>
-                        <th>Qty</th>
-                        <th>Physician / Attending Staff</th>
+                        <th>Transaction</th>
+                        <th>Pending Reason</th>
+                        <th>Referral</th>
+                        <th>Approval Date</th>
+                        <th>Approved by</th>
                     </tr>
                 </thead>
                 <tbody id="healthFormsLogbookBody">
                     @forelse($records as $record)
-                        @php
-                            $patient = $record->user;
-                            $patientName = trim((string) ($patient?->name ?: 'Unnamed Patient'));
-                            $reference = trim((string) ($record->reference_number ?: $record->student_number ?: $patient?->student_number));
-                            $course = trim((string) ($record->course_college ?: $patient?->course));
-                            $yearSection = trim(implode(' - ', array_filter([
-                                trim((string) $patient?->year),
-                                trim((string) $patient?->section),
-                            ])));
-                            $courseDepartment = trim(implode(' / ', array_filter([$course, $yearSection])));
-                            $dateValue = $record->verified_at ?: $record->created_at;
-                            $timeIn = $record->review_started_at ?: $record->created_at;
-                            $timeOut = $record->verified_at ?: $record->updated_at;
-                            $staffName = trim((string) (optional($record->approvedBy)->name ?: optional($record->reviewStartedBy)->name));
-                            $conditionText = $record->hasMedicalCondition() ? 'With medical condition' : 'No medical condition';
-                            $remarks = trim((string) ($record->med_assessment_remarks ?: $record->medical_condition_remarks ?: $record->assessment_remarks));
-                        @endphp
                         <tr
                             class="hf-logbook-row"
-                            data-patient-name="{{ \Illuminate\Support\Str::lower($patientName) }}"
-                            data-reference="{{ \Illuminate\Support\Str::lower($reference) }}"
+                            data-patient-name="{{ \Illuminate\Support\Str::lower($record['patient_name']) }}"
+                            data-reference="{{ \Illuminate\Support\Str::lower($record['reference']) }}"
                         >
-                            <td>{{ optional($dateValue)->format('m/d/Y') ?: '-' }}</td>
-                            <td>{{ optional($timeIn)->format('g:i A') ?: '-' }}</td>
-                            <td>{{ optional($timeOut)->format('g:i A') ?: '-' }}</td>
+                            <td>{{ optional($record['date'])->format('m/d/Y') ?: '-' }}</td>
+                            <td>{{ optional($record['time_in'])->format('g:i A') ?: '-' }}</td>
+                            <td>{{ optional($record['time_out'])->format('g:i A') ?: '-' }}</td>
                             <td>
-                                <span class="hf-patient-name">{{ $patientName }}</span>
-                                <span class="hf-patient-number">{{ $reference ?: 'No reference number' }}</span>
+                                <span class="hf-patient-name">{{ $record['patient_name'] }}</span>
+                                <span class="hf-patient-number">{{ $record['reference'] ?: 'No reference number' }}</span>
                             </td>
-                            <td>{{ $courseDepartment ?: ($patient?->user_type ?: '-') }}</td>
-                            <td>
-                                <span class="hf-entry">
-                                    <span class="hf-entry-label">Complaint</span>
-                                    <span class="hf-entry-value">Health form review</span>
-                                </span>
-                                <span class="hf-entry">
-                                    <span class="hf-entry-label">Impression</span>
-                                    <span class="hf-entry-value">{{ $conditionText }}{{ $remarks ? ' - ' . $remarks : '' }}</span>
-                                </span>
-                            </td>
-                            <td>
-                                Medical clearance
-                                <span class="hf-cell-secondary">{{ $record->clearance_status ?: 'Approved' }}</span>
-                            </td>
-                            <td>-</td>
-                            <td>{{ $staffName ?: 'Clinic Staff' }}</td>
+                            <td>{{ $record['course_department'] ?: '-' }}</td>
+                            <td>{{ $record['transaction'] ?: '-' }}</td>
+                            <td>{{ $record['pending_reason'] ?: '-' }}</td>
+                            <td>{{ $record['referral'] ?: '-' }}</td>
+                            <td>{{ optional($record['approval_date'])->format('m/d/Y') ?: '-' }}</td>
+                            <td>{{ $record['approved_by'] ?: '-' }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="hf-empty">No approved health form records were logged from {{ $selectedRangeLabel }}.</td>
+                            <td colspan="10" class="hf-empty">No approved health form records were logged from {{ $selectedRangeLabel }}.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -411,37 +539,12 @@
     </section>
 </div>
 
-<div class="hf-filter-modal" id="healthFormsLogbookFilterModal" aria-hidden="true">
-    <div class="hf-filter-card" role="dialog" aria-modal="true" aria-labelledby="healthFormsLogbookFilterTitle">
-        <header class="hf-filter-head">
-            <h2 id="healthFormsLogbookFilterTitle">Health Forms Logbook Date Range</h2>
-            <button type="button" class="hf-filter-close" id="closeHealthFormsLogbookFilter" aria-label="Close filter">&times;</button>
-        </header>
-        <form method="GET" class="hf-filter-form">
-            <div class="hf-filter-field">
-                <label for="healthFormsLogbookDateFrom">From</label>
-                <input id="healthFormsLogbookDateFrom" type="text" name="date_from" value="{{ $dateFrom->format('d/m/Y') }}" placeholder="DD/MM/YYYY" inputmode="numeric" pattern="\d{2}/\d{2}/\d{4}" required>
-            </div>
-            <div class="hf-filter-field">
-                <label for="healthFormsLogbookDateTo">To</label>
-                <input id="healthFormsLogbookDateTo" type="text" name="date_to" value="{{ $dateTo->format('d/m/Y') }}" placeholder="DD/MM/YYYY" inputmode="numeric" pattern="\d{2}/\d{2}/\d{4}" required>
-            </div>
-            <div class="hf-filter-actions">
-                <button type="button" class="hf-logbook-btn" id="cancelHealthFormsLogbookFilter">Cancel</button>
-                <button type="submit" class="hf-logbook-btn primary">
-                    <x-outline-icon name="check" />
-                    Apply Filter
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
 const healthFormsLogbookSearch = document.getElementById('healthFormsLogbookSearch');
 const healthFormsLogbookRows = Array.from(document.querySelectorAll('.hf-logbook-row'));
 const healthFormsLogbookVisibleCount = document.getElementById('healthFormsLogbookVisibleCount');
-const healthFormsLogbookFilterModal = document.getElementById('healthFormsLogbookFilterModal');
+const healthFormsLogbookFilterButton = document.getElementById('openHealthFormsLogbookFilter');
+const healthFormsLogbookFilterPopover = document.getElementById('healthFormsLogbookFilterPopover');
 
 healthFormsLogbookSearch?.addEventListener('input', function () {
     const value = this.value.trim().toLowerCase();
@@ -460,20 +563,26 @@ healthFormsLogbookSearch?.addEventListener('input', function () {
     }
 });
 
-document.getElementById('openHealthFormsLogbookFilter')?.addEventListener('click', function () {
-    healthFormsLogbookFilterModal?.classList.add('is-open');
-    healthFormsLogbookFilterModal?.setAttribute('aria-hidden', 'false');
+healthFormsLogbookFilterButton?.addEventListener('click', function () {
+    const isOpen = healthFormsLogbookFilterPopover?.classList.toggle('is-open') ?? false;
+    healthFormsLogbookFilterPopover?.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+    this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 });
 
 function closeHealthFormsLogbookFilter() {
-    healthFormsLogbookFilterModal?.classList.remove('is-open');
-    healthFormsLogbookFilterModal?.setAttribute('aria-hidden', 'true');
+    healthFormsLogbookFilterPopover?.classList.remove('is-open');
+    healthFormsLogbookFilterPopover?.setAttribute('aria-hidden', 'true');
+    healthFormsLogbookFilterButton?.setAttribute('aria-expanded', 'false');
 }
 
 document.getElementById('closeHealthFormsLogbookFilter')?.addEventListener('click', closeHealthFormsLogbookFilter);
 document.getElementById('cancelHealthFormsLogbookFilter')?.addEventListener('click', closeHealthFormsLogbookFilter);
-healthFormsLogbookFilterModal?.addEventListener('click', function (event) {
-    if (event.target === healthFormsLogbookFilterModal) closeHealthFormsLogbookFilter();
+document.addEventListener('click', function (event) {
+    if (!healthFormsLogbookFilterPopover?.classList.contains('is-open')) return;
+    if (!event.target.closest('.hf-logbook-search-actions')) closeHealthFormsLogbookFilter();
+});
+document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') closeHealthFormsLogbookFilter();
 });
 </script>
 @endsection

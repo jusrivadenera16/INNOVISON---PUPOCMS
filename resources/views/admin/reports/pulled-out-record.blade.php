@@ -113,7 +113,7 @@
 <div class="pulled-record-page">
     @include('admin.partials.report-breadcrumb', ['items' => [
         ['label' => 'Reports', 'url' => $reportsRootUrl],
-        ['label' => 'Digital Logbook', 'url' => $digitalLogbookUrl],
+        ['label' => 'Clinic Records', 'url' => $digitalLogbookUrl],
         ['label' => 'Pulled Out', 'url' => $pulledOutRecordsUrl],
         ['label' => 'Record'],
     ]])

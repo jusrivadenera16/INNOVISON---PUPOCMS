@@ -13567,6 +13567,7 @@
         const finalReviewApplicantsUrl = '{{ url($basePrefix . '/walkin/final-review-applicants') }}';
         const employeeDraftsUrl = '{{ url($basePrefix . '/walkin/employee-drafts') }}';
         const finalReviewTimeInUrl = '{{ url($basePrefix . '/walkin/final-review/time-in') }}';
+        const finalReviewTimeOutUrl = '{{ url($basePrefix . '/walkin/final-review/time-out') }}';
         const saveEncodingUrl = '{{ url($basePrefix . '/walkin/applicant-encoding') }}';
         const saveStudentAssessmentUrl = '{{ url($basePrefix . '/walkin/student-assessment') }}';
         const applicantFinalReviewDraftUrl = '{{ url($basePrefix . '/walkin/applicant-final-review-draft') }}';
@@ -14253,6 +14254,9 @@
         }
 
         function closeApplicantsModal() {
+            if (isFinalReviewWorkflow() && currentLookupRef) {
+                markFinalReviewTimeOut(currentLookupRef);
+            }
             if (backdrop) backdrop.classList.remove('show');
             closeHealthInfoModal();
             closeMedicalConditionModal();
@@ -16964,6 +16968,25 @@
             });
         }
 
+        function markFinalReviewTimeOut(referenceNumber) {
+            if (!canApproveFinalReview || !referenceNumber || !finalReviewTimeOutUrl) {
+                return Promise.resolve();
+            }
+
+            return fetch(finalReviewTimeOutUrl, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ reference_number: referenceNumber })
+            }).catch(function (error) {
+                console.warn('Unable to mark final review time-out.', error);
+            });
+        }
+
         function buildFinalReviewCard(applicant) {
             const article = document.createElement('article');
             article.className = 'applicant-final-review-card';
@@ -17130,6 +17153,9 @@
 
         if (backToFinalReviewList) {
             backToFinalReviewList.addEventListener('click', function () {
+                if (isFinalReviewWorkflow() && currentLookupRef) {
+                    markFinalReviewTimeOut(currentLookupRef);
+                }
                 resetLookupState();
                 showFinalReviewList();
             });

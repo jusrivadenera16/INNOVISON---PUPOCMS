@@ -199,6 +199,81 @@
         font-size: 14px;
     }
 
+    .summary-panel-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px solid #f1e4e7;
+    }
+
+    .summary-panel-pagination-meta {
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .summary-panel-pagination-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .summary-panel-page {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        min-width: 30px;
+        height: 30px;
+        border: 1px solid #ead8dc;
+        border-radius: 7px;
+        background: #ffffff;
+        color: #70131B;
+        font-size: 12px;
+        font-weight: 900;
+        text-decoration: none;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+    }
+
+    .summary-panel-page:hover,
+    .summary-panel-page:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        outline: none;
+    }
+
+    .summary-panel-page.is-disabled {
+        opacity: .45;
+        pointer-events: none;
+    }
+
+    .summary-panel-page.is-current {
+        border-color: #8f0015;
+        background: #8f0015;
+        color: #ffffff;
+    }
+
+    .summary-panel-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 25px;
+        min-height: 22px;
+        margin-left: 6px;
+        padding: 2px 7px;
+        border: 1px solid rgba(250, 204, 21, .55);
+        border-radius: 999px;
+        background: rgba(250, 204, 21, .12);
+        color: #a16207;
+        font-size: 11px;
+        vertical-align: middle;
+    }
+
     .summary-back {
         min-width: 132px;
         width: auto !important;
@@ -576,8 +651,8 @@
         border-radius: 999px;
         grid-column: 1;
         grid-row: 1 / span 3;
-        background: #fff1f2;
-        border: 1px solid rgba(127, 29, 45, .08);
+        background: #111827;
+        border: 1px solid rgba(250, 204, 21, .48);
     }
 
     .summary-card::after {
@@ -588,28 +663,33 @@
         width: 18px;
         height: 18px;
         transform: translateY(-50%);
-        background: #7f1d2d;
+        background: #facc15;
         -webkit-mask: var(--summary-card-icon) center / contain no-repeat;
         mask: var(--summary-card-icon) center / contain no-repeat;
     }
 
-    .summary-card:nth-child(1) { border-color: rgba(34, 197, 94, .32) !important; }
-    .summary-card:nth-child(1)::before { background: #dcfce7; }
+    .summary-card:nth-child(1) { border-color: rgba(250, 204, 21, .28) !important; }
+    .summary-card:nth-child(1)::before { background: #111827; }
     .summary-card:nth-child(1)::after {
-        background: #22c55e;
+        background: #facc15;
         --summary-card-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m20 7-8-4-8 4 8 4 8-4Z M4 7v10l8 4 8-4V7' stroke='black' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E");
     }
-    .summary-card:nth-child(2) { border-color: rgba(248, 113, 113, .36) !important; }
-    .summary-card:nth-child(2)::before { background: #fee2e2; }
+    .summary-card:nth-child(2) { border-color: rgba(250, 204, 21, .28) !important; }
+    .summary-card:nth-child(2)::before { background: #111827; }
     .summary-card:nth-child(2)::after {
-        background: #ef4444;
-        --summary-card-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 3v18M7 8h8.5a3.5 3.5 0 1 1 0 7H7' stroke='black' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E");
+        background: #facc15;
+        --summary-card-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.5 6.75 12 3l7.5 3-7.5 3-7.5-3Zm0 0v10.5L12 21l7.5-3.75V6.75M12 9.75V21' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     }
+    .summary-card:nth-child(3) { border-color: rgba(250, 204, 21, .28) !important; }
+    .summary-card:nth-child(3)::before { background: #111827; }
     .summary-card:nth-child(3)::after {
+        background: #facc15;
         --summary-card-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 12h14M12 5l7 7-7 7' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     }
+    .summary-card:nth-child(4) { border-color: rgba(250, 204, 21, .28) !important; }
+    .summary-card:nth-child(4)::before { background: #111827; }
     .summary-card:nth-child(4)::after {
-        background: #f59e0b;
+        background: #facc15;
         --summary-card-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 9v4m0 4h.01M10.3 4.3 2.7 18a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     }
 
@@ -675,6 +755,31 @@
         border-color: rgba(250, 204, 21, .18) !important;
         color: #f8fafc !important;
         box-shadow: none !important;
+    }
+
+    html[data-theme="dark"] .summary-panel-pagination {
+        border-top-color: rgba(148, 163, 184, .18);
+    }
+
+    html[data-theme="dark"] .summary-panel-pagination-meta {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .summary-panel-page {
+        border-color: rgba(250, 204, 21, .18);
+        background: #0f172a;
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .summary-panel-page:hover,
+    html[data-theme="dark"] .summary-panel-page:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+    }
+
+    html[data-theme="dark"] .summary-panel-count {
+        color: #facc15;
     }
 
     html[data-theme="dark"] .summary-table {
@@ -838,7 +943,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($itemPerformance as $item)
+                    @forelse($itemPerformancePage as $item)
                         <tr>
                             <td>
                                 <div style="font-weight: 700;">{{ $item->name }}</div>
@@ -868,6 +973,24 @@
                     @endforelse
                 </tbody>
             </table>
+            @if($itemPerformancePage->total() > 0)
+                <div class="summary-panel-pagination">
+                    <span class="summary-panel-pagination-meta">Showing {{ $itemPerformancePage->firstItem() }} to {{ $itemPerformancePage->lastItem() }} of {{ $itemPerformancePage->total() }}</span>
+                    <div class="summary-panel-pagination-actions" aria-label="Inventory performance pagination">
+                        @if($itemPerformancePage->onFirstPage())
+                            <span class="summary-panel-page is-disabled" aria-disabled="true">&larr;</span>
+                        @else
+                            <a class="summary-panel-page" href="{{ $itemPerformancePage->previousPageUrl() }}" rel="prev" aria-label="Previous inventory performance page">&larr;</a>
+                        @endif
+                        <span class="summary-panel-page is-current" aria-current="page">{{ $itemPerformancePage->currentPage() }}</span>
+                        @if($itemPerformancePage->hasMorePages())
+                            <a class="summary-panel-page" href="{{ $itemPerformancePage->nextPageUrl() }}" rel="next" aria-label="Next inventory performance page">&rarr;</a>
+                        @else
+                            <span class="summary-panel-page is-disabled" aria-disabled="true">&rarr;</span>
+                        @endif
+                    </div>
+                </div>
+            @endif
         </div>
 
         <div class="summary-panel">
@@ -886,7 +1009,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($lowStockItems as $item)
+                        @foreach($lowStockItemsPage as $item)
                             <tr>
                                 <td style="font-weight: 700;">{{ $item->name }}</td>
                                 <td>{{ rtrim(rtrim(number_format((float) $item->current_balance, 2, '.', ''), '0'), '.') }} {{ $item->unit }}</td>
@@ -895,6 +1018,70 @@
                         @endforeach
                     </tbody>
                 </table>
+                @if($lowStockItemsPage->total() > 0)
+                    <div class="summary-panel-pagination">
+                        <span class="summary-panel-pagination-meta">Showing {{ $lowStockItemsPage->firstItem() }} to {{ $lowStockItemsPage->lastItem() }} of {{ $lowStockItemsPage->total() }}</span>
+                        <div class="summary-panel-pagination-actions" aria-label="Low stock pagination">
+                            @if($lowStockItemsPage->onFirstPage())
+                                <span class="summary-panel-page is-disabled" aria-disabled="true">&larr;</span>
+                            @else
+                                <a class="summary-panel-page" href="{{ $lowStockItemsPage->previousPageUrl() }}" rel="prev" aria-label="Previous low stock page">&larr;</a>
+                            @endif
+                            <span class="summary-panel-page is-current" aria-current="page">{{ $lowStockItemsPage->currentPage() }}</span>
+                            @if($lowStockItemsPage->hasMorePages())
+                                <a class="summary-panel-page" href="{{ $lowStockItemsPage->nextPageUrl() }}" rel="next" aria-label="Next low stock page">&rarr;</a>
+                            @else
+                                <span class="summary-panel-page is-disabled" aria-disabled="true">&rarr;</span>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+            @endif
+        </div>
+
+        <div class="summary-panel">
+            <h4 class="summary-table-title">Near Expiry <span class="summary-panel-count">{{ $nearExpiryItems->count() }}</span></h4>
+            <p class="summary-table-subtitle">Items with remaining stock expiring within the next 3 months.</p>
+
+            @if($nearExpiryItems->isEmpty())
+                <div class="summary-empty">No items are near expiry within the next 3 months.</div>
+            @else
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Expiry Date</th>
+                            <th>Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($nearExpiryItemsPage as $item)
+                            <tr>
+                                <td style="font-weight: 700;">{{ $item->name }}</td>
+                                <td>{{ optional($item->expiration_date)->format('M d, Y') }}</td>
+                                <td>{{ rtrim(rtrim(number_format((float) $item->current_balance, 2, '.', ''), '0'), '.') }} {{ $item->unit }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                @if($nearExpiryItemsPage->total() > 0)
+                    <div class="summary-panel-pagination">
+                        <span class="summary-panel-pagination-meta">Showing {{ $nearExpiryItemsPage->firstItem() }} to {{ $nearExpiryItemsPage->lastItem() }} of {{ $nearExpiryItemsPage->total() }}</span>
+                        <div class="summary-panel-pagination-actions" aria-label="Near expiry pagination">
+                            @if($nearExpiryItemsPage->onFirstPage())
+                                <span class="summary-panel-page is-disabled" aria-disabled="true">&larr;</span>
+                            @else
+                                <a class="summary-panel-page" href="{{ $nearExpiryItemsPage->previousPageUrl() }}" rel="prev" aria-label="Previous near expiry page">&larr;</a>
+                            @endif
+                            <span class="summary-panel-page is-current" aria-current="page">{{ $nearExpiryItemsPage->currentPage() }}</span>
+                            @if($nearExpiryItemsPage->hasMorePages())
+                                <a class="summary-panel-page" href="{{ $nearExpiryItemsPage->nextPageUrl() }}" rel="next" aria-label="Next near expiry page">&rarr;</a>
+                            @else
+                                <span class="summary-panel-page is-disabled" aria-disabled="true">&rarr;</span>
+                            @endif
+                        </div>
+                    </div>
+                @endif
             @endif
         </div>
     </div>
