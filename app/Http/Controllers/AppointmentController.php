@@ -3059,6 +3059,7 @@ class AppointmentController extends Controller
             ->map(fn (ClinicServiceOption $option) => $option->serviceLabel())
             ->prepend('General Consultation')
             ->push('BP Monitoring')
+            ->toBase()
             ->unique()
             ->values()
             ->all();
