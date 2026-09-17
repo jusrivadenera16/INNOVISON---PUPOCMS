@@ -1260,14 +1260,14 @@
     }
     .confirmation-btn {
         min-width: 118px;
-        min-height: 36px;
+        min-height: 40px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 9px;
-        padding: 8px 14px;
+        padding: 9px 15px;
         border-radius: 8px;
-        font-size: 10.5px;
+        font-size: 11.5px;
     }
     .confirmation-btn-primary { min-width: 160px; }
     .confirmation-btn svg { width: 16px; height: 16px; }
