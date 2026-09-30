@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SecurityHeaders middleware</title>
+<style>
+body{margin:0;padding:36px;background:#10141d;color:#dbeafe;font:18px/1.6 Consolas,"Courier New",monospace}
+h1{font:700 30px Arial,sans-serif;color:#ffd21f;margin:0 0 24px}
+.panel{border:1px solid #6f2735;border-radius:10px;overflow:hidden;background:#171d29}
+.head{padding:14px 18px;background:#70131b;color:#fff;font:700 17px Arial,sans-serif}
+pre{margin:0;padding:22px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<h1>Step 1 - Global security middleware</h1>
+<div class="panel">
+<div class="head">app/Http/Middleware/SecurityHeaders.php</div>
+<pre>class SecurityHeaders
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        $response = $next($request);
+
+        $response-&gt;headers-&gt;set('X-Content-Type-Options', 'nosniff');
+        $response-&gt;headers-&gt;set('X-Frame-Options', 'SAMEORIGIN');
+        $response-&gt;headers-&gt;set('Content-Security-Policy', $policy);
+
+        if ($request-&gt;isSecure() &amp;&amp; !app()-&gt;environment(['local', 'testing'])) {
+            $response-&gt;headers-&gt;set(
+                'Strict-Transport-Security',
+                'max-age=31536000'
+            );
+        }
+
+        return $response;
+    }
+}</pre>
+</div>
+</body>
+</html>
