@@ -279,6 +279,7 @@
         ->filter(fn ($group) => $group['documents']->isNotEmpty())
         ->values();
     $healthSubmissionDocumentCount = $healthSubmissionDocumentGroups->sum(fn ($group) => $group['documents']->count());
+    $canViewHealthFiles = $healthSubmissionDocumentGroups->isNotEmpty();
 @endphp
 
 <div class="health-doc-layout">
@@ -324,7 +325,7 @@
                 </div>
 
                 <div class="health-doc-actions">
-                    @if($healthProfileRecord)
+                    @if($canViewHealthFiles)
                         <button type="button" class="health-doc-action is-primary" onclick="openHealthRecordModal()">
                             <x-outline-icon name="eye" />
                             View Files
@@ -517,7 +518,7 @@
     </aside>
 </div>
 
-@if($healthProfileRecord)
+@if($canViewHealthFiles)
     <div class="record-modal-overlay" id="healthRecordModal" aria-hidden="true">
         <div class="record-modal health-record-details-modal health-doc-files-modal" role="dialog" aria-modal="true" aria-labelledby="healthRecordModalTitle">
             <div class="record-modal-head">

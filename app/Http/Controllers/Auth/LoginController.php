@@ -1839,10 +1839,27 @@ class LoginController extends Controller
     {
         // These integrations are independent. A missing PUPTAS applicant must
         // not prevent GUISIS from supplying the student's academic record.
+        $this->normalizeStudentAccountClassification($user);
         $this->enrichUserWithPuptasData($user);
         $this->enrichUserWithFlssFacultyData($user);
         $this->enrichUserWithGuisisData($user);
         $this->promoteEnrolledApplicantToRegularStudent($user);
+    }
+
+    private function normalizeStudentAccountClassification(User $user): void
+    {
+        if (User::normalizeRole((string) ($user->user_role ?? '')) !== User::ROLE_STUDENT
+            || strtolower(trim((string) ($user->user_type ?? ''))) !== 'faculty'
+            || $user->clinicAccountTypeKey() !== 'student') {
+            return;
+        }
+
+        $user->user_type = 'Student';
+        $user->save();
+
+        Log::info('Stale Faculty classification corrected to Student from official student identity.', [
+            'user_id' => $user->id,
+        ]);
     }
 
     private function enrichUserWithFlssFacultyData(User $user): void
