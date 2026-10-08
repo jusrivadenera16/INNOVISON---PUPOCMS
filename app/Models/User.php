@@ -125,6 +125,13 @@ class User extends Authenticatable
     {
         $userType = strtolower(trim((string) $this->user_type));
 
+        // An official student number is the authoritative identity marker for
+        // student health workflows. Repair stale Faculty classifications that
+        // were carried over from an external directory match.
+        if ($userType === 'faculty' && $this->hasOfficialStudentHealthIdentity()) {
+            return 'student';
+        }
+
         return match ($userType) {
             'applicant' => 'applicant',
             'student', 'ojt', 'student / ojt' => 'student',
@@ -133,6 +140,19 @@ class User extends Authenticatable
             'guest', 'dependent' => 'dependent',
             default => null,
         };
+    }
+
+    private function hasOfficialStudentHealthIdentity(): bool
+    {
+        if ($this->hasOfficialStudentNumber($this->student_number)) {
+            return true;
+        }
+
+        $profileStudentNumber = $this->relationLoaded('healthProfile')
+            ? $this->healthProfile?->student_number
+            : (Schema::hasTable('health_profiles') ? $this->healthProfile()->value('student_number') : null);
+
+        return $this->hasOfficialStudentNumber($profileStudentNumber);
     }
 
     public function allowedClinicAccountTypes(): array

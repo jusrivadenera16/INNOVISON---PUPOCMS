@@ -572,6 +572,27 @@ class AdminHubIdpLinkingTest extends TestCase
         $this->assertSame(204, $this->checkFormRoute($user, 'store.health.form.student')->getStatusCode());
     }
 
+    public function test_official_student_identity_overrides_stale_faculty_classification(): void
+    {
+        $user = $this->upsertFromIdp([
+            'id' => 'student-faculty-conflict',
+            'email' => 'student-faculty-conflict@example.test',
+            'roles' => 'student',
+            'student_number' => '2025-02026-TG-0',
+        ]);
+        $user->user_type = 'Faculty';
+        $user->student_type = 'ojt';
+        $user->save();
+
+        $updated = $user->fresh();
+
+        $this->assertSame('student', $updated->clinicAccountTypeKey());
+        $this->assertSame('student', $updated->clinicHealthFormAudience());
+        $this->assertSame(route('health.form.student'), $updated->clinicHealthFormRoute()
+            ? route($updated->clinicHealthFormRoute())
+            : null);
+    }
+
     public function test_issued_applicant_clearance_stays_in_applicant_flow_without_student_number(): void
     {
         $user = $this->upsertFromIdp(['id' => 'approved-applicant', 'email' => 'approved-applicant@example.test', 'reference_number' => '2026-1010-1010']);
