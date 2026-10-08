@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Security Headers Evidence</title>
+    <style>
+        :root { color-scheme: dark; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 34px;
+            background: #10141d;
+            color: #eef2f7;
+            font: 16px/1.5 Consolas, "Courier New", monospace;
+        }
+        h1, h2 { font-family: Arial, sans-serif; margin: 0 0 18px; }
+        h1 { font-size: 30px; color: #ffd21f; }
+        h2 { font-size: 21px; color: #ffffff; }
+        .panel {
+            margin: 0 0 26px;
+            border: 1px solid #6f2735;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #171d29;
+        }
+        .panel-head {
+            padding: 12px 16px;
+            background: #70131b;
+            color: #ffffff;
+            font: 700 15px Arial, sans-serif;
+        }
+        pre {
+            margin: 0;
+            padding: 18px;
+            white-space: pre-wrap;
+            color: #dbeafe;
+        }
+        .ok { color: #86efac; }
+        .muted { color: #94a3b8; }
+    </style>
+</head>
+<body>
+    <h1>Global Security Headers Implementation</h1>
+
+    <section class="panel">
+        <div class="panel-head">Step 1 - SecurityHeaders middleware</div>
+        <pre>app/Http/Middleware/SecurityHeaders.php
+
+$response->headers->set('X-Content-Type-Options', 'nosniff');
+$response->headers->set('X-Frame-Options', 'SAMEORIGIN');
+$response->headers->set('Content-Security-Policy', implode('; ', [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'self'",
+    "script-src 'self' 'unsafe-inline' ...",
+    "style-src 'self' 'unsafe-inline' ...",
+    "img-src 'self' data: blob: https:",
+    "connect-src 'self' https:",
+    "frame-src 'self' https:",
+]));</pre>
+    </section>
+
+    <section class="panel">
+        <div class="panel-head">Step 2 - Global registration</div>
+        <pre>app/Http/Kernel.php
+
+protected $middleware = [
+    \Fruitcake\Cors\HandleCors::class,
+    <span class="ok">\App\Http\Middleware\SecurityHeaders::class,</span>
+    \Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class,
+];</pre>
+    </section>
+
+    <section class="panel">
+        <div class="panel-head">Step 3 - Local response verification</div>
+        <pre>GET http://127.0.0.1:8001/login
+HTTP/1.1 200 OK
+<span class="ok">X-Content-Type-Options: nosniff</span>
+<span class="ok">X-Frame-Options: SAMEORIGIN</span>
+<span class="ok">Content-Security-Policy: default-src 'self'; ...</span>
+<span class="muted">Strict-Transport-Security: omitted on local HTTP by design</span></pre>
+    </section>
+</body>
+</html>

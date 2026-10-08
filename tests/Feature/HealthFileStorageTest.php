@@ -110,6 +110,47 @@ class HealthFileStorageTest extends TestCase
         $this->assertSame('data:image/png;base64,' . base64_encode($contents), $source);
     }
 
+    public function test_aes_encryption_stores_ciphertext_and_reads_original_contents(): void
+    {
+        config([
+            'health_files.encryption_enabled' => true,
+            'health_files.encryption_key' => 'local-test-file-key',
+        ]);
+        $path = 'health_profiles/documents/encrypted.pdf';
+        $contents = '%PDF-private-health-file%';
+        $files = app(HealthFileStorage::class);
+
+        $this->assertTrue($files->put($path, $contents));
+
+        $raw = Storage::disk('health_private')->get($path);
+        $this->assertNotSame($contents, $raw);
+        $this->assertStringNotContainsString($contents, $raw);
+        $this->assertSame($contents, $files->get($path));
+
+        $response = $files->fileResponse($path, ['Content-Type' => 'application/pdf']);
+        ob_start();
+        $response->sendContent();
+        $responseContents = ob_get_clean();
+
+        $this->assertSame($contents, $responseContents);
+    }
+
+    public function test_existing_private_files_can_be_encrypted_and_verified(): void
+    {
+        config([
+            'health_files.encryption_enabled' => true,
+            'health_files.encryption_key' => 'local-test-file-key',
+        ]);
+        $path = 'health_profiles/documents/existing.pdf';
+        Storage::disk('health_private')->put($path, 'existing-private-content');
+
+        $this->assertSame(0, Artisan::call('health-files:encrypt-private', ['--apply' => true]));
+
+        $raw = Storage::disk('health_private')->get($path);
+        $this->assertNotSame('existing-private-content', $raw);
+        $this->assertSame('existing-private-content', app(HealthFileStorage::class)->get($path));
+    }
+
     public function test_migration_command_copies_verifies_and_preserves_legacy_files(): void
     {
         Storage::disk('public')->put('health_profiles/photos/one.png', 'one');

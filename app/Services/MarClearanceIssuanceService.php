@@ -1056,7 +1056,11 @@ class MarClearanceIssuanceService
 
             $matches = match ($filterKey) {
                 'final_review_result' => $this->applicantFinalReviewResult($profile, $snapshot) === $filterValue,
-                'medical_condition' => $this->applicantHasMedicalCondition($value) === ($filterValue === 'with_condition'),
+                'medical_condition' => $this->applicantHasMedicalCondition(
+                    $profile,
+                    $snapshot,
+                    $value
+                ) === ($filterValue === 'with_condition'),
                 'pwd_status' => $this->applicantHasPwd($value) === ($filterValue === 'pwd'),
                 'pwd_document' => $this->applicantHasPwdDocument($value) === ($filterValue === 'submitted'),
                 'covid_status' => $this->applicantCovidStatus($value) === $filterValue,
@@ -1103,8 +1107,17 @@ class MarClearanceIssuanceService
         return '';
     }
 
-    private function applicantHasMedicalCondition(callable $value): bool
+    private function applicantHasMedicalCondition(
+        ?HealthProfile $profile,
+        array $snapshot,
+        callable $value
+    ): bool
     {
+        $finalReviewResult = $this->applicantFinalReviewResult($profile, $snapshot);
+        if ($finalReviewResult !== '') {
+            return $finalReviewResult === 'with_findings';
+        }
+
         return trim((string) $value('medical_condition_remarks')) !== '';
     }
 

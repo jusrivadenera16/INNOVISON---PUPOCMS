@@ -9,6 +9,10 @@ use RuntimeException;
 
 class HealthFileStorage
 {
+    public function __construct(private HealthFileEncryption $encryption)
+    {
+    }
+
     public function normalizePath(?string $value): string
     {
         $path = trim((string) $value);
@@ -42,20 +46,40 @@ class HealthFileStorage
     {
         [$disk, $path] = $this->resolvedOrFail($value);
 
-        return (string) $disk->get($path);
+        return $this->encryption->decrypt((string) $disk->get($path));
     }
 
     public function path(?string $value): string
     {
         [$disk, $path] = $this->resolvedOrFail($value);
 
-        return $disk->path($path);
+        $rawContents = (string) $disk->get($path);
+        if (!$this->encryption->isEncrypted($rawContents)) {
+            return $disk->path($path);
+        }
+
+        $temporaryPath = tempnam(sys_get_temp_dir(), 'ocms-health-');
+        if ($temporaryPath === false || file_put_contents($temporaryPath, $this->encryption->decrypt($rawContents)) === false) {
+            throw new RuntimeException('Unable to materialize the encrypted private health file.');
+        }
+
+        register_shutdown_function(static function () use ($temporaryPath): void {
+            @unlink($temporaryPath);
+        });
+
+        return $temporaryPath;
     }
 
     public function mimeType(?string $value): ?string
     {
         [$disk, $path] = $this->resolvedOrFail($value);
-        $mimeType = $disk->mimeType($path);
+        $contents = $this->encryption->decrypt((string) $disk->get($path));
+        $mimeType = function_exists('finfo_open')
+            ? (new \finfo(FILEINFO_MIME_TYPE))->buffer($contents)
+            : null;
+        if (!is_string($mimeType) || $mimeType === '') {
+            $mimeType = $disk->mimeType($path);
+        }
 
         return is_string($mimeType) && $mimeType !== '' ? $mimeType : null;
     }
@@ -78,7 +102,7 @@ class HealthFileStorage
             throw new RuntimeException('Invalid private health-file path.');
         }
 
-        $written = $this->writeDisk()->put($path, $contents, $options);
+        $written = $this->writeDisk()->put($path, $this->encryption->encrypt((string) $contents), $options);
         if (!$written) {
             return false;
         }
@@ -95,8 +119,8 @@ class HealthFileStorage
             throw new RuntimeException('Invalid private health-file directory.');
         }
 
-        $path = $file->store($directory, $this->writeDiskName());
-        if (!is_string($path) || $path === '') {
+        $path = $file->hashName($directory);
+        if (!$this->put($path, (string) $file->get())) {
             throw new RuntimeException('Unable to store the private health file.');
         }
 
@@ -144,9 +168,30 @@ class HealthFileStorage
 
     public function download(?string $value, ?string $name = null, array $headers = [])
     {
-        [$disk, $path] = $this->resolvedOrFail($value);
+        $path = $this->normalizePath($value);
+        $contents = $this->get($path);
 
-        return $disk->download($path, $name, $headers);
+        return response()->streamDownload(
+            static function () use ($contents): void {
+                echo $contents;
+            },
+            $name ?: basename($path),
+            $this->responseHeaders($contents, $headers)
+        );
+    }
+
+    public function fileResponse(?string $value, array $headers = [])
+    {
+        $path = $this->normalizePath($value);
+        $contents = $this->get($path);
+
+        return response()->stream(
+            static function () use ($contents): void {
+                echo $contents;
+            },
+            200,
+            $this->responseHeaders($contents, $headers)
+        );
     }
 
     public function writeDiskName(): string
@@ -202,6 +247,15 @@ class HealthFileStorage
         }
 
         return $resolved;
+    }
+
+    private function responseHeaders(string $contents, array $headers): array
+    {
+        if (!array_key_exists('Content-Length', $headers)) {
+            $headers['Content-Length'] = (string) strlen($contents);
+        }
+
+        return $headers;
     }
 
     private function mirrorToLegacyIfEnabled(string $path): void

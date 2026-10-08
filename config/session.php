@@ -33,6 +33,10 @@ return [
 
     'lifetime' => env('SESSION_LIFETIME', 120),
 
+    // Student routes have a shorter server-side idle window without changing
+    // the global lifetime used by the admin workspace.
+    'student_idle_timeout' => env('STUDENT_IDLE_TIMEOUT', 15),
+
     'expire_on_close' => false,
 
     /*

@@ -14,6 +14,7 @@ class Kernel extends HttpKernel
      */
     protected $middleware = [
         \Fruitcake\Cors\HandleCors::class,
+        \App\Http\Middleware\SecurityHeaders::class,
         \Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \Illuminate\Foundation\Http\Middleware\TrimStrings::class,
@@ -67,6 +68,7 @@ class Kernel extends HttpKernel
         'audit' => \App\Http\Middleware\AuditTrailMiddleware::class,
         'external.api' => \App\Http\Middleware\AuthenticateExternalApiRequest::class,
         'idp.session' => \App\Http\Middleware\EnsureIdpSessionIsActive::class,
+        'student.idle' => \App\Http\Middleware\EnsureStudentSessionIdle::class,
         'account.active' => \App\Http\Middleware\EnsureAccountIsActive::class,
         'assistant.schedule' => \App\Http\Middleware\EnsureStudentAssistantWorkspaceAvailable::class,
         'superadmin.export' => \App\Http\Middleware\EnsureSuperAdminExportAccess::class,

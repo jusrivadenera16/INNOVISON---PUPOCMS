@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kernel registration</title>
+<style>
+body{margin:0;padding:36px;background:#10141d;color:#dbeafe;font:18px/1.6 Consolas,"Courier New",monospace}
+h1{font:700 30px Arial,sans-serif;color:#ffd21f;margin:0 0 24px}
+.panel{border:1px solid #6f2735;border-radius:10px;overflow:hidden;background:#171d29}
+.head{padding:14px 18px;background:#70131b;color:#fff;font:700 17px Arial,sans-serif}
+pre{margin:0;padding:22px;white-space:pre-wrap}
+.ok{color:#86efac}
+</style>
+</head>
+<body>
+<h1>Step 2 - Global registration</h1>
+<div class="panel">
+<div class="head">app/Http/Kernel.php</div>
+<pre>protected $middleware = [
+    \Fruitcake\Cors\HandleCors::class,
+    <span class="ok">\App\Http\Middleware\SecurityHeaders::class,</span>
+    \Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class,
+    \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
+];</pre>
+</div>
+</body>
+</html>

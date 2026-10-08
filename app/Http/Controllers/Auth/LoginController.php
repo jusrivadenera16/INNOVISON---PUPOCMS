@@ -10,6 +10,7 @@ use App\Models\DependentsProfile;
 use App\Models\HealthFormSubmission;
 use App\Models\User;
 use App\Services\ClinicWorkflowService;
+use App\Services\IdpSessionService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -806,17 +807,19 @@ class LoginController extends Controller
         return $sameSite;
     }
 
-    private function attachIdpCookies(RedirectResponse $response, ?string $accessToken, ?string $refreshToken): RedirectResponse
+    private function attachIdpCookies(RedirectResponse $response, ?string $accessToken, ?string $refreshToken, bool $expireOnClose = false): RedirectResponse
     {
         $secure = (bool) config('services.idp.cookie_secure', true);
         $sameSite = $this->normalizeCookieSameSite();
+        $accessMinutes = $expireOnClose ? 0 : (int) config('services.idp.access_cookie_minutes', 60);
+        $refreshMinutes = $expireOnClose ? 0 : (int) config('services.idp.refresh_cookie_minutes', 10080);
 
         $accessCookieName = trim((string) config('services.idp.access_cookie_name', 'access_token'));
         if ($accessCookieName !== '' && $accessToken !== null && $accessToken !== '') {
             $response->cookie(
                 $accessCookieName,
                 $accessToken,
-                (int) config('services.idp.access_cookie_minutes', 60),
+                $accessMinutes,
                 '/',
                 null,
                 $secure,
@@ -831,7 +834,7 @@ class LoginController extends Controller
             $response->cookie(
                 $refreshCookieName,
                 $refreshToken,
-                (int) config('services.idp.refresh_cookie_minutes', 10080),
+                $refreshMinutes,
                 '/',
                 null,
                 $secure,
@@ -846,29 +849,7 @@ class LoginController extends Controller
 
     private function clearIdpCookies(RedirectResponse $response): RedirectResponse
     {
-        $secure = (bool) config('services.idp.cookie_secure', true);
-        $sameSite = $this->normalizeCookieSameSite();
-
-        foreach (['access_cookie_name', 'refresh_cookie_name'] as $cookieKey) {
-            $cookieName = trim((string) config('services.idp.' . $cookieKey, ''));
-            if ($cookieName === '') {
-                continue;
-            }
-
-            $response->cookie(
-                $cookieName,
-                '',
-                -60,
-                '/',
-                null,
-                $secure,
-                true,
-                false,
-                $sameSite
-            );
-        }
-
-        return $response;
+        return app(IdpSessionService::class)->clearCookies($response);
     }
 
     private function buildLogoutRedirectUrl(): string
@@ -2423,7 +2404,10 @@ class LoginController extends Controller
         $redirectPath = $this->resolveRedirectPathForUser($user);
         $this->queueHealthProfilePrompt($request, $user, $redirectPath);
         $redirectResponse = redirect($redirectPath);
-        return $this->attachIdpCookies($redirectResponse, $accessToken, $refreshToken);
+        $expireIdpCookiesOnClose = $guard === $this->studentGuardName()
+            && (bool) config('services.idp.student_cookies_expire_on_close', true);
+
+        return $this->attachIdpCookies($redirectResponse, $accessToken, $refreshToken, $expireIdpCookiesOnClose);
     }
 
     public function acknowledgePostLoginTerms(Request $request)
@@ -2438,20 +2422,10 @@ class LoginController extends Controller
         $guard = $this->activeGuard($request);
         $user = $guard ? Auth::guard($guard)->user() : $this->authenticatedUser();
 
-        $clientId = config('services.idp.client_id');
-        $idpLogoutUrl = config('services.idp.logout_url');
         $accessTokenCookie = config('services.idp.access_cookie_name', 'access_token');
         $token = $request->cookie($accessTokenCookie);
 
-        try {
-            if ($idpLogoutUrl && $token) {
-                Http::withToken($token)->post($idpLogoutUrl, [
-                    'client_id' => $clientId,
-                ]);
-            }
-        } catch (\Exception $e) {
-            Log::error('IDP Logout API call failed: ' . $e->getMessage());
-        }
+        app(IdpSessionService::class)->logout($token);
 
         if ($user instanceof User) {
             $this->recordAuthEvent($request, 'Logout', 'User logged out from the system.', $user);
@@ -2464,6 +2438,7 @@ class LoginController extends Controller
             Auth::guard('web')->logout();
         }
 
+        $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         $hasRemainingPortalSession = Auth::guard($this->adminGuardName())->check()
@@ -2499,7 +2474,7 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return $this->clearIdpCookies(
+        return app(IdpSessionService::class)->clearCookies(
             redirect()->route('landing')->with('status', 'Logged out successfully')
         );
     }

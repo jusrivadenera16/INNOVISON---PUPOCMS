@@ -4,8 +4,16 @@ return [
     'write_disk' => env('HEALTH_FILES_WRITE_DISK', 'health_private'),
     'legacy_disk' => env('HEALTH_FILES_LEGACY_DISK', 'public'),
 
+    'encryption_enabled' => env('APP_ENV') !== 'testing'
+        && filter_var(
+            env('HEALTH_FILES_ENCRYPTION_ENABLED', false),
+            FILTER_VALIDATE_BOOLEAN
+        ),
+
+    'encryption_key' => env('HEALTH_FILES_ENCRYPTION_KEY', env('APP_KEY')),
+
     'legacy_fallback' => filter_var(
-        env('HEALTH_FILES_LEGACY_FALLBACK', true),
+        env('HEALTH_FILES_LEGACY_FALLBACK', false),
         FILTER_VALIDATE_BOOLEAN
     ),
 

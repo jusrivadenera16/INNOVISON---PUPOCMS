@@ -134,12 +134,18 @@ Route::middleware('web')->group(function () {
 });
 
 // --- PUBLIC STUDENT PAGES (Guest Mode) ---
-Route::get('/student/home', [AppointmentController::class, 'home'])->name('student.home');
-Route::get('/student/faq', [AppointmentController::class, 'faq'])->name('student.faq');
-Route::get('/student/booking', [AppointmentController::class, 'create'])->name('student.booking');
+Route::get('/student/home', [AppointmentController::class, 'home'])
+    ->middleware('student.idle')
+    ->name('student.home');
+Route::get('/student/faq', [AppointmentController::class, 'faq'])
+    ->middleware('student.idle')
+    ->name('student.faq');
+Route::get('/student/booking', [AppointmentController::class, 'create'])
+    ->middleware('student.idle')
+    ->name('student.booking');
 
 // --- PROTECTED ROUTES (Login required) ---
-Route::middleware(['auth:student', 'account.active', 'idp.session', 'audit'])->group(function () {
+Route::middleware(['auth:student', 'student.idle', 'account.active', 'idp.session', 'audit'])->group(function () {
     Route::middleware('role:student')->group(function () {
         Route::post('/student/skip-barcode', function () {
             session(['barcode_skipped' => true]);
