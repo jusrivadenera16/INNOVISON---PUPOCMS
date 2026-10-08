@@ -125,10 +125,11 @@ class User extends Authenticatable
     {
         $userType = strtolower(trim((string) $this->user_type));
 
-        // An official student number is the authoritative identity marker for
-        // student health workflows. Repair stale Faculty classifications that
-        // were carried over from an external directory match.
-        if ($userType === 'faculty' && $this->hasOfficialStudentHealthIdentity()) {
+        // An official student number plus a student IDP identity is the
+        // authoritative marker for student health workflows. Local admin
+        // permissions must not turn a Student Assistant into an employee.
+        if ($this->hasOfficialStudentHealthIdentity()
+            && ($this->isStudentIdentityRole() || $userType === 'faculty')) {
             return 'student';
         }
 
@@ -142,7 +143,7 @@ class User extends Authenticatable
         };
     }
 
-    private function hasOfficialStudentHealthIdentity(): bool
+    public function hasOfficialStudentHealthIdentity(): bool
     {
         if ($this->hasOfficialStudentNumber($this->student_number)) {
             return true;
@@ -153,6 +154,13 @@ class User extends Authenticatable
             : (Schema::hasTable('health_profiles') ? $this->healthProfile()->value('student_number') : null);
 
         return $this->hasOfficialStudentNumber($profileStudentNumber);
+    }
+
+    private function isStudentIdentityRole(): bool
+    {
+        $idpRole = str_replace(['-', ' '], '_', strtolower(trim((string) $this->idp_role)));
+
+        return in_array($idpRole, ['student', 'ojt', 'student_ojt'], true);
     }
 
     public function allowedClinicAccountTypes(): array
@@ -201,15 +209,18 @@ class User extends Authenticatable
 
     public function clinicHealthFormAudience(): ?string
     {
-        if (self::normalizeRole($this->user_role) !== self::ROLE_STUDENT) {
+        $accountType = $this->clinicAccountTypeKey();
+        $isStudentIdentity = $accountType === 'student' && $this->isStudentIdentityRole();
+
+        // A Student Assistant may use the student portal while retaining the
+        // local admin role needed for clinic module permissions.
+        if (self::normalizeRole($this->user_role) !== self::ROLE_STUDENT && !$isStudentIdentity) {
             return null;
         }
 
         if ($this->hasPendingAdmissionReference()) {
             return 'applicant';
         }
-
-        $accountType = $this->clinicAccountTypeKey();
 
         if ($accountType === 'applicant') {
             $profile = $this->relationLoaded('healthProfile') ? $this->healthProfile : (
