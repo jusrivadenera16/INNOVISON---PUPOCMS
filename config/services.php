@@ -83,6 +83,7 @@ return [
         'session_validation_cache_seconds' => (int) env('IDP_SESSION_VALIDATION_CACHE_SECONDS', 300),
         'cookie_secure' => filter_var(env('IDP_COOKIE_SECURE', true), FILTER_VALIDATE_BOOL),
         'cookie_same_site' => env('IDP_COOKIE_SAME_SITE', 'Lax'),
+        'student_cookies_expire_on_close' => filter_var(env('IDP_STUDENT_COOKIES_EXPIRE_ON_CLOSE', true), FILTER_VALIDATE_BOOL),
         'logout_path' => env('IDP_LOGOUT_PATH', '/logout'),
         'logout_url' => env('IDP_LOGOUT_URL'),
     ],

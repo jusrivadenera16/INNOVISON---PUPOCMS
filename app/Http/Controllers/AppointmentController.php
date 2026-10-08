@@ -2775,8 +2775,11 @@ class AppointmentController extends Controller
             ['digital_signature', 'guardian_signature']
         ));
         $isReferenced = HealthFormSubmission::query()
-            ->whereNotNull('profile_snapshot')
-            ->get(['profile_snapshot'])
+            ->where(function ($query) {
+                $query->whereNotNull('profile_snapshot')
+                    ->orWhereNotNull('profile_snapshot_encrypted');
+            })
+            ->get(['profile_snapshot', 'profile_snapshot_encrypted'])
             ->contains(function (HealthFormSubmission $submission) use ($normalizedPath, $snapshotFields): bool {
                 $snapshot = $submission->snapshotProfile();
 
@@ -3563,7 +3566,7 @@ public function account(Request $request)
                 $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
 
                 if ($path !== '' && $this->healthFiles()->exists($path)) {
-                    return response()->file($this->healthFiles()->path($path), [
+                    return $this->healthFiles()->fileResponse($path, [
                         'Content-Type' => 'application/pdf',
                         'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
                         'X-Content-Type-Options' => 'nosniff',
@@ -3613,7 +3616,7 @@ public function account(Request $request)
             $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
             $filename = basename($path);
 
-            return response()->file($disk->path($path), [
+            return $disk->fileResponse($path, [
                 'Content-Type' => $mimeType,
                 'Content-Disposition' => 'inline; filename="' . str_replace('"', '', $filename) . '"',
                 'X-Content-Type-Options' => 'nosniff',
@@ -3645,7 +3648,7 @@ public function account(Request $request)
             }
 
             if ($path !== '' && $this->healthFiles()->exists($path)) {
-                return response()->file($this->healthFiles()->path($path), [
+                return $this->healthFiles()->fileResponse($path, [
                     'Content-Type' => 'application/pdf',
                     'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
                     'X-Content-Type-Options' => 'nosniff',
@@ -3665,7 +3668,7 @@ public function account(Request $request)
                 $disk = $this->healthFiles();
                 $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
 
-                return response()->file($disk->path($path), [
+                return $disk->fileResponse($path, [
                     'Content-Type' => $mimeType,
                     'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
                     'X-Content-Type-Options' => 'nosniff',
@@ -3740,7 +3743,7 @@ public function account(Request $request)
         $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
         $filename = basename($path);
 
-        return response()->file($disk->path($path), [
+        return $disk->fileResponse($path, [
             'Content-Type' => $mimeType,
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', $filename) . '"',
             'X-Content-Type-Options' => 'nosniff',
@@ -3781,7 +3784,7 @@ public function account(Request $request)
         $path = preg_replace('#^(?:public/)?storage/#', '', ltrim($signatureValue, '/')) ?? $signatureValue;
         abort_if($path === '' || !$this->healthFiles()->exists($path), 404);
 
-        return response()->file($this->healthFiles()->path($path), [
+        return $this->healthFiles()->fileResponse($path, [
             'Content-Type' => $this->healthFiles()->mimeType($path) ?: 'image/png',
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
@@ -6952,7 +6955,7 @@ public function printHealthForm()
     $snapshotPath = ltrim((string) ($submission?->pdf_path ?? ''), '/');
     $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
     if ($snapshotPath !== '' && $this->healthFiles()->exists($snapshotPath)) {
-        return response()->file($this->healthFiles()->path($snapshotPath), [
+        return $this->healthFiles()->fileResponse($snapshotPath, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($snapshotPath)) . '"',
             'X-Content-Type-Options' => 'nosniff',
@@ -7029,7 +7032,7 @@ public function showHealthFormSubmissionPdf(HealthFormSubmission $submission)
     $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
     abort_if($path === '' || !$this->healthFiles()->exists($path), 404, 'Saved Health Form PDF not found.');
 
-    return response()->file($this->healthFiles()->path($path), [
+    return $this->healthFiles()->fileResponse($path, [
         'Content-Type' => 'application/pdf',
         'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
         'X-Content-Type-Options' => 'nosniff',
@@ -7077,7 +7080,7 @@ public function showHealthFormSubmissionDocument(HealthFormSubmission $submissio
         $disk = $this->healthFiles();
         $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
 
-        return response()->file($disk->path($path), [
+        return $disk->fileResponse($path, [
             'Content-Type' => $mimeType,
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
             'X-Content-Type-Options' => 'nosniff',

@@ -156,6 +156,14 @@ class AdminGlobalSearchController extends Controller
                     $this->addLikeConditions($builder, 'users', [
                         'name', 'first_name', 'last_name', 'email', 'student_number', 'student_id', 'reference_number',
                     ], $query);
+
+                    if (Schema::hasTable('dependents_profiles')) {
+                        $builder->orWhereHas('dependentProfile', function ($dependentQuery) use ($query) {
+                            $this->addLikeConditions($dependentQuery, 'dependents_profiles', [
+                                'id_number', 'idp_user_id', 'email', 'first_name', 'last_name',
+                            ], $query);
+                        });
+                    }
                 })
                 ->limit(self::RESULTS_PER_GROUP)
                 ->get()
@@ -211,7 +219,7 @@ class AdminGlobalSearchController extends Controller
                             'health',
                             $name !== '' ? $name : 'Employee health record',
                             $description,
-                            route('admin.health_records', ['user_type' => 'employee'])
+                            route('admin.employee_health_profile.show', $profile->id)
                         );
                     })
                     ->all();

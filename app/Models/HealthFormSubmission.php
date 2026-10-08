@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\EncryptsHealthProfileFields;
 use App\Models\Concerns\ExcludesInactiveUserRecords;
 
 class HealthFormSubmission extends Model
 {
-    use ExcludesInactiveUserRecords;
+    use ExcludesInactiveUserRecords, EncryptsHealthProfileFields;
 
     public const STATUS_REQUESTED = 'requested';
     public const STATUS_SUBMITTED = 'submitted';

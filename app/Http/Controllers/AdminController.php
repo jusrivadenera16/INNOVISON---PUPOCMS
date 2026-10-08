@@ -4558,7 +4558,7 @@ class AdminController extends Controller
         $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
         abort_if($path === '' || !$this->healthFiles()->exists($path), 404, 'Saved Health Form PDF not found.');
 
-        return response()->file($this->healthFiles()->path($path), [
+        return $this->healthFiles()->fileResponse($path, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
             'X-Content-Type-Options' => 'nosniff',
@@ -4635,7 +4635,7 @@ class AdminController extends Controller
             $disk = $this->healthFiles();
             $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
 
-            return response()->file($disk->path($path), [
+            return $disk->fileResponse($path, [
                 'Content-Type' => $mimeType,
                 'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
                 'X-Content-Type-Options' => 'nosniff',
@@ -4672,7 +4672,7 @@ class AdminController extends Controller
                 $disk = $this->healthFiles();
                 $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
 
-                return response()->file($disk->path($path), [
+                return $disk->fileResponse($path, [
                     'Content-Type' => $mimeType,
                     'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
                     'X-Content-Type-Options' => 'nosniff',
@@ -4745,7 +4745,7 @@ class AdminController extends Controller
         $disk = $this->healthFiles();
         $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
 
-        return response()->file($disk->path($path), [
+        return $disk->fileResponse($path, [
             'Content-Type' => $mimeType,
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
             'X-Content-Type-Options' => 'nosniff',

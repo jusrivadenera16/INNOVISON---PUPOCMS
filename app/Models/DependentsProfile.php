@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\EncryptsHealthProfileFields;
 use App\Models\Concerns\ExcludesInactiveUserRecords;
 
 class DependentsProfile extends Model
 {
-    use ExcludesInactiveUserRecords;
+    use ExcludesInactiveUserRecords, EncryptsHealthProfileFields;
 
     protected $table = 'dependents_profiles';
 

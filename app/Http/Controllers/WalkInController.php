@@ -1564,7 +1564,7 @@ class WalkInController extends Controller
         $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
         $filename = basename($path);
 
-        return response()->file($disk->path($path), [
+        return $disk->fileResponse($path, [
             'Content-Type' => $mimeType,
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', $filename) . '"',
             'X-Content-Type-Options' => 'nosniff',
@@ -1582,7 +1582,7 @@ class WalkInController extends Controller
         $snapshotPath = ltrim((string) $employeeProfile->staff_health_form_pdf_path, '/');
         $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
         if (!$showFreshTemplate && $snapshotPath !== '' && $this->healthFiles()->exists($snapshotPath)) {
-            return response()->file($this->healthFiles()->path($snapshotPath), [
+            return $this->healthFiles()->fileResponse($snapshotPath, [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($snapshotPath)) . '"',
                 'X-Content-Type-Options' => 'nosniff',
@@ -1639,7 +1639,7 @@ class WalkInController extends Controller
         $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
         $filename = basename($path);
 
-        return response()->file($disk->path($path), [
+        return $disk->fileResponse($path, [
             'Content-Type' => $mimeType,
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', $filename) . '"',
             'X-Content-Type-Options' => 'nosniff',
@@ -2657,7 +2657,7 @@ class WalkInController extends Controller
         $snapshotPath = ltrim((string) ($submission?->pdf_path ?? ''), '/');
         $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
         if ($snapshotPath !== '' && $this->healthFiles()->exists($snapshotPath)) {
-            return response()->file($this->healthFiles()->path($snapshotPath), [
+            return $this->healthFiles()->fileResponse($snapshotPath, [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($snapshotPath)) . '"',
                 'X-Content-Type-Options' => 'nosniff',

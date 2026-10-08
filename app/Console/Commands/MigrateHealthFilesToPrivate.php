@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\HealthFileEncryption;
 use App\Services\HealthFileStorage;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +15,7 @@ class MigrateHealthFilesToPrivate extends Command
 
     protected $description = 'Copy legacy public health files to private storage and verify their contents.';
 
-    public function handle(HealthFileStorage $healthFiles): int
+    public function handle(HealthFileStorage $healthFiles, HealthFileEncryption $encryption): int
     {
         $dryRun = (bool) $this->option('dry-run');
         $sourceDiskName = $healthFiles->legacyDiskName();
@@ -43,10 +44,13 @@ class MigrateHealthFilesToPrivate extends Command
         foreach ($sourceFiles as $path) {
             try {
                 $sourceContents = (string) $sourceDisk->get($path);
+                if ($encryption->isEncrypted($sourceContents)) {
+                    $sourceContents = $encryption->decrypt($sourceContents);
+                }
                 $sourceHash = hash('sha256', $sourceContents);
 
                 if ($targetDisk->exists($path)) {
-                    $targetHash = hash('sha256', (string) $targetDisk->get($path));
+                    $targetHash = hash('sha256', $healthFiles->get($path));
                     if (hash_equals($sourceHash, $targetHash)) {
                         $verified++;
                         continue;
@@ -67,12 +71,12 @@ class MigrateHealthFilesToPrivate extends Command
                     continue;
                 }
 
-                if (!$targetDisk->put($path, $sourceContents)) {
+                if (!$healthFiles->put($path, $sourceContents)) {
                     $failed++;
                     continue;
                 }
 
-                $targetHash = hash('sha256', (string) $targetDisk->get($path));
+                $targetHash = hash('sha256', $healthFiles->get($path));
                 if (!hash_equals($sourceHash, $targetHash)) {
                     $targetDisk->delete($path);
                     $failed++;
