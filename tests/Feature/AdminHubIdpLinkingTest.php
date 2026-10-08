@@ -588,9 +588,27 @@ class AdminHubIdpLinkingTest extends TestCase
 
         $this->assertSame('student', $updated->clinicAccountTypeKey());
         $this->assertSame('student', $updated->clinicHealthFormAudience());
-        $this->assertSame(route('health.form.student'), $updated->clinicHealthFormRoute()
-            ? route($updated->clinicHealthFormRoute())
-            : null);
+        $this->assertSame('health.form.student', $updated->clinicHealthFormRoute());
+    }
+
+    public function test_student_assistant_with_student_identity_uses_student_health_workflow(): void
+    {
+        $user = $this->upsertFromIdp([
+            'id' => 'student-assistant-student-identity',
+            'email' => 'student-assistant-student@example.test',
+            'roles' => 'student',
+            'student_number' => '2025-02026-TG-0',
+        ]);
+        $user->user_role = User::ROLE_ADMIN;
+        $user->user_type = 'Assistant';
+        $user->idp_role = 'student';
+        $user->save();
+
+        $updated = $user->fresh();
+
+        $this->assertSame('student', $updated->clinicAccountTypeKey());
+        $this->assertSame('student', $updated->clinicHealthFormAudience());
+        $this->assertSame('health.form.student', $updated->clinicHealthFormRoute());
     }
 
     public function test_issued_applicant_clearance_stays_in_applicant_flow_without_student_number(): void
