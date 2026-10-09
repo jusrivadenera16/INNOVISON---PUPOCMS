@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Mail\StudentPortalNotificationMail;
 use App\Models\Appointment;
+use App\Models\ConsultationEvaluation;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -221,6 +222,23 @@ class StudentNotificationMailer
             $notice['action_label'],
             $notice['action_url'],
             $notice['status_card'] ?? []
+        );
+    }
+
+    /**
+     * Invites a student to complete the service evaluation for a consultation.
+     *
+     * @return array{status: 'sent'|'skipped'|'failed'}
+     */
+    public function sendServiceEvaluationNotice(User $recipient, ConsultationEvaluation $evaluation): array
+    {
+        return $this->send(
+            $recipient,
+            'Please evaluate your PUP Taguig Clinic service',
+            'How was your clinic service experience?',
+            'You recently completed a consultation with the PUP Taguig Clinic. If you have a moment, please evaluate the service you received. Your feedback helps us improve our care and support.',
+            'Evaluate the Service',
+            route('student.evaluation.show', ['evaluation' => $evaluation->id])
         );
     }
 

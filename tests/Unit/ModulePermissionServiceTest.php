@@ -61,6 +61,17 @@ class ModulePermissionServiceTest extends TestCase
         $this->assertFalse($service->can($user, 'reports.export_reports'));
     }
 
+    public function test_service_evaluation_report_permission_is_separate_from_feedbacks(): void
+    {
+        $service = new ModulePermissionService();
+        $user = new User();
+        $user->user_role = User::ROLE_ADMIN;
+        $user->module_permissions = ['reports.view', 'reports.service_evaluation'];
+
+        $this->assertTrue($service->can($user, 'reports.service_evaluation'));
+        $this->assertFalse($service->can($user, 'reports.feedbacks'));
+    }
+
     public function test_employee_id_lookup_requires_employee_record_view_access(): void
     {
         $service = new ModulePermissionService();

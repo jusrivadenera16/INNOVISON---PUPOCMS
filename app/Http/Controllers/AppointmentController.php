@@ -12,6 +12,7 @@ use App\Models\Appointment;
 use App\Models\AppointmentFeedback;
 use App\Models\ClinicServiceOption;
 use App\Models\Consultation;
+use App\Models\ConsultationEvaluation;
 use App\Models\DependentsProfile;
 use App\Models\HealthFormCategory;
 use App\Models\HealthFormSubmission;
@@ -234,6 +235,37 @@ class AppointmentController extends Controller
                         'link' => url('/student/history'),
                     ];
                 }
+            }
+        }
+
+        if (Schema::hasTable('eval_form')) {
+            $evaluations = ConsultationEvaluation::query()
+                ->where('user_id', $user->id)
+                ->whereIn('status', ['sent', 'submitted'])
+                ->with('consultation')
+                ->latest('updated_at')
+                ->get();
+
+            foreach ($evaluations as $evaluation) {
+                $isSubmitted = $evaluation->status === 'submitted' && $evaluation->submitted_at;
+                $consultationDate = optional($evaluation->consultation?->consultation_date)->format('M d');
+                $notifications[] = [
+                    'id' => $this->buildNotificationId('consultation-evaluation', [
+                        $evaluation->id,
+                        $evaluation->status,
+                        optional($evaluation->updated_at)->timestamp,
+                    ]),
+                    'type' => $isSubmitted ? 'success' : 'info',
+                    'icon' => $isSubmitted ? 'OK' : '!',
+                    'message' => $isSubmitted
+                        ? 'Thank you for submitting your service evaluation.'
+                        : 'The clinic invited you to evaluate the service you received during your recent consultation.'
+                            . ($consultationDate ? " ({$consultationDate})." : '.'),
+                    'time' => $isSubmitted
+                        ? ($evaluation->submitted_at?->diffForHumans() ?? 'Evaluation submitted')
+                        : ($evaluation->sent_at?->diffForHumans() ?? 'New service evaluation'),
+                    'link' => route('student.evaluation.show', ['evaluation' => $evaluation->id]),
+                ];
             }
         }
 
@@ -4467,6 +4499,134 @@ public function account(Request $request)
         ]);
 
         return redirect('/student/account?view=notifications')->with('success', 'Thank you for sharing your feedback.');
+    }
+
+    public function showEvaluationForm(ConsultationEvaluation $evaluation)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::guard('student')->user() ?: Auth::user();
+        if (!$user || $evaluation->user_id !== $user->id) {
+            return redirect('/student/history')->with('error', 'Evaluation form not available for this consultation.');
+        }
+
+        $evaluation->load('consultation');
+
+        if ($evaluation->status !== 'submitted' && !$evaluation->opened_at) {
+            $evaluation->forceFill([
+                'opened_at' => now(),
+            ])->save();
+        }
+
+        return view('student.evaluation_form', [
+            'evaluation' => $evaluation,
+            'consultation' => $evaluation->consultation,
+        ]);
+    }
+
+    public function previewEvaluationForm()
+    {
+        $evaluation = new ConsultationEvaluation([
+            'status' => 'preview',
+            'feedback' => '',
+        ]);
+        $evaluation->id = 0;
+
+        $consultation = new Consultation([
+            'service' => 'Medical Consultation',
+        ]);
+        $consultation->consultation_date = now()->toDateString();
+
+        return view('student.evaluation_form', [
+            'evaluation' => $evaluation,
+            'consultation' => $consultation,
+            'isPreview' => true,
+        ]);
+    }
+
+    public function storeEvaluation(Request $request, ConsultationEvaluation $evaluation)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::guard('student')->user() ?: Auth::user();
+        if (!$user || $evaluation->user_id !== $user->id) {
+            return redirect('/student/history')->with('error', 'Evaluation form not available for this consultation.');
+        }
+
+        if ($evaluation->status === 'submitted' && $evaluation->submitted_at) {
+            return redirect()
+                ->route('student.evaluation.show', ['evaluation' => $evaluation->id])
+                ->with('success', 'Your service evaluation has already been submitted.');
+        }
+
+        $sqdCodes = array_map(static fn (int $number): string => 'SQD' . $number, range(0, 8));
+        $evaluationRules = [
+            'consent' => ['accepted'],
+            'client_type' => [
+                'required',
+                Rule::in([
+                    'Faculty',
+                    'Administrative Employee',
+                    'Student',
+                    'Alumni',
+                    'Parent of a Student',
+                    'Industry Partner',
+                    'Visitor/Guest',
+                ]),
+            ],
+            'sex' => ['required', Rule::in(['Male', 'Female', 'Prefer not to say'])],
+            'age_group' => [
+                'required',
+                Rule::in([
+                    '19 or lower',
+                    '20-34 years old',
+                    '35-49 years old',
+                    '50-64 years old',
+                    '65 or higher',
+                    'Prefer not to say',
+                ]),
+            ],
+            'cc1' => ['required', Rule::in(['1', '2', '3', '4'])],
+            'cc2' => ['required', Rule::in(['1', '2', '3', '4'])],
+            'cc3' => ['required', Rule::in(['1', '2', '3'])],
+            'suggestions' => ['nullable', 'string', 'max:1500'],
+            'sqd_answers' => ['required', 'array'],
+        ];
+
+        foreach ($sqdCodes as $sqdCode) {
+            $evaluationRules["sqd_answers.{$sqdCode}"] = ['required', 'integer', 'between:0,5'];
+        }
+
+        $validated = $request->validate($evaluationRules);
+        $sqdAnswers = collect($validated['sqd_answers'])
+            ->only($sqdCodes)
+            ->map(static fn ($value): int => (int) $value)
+            ->all();
+
+        $evaluation->forceFill([
+            'status' => 'submitted',
+            'consent_at' => now(),
+            'client_type' => $validated['client_type'],
+            'sex' => $validated['sex'],
+            'age_group' => $validated['age_group'],
+            'cc1' => $validated['cc1'],
+            'cc2' => $validated['cc2'],
+            'cc3' => $validated['cc3'],
+            'sqd_answers' => $sqdAnswers,
+            'rating' => $sqdAnswers['SQD0'] ?? null,
+            'feedback' => trim((string) ($validated['suggestions'] ?? '')),
+            'suggestions' => trim((string) ($validated['suggestions'] ?? '')),
+            'submitted_at' => now(),
+        ])->save();
+
+        ActivityLog::create([
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'action' => 'Consultation Service Evaluation Submitted',
+            'description' => "Submitted a service evaluation for Consultation #{$evaluation->consultation_id}.",
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        return redirect('/student/account?view=notifications')->with('success', 'Thank you for evaluating our clinic service.');
     }
 
 

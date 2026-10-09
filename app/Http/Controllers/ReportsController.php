@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Models\MedicalConditions;
 use App\Models\Category;
 use App\Models\Consultation;
+use App\Models\ConsultationEvaluation;
 use App\Models\AppointmentFeedback;
 use App\Models\Appointment;
 use App\Models\ActivityLog;
@@ -2365,6 +2367,170 @@ class ReportsController extends Controller
             'clinicScore',
             'recommendedCount',
             'lowRatingCount'
+        ));
+    }
+
+    public function serviceEvaluationReport(Request $request)
+    {
+        $dateToRules = ['nullable', 'date'];
+        if ($request->filled('date_from')) {
+            $dateToRules[] = 'after_or_equal:date_from';
+        }
+        $filters = $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => $dateToRules,
+        ]);
+        $dateFrom = $filters['date_from'] ?? '';
+        $dateTo = $filters['date_to'] ?? '';
+
+        $sqdDefinitions = [
+            'SQD0' => 'Overall Satisfaction',
+            'SQD1' => 'Responsiveness / Time',
+            'SQD2' => 'Requirements',
+            'SQD3' => 'Ease of Transaction',
+            'SQD4' => 'Accessibility of Information',
+            'SQD5' => 'Cost / Fees',
+            'SQD6' => 'Fairness',
+            'SQD7' => 'Courtesy and Helpfulness',
+            'SQD8' => 'Service Outcome',
+        ];
+        $sqdSummary = [];
+        foreach ($sqdDefinitions as $code => $label) {
+            $sqdSummary[$code] = [
+                'label' => $label,
+                'average' => null,
+                'valid_count' => 0,
+                'na_count' => 0,
+                'distribution' => array_fill(0, 6, 0),
+                'sum' => 0,
+            ];
+        }
+
+        $ccDefinitions = [
+            'cc1' => [
+                'question' => 'Knowledge of the Citizen\'s Charter',
+                'choices' => [
+                    '1' => 'Knows it and saw it displayed',
+                    '2' => 'Knows it but did not see it displayed',
+                    '3' => 'Learned of it upon seeing it displayed',
+                    '4' => 'Does not know it and did not see it displayed',
+                ],
+            ],
+            'cc2' => [
+                'question' => 'Visibility of the Citizen\'s Charter',
+                'choices' => [
+                    '1' => 'Very easy to find',
+                    '2' => 'Somewhat easy to find',
+                    '3' => 'Difficult to find',
+                    '4' => 'Could not find it',
+                ],
+            ],
+            'cc3' => [
+                'question' => 'Helpfulness of the Citizen\'s Charter',
+                'choices' => [
+                    '1' => 'Very helpful',
+                    '2' => 'Somewhat helpful',
+                    '3' => 'Not helpful',
+                ],
+            ],
+        ];
+        $ccSummary = [];
+        foreach ($ccDefinitions as $code => $definition) {
+            $ccSummary[$code] = $definition + [
+                'counts' => array_fill_keys(array_keys($definition['choices']), 0),
+                'total' => 0,
+            ];
+        }
+
+        $totalSubmissions = 0;
+        $ratedCount = 0;
+        $averageRating = 0.0;
+        $satisfactionRate = 0.0;
+        $positiveCount = 0;
+        $needsAttentionCount = 0;
+        $evaluationItems = new LengthAwarePaginator(
+            collect(),
+            0,
+            10,
+            LengthAwarePaginator::resolveCurrentPage(),
+            ['path' => LengthAwarePaginator::resolveCurrentPath()]
+        );
+
+        if (Schema::hasTable('eval_form')) {
+            $submittedQuery = ConsultationEvaluation::query()
+                ->where('status', 'submitted')
+                ->whereNotNull('submitted_at');
+
+            if ($dateFrom !== '') {
+                $submittedQuery->whereDate('submitted_at', '>=', $dateFrom);
+            }
+            if ($dateTo !== '') {
+                $submittedQuery->whereDate('submitted_at', '<=', $dateTo);
+            }
+
+            $totalSubmissions = (clone $submittedQuery)->count();
+            $ratedQuery = (clone $submittedQuery)->whereBetween('rating', [1, 5]);
+            $ratedCount = (clone $ratedQuery)->count();
+            $averageRating = round((float) ((clone $ratedQuery)->avg('rating') ?? 0), 1);
+            $positiveCount = (clone $ratedQuery)->where('rating', '>=', 4)->count();
+            $needsAttentionCount = (clone $ratedQuery)->where('rating', '<=', 2)->count();
+            $satisfactionRate = $ratedCount > 0 ? round(($positiveCount / $ratedCount) * 100, 1) : 0.0;
+
+            foreach ((clone $submittedQuery)->select(['sqd_answers', 'cc1', 'cc2', 'cc3'])->cursor() as $evaluation) {
+                $answers = $evaluation->sqd_answers ?? [];
+                foreach (array_keys($sqdDefinitions) as $code) {
+                    $answer = data_get($answers, $code);
+                    if (!is_numeric($answer) || (int) $answer < 0 || (int) $answer > 5) {
+                        continue;
+                    }
+
+                    $answer = (int) $answer;
+                    $sqdSummary[$code]['distribution'][$answer]++;
+                    if ($answer === 0) {
+                        $sqdSummary[$code]['na_count']++;
+                    } else {
+                        $sqdSummary[$code]['valid_count']++;
+                        $sqdSummary[$code]['sum'] += $answer;
+                    }
+                }
+
+                foreach (array_keys($ccDefinitions) as $code) {
+                    $answer = (string) ($evaluation->{$code} ?? '');
+                    if (array_key_exists($answer, $ccSummary[$code]['counts'])) {
+                        $ccSummary[$code]['counts'][$answer]++;
+                        $ccSummary[$code]['total']++;
+                    }
+                }
+            }
+
+            foreach ($sqdSummary as &$dimension) {
+                $dimension['average'] = $dimension['valid_count'] > 0
+                    ? round($dimension['sum'] / $dimension['valid_count'], 1)
+                    : null;
+                unset($dimension['sum']);
+            }
+            unset($dimension);
+
+            $evaluationItems = (clone $submittedQuery)
+                ->select(['id', 'consultation_id', 'client_type', 'submitted_at', 'rating', 'suggestions'])
+                ->with('consultation:id,service,consultation_date')
+                ->latest('submitted_at')
+                ->paginate(10)
+                ->withQueryString();
+        }
+
+        return view('admin.reports.evaluation_reports', compact(
+            'dateFrom',
+            'dateTo',
+            'totalSubmissions',
+            'ratedCount',
+            'averageRating',
+            'satisfactionRate',
+            'positiveCount',
+            'needsAttentionCount',
+            'sqdSummary',
+            'ccSummary',
+            'evaluationItems'
         ));
     }
 

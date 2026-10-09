@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Concerns\ExcludesInactiveUserRecords;
 
@@ -45,6 +46,11 @@ class Consultation extends Model
     public function medicines(): HasMany
     {
         return $this->hasMany(ConsultationMedicine::class);
+    }
+
+    public function evaluation(): HasOne
+    {
+        return $this->hasOne(ConsultationEvaluation::class);
     }
 
     public function medicalCondition(): BelongsTo

@@ -230,6 +230,9 @@ Route::middleware(['auth:student', 'student.idle', 'account.active', 'idp.sessio
         Route::get('/student/notifications/{notificationId}', [AppointmentController::class, 'openNotification'])->name('student.notifications.open');
         Route::post('/student/notifications/mark-all-read', [AppointmentController::class, 'markAllNotificationsRead'])->name('student.notifications.read_all');
         Route::post('/student/notifications/preferences', [AppointmentController::class, 'updateNotificationPreferences'])->name('student.notifications.preferences');
+        Route::get('/student/evaluation-form/preview', [AppointmentController::class, 'previewEvaluationForm'])->name('student.evaluation.preview');
+        Route::get('/student/evaluations/{evaluation}', [AppointmentController::class, 'showEvaluationForm'])->name('student.evaluation.show');
+        Route::post('/student/evaluations/{evaluation}', [AppointmentController::class, 'storeEvaluation'])->name('student.evaluation.store');
         Route::get('/student/appointments/{appointment}/feedback', [AppointmentController::class, 'showFeedbackForm'])->name('student.feedback.show');
         Route::post('/student/appointments/{appointment}/feedback', [AppointmentController::class, 'storeFeedback'])->name('student.feedback.store');
     });
@@ -353,6 +356,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::get('/admin/walkin/staff-document/{staffProfile}/{document}', [WalkInController::class, 'showStaffDocument'])->middleware('module.permission:walkin.employee_view')->name('walkin.staffDocument');
         Route::post('/admin/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->middleware('module.permission:walkin.encode_assessment|walkin.edit_information')->name('walkin.health-profile-information.update');
         Route::post('/admin/walkin/store', [WalkInController::class, 'store'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.store');
+        Route::post('/admin/walkin/consultation-evaluation', [WalkInController::class, 'sendConsultationEvaluation'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.consultation-evaluation');
         Route::post('/admin/walkin/consultation-draft', [WalkInController::class, 'saveConsultationDraft'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.consultation-draft');
         Route::post('/admin/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->middleware('module.permission:walkin.encode_assessment')->name('admin.walkin.applicant_encoding');
         Route::post('/admin/walkin/student-assessment', [WalkInController::class, 'saveStudentAssessment'])->middleware('module.permission:walkin.encode_assessment|walkin.employee_lookup')->name('admin.walkin.student_assessment');
@@ -382,6 +386,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
             ->middleware(['module.permission:reports.export_reports', 'superadmin.export'])
             ->name('reports.health-forms-logbook.export');
         Route::get('/admin/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->middleware('module.permission:reports.feedbacks')->name('reports.feedbacks');
+        Route::get('/admin/reports/evaluation-reports', [ReportsController::class, 'serviceEvaluationReport'])->middleware('module.permission:reports.service_evaluation')->name('reports.evaluation-reports');
         Route::get('/admin/reports/digital-logbook/pulled-out-records', [ReportsController::class, 'pulledOutRecords'])
             ->middleware('role:superadmin')
             ->name('reports.pulled-out-records');
@@ -563,6 +568,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::get('/walkin/staff-document/{staffProfile}/{document}', [WalkInController::class, 'showStaffDocument'])->middleware('module.permission:walkin.employee_view')->name('walkin.staffDocument');
         Route::post('/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->middleware('module.permission:walkin.encode_assessment|walkin.edit_information')->name('walkin.health-profile-information.update');
         Route::post('/walkin/store', [WalkInController::class, 'store'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.store');
+        Route::post('/walkin/consultation-evaluation', [WalkInController::class, 'sendConsultationEvaluation'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.consultation-evaluation');
         Route::post('/walkin/consultation-draft', [WalkInController::class, 'saveConsultationDraft'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.consultation-draft');
         Route::post('/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.applicant_encoding');
         Route::post('/walkin/student-assessment', [WalkInController::class, 'saveStudentAssessment'])->middleware('module.permission:walkin.encode_assessment|walkin.employee_lookup')->name('walkin.student_assessment');
@@ -588,6 +594,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
             ->middleware(['module.permission:reports.export_reports', 'superadmin.export'])
             ->name('reports.health-forms-logbook.export');
         Route::get('/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->middleware('module.permission:reports.feedbacks')->name('reports.feedbacks');
+        Route::get('/reports/evaluation-reports', [ReportsController::class, 'serviceEvaluationReport'])->middleware('module.permission:reports.service_evaluation')->name('reports.evaluation-reports');
         Route::middleware(['module.permission:reports.export_reports', 'superadmin.export'])->group(function () {
             Route::get('/reports/export-hub', [ReportsController::class, 'exportHub'])->name('reports.exportHub');
             Route::get('/reports/export-hub/mar', [ReportsController::class, 'exportReportsMar'])->name('reports.exportHub.mar');

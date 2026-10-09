@@ -17,6 +17,7 @@ use App\Models\Item;
 use App\Models\ActivityLog;
 use App\Models\ClinicServiceOption;
 use App\Models\Consultation;
+use App\Models\ConsultationEvaluation;
 use App\Models\ConsultationDraft;
 use App\Models\ConsultationMedicine;
 use App\Models\MarClearanceSubcategory;
@@ -1729,6 +1730,68 @@ class WalkInController extends Controller
     return view('admin.walkin', compact('walkins', 'mode', 'finalReviewApplicants', 'employeeDrafts'));
 }
 
+    public function sendConsultationEvaluation(Request $request)
+    {
+        $validated = $request->validate([
+            'consultation_id' => ['required', 'integer', 'exists:consultations,id'],
+            'decision' => ['required', Rule::in(['send', 'skip'])],
+        ]);
+
+        if ($validated['decision'] === 'skip') {
+            return redirect()->back()->with('success', 'The service evaluation email was not sent.');
+        }
+
+        $consultation = Consultation::with('user')->findOrFail($validated['consultation_id']);
+        $student = $consultation->user;
+
+        if (!$student) {
+            return redirect()->back()->with('error', 'The patient account for this consultation could not be found.');
+        }
+
+        $evaluation = ConsultationEvaluation::firstOrNew([
+            'consultation_id' => $consultation->id,
+        ]);
+
+        if ($evaluation->exists && $evaluation->status === 'sent' && $evaluation->sent_at) {
+            return redirect()->back()->with('success', 'The service evaluation link was already sent to the patient email address.');
+        }
+
+        if ($evaluation->exists && $evaluation->status === 'submitted' && $evaluation->submitted_at) {
+            return redirect()->back()->with('success', 'The patient has already submitted this service evaluation.');
+        }
+
+        $evaluation->fill([
+            'user_id' => $student->id,
+            'requested_by_user_id' => optional($request->user())->id,
+            'status' => 'pending',
+        ]);
+        $evaluation->save();
+        $evaluation->load('consultation');
+
+        $mailResult = app(StudentNotificationMailer::class)
+            ->sendServiceEvaluationNotice($student, $evaluation);
+
+        if ($mailResult['status'] === 'sent') {
+            $evaluation->forceFill([
+                'status' => 'sent',
+                'sent_at' => now(),
+            ])->save();
+
+            return redirect()->back()->with('success', 'The service evaluation link was sent to the patient email address.');
+        }
+
+        $evaluation->forceFill([
+            'status' => $mailResult['status'] === 'skipped' ? 'email_skipped' : 'email_failed',
+        ])->save();
+
+        return redirect()->back()->with(
+            'error',
+            $mailResult['status'] === 'skipped'
+                ? 'The service evaluation was saved, but the email was not sent because email notifications are disabled or no valid email address is available.'
+                : 'The service evaluation was saved, but the email could not be sent. Check the mail settings and try again.'
+        );
+    }
+
     private function finalReviewApplicantQuery()
     {
         return HealthProfile::with('user')
@@ -3053,7 +3116,7 @@ PROMPT;
             return redirect()->back()->withInput()->with('error', 'You can issue up to five medicines per consultation.');
         }
 
-        $completedAppointment = DB::transaction(function () use ($request, $student, $medicineLines, $requestedSource, $consultationStartedAt, $appointmentNumber) {
+        $consultationResult = DB::transaction(function () use ($request, $student, $medicineLines, $requestedSource, $consultationStartedAt, $appointmentNumber) {
             $isOnlineSource = $requestedSource === 'online';
             $finalSource = 'walkin';
             $patientType = Appointment::normalizeUserType($student->user_role ?? $student->user_type);
@@ -3218,11 +3281,20 @@ PROMPT;
                 ]);
             }
 
-            return $completedAppointment;
+            return [
+                'appointment' => $completedAppointment,
+                'consultation_id' => $consultation->id,
+            ];
         });
 
-        if ($completedAppointment) {
-            app(StudentNotificationMailer::class)->sendAppointmentNotice($student, $completedAppointment, 'feedback');
+        $completedAppointment = $consultationResult['appointment'] ?? null;
+        $consultationId = (int) ($consultationResult['consultation_id'] ?? 0);
+
+        if ($consultationId > 0) {
+            $request->session()->flash('consultation_evaluation_prompt', [
+                'consultation_id' => $consultationId,
+                'patient_name' => (string) $student->name,
+            ]);
         }
 
         $request->session()->forget($consultationSessionKey);

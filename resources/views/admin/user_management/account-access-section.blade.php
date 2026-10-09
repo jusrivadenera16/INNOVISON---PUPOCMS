@@ -273,6 +273,11 @@
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
                             <span><strong>Feedbacks</strong><small>Patient ratings, comments, and feedback</small></span>
                         </label>
+                        <label class="um-action-permission">
+                            <input type="checkbox" name="module_permissions[]" value="reports.service_evaluation" data-module-action>
+                            <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
+                            <span><strong>Service Evaluation</strong><small>Client Satisfaction Survey responses and ratings</small></span>
+                        </label>
                         <div class="um-action-permission is-locked">
                             <span class="um-action-lock" aria-hidden="true"><x-outline-icon name="shield-check" /></span>
                             <span><strong>Export Reports</strong><small>Restricted to Super Admin</small></span>

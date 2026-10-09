@@ -5961,6 +5961,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         ['label' => 'Appointment Statistics', 'url' => $reportNavUrl('appointment-statistics'), 'active' => request()->routeIs('reports.appointment-statistics'), 'icon' => 'calendar-days', 'permission' => 'reports.appointment_statistics'],
         ['label' => 'Clinic Records', 'url' => $reportNavUrl('digital-logbook'), 'active' => request()->routeIs('reports.digital-logbook') || request()->routeIs('assistant.reports.digital-logbook') || request()->routeIs('reports.daily-treatment-record') || request()->routeIs('assistant.reports.daily-treatment-record') || request()->routeIs('reports.pulled-out-records*'), 'icon' => 'clipboard-document-list', 'permission' => 'reports.digital_logbook'],
         ['label' => 'Feedbacks', 'url' => $reportNavUrl('feedbacks'), 'active' => request()->routeIs('reports.feedbacks'), 'icon' => 'megaphone', 'permission' => 'reports.feedbacks'],
+        ['label' => 'Service Evaluation', 'url' => $reportNavUrl('evaluation-reports'), 'active' => request()->routeIs('reports.evaluation-reports') || request()->routeIs('assistant.reports.evaluation-reports'), 'icon' => 'chart-bar', 'permission' => 'reports.service_evaluation'],
         ['label' => 'Export Reports', 'url' => $reportNavUrl('export-hub'), 'active' => request()->routeIs('reports.exportHub*'), 'icon' => 'arrow-down-tray', 'permission' => 'reports.export_reports'],
         ['label' => 'Audit Trail', 'url' => $isStudentAssistant ? url('/assistant/logs') : url('/admin/activity-logs'), 'active' => request()->routeIs('admin.logs') || Request::is('admin/activity-logs') || Request::is('assistant/logs'), 'icon' => 'clock', 'superadmin' => true],
     ])->filter(fn (array $link): bool => !empty($link['superadmin']) ? $isAdminLike : $canAccessModule($link['permission']))->values()->all();
@@ -6731,6 +6732,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     </main>
 
 </div>
+
+@include('admin.partials.consultation-evaluation-prompt')
 
 <div class="admin-loader-overlay admin-action-loader" id="adminActionLoader" role="status" aria-live="assertive" aria-label="Processing action" aria-hidden="true">
     <div class="loading" aria-hidden="true">
