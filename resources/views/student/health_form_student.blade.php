@@ -1642,6 +1642,16 @@
             display: grid;
         }
 
+        .findings-select-wrap.is-open {
+            z-index: 1000;
+        }
+
+        .findings-select-wrap.is-open .clinic-select-menu {
+            top: auto;
+            bottom: calc(100% + 10px);
+            z-index: 1001;
+        }
+
         .clinic-select-option {
             width: 100%;
             border: 1px solid rgba(148, 163, 184, 0.22);
@@ -2660,9 +2670,18 @@
         }
 
         @media (max-width: 768px) {
+            .step-fill-note,
+            .student-category-note {
+                display: none;
+            }
+
             .student-address-grid,
             .student-category-grid {
                 grid-template-columns: minmax(0, 1fr);
+            }
+
+            .student-form-category .personal-identity-grid {
+                grid-template-columns: 1fr;
             }
 
             .student-address-grid > .form-field:nth-child(1),
@@ -3279,7 +3298,7 @@
                             <label class="form-label" for="birthday">Birthday <span class="required">*</span></label>
                             <div class="address-field-control">
                                 <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M7 2v4M17 2v4M3 9h18"></path></svg></span>
-                                <input id="birthday" type="date" class="form-control field-maroon" name="birthday" value="{{ $prefillOrOld('birthday') }}" required>
+                                <input id="birthday" type="date" class="form-control field-maroon" name="birthday" value="{{ $prefillOrOld('birthday') }}" min="1950-01-01" max="{{ now()->subYears(15)->toDateString() }}" required>
                             </div>
                         </div>
                         <div class="form-field">
@@ -3957,18 +3976,18 @@
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="med_cert_findings">Findings</label>
-                                    <div class="clinic-select-wrap" data-clinic-select>
+                                    <div class="clinic-select-wrap findings-select-wrap" data-clinic-select>
                                         <select id="med_cert_findings" name="med_cert_findings" class="form-select clinic-select-native" data-requirement-extra-field>
                                             <option value="">Select findings</option>
-                                            <option value="No Findings / Normal" {{ $selectedMedCertFindings === 'No Findings / Normal' ? 'selected' : '' }}>No Findings / Normal</option>
+                                            <option value="No Findings / Normal" {{ $selectedMedCertFindings === 'No Findings / Normal' ? 'selected' : '' }}>No Findings</option>
                                             <option value="With Findings" {{ $selectedMedCertFindings === 'With Findings' ? 'selected' : '' }}>With Findings</option>
-                                            <option value="Not Sure / For Clinic Review" {{ $selectedMedCertFindings === 'Not Sure / For Clinic Review' ? 'selected' : '' }}>Not Sure / For Clinic Review</option>
+                                            <option value="Not Sure / For Clinic Review" {{ $selectedMedCertFindings === 'Not Sure / For Clinic Review' ? 'selected' : '' }}>Not Sure</option>
                                         </select>
                                         <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select findings</button>
                                         <div class="clinic-select-menu" role="listbox" aria-label="Medical certificate findings options">
-                                            <button type="button" class="clinic-select-option" data-select-value="No Findings / Normal">No Findings / Normal</button>
+                                            <button type="button" class="clinic-select-option" data-select-value="No Findings / Normal">No Findings</button>
                                             <button type="button" class="clinic-select-option" data-select-value="With Findings">With Findings</button>
-                                            <button type="button" class="clinic-select-option" data-select-value="Not Sure / For Clinic Review">Not Sure / For Clinic Review</button>
+                                            <button type="button" class="clinic-select-option" data-select-value="Not Sure / For Clinic Review">Not Sure</button>
                                         </div>
                                     </div>
                                 </div>
@@ -4033,18 +4052,18 @@
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="xray_findings">Findings</label>
-                                    <div class="clinic-select-wrap" data-clinic-select>
+                                    <div class="clinic-select-wrap findings-select-wrap" data-clinic-select>
                                         <select id="xray_findings" name="xray_findings" class="form-select clinic-select-native" data-requirement-extra-field>
                                             <option value="">Select findings</option>
-                                            <option value="Normal" {{ $selectedXrayFindings === 'Normal' ? 'selected' : '' }}>Normal</option>
+                                            <option value="Normal" {{ $selectedXrayFindings === 'Normal' ? 'selected' : '' }}>No Findings</option>
                                             <option value="With Findings" {{ $selectedXrayFindings === 'With Findings' ? 'selected' : '' }}>With Findings</option>
-                                            <option value="Not Sure / For Clinic Review" {{ $selectedXrayFindings === 'Not Sure / For Clinic Review' ? 'selected' : '' }}>Not Sure / For Clinic Review</option>
+                                            <option value="Not Sure / For Clinic Review" {{ $selectedXrayFindings === 'Not Sure / For Clinic Review' ? 'selected' : '' }}>Not Sure</option>
                                         </select>
                                         <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select findings</button>
                                         <div class="clinic-select-menu" role="listbox" aria-label="Chest X-ray findings options">
-                                            <button type="button" class="clinic-select-option" data-select-value="Normal">Normal</button>
+                                            <button type="button" class="clinic-select-option" data-select-value="Normal">No Findings</button>
                                             <button type="button" class="clinic-select-option" data-select-value="With Findings">With Findings</button>
-                                            <button type="button" class="clinic-select-option" data-select-value="Not Sure / For Clinic Review">Not Sure / For Clinic Review</button>
+                                            <button type="button" class="clinic-select-option" data-select-value="Not Sure / For Clinic Review">Not Sure</button>
                                         </div>
                                     </div>
                                 </div>
@@ -4408,8 +4427,8 @@
 
             function syncHomeAddressValue() {
                 if (!homeAddressInput || homeAddressPartInputs.length === 0) return;
-                const addressParts = homeAddressPartInputs
-                    .map((input) => input.value.trim())
+                const addressParts = ['home_address_street', 'home_address_barangay', 'home_address_city_municipality', 'home_address_province']
+                    .map((id) => document.getElementById(id)?.value.trim() || '')
                     .filter((value) => value !== '');
 
                 homeAddressInput.value = addressParts.join(', ');
@@ -5049,8 +5068,31 @@
             }
 
             function updateAgeFromBirthday() {
-                if (!birthdayInput || !ageInput || !birthdayInput.value) return;
-                const birthday = new Date(birthdayInput.value);
+                if (!birthdayInput || !ageInput) return;
+
+                birthdayInput.setCustomValidity('');
+                delete birthdayInput.dataset.validationMessage;
+                ageInput.value = '';
+
+                const birthdayValue = birthdayInput.value;
+                if (!birthdayValue) return;
+
+                const minimumBirthday = birthdayInput.min || '1950-01-01';
+                const maximumBirthday = birthdayInput.max || '';
+                if (birthdayValue < minimumBirthday) {
+                    const message = 'Birthday must be January 1, 1950 or later.';
+                    birthdayInput.setCustomValidity(message);
+                    birthdayInput.dataset.validationMessage = message;
+                    return;
+                }
+                if (maximumBirthday && birthdayValue > maximumBirthday) {
+                    const message = 'Age must be at least 15 years old.';
+                    birthdayInput.setCustomValidity(message);
+                    birthdayInput.dataset.validationMessage = message;
+                    return;
+                }
+
+                const birthday = new Date(`${birthdayValue}T00:00:00`);
                 if (Number.isNaN(birthday.getTime())) return;
 
                 const today = new Date();
@@ -5061,8 +5103,12 @@
                     age--;
                 }
 
-                if (age >= 0) {
+                if (age >= 15) {
                     ageInput.value = age;
+                } else {
+                    const message = 'Age must be at least 15 years old.';
+                    birthdayInput.setCustomValidity(message);
+                    birthdayInput.dataset.validationMessage = message;
                 }
             }
 
@@ -5737,6 +5783,7 @@
             }
 
             birthdayInput?.addEventListener('change', updateAgeFromBirthday);
+            birthdayInput?.addEventListener('input', updateAgeFromBirthday);
             birthdayInput?.addEventListener('change', toggleGuardianSignatureSection);
             setupSignaturePad();
             setupGuardianSignaturePad();

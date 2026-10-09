@@ -811,7 +811,7 @@ class AppointmentController extends Controller
                     ->orWhereDate('expires_at', '>=', now(config('app.timezone'))->toDateString());
             })
             ->latest()
-            ->take(8)
+            ->take(15)
             ->get()
             ->map(fn (Announcement $announcement) => [
                 'id' => $announcement->id,
@@ -5075,6 +5075,9 @@ public function storeDependentProfile(Request $request)
         return back()->withInput()->with('error', 'Dependent profile storage is not ready yet. Please run the latest database migration.');
     }
 
+    $dependentBirthdayMin = '1950-01-01';
+    $dependentBirthdayMax = Carbon::today()->subYears(15)->toDateString();
+
     $validated = $request->validate([
         'id_number' => ['nullable', 'string', 'max:120'],
         'first_name' => ['required', 'string', 'max:120'],
@@ -5082,19 +5085,27 @@ public function storeDependentProfile(Request $request)
         'last_name' => ['required', 'string', 'max:120'],
         'suffix_name' => ['nullable', 'string', 'max:120'],
         'email' => ['required', 'email', 'max:255'],
-        'birthday' => ['required', 'date', 'before_or_equal:today'],
-        'age' => ['required', 'integer', 'min:0', 'max:120'],
+        'birthday' => ['required', 'date', 'after_or_equal:' . $dependentBirthdayMin, 'before_or_equal:' . $dependentBirthdayMax],
+        'age' => ['required', 'integer', 'min:15', 'max:100'],
         'sex' => ['required', 'string', 'max:40'],
         'civil_status' => ['required', 'string', 'max:80'],
         'street' => ['required', 'string', 'max:255'],
         'barangay' => ['required', 'string', 'max:120'],
         'municipality' => ['required', 'string', 'max:120'],
         'province' => ['required', 'string', 'max:120'],
-        'contact_no' => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'contact_no' => ['required', 'string', 'size:11', 'regex:/^09\d{9}$/'],
         'landline' => ['nullable', 'string', 'max:20', 'regex:/^(?:[0-9+\-\s()]+|N\/?A|NONE)$/i'],
         'emergency_contact_name' => ['required', 'string', 'max:255'],
-        'emergency_contact_no' => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'emergency_contact_no' => ['required', 'string', 'size:11', 'regex:/^09\d{9}$/'],
         'dependent_profile_certified' => ['accepted'],
+    ], [
+        'contact_no.size' => 'Please put an 11-digit mobile number starting with 09.',
+        'contact_no.regex' => 'Please put an 11-digit mobile number starting with 09.',
+        'emergency_contact_no.size' => 'Please put an 11-digit mobile number starting with 09.',
+        'emergency_contact_no.regex' => 'Please put an 11-digit mobile number starting with 09.',
+        'birthday.after_or_equal' => 'Birthday must be January 1, 1950 or later.',
+        'birthday.before_or_equal' => 'Age must be at least 15 years old.',
+        'age.min' => 'Age must be at least 15 years old.',
     ]);
 
     $validated['first_name'] = trim((string) ($user->first_name ?? '')) ?: $validated['first_name'];
@@ -5547,6 +5558,9 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
         $employeeNumberRule->ignore($existingEmployeeProfile->id);
     }
 
+    $employeeBirthdayMin = '1950-01-01';
+    $employeeBirthdayMax = Carbon::today()->subYears(15)->toDateString();
+
     $validated = $request->validate([
         'employee_number' => [
             'nullable',
@@ -5571,7 +5585,7 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
         'age' => ['required', 'numeric', 'min:15', 'max:100'],
         'sex' => ['required', 'string', 'max:40'],
         'civil_status' => ['required', 'string', 'max:80'],
-        'birthday' => ['required', 'date'],
+        'birthday' => ['required', 'date', 'after_or_equal:' . $employeeBirthdayMin, 'before_or_equal:' . $employeeBirthdayMax],
         'past_medical_history' => ['nullable', 'array'],
         'past_medical_history.*' => ['string', 'max:80'],
         'past_medical_history_others' => ['nullable', 'string', 'max:255'],
@@ -5641,6 +5655,9 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
         'employee_health_profile_certified' => ['accepted'],
     ], [
         'employee_number.unique' => 'This employee number is already registered. Please use the correct employee number for this account.',
+        'birthday.after_or_equal' => 'Birthday must be January 1, 1950 or later.',
+        'birthday.before_or_equal' => 'Age must be at least 15 years old.',
+        'age.min' => 'Age must be at least 15 years old.',
     ]);
 
     $employeeSignatureMethod = (string) $validated['employee_signature_method'];
@@ -6381,12 +6398,10 @@ public function storeHealthForm(Request $request)
     $studentSectionRule = $isDedicatedStudentForm
         ? ['required', 'string', Rule::in(['1', '2', '3', '4'])]
         : ['nullable', 'string', Rule::in(['1', '2', '3', '4'])];
-    $studentMobileRule = $isDedicatedStudentForm
-        ? ['required', 'string', 'size:11', 'regex:/^09\d{9}$/']
-        : ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'];
-    $studentZipcodeRule = $isDedicatedStudentForm
-        ? ['required', 'digits:4']
-        : ['required', 'string', 'max:20'];
+    $studentMobileRule = ['required', 'string', 'size:11', 'regex:/^09\d{9}$/'];
+    $studentZipcodeRule = ['required', 'digits:4'];
+    $healthFormBirthdayMin = '1950-01-01';
+    $healthFormBirthdayMax = Carbon::today()->subYears(15)->toDateString();
 
     $request->validate([
         'student_id'        => 'nullable|string|max:255',
@@ -6395,8 +6410,17 @@ public function storeHealthForm(Request $request)
         'year'              => $studentYearRule,
         'section'           => $studentSectionRule,
         'home_address'      => 'required|string|max:255',
+        'home_address_street' => 'required|string|max:255',
+        'home_address_barangay' => 'required|string|max:120',
+        'home_address_city_municipality' => 'required|string|max:120',
+        'home_address_province' => 'required|string|max:120',
         'zipcode'           => $studentZipcodeRule,
-        'birthday'          => 'required|date',
+        'birthday'          => [
+            'required',
+            'date',
+            'after_or_equal:' . $healthFormBirthdayMin,
+            'before_or_equal:' . $healthFormBirthdayMax,
+        ],
         'student_photo'     => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'student_photo', ['image', 'mimes:jpeg,png,jpg', 'max:1024']),
         'health_declaration' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'health_declaration', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'], $applicantDocumentsRequired),
         'age'               => 'required|numeric|min:15|max:100',
@@ -6464,6 +6488,9 @@ public function storeHealthForm(Request $request)
         'cellphone.size' => 'Please put an 11-digit mobile number starting with 09.',
         'cellphone.regex' => 'Please put an 11-digit mobile number starting with 09.',
         'zipcode.digits' => 'ZIP Code must contain exactly 4 digits.',
+        'birthday.after_or_equal' => 'Birthday must be January 1, 1950 or later.',
+        'birthday.before_or_equal' => 'Age must be at least 15 years old.',
+        'age.min' => 'Age must be at least 15 years old.',
     ]);
 
     $signatureMethod = (string) $request->input('signature_method', 'draw');

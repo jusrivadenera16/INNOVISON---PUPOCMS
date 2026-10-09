@@ -393,21 +393,6 @@
             accent-color: var(--clinic-maroon);
         }
 
-        .contact-table {
-            display: grid;
-            gap: 12px;
-        }
-
-        .contact-row {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px;
-            padding: 14px;
-            border: 1px solid rgba(127, 29, 45, 0.12);
-            border-radius: 8px;
-            background: rgba(248, 250, 252, 0.72);
-        }
-
         .btn-row {
             display: flex;
             justify-content: flex-end;
@@ -495,8 +480,7 @@
 
             .field-grid,
             .field-grid.three,
-            .field-grid.four,
-            .contact-row {
+            .field-grid.four {
                 grid-template-columns: 1fr;
             }
 
@@ -731,6 +715,14 @@
             font-weight: 650;
         }
 
+        .profile-section .field-helper {
+            margin-top: 5px;
+            color: #94a3b8;
+            font-size: 0.74rem;
+            font-weight: 650;
+            line-height: 1.2;
+        }
+
         .dependent-address-lookup-status.is-error {
             color: #9f1239;
         }
@@ -759,6 +751,164 @@
             color: #64748b;
             font-size: 0.78rem;
             font-weight: 700;
+        }
+
+        .profile-section .dependent-field-control,
+        .profile-section .dependent-select-button {
+            min-height: 42px;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            border-radius: 6px;
+            background: linear-gradient(180deg, #fbfcfd 0%, #f4f6f8 100%);
+            box-shadow: none;
+        }
+
+        .profile-section .dependent-field-control {
+            display: flex;
+            align-items: stretch;
+            overflow: hidden;
+        }
+
+        .profile-section .dependent-field-control:focus-within,
+        .profile-section .dependent-select-button:focus-visible,
+        .profile-section .dependent-select-wrap.is-open .dependent-select-button {
+            border-color: rgba(127, 29, 45, 0.68);
+            box-shadow: 0 0 0 3px rgba(127, 29, 45, 0.08);
+            outline: none;
+        }
+
+        .profile-section .dependent-field-control.is-invalid {
+            border-color: #dc2626;
+            background: #fff7f7;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.10);
+        }
+
+        .profile-section .form-field.has-invalid .form-label {
+            color: #b91c1c;
+        }
+
+        .dependent-validation-message {
+            display: none;
+            margin-top: 5px;
+            color: #b91c1c;
+            font-size: 0.74rem;
+            font-weight: 750;
+            line-height: 1.2;
+        }
+
+        .dependent-validation-message.is-visible {
+            display: block;
+        }
+
+        .profile-section .dependent-field-control .address-field-icon,
+        .profile-section .dependent-select-button .address-field-icon {
+            display: inline-grid;
+            place-items: center;
+            align-self: stretch;
+            width: 46px;
+            min-width: 46px;
+            margin-right: 12px;
+            border-right: 1px solid rgba(148, 163, 184, 0.32);
+            color: #475569;
+        }
+
+        .profile-section .dependent-field-control .address-field-icon svg,
+        .profile-section .dependent-select-button .address-field-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
+        }
+
+        .profile-section .dependent-field-control .form-control {
+            flex: 1;
+            min-width: 0;
+            min-height: 40px;
+            height: 40px;
+            padding: 9px 12px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            color: #334155;
+            font-size: 0.84rem;
+            font-weight: 750;
+            box-shadow: none;
+        }
+
+        .profile-section .dependent-field-control .form-control[readonly] {
+            background: transparent;
+            color: #334155;
+        }
+
+        .profile-section .dependent-select-wrap {
+            position: relative;
+        }
+
+        .profile-section .dependent-select-button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 0;
+            padding: 0 12px 0 0;
+            color: #334155;
+            font-size: 0.84rem;
+            font-weight: 750;
+            text-align: left;
+        }
+
+        .profile-section .dependent-select-value {
+            min-width: 0;
+            padding: 9px 0;
+            overflow: hidden;
+            line-height: 1.25;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .profile-section .dependent-select-chevron {
+            width: 18px;
+            height: 18px;
+            flex: 0 0 auto;
+            margin-left: auto;
+            padding-left: 12px;
+            border-left: 1px solid rgba(148, 163, 184, 0.32);
+            color: var(--clinic-maroon);
+            transition: transform .22s ease;
+        }
+
+        .profile-section .dependent-select-menu {
+            top: calc(100% + 7px);
+            z-index: 90;
+            gap: 6px;
+            padding: 7px;
+            border-radius: 8px;
+        }
+
+        .profile-section .dependent-select-option {
+            border-radius: 6px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            color: var(--clinic-maroon);
+            box-shadow: none;
+        }
+
+        .profile-section .dependent-select-option::before {
+            display: none;
+        }
+
+        .profile-section .dependent-select-option:hover,
+        .profile-section .dependent-select-option:focus-visible,
+        .profile-section .dependent-select-option.is-selected {
+            border-color: transparent;
+            background: linear-gradient(135deg, var(--clinic-maroon) 0%, var(--clinic-maroon-dark) 100%);
+            color: #ffffff;
+            box-shadow: 0 8px 16px rgba(127, 29, 45, 0.16);
+            outline: none;
+        }
+
+        .profile-section .dependent-select-wrap.is-open .dependent-select-chevron {
+            transform: rotate(180deg);
         }
 
         @media (max-width: 768px) {
@@ -831,41 +981,67 @@
                     <div class="field-grid four">
                         <div class="form-field">
                             <label class="form-label" for="first_name">First Name <span class="required">*</span></label>
-                            <input id="first_name" name="first_name" class="form-control" value="{{ old('first_name', $prefill['first_name'] ?? '') }}" required maxlength="120" readonly aria-readonly="true">
+                            <div class="dependent-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+                                <input id="first_name" name="first_name" class="form-control" value="{{ old('first_name', $prefill['first_name'] ?? '') }}" required maxlength="120" readonly aria-readonly="true">
+                            </div>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="middle_name">Middle Name</label>
-                            <input id="middle_name" name="middle_name" class="form-control" value="{{ old('middle_name', $prefill['middle_name'] ?? '') }}" maxlength="120" readonly aria-readonly="true">
+                            <div class="dependent-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+                                <input id="middle_name" name="middle_name" class="form-control" value="{{ old('middle_name', $prefill['middle_name'] ?? '') }}" maxlength="120" readonly aria-readonly="true">
+                            </div>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="last_name">Last Name <span class="required">*</span></label>
-                            <input id="last_name" name="last_name" class="form-control" value="{{ old('last_name', $prefill['last_name'] ?? '') }}" required maxlength="120" readonly aria-readonly="true">
+                            <div class="dependent-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+                                <input id="last_name" name="last_name" class="form-control" value="{{ old('last_name', $prefill['last_name'] ?? '') }}" required maxlength="120" readonly aria-readonly="true">
+                            </div>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="suffix_name">Suffix</label>
-                            <input id="suffix_name" name="suffix_name" class="form-control" value="{{ old('suffix_name', $prefill['suffix_name'] ?? '') }}" maxlength="120" readonly aria-readonly="true">
+                            <div class="dependent-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+                                <input id="suffix_name" name="suffix_name" class="form-control" value="{{ old('suffix_name', $prefill['suffix_name'] ?? '') }}" maxlength="120" readonly aria-readonly="true">
+                            </div>
                         </div>
                     </div>
 
                     <div class="field-grid">
                         <div class="form-field">
                             <label class="form-label" for="email">Email Address <span class="required">*</span></label>
-                            <input id="email" name="email" type="email" class="form-control" value="{{ old('email', $prefill['email'] ?? '') }}" required maxlength="255" readonly aria-readonly="true">
+                            <div class="dependent-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg></span>
+                                <input id="email" name="email" type="email" class="form-control" value="{{ old('email', $prefill['email'] ?? '') }}" required maxlength="255" readonly aria-readonly="true">
+                            </div>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="id_number">ID Number</label>
-                            <input id="id_number" name="id_number" class="form-control" value="{{ old('id_number', $prefill['id_number'] ?? '') }}" maxlength="120">
+                            <div class="dependent-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M7 9h4M7 13h7M7 16h5"></path></svg></span>
+                                <input id="id_number" name="id_number" class="form-control" value="{{ old('id_number', $prefill['id_number'] ?? '') }}" maxlength="120">
+                            </div>
                         </div>
                     </div>
 
                     <div class="field-grid">
                         <div class="form-field">
                             <label class="form-label" for="birthday">Birthday <span class="required">*</span></label>
-                            <input id="birthday" name="birthday" type="date" class="form-control" value="{{ old('birthday', $prefill['birthday'] ?? '') }}" required max="{{ now()->toDateString() }}">
+                            <div class="dependent-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg></span>
+                                <input id="birthday" name="birthday" type="date" class="form-control" value="{{ old('birthday', $prefill['birthday'] ?? '') }}" min="1950-01-01" max="{{ now()->subYears(15)->toDateString() }}" required>
+                            </div>
+                            <small class="dependent-validation-message" data-birthday-validation-error></small>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="age">Age <span class="required">*</span></label>
-                            <input id="age" name="age" type="number" min="0" max="120" class="form-control" value="{{ old('age', $prefill['age'] ?? '') }}" required>
+                            <div class="dependent-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v4l2.5 2"></path></svg></span>
+                                <input id="age" name="age" type="number" min="15" max="100" class="form-control" value="{{ old('age', $prefill['age'] ?? '') }}" required readonly>
+                            </div>
+                            <small class="field-helper">Automatically calculated from Birthday.</small>
                         </div>
                     </div>
 
@@ -974,30 +1150,54 @@
                             <svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.2-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7A2 2 0 0 1 22 16.9Z"></path></svg>
                             </span>
                             <div>
-                                <h2>Contact Information</h2>
-                                <p class="dependent-category-note">Provide your contact and emergency contact details.</p>
-                            </div>
+                            <h2>Contact Information</h2>
+                            <p class="dependent-category-note">Provide the dependent's contact details.</p>
                         </div>
-                    <div class="contact-table">
-                        <div class="contact-row">
-                            <div class="form-field">
-                                <label class="form-label" for="contact_no">Contact Number <span class="required">*</span></label>
-                                <input id="contact_no" name="contact_no" class="form-control" value="{{ old('contact_no', $prefill['contact_no'] ?? '') }}" required inputmode="numeric" maxlength="20">
+                    </div>
+                    <div class="field-grid">
+                        <div class="form-field">
+                            <label class="form-label" for="contact_no">Contact Number <span class="required">*</span></label>
+                            <div class="dependent-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h4l2 5-2.5 1.5a13 13 0 0 0 5 5L16 12l5 2v4c0 1.1-.9 2-2 2C10.7 20 4 13.3 4 5a2 2 0 0 1 2-2Z"></path></svg></span>
+                                <input id="contact_no" name="contact_no" class="form-control" value="{{ old('contact_no', $prefill['contact_no'] ?? '') }}" required inputmode="numeric" pattern="09[0-9]{9}" minlength="11" maxlength="11" data-numeric-contact data-validation-message="Please put an 11-digit mobile number starting with 09.">
                             </div>
-                            <div class="form-field">
-                                <label class="form-label" for="landline">Landline</label>
+                            <small class="dependent-validation-message" data-contact-validation-error>Please put an 11-digit mobile number starting with 09.</small>
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="landline">Landline</label>
+                            <div class="dependent-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h4l2 5-2.5 1.5a13 13 0 0 0 5 5L16 12l5 2v4c0 1.1-.9 2-2 2C10.7 20 4 13.3 4 5a2 2 0 0 1 2-2Z"></path></svg></span>
                                 <input id="landline" name="landline" class="form-control" value="{{ old('landline', $prefill['landline'] ?? '') }}" maxlength="20">
                             </div>
                         </div>
-                        <div class="contact-row">
-                            <div class="form-field">
-                                <label class="form-label" for="emergency_contact_name">Emergency Person <span class="required">*</span></label>
+                    </div>
+                </section>
+
+                <section class="profile-section">
+                    <div class="dependent-category-header">
+                        <span class="dependent-category-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        </span>
+                        <div>
+                            <h2>Emergency Contact Information</h2>
+                            <p class="dependent-category-note">Provide someone the clinic can contact in an emergency.</p>
+                        </div>
+                    </div>
+                    <div class="field-grid">
+                        <div class="form-field">
+                            <label class="form-label" for="emergency_contact_name">Emergency Person <span class="required">*</span></label>
+                            <div class="dependent-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
                                 <input id="emergency_contact_name" name="emergency_contact_name" class="form-control" value="{{ old('emergency_contact_name', $prefill['emergency_contact_name'] ?? '') }}" required maxlength="255">
                             </div>
-                            <div class="form-field">
-                                <label class="form-label" for="emergency_contact_no">Emergency Contact Number <span class="required">*</span></label>
-                                <input id="emergency_contact_no" name="emergency_contact_no" class="form-control" value="{{ old('emergency_contact_no', $prefill['emergency_contact_no'] ?? '') }}" required inputmode="numeric" maxlength="20">
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="emergency_contact_no">Emergency Contact Number <span class="required">*</span></label>
+                            <div class="dependent-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h4l2 5-2.5 1.5a13 13 0 0 0 5 5L16 12l5 2v4c0 1.1-.9 2-2 2C10.7 20 4 13.3 4 5a2 2 0 0 1 2-2Z"></path></svg></span>
+                                <input id="emergency_contact_no" name="emergency_contact_no" class="form-control" value="{{ old('emergency_contact_no', $prefill['emergency_contact_no'] ?? '') }}" required inputmode="numeric" pattern="09[0-9]{9}" minlength="11" maxlength="11" data-numeric-contact data-validation-message="Please put an 11-digit mobile number starting with 09.">
                             </div>
+                            <small class="dependent-validation-message" data-contact-validation-error>Please put an 11-digit mobile number starting with 09.</small>
                         </div>
                     </div>
                 </section>
@@ -1034,7 +1234,12 @@
             const form = document.getElementById('dependent_profile_form');
             const submitButton = document.getElementById('dependent_profile_submit');
             const submitLabel = submitButton?.querySelector('[data-submit-label]');
+            const numericContactInputs = Array.from(document.querySelectorAll('[data-numeric-contact]'));
             const enhancedSelects = [];
+            const dependentSelectIcons = {
+                sex: '<path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle>',
+                civil_status: '<path d="M20.8 8.6c0 5.1-8.8 10.1-8.8 10.1S3.2 13.7 3.2 8.6A4.6 4.6 0 0 1 12 6.3a4.6 4.6 0 0 1 8.8 2.3Z"></path>',
+            };
             const locationSelects = Array.from(document.querySelectorAll('[data-address-select]'))
                 .map((select) => select.closest('[data-address-level]'))
                 .filter(Boolean);
@@ -1065,10 +1270,62 @@
             }
 
             function syncAge() {
-                const resolvedAge = calculateAge(birthday?.value || '');
-                if (resolvedAge !== '' && age) {
-                    age.value = resolvedAge;
+                if (!birthday || !age) return;
+
+                birthday.setCustomValidity('');
+                age.value = '';
+                const errorMessage = birthday.closest('.form-field')?.querySelector('[data-birthday-validation-error]');
+                const birthdayField = birthday.closest('.form-field');
+                errorMessage?.classList.remove('is-visible');
+                birthdayField?.classList.remove('has-invalid');
+                birthday.closest('.dependent-field-control')?.classList.remove('is-invalid');
+
+                const birthdayValue = birthday.value;
+                if (!birthdayValue) return;
+
+                const minimumBirthday = birthday.min || '1950-01-01';
+                const maximumBirthday = birthday.max || '';
+                let message = '';
+                if (birthdayValue < minimumBirthday) {
+                    message = 'Birthday must be January 1, 1950 or later.';
+                } else if (maximumBirthday && birthdayValue > maximumBirthday) {
+                    message = 'Age must be at least 15 years old.';
+                } else {
+                    const resolvedAge = calculateAge(birthdayValue);
+                    if (resolvedAge >= 15 && resolvedAge <= 100) {
+                        age.value = resolvedAge;
+                    } else {
+                        message = 'Age must be at least 15 years old.';
+                    }
                 }
+
+                if (message) {
+                    birthday.setCustomValidity(message);
+                    if (errorMessage) {
+                        errorMessage.textContent = message;
+                        errorMessage.classList.add('is-visible');
+                    }
+                    birthdayField?.classList.add('has-invalid');
+                    birthday.closest('.dependent-field-control')?.classList.add('is-invalid');
+                }
+            }
+
+            function syncDependentContactValidity(input) {
+                if (!input) return;
+
+                const digits = input.value.replace(/\D/g, '').slice(0, 11);
+                if (input.value !== digits) input.value = digits;
+
+                const valid = digits === '' || /^09\d{9}$/.test(digits);
+                const message = valid ? '' : (input.dataset.validationMessage || 'Please put an 11-digit mobile number starting with 09.');
+                const field = input.closest('.form-field');
+                const control = input.closest('.dependent-field-control');
+                const error = field?.querySelector('[data-contact-validation-error]');
+
+                input.setCustomValidity(message);
+                field?.classList.toggle('has-invalid', Boolean(message));
+                control?.classList.toggle('is-invalid', Boolean(message));
+                error?.classList.toggle('is-visible', Boolean(message));
             }
 
             function syncAddress() {
@@ -1104,6 +1361,7 @@
                 button.setAttribute('aria-haspopup', 'listbox');
                 button.setAttribute('aria-expanded', 'false');
                 button.innerHTML = `
+                    <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${dependentSelectIcons[select.id] || '<circle cx="12" cy="12" r="8"></circle>'}</svg></span>
                     <span class="dependent-select-value"></span>
                     <svg class="dependent-select-chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1460,6 +1718,12 @@
             });
 
             birthday?.addEventListener('change', syncAge);
+            birthday?.addEventListener('input', syncAge);
+            numericContactInputs.forEach((input) => {
+                input.addEventListener('input', () => syncDependentContactValidity(input));
+                input.addEventListener('blur', () => syncDependentContactValidity(input));
+                syncDependentContactValidity(input);
+            });
             addressParts.forEach((input) => {
                 input.addEventListener('input', syncAddress);
                 input.addEventListener('change', syncAddress);
@@ -1487,6 +1751,7 @@
                 submitButton.setAttribute('aria-busy', 'true');
                 submitLabel.textContent = 'Saving...';
             });
+            syncAge();
             syncAddress();
         })();
     </script>

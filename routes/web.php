@@ -67,7 +67,7 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
                         ->orWhereDate('expires_at', '>=', now()->toDateString());
                 })
                 ->latest()
-                ->take(6)
+                ->take(15)
                 ->get();
         }
     } catch (\Throwable) {

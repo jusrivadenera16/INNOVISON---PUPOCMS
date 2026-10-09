@@ -2970,6 +2970,25 @@
             display: block;
         }
 
+        .employee-personal-stack .birthday-validation-error {
+            display: none;
+            color: #b91c1c !important;
+        }
+
+        .employee-personal-stack .birthday-validation-error.is-visible {
+            display: block;
+        }
+
+        .employee-personal-stack .form-field.birthday-invalid-field .address-field-control {
+            border-color: #dc2626 !important;
+            background: #fff7f7 !important;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12) !important;
+        }
+
+        .employee-personal-stack .form-field.birthday-invalid-field .form-label {
+            color: #b91c1c;
+        }
+
         @media (max-width: 767px) {
             .employee-address-fields {
                 display: grid !important;
@@ -3230,8 +3249,9 @@
                                     <span class="address-field-icon" aria-hidden="true">
                                         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M7 2v4M17 2v4M3 9h18"></path></svg>
                                     </span>
-                                    <input id="birthday" type="date" name="birthday" class="form-control" value="{{ $employeeValue('birthday', $user->DOB ?? '') }}" required>
+                                    <input id="birthday" type="date" name="birthday" class="form-control" value="{{ $employeeValue('birthday', $user->DOB ?? '') }}" min="1950-01-01" max="{{ now()->subYears(15)->toDateString() }}" required>
                                 </div>
+                                <small class="field-hint birthday-validation-error" data-birthday-validation-error></small>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="age">Age <span class="required">*</span></label>
@@ -4326,20 +4346,54 @@
             });
 
             function calculateAgeFromBirthday() {
-                if (!birthdayInput || !ageInput || !birthdayInput.value) return;
-                const birthday = new Date(`${birthdayInput.value}T00:00:00`);
-                if (Number.isNaN(birthday.getTime())) return;
-                const today = new Date();
-                let age = today.getFullYear() - birthday.getFullYear();
-                const monthDiff = today.getMonth() - birthday.getMonth();
-                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthday.getDate())) {
-                    age -= 1;
+                if (!birthdayInput || !ageInput) return;
+
+                birthdayInput.setCustomValidity('');
+                ageInput.value = '';
+                const errorMessage = birthdayInput.closest('.form-field')?.querySelector('[data-birthday-validation-error]');
+                const birthdayField = birthdayInput.closest('.form-field');
+                errorMessage?.classList.remove('is-visible');
+                birthdayField?.classList.remove('birthday-invalid-field');
+
+                const birthdayValue = birthdayInput.value;
+                if (!birthdayValue) return;
+
+                const minimumBirthday = birthdayInput.min || '1950-01-01';
+                const maximumBirthday = birthdayInput.max || '';
+                let message = '';
+                if (birthdayValue < minimumBirthday) {
+                    message = 'Birthday must be January 1, 1950 or later.';
+                } else if (maximumBirthday && birthdayValue > maximumBirthday) {
+                    message = 'Age must be at least 15 years old.';
+                } else {
+                    const birthday = new Date(`${birthdayValue}T00:00:00`);
+                    if (Number.isNaN(birthday.getTime())) return;
+                    const today = new Date();
+                    let age = today.getFullYear() - birthday.getFullYear();
+                    const monthDiff = today.getMonth() - birthday.getMonth();
+                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthday.getDate())) {
+                        age -= 1;
+                    }
+                    if (age >= 15 && age <= 100) {
+                        ageInput.value = String(age);
+                    } else {
+                        message = 'Age must be at least 15 years old.';
+                    }
                 }
-                if (age > 0) ageInput.value = String(age);
+
+                if (message) {
+                    birthdayInput.setCustomValidity(message);
+                    if (errorMessage) {
+                        errorMessage.textContent = message;
+                        errorMessage.classList.add('is-visible');
+                    }
+                    birthdayField?.classList.add('birthday-invalid-field');
+                }
             }
 
             birthdayInput?.addEventListener('change', calculateAgeFromBirthday);
             birthdayInput?.addEventListener('input', calculateAgeFromBirthday);
+            calculateAgeFromBirthday();
 
             function syncPastMedicalOthers() {
                 const show = !!pastMedicalOthersToggle?.checked;
