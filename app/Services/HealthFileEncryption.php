@@ -22,12 +22,17 @@ class HealthFileEncryption
             return $contents;
         }
 
+        return $this->encryptWithKey($contents, $this->key());
+    }
+
+    public function encryptWithKey(string $contents, string $configuredKey): string
+    {
         $nonce = random_bytes(self::NONCE_LENGTH);
         $tag = '';
         $ciphertext = openssl_encrypt(
             $contents,
             self::CIPHER,
-            $this->key(),
+            $this->normalizeKey($configuredKey),
             OPENSSL_RAW_DATA,
             $nonce,
             $tag,
@@ -48,6 +53,15 @@ class HealthFileEncryption
             return $contents;
         }
 
+        return $this->decryptWithKey($contents, $this->key());
+    }
+
+    public function decryptWithKey(string $contents, string $configuredKey): string
+    {
+        if (!$this->isEncrypted($contents)) {
+            return $contents;
+        }
+
         $headerLength = strlen(self::MAGIC) + self::NONCE_LENGTH + self::TAG_LENGTH;
         if (strlen($contents) < $headerLength) {
             throw new RuntimeException('The private health file has an invalid encryption envelope.');
@@ -62,7 +76,7 @@ class HealthFileEncryption
         $plaintext = openssl_decrypt(
             $ciphertext,
             self::CIPHER,
-            $this->key(),
+            $this->normalizeKey($configuredKey),
             OPENSSL_RAW_DATA,
             $nonce,
             $tag,
@@ -76,6 +90,15 @@ class HealthFileEncryption
         return $plaintext;
     }
 
+    public function reEncrypt(string $contents, string $fromKey, string $toKey): string
+    {
+        $plaintext = $this->isEncrypted($contents)
+            ? $this->decryptWithKey($contents, $fromKey)
+            : $contents;
+
+        return $this->encryptWithKey($plaintext, $toKey);
+    }
+
     public function isEncrypted(string $contents): bool
     {
         return strncmp($contents, self::MAGIC, strlen(self::MAGIC)) === 0;
@@ -86,6 +109,16 @@ class HealthFileEncryption
         $configuredKey = trim((string) config('health_files.encryption_key', ''));
         if ($configuredKey === '') {
             throw new RuntimeException('HEALTH_FILES_ENCRYPTION_KEY or APP_KEY is required for private health-file encryption.');
+        }
+
+        return $this->normalizeKey($configuredKey);
+    }
+
+    private function normalizeKey(string $configuredKey): string
+    {
+        $configuredKey = trim($configuredKey);
+        if ($configuredKey === '') {
+            throw new RuntimeException('A non-empty encryption key is required.');
         }
 
         if (str_starts_with($configuredKey, 'base64:')) {

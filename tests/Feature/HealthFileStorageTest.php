@@ -151,6 +151,32 @@ class HealthFileStorageTest extends TestCase
         $this->assertSame('existing-private-content', app(HealthFileStorage::class)->get($path));
     }
 
+    public function test_existing_private_files_can_be_reencrypted_with_a_new_health_key(): void
+    {
+        config([
+            'app.key' => 'local-old-app-key',
+            'health_files.encryption_enabled' => true,
+            'health_files.encryption_key' => 'local-old-app-key',
+        ]);
+        $path = 'health_profiles/documents/rotated.pdf';
+        $contents = '%PDF-rotated-private-health-file%';
+        $files = app(HealthFileStorage::class);
+
+        $this->assertTrue($files->put($path, $contents));
+        $oldRaw = Storage::disk('health_private')->get($path);
+
+        config(['health_files.encryption_key' => 'local-new-health-file-key']);
+
+        $this->assertSame(0, Artisan::call('health-files:rotate-key', [
+            '--apply' => true,
+            '--from-app-key' => true,
+        ]));
+
+        $newRaw = Storage::disk('health_private')->get($path);
+        $this->assertNotSame($oldRaw, $newRaw);
+        $this->assertSame($contents, app(HealthFileStorage::class)->get($path));
+    }
+
     public function test_migration_command_copies_verifies_and_preserves_legacy_files(): void
     {
         Storage::disk('public')->put('health_profiles/photos/one.png', 'one');

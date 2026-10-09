@@ -2218,6 +2218,470 @@
             font-weight: 700;
         }
 
+        .student-form-category {
+            margin-top: 18px;
+            padding: 16px;
+            border: 1px solid rgba(127, 29, 45, 0.14);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.76);
+        }
+
+        .student-category-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(127, 29, 45, 0.14);
+        }
+
+        .student-category-icon {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+            border-radius: 50%;
+            background: #7f1d2d;
+            color: #ffffff;
+        }
+
+        .student-category-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
+        }
+
+        .student-category-title {
+            margin: 0;
+            color: #7f1d2d;
+            font-size: 0.98rem;
+            font-weight: 900;
+        }
+
+        .student-category-note {
+            margin: 2px 0 0;
+            color: #64748b;
+            font-size: 0.76rem;
+            font-weight: 650;
+            line-height: 1.35;
+        }
+
+        .student-category-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .student-category-grid .form-field,
+        .student-form-category > .form-field {
+            border: 0;
+            padding: 0;
+            background: transparent;
+            border-radius: 0;
+        }
+
+        .student-form-category .form-field {
+            border: 0;
+            padding: 0;
+            background: transparent;
+            border-radius: 0;
+        }
+
+        .student-form-category .form-field .form-label {
+            color: #475569;
+            font-size: 0.72rem;
+            letter-spacing: 0.05em;
+            margin-bottom: 10px;
+        }
+
+        .student-form-category .form-field > .form-control,
+        .student-form-category .form-field > .form-select {
+            height: 42px;
+            min-height: 42px;
+            padding: 9px 12px;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            border-radius: 6px;
+            background: linear-gradient(180deg, #fbfcfd 0%, #f4f6f8 100%);
+            box-shadow: none;
+            color: #334155;
+            font-size: 0.84rem;
+            font-weight: 750;
+        }
+
+        .student-form-category .form-field > .form-control.field-maroon,
+        .student-form-category .form-field > .form-control.field-maroon.is-filled,
+        .student-form-category .form-field > .form-select.field-maroon,
+        .student-form-category .form-field > .form-select.field-maroon.is-filled {
+            height: 42px;
+            min-height: 42px;
+            padding: 9px 12px;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            border-radius: 6px;
+            background: linear-gradient(180deg, #fbfcfd 0%, #f4f6f8 100%) !important;
+            box-shadow: none;
+        }
+
+        .student-form-category .form-field > .form-control:focus,
+        .student-form-category .form-field > .form-select:focus {
+            border-color: rgba(127, 29, 45, 0.68);
+            box-shadow: 0 0 0 3px rgba(127, 29, 45, 0.08);
+            background: linear-gradient(180deg, #fbfcfd 0%, #f4f6f8 100%);
+        }
+
+        .student-form-category .address-field-control {
+            display: flex;
+            align-items: stretch;
+            height: 42px;
+            min-height: 42px;
+            overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            border-radius: 6px;
+            background: linear-gradient(180deg, #fbfcfd 0%, #f4f6f8 100%);
+        }
+
+        .student-form-category .address-field-control:focus-within {
+            border-color: rgba(127, 29, 45, 0.68);
+            box-shadow: 0 0 0 3px rgba(127, 29, 45, 0.08);
+        }
+
+        .student-form-category .address-field-control .address-field-icon,
+        .student-form-category .clinic-select-display .address-field-icon {
+            display: inline-grid;
+            place-items: center;
+            align-self: stretch;
+            width: 46px;
+            min-width: 46px;
+            margin-right: 12px;
+            border-right: 1px solid rgba(148, 163, 184, 0.32);
+            color: #475569;
+        }
+
+        .student-form-category .address-field-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
+        }
+
+        .student-form-category .address-field-control .form-control {
+            flex: 1;
+            min-width: 0;
+            height: 40px;
+            min-height: 40px;
+            padding: 9px 12px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .student-form-category .address-field-control .form-control.field-maroon,
+        .student-form-category .address-field-control .form-control.field-maroon.is-filled {
+            height: 40px;
+            min-height: 40px;
+            padding: 9px 12px;
+            border: 0;
+            border-radius: 0;
+            background: transparent !important;
+            box-shadow: none;
+        }
+
+        .student-form-category .address-field-control .form-control:focus {
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .student-form-category .clinic-select-wrap .clinic-select-display {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            height: 42px;
+            min-height: 42px;
+            padding: 0 42px 0 0;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            border-radius: 6px;
+            background: linear-gradient(180deg, #fbfcfd 0%, #f4f6f8 100%);
+            box-shadow: none;
+            color: #334155;
+            font-size: 0.84rem;
+            font-weight: 750;
+        }
+
+        .student-form-category .clinic-select-wrap .clinic-select-display:hover,
+        .student-form-category .clinic-select-wrap .clinic-select-display:focus,
+        .student-form-category .clinic-select-wrap .clinic-select-display.is-open {
+            border-color: rgba(127, 29, 45, 0.68);
+            box-shadow: 0 0 0 3px rgba(127, 29, 45, 0.08);
+            outline: none;
+        }
+
+        .student-form-category .clinic-select-wrap .clinic-select-display .clinic-select-value {
+            min-width: 0;
+            padding: 9px 0;
+            overflow: hidden;
+            line-height: 1.25;
+            text-overflow: ellipsis;
+        }
+
+        .student-form-category .clinic-select-wrap::before {
+            display: none;
+        }
+
+        .student-form-category .clinic-select-wrap::after {
+            top: 50%;
+            right: 16px;
+            width: 9px;
+            height: 9px;
+            border-right: 2px solid #7f1d2d;
+            border-bottom: 2px solid #7f1d2d;
+        }
+
+        .student-form-category .clinic-select-menu {
+            gap: 6px;
+            padding: 8px;
+            border-radius: 9px;
+        }
+
+        .student-form-category .clinic-select-option,
+        .student-form-category .course-select-wrap .clinic-select-option {
+            border-radius: 6px;
+            padding: 10px 12px;
+            box-shadow: none;
+        }
+
+        .student-form-category .address-field-control.is-invalid {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.10);
+        }
+
+        .student-form-category .student-contact-error {
+            display: none;
+            color: #b91c1c;
+        }
+
+        .student-form-category .form-field.has-invalid .student-contact-error {
+            display: block;
+        }
+
+        .student-form-category .field-helper {
+            margin-top: 6px;
+            color: #94a3b8;
+            font-size: 0.74rem;
+            font-weight: 650;
+        }
+
+        .student-form-category .personal-identity-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            margin-bottom: 12px;
+        }
+
+        .student-form-category .personal-email-field {
+            margin-bottom: 0;
+        }
+
+        .student-form-category .personal-identity-grid + .personal-email-field {
+            margin-top: 0;
+        }
+
+        .student-form-category .student-category-header + .personal-email-field {
+            margin-bottom: 12px;
+        }
+
+        .student-form-category .student-zip-field .address-field-control {
+            background: linear-gradient(180deg, #f1f5f9 0%, #e8edf2 100%);
+        }
+
+        .student-form-category .student-zip-field .form-control[readonly] {
+            color: #334155;
+            cursor: not-allowed;
+        }
+
+        .student-form-category .personal-identity-grid,
+        .student-form-category .step-one-grid {
+            margin: 0;
+        }
+
+        .student-form-category .personal-identity-grid {
+            margin-bottom: 12px;
+        }
+
+        .student-address-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .student-address-grid > .form-field {
+            min-width: 0;
+            border: 0;
+            padding: 0;
+            background: transparent;
+            border-radius: 0;
+        }
+
+        .student-address-grid > .form-field:nth-child(1) { grid-column: 1; grid-row: 1; }
+        .student-address-grid > .form-field:nth-child(2) { grid-column: 2; grid-row: 1; }
+        .student-address-grid > .form-field:nth-child(3) { grid-column: 1; grid-row: 2; }
+        .student-address-grid > .form-field:nth-child(4) { grid-column: 2; grid-row: 2; }
+
+        .student-address-grid .clinic-select-display,
+        .student-address-grid .address-field-control {
+            min-height: 42px;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            border-radius: 6px;
+            background: linear-gradient(180deg, #fbfcfd 0%, #f4f6f8 100%);
+            box-shadow: none;
+        }
+
+        .student-address-grid .clinic-select-display {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            padding: 0 42px 0 0;
+            color: #334155;
+            font-size: 0.84rem;
+            font-weight: 750;
+            white-space: normal;
+        }
+
+        .student-address-grid .clinic-select-display:hover,
+        .student-address-grid .clinic-select-display:focus,
+        .student-address-grid .clinic-select-display.is-open,
+        .student-address-grid .address-field-control:focus-within {
+            border-color: rgba(127, 29, 45, 0.68);
+            box-shadow: 0 0 0 3px rgba(127, 29, 45, 0.08);
+            outline: none;
+        }
+
+        .student-address-grid .clinic-select-display .address-field-icon,
+        .student-address-grid .address-field-icon {
+            display: inline-grid;
+            place-items: center;
+            align-self: stretch;
+            width: 46px;
+            min-width: 46px;
+            margin-right: 12px;
+            border-right: 1px solid rgba(148, 163, 184, 0.32);
+            color: #475569;
+        }
+
+        .student-address-grid .address-field-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
+        }
+
+        .student-address-grid .clinic-select-value {
+            min-width: 0;
+            padding: 9px 0;
+            overflow: hidden;
+            line-height: 1.25;
+            text-overflow: ellipsis;
+        }
+
+        .student-address-grid .clinic-select-wrap::before {
+            display: none;
+        }
+
+        .student-address-grid .clinic-select-wrap::after {
+            top: 50%;
+            right: 16px;
+            width: 9px;
+            height: 9px;
+            border-right: 2px solid #7f1d2d;
+            border-bottom: 2px solid #7f1d2d;
+        }
+
+        .student-address-grid .address-field-control {
+            display: flex;
+            align-items: stretch;
+            overflow: hidden;
+        }
+
+        .student-address-grid .address-field-control .form-control {
+            flex: 1;
+            min-width: 0;
+            min-height: 40px;
+            padding: 9px 12px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .student-address-lookup-status {
+            margin: 6px 0 0;
+            color: #64748b;
+            font-size: 0.74rem;
+            font-weight: 650;
+        }
+
+        .student-address-lookup-status.is-error {
+            color: #9f1239;
+        }
+
+        .location-select-search {
+            width: 100%;
+            min-height: 38px;
+            margin-bottom: 2px;
+            padding: 8px 10px;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            border-radius: 6px;
+            color: #1e293b;
+            background: #ffffff;
+            font: inherit;
+            font-size: 0.82rem;
+        }
+
+        .location-select-search:focus {
+            outline: none;
+            border-color: #7f1d2d;
+            box-shadow: 0 0 0 3px rgba(127, 29, 45, 0.08);
+        }
+
+        .location-select-empty {
+            padding: 10px;
+            color: #64748b;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .student-address-grid,
+            .student-category-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .student-address-grid > .form-field:nth-child(1),
+            .student-address-grid > .form-field:nth-child(2),
+            .student-address-grid > .form-field:nth-child(3),
+            .student-address-grid > .form-field:nth-child(4) {
+                grid-column: 1;
+                grid-row: auto;
+            }
+
+            .student-category-grid .form-field.span-2 {
+                grid-column: auto;
+            }
+
+            .student-category-header {
+                align-items: flex-start;
+            }
+        }
+
         @media (max-width: 768px) {
             body {
                 padding-bottom: 132px;
@@ -2390,7 +2854,7 @@
         <div class="section-body">
             @php
                 $selectedPwd = old('has_disability', $prefill['has_disability'] ?? 'No');
-                $personalErrorFields = ['school_year', 'course_code', 'course_college', 'home_address', 'zipcode', 'birthday', 'age', 'sex', 'civil_status', 'blood_type', 'contact_no', 'guardian_name', 'landline', 'cellphone'];
+                $personalErrorFields = ['school_year', 'year', 'section', 'course_code', 'course_college', 'home_address', 'zipcode', 'birthday', 'age', 'sex', 'civil_status', 'blood_type', 'contact_no', 'guardian_name', 'landline', 'cellphone'];
                 $medicalErrorFields = ['has_illness', 'medical_history', 'other_illness', 'has_disability', 'disability_type', 'food_allergies', 'no_allergies', 'medicine_allergies', 'other_med_allergies', 'is_smoker', 'is_drinker'];
                 $covidErrorFields = ['covid_vaccinated', 'vaccine_history'];
                 $uploadErrorFields = ['medical_certificate', 'doctor_name', 'med_cert_date', 'med_cert_findings', 'med_cert_findings_details', 'chest_xray_result', 'xray_date', 'xray_findings', 'xray_findings_details', 'pwd_id_proof', 'student_photo', 'health_declaration'];
@@ -2625,29 +3089,88 @@
                 <div class="step-panel {{ $startStep === 2 ? '' : 'is-hidden' }}" id="stepPanel2">
                     <h2 class="section-title step-page-title" data-title-letter="P">Personal Information</h2>
                     <p class="step-fill-note">Complete the student and emergency contact details from the official PUP Health Information Form.</p>
+                    <section class="student-form-category">
+                        <div class="student-category-header">
+                            <span class="student-category-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            </span>
+                            <div>
+                                <h3 class="student-category-title">Identity Information</h3>
+                                <p class="student-category-note">Review your name and account details.</p>
+                            </div>
+                        </div>
                     <div class="personal-identity-grid">
                         <div class="form-field">
                             <label class="form-label" for="profile_first_name">First Name</label>
-                            <input id="profile_first_name" class="form-control identity-readonly" value="{{ $displayFirstName !== '' ? $displayFirstName : 'N/A' }}" readonly>
+                            <div class="address-field-control">
+                                <span class="address-field-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+                                </span>
+                                <input id="profile_first_name" class="form-control identity-readonly" value="{{ $displayFirstName !== '' ? $displayFirstName : 'N/A' }}" readonly>
+                            </div>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="profile_middle_name">Middle Name</label>
-                            <input id="profile_middle_name" class="form-control identity-readonly" value="{{ $displayMiddleName !== '' ? $displayMiddleName : 'N/A' }}" readonly>
+                            <div class="address-field-control">
+                                <span class="address-field-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+                                </span>
+                                <input id="profile_middle_name" class="form-control identity-readonly" value="{{ $displayMiddleName !== '' ? $displayMiddleName : 'N/A' }}" readonly>
+                            </div>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="profile_last_name">Last Name</label>
-                            <input id="profile_last_name" class="form-control identity-readonly" value="{{ $displayLastName !== '' ? $displayLastName : 'N/A' }}" readonly>
+                            <div class="address-field-control">
+                                <span class="address-field-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+                                </span>
+                                <input id="profile_last_name" class="form-control identity-readonly" value="{{ $displayLastName !== '' ? $displayLastName : 'N/A' }}" readonly>
+                            </div>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="profile_suffix_name">Suffix Name</label>
-                            <input id="profile_suffix_name" class="form-control identity-readonly" value="{{ $displaySuffixName }}" readonly>
+                            <div class="address-field-control">
+                                <span class="address-field-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+                                </span>
+                                <input id="profile_suffix_name" class="form-control identity-readonly" value="{{ $displaySuffixName }}" readonly>
+                            </div>
                             <input type="hidden" name="suffix_name" value="{{ $displaySuffixName }}">
                         </div>
                     </div>
                     <div class="form-field personal-email-field">
                         <label class="form-label" for="profile_email">Email Address</label>
-                        <input id="profile_email" type="email" class="form-control identity-readonly" value="{{ $user->email }}" readonly>
+                        <div class="address-field-control">
+                            <span class="address-field-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg>
+                            </span>
+                            <input id="profile_email" type="email" class="form-control identity-readonly" value="{{ $user->email }}" readonly>
+                        </div>
                     </div>
+                    </section>
+                    <section class="student-form-category">
+                        <div class="student-category-header">
+                            <span class="student-category-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"></path></svg>
+                            </span>
+                            <div>
+                                <h3 class="student-category-title">Academic Information</h3>
+                                <p class="student-category-note">Confirm your current program and school details.</p>
+                            </div>
+                        </div>
+                    @php
+                        $selectedStudentYear = old('year', $prefill['year_level'] ?? ($user->year ?? ''));
+                        $selectedStudentYearKey = strtolower(trim((string) $selectedStudentYear));
+                        $selectedStudentYear = match ($selectedStudentYearKey) {
+                            '1', '1st', 'first year', 'first' => '1st Year',
+                            '2', '2nd', 'second year', 'second' => '2nd Year',
+                            '3', '3rd', 'third year', 'third' => '3rd Year',
+                            '4', '4th', 'fourth year', 'fourth' => '4th Year',
+                            default => $selectedStudentYear,
+                        };
+                        $selectedStudentSection = old('section', $prefill['section'] ?? ($user->section ?? ''));
+                        $selectedStudentSection = preg_replace('/^section\s*/i', '', trim((string) $selectedStudentSection));
+                    @endphp
                     @if($courseApplicable)
                         <div class="form-field personal-email-field">
                             <label class="form-label" for="course_code">Program <span class="required">*</span></label>
@@ -2664,7 +3187,10 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select program</button>
+                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 21h16M6 21V5h8v16M14 9h4v12M9 8h2M9 12h2M9 16h2M16 12h1M16 16h1"></path></svg></span>
+                                    <span class="clinic-select-value">Select program</span>
+                                </button>
                                 <div class="clinic-select-menu" role="listbox" aria-label="Course options">
                                     @foreach($courseOptions as $courseOption)
                                         <button
@@ -2679,49 +3205,89 @@
                             </div>
                         </div>
                     @endif
-                    <div class="step-one-grid">
+                    <div class="student-category-grid">
                         <div class="form-field">
                             <label class="form-label" for="school_year">School Year <span class="required">*</span></label>
-                            <input
-                                id="school_year"
-                                class="form-control field-maroon"
-                                name="school_year"
-                                value="{{ old('school_year', $prefill['school_year'] ?? '') }}"
-                                placeholder="YYYY-YYYY"
-                                pattern="\d{4}-\d{4}"
-                                inputmode="numeric"
-                                required
-                            >
+                            <div class="address-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M7 2v4M17 2v4M3 9h18"></path></svg></span>
+                                <input
+                                    id="school_year"
+                                    class="form-control field-maroon"
+                                    name="school_year"
+                                    value="{{ old('school_year', $prefill['school_year'] ?? '') }}"
+                                    placeholder="YYYY-YYYY"
+                                    pattern="\d{4}-\d{4}"
+                                    inputmode="numeric"
+                                    required
+                                >
+                            </div>
                         </div>
-                        @if(!empty($prefill['year_level']))
-                            <div class="form-field">
-                                <label class="form-label" for="year_level_display">Year Level</label>
-                                <input
-                                    id="year_level_display"
-                                    class="form-control field-maroon identity-readonly"
-                                    value="{{ $prefill['year_level'] }}"
-                                    readonly
-                                >
+                        <div class="form-field">
+                            <label class="form-label" for="year">Year <span class="required">*</span></label>
+                            <div class="clinic-select-wrap" data-clinic-select data-select-placeholder="Select year">
+                                <select id="year" class="form-select clinic-select-native field-maroon" name="year" required>
+                                    <option value="">Select year</option>
+                                    @foreach(['1st Year', '2nd Year', '3rd Year', '4th Year'] as $yearOption)
+                                        <option value="{{ $yearOption }}" {{ $selectedStudentYear === $yearOption ? 'selected' : '' }}>{{ $yearOption }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M7 9h10M7 13h6M7 16h4"></path></svg></span>
+                                    <span class="clinic-select-value">Select year</span>
+                                </button>
+                                <div class="clinic-select-menu" role="listbox" aria-label="Year options">
+                                    @foreach(['1st Year', '2nd Year', '3rd Year', '4th Year'] as $yearOption)
+                                        <button type="button" class="clinic-select-option" data-select-value="{{ $yearOption }}">{{ $yearOption }}</button>
+                                    @endforeach
+                                </div>
                             </div>
-                        @endif
-                        @if(!empty($prefill['section']))
-                            <div class="form-field">
-                                <label class="form-label" for="section_display">Section</label>
-                                <input
-                                    id="section_display"
-                                    class="form-control field-maroon identity-readonly"
-                                    value="{{ $prefill['section'] }}"
-                                    readonly
-                                >
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="section">Section <span class="required">*</span></label>
+                            <div class="clinic-select-wrap" data-clinic-select data-select-placeholder="Select section">
+                                <select id="section" class="form-select clinic-select-native field-maroon" name="section" required>
+                                    <option value="">Select section</option>
+                                    @foreach(['1', '2', '3', '4'] as $sectionOption)
+                                        <option value="{{ $sectionOption }}" {{ (string) $selectedStudentSection === $sectionOption ? 'selected' : '' }}>{{ $sectionOption }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M7 9h10M7 13h6M7 16h4"></path></svg></span>
+                                    <span class="clinic-select-value">Select section</span>
+                                </button>
+                                <div class="clinic-select-menu" role="listbox" aria-label="Section options">
+                                    @foreach(['1', '2', '3', '4'] as $sectionOption)
+                                        <button type="button" class="clinic-select-option" data-select-value="{{ $sectionOption }}">{{ $sectionOption }}</button>
+                                    @endforeach
+                                </div>
                             </div>
-                        @endif
+                        </div>
+                    </div>
+                    </section>
+                    <section class="student-form-category">
+                        <div class="student-category-header">
+                            <span class="student-category-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+                            </span>
+                            <div>
+                                <h3 class="student-category-title">Personal Details</h3>
+                                <p class="student-category-note">Provide your birth, sex, civil status, and blood type.</p>
+                            </div>
+                        </div>
+                        <div class="student-category-grid">
                         <div class="form-field">
                             <label class="form-label" for="birthday">Birthday <span class="required">*</span></label>
-                            <input id="birthday" type="date" class="form-control field-maroon" name="birthday" value="{{ $prefillOrOld('birthday') }}" required>
+                            <div class="address-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M7 2v4M17 2v4M3 9h18"></path></svg></span>
+                                <input id="birthday" type="date" class="form-control field-maroon" name="birthday" value="{{ $prefillOrOld('birthday') }}" required>
+                            </div>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="age">Age <span class="required">*</span></label>
-                            <input id="age" type="number" class="form-control field-maroon" name="age" value="{{ $prefillOrOld('age') }}" min="15" max="100" required readonly>
+                            <div class="address-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v5l3 2"></path></svg></span>
+                                <input id="age" type="number" class="form-control field-maroon" name="age" value="{{ $prefillOrOld('age') }}" min="15" max="100" required readonly>
+                            </div>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="sex">Sex <span class="required">*</span></label>
@@ -2732,7 +3298,10 @@
                                         <option value="{{ $option }}" {{ $prefillOrOld('sex') === $option ? 'selected' : '' }}>{{ $option }}</option>
                                     @endforeach
                                 </select>
-                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select sex</button>
+                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M5 21a7 7 0 0 1 14 0"></path></svg></span>
+                                    <span class="clinic-select-value">Select sex</span>
+                                </button>
                                 <div class="clinic-select-menu" role="listbox" aria-label="Sex options">
                                     <button type="button" class="clinic-select-option" data-select-value="Male">Male</button>
                                     <button type="button" class="clinic-select-option" data-select-value="Female">Female</button>
@@ -2747,7 +3316,10 @@
                                         <option value="{{ $option }}" {{ old('civil_status', $prefill['civil_status'] ?? 'Single') === $option ? 'selected' : '' }}>{{ $option }}</option>
                                     @endforeach
                                 </select>
-                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select civil status</button>
+                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M5 21a7 7 0 0 1 14 0"></path></svg></span>
+                                    <span class="clinic-select-value">Select civil status</span>
+                                </button>
                                 <div class="clinic-select-menu" role="listbox" aria-label="Civil status options">
                                     @foreach(['Single', 'Married', 'Widowed', 'Separated'] as $option)
                                         <button type="button" class="clinic-select-option" data-select-value="{{ $option }}">{{ $option }}</button>
@@ -2763,7 +3335,10 @@
                                         <option value="{{ $option }}" {{ old('blood_type', $prefill['blood_type'] ?? 'Unknown') === $option ? 'selected' : '' }}>{{ $option }}</option>
                                     @endforeach
                                 </select>
-                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select blood type</button>
+                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.2 6 11a6 6 0 1 1-12 0c0-4.8 6-11 6-11Z"></path></svg></span>
+                                    <span class="clinic-select-value">Select blood type</span>
+                                </button>
                                 <div class="clinic-select-menu" role="listbox" aria-label="Blood type options">
                                     @foreach(['Unknown', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as $option)
                                         <button type="button" class="clinic-select-option" data-select-value="{{ $option }}">{{ $option }}</button>
@@ -2771,6 +3346,8 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    </section>
                         @php
                             $combinedHomeAddress = $prefillOrOld('home_address');
                             $oldAddressStreet = old('home_address_street');
@@ -2822,118 +3399,188 @@
                                 }
                             }
                         @endphp
-                        <div class="form-field span-2">
-                            <label class="form-label home-address-label" for="home_address_street">Home Address <span class="required">*</span></label>
-                            <input id="home_address" type="hidden" name="home_address" value="{{ $combinedHomeAddress }}" required>
-                            <div class="address-split-grid">
-                                <div class="form-field">
-                                    <label class="form-label" for="home_address_street">House No. / Street <span class="required">*</span></label>
-                                    <input
-                                        id="home_address_street"
-                                        class="form-control field-maroon"
-                                        name="home_address_street"
-                                        value="{{ $addressStreet }}"
-                                        placeholder="e.g., 123 Mabini St."
-                                        data-home-address-part
-                                        required
-                                    >
-                                </div>
-                                <div class="form-field">
-                                    <label class="form-label" for="home_address_barangay">Barangay <span class="required">*</span></label>
-                                    <input
-                                        id="home_address_barangay"
-                                        class="form-control field-maroon"
-                                        name="home_address_barangay"
-                                        value="{{ $addressBarangay }}"
-                                        placeholder="e.g., Brgy. Central"
-                                        data-home-address-part
-                                        required
-                                    >
-                                </div>
-                                <div class="form-field">
-                                    <label class="form-label" for="home_address_city_municipality">City / Municipality <span class="required">*</span></label>
-                                    <input
-                                        id="home_address_city_municipality"
-                                        class="form-control field-maroon"
-                                        name="home_address_city_municipality"
-                                        value="{{ $addressCity }}"
-                                        placeholder="e.g., Taguig City"
-                                        data-home-address-part
-                                        required
-                                    >
-                                </div>
-                                <div class="form-field">
-                                    <label class="form-label" for="home_address_province">Province <span class="required">*</span></label>
-                                    <input
-                                        id="home_address_province"
-                                        class="form-control field-maroon"
-                                        name="home_address_province"
-                                        value="{{ $addressProvince }}"
-                                        placeholder="e.g., Metro Manila"
-                                        data-home-address-part
-                                        required
-                                    >
-                                </div>
+                    <section class="student-form-category student-address-section">
+                        <div class="student-category-header">
+                            <span class="student-category-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>
+                            </span>
+                            <div>
+                                <h3 class="student-category-title">Address Information</h3>
+                                <p class="student-category-note">Select your province, city or municipality, barangay, then enter your street or house number.</p>
                             </div>
-                            <div class="field-helper"></div>
                         </div>
-                        <div class="form-field">
+                        <input id="home_address" type="hidden" name="home_address" value="{{ $combinedHomeAddress }}" required>
+                        <div class="student-address-grid">
+                            <div class="form-field">
+                                <label class="form-label" for="home_address_province">Province <span class="required">*</span></label>
+                                <div class="clinic-select-wrap location-select-wrap" data-clinic-select data-address-level="province" data-select-placeholder="Select province">
+                                    <select id="home_address_province" class="clinic-select-native field-maroon" name="home_address_province" data-home-address-part data-address-select required>
+                                        <option value="">Select province</option>
+                                        @if($addressProvince !== '')
+                                            <option value="{{ $addressProvince }}" selected>{{ $addressProvince }}</option>
+                                        @endif
+                                    </select>
+                                    <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">
+                                        <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"></path><path d="M9 3v15M15 6v15"></path></svg></span>
+                                        <span class="clinic-select-value">Select province</span>
+                                    </button>
+                                    <div class="clinic-select-menu" role="listbox" aria-label="Province options"></div>
+                                </div>
+                                <div class="field-helper">Example: Metro Manila</div>
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="home_address_city_municipality">City / Municipality <span class="required">*</span></label>
+                                <div class="clinic-select-wrap location-select-wrap" data-clinic-select data-address-level="city" data-select-placeholder="Select city or municipality">
+                                    <select id="home_address_city_municipality" class="clinic-select-native field-maroon" name="home_address_city_municipality" data-home-address-part data-address-select required>
+                                        <option value="">Select city or municipality</option>
+                                        @if($addressCity !== '')
+                                            <option value="{{ $addressCity }}" selected>{{ $addressCity }}</option>
+                                        @endif
+                                    </select>
+                                    <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">
+                                        <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 21V5l8-3 8 3v16"></path><path d="M8 21v-5h4v5M16 8h.01M16 12h.01M8 9h.01M8 12h.01"></path></svg></span>
+                                        <span class="clinic-select-value">Select city or municipality</span>
+                                    </button>
+                                    <div class="clinic-select-menu" role="listbox" aria-label="City or municipality options"></div>
+                                </div>
+                                <div class="field-helper">Example: Taguig City</div>
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="home_address_barangay">Barangay <span class="required">*</span></label>
+                                <div class="clinic-select-wrap location-select-wrap" data-clinic-select data-address-level="barangay" data-select-placeholder="Select barangay">
+                                    <select id="home_address_barangay" class="clinic-select-native field-maroon" name="home_address_barangay" data-home-address-part data-address-select required>
+                                        <option value="">Select barangay</option>
+                                        @if($addressBarangay !== '')
+                                            <option value="{{ $addressBarangay }}" selected>{{ $addressBarangay }}</option>
+                                        @endif
+                                    </select>
+                                    <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">
+                                        <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"></path><circle cx="12" cy="9" r="2.5"></circle></svg></span>
+                                        <span class="clinic-select-value">Select barangay</span>
+                                    </button>
+                                    <div class="clinic-select-menu" role="listbox" aria-label="Barangay options"></div>
+                                </div>
+                                <div class="field-helper">Example: Brgy. Central</div>
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="home_address_street">House No. / Street <span class="required">*</span></label>
+                                <div class="address-field-control">
+                                    <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7"></path><path d="M5 9v11h14V9M9 20v-6h6v6"></path></svg></span>
+                                    <input id="home_address_street" class="form-control field-maroon" name="home_address_street" value="{{ $addressStreet }}" data-home-address-part required>
+                                </div>
+                                <div class="field-helper">Example: 123 Mabini St.</div>
+                            </div>
+                        </div>
+                        <div class="form-field student-zip-field">
                             <label class="form-label" for="zipcode">ZIP Code <span class="required">*</span></label>
-                            <input id="zipcode" class="form-control field-maroon" name="zipcode" value="{{ $prefillOrOld('zipcode') }}" required>
+                            <div class="address-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M7 9h10M7 13h6M7 16h4"></path></svg></span>
+                                <input
+                                    id="zipcode"
+                                    class="form-control field-maroon"
+                                    name="zipcode"
+                                    value="{{ $prefillOrOld('zipcode') }}"
+                                    inputmode="numeric"
+                                    pattern="[0-9]{4}"
+                                    minlength="4"
+                                    maxlength="4"
+                                    autocomplete="postal-code"
+                                    data-numeric-zipcode
+                                    required
+                                >
+                            </div>
                         </div>
+                        <p class="student-address-lookup-status" id="studentAddressLookupStatus">Select a province, then a city/municipality and barangay.</p>
+                    </section>
+                    <section class="student-form-category">
+                        <div class="student-category-header">
+                            <span class="student-category-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.2-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7A2 2 0 0 1 22 16.9Z"></path></svg>
+                            </span>
+                            <div>
+                                <h3 class="student-category-title">Contact Information</h3>
+                                <p class="student-category-note">Provide the student's contact details.</p>
+                            </div>
+                        </div>
+                        <div class="student-category-grid">
                         <div class="form-field">
                             <label class="form-label" for="contact_no">Student Contact Number <span class="required">*</span></label>
-                            <input
-                                id="contact_no"
-                                class="form-control field-maroon"
-                                name="contact_no"
-                                value="{{ old('contact_no', $prefill['contact_number'] ?? $user->contact_no ?? '') }}"
-                                placeholder="Enter 11-digit mobile number"
-                                inputmode="numeric"
-                                pattern="[0-9]{11,20}"
-                                minlength="11"
-                                maxlength="20"
-                                data-numeric-contact
-                                data-validation-message="Enter numbers only, at least 11 digits."
-                                required
-                            >
+                            <div class="address-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h4l2 5-2.5 1.5a13 13 0 0 0 5 5L16 12l5 2v4c0 1.1-.9 2-2 2C10.7 20 4 13.3 4 5a2 2 0 0 1 2-2Z"></path></svg></span>
+                                <input
+                                    id="contact_no"
+                                    class="form-control field-maroon"
+                                    name="contact_no"
+                                    value="{{ old('contact_no', $prefill['contact_number'] ?? $user->contact_no ?? '') }}"
+                                    inputmode="numeric"
+                                    pattern="09[0-9]{9}"
+                                    minlength="11"
+                                    maxlength="11"
+                                    data-numeric-contact
+                                    data-validation-message="Please put an 11-digit mobile number starting with 09."
+                                    required
+                                >
+                            </div>
                             <div class="field-helper">Example: 09123456789</div>
-                        </div>
-                        <div class="form-field">
-                            <label class="form-label" for="guardian_name">Parent / Guardian Name <span class="required">*</span></label>
-                            <input id="guardian_name" class="form-control field-maroon" name="guardian_name" value="{{ old('guardian_name', $prefill['guardian_name'] ?? '') }}" required>
-                        </div>
-                        <div class="form-field">
-                            <label class="form-label" for="cellphone">Parent / Guardian Contact Number <span class="required">*</span></label>
-                            <input
-                                id="cellphone"
-                                class="form-control field-maroon"
-                                name="cellphone"
-                                value="{{ old('cellphone', $prefill['cellphone'] ?? '') }}"
-                                placeholder="Enter 11-digit mobile number"
-                                inputmode="numeric"
-                                pattern="[0-9]{11,20}"
-                                minlength="11"
-                                maxlength="20"
-                                data-numeric-contact
-                                data-validation-message="Enter numbers only, at least 11 digits."
-                                required
-                            >
-                            <div class="field-helper">Example: 09123456789</div>
+                            <div class="field-helper student-contact-error">Please put an 11-digit mobile number starting with 09.</div>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="landline">Landline</label>
-                            <input
-                                id="landline"
-                                class="form-control field-maroon"
-                                name="landline"
-                                value="{{ old('landline', $prefill['landline'] ?? '') }}"
-                                placeholder="Enter landline or NA / None"
-                                required
-                            >
+                            <div class="address-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h4l2 5-2.5 1.5a13 13 0 0 0 5 5L16 12l5 2v4c0 1.1-.9 2-2 2C10.7 20 4 13.3 4 5a2 2 0 0 1 2-2Z"></path></svg></span>
+                                <input
+                                    id="landline"
+                                    class="form-control field-maroon"
+                                    name="landline"
+                                    value="{{ old('landline', $prefill['landline'] ?? '') }}"
+                                    required
+                                >
+                            </div>
                             <div class="field-helper">Put NA or None if not applicable.</div>
                         </div>
-                    </div>
+                        </div>
+                    </section>
+                    <section class="student-form-category">
+                        <div class="student-category-header">
+                            <span class="student-category-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="m12 3 9 4.5-9 4.5-9-4.5L12 3Z"></path><path d="M6 10.5V16c2.8 2.4 9.2 2.4 12 0v-5.5M21 8v6"></path></svg>
+                            </span>
+                            <div>
+                                <h3 class="student-category-title">Emergency Contact Information</h3>
+                                <p class="student-category-note">Provide someone the clinic can contact in an emergency.</p>
+                            </div>
+                        </div>
+                        <div class="student-category-grid">
+                        <div class="form-field">
+                            <label class="form-label" for="guardian_name">Parent / Guardian Name <span class="required">*</span></label>
+                            <div class="address-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></span>
+                                <input id="guardian_name" class="form-control field-maroon" name="guardian_name" value="{{ old('guardian_name', $prefill['guardian_name'] ?? '') }}" required>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="cellphone">Emergency Contact Number <span class="required">*</span></label>
+                            <div class="address-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h4l2 5-2.5 1.5a13 13 0 0 0 5 5L16 12l5 2v4c0 1.1-.9 2-2 2C10.7 20 4 13.3 4 5a2 2 0 0 1 2-2Z"></path></svg></span>
+                                <input
+                                    id="cellphone"
+                                    class="form-control field-maroon"
+                                    name="cellphone"
+                                    value="{{ old('cellphone', $prefill['cellphone'] ?? '') }}"
+                                    inputmode="numeric"
+                                    pattern="09[0-9]{9}"
+                                    minlength="11"
+                                    maxlength="11"
+                                    data-numeric-contact
+                                    data-validation-message="Please put an 11-digit mobile number starting with 09."
+                                    required
+                                >
+                            </div>
+                            <div class="field-helper">Example: 09123456789</div>
+                            <div class="field-helper student-contact-error">Please put an 11-digit mobile number starting with 09.</div>
+                        </div>
+                        </div>
+                    </section>
                     <div class="btn-row">
                         <button type="button" class="btn btn-health btn-health-back" data-step-back="1">
                             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -3687,7 +4334,23 @@
             const uploadInputs = Array.from(document.querySelectorAll('[data-upload-input]'));
             const numericContactInputs = Array.from(document.querySelectorAll('[data-numeric-contact]'));
             const homeAddressInput = document.getElementById('home_address');
+            const zipcodeInput = document.getElementById('zipcode');
             const homeAddressPartInputs = Array.from(document.querySelectorAll('[data-home-address-part]'));
+            const studentAddressLookupStatus = document.getElementById('studentAddressLookupStatus');
+            const addressLocationApiBase = 'https://psgc.gitlab.io/api';
+            const postalCodeDataUrl = 'https://raw.githubusercontent.com/maikkoko/postal-ph/master/data/postal_codes/_all.json';
+            const postalCityDataUrl = 'https://raw.githubusercontent.com/maikkoko/postal-ph/master/data/cities/cities_with_id.json';
+            const addressLocationValues = {
+                province: @json($prefill['home_address_province'] ?? ''),
+                city: @json($prefill['home_address_city_municipality'] ?? ''),
+                barangay: @json($prefill['home_address_barangay'] ?? ''),
+            };
+            let studentPostalCodeIndex = new Map();
+            const addressLocationWraps = {
+                province: document.querySelector('[data-address-level="province"]'),
+                city: document.querySelector('[data-address-level="city"]'),
+                barangay: document.querySelector('[data-address-level="barangay"]'),
+            };
             const signatureCanvas = document.getElementById('digitalSignaturePad');
             const signatureDataInput = document.getElementById('digital_signature_data');
             const signatureUploadInput = document.getElementById('digital_signature_upload');
@@ -4586,7 +5249,12 @@
                     ? (select.options[select.selectedIndex]?.text || selectedValue)
                     : placeholder;
 
-                display.textContent = selectedText;
+                const displayValue = display.querySelector('.clinic-select-value');
+                if (displayValue) {
+                    displayValue.textContent = selectedText;
+                } else {
+                    display.textContent = selectedText;
+                }
                 options.forEach((option) => {
                     option.classList.toggle('is-selected', option.dataset.selectValue === selectedValue);
                 });
@@ -4625,7 +5293,6 @@
             function initializeClinicSelect(wrap) {
                 const select = wrap?.querySelector('select');
                 const display = wrap?.querySelector('.clinic-select-display');
-                const options = Array.from(wrap?.querySelectorAll('.clinic-select-option') || []);
                 if (!select || !display) return;
 
                 syncClinicSelect(wrap);
@@ -4642,17 +5309,333 @@
                     display.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
                 });
 
-                options.forEach((option) => {
-                    option.addEventListener('click', () => {
+                wrap.querySelector('.clinic-select-menu')?.addEventListener('click', (event) => {
+                    const option = event.target.closest('.clinic-select-option');
+                    if (!option) return;
                         select.value = option.dataset.selectValue || '';
                         select.dispatchEvent(new Event('change', { bubbles: true }));
                         syncClinicSelect(wrap);
                         closeClinicSelect(wrap);
-                    });
                 });
 
                 select.addEventListener('change', () => syncClinicSelect(wrap));
             }
+
+            function setStudentAddressStatus(message, isError = false) {
+                if (!studentAddressLookupStatus) return;
+                studentAddressLookupStatus.textContent = message;
+                studentAddressLookupStatus.classList.toggle('is-error', isError);
+            }
+
+            function setAddressSelectDisabled(wrap, disabled) {
+                const select = wrap?.querySelector('select');
+                const display = wrap?.querySelector('.clinic-select-display');
+                if (!select || !display) return;
+                select.disabled = disabled;
+                display.disabled = disabled;
+                if (disabled) closeClinicSelect(wrap);
+            }
+
+            function normalizeLocationName(value) {
+                return String(value || '')
+                    .trim()
+                    .toLowerCase()
+                    .replace(/^(city|municipality)\s+of\s+/, '')
+                    .replace(/^(city|municipality)\s+/, '')
+                    .replace(/\s+(city|municipality)$/, '')
+                    .replace(/^(brgy\.?|barangay)\s+/, '')
+                    .replace(/[^a-z0-9]+/g, ' ')
+                    .trim();
+            }
+
+            function formatLocationLabel(value, level) {
+                const label = String(value || '').trim();
+                if (level !== 'city') return label;
+                const cityOfMatch = label.match(/^City of\s+(.+)$/i);
+                if (cityOfMatch) return `${cityOfMatch[1].trim()} City`;
+                const municipalityOfMatch = label.match(/^Municipality of\s+(.+)$/i);
+                if (municipalityOfMatch) return `${municipalityOfMatch[1].trim()} Municipality`;
+                return label;
+            }
+
+            function findLocationMatch(items, selectedValue) {
+                const normalizedSelected = normalizeLocationName(selectedValue);
+                if (!normalizedSelected) return null;
+                return items.find((item) => normalizeLocationName(item.name) === normalizedSelected) || null;
+            }
+
+            function createLocationOption(select, menu, value, label, code = '', zipcode = '') {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = label;
+                if (code) option.dataset.locationCode = code;
+                if (zipcode) option.dataset.zipcode = zipcode;
+                select.appendChild(option);
+
+                const menuOption = document.createElement('button');
+                menuOption.type = 'button';
+                menuOption.className = 'clinic-select-option';
+                menuOption.dataset.selectValue = value;
+                if (zipcode) menuOption.dataset.zipcode = zipcode;
+                menuOption.textContent = label;
+                menu.appendChild(menuOption);
+            }
+
+            function addLocationSearch(menu, wrap) {
+                const search = document.createElement('input');
+                search.type = 'search';
+                search.className = 'location-select-search';
+                search.placeholder = `Search ${wrap.dataset.addressLevel || 'location'}...`;
+                search.setAttribute('aria-label', `Search ${wrap.dataset.addressLevel || 'location'} options`);
+                search.addEventListener('input', () => {
+                    const query = search.value.trim().toLowerCase();
+                    const options = Array.from(menu.querySelectorAll('.clinic-select-option'));
+                    let visibleCount = 0;
+                    options.forEach((option) => {
+                        const visible = !query || option.textContent.toLowerCase().includes(query);
+                        option.hidden = !visible;
+                        if (visible) visibleCount += 1;
+                    });
+                    let empty = menu.querySelector('.location-select-empty');
+                    if (visibleCount === 0 && options.length > 0) {
+                        if (!empty) {
+                            empty = document.createElement('div');
+                            empty.className = 'location-select-empty';
+                            empty.textContent = 'No matching location found.';
+                            menu.appendChild(empty);
+                        }
+                    } else {
+                        empty?.remove();
+                    }
+                });
+                menu.appendChild(search);
+            }
+
+            function postalCodeKey(city, barangay = '') {
+                const cityKey = normalizeLocationName(city);
+                const barangayKey = normalizeLocationName(barangay);
+                return barangayKey ? `${cityKey}|${barangayKey}` : cityKey;
+            }
+
+            function postalCodeFromRecord(record) {
+                const value = record?.zip_code ?? record?.zipcode ?? record?.postal_code ?? record?.postalCode ?? '';
+                return String(value || '').trim();
+            }
+
+            async function loadStudentPostalCodes() {
+                const [postalResponse, cityResponse] = await Promise.all([
+                    fetch(postalCodeDataUrl, { headers: { Accept: 'application/json' }, credentials: 'omit' }),
+                    fetch(postalCityDataUrl, { headers: { Accept: 'application/json' }, credentials: 'omit' }),
+                ]);
+                if (!postalResponse.ok || !cityResponse.ok) {
+                    throw new Error('Postal code lookup failed.');
+                }
+
+                const postalGroups = await postalResponse.json();
+                const cityRecords = await cityResponse.json();
+                const cityNamesById = new Map(
+                    (Array.isArray(cityRecords) ? cityRecords : [])
+                        .map((city) => [String(city.id || ''), city.name || ''])
+                        .filter(([id, name]) => id && name)
+                );
+                const index = new Map();
+
+                (Array.isArray(postalGroups) ? postalGroups : []).forEach((group) => {
+                    (Array.isArray(group?.data) ? group.data : []).forEach((record) => {
+                        const cityName = cityNamesById.get(String(record?.citymun_id || '')) || '';
+                        const locationName = record?.location || '';
+                        const zipcode = postalCodeFromRecord(record);
+                        if (!cityName || !zipcode) return;
+
+                        const cityKey = postalCodeKey(cityName);
+                        if (!index.has(cityKey)) {
+                            index.set(cityKey, zipcode);
+                        }
+
+                        if (locationName) {
+                            index.set(postalCodeKey(cityName, locationName), zipcode);
+                        }
+                    });
+                });
+
+                studentPostalCodeIndex = index;
+            }
+
+            function syncStudentZipcodeFromAddress() {
+                if (!zipcodeInput || studentPostalCodeIndex.size === 0) return;
+
+                const city = addressLocationValues.city || '';
+                const barangay = addressLocationValues.barangay || '';
+                const zipcode = studentPostalCodeIndex.get(postalCodeKey(city, barangay))
+                    || studentPostalCodeIndex.get(postalCodeKey(city));
+                if (!zipcode) return;
+
+                zipcodeInput.value = zipcode;
+                zipcodeInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+
+            function populateLocationSelect(wrap, items, selectedValue) {
+                const select = wrap?.querySelector('select');
+                const menu = wrap?.querySelector('.clinic-select-menu');
+                if (!select || !menu) return null;
+
+                select.innerHTML = '';
+                menu.innerHTML = '';
+                addLocationSearch(menu, wrap);
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.disabled = true;
+                placeholder.textContent = wrap.dataset.selectPlaceholder || 'Select option';
+                select.appendChild(placeholder);
+
+                const level = wrap.dataset.addressLevel || '';
+                const sortedItems = [...items].sort((left, right) => formatLocationLabel(left.name, level).localeCompare(
+                    formatLocationLabel(right.name, level), undefined, { sensitivity: 'base' }
+                ));
+                const match = findLocationMatch(sortedItems, selectedValue);
+                sortedItems.forEach((item) => {
+                    const rawValue = String(item.name || '').trim();
+                    if (!rawValue) return;
+                    const value = formatLocationLabel(rawValue, level);
+                    createLocationOption(select, menu, value, value, item.code || '', item.zipcode || '');
+                });
+
+                const resolvedValue = match
+                    ? formatLocationLabel(match.name, level)
+                    : String(selectedValue || '').trim();
+                if (resolvedValue && !Array.from(select.options).some((option) => option.value === resolvedValue)) {
+                    createLocationOption(select, menu, resolvedValue, `${resolvedValue} (existing value)`);
+                }
+                select.value = resolvedValue;
+                syncClinicSelect(wrap);
+                return match;
+            }
+
+            async function fetchLocationCollection(path) {
+                const controller = new AbortController();
+                const timeout = window.setTimeout(() => controller.abort(), 10000);
+                try {
+                    const response = await fetch(`${addressLocationApiBase}${path}`, {
+                        headers: { Accept: 'application/json' },
+                        credentials: 'omit',
+                        signal: controller.signal,
+                    });
+                    if (!response.ok) throw new Error(`Location lookup failed with ${response.status}.`);
+                    const payload = await response.json();
+                    return Array.isArray(payload) ? payload : (Array.isArray(payload.value) ? payload.value : []);
+                } finally {
+                    window.clearTimeout(timeout);
+                }
+            }
+
+            async function loadStudentBarangays(cityCode, selectedValue = '') {
+                const wrap = addressLocationWraps.barangay;
+                setAddressSelectDisabled(wrap, true);
+                populateLocationSelect(wrap, [], selectedValue);
+                if (!cityCode) {
+                    setAddressSelectDisabled(wrap, false);
+                    return;
+                }
+                const barangays = await fetchLocationCollection(`/cities-municipalities/${encodeURIComponent(cityCode)}/barangays/`);
+                populateLocationSelect(wrap, barangays, selectedValue);
+                setAddressSelectDisabled(wrap, false);
+            }
+
+            async function loadStudentCities(provinceCode, selectedValue = '', selectedBarangay = '') {
+                const cityWrap = addressLocationWraps.city;
+                const barangayWrap = addressLocationWraps.barangay;
+                setAddressSelectDisabled(cityWrap, true);
+                setAddressSelectDisabled(barangayWrap, true);
+                populateLocationSelect(cityWrap, [], selectedValue);
+                populateLocationSelect(barangayWrap, [], selectedBarangay);
+                if (!provinceCode) {
+                    setAddressSelectDisabled(cityWrap, false);
+                    setAddressSelectDisabled(barangayWrap, false);
+                    return;
+                }
+                const endpoint = provinceCode === '130000000'
+                    ? '/regions/130000000/cities-municipalities/'
+                    : `/provinces/${encodeURIComponent(provinceCode)}/cities-municipalities/`;
+                const cities = await fetchLocationCollection(endpoint);
+                const selectedCity = populateLocationSelect(cityWrap, cities, selectedValue);
+                setAddressSelectDisabled(cityWrap, false);
+                await loadStudentBarangays(selectedCity?.code || '', selectedBarangay);
+                syncStudentZipcodeFromAddress();
+            }
+
+            async function loadStudentAddressLocations() {
+                try {
+                    setStudentAddressStatus('Loading address options...');
+                    setAddressSelectDisabled(addressLocationWraps.province, true);
+                    const provinces = [
+                        { code: '130000000', name: 'Metro Manila' },
+                        ...(await fetchLocationCollection('/provinces/')),
+                    ];
+                    const selectedProvince = populateLocationSelect(addressLocationWraps.province, provinces, addressLocationValues.province);
+                    setAddressSelectDisabled(addressLocationWraps.province, false);
+                    await loadStudentCities(
+                        selectedProvince?.code || '',
+                        addressLocationValues.city,
+                        addressLocationValues.barangay
+                    );
+                    try {
+                        await loadStudentPostalCodes();
+                        syncStudentZipcodeFromAddress();
+                    } catch (postalError) {
+                        // Preserve the existing ZIP value when the optional postal lookup is unavailable.
+                    }
+                    syncHomeAddressValue();
+                    setStudentAddressStatus('Select a province, then a city/municipality and barangay.');
+                } catch (error) {
+                    syncHomeAddressValue();
+                    setStudentAddressStatus('Address options are unavailable. Existing values were preserved; refresh and try again.', true);
+                    setAddressSelectDisabled(addressLocationWraps.province, false);
+                    setAddressSelectDisabled(addressLocationWraps.city, false);
+                    setAddressSelectDisabled(addressLocationWraps.barangay, false);
+                }
+            }
+
+            function selectedLocationCode(level) {
+                const select = addressLocationWraps[level]?.querySelector('select');
+                return select?.options[select.selectedIndex]?.dataset.locationCode || '';
+            }
+
+            addressLocationWraps.province?.querySelector('select')?.addEventListener('change', async (event) => {
+                addressLocationValues.province = event.target.value;
+                addressLocationValues.city = '';
+                addressLocationValues.barangay = '';
+                if (zipcodeInput) zipcodeInput.value = '';
+                try {
+                    setStudentAddressStatus('Loading cities and municipalities...');
+                    await loadStudentCities(selectedLocationCode('province'));
+                    setStudentAddressStatus('Select a city/municipality, then a barangay.');
+                } catch (error) {
+                    setStudentAddressStatus('City and municipality options are unavailable. Please refresh and try again.', true);
+                    setAddressSelectDisabled(addressLocationWraps.city, false);
+                    setAddressSelectDisabled(addressLocationWraps.barangay, false);
+                }
+            });
+
+            addressLocationWraps.city?.querySelector('select')?.addEventListener('change', async (event) => {
+                addressLocationValues.city = event.target.value;
+                addressLocationValues.barangay = '';
+                if (zipcodeInput) zipcodeInput.value = '';
+                try {
+                    setStudentAddressStatus('Loading barangays...');
+                    await loadStudentBarangays(selectedLocationCode('city'));
+                    syncStudentZipcodeFromAddress();
+                    setStudentAddressStatus('Address options loaded.');
+                } catch (error) {
+                    setStudentAddressStatus('Barangay options are unavailable. Please refresh and try again.', true);
+                    setAddressSelectDisabled(addressLocationWraps.barangay, false);
+                }
+            });
+
+            addressLocationWraps.barangay?.querySelector('select')?.addEventListener('change', (event) => {
+                addressLocationValues.barangay = event.target.value;
+                syncStudentZipcodeFromAddress();
+                syncHomeAddressValue();
+            });
 
             courseCodeSelect?.addEventListener('change', syncCourseCollegeValue);
             syncCourseCollegeValue();
@@ -4762,10 +5745,28 @@
             toggleGuardianSignatureSection();
             form?.addEventListener('input', clearValidationBubble);
             form?.addEventListener('change', clearValidationBubble);
+            function syncNumericContactValidity(input) {
+                const value = input.value.trim();
+                const isValid = value === '' || /^09\d{9}$/.test(value);
+                const field = input.closest('.form-field');
+                const control = input.closest('.address-field-control');
+
+                input.setCustomValidity(isValid ? '' : 'Please put an 11-digit mobile number starting with 09.');
+                field?.classList.toggle('has-invalid', !isValid);
+                control?.classList.toggle('is-invalid', !isValid);
+                input.setAttribute('aria-invalid', isValid ? 'false' : 'true');
+            }
+
             numericContactInputs.forEach((input) => {
                 input.addEventListener('input', () => {
-                    input.value = input.value.replace(/\D/g, '');
+                    input.value = input.value.replace(/\D/g, '').slice(0, 11);
+                    syncNumericContactValidity(input);
                 });
+                input.addEventListener('blur', () => syncNumericContactValidity(input));
+                syncNumericContactValidity(input);
+            });
+            zipcodeInput?.addEventListener('input', () => {
+                zipcodeInput.value = zipcodeInput.value.replace(/\D/g, '').slice(0, 4);
             });
             illnessRadios.forEach((radio) => {
                 radio.addEventListener('change', toggleIllnessDetails);
@@ -4790,6 +5791,7 @@
                 });
             });
             clinicSelects.forEach(initializeClinicSelect);
+            loadStudentAddressLocations();
             uploadInputs.forEach((input) => {
                 renderUploadPreview(input);
                 input.addEventListener('change', () => renderUploadPreview(input));

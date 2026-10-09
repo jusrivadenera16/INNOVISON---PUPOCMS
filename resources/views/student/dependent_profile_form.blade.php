@@ -504,12 +504,278 @@
                 grid-column: auto;
             }
 
-            .btn-row {
-                flex-direction: column-reverse;
-            }
+        .btn-row {
+            flex-direction: column-reverse;
+        }
 
             .btn-health {
                 width: 100%;
+            }
+        }
+
+        .dependent-category-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(127, 29, 45, 0.14);
+        }
+
+        .dependent-category-icon {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+            border-radius: 50%;
+            background: var(--clinic-maroon);
+            color: #ffffff;
+        }
+
+        .dependent-category-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
+        }
+
+        .dependent-category-header h2 {
+            margin: 0;
+        }
+
+        .dependent-category-note {
+            margin: 2px 0 0;
+            color: #64748b;
+            font-size: 0.76rem;
+            font-weight: 650;
+            line-height: 1.35;
+        }
+
+        .dependent-address-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .dependent-address-grid > .form-field {
+            min-width: 0;
+        }
+
+        .dependent-address-grid > .form-field:nth-child(1) { grid-column: 1; grid-row: 1; }
+        .dependent-address-grid > .form-field:nth-child(2) { grid-column: 2; grid-row: 1; }
+        .dependent-address-grid > .form-field:nth-child(3) { grid-column: 1; grid-row: 2; }
+        .dependent-address-grid > .form-field:nth-child(4) { grid-column: 2; grid-row: 2; }
+
+        .dependent-address-grid .clinic-select-wrap {
+            position: relative;
+        }
+
+        .dependent-address-grid .clinic-select-native {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            min-height: 1px !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .dependent-address-grid .clinic-select-display,
+        .dependent-address-grid .address-field-control {
+            min-height: 42px;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            border-radius: 6px;
+            background: linear-gradient(180deg, #fbfcfd 0%, #f4f6f8 100%);
+            box-shadow: none;
+        }
+
+        .dependent-address-grid .clinic-select-display {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            width: 100%;
+            padding: 0 42px 0 0;
+            color: #334155;
+            font: inherit;
+            font-size: 0.84rem;
+            font-weight: 750;
+            text-align: left;
+        }
+
+        .dependent-address-grid .clinic-select-display:hover,
+        .dependent-address-grid .clinic-select-display:focus,
+        .dependent-address-grid .clinic-select-display.is-open,
+        .dependent-address-grid .address-field-control:focus-within {
+            border-color: rgba(127, 29, 45, 0.68);
+            box-shadow: 0 0 0 3px rgba(127, 29, 45, 0.08);
+            outline: none;
+        }
+
+        .dependent-address-grid .address-field-icon {
+            display: inline-grid;
+            place-items: center;
+            align-self: stretch;
+            width: 46px;
+            min-width: 46px;
+            margin-right: 12px;
+            border-right: 1px solid rgba(148, 163, 184, 0.32);
+            color: #475569;
+        }
+
+        .dependent-address-grid .address-field-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
+        }
+
+        .dependent-address-grid .clinic-select-value {
+            min-width: 0;
+            padding: 9px 0;
+            overflow: hidden;
+            line-height: 1.25;
+            text-overflow: ellipsis;
+        }
+
+        .dependent-address-grid .clinic-select-wrap::after,
+        .dependent-address-grid .clinic-select-wrap::before {
+            display: none;
+        }
+
+        .dependent-address-grid .clinic-select-wrap::after {
+            content: "";
+            display: block;
+            position: absolute;
+            top: 50%;
+            right: 16px;
+            width: 9px;
+            height: 9px;
+            border-right: 2px solid var(--clinic-maroon);
+            border-bottom: 2px solid var(--clinic-maroon);
+            transform: translateY(-65%) rotate(45deg);
+            pointer-events: none;
+        }
+
+        .dependent-address-grid .clinic-select-menu {
+            position: absolute;
+            top: calc(100% + 7px);
+            left: 0;
+            right: 0;
+            z-index: 90;
+            display: none;
+            gap: 6px;
+            max-height: 240px;
+            overflow-y: auto;
+            padding: 7px;
+            border: 1px solid rgba(127, 29, 45, 0.18);
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 18px 34px rgba(15, 23, 42, 0.18);
+        }
+
+        .dependent-address-grid .clinic-select-wrap.is-open .clinic-select-menu {
+            display: grid;
+        }
+
+        .dependent-address-grid .clinic-select-option {
+            width: 100%;
+            min-height: 40px;
+            padding: 9px 12px;
+            border: 1px solid rgba(127, 29, 45, 0.13);
+            border-radius: 6px;
+            background: #ffffff;
+            color: var(--clinic-maroon);
+            font: inherit;
+            font-size: 0.86rem;
+            font-weight: 800;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .dependent-address-grid .clinic-select-option:hover,
+        .dependent-address-grid .clinic-select-option:focus-visible,
+        .dependent-address-grid .clinic-select-option.is-selected {
+            border-color: var(--clinic-maroon);
+            background: var(--clinic-maroon);
+            color: #ffffff;
+            outline: none;
+        }
+
+        .dependent-address-grid .address-field-control {
+            display: flex;
+            align-items: stretch;
+            overflow: hidden;
+        }
+
+        .dependent-address-grid .address-field-control .form-control {
+            flex: 1;
+            min-width: 0;
+            min-height: 40px;
+            padding: 9px 12px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .dependent-address-lookup-status {
+            margin: 8px 0 0;
+            color: #64748b;
+            font-size: 0.74rem;
+            font-weight: 650;
+        }
+
+        .dependent-address-lookup-status.is-error {
+            color: #9f1239;
+        }
+
+        .dependent-address-grid .location-select-search {
+            width: 100%;
+            min-height: 38px;
+            margin-bottom: 2px;
+            padding: 8px 10px;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            border-radius: 6px;
+            color: #1e293b;
+            background: #ffffff;
+            font: inherit;
+            font-size: 0.82rem;
+        }
+
+        .dependent-address-grid .location-select-search:focus {
+            outline: none;
+            border-color: var(--clinic-maroon);
+            box-shadow: 0 0 0 3px rgba(127, 29, 45, 0.08);
+        }
+
+        .dependent-address-grid .location-select-empty {
+            padding: 10px;
+            color: #64748b;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .dependent-address-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .dependent-address-grid > .form-field:nth-child(1),
+            .dependent-address-grid > .form-field:nth-child(2),
+            .dependent-address-grid > .form-field:nth-child(3),
+            .dependent-address-grid > .form-field:nth-child(4) {
+                grid-column: 1;
+                grid-row: auto;
+            }
+
+            .dependent-category-header {
+                align-items: flex-start;
             }
         }
     </style>
@@ -552,7 +818,15 @@
                 <input type="hidden" id="home_address" name="home_address" value="{{ old('home_address', $prefill['home_address'] ?? '') }}">
 
                 <section class="profile-section">
-                    <h2>Personal Information</h2>
+                    <div class="dependent-category-header">
+                        <span class="dependent-category-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        </span>
+                        <div>
+                            <h2>Personal Information</h2>
+                            <p class="dependent-category-note">Review your identity and personal details.</p>
+                        </div>
+                    </div>
                     <div class="field-stack">
                     <div class="field-grid four">
                         <div class="form-field">
@@ -620,30 +894,90 @@
                     </div>
                 </section>
 
-                <section class="profile-section">
-                    <h2>Complete Address</h2>
-                    <div class="field-grid">
-                        <div class="form-field span-2">
-                            <label class="form-label" for="street">Street / House No. <span class="required">*</span></label>
-                            <input id="street" name="street" class="form-control" value="{{ old('street', $prefill['street'] ?? '') }}" required maxlength="255" data-address-part>
+                <section class="profile-section dependent-address-section">
+                    <div class="dependent-category-header">
+                        <span class="dependent-category-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>
+                        </span>
+                        <div>
+                            <h2>Address Information</h2>
+                            <p class="dependent-category-note">Select your province, city or municipality, barangay, then enter your street or house number.</p>
+                        </div>
+                    </div>
+                    <div class="dependent-address-grid">
+                        <div class="form-field">
+                            <label class="form-label" for="province">Province <span class="required">*</span></label>
+                            <div class="clinic-select-wrap location-select-wrap" data-address-level="province" data-select-placeholder="Select province">
+                                <select id="province" name="province" class="form-select clinic-select-native" data-address-part data-address-select required>
+                                    <option value="">Select province</option>
+                                    @if(old('province', $prefill['province'] ?? '') !== '')
+                                        <option value="{{ old('province', $prefill['province'] ?? '') }}" selected>{{ old('province', $prefill['province'] ?? '') }}</option>
+                                    @endif
+                                </select>
+                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"></path><path d="M9 3v15M15 6v15"></path></svg></span>
+                                    <span class="clinic-select-value">Select province</span>
+                                </button>
+                                <div class="clinic-select-menu" role="listbox" aria-label="Province options"></div>
+                            </div>
+                            <div class="field-helper">Example: Metro Manila</div>
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="municipality">City / Municipality <span class="required">*</span></label>
+                            <div class="clinic-select-wrap location-select-wrap" data-address-level="city" data-select-placeholder="Select city or municipality">
+                                <select id="municipality" name="municipality" class="form-select clinic-select-native" data-address-part data-address-select required>
+                                    <option value="">Select city or municipality</option>
+                                    @if(old('municipality', $prefill['municipality'] ?? '') !== '')
+                                        <option value="{{ old('municipality', $prefill['municipality'] ?? '') }}" selected>{{ old('municipality', $prefill['municipality'] ?? '') }}</option>
+                                    @endif
+                                </select>
+                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 21V5l8-3 8 3v16"></path><path d="M8 21v-5h4v5M16 8h.01M16 12h.01M8 9h.01M8 12h.01"></path></svg></span>
+                                    <span class="clinic-select-value">Select city or municipality</span>
+                                </button>
+                                <div class="clinic-select-menu" role="listbox" aria-label="City or municipality options"></div>
+                            </div>
+                            <div class="field-helper">Example: Taguig City</div>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="barangay">Barangay <span class="required">*</span></label>
-                            <input id="barangay" name="barangay" class="form-control" value="{{ old('barangay', $prefill['barangay'] ?? '') }}" required maxlength="120" data-address-part>
+                            <div class="clinic-select-wrap location-select-wrap" data-address-level="barangay" data-select-placeholder="Select barangay">
+                                <select id="barangay" name="barangay" class="form-select clinic-select-native" data-address-part data-address-select required>
+                                    <option value="">Select barangay</option>
+                                    @if(old('barangay', $prefill['barangay'] ?? '') !== '')
+                                        <option value="{{ old('barangay', $prefill['barangay'] ?? '') }}" selected>{{ old('barangay', $prefill['barangay'] ?? '') }}</option>
+                                    @endif
+                                </select>
+                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"></path><circle cx="12" cy="9" r="2.5"></circle></svg></span>
+                                    <span class="clinic-select-value">Select barangay</span>
+                                </button>
+                                <div class="clinic-select-menu" role="listbox" aria-label="Barangay options"></div>
+                            </div>
+                            <div class="field-helper">Example: Brgy. Central</div>
                         </div>
                         <div class="form-field">
-                            <label class="form-label" for="municipality">Municipality / City <span class="required">*</span></label>
-                            <input id="municipality" name="municipality" class="form-control" value="{{ old('municipality', $prefill['municipality'] ?? '') }}" required maxlength="120" data-address-part>
-                        </div>
-                        <div class="form-field span-2">
-                            <label class="form-label" for="province">Province <span class="required">*</span></label>
-                            <input id="province" name="province" class="form-control" value="{{ old('province', $prefill['province'] ?? '') }}" required maxlength="120" data-address-part>
+                            <label class="form-label" for="street">Street / House No. <span class="required">*</span></label>
+                            <div class="address-field-control">
+                                <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7"></path><path d="M5 9v11h14V9M9 20v-6h6v6"></path></svg></span>
+                                <input id="street" name="street" class="form-control" value="{{ old('street', $prefill['street'] ?? '') }}" required maxlength="255" data-address-part placeholder="e.g., 123 Mabini St.">
+                            </div>
+                            <div class="field-helper">Example: 123 Mabini St.</div>
                         </div>
                     </div>
+                    <p class="dependent-address-lookup-status" id="dependentAddressLookupStatus">Select a province, then a city/municipality and barangay.</p>
                 </section>
 
                 <section class="profile-section">
-                    <h2>Contact Information</h2>
+                    <div class="dependent-category-header">
+                        <span class="dependent-category-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.2-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7A2 2 0 0 1 22 16.9Z"></path></svg>
+                            </span>
+                            <div>
+                                <h2>Contact Information</h2>
+                                <p class="dependent-category-note">Provide your contact and emergency contact details.</p>
+                            </div>
+                        </div>
                     <div class="contact-table">
                         <div class="contact-row">
                             <div class="form-field">
@@ -701,6 +1035,21 @@
             const submitButton = document.getElementById('dependent_profile_submit');
             const submitLabel = submitButton?.querySelector('[data-submit-label]');
             const enhancedSelects = [];
+            const locationSelects = Array.from(document.querySelectorAll('[data-address-select]'))
+                .map((select) => select.closest('[data-address-level]'))
+                .filter(Boolean);
+            const dependentAddressLookupStatus = document.getElementById('dependentAddressLookupStatus');
+            const dependentAddressApiBase = 'https://psgc.gitlab.io/api';
+            const dependentAddressValues = {
+                province: @json(old('province', $prefill['province'] ?? '')),
+                city: @json(old('municipality', $prefill['municipality'] ?? '')),
+                barangay: @json(old('barangay', $prefill['barangay'] ?? '')),
+            };
+            const dependentAddressWraps = {
+                province: document.querySelector('[data-address-level="province"]'),
+                city: document.querySelector('[data-address-level="city"]'),
+                barangay: document.querySelector('[data-address-level="barangay"]'),
+            };
 
             function calculateAge(value) {
                 if (!value) return '';
@@ -823,20 +1172,313 @@
                 updateSelectedLabel();
             }
 
+            function closeLocationSelect(wrapper) {
+                wrapper?.classList.remove('is-open');
+                wrapper?.querySelector('.clinic-select-display')?.classList.remove('is-open');
+                wrapper?.querySelector('.clinic-select-display')?.setAttribute('aria-expanded', 'false');
+                const search = wrapper?.querySelector('.location-select-search');
+                if (search && search.value !== '') {
+                    search.value = '';
+                    search.dispatchEvent(new Event('input'));
+                }
+            }
+
+            function syncLocationSelect(wrapper) {
+                const select = wrapper?.querySelector('select');
+                const display = wrapper?.querySelector('.clinic-select-display');
+                if (!select || !display) return;
+                const selectedText = select.value
+                    ? (select.options[select.selectedIndex]?.text || select.value)
+                    : (wrapper.dataset.selectPlaceholder || 'Select option');
+                const value = display.querySelector('.clinic-select-value');
+                if (value) value.textContent = selectedText;
+                wrapper.querySelectorAll('.clinic-select-option').forEach((option) => {
+                    option.classList.toggle('is-selected', option.dataset.selectValue === select.value);
+                });
+            }
+
+            function setLocationSelectDisabled(wrapper, disabled) {
+                const select = wrapper?.querySelector('select');
+                const display = wrapper?.querySelector('.clinic-select-display');
+                if (!select || !display) return;
+                select.disabled = disabled;
+                display.disabled = disabled;
+                if (disabled) closeLocationSelect(wrapper);
+            }
+
+            function normalizeLocationName(value) {
+                return String(value || '')
+                    .trim()
+                    .toLowerCase()
+                    .replace(/^(city|municipality)\s+of\s+/, '')
+                    .replace(/^(city|municipality)\s+/, '')
+                    .replace(/\s+(city|municipality)$/, '')
+                    .replace(/^(brgy\.?|barangay)\s+/, '')
+                    .replace(/[^a-z0-9]+/g, ' ')
+                    .trim();
+            }
+
+            function formatLocationLabel(value, level) {
+                const label = String(value || '').trim();
+                if (level !== 'city') return label;
+                const cityOfMatch = label.match(/^City of\s+(.+)$/i);
+                if (cityOfMatch) return `${cityOfMatch[1].trim()} City`;
+                const municipalityOfMatch = label.match(/^Municipality of\s+(.+)$/i);
+                if (municipalityOfMatch) return `${municipalityOfMatch[1].trim()} Municipality`;
+                return label;
+            }
+
+            function findLocationMatch(items, selectedValue) {
+                const normalizedSelected = normalizeLocationName(selectedValue);
+                if (!normalizedSelected) return null;
+                return items.find((item) => normalizeLocationName(item.name) === normalizedSelected) || null;
+            }
+
+            function createLocationOption(select, menu, value, label, code = '') {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = label;
+                if (code) option.dataset.locationCode = code;
+                select.appendChild(option);
+
+                const menuOption = document.createElement('button');
+                menuOption.type = 'button';
+                menuOption.className = 'clinic-select-option';
+                menuOption.dataset.selectValue = value;
+                menuOption.textContent = label;
+                menu.appendChild(menuOption);
+            }
+
+            function addLocationSearch(menu, wrapper) {
+                const search = document.createElement('input');
+                search.type = 'search';
+                search.className = 'location-select-search';
+                search.placeholder = `Search ${wrapper.dataset.addressLevel || 'location'}...`;
+                search.setAttribute('aria-label', `Search ${wrapper.dataset.addressLevel || 'location'} options`);
+                search.addEventListener('input', () => {
+                    const query = search.value.trim().toLowerCase();
+                    const options = Array.from(menu.querySelectorAll('.clinic-select-option'));
+                    let visibleCount = 0;
+                    options.forEach((option) => {
+                        const visible = !query || option.textContent.toLowerCase().includes(query);
+                        option.hidden = !visible;
+                        if (visible) visibleCount += 1;
+                    });
+                    let empty = menu.querySelector('.location-select-empty');
+                    if (visibleCount === 0 && options.length > 0) {
+                        if (!empty) {
+                            empty = document.createElement('div');
+                            empty.className = 'location-select-empty';
+                            empty.textContent = 'No matching location found.';
+                            menu.appendChild(empty);
+                        }
+                    } else {
+                        empty?.remove();
+                    }
+                });
+                menu.appendChild(search);
+            }
+
+            function populateLocationSelect(wrapper, items, selectedValue) {
+                const select = wrapper?.querySelector('select');
+                const menu = wrapper?.querySelector('.clinic-select-menu');
+                if (!select || !menu) return null;
+                select.innerHTML = '';
+                menu.innerHTML = '';
+                addLocationSearch(menu, wrapper);
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.disabled = true;
+                placeholder.textContent = wrapper.dataset.selectPlaceholder || 'Select option';
+                select.appendChild(placeholder);
+
+                const level = wrapper.dataset.addressLevel || '';
+                const sortedItems = [...items].sort((left, right) => formatLocationLabel(left.name, level).localeCompare(
+                    formatLocationLabel(right.name, level), undefined, { sensitivity: 'base' }
+                ));
+                const match = findLocationMatch(sortedItems, selectedValue);
+                sortedItems.forEach((item) => {
+                    const rawValue = String(item.name || '').trim();
+                    if (!rawValue) return;
+                    const value = formatLocationLabel(rawValue, level);
+                    createLocationOption(select, menu, value, value, item.code || '');
+                });
+                const resolvedValue = match ? formatLocationLabel(match.name, level) : String(selectedValue || '').trim();
+                if (resolvedValue && !Array.from(select.options).some((option) => option.value === resolvedValue)) {
+                    createLocationOption(select, menu, resolvedValue, `${resolvedValue} (existing value)`);
+                }
+                select.value = resolvedValue;
+                syncLocationSelect(wrapper);
+                return match;
+            }
+
+            async function fetchLocationCollection(path) {
+                const controller = new AbortController();
+                const timeout = window.setTimeout(() => controller.abort(), 10000);
+                try {
+                    const response = await fetch(`${dependentAddressApiBase}${path}`, {
+                        headers: { Accept: 'application/json' },
+                        credentials: 'omit',
+                        signal: controller.signal,
+                    });
+                    if (!response.ok) throw new Error(`Location lookup failed with ${response.status}.`);
+                    const payload = await response.json();
+                    return Array.isArray(payload) ? payload : (Array.isArray(payload.value) ? payload.value : []);
+                } finally {
+                    window.clearTimeout(timeout);
+                }
+            }
+
+            async function loadDependentBarangays(cityCode, selectedValue = '') {
+                const wrapper = dependentAddressWraps.barangay;
+                setLocationSelectDisabled(wrapper, true);
+                populateLocationSelect(wrapper, [], selectedValue);
+                if (!cityCode) {
+                    setLocationSelectDisabled(wrapper, false);
+                    return;
+                }
+                const barangays = await fetchLocationCollection(`/cities-municipalities/${encodeURIComponent(cityCode)}/barangays/`);
+                populateLocationSelect(wrapper, barangays, selectedValue);
+                setLocationSelectDisabled(wrapper, false);
+            }
+
+            async function loadDependentCities(provinceCode, selectedValue = '', selectedBarangay = '') {
+                const cityWrapper = dependentAddressWraps.city;
+                const barangayWrapper = dependentAddressWraps.barangay;
+                setLocationSelectDisabled(cityWrapper, true);
+                setLocationSelectDisabled(barangayWrapper, true);
+                populateLocationSelect(cityWrapper, [], selectedValue);
+                populateLocationSelect(barangayWrapper, [], selectedBarangay);
+                if (!provinceCode) {
+                    setLocationSelectDisabled(cityWrapper, false);
+                    setLocationSelectDisabled(barangayWrapper, false);
+                    return;
+                }
+                const endpoint = provinceCode === '130000000'
+                    ? '/regions/130000000/cities-municipalities/'
+                    : `/provinces/${encodeURIComponent(provinceCode)}/cities-municipalities/`;
+                const cities = await fetchLocationCollection(endpoint);
+                const selectedCity = populateLocationSelect(cityWrapper, cities, selectedValue);
+                setLocationSelectDisabled(cityWrapper, false);
+                await loadDependentBarangays(selectedCity?.code || '', selectedBarangay);
+            }
+
+            async function loadDependentAddressLocations() {
+                try {
+                    if (dependentAddressLookupStatus) dependentAddressLookupStatus.textContent = 'Loading address options...';
+                    setLocationSelectDisabled(dependentAddressWraps.province, true);
+                    const provinces = [
+                        { code: '130000000', name: 'Metro Manila' },
+                        ...(await fetchLocationCollection('/provinces/')),
+                    ];
+                    const selectedProvince = populateLocationSelect(dependentAddressWraps.province, provinces, dependentAddressValues.province);
+                    setLocationSelectDisabled(dependentAddressWraps.province, false);
+                    await loadDependentCities(selectedProvince?.code || '', dependentAddressValues.city, dependentAddressValues.barangay);
+                    syncAddress();
+                    if (dependentAddressLookupStatus) dependentAddressLookupStatus.textContent = 'Select a province, then a city/municipality and barangay.';
+                } catch (error) {
+                    syncAddress();
+                    if (dependentAddressLookupStatus) {
+                        dependentAddressLookupStatus.textContent = 'Address options are unavailable. Existing values were preserved; refresh and try again.';
+                        dependentAddressLookupStatus.classList.add('is-error');
+                    }
+                    setLocationSelectDisabled(dependentAddressWraps.province, false);
+                    setLocationSelectDisabled(dependentAddressWraps.city, false);
+                    setLocationSelectDisabled(dependentAddressWraps.barangay, false);
+                }
+            }
+
+            function selectedLocationCode(level) {
+                const select = dependentAddressWraps[level]?.querySelector('select');
+                return select?.options[select.selectedIndex]?.dataset.locationCode || '';
+            }
+
+            function initializeLocationSelect(wrapper) {
+                const select = wrapper?.querySelector('select');
+                const display = wrapper?.querySelector('.clinic-select-display');
+                if (!select || !display) return;
+                syncLocationSelect(wrapper);
+                display.addEventListener('click', () => {
+                    if (display.disabled || select.disabled) return;
+                    const willOpen = !wrapper.classList.contains('is-open');
+                    locationSelects.forEach((other) => {
+                        if (other !== wrapper) closeLocationSelect(other);
+                    });
+                    wrapper.classList.toggle('is-open', willOpen);
+                    display.classList.toggle('is-open', willOpen);
+                    display.setAttribute('aria-expanded', String(willOpen));
+                    if (willOpen) window.setTimeout(() => wrapper.querySelector('.location-select-search')?.focus(), 0);
+                });
+                wrapper.querySelector('.clinic-select-menu')?.addEventListener('click', (event) => {
+                    const option = event.target.closest('.clinic-select-option');
+                    if (!option) return;
+                    select.value = option.dataset.selectValue || '';
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                    syncLocationSelect(wrapper);
+                    closeLocationSelect(wrapper);
+                });
+                select.addEventListener('change', () => syncLocationSelect(wrapper));
+            }
+
+            dependentAddressWraps.province?.querySelector('select')?.addEventListener('change', async (event) => {
+                dependentAddressValues.province = event.target.value;
+                dependentAddressValues.city = '';
+                dependentAddressValues.barangay = '';
+                try {
+                    if (dependentAddressLookupStatus) dependentAddressLookupStatus.textContent = 'Loading cities and municipalities...';
+                    await loadDependentCities(selectedLocationCode('province'));
+                    if (dependentAddressLookupStatus) dependentAddressLookupStatus.textContent = 'Select a city/municipality, then a barangay.';
+                } catch (error) {
+                    if (dependentAddressLookupStatus) {
+                        dependentAddressLookupStatus.textContent = 'City and municipality options are unavailable. Please refresh and try again.';
+                        dependentAddressLookupStatus.classList.add('is-error');
+                    }
+                    setLocationSelectDisabled(dependentAddressWraps.city, false);
+                    setLocationSelectDisabled(dependentAddressWraps.barangay, false);
+                }
+            });
+
+            dependentAddressWraps.city?.querySelector('select')?.addEventListener('change', async (event) => {
+                dependentAddressValues.city = event.target.value;
+                dependentAddressValues.barangay = '';
+                try {
+                    if (dependentAddressLookupStatus) dependentAddressLookupStatus.textContent = 'Loading barangays...';
+                    await loadDependentBarangays(selectedLocationCode('city'));
+                    if (dependentAddressLookupStatus) dependentAddressLookupStatus.textContent = 'Address options loaded.';
+                } catch (error) {
+                    if (dependentAddressLookupStatus) {
+                        dependentAddressLookupStatus.textContent = 'Barangay options are unavailable. Please refresh and try again.';
+                        dependentAddressLookupStatus.classList.add('is-error');
+                    }
+                    setLocationSelectDisabled(dependentAddressWraps.barangay, false);
+                }
+            });
+
+            dependentAddressWraps.barangay?.querySelector('select')?.addEventListener('change', (event) => {
+                dependentAddressValues.barangay = event.target.value;
+                syncAddress();
+            });
+
             birthday?.addEventListener('change', syncAge);
             addressParts.forEach((input) => {
                 input.addEventListener('input', syncAddress);
                 input.addEventListener('change', syncAddress);
             });
-            document.querySelectorAll('.form-select').forEach(enhanceSelect);
+            document.querySelectorAll('.form-select:not([data-address-select])').forEach(enhanceSelect);
+            locationSelects.forEach(initializeLocationSelect);
+            loadDependentAddressLocations();
             document.addEventListener('click', (event) => {
                 if (!event.target.closest('.dependent-select-wrap')) {
                     enhancedSelects.forEach(({ wrapper }) => closeSelect(wrapper));
+                }
+                if (!event.target.closest('.clinic-select-wrap')) {
+                    locationSelects.forEach((wrapper) => closeLocationSelect(wrapper));
                 }
             });
             document.addEventListener('keydown', (event) => {
                 if (event.key === 'Escape') {
                     enhancedSelects.forEach(({ wrapper }) => closeSelect(wrapper));
+                    locationSelects.forEach((wrapper) => closeLocationSelect(wrapper));
                 }
             });
             form?.addEventListener('submit', () => {

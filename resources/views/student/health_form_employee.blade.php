@@ -397,6 +397,50 @@
             font-size: 0.93rem;
         }
 
+        .employee-step-heading {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .employee-step-heading .step-page-title {
+            margin-bottom: 0;
+            min-width: 0;
+        }
+
+        .employee-step-date {
+            min-width: 160px;
+            text-align: right;
+        }
+
+        @media (max-width: 767px) {
+            .employee-step-heading {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                align-items: start;
+                gap: 8px;
+            }
+
+            .employee-step-heading .step-page-title {
+                font-size: 1.35rem;
+            }
+
+            .employee-step-date {
+                width: 132px;
+                min-width: 132px;
+                padding: 8px 9px;
+            }
+
+            .employee-step-date small {
+                font-size: 0.66rem;
+            }
+
+            .employee-step-date strong {
+                font-size: 0.8rem;
+            }
+        }
+
         .identity-overview {
             margin-bottom: 18px;
             border: 1px solid rgba(127, 29, 45, 0.14);
@@ -1467,7 +1511,7 @@
             min-height: 46px;
             padding: 11px 48px 11px 14px;
             border: 1px solid rgba(148, 163, 184, 0.20);
-            border-radius: 18px;
+            border-radius: 6px;
             font-size: 0.88rem;
             color: #111111;
             background: linear-gradient(180deg, #ffffff 0%, #fff8f6 100%);
@@ -1494,6 +1538,12 @@
             box-shadow:
                 0 0 0 4px rgba(139, 0, 0, 0.06),
                 0 10px 18px rgba(139, 0, 0, 0.08);
+        }
+
+        .clinic-select-display:disabled {
+            opacity: 0.62;
+            cursor: not-allowed;
+            box-shadow: none;
         }
 
         .clinic-select-wrap::after {
@@ -1536,7 +1586,7 @@
             display: none;
             gap: 10px;
             padding: 12px;
-            border-radius: 18px;
+            border-radius: 6px;
             border: 1px solid rgba(139, 0, 0, 0.12);
             background: rgba(255, 255, 255, 0.98);
             box-shadow: 0 18px 34px rgba(15, 23, 42, 0.14);
@@ -1549,6 +1599,34 @@
             scrollbar-color: rgba(127, 29, 45, 0.45) transparent;
         }
 
+        .location-select-search {
+            width: 100%;
+            min-height: 40px;
+            padding: 9px 12px;
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            border-radius: 6px;
+            background: #ffffff;
+            color: #1e293b;
+            font-size: 0.82rem;
+            font-weight: 650;
+            outline: none;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .location-select-search:focus {
+            border-color: var(--clinic-maroon);
+            box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.08);
+        }
+
+        .location-select-empty {
+            padding: 10px 12px;
+            color: #64748b;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
         .clinic-select-wrap.is-open .clinic-select-menu {
             display: grid;
         }
@@ -1558,7 +1636,7 @@
             border: 1px solid rgba(148, 163, 184, 0.22);
             background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
             color: #1e293b;
-            border-radius: 999px;
+            border-radius: 6px;
             padding: 11px 14px;
             font-size: 0.82rem;
             font-weight: 800;
@@ -1584,18 +1662,6 @@
             background: linear-gradient(135deg, var(--clinic-maroon) 0%, var(--clinic-maroon-dark) 100%);
             color: #ffffff;
             box-shadow: 0 14px 26px rgba(127, 29, 45, 0.24);
-        }
-
-        .course-select-wrap .clinic-select-display {
-            min-height: 52px;
-            white-space: normal;
-            line-height: 1.25;
-        }
-
-        .course-select-wrap .clinic-select-option {
-            border-radius: 14px;
-            white-space: normal;
-            line-height: 1.25;
         }
 
         .btn-row {
@@ -1917,6 +1983,242 @@
             gap: 12px;
         }
 
+        .employee-category-section {
+            display: grid;
+            gap: 12px;
+            margin-top: 2px;
+            padding: 16px;
+            border: 1px solid rgba(127, 29, 45, 0.16);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.82);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+        }
+
+        .employee-category-section .address-section-title {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 1rem;
+        }
+
+        .employee-address-section {
+            display: grid;
+            gap: 12px;
+            margin-top: 2px;
+            padding: 16px;
+            border: 1px solid rgba(127, 29, 45, 0.16);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.82);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+        }
+
+        .employee-address-section .address-section-title {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 1rem;
+        }
+
+        .address-section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(127, 29, 45, 0.12);
+        }
+
+        .address-section-heading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 0 0 auto;
+        }
+
+        .address-section-icon {
+            display: inline-grid;
+            place-items: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--clinic-maroon);
+            color: #ffffff;
+            flex: 0 0 auto;
+        }
+
+        .address-section-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
+        }
+
+        .address-section-divider {
+            width: 52px;
+            height: 2px;
+            margin-left: auto;
+            background: var(--clinic-maroon);
+            flex: 0 0 auto;
+        }
+
+        .address-section-note {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.78rem;
+            font-weight: 650;
+            line-height: 1.35;
+        }
+
+        .address-lookup-status {
+            display: none;
+            margin: 0;
+        }
+
+        .address-lookup-status.is-error {
+            display: block;
+            color: #9f1239;
+        }
+
+        .employee-address-section .form-field {
+            border: 0;
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
+        }
+
+        .employee-address-section .form-field .form-label {
+            color: #475569;
+            font-size: 0.72rem;
+            letter-spacing: 0.05em;
+            margin-bottom: 7px;
+        }
+
+        .address-field-control {
+            display: flex;
+            align-items: stretch;
+            min-height: 42px;
+            overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            border-radius: 9px;
+            background: linear-gradient(180deg, #fbfcfd 0%, #f4f6f8 100%);
+        }
+
+        .address-field-control:focus-within {
+            border-color: rgba(127, 29, 45, 0.68);
+            box-shadow: 0 0 0 3px rgba(127, 29, 45, 0.08);
+        }
+
+        .address-field-control .address-field-icon {
+            display: inline-grid;
+            place-items: center;
+            width: 46px;
+            min-width: 46px;
+            border-right: 1px solid rgba(148, 163, 184, 0.32);
+            color: #475569;
+        }
+
+        .address-field-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
+        }
+
+        .employee-address-section .address-field-control .form-control {
+            flex: 1;
+            min-width: 0;
+            min-height: 40px;
+            padding: 9px 12px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .employee-address-section .location-select-wrap {
+            position: relative;
+        }
+
+        .employee-address-section .location-select-wrap .clinic-select-display {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            min-height: 42px;
+            padding: 0 42px 0 0;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            border-radius: 6px;
+            background: linear-gradient(180deg, #fbfcfd 0%, #f4f6f8 100%);
+            box-shadow: none;
+            color: #334155;
+            font-size: 0.84rem;
+            font-weight: 750;
+        }
+
+        .employee-address-section .location-select-wrap .clinic-select-display:hover,
+        .employee-address-section .location-select-wrap .clinic-select-display:focus,
+        .employee-address-section .location-select-wrap .clinic-select-display.is-open {
+            border-color: rgba(127, 29, 45, 0.68);
+            box-shadow: 0 0 0 3px rgba(127, 29, 45, 0.08);
+        }
+
+        .employee-address-section .location-select-wrap .clinic-select-display .address-field-icon {
+            display: inline-grid;
+            place-items: center;
+            align-self: stretch;
+            width: 46px;
+            min-width: 46px;
+            margin-right: 12px;
+            border-right: 1px solid rgba(148, 163, 184, 0.32);
+            color: #475569;
+        }
+
+        .employee-address-section .location-select-wrap .clinic-select-value {
+            min-width: 0;
+            padding: 9px 0;
+            line-height: 1.25;
+        }
+
+        .employee-address-section .location-select-wrap::before {
+            display: none;
+        }
+
+        .employee-address-section .location-select-wrap::after {
+            top: 50%;
+            right: 16px;
+            width: 9px;
+            height: 9px;
+            border-right: 2px solid #7f1d2d;
+            border-bottom: 2px solid #7f1d2d;
+        }
+
+        .employee-address-section .field-hint {
+            margin-top: 6px;
+            text-align: left;
+            font-size: 0.7rem;
+        }
+
+        @media (max-width: 768px) {
+            .address-section-header {
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .address-section-divider {
+                display: none;
+            }
+
+            .address-section-note {
+                flex: 1 1 100%;
+                margin-left: 44px;
+            }
+        }
+
         .employee-personal-row {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1929,6 +2231,30 @@
 
         .employee-personal-row.four {
             grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .employee-personal-stack .employee-address-section .employee-personal-row.four {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .employee-personal-stack .employee-address-section .employee-personal-row.four .form-field:nth-child(1) {
+            grid-column: 2;
+            grid-row: 2;
+        }
+
+        .employee-personal-stack .employee-address-section .employee-personal-row.four .form-field:nth-child(2) {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .employee-personal-stack .employee-address-section .employee-personal-row.four .form-field:nth-child(3) {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .employee-personal-stack .employee-address-section .employee-personal-row.four .form-field:nth-child(4) {
+            grid-column: 1;
+            grid-row: 1;
         }
 
         .employee-personal-row.single {
@@ -2115,7 +2441,7 @@
 
         .employee-personal-stack .clinic-select-wrap .clinic-select-display {
             border: 1.5px solid rgba(127, 29, 45, 0.52);
-            border-radius: 18px;
+            border-radius: 6px;
             min-height: 50px;
             background: linear-gradient(180deg, #fffafb 0%, #fff6f7 100%);
         }
@@ -2130,6 +2456,148 @@
 
         .employee-personal-stack .clinic-select-option.is-selected {
             color: #ffffff;
+        }
+
+        .employee-personal-stack .employee-address-section .address-field-control .form-control:not([readonly]) {
+            min-height: 40px;
+            padding: 9px 12px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .employee-personal-stack .employee-address-section .address-field-control .form-control:not([readonly]):focus {
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .employee-personal-stack .employee-address-section .location-select-wrap .clinic-select-display {
+            min-height: 42px;
+            padding: 0 42px 0 0;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            border-radius: 6px;
+            background: linear-gradient(180deg, #fbfcfd 0%, #f4f6f8 100%);
+            box-shadow: none;
+        }
+
+        .employee-personal-stack .employee-address-section .location-select-wrap.is-open .clinic-select-display,
+        .employee-personal-stack .employee-address-section .location-select-wrap .clinic-select-display:focus {
+            border-color: rgba(127, 29, 45, 0.68);
+            box-shadow: 0 0 0 3px rgba(127, 29, 45, 0.08);
+        }
+
+        .employee-personal-stack .employee-category-section .form-field {
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            padding: 0;
+        }
+
+        .employee-personal-stack .employee-category-section .form-field .form-label {
+            color: #475569;
+            font-size: 0.72rem;
+            letter-spacing: 0.05em;
+            margin-bottom: 7px;
+        }
+
+        .employee-personal-stack .employee-category-section .form-field .form-control,
+        .employee-personal-stack .employee-category-section .form-field .form-select {
+            min-height: 42px;
+            padding: 9px 12px;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            border-radius: 0;
+            background: linear-gradient(180deg, #fbfcfd 0%, #f4f6f8 100%);
+            box-shadow: none;
+            color: #334155;
+            font-size: 0.84rem;
+            font-weight: 750;
+        }
+
+        .employee-personal-stack .employee-category-section .form-field .form-control:focus,
+        .employee-personal-stack .employee-category-section .form-field .form-select:focus {
+            border-color: rgba(127, 29, 45, 0.68);
+            background: linear-gradient(180deg, #fbfcfd 0%, #f4f6f8 100%);
+            box-shadow: 0 0 0 3px rgba(127, 29, 45, 0.08);
+        }
+
+        .employee-personal-stack .employee-category-section .address-field-control {
+            min-height: 42px;
+        }
+
+        .employee-personal-stack .employee-category-section .address-field-control:focus-within {
+            border-color: rgba(127, 29, 45, 0.68);
+            box-shadow: 0 0 0 3px rgba(127, 29, 45, 0.08);
+        }
+
+        .employee-personal-stack .employee-category-section .address-field-control .form-control {
+            flex: 1;
+            min-width: 0;
+            min-height: 40px;
+            padding: 9px 12px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .employee-personal-stack .employee-category-section .address-field-control .form-control:focus {
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .employee-personal-stack .employee-category-section .clinic-select-wrap .clinic-select-display {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            min-height: 42px;
+            padding: 0 42px 0 0;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            border-radius: 6px;
+            background: linear-gradient(180deg, #fbfcfd 0%, #f4f6f8 100%);
+            box-shadow: none;
+            color: #334155;
+            font-size: 0.84rem;
+            font-weight: 750;
+        }
+
+        .employee-personal-stack .employee-category-section .clinic-select-wrap .clinic-select-display .address-field-icon {
+            display: inline-grid;
+            place-items: center;
+            align-self: stretch;
+            width: 46px;
+            min-width: 46px;
+            margin-right: 12px;
+            border-right: 1px solid rgba(148, 163, 184, 0.32);
+            color: #475569;
+        }
+
+        .employee-personal-stack .employee-category-section .clinic-select-wrap .clinic-select-value {
+            min-width: 0;
+            padding: 9px 0;
+            line-height: 1.25;
+        }
+
+        .employee-personal-stack .employee-category-section .clinic-select-wrap.is-open .clinic-select-display,
+        .employee-personal-stack .employee-category-section .clinic-select-wrap .clinic-select-display:focus {
+            border-color: rgba(127, 29, 45, 0.68);
+            box-shadow: 0 0 0 3px rgba(127, 29, 45, 0.08);
+        }
+
+        .employee-personal-stack .employee-category-section .clinic-select-wrap::before {
+            top: 21px;
+        }
+
+        .employee-personal-stack .employee-category-section .clinic-select-wrap::after {
+            top: 21px;
+        }
+
+        .employee-personal-stack .employee-category-section .field-hint {
+            margin-top: 6px;
+            text-align: left;
+            font-size: 0.7rem;
         }
 
         .form-field .form-control.field-maroon,
@@ -2253,6 +2721,43 @@
             .employee-personal-row.four,
             .employee-personal-row.single {
                 grid-template-columns: 1fr;
+            }
+
+            .employee-personal-stack .employee-address-section .employee-personal-row.four {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .employee-personal-stack .employee-address-section .employee-personal-row.four .form-field {
+                grid-column: auto;
+                grid-row: auto;
+            }
+
+            .employee-address-section .employee-personal-row.four {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .employee-address-section .employee-personal-row.four > .form-field:nth-child(1) {
+                grid-column: auto;
+                grid-row: auto;
+                order: 4;
+            }
+
+            .employee-address-section .employee-personal-row.four > .form-field:nth-child(2) {
+                grid-column: auto;
+                grid-row: auto;
+                order: 3;
+            }
+
+            .employee-address-section .employee-personal-row.four > .form-field:nth-child(3) {
+                grid-column: auto;
+                grid-row: auto;
+                order: 2;
+            }
+
+            .employee-address-section .employee-personal-row.four > .form-field:nth-child(4) {
+                grid-column: auto;
+                grid-row: auto;
+                order: 1;
             }
 
             .requirement-extra {
@@ -2445,6 +2950,60 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .employee-personal-stack .form-field.mobile-contact-invalid-field .address-field-control {
+            border-color: #dc2626 !important;
+            background: #fff7f7 !important;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12) !important;
+        }
+
+        .employee-personal-stack .form-field.mobile-contact-invalid-field .form-label {
+            color: #b91c1c;
+        }
+
+        .employee-personal-stack .mobile-contact-error {
+            display: none;
+            color: #b91c1c !important;
+        }
+
+        .employee-personal-stack .mobile-contact-error.is-visible {
+            display: block;
+        }
+
+        @media (max-width: 767px) {
+            .employee-address-fields {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) !important;
+                grid-auto-flow: row !important;
+            }
+
+            .employee-address-fields > .form-field,
+            .employee-address-fields > .form-field:nth-child(1),
+            .employee-address-fields > .form-field:nth-child(2),
+            .employee-address-fields > .form-field:nth-child(3),
+            .employee-address-fields > .form-field:nth-child(4) {
+                grid-column: auto !important;
+                grid-row: auto !important;
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+
+            .employee-address-fields > .form-field:nth-child(1) {
+                order: 4 !important;
+            }
+
+            .employee-address-fields > .form-field:nth-child(2) {
+                order: 3 !important;
+            }
+
+            .employee-address-fields > .form-field:nth-child(3) {
+                order: 2 !important;
+            }
+
+            .employee-address-fields > .form-field:nth-child(4) {
+                order: 1 !important;
+            }
+        }
     </style>
 </head>
 <body class="health-form-page">
@@ -2491,7 +3050,6 @@
                     5 => '2x2 Photo',
                     6 => 'E-Signature',
                 ];
-                $selectedEmployeeCourse = old('course_college', $employeeValue('course_college', $user->course ?? ''));
                 $selectedPastMedicalHistory = $employeeCheckedValues('past_medical_history');
                 $selectedPreviousHospitalization = old('previous_hospitalization', data_get($employeeProfile ?? null, 'previous_hospitalization') ? '1' : '0');
                 $selectedOperationSurgery = old('operation_surgery', data_get($employeeProfile ?? null, 'operation_surgery') ? '1' : '0');
@@ -2499,10 +3057,6 @@
                 $selectedAlcoholDrinking = old('alcohol_drinking', data_get($employeeProfile ?? null, 'alcohol_drinking') ? '1' : '0');
                 $selectedTraveledAbroad = old('traveled_abroad', data_get($employeeProfile ?? null, 'traveled_abroad') ? '1' : '0');
                 $selectedEmployeePwd = old('has_disability', data_get($employeeProfile ?? null, 'has_disability') ? '1' : '0');
-                $employeeCourseOptions = collect($employeeCourseOptions ?? [])
-                    ->filter(fn ($courseOption) => is_array($courseOption))
-                    ->values()
-                    ->all();
             @endphp
             <div class="stepper-shell">
                 <div class="step-progress-top">
@@ -2543,9 +3097,9 @@
                     $provinceFallback = $employeeValue('province');
                 @endphp
                 <div class="step-panel {{ $startStep === 1 ? '' : 'is-hidden' }}" id="stepPanel1">
-                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;">
-                        <h2 class="section-title step-page-title" data-title-letter="P" style="margin-bottom:0;">Personal Information</h2>
-                        <div class="readonly-item" style="min-width:160px;text-align:right;">
+                    <div class="employee-step-heading">
+                        <h2 class="section-title step-page-title" data-title-letter="P">Personal Information</h2>
+                        <div class="readonly-item employee-step-date">
                             <small>Date</small>
                             <strong>{{ now()->format('M d, Y') }}</strong>
                         </div>
@@ -2553,54 +3107,158 @@
                     <p class="step-fill-note">Complete your identity, department, and emergency contact details.</p>
                     <input id="form_date" type="hidden" name="form_date" value="{{ now()->toDateString() }}">
                     <div class="employee-personal-stack">
+                        <div class="employee-category-section">
+                            <div class="address-section-header">
+                                <div class="address-section-heading">
+                                    <span class="address-section-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24">
+                                            <circle cx="12" cy="7" r="4"></circle>
+                                            <path d="M4 21a8 8 0 0 1 16 0"></path>
+                                        </svg>
+                                    </span>
+                                    <h3 class="section-title address-section-title">Identity Information</h3>
+                                </div>
+                                <span class="address-section-divider" aria-hidden="true"></span>
+                                <p class="address-section-note">Review your name and account details.</p>
+                            </div>
                         <div class="employee-personal-row four">
                             <div class="form-field">
                                 <label class="form-label" for="first_name">First Name <span class="required">*</span></label>
-                                <input id="first_name" type="text" name="first_name" class="form-control" value="{{ $employeeValue('first_name', $user->first_name ?? '') }}" readonly required>
+                                <div class="address-field-control">
+                                    <span class="address-field-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+                                    </span>
+                                    <input id="first_name" type="text" name="first_name" class="form-control" value="{{ $employeeValue('first_name', $user->first_name ?? '') }}" readonly required>
+                                </div>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="middle_name">Middle Name</label>
-                                <input id="middle_name" type="text" name="middle_name" class="form-control" value="{{ $employeeValue('middle_name', $user->middle_name ?? '') }}" placeholder="N/A if not applicable" readonly>
+                                <div class="address-field-control">
+                                    <span class="address-field-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+                                    </span>
+                                    <input id="middle_name" type="text" name="middle_name" class="form-control" value="{{ $employeeValue('middle_name', $user->middle_name ?? '') }}" placeholder="-" readonly>
+                                </div>
                                 <small class="field-hint"></small>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="last_name">Last Name <span class="required">*</span></label>
-                                <input id="last_name" type="text" name="last_name" class="form-control" value="{{ $employeeValue('last_name', $user->last_name ?? '') }}" readonly required>
+                                <div class="address-field-control">
+                                    <span class="address-field-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+                                    </span>
+                                    <input id="last_name" type="text" name="last_name" class="form-control" value="{{ $employeeValue('last_name', $user->last_name ?? '') }}" readonly required>
+                                </div>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="suffix_name">Suffix Name</label>
-                                <input id="suffix_name" type="text" name="suffix_name" class="form-control" value="{{ $employeeValue('suffix_name', $user->suffix_name ?? '') }}" readonly>
+                                <div class="address-field-control">
+                                    <span class="address-field-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+                                    </span>
+                                    <input id="suffix_name" type="text" name="suffix_name" class="form-control" value="{{ $employeeValue('suffix_name', $user->suffix_name ?? '') }}" readonly>
+                                </div>
                             </div>
                         </div>
                         <div class="employee-personal-row single">
                             <div class="form-field">
                                 <label class="form-label" for="employee_email">Email Address</label>
-                                <input id="employee_email" type="email" class="form-control" value="{{ old('employee_email', data_get($employeePrefill ?? [], 'email', $user->email ?? '')) }}" readonly>
+                                <div class="address-field-control">
+                                    <span class="address-field-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg>
+                                    </span>
+                                    <input id="employee_email" type="email" class="form-control" value="{{ old('employee_email', data_get($employeePrefill ?? [], 'email', $user->email ?? '')) }}" readonly>
+                                </div>
                             </div>
                         </div>
+                        </div>
+                        <div class="employee-category-section">
+                            <div class="address-section-header">
+                                <div class="address-section-heading">
+                                    <span class="address-section-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24">
+                                            <rect x="3" y="7" width="18" height="13" rx="2"></rect>
+                                            <path d="M8 7V5h8v2M3 12h18M10 12v2h4v-2"></path>
+                                        </svg>
+                                    </span>
+                                    <h3 class="section-title address-section-title">Employment Information</h3>
+                                </div>
+                                <span class="address-section-divider" aria-hidden="true"></span>
+                                <p class="address-section-note">Provide your clinic employment and department details.</p>
+                            </div>
                         <div class="employee-personal-row">
                             <div class="form-field">
                                 <label class="form-label" for="employee_number">Employee Number</label>
-                                <input id="employee_number" type="text" name="employee_number" class="form-control" value="{{ $employeeValue('employee_number', $user->employee_number ?? '') }}">
+                                <div class="address-field-control">
+                                    <span class="address-field-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M7 9h10M7 13h6M7 16h4"></path></svg>
+                                    </span>
+                                    <input id="employee_number" type="text" name="employee_number" class="form-control" value="{{ $employeeValue('employee_number', $user->employee_number ?? '') }}">
+                                </div>
                                 <small class="field-hint">Example: FA001TG2026</small>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="office">College / Department <span class="required">*</span></label>
-                                <input id="office" type="text" name="office" class="form-control" value="{{ $employeeValue('office') }}" required>
+                                <div class="address-field-control">
+                                    <span class="address-field-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><path d="M4 21h16M6 21V5h8v16M14 9h4v12M9 8h2M9 12h2M9 16h2M16 12h1M16 16h1"></path></svg>
+                                    </span>
+                                    <input id="office" type="text" name="office" class="form-control" value="{{ $employeeValue('office') }}" required>
+                                </div>
                                 <small class="field-hint">Example: Medical Services Department</small>
                             </div>
                         </div>
+                        </div>
+                        <div class="employee-category-section">
+                            <div class="address-section-header">
+                                <div class="address-section-heading">
+                                    <span class="address-section-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24">
+                                            <rect x="3" y="4" width="18" height="17" rx="2"></rect>
+                                            <path d="M7 2v4M17 2v4M3 9h18M8 13h3M8 17h3M14 13h3M14 17h3"></path>
+                                        </svg>
+                                    </span>
+                                    <h3 class="section-title address-section-title">Birth Information</h3>
+                                </div>
+                                <span class="address-section-divider" aria-hidden="true"></span>
+                                <p class="address-section-note">Enter your date of birth to confirm your age.</p>
+                            </div>
                         <div class="employee-personal-row">
                             <div class="form-field">
                                 <label class="form-label" for="birthday">Date of Birth <span class="required">*</span></label>
-                                <input id="birthday" type="date" name="birthday" class="form-control" value="{{ $employeeValue('birthday', $user->DOB ?? '') }}" required>
+                                <div class="address-field-control">
+                                    <span class="address-field-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M7 2v4M17 2v4M3 9h18"></path></svg>
+                                    </span>
+                                    <input id="birthday" type="date" name="birthday" class="form-control" value="{{ $employeeValue('birthday', $user->DOB ?? '') }}" required>
+                                </div>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="age">Age <span class="required">*</span></label>
-                                <input id="age" type="number" name="age" class="form-control" value="{{ $employeeValue('age') }}" min="15" max="100" readonly required>
+                                <div class="address-field-control">
+                                    <span class="address-field-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v5l3 2"></path></svg>
+                                    </span>
+                                    <input id="age" type="number" name="age" class="form-control" value="{{ $employeeValue('age') }}" min="15" max="100" readonly required>
+                                </div>
                                 <small class="field-hint">Automatically calculated from Date of Birth.</small>
                             </div>
                         </div>
+                        </div>
+                        <div class="employee-category-section">
+                            <div class="address-section-header">
+                                <div class="address-section-heading">
+                                    <span class="address-section-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24">
+                                            <circle cx="12" cy="7" r="4"></circle>
+                                            <path d="M5 21a7 7 0 0 1 14 0"></path>
+                                        </svg>
+                                    </span>
+                                    <h3 class="section-title address-section-title">Personal Details</h3>
+                                </div>
+                                <span class="address-section-divider" aria-hidden="true"></span>
+                                <p class="address-section-note">Provide your personal, contact, and school details.</p>
+                            </div>
                         <div class="employee-personal-row">
                             <div class="form-field">
                                 <label class="form-label" for="civil_status">Civil Status <span class="required">*</span></label>
@@ -2611,7 +3269,12 @@
                                             <option value="{{ $status }}" {{ $employeeValue('civil_status') === $status ? 'selected' : '' }}>{{ $status }}</option>
                                         @endforeach
                                     </select>
-                                    <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select civil status</button>
+                                    <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">
+                                        <span class="address-field-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M5 21a7 7 0 0 1 14 0"></path></svg>
+                                        </span>
+                                        <span class="clinic-select-value">Select civil status</span>
+                                    </button>
                                     <div class="clinic-select-menu" role="listbox" aria-label="Civil status options">
                                         @foreach(['Single', 'Married', 'Widowed', 'Separated'] as $status)
                                             <button type="button" class="clinic-select-option" data-select-value="{{ $status }}">{{ $status }}</button>
@@ -2628,7 +3291,12 @@
                                             <option value="{{ $sexOption }}" {{ $employeeValue('sex', $user->gender ?? '') === $sexOption ? 'selected' : '' }}>{{ $sexOption }}</option>
                                         @endforeach
                                     </select>
-                                    <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select sex</button>
+                                    <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">
+                                        <span class="address-field-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M5 21a7 7 0 0 1 14 0"></path></svg>
+                                        </span>
+                                        <span class="clinic-select-value">Select sex</span>
+                                    </button>
                                     <div class="clinic-select-menu" role="listbox" aria-label="Sex options">
                                         @foreach(['Male', 'Female'] as $sexOption)
                                             <button type="button" class="clinic-select-option" data-select-value="{{ $sexOption }}">{{ $sexOption }}</button>
@@ -2637,77 +3305,168 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="employee-personal-row single">
-                            <div class="form-field">
-                                <label class="form-label" for="course_college">Course / College</label>
-                                <div class="clinic-select-wrap course-select-wrap" data-clinic-select data-select-placeholder="Select course or Not Applicable">
-                                    <select id="course_college" name="course_college" class="form-select clinic-select-native">
-                                        <option value="">Select course or Not Applicable</option>
-                                        @foreach($employeeCourseOptions as $courseOption)
-                                            @php
-                                                $courseValue = $courseOption['name'] ?? $courseOption['label'] ?? $courseOption['code'] ?? '';
-                                            @endphp
-                                            <option value="{{ $courseValue }}" {{ $selectedEmployeeCourse === $courseValue ? 'selected' : '' }}>{{ $courseOption['label'] ?? $courseValue }}</option>
-                                        @endforeach
-                                    </select>
-                                    <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select course or Not Applicable</button>
-                                    <div class="clinic-select-menu" role="listbox" aria-label="Course or college options">
-                                        @foreach($employeeCourseOptions as $courseOption)
-                                            @php
-                                                $courseValue = $courseOption['name'] ?? $courseOption['label'] ?? $courseOption['code'] ?? '';
-                                            @endphp
-                                            <button type="button" class="clinic-select-option" data-select-value="{{ $courseValue }}">{{ $courseOption['label'] ?? $courseValue }}</button>
-                                        @endforeach
-                                    </div>
-                                </div>
-                                <small class="field-hint">Example: Bachelor of Science in Information Technology</small>
-                            </div>
-                        </div>
                         <div class="employee-personal-row">
                             <div class="form-field">
                                 <label class="form-label" for="contact_no">Contact Number <span class="required">*</span></label>
-                                <input id="contact_no" type="text" name="contact_no" class="form-control" value="{{ $employeeValue('contact_no', $user->contact_no ?? '') }}" maxlength="20" required>
+                                <div class="address-field-control">
+                                    <span class="address-field-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><path d="M6 3h4l2 5-2.5 1.5a13 13 0 0 0 5 5L16 12l5 2v4c0 1.1-.9 2-2 2C10.7 20 4 13.3 4 5a2 2 0 0 1 2-2Z"></path></svg>
+                                    </span>
+                                    <input id="contact_no" type="text" name="contact_no" class="form-control" value="{{ $employeeValue('contact_no', $user->contact_no ?? '') }}" maxlength="11" minlength="11" inputmode="numeric" pattern="09[0-9]{9}" data-mobile-contact data-validation-message="Use an 11-digit mobile number starting with 09." required>
+                                </div>
                                 <small class="field-hint">Example: 09123456789</small>
+                                <small class="field-hint mobile-contact-error" data-mobile-contact-error>Please put an 11-digit mobile number starting with 09.</small>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="school_year">School Year</label>
-                                <input id="school_year" type="text" name="school_year" class="form-control" value="{{ old('school_year', $employeeValue('school_year', $user->year ?? '')) }}">
+                                <div class="address-field-control">
+                                    <span class="address-field-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M7 2v4M17 2v4M3 9h18"></path></svg>
+                                    </span>
+                                    <input id="school_year" type="text" name="school_year" class="form-control" value="{{ old('school_year', $employeeValue('school_year', $user->year ?? '')) }}">
+                                </div>
                                 <small class="field-hint">Example: 2026-2027</small>
                             </div>
                         </div>
-                        <div class="employee-personal-row four">
-                            <div class="form-field">
-                                <label class="form-label" for="street_address">Street / House No. <span class="required">*</span></label>
-                                <input id="street_address" type="text" name="street_address" class="form-control" value="{{ old('street_address', $streetFallback) }}" required>
-                                <small class="field-hint">Example: 123 Mabini St.</small>
-                            </div>
-                            <div class="form-field">
-                                <label class="form-label" for="barangay">Barangay <span class="required">*</span></label>
-                                <input id="barangay" type="text" name="barangay" class="form-control" value="{{ old('barangay', $barangayFallback) }}" required>
-                                <small class="field-hint">Example: Brgy. Central</small>
-                            </div>
-                            <div class="form-field">
-                                <label class="form-label" for="city_municipality">City / Municipality <span class="required">*</span></label>
-                                <input id="city_municipality" type="text" name="city_municipality" class="form-control" value="{{ old('city_municipality', $cityFallback) }}" required>
-                                <small class="field-hint">Example: Taguig City</small>
-                            </div>
-                            <div class="form-field">
-                                <label class="form-label" for="province">Province <span class="required">*</span></label>
-                                <input id="province" type="text" name="province" class="form-control" value="{{ old('province', $provinceFallback) }}" required>
-                                <small class="field-hint">Example: Metro Manila</small>
-                            </div>
                         </div>
+                        <div class="employee-address-section">
+                            <div class="address-section-header">
+                                <div class="address-section-heading">
+                                    <span class="address-section-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="m3 10 9-7 9 7"></path>
+                                            <path d="M5 9.5V21h14V9.5"></path>
+                                            <path d="M9 21v-6h6v6"></path>
+                                        </svg>
+                                    </span>
+                                    <h3 class="section-title address-section-title">Address Information</h3>
+                                </div>
+                                <span class="address-section-divider" aria-hidden="true"></span>
+                                <p class="address-section-note">Provide your complete residential address.</p>
+                            </div>
+                            <div class="employee-personal-row four employee-address-fields">
+                                <div class="form-field">
+                                    <label class="form-label" for="street_address">Street / House No. <span class="required">*</span></label>
+                                    <div class="address-field-control">
+                                        <span class="address-field-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24">
+                                                <path d="m3 10 9-7 9 7"></path>
+                                                <path d="M5 9.5V21h14V9.5"></path>
+                                                <path d="M9 21v-6h6v6"></path>
+                                            </svg>
+                                        </span>
+                                        <input id="street_address" type="text" name="street_address" class="form-control" value="{{ old('street_address', $streetFallback) }}" required>
+                                    </div>
+                                    <small class="field-hint">Example: 123 Mabini St.</small>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label" for="barangay">Barangay <span class="required">*</span></label>
+                                    <div class="clinic-select-wrap location-select-wrap" data-clinic-select data-address-level="barangay" data-select-placeholder="Select barangay">
+                                        <select id="barangay" name="barangay" class="form-select clinic-select-native" required disabled>
+                                            <option value="" {{ $barangayFallback === '' ? 'selected' : '' }} disabled>Select barangay</option>
+                                            @if($barangayFallback !== '')
+                                                <option value="{{ $barangayFallback }}" selected>{{ $barangayFallback }}</option>
+                                            @endif
+                                        </select>
+                                        <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false" disabled>
+                                            <span class="address-field-icon" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"></path>
+                                                    <circle cx="12" cy="10" r="2.5"></circle>
+                                                </svg>
+                                            </span>
+                                            <span class="clinic-select-value">{{ $barangayFallback !== '' ? $barangayFallback : 'Select barangay' }}</span>
+                                        </button>
+                                        <div class="clinic-select-menu" role="listbox" aria-label="Barangay options"></div>
+                                    </div>
+                                    <small class="field-hint">Example: Brgy. Central</small>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label" for="city_municipality">City / Municipality <span class="required">*</span></label>
+                                    <div class="clinic-select-wrap location-select-wrap" data-clinic-select data-address-level="city" data-select-placeholder="Select city or municipality">
+                                        <select id="city_municipality" name="city_municipality" class="form-select clinic-select-native" required disabled>
+                                            <option value="" {{ $cityFallback === '' ? 'selected' : '' }} disabled>Select city or municipality</option>
+                                            @if($cityFallback !== '')
+                                                <option value="{{ $cityFallback }}" selected>{{ $cityFallback }}</option>
+                                            @endif
+                                        </select>
+                                        <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false" disabled>
+                                            <span class="address-field-icon" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M4 21h16"></path>
+                                                    <path d="M6 21V5h8v16"></path>
+                                                    <path d="M14 9h4v12"></path>
+                                                    <path d="M9 8h2M9 12h2M9 16h2M16 12h1M16 16h1"></path>
+                                                </svg>
+                                            </span>
+                                            <span class="clinic-select-value">{{ $cityFallback !== '' ? $cityFallback : 'Select city or municipality' }}</span>
+                                        </button>
+                                        <div class="clinic-select-menu" role="listbox" aria-label="City or municipality options"></div>
+                                    </div>
+                                    <small class="field-hint">Example: Taguig City</small>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label" for="province">Province <span class="required">*</span></label>
+                                    <div class="clinic-select-wrap location-select-wrap" data-clinic-select data-address-level="province" data-select-placeholder="Select province">
+                                        <select id="province" name="province" class="form-select clinic-select-native" required>
+                                            <option value="" {{ $provinceFallback === '' ? 'selected' : '' }} disabled>Select province</option>
+                                            @if($provinceFallback !== '')
+                                                <option value="{{ $provinceFallback }}" selected>{{ $provinceFallback }}</option>
+                                            @endif
+                                        </select>
+                                        <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">
+                                            <span class="address-field-icon" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="m4 6 6-2 4 2 6-2v14l-6 2-4-2-6 2V6Z"></path>
+                                                    <path d="M10 4v14M14 6v14"></path>
+                                                </svg>
+                                            </span>
+                                            <span class="clinic-select-value">{{ $provinceFallback !== '' ? $provinceFallback : 'Select province' }}</span>
+                                        </button>
+                                        <div class="clinic-select-menu" role="listbox" aria-label="Province options"></div>
+                                    </div>
+                                    <small class="field-hint">Example: Metro Manila</small>
+                                </div>
+                            </div>
+                            <small class="field-hint address-lookup-status" id="employeeAddressLookupStatus" aria-live="polite"></small>
+                        </div>
+                        <div class="employee-category-section">
+                            <div class="address-section-header">
+                                <div class="address-section-heading">
+                                    <span class="address-section-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="m12 3 10 18H2L12 3Z"></path>
+                                            <path d="M12 9v5M12 17h.01"></path>
+                                        </svg>
+                                    </span>
+                                    <h3 class="section-title address-section-title">Emergency Contact</h3>
+                                </div>
+                                <span class="address-section-divider" aria-hidden="true"></span>
+                                <p class="address-section-note">Provide someone the clinic can contact in an emergency.</p>
+                            </div>
                         <div class="employee-personal-row">
                             <div class="form-field">
                                 <label class="form-label" for="emergency_contact_person">Contact Person in Case of Emergency <span class="required">*</span></label>
-                                <input id="emergency_contact_person" type="text" name="emergency_contact_person" class="form-control" value="{{ $employeeValue('emergency_contact_person') }}" required>
+                                <div class="address-field-control">
+                                    <span class="address-field-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+                                    </span>
+                                    <input id="emergency_contact_person" type="text" name="emergency_contact_person" class="form-control" value="{{ $employeeValue('emergency_contact_person') }}" required>
+                                </div>
                                 <small class="field-hint">Example: Maria Dela Cruz</small>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="emergency_contact_no">Contact Person Contact Number <span class="required">*</span></label>
-                                <input id="emergency_contact_no" type="text" name="emergency_contact_no" class="form-control" value="{{ $employeeValue('emergency_contact_no') }}" maxlength="20" required>
+                                <div class="address-field-control">
+                                    <span class="address-field-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><path d="M6 3h4l2 5-2.5 1.5a13 13 0 0 0 5 5L16 12l5 2v4c0 1.1-.9 2-2 2C10.7 20 4 13.3 4 5a2 2 0 0 1 2-2Z"></path></svg>
+                                    </span>
+                                    <input id="emergency_contact_no" type="text" name="emergency_contact_no" class="form-control" value="{{ $employeeValue('emergency_contact_no') }}" maxlength="11" minlength="11" inputmode="numeric" pattern="09[0-9]{9}" data-mobile-contact data-validation-message="Use an 11-digit mobile number starting with 09." required>
+                                </div>
                                 <small class="field-hint">Example: 09123456789</small>
+                                <small class="field-hint mobile-contact-error" data-mobile-contact-error>Please put an 11-digit mobile number starting with 09.</small>
                             </div>
+                        </div>
                         </div>
                     </div>
                     <div class="btn-row">
@@ -3089,6 +3848,7 @@
             const employeeDisabilityTypeInput = document.getElementById('disability_type');
             const employeePwdRequirementCard = document.getElementById('employeePwdRequirementCard');
             const uploadInputs = Array.from(document.querySelectorAll('[data-upload-input]'));
+            const mobileContactInputs = Array.from(document.querySelectorAll('[data-mobile-contact]'));
             const submitButton = document.getElementById('employeeHealthSubmit');
             const submitButtonLabel = submitButton?.querySelector('[data-submit-label]');
             const stepButtons = Array.from(document.querySelectorAll('[data-step-next], [data-step-back]'));
@@ -3102,6 +3862,11 @@
                 const display = wrap?.querySelector('.clinic-select-display');
                 display?.classList.remove('is-open');
                 display?.setAttribute('aria-expanded', 'false');
+                const search = wrap?.querySelector('.location-select-search');
+                if (search && search.value !== '') {
+                    search.value = '';
+                    search.dispatchEvent(new Event('input'));
+                }
             }
 
             function syncClinicSelect(wrap) {
@@ -3118,7 +3883,12 @@
                     ? (select.options[select.selectedIndex]?.text || selectedValue)
                     : placeholder;
 
-                display.textContent = selectedText;
+                const displayValue = display.querySelector('.clinic-select-value');
+                if (displayValue) {
+                    displayValue.textContent = selectedText;
+                } else {
+                    display.textContent = selectedText;
+                }
                 options.forEach((option) => {
                     option.classList.toggle('is-selected', option.dataset.selectValue === selectedValue);
                 });
@@ -3127,12 +3897,14 @@
             function initializeClinicSelect(wrap) {
                 const select = wrap?.querySelector('select');
                 const display = wrap?.querySelector('.clinic-select-display');
-                const options = Array.from(wrap?.querySelectorAll('.clinic-select-option') || []);
                 if (!select || !display) return;
 
                 syncClinicSelect(wrap);
 
+                if (wrap.dataset.clinicSelectInitialized === 'true') return;
+
                 display.addEventListener('click', () => {
+                    if (display.disabled || select.disabled) return;
                     const shouldOpen = !wrap.classList.contains('is-open');
                     clinicSelects.forEach((otherWrap) => {
                         if (otherWrap !== wrap) closeClinicSelect(otherWrap);
@@ -3140,18 +3912,248 @@
                     wrap.classList.toggle('is-open', shouldOpen);
                     display.classList.toggle('is-open', shouldOpen);
                     display.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+                    if (shouldOpen && wrap.dataset.addressLevel) {
+                        window.setTimeout(() => wrap.querySelector('.location-select-search')?.focus(), 0);
+                    }
                 });
 
-                options.forEach((option) => {
-                    option.addEventListener('click', () => {
+                wrap.querySelector('.clinic-select-menu')?.addEventListener('click', (event) => {
+                    const option = event.target.closest('.clinic-select-option');
+                    if (!option) return;
                         select.value = option.dataset.selectValue || '';
                         select.dispatchEvent(new Event('change', { bubbles: true }));
                         syncClinicSelect(wrap);
                         closeClinicSelect(wrap);
-                    });
                 });
 
                 select.addEventListener('change', () => syncClinicSelect(wrap));
+                wrap.dataset.clinicSelectInitialized = 'true';
+            }
+
+            const employeeAddressLookupStatus = document.getElementById('employeeAddressLookupStatus');
+            const addressLocationApiBase = 'https://psgc.gitlab.io/api';
+            const addressLocationValues = {
+                province: @json($provinceFallback),
+                city: @json($cityFallback),
+                barangay: @json($barangayFallback),
+            };
+            const addressLocationWraps = {
+                province: document.querySelector('[data-address-level="province"]'),
+                city: document.querySelector('[data-address-level="city"]'),
+                barangay: document.querySelector('[data-address-level="barangay"]'),
+            };
+
+            function setAddressLookupStatus(message, isError = false) {
+                if (!employeeAddressLookupStatus) return;
+                employeeAddressLookupStatus.textContent = message;
+                employeeAddressLookupStatus.classList.toggle('is-error', isError);
+            }
+
+            function setClinicSelectDisabled(wrap, disabled) {
+                const select = wrap?.querySelector('select');
+                const display = wrap?.querySelector('.clinic-select-display');
+                if (!select || !display) return;
+                select.disabled = disabled;
+                display.disabled = disabled;
+                if (disabled) closeClinicSelect(wrap);
+            }
+
+            function normalizeLocationName(value) {
+                return String(value || '')
+                    .trim()
+                    .toLowerCase()
+                    .replace(/^(city|municipality)\s+of\s+/, '')
+                    .replace(/^(city|municipality)\s+/, '')
+                    .replace(/\s+(city|municipality)$/, '')
+                    .replace(/^(brgy\.?|barangay)\s+/, '')
+                    .replace(/[^a-z0-9]+/g, ' ')
+                    .trim();
+            }
+
+            function findLocationMatch(items, selectedValue) {
+                const normalizedSelected = normalizeLocationName(selectedValue);
+                if (!normalizedSelected) return null;
+                return items.find((item) => normalizeLocationName(item.name) === normalizedSelected) || null;
+            }
+
+            function formatLocationLabel(value, level) {
+                const label = String(value || '').trim();
+                if (level !== 'city') return label;
+
+                const cityOfMatch = label.match(/^City of\s+(.+)$/i);
+                if (cityOfMatch) return `${cityOfMatch[1].trim()} City`;
+
+                const municipalityOfMatch = label.match(/^Municipality of\s+(.+)$/i);
+                if (municipalityOfMatch) return `${municipalityOfMatch[1].trim()} Municipality`;
+
+                return label;
+            }
+
+            function createLocationOption(select, menu, value, label, code = '') {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = label;
+                if (code) option.dataset.locationCode = code;
+                select.appendChild(option);
+
+                const menuOption = document.createElement('button');
+                menuOption.type = 'button';
+                menuOption.className = 'clinic-select-option';
+                menuOption.dataset.selectValue = value;
+                menuOption.textContent = label;
+                menu.appendChild(menuOption);
+            }
+
+            function addLocationSearch(menu, wrap) {
+                const search = document.createElement('input');
+                search.type = 'search';
+                search.className = 'location-select-search';
+                search.placeholder = `Search ${wrap.dataset.addressLevel || 'location'}...`;
+                search.setAttribute('aria-label', `Search ${wrap.dataset.addressLevel || 'location'} options`);
+                search.addEventListener('input', () => {
+                    const query = search.value.trim().toLowerCase();
+                    const options = Array.from(menu.querySelectorAll('.clinic-select-option'));
+                    let visibleCount = 0;
+                    options.forEach((option) => {
+                        const isVisible = !query || option.textContent.toLowerCase().includes(query);
+                        option.hidden = !isVisible;
+                        if (isVisible) visibleCount += 1;
+                    });
+
+                    let emptyMessage = menu.querySelector('.location-select-empty');
+                    if (visibleCount === 0 && options.length > 0) {
+                        if (!emptyMessage) {
+                            emptyMessage = document.createElement('div');
+                            emptyMessage.className = 'location-select-empty';
+                            emptyMessage.textContent = 'No matching location found.';
+                            menu.appendChild(emptyMessage);
+                        }
+                    } else {
+                        emptyMessage?.remove();
+                    }
+                });
+                menu.appendChild(search);
+            }
+
+            function populateLocationSelect(wrap, items, selectedValue) {
+                const select = wrap?.querySelector('select');
+                const menu = wrap?.querySelector('.clinic-select-menu');
+                if (!select || !menu) return null;
+
+                select.innerHTML = '';
+                menu.innerHTML = '';
+                addLocationSearch(menu, wrap);
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.disabled = true;
+                placeholder.textContent = wrap.dataset.selectPlaceholder || 'Select option';
+                select.appendChild(placeholder);
+
+                const addressLevel = wrap.dataset.addressLevel || '';
+                const sortedItems = [...items].sort((left, right) => formatLocationLabel(left.name, addressLevel).localeCompare(
+                    formatLocationLabel(right.name, addressLevel),
+                    undefined,
+                    { sensitivity: 'base' }
+                ));
+                const match = findLocationMatch(sortedItems, selectedValue);
+                sortedItems.forEach((item) => {
+                    const apiValue = String(item.name || '').trim();
+                    if (!apiValue) return;
+                    const value = formatLocationLabel(apiValue, addressLevel);
+                    const label = value;
+                    createLocationOption(select, menu, value, label, item.code || '');
+                });
+
+                let resolvedValue = match
+                    ? formatLocationLabel(match.name, addressLevel)
+                    : String(selectedValue || '').trim();
+                if (resolvedValue && !Array.from(select.options).some((option) => option.value === resolvedValue)) {
+                    createLocationOption(select, menu, resolvedValue, `${resolvedValue} (existing value)`);
+                }
+                select.value = resolvedValue;
+                syncClinicSelect(wrap);
+                return match;
+            }
+
+            async function fetchLocationCollection(path) {
+                const controller = new AbortController();
+                const timeout = window.setTimeout(() => controller.abort(), 10000);
+                try {
+                    const response = await fetch(`${addressLocationApiBase}${path}`, {
+                        headers: { Accept: 'application/json' },
+                        credentials: 'omit',
+                        signal: controller.signal,
+                    });
+                    if (!response.ok) throw new Error(`Location lookup failed with ${response.status}.`);
+                    const payload = await response.json();
+                    return Array.isArray(payload) ? payload : (Array.isArray(payload.value) ? payload.value : []);
+                } finally {
+                    window.clearTimeout(timeout);
+                }
+            }
+
+            async function loadBarangays(cityCode, selectedValue = '') {
+                const wrap = addressLocationWraps.barangay;
+                setClinicSelectDisabled(wrap, true);
+                populateLocationSelect(wrap, [], selectedValue);
+                if (!cityCode) {
+                    setClinicSelectDisabled(wrap, false);
+                    return;
+                }
+
+                const barangays = await fetchLocationCollection(`/cities-municipalities/${encodeURIComponent(cityCode)}/barangays/`);
+                populateLocationSelect(wrap, barangays, selectedValue);
+                setClinicSelectDisabled(wrap, false);
+            }
+
+            async function loadCities(provinceCode, selectedValue = '', selectedBarangay = '') {
+                const cityWrap = addressLocationWraps.city;
+                const barangayWrap = addressLocationWraps.barangay;
+                setClinicSelectDisabled(cityWrap, true);
+                setClinicSelectDisabled(barangayWrap, true);
+                populateLocationSelect(cityWrap, [], selectedValue);
+                populateLocationSelect(barangayWrap, [], selectedBarangay);
+                if (!provinceCode) {
+                    setClinicSelectDisabled(cityWrap, false);
+                    setClinicSelectDisabled(barangayWrap, false);
+                    return;
+                }
+
+                const endpoint = provinceCode === '130000000'
+                    ? '/regions/130000000/cities-municipalities/'
+                    : `/provinces/${encodeURIComponent(provinceCode)}/cities-municipalities/`;
+                const cities = await fetchLocationCollection(endpoint);
+                const selectedCity = populateLocationSelect(cityWrap, cities, selectedValue);
+                setClinicSelectDisabled(cityWrap, false);
+                await loadBarangays(selectedCity?.code || '', selectedBarangay);
+            }
+
+            async function loadEmployeeAddressLocations() {
+                try {
+                    setAddressLookupStatus('Loading address options...');
+                    setClinicSelectDisabled(addressLocationWraps.province, true);
+                    const provinces = [
+                        { code: '130000000', name: 'Metro Manila' },
+                        ...(await fetchLocationCollection('/provinces/')),
+                    ];
+                    const selectedProvince = populateLocationSelect(
+                        addressLocationWraps.province,
+                        provinces,
+                        addressLocationValues.province
+                    );
+                    setClinicSelectDisabled(addressLocationWraps.province, false);
+                    await loadCities(
+                        selectedProvince?.code || '',
+                        addressLocationValues.city,
+                        addressLocationValues.barangay
+                    );
+                    setAddressLookupStatus('Select a province, then a city/municipality and barangay.');
+                } catch (error) {
+                    setAddressLookupStatus('Address options are unavailable. Existing values were preserved; refresh and try again.', true);
+                    setClinicSelectDisabled(addressLocationWraps.province, false);
+                    setClinicSelectDisabled(addressLocationWraps.city, false);
+                    setClinicSelectDisabled(addressLocationWraps.barangay, false);
+                }
             }
 
             function showError(message) {
@@ -3235,6 +4237,29 @@
                     window.requestAnimationFrame(() => resizeSignatureCanvas());
                 }
             }
+
+            function syncMobileContactValidity(input) {
+                if (!input) return;
+
+                const digits = input.value.replace(/\D/g, '').slice(0, 11);
+                if (input.value !== digits) input.value = digits;
+
+                const valid = /^09\d{9}$/.test(digits);
+                const message = digits === '' || valid
+                    ? ''
+                    : (input.dataset.validationMessage || 'Use an 11-digit mobile number starting with 09.');
+
+                input.setCustomValidity(message);
+                input.classList.toggle('mobile-contact-invalid', Boolean(message));
+                input.closest('.form-field')?.classList.toggle('mobile-contact-invalid-field', Boolean(message));
+                input.closest('.form-field')?.querySelector('[data-mobile-contact-error]')?.classList.toggle('is-visible', Boolean(message));
+            }
+
+            mobileContactInputs.forEach((input) => {
+                input.addEventListener('input', () => syncMobileContactValidity(input));
+                input.addEventListener('blur', () => syncMobileContactValidity(input));
+                syncMobileContactValidity(input);
+            });
 
             function validateStep(step) {
                 const panel = panels[step - 1];
@@ -3616,6 +4641,39 @@
                 });
             });
 
+            function selectedLocationCode(level) {
+                const select = addressLocationWraps[level]?.querySelector('select');
+                return select?.options[select.selectedIndex]?.dataset.locationCode || '';
+            }
+
+            addressLocationWraps.province?.querySelector('select')?.addEventListener('change', async (event) => {
+                addressLocationValues.province = event.target.value;
+                addressLocationValues.city = '';
+                addressLocationValues.barangay = '';
+                try {
+                    setAddressLookupStatus('Loading cities and municipalities...');
+                    await loadCities(selectedLocationCode('province'));
+                    setAddressLookupStatus('Select a city/municipality, then a barangay.');
+                } catch (error) {
+                    setAddressLookupStatus('City and municipality options are unavailable. Please refresh and try again.', true);
+                    setClinicSelectDisabled(addressLocationWraps.city, false);
+                    setClinicSelectDisabled(addressLocationWraps.barangay, false);
+                }
+            });
+
+            addressLocationWraps.city?.querySelector('select')?.addEventListener('change', async (event) => {
+                addressLocationValues.city = event.target.value;
+                addressLocationValues.barangay = '';
+                try {
+                    setAddressLookupStatus('Loading barangay options...');
+                    await loadBarangays(selectedLocationCode('city'));
+                    setAddressLookupStatus('Address options loaded.');
+                } catch (error) {
+                    setAddressLookupStatus('Barangay options are unavailable. Please refresh and try again.', true);
+                    setClinicSelectDisabled(addressLocationWraps.barangay, false);
+                }
+            });
+
             form.addEventListener('submit', (event) => {
                 if (isSubmitting) {
                     event.preventDefault();
@@ -3654,6 +4712,7 @@
             if (initialMessage) showError(initialMessage);
             updateEmployeeConsentDynamicText();
             clinicSelects.forEach(initializeClinicSelect);
+            loadEmployeeAddressLocations();
             syncPastMedicalOthers();
             syncEmployeeConditionalDetails(hospitalizationRadios, hospitalizationDetailsWrap, hospitalizationDetailsInput);
             syncEmployeeConditionalDetails(surgeryRadios, surgeryDetailsWrap, surgeryDetailsInput);

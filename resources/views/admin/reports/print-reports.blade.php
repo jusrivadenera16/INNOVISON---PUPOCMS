@@ -12,7 +12,12 @@
     $footerBgSrc = $isPdfMode ? public_path('images/footer_bg_print.jpg') : asset('images/footer_bg.png');
     $footerBgAvailable = $isPdfMode ? file_exists(public_path('images/footer_bg_print.jpg')) : file_exists(public_path('images/footer_bg.png'));
     $marMonthStart = \Carbon\Carbon::parse(($monthFilter ?? now()->format('Y-m')) . '-01')->startOfMonth();
-    $marReportAsOf = $marMonthStart->isCurrentMonth() ? now() : $marMonthStart->copy()->endOfMonth();
+    // The MAR data is filtered by the selected range, so the report's "as of"
+    // date must represent the selected end date rather than the start month.
+    $marReportAsOf = !empty($dateTo)
+        ? \Carbon\Carbon::parse($dateTo)
+        : ($marMonthStart->isCurrentMonth() ? now() : $marMonthStart->copy()->endOfMonth());
+    $marReportSubmittedAt = now();
     $resolveReportIdentity = static function ($staff, string $fallbackName = 'CLINIC STAFF', string $fallbackPosition = 'Clinic Staff', bool $useOfficeFallback = false): array {
         $profile = data_get($staff, 'adminProfile') ?: $staff;
         $name = trim((string) (data_get($profile, 'report_name') ?: data_get($staff, 'report_name') ?: data_get($staff, 'name')));
@@ -1933,7 +1938,7 @@
                     </td>
                     <td>
                         <span class="meta-label">Date of Submission:</span>
-                        <span class="meta-value">{{ $marReportAsOf->format('F d, Y') }}</span>
+                        <span class="meta-value">{{ $marReportSubmittedAt->format('F d, Y') }}</span>
                     </td>
                 </tr>
                 <tr>

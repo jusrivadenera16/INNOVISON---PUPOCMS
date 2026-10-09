@@ -5220,13 +5220,6 @@ private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
     $employeePrefill = $this->buildEmployeeHealthFormPrefill($user, $employeeProfile);
     $displayName = trim((string) ($user->name ?? ''));
 
-    $employeeCourseOptions = array_merge([
-        [
-            'code' => 'N/A',
-            'name' => 'Not Applicable',
-            'label' => 'Not Applicable',
-        ],
-    ], $this->healthFormCourseOptions());
     $healthFormCategories = $this->healthFormCategoriesForAudience(
         $this->employeeHealthFormCategoryAudience($user)
     );
@@ -5239,7 +5232,6 @@ private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
         'employeeProfile',
         'employeePrefill',
         'displayName',
-        'employeeCourseOptions',
         'healthFormCategories',
         'defaultEmployeeHealthFormCategory',
         'adminForm'
@@ -5570,12 +5562,11 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
         'barangay' => ['required', 'string', 'max:120'],
         'city_municipality' => ['required', 'string', 'max:120'],
         'province' => ['required', 'string', 'max:120'],
-        'contact_no' => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'contact_no' => ['required', 'string', 'size:11', 'regex:/^09\d{9}$/'],
         'emergency_contact_person' => ['required', 'string', 'max:255'],
-        'emergency_contact_no' => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'emergency_contact_no' => ['required', 'string', 'size:11', 'regex:/^09\d{9}$/'],
         'form_date' => ['required', 'date'],
         'office' => ['required', 'string', 'max:255'],
-        'course_college' => ['nullable', 'string', 'max:160'],
         'school_year' => ['nullable', 'string', 'max:40'],
         'age' => ['required', 'numeric', 'min:15', 'max:100'],
         'sex' => ['required', 'string', 'max:40'],
@@ -5788,7 +5779,6 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
         'emergency_contact_no' => $validated['emergency_contact_no'],
         'form_date' => $validated['form_date'],
         'office' => $validated['office'],
-        'course_college' => $validated['course_college'] ?? null,
         'school_year' => $validated['school_year'] ?? null,
         'age' => $validated['age'],
         'sex' => $validated['sex'],
@@ -6385,13 +6375,27 @@ public function storeHealthForm(Request $request)
     $applicantDocumentDateRule = $applicantDocumentsRequired
         ? ['required', 'date', 'after_or_equal:' . $applicantDocumentDateMin, 'before_or_equal:' . $applicantDocumentDateMax]
         : ['nullable', 'date'];
+    $studentYearRule = $isDedicatedStudentForm
+        ? ['required', 'string', Rule::in(['1st Year', '2nd Year', '3rd Year', '4th Year'])]
+        : ['nullable', 'string', Rule::in(['1st Year', '2nd Year', '3rd Year', '4th Year'])];
+    $studentSectionRule = $isDedicatedStudentForm
+        ? ['required', 'string', Rule::in(['1', '2', '3', '4'])]
+        : ['nullable', 'string', Rule::in(['1', '2', '3', '4'])];
+    $studentMobileRule = $isDedicatedStudentForm
+        ? ['required', 'string', 'size:11', 'regex:/^09\d{9}$/']
+        : ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'];
+    $studentZipcodeRule = $isDedicatedStudentForm
+        ? ['required', 'digits:4']
+        : ['required', 'string', 'max:20'];
 
     $request->validate([
         'student_id'        => 'nullable|string|max:255',
         'reference_number'  => $referenceNumberRules,
         'school_year'       => ['required', 'string', 'regex:/^\d{4}-\d{4}$/'],
+        'year'              => $studentYearRule,
+        'section'           => $studentSectionRule,
         'home_address'      => 'required|string|max:255',
-        'zipcode'           => 'required|string|max:20',
+        'zipcode'           => $studentZipcodeRule,
         'birthday'          => 'required|date',
         'student_photo'     => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'student_photo', ['image', 'mimes:jpeg,png,jpg', 'max:1024']),
         'health_declaration' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'health_declaration', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'], $applicantDocumentsRequired),
@@ -6405,10 +6409,10 @@ public function storeHealthForm(Request $request)
             ? ['required', 'string', 'max:120', Rule::in($studentHealthFormCategoryValues)]
             : ['nullable', 'string', 'max:120'],
         'blood_type'        => 'required|string|max:20',
-        'contact_no'        => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'contact_no'        => $studentMobileRule,
         'guardian_name'     => 'required|string|max:255',
         'landline'          => ['required', 'string', 'max:20', 'regex:/^(?:[0-9+\-\s()]+|N\/?A|NONE)$/i'],
-        'cellphone'         => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'cellphone'         => $studentMobileRule,
         'has_illness'       => 'required|string|in:Yes,No',
         'medical_history'   => 'nullable|array',
         'medical_history.*' => 'string|max:100',
@@ -6454,6 +6458,12 @@ public function storeHealthForm(Request $request)
         'guardian_signature_upload' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
         'digital_signature_existing' => 'nullable|string|max:255',
         'health_profile_certified' => 'accepted',
+    ], [
+        'contact_no.size' => 'Please put an 11-digit mobile number starting with 09.',
+        'contact_no.regex' => 'Please put an 11-digit mobile number starting with 09.',
+        'cellphone.size' => 'Please put an 11-digit mobile number starting with 09.',
+        'cellphone.regex' => 'Please put an 11-digit mobile number starting with 09.',
+        'zipcode.digits' => 'ZIP Code must contain exactly 4 digits.',
     ]);
 
     $signatureMethod = (string) $request->input('signature_method', 'draw');
@@ -6615,6 +6625,10 @@ public function storeHealthForm(Request $request)
 
     $user->DOB = $request->input('birthday');
     $user->contact_no = $request->input('contact_no');
+    if ($isDedicatedStudentForm) {
+        $user->year = $request->input('year');
+        $user->section = $request->input('section');
+    }
     $resolvedGender = trim((string) $request->input('sex'));
     if ($resolvedGender !== '') {
         $user->gender = $resolvedGender;
@@ -7073,6 +7087,10 @@ public function showHealthFormSubmissionDocument(HealthFormSubmission $submissio
     $path = ltrim((string) ($profileData[$document] ?? ''), '/');
     if ($path === '' && $document === 'chest_xray_result') {
         $path = ltrim((string) ($profileData['chest_xray_document'] ?? ''), '/');
+    }
+    if ($path === '' && $document === 'student_photo' && $submission->employee_health_profile_id) {
+        $employeeProfile = $submission->employeeHealthProfile;
+        $path = ltrim((string) ($profileData['employee_photo'] ?? $employeeProfile?->student_photo ?? ''), '/');
     }
     $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
 

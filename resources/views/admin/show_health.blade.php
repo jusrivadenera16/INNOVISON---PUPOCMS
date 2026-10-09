@@ -2207,6 +2207,22 @@
         background: #111827;
         color: #f8fafc;
     }
+
+    [data-theme="dark"] #newHealthFormModal .correction-info-row {
+        border-color: #334155;
+        background: #182334;
+        color: #f8fafc;
+    }
+
+    [data-theme="dark"] #newHealthFormModal .correction-info-row span:first-child {
+        color: #94a3b8;
+    }
+
+    [data-theme="dark"] #newHealthFormModal .correction-note {
+        border-color: rgba(250, 204, 21, .38);
+        background: rgba(146, 64, 14, .22);
+        color: #fde68a;
+    }
     [data-theme="dark"] .correction-field select option:checked {
         background: #70131B;
         color: #ffffff;
@@ -2718,9 +2734,11 @@
     $canRequestFileCorrection = !$isPulloutPending && !$isPulledOut
         && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && (optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false);
-    $canRequestNewHealthForm = !$isPulloutPending && !$isPulledOut
+    $canManageNewHealthForm = !$isPulloutPending && !$isPulledOut
         && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && (optional(auth()->user())->canAccessPermission('health_records.request_health_form') ?? false);
+    $canRequestNewHealthForm = $canManageNewHealthForm && !$activeNewHealthFormRequest;
+    $canViewExistingNewHealthFormRequest = $canManageNewHealthForm && (bool) $activeNewHealthFormRequest;
     $canReturnToPending = !$profileIsDependent && !$isPulloutPending && !$isPulledOut
         && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && (optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false);
@@ -2869,10 +2887,10 @@
                     </svg>
                 </button>
                 <div class="profile-actions-menu" id="profileActionsMenu">
-                    @if($canRequestNewHealthForm)
+                    @if($canManageNewHealthForm)
                         <button type="button" id="openNewHealthFormModal">
-                            Request New Health Form
-                            <span aria-hidden="true">+</span>
+                            {{ $canViewExistingNewHealthFormRequest ? 'View Existing Request' : 'Request New Health Form' }}
+                            <span aria-hidden="true">@if($canViewExistingNewHealthFormRequest)&rarr;@else+@endif</span>
                         </button>
                     @endif
                     @if($canRequestFileCorrection)
@@ -3464,43 +3482,73 @@
     </div>
 </div>
 
-@if($canRequestNewHealthForm)
+@if($canManageNewHealthForm)
 <div class="correction-modal" id="newHealthFormModal" aria-hidden="true">
     <div class="correction-card">
         <div class="correction-head">
             <div class="correction-head-title">
                 <span class="correction-head-icon"><x-outline-icon name="document-text" /></span>
                 <div>
-                    <h3>Request New Health Form</h3>
-                    <p>Ask this student to submit a fresh Health Information Form for a specific purpose.</p>
+                    <h3>{{ $canViewExistingNewHealthFormRequest ? 'Existing Health Form Request' : 'Request New Health Form' }}</h3>
+                    <p>{{ $canViewExistingNewHealthFormRequest ? 'Review the active Health Form request for this student.' : 'Ask this student to submit a fresh Health Information Form for a specific purpose.' }}</p>
                 </div>
             </div>
             <button type="button" class="correction-close" id="closeNewHealthFormModal" aria-label="Close new health form modal">
                 <x-outline-icon name="x-mark" />
             </button>
         </div>
-        <form method="POST" action="{{ route('admin.health_profile.request_health_form', $profile->id) }}" class="correction-body">
-            @csrf
-            <div class="correction-field">
-                <label for="newHealthFormCategory">Category / Purpose</label>
-                <div class="correction-select-wrap correction-custom-select-wrap">
-                    <select id="newHealthFormCategory" name="category" class="correction-custom-source" required>
-                        <option value="">Select category</option>
-                        @foreach(($healthFormCategories ?? collect()) as $category)
-                            <option value="{{ $category }}">{{ $category }}</option>
-                        @endforeach
-                    </select>
+        @if($canViewExistingNewHealthFormRequest)
+            <div class="correction-body existing-health-form-request-body">
+                <div class="correction-info-row">
+                    <span>Status</span>
+                    <strong>{{ ucwords(str_replace('_', ' ', $activeNewHealthFormRequest->status)) }}</strong>
+                </div>
+                <div class="correction-info-row">
+                    <span>Category / Purpose</span>
+                    <strong>{{ $activeNewHealthFormRequest->category ?: 'General Health Form' }}</strong>
+                </div>
+                <div class="correction-info-row">
+                    <span>Requested At</span>
+                    <strong>{{ optional($activeNewHealthFormRequest->requested_at)->format('M d, Y h:i A') ?: 'N/A' }}</strong>
+                </div>
+                @if(filled($activeNewHealthFormRequest->remarks))
+                    <div class="correction-info-row">
+                        <span>Remarks</span>
+                        <strong>{{ $activeNewHealthFormRequest->remarks }}</strong>
+                    </div>
+                @endif
+                <div class="correction-note">
+                    A Health Form request is already active for this record. No new request can be sent until this request is completed or closed.
+                </div>
+                <div class="correction-actions">
+                    <button type="button" class="correction-cancel" id="cancelNewHealthFormModal">Close</button>
+                    <button type="button" class="correction-submit" id="viewExistingHealthFormRecord">View Health Form Record</button>
                 </div>
             </div>
-            <div class="correction-field">
-                <label for="newHealthFormRemarks">Remarks</label>
-                <textarea id="newHealthFormRemarks" name="remarks" placeholder="Optional note for why a new form is needed.">{{ old('remarks') }}</textarea>
-            </div>
-            <div class="correction-actions">
-                <button type="button" class="correction-cancel" id="cancelNewHealthFormModal">Cancel</button>
-                <button type="submit" class="correction-submit">Send Request</button>
-            </div>
-        </form>
+        @else
+            <form method="POST" action="{{ route('admin.health_profile.request_health_form', $profile->id) }}" class="correction-body">
+                @csrf
+                <div class="correction-field">
+                    <label for="newHealthFormCategory">Category / Purpose</label>
+                    <div class="correction-select-wrap correction-custom-select-wrap">
+                        <select id="newHealthFormCategory" name="category" class="correction-custom-source" required>
+                            <option value="">Select category</option>
+                            @foreach(($healthFormCategories ?? collect()) as $category)
+                                <option value="{{ $category }}">{{ $category }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="correction-field">
+                    <label for="newHealthFormRemarks">Remarks</label>
+                    <textarea id="newHealthFormRemarks" name="remarks" placeholder="Optional note for why a new form is needed.">{{ old('remarks') }}</textarea>
+                </div>
+                <div class="correction-actions">
+                    <button type="button" class="correction-cancel" id="cancelNewHealthFormModal">Cancel</button>
+                    <button type="submit" class="correction-submit">Send Request</button>
+                </div>
+            </form>
+        @endif
     </div>
 </div>
 @endif
@@ -4032,6 +4080,12 @@
     openNewHealthFormModal?.addEventListener('click', function () {
         setProfileActionsMenu(false);
         setNewHealthFormModal(true);
+    });
+
+    document.getElementById('viewExistingHealthFormRecord')?.addEventListener('click', function () {
+        setNewHealthFormModal(false);
+        document.querySelector('[data-profile-tab-target="docsPanel"]')?.click();
+        document.getElementById('docsPanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
     closeNewHealthFormModal?.addEventListener('click', function () {
