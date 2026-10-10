@@ -3642,6 +3642,191 @@
             border-color: rgba(255, 255, 255, 0.38) !important;
         }
 
+        .admin-flash-toast-stack {
+            position: fixed;
+            top: 96px;
+            right: 26px;
+            z-index: 499996;
+            display: grid;
+            gap: 12px;
+            width: min(330px, calc(100vw - 32px));
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            pointer-events: none;
+        }
+
+        .admin-flash-toast {
+            position: relative;
+            display: grid;
+            grid-template-columns: 38px minmax(0, 1fr) 28px;
+            align-items: center;
+            gap: 12px;
+            min-height: 78px;
+            padding: 14px 16px 14px 22px;
+            overflow: hidden;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            border-radius: 9px;
+            background: rgba(255, 255, 255, 0.98);
+            color: #334155;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+            opacity: 0;
+            transform: translateX(18px) scale(0.98);
+            animation: adminFlashToastIn 0.32s cubic-bezier(.2, .8, .2, 1) forwards;
+            pointer-events: auto;
+        }
+
+        .admin-flash-toast::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 12px;
+            background: var(--admin-toast-edge);
+            -webkit-mask: radial-gradient(circle at 100% 8px, transparent 0 5px, #000 5.5px) 0 0 / 100% 16px repeat-y;
+            mask: radial-gradient(circle at 100% 8px, transparent 0 5px, #000 5.5px) 0 0 / 100% 16px repeat-y;
+        }
+
+        .admin-flash-toast.is-success {
+            --admin-toast-accent: #159a32;
+            --admin-toast-accent-soft: #d9f7d7;
+            --admin-toast-edge: #b9efb8;
+        }
+
+        .admin-flash-toast.is-error {
+            --admin-toast-accent: #dc2626;
+            --admin-toast-accent-soft: #fee2e2;
+            --admin-toast-edge: #fecaca;
+        }
+
+        .admin-flash-toast.is-info {
+            --admin-toast-accent: #2563eb;
+            --admin-toast-accent-soft: #dbeafe;
+            --admin-toast-edge: #bfdbfe;
+        }
+
+        .admin-flash-toast.is-warning {
+            --admin-toast-accent: #ea580c;
+            --admin-toast-accent-soft: #ffedd5;
+            --admin-toast-edge: #fed7aa;
+        }
+
+        .admin-flash-toast.is-hiding {
+            animation: adminFlashToastOut 0.22s ease forwards;
+        }
+
+        .admin-flash-toast-timer {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            overflow: hidden;
+            border-radius: 0 0 9px 9px;
+            background: var(--admin-toast-accent-soft);
+        }
+
+        .admin-flash-toast-timer::after {
+            content: "";
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--admin-toast-accent);
+            transform-origin: left center;
+            animation: adminFlashToastTimer 5s linear forwards;
+        }
+
+        .admin-flash-toast-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--admin-toast-accent-soft);
+            color: var(--admin-toast-accent);
+        }
+
+        .admin-flash-toast-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke-width: 2.2;
+        }
+
+        .admin-flash-toast-title,
+        .admin-flash-toast-message {
+            display: block;
+            line-height: 1.25;
+        }
+
+        .admin-flash-toast-title {
+            margin-bottom: 4px;
+            color: var(--admin-toast-accent);
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .admin-flash-toast-message {
+            color: #475569;
+            font-size: 14px;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+        .admin-flash-toast-close {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border: 0;
+            border-radius: 50%;
+            background: transparent;
+            color: #475569;
+            cursor: pointer;
+            transition: background .18s ease, color .18s ease, transform .18s ease;
+        }
+
+        .admin-flash-toast-close:hover,
+        .admin-flash-toast-close:focus-visible {
+            background: rgba(15, 23, 42, 0.08);
+            color: #111827;
+            transform: scale(1.04);
+            outline: none;
+        }
+
+        .admin-flash-toast-close svg {
+            width: 17px;
+            height: 17px;
+            stroke-width: 2;
+        }
+
+        @keyframes adminFlashToastIn {
+            to { opacity: 1; transform: translateX(0) scale(1); }
+        }
+
+        @keyframes adminFlashToastOut {
+            to { opacity: 0; transform: translateX(18px) scale(0.98); }
+        }
+
+        @keyframes adminFlashToastTimer {
+            to { transform: scaleX(0); }
+        }
+
+        @media (max-width: 640px) {
+            .admin-flash-toast-stack {
+                top: 82px;
+                right: 16px;
+                width: min(330px, calc(100vw - 32px));
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .admin-flash-toast,
+            .admin-flash-toast.is-hiding {
+                animation-duration: 0.01ms;
+            }
+        }
+
         .admin-live-alert {
             position: fixed;
             left: 50%;
@@ -6733,6 +6918,73 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
 </div>
 
+@php
+    $adminToastEntries = [];
+    $adminToastTypes = [
+        'success' => ['type' => 'success', 'title' => 'Success message'],
+        'status' => ['type' => 'success', 'title' => 'Success message'],
+        'message' => ['type' => 'info', 'title' => 'Information'],
+        'info' => ['type' => 'info', 'title' => 'Information'],
+        'warning' => ['type' => 'warning', 'title' => 'Warning message'],
+        'error' => ['type' => 'error', 'title' => 'Error message'],
+        'danger' => ['type' => 'error', 'title' => 'Error message'],
+    ];
+
+    foreach ($adminToastTypes as $key => $presentation) {
+        $messages = session()->get($key);
+        foreach (is_array($messages) ? $messages : [$messages] as $message) {
+            if (is_scalar($message) && trim((string) $message) !== '') {
+                $adminToastEntries[] = $presentation + ['message' => (string) $message];
+            }
+        }
+    }
+
+    foreach ($errors->all() as $message) {
+        $adminToastEntries[] = [
+            'type' => 'error',
+            'title' => 'Error message',
+            'message' => $message,
+        ];
+    }
+@endphp
+@if($adminToastEntries)
+    <div class="admin-flash-toast-stack" aria-live="polite" aria-atomic="false">
+        @foreach($adminToastEntries as $entry)
+            <div class="admin-flash-toast is-{{ $entry['type'] }}" role="{{ $entry['type'] === 'error' ? 'alert' : 'status' }}" data-admin-flash-toast>
+                <span class="admin-flash-toast-icon" aria-hidden="true">
+                    @if($entry['type'] === 'error')
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+                        </svg>
+                    @elseif($entry['type'] === 'warning')
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3h.008v.008H12v-.008ZM10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+                        </svg>
+                    @elseif($entry['type'] === 'info')
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 11v5m0-8h.008M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                    @else
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                    @endif
+                </span>
+                <span>
+                    <strong class="admin-flash-toast-title">{{ $entry['title'] }}</strong>
+                    <span class="admin-flash-toast-message">{{ $entry['message'] }}</span>
+                </span>
+                <button type="button" class="admin-flash-toast-close" data-admin-flash-toast-close aria-label="Dismiss message">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <span class="admin-flash-toast-timer" aria-hidden="true"></span>
+            </div>
+        @endforeach
+    </div>
+@endif
+
 @include('admin.partials.consultation-evaluation-prompt')
 
 <div class="admin-loader-overlay admin-action-loader" id="adminActionLoader" role="status" aria-live="assertive" aria-label="Processing action" aria-hidden="true">
@@ -8960,6 +9212,56 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         initAccessibilityLaunch();
         initAdminLogoutConfirm();
     });
+</script>
+
+<script>
+    (function () {
+        const toasts = Array.from(document.querySelectorAll('[data-admin-flash-toast]'));
+        const normalize = (value) => value.replace(/\s+/g, ' ').trim().toLowerCase();
+        const toastMessages = toasts
+            .map((toast) => normalize(toast.querySelector('.admin-flash-toast-message')?.textContent || ''))
+            .filter(Boolean);
+        const inlineFeedbackSelector = [
+            '.main .alert',
+            '.main [role="alert"]',
+            '.main [class*="alert"]',
+            '.main [class*="feedback"]',
+            '.main [class*="error-message"]',
+            '.main [class*="validation-error"]',
+            '.main [class*="invalid-feedback"]',
+            '.main [class*="field-error"]',
+            '.main [class*="form-error"]',
+            '.main [class*="success-message"]',
+            '.main [class*="success-alert"]',
+            '.main .text-danger',
+            '.main .text-red-500'
+        ].join(', ');
+
+        document.querySelectorAll(inlineFeedbackSelector).forEach((node) => {
+            if (!node.getClientRects().length || !toastMessages.length) return;
+            const inlineMessage = normalize(node.textContent || '');
+            if (toastMessages.some((message) => inlineMessage === message || inlineMessage.includes(message))) {
+                node.remove();
+            }
+        });
+
+        toasts.forEach((toast) => {
+            let dismissed = false;
+            const dismiss = () => {
+                if (dismissed) return;
+                dismissed = true;
+                toast.classList.add('is-hiding');
+                window.setTimeout(() => {
+                    const stack = toast.closest('.admin-flash-toast-stack');
+                    toast.remove();
+                    if (stack && !stack.querySelector('[data-admin-flash-toast]')) stack.remove();
+                }, 240);
+            };
+
+            toast.querySelector('[data-admin-flash-toast-close]')?.addEventListener('click', dismiss);
+            window.setTimeout(dismiss, 5000);
+        });
+    })();
 </script>
 
 @include('partials.system_footer')

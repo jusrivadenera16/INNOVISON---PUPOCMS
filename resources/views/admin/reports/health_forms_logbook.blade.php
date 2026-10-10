@@ -63,7 +63,7 @@
         border: 1px solid rgba(112, 19, 27, 0.12);
         border-radius: 18px;
         box-shadow: 0 18px 45px rgba(15, 23, 42, 0.1);
-        overflow: hidden;
+        overflow: visible;
     }
     .hf-form-b-heading {
         display: flex;
@@ -73,6 +73,7 @@
         padding: 22px 24px;
         border-top: 5px solid #70131b;
         border-bottom: 1px solid #f1d7d7;
+        border-radius: 17px 17px 0 0;
         background: linear-gradient(135deg, #ffffff, #fffaf0);
     }
     .hf-form-b-kicker {
@@ -208,6 +209,7 @@
         justify-content: space-between;
         gap: 10px;
         padding: 14px 18px;
+        border-radius: 0 0 17px 17px;
         background: #f8fafc;
         color: #64748b;
         font-size: 12px;
@@ -223,7 +225,10 @@
         border-radius: 14px;
         background: #ffffff;
         box-shadow: 0 18px 38px rgba(15, 23, 42, 0.2);
-        overflow: hidden;
+        max-height: calc(100vh - 24px);
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
         z-index: 1000;
     }
     .hf-filter-popover.is-open {
@@ -309,8 +314,8 @@
         padding-top: 2px;
     }
     .hf-filter-actions .hf-logbook-btn {
-        min-height: 38px;
-        padding: 8px 13px;
+        min-height: 32px;
+        padding: 5px 12px;
         font-size: 12px;
     }
     html[data-theme="dark"] .hf-filter-popover {
@@ -477,7 +482,7 @@
                                 <button type="button" class="hf-logbook-btn" id="cancelHealthFormsLogbookFilter">Cancel</button>
                                 <button type="submit" class="hf-logbook-btn primary">
                                     <x-outline-icon name="check" />
-                                    Apply Filter
+                                    Apply
                                 </button>
                             </div>
                         </form>
@@ -567,7 +572,21 @@ healthFormsLogbookFilterButton?.addEventListener('click', function () {
     const isOpen = healthFormsLogbookFilterPopover?.classList.toggle('is-open') ?? false;
     healthFormsLogbookFilterPopover?.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
     this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    if (isOpen) requestAnimationFrame(fitHealthFormsLogbookFilterPopover);
 });
+
+function fitHealthFormsLogbookFilterPopover() {
+    if (!healthFormsLogbookFilterPopover?.classList.contains('is-open')) return;
+
+    const anchorRect = healthFormsLogbookFilterPopover.parentElement.getBoundingClientRect();
+    healthFormsLogbookFilterPopover.style.top = 'calc(100% + 10px)';
+    healthFormsLogbookFilterPopover.style.bottom = 'auto';
+    healthFormsLogbookFilterPopover.style.maxHeight = 'none';
+
+    const naturalHeight = healthFormsLogbookFilterPopover.scrollHeight;
+    const availableBelow = window.innerHeight - anchorRect.bottom - 22;
+    healthFormsLogbookFilterPopover.style.maxHeight = `${Math.min(naturalHeight, Math.max(100, availableBelow))}px`;
+}
 
 function closeHealthFormsLogbookFilter() {
     healthFormsLogbookFilterPopover?.classList.remove('is-open');
@@ -584,5 +603,7 @@ document.addEventListener('click', function (event) {
 document.addEventListener('keydown', function (event) {
     if (event.key === 'Escape') closeHealthFormsLogbookFilter();
 });
+window.addEventListener('resize', fitHealthFormsLogbookFilterPopover);
+window.addEventListener('scroll', fitHealthFormsLogbookFilterPopover);
 </script>
 @endsection

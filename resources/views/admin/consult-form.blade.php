@@ -4918,20 +4918,12 @@
         <span class="utility-rail-count">{{ $items->count() }}</span>
     </button>
     @if($student)
-        @php
-            $recentRecordsCount = \App\Models\Consultation::where('user_id', $student->id)->count();
-        @endphp
         <button type="button" class="utility-rail-button" data-utility-target="recent_records" title="Recent Records">
             <x-outline-icon name="clock" />
             <span>Recent Records</span>
-            <span class="utility-rail-count">{{ $recentRecordsCount }}</span>
+            <span class="utility-rail-count">{{ $studentRecentRecords->count() }}</span>
         </button>
     @endif
-    <button type="button" class="utility-rail-button" data-utility-target="treatments" title="Treatment Record">
-        <x-outline-icon name="clipboard-document-list" />
-        <span>Treatment Record</span>
-        <span class="utility-rail-count">{{ $studentTreatments->count() }}</span>
-    </button>
 </nav>
 
 <aside id="right-utility-panel" aria-hidden="true" aria-label="Consultation utility panel">
@@ -4940,7 +4932,7 @@
         <h2 class="utility-panel-title" id="utilityPanelTitle">Uploaded Documents</h2>
         <button type="button" id="close-utility-panel" aria-label="Close utility panel">&times;</button>
     </header>
-    <button type="button" id="expand-utility-panel" aria-label="Expand treatment record panel" title="Expand treatment record">&lt;</button>
+    <button type="button" id="expand-utility-panel" aria-label="Expand recent records panel" title="Expand recent records">&lt;</button>
 
     <section class="utility-panel-pane" data-utility-pane="documents">
         <p class="utility-pane-note">Submitted clinic files and the generated Health Information Form.</p>
@@ -5113,11 +5105,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php
-                        $recentConsultations = $student ? \App\Models\Consultation::with(['medicineItem', 'medicines.item'])->where('user_id', $student->id)->orderByDesc('created_at')->get() : collect();
-                    @endphp
-                    @if($student && $recentConsultations->count())
-                        @forelse($recentConsultations as $consultation)
+                    @if($student && $studentRecentRecords->count())
+                        @forelse($studentRecentRecords as $consultation)
                             @php
                                 $consultationMedicineLines = $consultation->medicines->filter(fn ($line) => trim((string) ($line->medicine ?: optional($line->item)->name)) !== '');
                                 $consultMedicine = $consultationMedicineLines->isNotEmpty()
@@ -5188,88 +5177,6 @@
         </div>
     </section>
 
-    <section class="utility-panel-pane" data-utility-pane="treatments">
-        <p class="utility-pane-note">The 20 most recent finalized consultations for this patient.</p>
-        <div class="consultation-treatment-table-wrap">
-            <table class="consultation-treatment-table">
-                <thead>
-                    <tr>
-                        <th class="treatment-date-col">Date</th>
-                        <th class="treatment-time-col">Time In</th>
-                        <th class="treatment-time-col">Time Out</th>
-                        <th class="treatment-service-col">Service</th>
-                        <th class="treatment-complaint-col">Complaints / Impression</th>
-                        <th class="treatment-medicine-col">Treatment / Medicines</th>
-                        <th class="treatment-quantity-col">Qty</th>
-                        <th class="treatment-staff-col">Attending Staff</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($studentTreatments as $treatment)
-                        @php
-                            $treatmentMedicineLines = $treatment->medicines->filter(fn ($line) => trim((string) ($line->medicine ?: optional($line->item)->name)) !== '');
-                            $treatmentMedicine = $treatmentMedicineLines->isNotEmpty()
-                                ? $treatmentMedicineLines->map(fn ($line) => $line->medicine ?: optional($line->item)->name)->implode(', ')
-                                : trim((string) (optional($treatment->medicineItem)->name ?: $treatment->medicine));
-                            $treatmentStaff = trim((string) ($treatment->attending_staff_name ?: optional($treatment->attendingStaff)->name));
-                            $treatmentQuantity = $treatmentMedicineLines->isNotEmpty()
-                                ? $treatmentMedicineLines->map(fn ($line) => rtrim(rtrim(number_format((float) $line->quantity, 2, '.', ''), '0'), '.'))->implode(', ')
-                                : ((float) $treatment->medicine_quantity > 0 ? rtrim(rtrim(number_format((float) $treatment->medicine_quantity, 2, '.', ''), '0'), '.') : '');
-                            $treatmentTimeIn = $treatment->time_in ?: optional($treatment->created_at)->format('H:i:s');
-                            $treatmentTimeOut = $treatment->time_out ?: optional($treatment->updated_at)->format('H:i:s');
-                            $treatmentComplaint = trim((string) $treatment->reason_for_visit);
-                            $treatmentImpression = trim((string) $treatment->comments);
-                            $treatmentReferralLabels = collect($referralOptions ?? [])
-                                ->mapWithKeys(fn ($option) => [$option->code => $option->name])
-                                ->union([
-                                    'hospital_without_nurse' => 'Refer to Hospital (Without Nurse)',
-                                    'hospital_with_nurse' => 'Refer to Hospital (With Nurse)',
-                                    'general' => 'Referral (General)',
-                                    'others' => 'Others',
-                                ])
-                                ->all();
-                            $treatmentReferralType = trim((string) ($treatment->referral_type ?? ''));
-                            $treatmentReferral = $treatmentReferralType !== '' && $treatmentReferralType !== 'none'
-                                ? ($treatmentReferralLabels[$treatmentReferralType] ?? $treatmentReferralType)
-                                : '';
-                            if ($treatmentReferral !== '' && trim((string) ($treatment->referral_details ?? '')) !== '') {
-                                $treatmentReferral .= ': ' . trim((string) $treatment->referral_details);
-                            }
-                        @endphp
-                        <tr>
-                            <td>{{ optional($treatment->consultation_date)->format('m/d/Y') ?: '-' }}</td>
-                            <td>{{ $treatmentTimeIn ? \Carbon\Carbon::parse($treatmentTimeIn)->format('g:i A') : '-' }}</td>
-                            <td>{{ $treatmentTimeOut ? \Carbon\Carbon::parse($treatmentTimeOut)->format('g:i A') : '-' }}</td>
-                            <td>{{ $treatment->service ?: 'Consultation' }}</td>
-                            <td>
-                                <span class="treatment-table-entry">
-                                    <span class="treatment-table-entry-label">Complaint</span>
-                                    <span class="treatment-table-entry-value">{{ $treatmentComplaint ?: 'No complaint recorded.' }}</span>
-                                </span>
-                                <span class="treatment-table-entry">
-                                    <span class="treatment-table-entry-label">Impression</span>
-                                    <span class="treatment-table-entry-value">{{ $treatmentImpression ?: 'No assessment recorded.' }}</span>
-                                </span>
-                                @if($treatmentReferral !== '')
-                                    <span class="treatment-table-entry">
-                                        <span class="treatment-table-entry-label">Referral</span>
-                                        <span class="treatment-table-entry-value">{{ $treatmentReferral }}</span>
-                                    </span>
-                                @endif
-                            </td>
-                            <td>{{ $treatmentMedicine !== '' && strtolower($treatmentMedicine) !== 'none' ? $treatmentMedicine : 'No medicine issued' }}</td>
-                            <td class="treatment-quantity-col">{{ $treatmentQuantity !== '' ? $treatmentQuantity : '-' }}</td>
-                            <td>{{ $treatmentStaff ?: 'Clinic Staff' }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="consultation-treatment-empty">No previous treatment records are available for this student.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </section>
 </aside>
 
 <script>
@@ -5716,8 +5623,7 @@
         const utilityLabels = {
             documents: 'Uploaded Documents',
             inventory: 'Live Medicine Stock',
-            recent_records: 'Recent Records',
-            treatments: 'Treatment Record'
+            recent_records: 'Recent Records'
         };
 
         const setInventorySearchOpen = function (isOpen) {
@@ -5765,7 +5671,7 @@
 
             activeUtility = target;
             utilityTitle.textContent = utilityLabels[target] || 'Consultation Tools';
-            const isExpandablePanel = target === 'treatments' || target === 'recent_records';
+            const isExpandablePanel = target === 'recent_records';
             expandUtilityPanel?.classList.toggle('is-visible', isExpandablePanel);
             if (!isExpandablePanel) {
                 utilityPanel.classList.remove('is-expanded');
@@ -5787,12 +5693,12 @@
         };
 
         const toggleUtilityExpansion = function () {
-            if (activeUtility !== 'treatments' && activeUtility !== 'recent_records') return;
+            if (activeUtility !== 'recent_records') return;
             const isExpanded = utilityPanel.classList.toggle('is-expanded');
             utilityRail.classList.toggle('panel-expanded', isExpanded);
             expandUtilityPanel?.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
 
-            const panelName = activeUtility === 'treatments' ? 'treatment record' : 'recent records';
+            const panelName = 'recent records';
             expandUtilityPanel?.setAttribute(
                 'aria-label',
                 isExpanded ? `Collapse ${panelName} panel` : `Expand ${panelName} panel`

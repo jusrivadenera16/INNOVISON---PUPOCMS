@@ -20,6 +20,8 @@ use Illuminate\Support\Collection;
 
 class MarClearanceIssuanceService
 {
+    private ?Collection $activeSourceMappings = null;
+
     public function resolveSubcategoryForWorkflow(
         ?string $category,
         string $sourceWorkflow,
@@ -838,26 +840,30 @@ class MarClearanceIssuanceService
         CarbonInterface|string|null $date = null
     ): Collection {
         $date = $date ? Carbon::parse($date) : now();
-
-        return MarClearanceSourceMapping::query()
+        $mappings = $this->activeSourceMappings ??= MarClearanceSourceMapping::query()
             ->where('is_active', true)
             ->with([
-                'clearanceType',
-                'subcategory.clearanceType',
+                'clearanceType.sources',
+                'subcategory.clearanceType.sources',
+                'subcategory.sources',
                 'sourceCategory',
             ])
-            ->get()
+            ->get();
+
+        return $mappings
             ->filter(function (MarClearanceSourceMapping $mapping) use ($sourceWorkflow, $date): bool {
                 $target = $this->configuredMappingTarget($mapping);
                 if (!$target || !$this->mappingIsEffective($mapping, $date)) {
                     return false;
                 }
 
-                $sourceQuery = $target['subcategory']
-                    ? $target['subcategory']->sources()
-                    : $target['clearanceType']->sources();
+                $sources = $target['subcategory']
+                    ? $target['subcategory']->sources
+                    : $target['clearanceType']->sources;
 
-                return $sourceQuery->where('source', $sourceWorkflow)->exists();
+                return $sources->contains(
+                    fn ($source): bool => (string) $source->source === $sourceWorkflow
+                );
             })
             ->values();
     }

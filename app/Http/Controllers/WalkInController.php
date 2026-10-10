@@ -2276,12 +2276,10 @@ class WalkInController extends Controller
             ->get();
         $studentDocuments = $this->healthProfileDocuments($request, $student->healthProfile);
         $studentDocumentVersions = $this->healthProfileDocumentVersions($request, $student->healthProfile);
-        $studentTreatments = Consultation::query()
-            ->with(['medicalCondition.category', 'medicineItem', 'medicines.item', 'attendingStaff'])
+        $studentRecentRecords = Consultation::query()
+            ->with(['medicineItem', 'medicines.item', 'attendingStaff'])
             ->where('user_id', $student->id)
-            ->latest('consultation_date')
-            ->latest('time_out')
-            ->limit(20)
+            ->latest('created_at')
             ->get();
 
         $consultationDob = (string) ($student->healthProfile->birthday ?? $student->DOB ?? '');
@@ -2318,7 +2316,7 @@ class WalkInController extends Controller
             'consultationWeight',
             'studentDocuments',
             'studentDocumentVersions',
-            'studentTreatments',
+            'studentRecentRecords',
             'consultationStartedAt',
             'consultationDraftData'
         ));

@@ -1,11 +1,12 @@
 @php
     $evaluationPrompt = session('consultation_evaluation_prompt');
+    $hasEvaluationPrompt = is_array($evaluationPrompt) && !empty($evaluationPrompt['consultation_id']);
     $evaluationPromptRoute = request()->is('assistant/*')
         ? 'assistant.walkin.consultation-evaluation'
         : 'walkin.consultation-evaluation';
 @endphp
 
-@if(is_array($evaluationPrompt) && !empty($evaluationPrompt['consultation_id']))
+@if($hasEvaluationPrompt)
     <style>
         .consultation-evaluation-prompt {
             position: fixed;
@@ -128,10 +129,13 @@
         }
 
         .consultation-evaluation-action {
+            position: relative;
             display: inline-flex;
             flex: 1 1 0;
             align-items: center;
             justify-content: center;
+            isolation: isolate;
+            overflow: hidden;
             min-height: 38px;
             padding: 0 8px;
             border: 1px solid #b7bec8;
@@ -141,12 +145,60 @@
             cursor: pointer;
             font-size: 12px;
             font-weight: 800;
+            transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+        }
+
+        .consultation-evaluation-action::before {
+            position: absolute;
+            z-index: 0;
+            top: -40%;
+            bottom: -40%;
+            left: -20%;
+            width: 36%;
+            background: linear-gradient(105deg, transparent, rgba(255, 248, 196, .9), transparent);
+            content: "";
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(0) skewX(-18deg);
+        }
+
+        .consultation-evaluation-action > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .consultation-evaluation-action:hover,
+        .consultation-evaluation-action:focus-visible {
+            border-color: #facc15;
+            background: #facc15;
+            color: #70131b;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(250, 204, 21, .15), 0 8px 18px rgba(112, 19, 27, .16);
+            transform: translateY(-1px);
+        }
+
+        .consultation-evaluation-action:hover::before,
+        .consultation-evaluation-action:focus-visible::before {
+            animation: consultationEvaluationSweep .8s ease both;
+        }
+
+        @keyframes consultationEvaluationSweep {
+            0% { opacity: 0; transform: translateX(0) skewX(-18deg); }
+            18% { opacity: 1; }
+            100% { opacity: 0; transform: translateX(390%) skewX(-18deg); }
         }
 
         .consultation-evaluation-action.primary {
             border-color: #86111f;
             background: #86111f;
             color: #ffffff;
+        }
+
+        .consultation-evaluation-action.primary:hover,
+        .consultation-evaluation-action.primary:focus-visible {
+            border-color: #facc15;
+            background: #facc15;
+            color: #70131b;
         }
 
         .consultation-evaluation-action svg {
@@ -158,6 +210,17 @@
             stroke-linecap: round;
             stroke-linejoin: round;
             stroke-width: 1.8;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .consultation-evaluation-action {
+                transition: none;
+            }
+
+            .consultation-evaluation-action:hover::before,
+            .consultation-evaluation-action:focus-visible::before {
+                animation: none;
+            }
         }
 
         @media (max-width: 360px) {
@@ -207,7 +270,7 @@
             <form method="POST" action="{{ route($evaluationPromptRoute) }}" class="consultation-evaluation-actions">
                 @csrf
                 <input type="hidden" name="consultation_id" value="{{ (int) $evaluationPrompt['consultation_id'] }}">
-                <button type="submit" name="decision" value="skip" class="consultation-evaluation-action">Skip</button>
+                <button type="submit" name="decision" value="skip" class="consultation-evaluation-action"><span>Skip</span></button>
                 <button type="submit" name="decision" value="send" class="consultation-evaluation-action primary">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="m3.5 4.5 17 7.5-17 7.5 3.8-7.5-3.8-7.5Z"></path>
@@ -222,10 +285,10 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const prompt = document.querySelector('.consultation-evaluation-prompt');
-            const closeButton = prompt?.querySelector('[data-close-consultation-evaluation]');
-            if (!prompt || !closeButton) return;
+            if (!prompt) return;
 
-            closeButton.addEventListener('click', function () {
+            const closeButton = prompt.querySelector('[data-close-consultation-evaluation]');
+            closeButton?.addEventListener('click', function () {
                 prompt.remove();
             });
         });

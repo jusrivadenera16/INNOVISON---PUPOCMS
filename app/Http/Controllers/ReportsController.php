@@ -687,16 +687,22 @@ class ReportsController extends Controller
         return $relations;
     }
 
-    private function buildMarServiceSummary(Carbon $dateFrom, Carbon $dateTo): array
+    private function buildMarServiceSummary(
+        Carbon $dateFrom,
+        Carbon $dateTo,
+        ?Collection $consultations = null
+    ): array
     {
         $patientTypes = ['student', 'faculty', 'admin', 'dependent'];
-        $profileRelations = collect($this->reportUserProfileRelations())
-            ->map(fn (string $relation) => 'user.' . $relation)
-            ->all();
-        $consultations = Consultation::query()
-            ->with(array_merge(['user'], $profileRelations))
-            ->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()])
-            ->get();
+        if ($consultations === null) {
+            $profileRelations = collect($this->reportUserProfileRelations())
+                ->map(fn (string $relation) => 'user.' . $relation)
+                ->all();
+            $consultations = Consultation::query()
+                ->with(array_merge(['user'], $profileRelations))
+                ->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()])
+                ->get();
+        }
 
         $countsFor = function (Collection $records) use ($patientTypes): array {
             $counts = array_fill_keys($patientTypes, 0);
@@ -1128,16 +1134,19 @@ class ReportsController extends Controller
         Collection $categories,
         Carbon $dateFrom,
         Carbon $dateTo,
-        ?Collection $clearanceIssuances = null
+        ?Collection $clearanceIssuances = null,
+        ?Collection $consultations = null
     ): array
     {
         $consultationUserRelations = array_map(
             fn (string $relation) => 'user.' . $relation,
             $this->reportUserProfileRelations()
         );
-        $consultations = Consultation::with($consultationUserRelations)
-            ->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()])
-            ->get();
+        if ($consultations === null) {
+            $consultations = Consultation::with($consultationUserRelations)
+                ->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()])
+                ->get();
+        }
 
         $clearanceIssuances ??= app(MarClearanceIssuanceService::class)
             ->issuancesForReportPeriod($dateFrom, $dateTo);
@@ -1936,10 +1945,11 @@ class ReportsController extends Controller
             $legacyStudentQuery->whereNotIn('id', $healthProfileIdsWithHistory);
         }
 
-        $records = $submissionRecords->merge(
+        $records = collect($submissionRecords->all())->merge(
             $legacyStudentQuery
                 ->get()
                 ->map(fn (HealthProfile $profile) => $this->healthFormsLogbookProfileEntry($profile, 'health'))
+                ->all()
         );
 
         if (\Schema::hasTable('health_profile_emp')) {
@@ -1962,6 +1972,7 @@ class ReportsController extends Controller
                 $legacyEmployeeQuery
                     ->get()
                     ->map(fn (EmployeeHealthProfile $profile) => $this->healthFormsLogbookProfileEntry($profile, 'employee'))
+                    ->all()
             );
         }
 
@@ -3953,6 +3964,24 @@ public function printReport(Request $request)
 
     if ($type == 'mar') {
         $title = "MONTHLY ACCOMPLISHMENT REPORT";
+        $consultationUserRelations = array_map(
+            fn (string $relation) => 'user.' . $relation,
+            $this->reportUserProfileRelations()
+        );
+        $marConsultations = Consultation::query()
+            ->with(array_merge(['user'], $consultationUserRelations))
+            ->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()])
+            ->get();
+        $consultationsByCondition = $marConsultations->groupBy('medical_condition_id');
+        $data = Category::with('medicalConditions')->get();
+        $data->each(function (Category $category) use ($consultationsByCondition): void {
+            $category->medicalConditions->each(function (MedicalConditions $condition) use ($consultationsByCondition): void {
+                $condition->setRelation(
+                    'consultations',
+                    $consultationsByCondition->get($condition->id, collect())
+                );
+            });
+        });
         $marClearanceTypes = MarClearanceType::query()
             ->where('is_active', true)
             ->with('subcategories')
@@ -3961,17 +3990,14 @@ public function printReport(Request $request)
             ->get();
         $marClearanceIssuances = app(MarClearanceIssuanceService::class)
             ->issuancesForReportPeriod($dateFrom, $dateTo);
-        // for categories
-        $data = \App\Models\Category::with(['medicalConditions.consultations' => function($query) use ($dateFrom, $dateTo) {
-            $query->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()]);
-        }])->get();
         $gadTables = $this->buildMarGadTables(
             $data,
             $dateFrom,
             $dateTo,
-            $marClearanceIssuances
+            $marClearanceIssuances,
+            $marConsultations
         );
-        $marServiceSummary = $this->buildMarServiceSummary($dateFrom, $dateTo);
+        $marServiceSummary = $this->buildMarServiceSummary($dateFrom, $dateTo, $marConsultations);
     } 
     elseif ($type == 'inventory') {
         $title = match ($inventoryScope) {
