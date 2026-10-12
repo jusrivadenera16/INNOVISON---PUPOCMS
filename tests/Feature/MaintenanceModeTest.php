@@ -7,6 +7,7 @@ use App\Models\SystemSetting;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -55,8 +56,29 @@ class MaintenanceModeTest extends TestCase
 
         $response = app(MaintenanceController::class)->show();
 
-        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame(503, $response->getStatusCode());
         $this->assertStringContainsString('Under Maintenance', (string) $response->getContent());
         $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+    }
+
+    public function test_laravel_503_error_view_reuses_the_maintenance_page_without_route_data(): void
+    {
+        $response = response()->view('errors.503', [], 503);
+
+        $this->assertSame(503, $response->getStatusCode());
+        $this->assertStringContainsString('Under Maintenance', (string) $response->getContent());
+        $this->assertStringContainsString('Please check back soon', (string) $response->getContent());
+    }
+
+    public function test_http_503_exception_uses_the_maintenance_page(): void
+    {
+        Route::get('/__maintenance-503-test', function () {
+            abort(503);
+        });
+
+        $this->get('/__maintenance-503-test')
+            ->assertStatus(503)
+            ->assertSee('Under Maintenance')
+            ->assertSee('Please check back soon');
     }
 }
