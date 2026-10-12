@@ -2047,14 +2047,6 @@
         </div>
     </section>
 
-    @if(session('success'))
-        <div class="announcement-alert">{{ session('success') }}</div>
-    @endif
-
-    @if($errors->any())
-        <div class="announcement-error">{{ $errors->first() }}</div>
-    @endif
-
     <div class="announcement-grid">
         @if($canPublishAnnouncements)
         <section class="announcement-card">

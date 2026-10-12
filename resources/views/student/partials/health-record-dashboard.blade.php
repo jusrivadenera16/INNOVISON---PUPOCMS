@@ -81,7 +81,7 @@
         ?: ($accountProfileData['employee_number'] ?? '')
         ?: ($user->employee_number ?? '')
     ));
-    $isEmployeeHealthRecord = (bool) $usesEmployeeHealthForm;
+    $isEmployeeHealthRecord = (bool) ($usesEmployeeHealthForm ?? false);
     $isStudentHealthRecord = !$isEmployeeHealthRecord && $resolvedStudentNumber !== '';
     $isApplicantHealthRecord = !$isEmployeeHealthRecord
         && !$isStudentHealthRecord
@@ -181,7 +181,7 @@
     $healthRecordDocuments = [
         [
             'key' => 'student_photo',
-            'title' => $usesEmployeeHealthForm ? 'Employee Photo' : '2x2 Student Photo',
+            'title' => $isEmployeeHealthRecord ? 'Employee Photo' : '2x2 Student Photo',
             'meta' => 'Image Upload',
             'path' => optional($healthProfileRecord)->student_photo,
             'is_image' => true,
@@ -204,7 +204,7 @@
             'key' => 'chest_xray_result',
             'title' => 'Chest X-ray Result',
             'meta' => 'PDF or Image Upload',
-            'path' => $usesEmployeeHealthForm
+            'path' => $isEmployeeHealthRecord
                 ? optional($healthProfileRecord)->chest_xray_document
                 : optional($healthProfileRecord)->chest_xray_result,
             'is_image' => false,
@@ -238,15 +238,18 @@
             return !$submission || ($healthFormSubmitted && $statusKey !== 'requested');
         })
         ->values()
-        ->map(function ($submission, $index) use ($healthSubmissionSnapshotProfile, $healthSubmissionDocumentBlueprints, $healthFormDisplayId, $healthRecordDate, $healthSubmissionFormType, $healthProfileRecord, $latestHealthSubmission, $healthRecordDocuments) {
+        ->map(function ($submission, $index) use ($healthSubmissionSnapshotProfile, $healthSubmissionDocumentBlueprints, $healthFormDisplayId, $healthRecordDate, $healthSubmissionFormType, $healthProfileRecord, $latestHealthSubmission, $healthRecordDocuments, $isEmployeeHealthRecord) {
             $snapshot = $healthSubmissionSnapshotProfile($submission);
             $useCurrentProfileFallback = !$submission
                 || ($snapshot === [] && optional($submission)->id === optional($latestHealthSubmission)->id);
             $documents = $healthSubmissionDocumentBlueprints
-                ->map(function ($document) use ($submission, $snapshot, $useCurrentProfileFallback, $healthRecordDocuments) {
+                ->map(function ($document) use ($submission, $snapshot, $useCurrentProfileFallback, $healthRecordDocuments, $isEmployeeHealthRecord) {
                     $path = trim((string) ($snapshot[$document['key']] ?? ''));
                     if ($path === '' && $document['key'] === 'chest_xray_result') {
                         $path = trim((string) ($snapshot['chest_xray_document'] ?? ''));
+                    }
+                    if ($path === '' && $document['key'] === 'student_photo' && $isEmployeeHealthRecord) {
+                        $path = trim((string) ($snapshot['employee_photo'] ?? ''));
                     }
                     if ($useCurrentProfileFallback && $path === '') {
                         $currentDocument = collect($healthRecordDocuments)->firstWhere('key', $document['key']);

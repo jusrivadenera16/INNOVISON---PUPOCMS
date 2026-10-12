@@ -4,6 +4,16 @@
         $healthFormStudentPhotoSrc = app(\App\Services\StoredImageDataUri::class)
             ->fromStorage($profile->student_photo ?? null);
     }
+    $printedHomeAddress = trim((string) ($profile->home_address ?? ''));
+    $splitHomeAddress = array_values(array_filter([
+        trim((string) ($profile->street ?? '')),
+        trim((string) ($profile->barangay ?? '')),
+        trim((string) ($profile->municipality ?? '')),
+        trim((string) ($profile->province ?? '')),
+    ], fn ($part) => $part !== ''));
+    if ($splitHomeAddress !== []) {
+        $printedHomeAddress = implode(', ', $splitHomeAddress);
+    }
 @endphp
 <div class="print-container">
     <div class="print-page">
@@ -78,7 +88,7 @@
         </tr>
         <tr>
             <td class="line-label home-address-label-cell">Home Address:</td>
-            <td class="line-value home-address-value-cell">{{ $profile->home_address ?? '' }}</td>
+            <td class="line-value home-address-value-cell">{{ $printedHomeAddress }}</td>
             <td class="line-label school-year-label">School Year:</td>
             <td class="line-value">{{ $profile->school_year ?? '2025-2026' }}</td>
         </tr>

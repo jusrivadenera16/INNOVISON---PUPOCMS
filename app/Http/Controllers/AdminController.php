@@ -3550,6 +3550,7 @@ class AdminController extends Controller
             ->latest('requested_at')
             ->latest('id')
             ->get();
+        $activeNewHealthFormRequest = $this->activeStudentNewHealthFormRequest($profile);
 
         $versionNumbers = $healthFormSubmissions
             ->sortBy(function (HealthFormSubmission $submission) {
@@ -3602,7 +3603,8 @@ class AdminController extends Controller
             'healthFormCategories',
             'healthFormSubmissions',
             'healthProfileHistory',
-            'currentHealthFormSubmission'
+            'currentHealthFormSubmission',
+            'activeNewHealthFormRequest'
         ));
     }
 
@@ -3636,6 +3638,8 @@ class AdminController extends Controller
     {
         $employeeProfile->loadMissing(['user', 'approvedBy']);
         abort_unless($employeeProfile->user, 404);
+
+        $activeNewHealthFormRequest = $this->activeEmployeeNewHealthFormRequest($employeeProfile);
 
         $employeeHealthFormAudience = $this->employeeHealthFormCategoryAudience($employeeProfile->user);
         $employeeHealthFormCategories = HealthFormCategory::query()
@@ -3762,14 +3766,65 @@ class AdminController extends Controller
             'employeeHealthFormAudience',
             'canRequestEmployeeHealthActions',
             'canRequestNewEmployeeHealthForm',
-            'canRequestEmployeeFileCorrection'
+            'canRequestEmployeeFileCorrection',
+            'activeNewHealthFormRequest'
         ));
+    }
+
+    private function activeStudentNewHealthFormRequest(HealthProfile $profile): ?HealthFormSubmission
+    {
+        $latestSubmission = HealthFormSubmission::query()
+            ->where('user_id', $profile->user_id)
+            ->orderByRaw('COALESCE(approved_at, submitted_at, requested_at, created_at) DESC')
+            ->latest('id')
+            ->first();
+
+        if (!$latestSubmission || !in_array($latestSubmission->status, [
+            HealthFormSubmission::STATUS_REQUESTED,
+            HealthFormSubmission::STATUS_SUBMITTED,
+            HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+        ], true)) {
+            return null;
+        }
+
+        return $latestSubmission;
+    }
+
+    private function activeEmployeeNewHealthFormRequest(EmployeeHealthProfile $profile): ?HealthProfileCorrectionRequest
+    {
+        return HealthProfileCorrectionRequest::query()
+            ->where('user_id', $profile->user_id)
+            ->where('employee_health_profile_id', $profile->id)
+            ->whereIn('status', [
+                HealthProfileCorrectionRequest::STATUS_PENDING,
+                HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+                HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW,
+            ])
+            ->where(function ($query) {
+                $query->where('type', HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM)
+                    ->orWhere(function ($nestedQuery) {
+                        $nestedQuery->where('type', HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION)
+                            ->where(function ($requestKindQuery) {
+                                $requestKindQuery
+                                    ->whereJsonContains('metadata->request_kind', 'new_health_form')
+                                    ->orWhereJsonContains('metadata->request_kind', 'bulk_new_health_form');
+                            });
+                    });
+            })
+            ->latest('requested_at')
+            ->latest('id')
+            ->first();
     }
 
     public function requestNewHealthForm(Request $request, $id)
     {
         $profile = HealthProfile::with('user')->findOrFail($id);
         $healthFormAudience = $this->resolveAdminHealthProfileAudience($profile);
+
+        if ($this->activeStudentNewHealthFormRequest($profile)) {
+            return redirect()->route('admin.show_health', $profile->id)
+                ->with('info', 'An existing Health Form request is already active for this record.');
+        }
 
         $validated = $request->validate([
             'category' => [
@@ -3787,41 +3842,49 @@ class AdminController extends Controller
 
         $adminUser = Auth::guard('admin')->user();
 
-        $submission = HealthFormSubmission::query()->updateOrCreate(
-            [
+        $submission = DB::transaction(function () use ($profile, $validated, $adminUser) {
+            User::query()->whereKey($profile->user_id)->lockForUpdate()->firstOrFail();
+
+            if ($this->activeStudentNewHealthFormRequest($profile)) {
+                return null;
+            }
+
+            $requestedAt = now();
+            $submission = HealthFormSubmission::create([
                 'user_id' => $profile->user_id,
-                'status' => HealthFormSubmission::STATUS_REQUESTED,
-            ],
-            [
                 'health_profile_id' => $profile->id,
+                'status' => HealthFormSubmission::STATUS_REQUESTED,
                 'category' => trim((string) $validated['category']),
                 'school_year' => trim((string) ($profile->school_year ?? '')) ?: null,
                 'requested_by_user_id' => $adminUser?->id,
-                'requested_at' => now(),
+                'requested_at' => $requestedAt,
                 'remarks' => trim((string) ($validated['remarks'] ?? '')) ?: null,
-            ]
-        );
+            ]);
 
-        HealthProfileCorrectionRequest::query()->updateOrCreate(
-            [
+            HealthProfileCorrectionRequest::create([
                 'user_id' => $profile->user_id,
                 'health_profile_id' => $profile->id,
+                'health_form_submission_id' => $submission->id,
                 'type' => HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM,
                 'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
-            ],
-            [
-                'health_form_submission_id' => $submission->id,
                 'profile_kind' => 'student',
                 'required_documents' => [],
                 'admin_note' => trim((string) ($validated['remarks'] ?? '')) ?: null,
                 'requested_by_user_id' => $adminUser?->id,
-                'requested_at' => now(),
+                'requested_at' => $requestedAt,
                 'metadata' => [
                     'category' => trim((string) $validated['category']),
                     'school_year' => trim((string) ($profile->school_year ?? '')) ?: null,
                 ],
-            ]
-        );
+            ]);
+
+            return $submission;
+        });
+
+        if (!$submission) {
+            return redirect()->route('admin.show_health', $profile->id)
+                ->with('info', 'An existing Health Form request is already active for this record.');
+        }
 
         $this->logActivity(
             'New Health Form Requested',
@@ -3842,6 +3905,11 @@ class AdminController extends Controller
     {
         $employeeProfile->loadMissing('user');
         abort_unless($employeeProfile->user, 404);
+
+        if ($this->activeEmployeeNewHealthFormRequest($employeeProfile)) {
+            return redirect()->route('admin.employee_health_profile.show', $employeeProfile->id)
+                ->with('info', 'An existing Health Form request is already active for this record.');
+        }
 
         $employeeHealthFormAudience = $this->employeeHealthFormCategoryAudience($employeeProfile->user);
         $validated = $request->validate([
@@ -3866,35 +3934,47 @@ class AdminController extends Controller
             $pendingReason .= ': ' . $remarks;
         }
 
-        $wasAlreadyIssued = in_array($employeeProfile->clearance_status, ['Approved', 'Issued', 'Fully Cleared', 'Cleared'], true)
-            || !empty($employeeProfile->verified_at);
+        $wasAlreadyIssued = false;
+        $requestCreated = DB::transaction(function () use (
+            $employeeProfile,
+            $adminUser,
+            $category,
+            $remarks,
+            $pendingReason,
+            &$wasAlreadyIssued
+        ) {
+            User::query()->whereKey($employeeProfile->user_id)->lockForUpdate()->firstOrFail();
 
-        if ($wasAlreadyIssued) {
-            app(EmployeeHealthFormHistoryService::class)->ensureApprovedSnapshot($employeeProfile);
-        } else {
-            $employeeProfile->health_form_category = $category;
-            $employeeProfile->pending_reason = $pendingReason;
-            $employeeProfile->documents_valid = false;
-            $employeeProfile->resubmission_required_fields = [];
-            $employeeProfile->resubmission_requested_at = now();
-            $employeeProfile->pending_compliance_reminder_sent_at = null;
-            $employeeProfile->pending_compliance_reminder_count = 0;
-            $employeeProfile->resubmitted_at = null;
-            $employeeProfile->clearance_status = 'Pending Resubmission';
-            $employeeProfile->submission_status = 'pending';
-            $employeeProfile->verified_at = null;
-            $employeeProfile->approved_by_user_id = null;
-            $employeeProfile->save();
-        }
+            if ($this->activeEmployeeNewHealthFormRequest($employeeProfile)) {
+                return false;
+            }
 
-        HealthProfileCorrectionRequest::query()->updateOrCreate(
-            [
+            $wasAlreadyIssued = in_array($employeeProfile->clearance_status, ['Approved', 'Issued', 'Fully Cleared', 'Cleared'], true)
+                || !empty($employeeProfile->verified_at);
+
+            if ($wasAlreadyIssued) {
+                app(EmployeeHealthFormHistoryService::class)->ensureApprovedSnapshot($employeeProfile);
+            } else {
+                $employeeProfile->health_form_category = $category;
+                $employeeProfile->pending_reason = $pendingReason;
+                $employeeProfile->documents_valid = false;
+                $employeeProfile->resubmission_required_fields = [];
+                $employeeProfile->resubmission_requested_at = now();
+                $employeeProfile->pending_compliance_reminder_sent_at = null;
+                $employeeProfile->pending_compliance_reminder_count = 0;
+                $employeeProfile->resubmitted_at = null;
+                $employeeProfile->clearance_status = 'Pending Resubmission';
+                $employeeProfile->submission_status = 'pending';
+                $employeeProfile->verified_at = null;
+                $employeeProfile->approved_by_user_id = null;
+                $employeeProfile->save();
+            }
+
+            HealthProfileCorrectionRequest::create([
                 'user_id' => $employeeProfile->user_id,
                 'employee_health_profile_id' => $employeeProfile->id,
                 'type' => HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION,
                 'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
-            ],
-            [
                 'profile_kind' => 'employee',
                 'required_documents' => [],
                 'admin_note' => $pendingReason,
@@ -3906,8 +3986,15 @@ class AdminController extends Controller
                     'remarks' => $remarks !== '' ? $remarks : null,
                     'was_already_issued' => $wasAlreadyIssued,
                 ],
-            ]
-        );
+            ]);
+
+            return true;
+        });
+
+        if (!$requestCreated) {
+            return redirect()->route('admin.employee_health_profile.show', $employeeProfile->id)
+                ->with('info', 'An existing Health Form request is already active for this record.');
+        }
 
         ActivityLog::create([
             'user_id' => $adminUser?->id,
@@ -3995,24 +4082,38 @@ class AdminController extends Controller
             'failed' => 0,
             'skipped' => 0,
         ];
+        $alreadyRequestedCount = 0;
+        $processedCount = 0;
 
         foreach ($employeeProfiles as $employeeProfile) {
             $pendingReason = 'Health Form Correction requested: New Health Form for ' . $category;
-            $wasAlreadyIssued = in_array($employeeProfile->clearance_status, ['Approved', 'Issued', 'Fully Cleared', 'Cleared'], true)
-                || !empty($employeeProfile->verified_at);
+            $wasAlreadyIssued = false;
+            $requestCreated = DB::transaction(function () use (
+                $employeeProfile,
+                $adminUser,
+                $pendingReason,
+                $category,
+                $userType,
+                &$wasAlreadyIssued
+            ) {
+                User::query()->whereKey($employeeProfile->user_id)->lockForUpdate()->firstOrFail();
 
-            if ($wasAlreadyIssued) {
-                app(EmployeeHealthFormHistoryService::class)->ensureApprovedSnapshot($employeeProfile);
-            }
+                if ($this->activeEmployeeNewHealthFormRequest($employeeProfile)) {
+                    return false;
+                }
 
-            HealthProfileCorrectionRequest::query()->updateOrCreate(
-                [
+                $wasAlreadyIssued = in_array($employeeProfile->clearance_status, ['Approved', 'Issued', 'Fully Cleared', 'Cleared'], true)
+                    || !empty($employeeProfile->verified_at);
+
+                if ($wasAlreadyIssued) {
+                    app(EmployeeHealthFormHistoryService::class)->ensureApprovedSnapshot($employeeProfile);
+                }
+
+                HealthProfileCorrectionRequest::create([
                     'user_id' => $employeeProfile->user_id,
                     'employee_health_profile_id' => $employeeProfile->id,
                     'type' => HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION,
                     'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
-                ],
-                [
                     'profile_kind' => 'employee',
                     'required_documents' => [],
                     'admin_note' => $pendingReason,
@@ -4024,8 +4125,16 @@ class AdminController extends Controller
                         'audience' => $userType,
                         'was_already_issued' => $wasAlreadyIssued,
                     ],
-                ]
-            );
+                ]);
+
+                return true;
+            });
+
+            if (!$requestCreated) {
+                $alreadyRequestedCount++;
+                continue;
+            }
+            $processedCount++;
 
             ActivityLog::create([
                 'user_id' => $adminUser?->id,
@@ -4067,11 +4176,16 @@ class AdminController extends Controller
             }
         }
 
-        $processedCount = $employeeProfiles->count();
         $skippedCount = count($selectedProfileIds) - $processedCount;
         $message = $processedCount . ' bulk Health Form request' . ($processedCount === 1 ? '' : 's') . ' sent.';
+        if ($alreadyRequestedCount > 0) {
+            $message .= ' ' . $alreadyRequestedCount . ' record' . ($alreadyRequestedCount === 1 ? ' already has' : 's already have') . ' an active request and was not sent again.';
+        }
         if ($skippedCount > 0) {
-            $message .= ' ' . $skippedCount . ' selected record' . ($skippedCount === 1 ? '' : 's') . ' was no longer eligible and was skipped.';
+            $nonEligibleCount = max(0, $skippedCount - $alreadyRequestedCount);
+            if ($nonEligibleCount > 0) {
+                $message .= ' ' . $nonEligibleCount . ' selected record' . ($nonEligibleCount === 1 ? '' : 's') . ' was no longer eligible and was skipped.';
+            }
         }
         if ($emailCounts['sent'] > 0) {
             $message .= ' Email notifications sent: ' . $emailCounts['sent'] . '.';
@@ -4124,44 +4238,55 @@ class AdminController extends Controller
             'failed' => 0,
             'skipped' => 0,
         ];
+        $alreadyRequestedCount = 0;
+        $processedCount = 0;
 
         foreach ($studentProfiles as $profile) {
-            $submission = HealthFormSubmission::query()->updateOrCreate(
-                [
+            $requestCreated = DB::transaction(function () use ($profile, $adminUser, $category) {
+                User::query()->whereKey($profile->user_id)->lockForUpdate()->firstOrFail();
+
+                if ($this->activeStudentNewHealthFormRequest($profile)) {
+                    return false;
+                }
+
+                $requestedAt = now();
+                $submission = HealthFormSubmission::create([
                     'user_id' => $profile->user_id,
-                    'status' => HealthFormSubmission::STATUS_REQUESTED,
-                ],
-                [
                     'health_profile_id' => $profile->id,
+                    'status' => HealthFormSubmission::STATUS_REQUESTED,
                     'category' => $category,
                     'school_year' => trim((string) ($profile->school_year ?? '')) ?: null,
                     'requested_by_user_id' => $adminUser?->id,
-                    'requested_at' => now(),
+                    'requested_at' => $requestedAt,
                     'remarks' => null,
-                ]
-            );
+                ]);
 
-            HealthProfileCorrectionRequest::query()->updateOrCreate(
-                [
+                HealthProfileCorrectionRequest::create([
                     'user_id' => $profile->user_id,
                     'health_profile_id' => $profile->id,
+                    'health_form_submission_id' => $submission->id,
                     'type' => HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM,
                     'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
-                ],
-                [
-                    'health_form_submission_id' => $submission->id,
                     'profile_kind' => 'student',
                     'required_documents' => [],
                     'admin_note' => null,
                     'requested_by_user_id' => $adminUser?->id,
-                    'requested_at' => now(),
+                    'requested_at' => $requestedAt,
                     'metadata' => [
                         'request_kind' => 'bulk_new_health_form',
                         'category' => $category,
                         'school_year' => trim((string) ($profile->school_year ?? '')) ?: null,
                     ],
-                ]
-            );
+                ]);
+
+                return true;
+            });
+
+            if (!$requestCreated) {
+                $alreadyRequestedCount++;
+                continue;
+            }
+            $processedCount++;
 
             ActivityLog::create([
                 'user_id' => $adminUser?->id,
@@ -4202,11 +4327,16 @@ class AdminController extends Controller
             }
         }
 
-        $processedCount = $studentProfiles->count();
         $skippedCount = count($selectedProfileIds) - $processedCount;
         $message = $processedCount . ' bulk Health Form request' . ($processedCount === 1 ? '' : 's') . ' sent to students.';
+        if ($alreadyRequestedCount > 0) {
+            $message .= ' ' . $alreadyRequestedCount . ' student' . ($alreadyRequestedCount === 1 ? ' already has' : 's already have') . ' an active request and was not sent again.';
+        }
         if ($skippedCount > 0) {
-            $message .= ' ' . $skippedCount . ' selected record' . ($skippedCount === 1 ? '' : 's') . ' was no longer eligible and was skipped.';
+            $nonEligibleCount = max(0, $skippedCount - $alreadyRequestedCount);
+            if ($nonEligibleCount > 0) {
+                $message .= ' ' . $nonEligibleCount . ' selected record' . ($nonEligibleCount === 1 ? '' : 's') . ' was no longer eligible and was skipped.';
+            }
         }
         if ($emailCounts['sent'] > 0) {
             $message .= ' Email notifications sent: ' . $emailCounts['sent'] . '.';

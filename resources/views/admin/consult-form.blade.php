@@ -1722,56 +1722,6 @@
     .consultation-main .btn-save.is-finalizing::before {
         transform: translateX(0);
     }
-    .consultation-success-overlay {
-        position: fixed;
-        z-index: 9999;
-        inset: 0;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        background: rgba(15, 23, 42, .58);
-        backdrop-filter: blur(5px);
-    }
-    .consultation-success-overlay.is-open {
-        display: flex;
-    }
-    .consultation-success-card {
-        width: min(360px, calc(100vw - 30px));
-        padding: 28px 22px;
-        border: 1px solid rgba(250, 204, 21, .48);
-        border-radius: 18px;
-        background: #ffffff;
-        box-shadow: 0 24px 54px rgba(15, 23, 42, .3);
-        text-align: center;
-        animation: consultationSuccessPop .38s cubic-bezier(.2, .9, .25, 1.2);
-    }
-    .consultation-success-check {
-        width: 76px;
-        height: 76px;
-        display: grid;
-        place-items: center;
-        margin: 0 auto 14px;
-        border-radius: 999px;
-        background: #70131b;
-        color: #facc15;
-        box-shadow: 0 12px 26px rgba(112, 19, 27, .24);
-    }
-    .consultation-success-check svg {
-        width: 39px;
-        height: 39px;
-        stroke-width: 2.8;
-    }
-    .consultation-success-card strong {
-        display: block;
-        color: #70131b;
-        font-size: 20px;
-        font-weight: 900;
-    }
-    @keyframes consultationSuccessPop {
-        from { opacity: 0; transform: scale(.72) translateY(18px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
-    }
     .consultation-main .btn-cancel {
         position: relative;
         z-index: 0;
@@ -4426,7 +4376,7 @@
     $draftValue = static function (string $key, $default = '') use ($consultationDraftData) {
         return old($key, array_key_exists($key, $consultationDraftData) ? $consultationDraftData[$key] : $default);
     };
-    $consultationDraftStorageKey = 'consultation-draft:' . $patientIdNumberForSubmit . ':' . ($user_source ?? 'walkin');
+    $consultationDraftStorageKey = 'consultation-draft:' . $patientIdNumberForSubmit . ':' . ($user_source ?? 'walkin') . ':' . ($appointmentNumber ?: ($consultationStartedAt ?? 'new'));
     $studentInitials = collect(preg_split('/\s+/', trim((string) $student->name)) ?: [])
         ->filter()
         ->take(2)
@@ -4669,7 +4619,6 @@
                                 </option>
                             @endforeach
                         </select>
-                        <div class="form-help">Required for MAR reporting.</div>
                     </div>
                     <div class="form-group visit-field">
                         <div class="consult-certificate-label-row">
@@ -4703,7 +4652,6 @@
                                 @endif
                             @endforeach
                         </select>
-                        <div class="form-help">Choose the specific subcategory configured under the clearance type.</div>
                     </div>
                 </div>
             </section>
@@ -4847,15 +4795,6 @@
     </div>
 </div>
 
-<div class="consultation-success-overlay" id="consultationSuccessOverlay" aria-live="assertive" aria-hidden="true">
-    <div class="consultation-success-card">
-        <div class="consultation-success-check" aria-hidden="true">
-            <x-outline-icon name="check" />
-        </div>
-        <strong>Done Consultation</strong>
-    </div>
-</div>
-
 @if($canManageMarConfiguration)
     <div class="consultation-mar-modal" id="consultationMarSubcategoryModal" aria-hidden="true" hidden>
         <div class="consultation-mar-dialog" role="dialog" aria-modal="true" aria-labelledby="consultationMarDialogTitle">
@@ -4918,20 +4857,12 @@
         <span class="utility-rail-count">{{ $items->count() }}</span>
     </button>
     @if($student)
-        @php
-            $recentRecordsCount = \App\Models\Consultation::where('user_id', $student->id)->count();
-        @endphp
         <button type="button" class="utility-rail-button" data-utility-target="recent_records" title="Recent Records">
             <x-outline-icon name="clock" />
             <span>Recent Records</span>
-            <span class="utility-rail-count">{{ $recentRecordsCount }}</span>
+            <span class="utility-rail-count">{{ $studentRecentRecords->count() }}</span>
         </button>
     @endif
-    <button type="button" class="utility-rail-button" data-utility-target="treatments" title="Treatment Record">
-        <x-outline-icon name="clipboard-document-list" />
-        <span>Treatment Record</span>
-        <span class="utility-rail-count">{{ $studentTreatments->count() }}</span>
-    </button>
 </nav>
 
 <aside id="right-utility-panel" aria-hidden="true" aria-label="Consultation utility panel">
@@ -4940,7 +4871,7 @@
         <h2 class="utility-panel-title" id="utilityPanelTitle">Uploaded Documents</h2>
         <button type="button" id="close-utility-panel" aria-label="Close utility panel">&times;</button>
     </header>
-    <button type="button" id="expand-utility-panel" aria-label="Expand treatment record panel" title="Expand treatment record">&lt;</button>
+    <button type="button" id="expand-utility-panel" aria-label="Expand recent records panel" title="Expand recent records">&lt;</button>
 
     <section class="utility-panel-pane" data-utility-pane="documents">
         <p class="utility-pane-note">Submitted clinic files and the generated Health Information Form.</p>
@@ -5113,11 +5044,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php
-                        $recentConsultations = $student ? \App\Models\Consultation::with(['medicineItem', 'medicines.item'])->where('user_id', $student->id)->orderByDesc('created_at')->get() : collect();
-                    @endphp
-                    @if($student && $recentConsultations->count())
-                        @forelse($recentConsultations as $consultation)
+                    @if($student && $studentRecentRecords->count())
+                        @forelse($studentRecentRecords as $consultation)
                             @php
                                 $consultationMedicineLines = $consultation->medicines->filter(fn ($line) => trim((string) ($line->medicine ?: optional($line->item)->name)) !== '');
                                 $consultMedicine = $consultationMedicineLines->isNotEmpty()
@@ -5188,88 +5116,6 @@
         </div>
     </section>
 
-    <section class="utility-panel-pane" data-utility-pane="treatments">
-        <p class="utility-pane-note">The 20 most recent finalized consultations for this patient.</p>
-        <div class="consultation-treatment-table-wrap">
-            <table class="consultation-treatment-table">
-                <thead>
-                    <tr>
-                        <th class="treatment-date-col">Date</th>
-                        <th class="treatment-time-col">Time In</th>
-                        <th class="treatment-time-col">Time Out</th>
-                        <th class="treatment-service-col">Service</th>
-                        <th class="treatment-complaint-col">Complaints / Impression</th>
-                        <th class="treatment-medicine-col">Treatment / Medicines</th>
-                        <th class="treatment-quantity-col">Qty</th>
-                        <th class="treatment-staff-col">Attending Staff</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($studentTreatments as $treatment)
-                        @php
-                            $treatmentMedicineLines = $treatment->medicines->filter(fn ($line) => trim((string) ($line->medicine ?: optional($line->item)->name)) !== '');
-                            $treatmentMedicine = $treatmentMedicineLines->isNotEmpty()
-                                ? $treatmentMedicineLines->map(fn ($line) => $line->medicine ?: optional($line->item)->name)->implode(', ')
-                                : trim((string) (optional($treatment->medicineItem)->name ?: $treatment->medicine));
-                            $treatmentStaff = trim((string) ($treatment->attending_staff_name ?: optional($treatment->attendingStaff)->name));
-                            $treatmentQuantity = $treatmentMedicineLines->isNotEmpty()
-                                ? $treatmentMedicineLines->map(fn ($line) => rtrim(rtrim(number_format((float) $line->quantity, 2, '.', ''), '0'), '.'))->implode(', ')
-                                : ((float) $treatment->medicine_quantity > 0 ? rtrim(rtrim(number_format((float) $treatment->medicine_quantity, 2, '.', ''), '0'), '.') : '');
-                            $treatmentTimeIn = $treatment->time_in ?: optional($treatment->created_at)->format('H:i:s');
-                            $treatmentTimeOut = $treatment->time_out ?: optional($treatment->updated_at)->format('H:i:s');
-                            $treatmentComplaint = trim((string) $treatment->reason_for_visit);
-                            $treatmentImpression = trim((string) $treatment->comments);
-                            $treatmentReferralLabels = collect($referralOptions ?? [])
-                                ->mapWithKeys(fn ($option) => [$option->code => $option->name])
-                                ->union([
-                                    'hospital_without_nurse' => 'Refer to Hospital (Without Nurse)',
-                                    'hospital_with_nurse' => 'Refer to Hospital (With Nurse)',
-                                    'general' => 'Referral (General)',
-                                    'others' => 'Others',
-                                ])
-                                ->all();
-                            $treatmentReferralType = trim((string) ($treatment->referral_type ?? ''));
-                            $treatmentReferral = $treatmentReferralType !== '' && $treatmentReferralType !== 'none'
-                                ? ($treatmentReferralLabels[$treatmentReferralType] ?? $treatmentReferralType)
-                                : '';
-                            if ($treatmentReferral !== '' && trim((string) ($treatment->referral_details ?? '')) !== '') {
-                                $treatmentReferral .= ': ' . trim((string) $treatment->referral_details);
-                            }
-                        @endphp
-                        <tr>
-                            <td>{{ optional($treatment->consultation_date)->format('m/d/Y') ?: '-' }}</td>
-                            <td>{{ $treatmentTimeIn ? \Carbon\Carbon::parse($treatmentTimeIn)->format('g:i A') : '-' }}</td>
-                            <td>{{ $treatmentTimeOut ? \Carbon\Carbon::parse($treatmentTimeOut)->format('g:i A') : '-' }}</td>
-                            <td>{{ $treatment->service ?: 'Consultation' }}</td>
-                            <td>
-                                <span class="treatment-table-entry">
-                                    <span class="treatment-table-entry-label">Complaint</span>
-                                    <span class="treatment-table-entry-value">{{ $treatmentComplaint ?: 'No complaint recorded.' }}</span>
-                                </span>
-                                <span class="treatment-table-entry">
-                                    <span class="treatment-table-entry-label">Impression</span>
-                                    <span class="treatment-table-entry-value">{{ $treatmentImpression ?: 'No assessment recorded.' }}</span>
-                                </span>
-                                @if($treatmentReferral !== '')
-                                    <span class="treatment-table-entry">
-                                        <span class="treatment-table-entry-label">Referral</span>
-                                        <span class="treatment-table-entry-value">{{ $treatmentReferral }}</span>
-                                    </span>
-                                @endif
-                            </td>
-                            <td>{{ $treatmentMedicine !== '' && strtolower($treatmentMedicine) !== 'none' ? $treatmentMedicine : 'No medicine issued' }}</td>
-                            <td class="treatment-quantity-col">{{ $treatmentQuantity !== '' ? $treatmentQuantity : '-' }}</td>
-                            <td>{{ $treatmentStaff ?: 'Clinic Staff' }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="consultation-treatment-empty">No previous treatment records are available for this student.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </section>
 </aside>
 
 <script>
@@ -5294,7 +5140,6 @@
         const inventorySearchEmpty = document.getElementById('inventorySearchEmpty');
         const consultationForm = document.getElementById('consultationForm');
         const finalizeButton = document.getElementById('finalizeConsultationButton');
-        const consultationSuccessOverlay = document.getElementById('consultationSuccessOverlay');
         const certificateSelect = document.getElementById('consultCertificate');
         const addSubcategoryButton = document.getElementById('consultAddSubcategoryButton');
         const marSubcategoryModal = document.getElementById('consultationMarSubcategoryModal');
@@ -5716,8 +5561,7 @@
         const utilityLabels = {
             documents: 'Uploaded Documents',
             inventory: 'Live Medicine Stock',
-            recent_records: 'Recent Records',
-            treatments: 'Treatment Record'
+            recent_records: 'Recent Records'
         };
 
         const setInventorySearchOpen = function (isOpen) {
@@ -5765,7 +5609,7 @@
 
             activeUtility = target;
             utilityTitle.textContent = utilityLabels[target] || 'Consultation Tools';
-            const isExpandablePanel = target === 'treatments' || target === 'recent_records';
+            const isExpandablePanel = target === 'recent_records';
             expandUtilityPanel?.classList.toggle('is-visible', isExpandablePanel);
             if (!isExpandablePanel) {
                 utilityPanel.classList.remove('is-expanded');
@@ -5787,12 +5631,12 @@
         };
 
         const toggleUtilityExpansion = function () {
-            if (activeUtility !== 'treatments' && activeUtility !== 'recent_records') return;
+            if (activeUtility !== 'recent_records') return;
             const isExpanded = utilityPanel.classList.toggle('is-expanded');
             utilityRail.classList.toggle('panel-expanded', isExpanded);
             expandUtilityPanel?.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
 
-            const panelName = activeUtility === 'treatments' ? 'treatment record' : 'recent records';
+            const panelName = 'recent records';
             expandUtilityPanel?.setAttribute(
                 'aria-label',
                 isExpanded ? `Collapse ${panelName} panel` : `Expand ${panelName} panel`
@@ -6236,22 +6080,11 @@
                 return;
             }
 
-            event.preventDefault();
-            try {
-                localStorage.removeItem(consultationDraftStorageKey);
-            } catch (error) {
-                console.warn('Unable to clear the local consultation draft.', error);
-            }
             isSubmittingConsultation = true;
             finalizeButton.classList.add('is-finalizing');
             finalizeButton.setAttribute('aria-disabled', 'true');
             const label = finalizeButton.querySelector('span');
             if (label) label.textContent = 'Finalizing Consultation...';
-            consultationSuccessOverlay?.classList.add('is-open');
-            consultationSuccessOverlay?.setAttribute('aria-hidden', 'false');
-            window.setTimeout(function () {
-                consultationForm.submit();
-            }, 850);
         });
 
         const syncAllPopulatedFields = function () {
@@ -6273,7 +6106,15 @@
         }
 
         saveConsultationDraftButton?.addEventListener('click', saveConsultationDraft);
+        @if(session('consultation_evaluation_prompt'))
+            try {
+                localStorage.removeItem(consultationDraftStorageKey);
+            } catch (error) {
+                console.warn('Unable to clear the finalized consultation draft.', error);
+            }
+        @else
         window.addEventListener('beforeunload', persistLocalConsultationDraft);
+        @endif
 
         medicineEntries.forEach(updateMedicineEntry);
         updateMedicineSelections();

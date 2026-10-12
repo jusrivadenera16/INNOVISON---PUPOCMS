@@ -1367,6 +1367,7 @@
     $appointmentStatisticsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/appointment-statistics') : url('/admin/reports/appointment-statistics');
     $healthFormsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/health-forms') : url('/admin/reports/health-forms');
     $feedbacksUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/feedbacks') : url('/admin/reports/feedbacks');
+    $evaluationReportsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/evaluation-reports') : url('/admin/reports/evaluation-reports');
     $exportHubUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/export-hub') : url('/admin/reports/export-hub');
     $canAccessReport = fn (string $permission): bool => optional(auth()->user())->canAccessPermission($permission) ?? false;
 @endphp
@@ -1442,6 +1443,17 @@
             <div>
                 <div class="report-main-title">Feedbacks</div>
                 <p class="report-card-copy">Review patient feedback, ratings, comments, and clinic experience notes to improve care.</p>
+            </div>
+        </a>
+        @endif
+
+        @if($canAccessReport('reports.service_evaluation'))
+        <a href="{{ $evaluationReportsUrl }}" class="report-card">
+            <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="report-card-icon"><x-outline-icon name="chart-bar" /></span>
+            <div>
+                <div class="report-main-title">Service Evaluation</div>
+                <p class="report-card-copy">Review Citizen's Charter responses, service quality ratings, and submitted suggestions.</p>
             </div>
         </a>
         @endif

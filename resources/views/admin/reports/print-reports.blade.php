@@ -12,7 +12,12 @@
     $footerBgSrc = $isPdfMode ? public_path('images/footer_bg_print.jpg') : asset('images/footer_bg.png');
     $footerBgAvailable = $isPdfMode ? file_exists(public_path('images/footer_bg_print.jpg')) : file_exists(public_path('images/footer_bg.png'));
     $marMonthStart = \Carbon\Carbon::parse(($monthFilter ?? now()->format('Y-m')) . '-01')->startOfMonth();
-    $marReportAsOf = $marMonthStart->isCurrentMonth() ? now() : $marMonthStart->copy()->endOfMonth();
+    // The MAR data is filtered by the selected range, so the report's "as of"
+    // date must represent the selected end date rather than the start month.
+    $marReportAsOf = !empty($dateTo)
+        ? \Carbon\Carbon::parse($dateTo)
+        : ($marMonthStart->isCurrentMonth() ? now() : $marMonthStart->copy()->endOfMonth());
+    $marReportSubmittedAt = now();
     $resolveReportIdentity = static function ($staff, string $fallbackName = 'CLINIC STAFF', string $fallbackPosition = 'Clinic Staff', bool $useOfficeFallback = false): array {
         $profile = data_get($staff, 'adminProfile') ?: $staff;
         $name = trim((string) (data_get($profile, 'report_name') ?: data_get($staff, 'report_name') ?: data_get($staff, 'name')));
@@ -1717,42 +1722,44 @@
 </head>
 <body class="{{ $isPdfMode ? 'pdf-mode' : '' }} {{ $isOfficialFormReport ? 'official-form-report' : '' }} {{ $isMarReport ? 'mar-form-report' : '' }} {{ ($isInventoryReport || $isAppointmentReport) ? 'official-inventory-template' : '' }}">
 
-    <div class="page-header" aria-hidden="true">
-        <div class="page-header-inner">
-            <div class="page-header-left">
-                @if($canRenderPdfImages)
-                    <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo">
-                @else
-                    <span class="pdf-logo-fallback">PUP</span>
-                @endif
-                <div class="page-header-copy">
-                    <strong>PUP TAGUIG</strong>
-                    <span>{{ strtoupper($title) }}</span>
+    @unless($isMarReport)
+        <div class="page-header" aria-hidden="true">
+            <div class="page-header-inner">
+                <div class="page-header-left">
+                    @if($canRenderPdfImages)
+                        <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo">
+                    @else
+                        <span class="pdf-logo-fallback">PUP</span>
+                    @endif
+                    <div class="page-header-copy">
+                        <strong>PUP TAGUIG</strong>
+                        <span>{{ strtoupper($title) }}</span>
+                    </div>
+                </div>
+                <div class="page-header-meta">
+                    <div>Medical Services Unit</div>
+                    <div>{{ date('F d, Y') }}</div>
                 </div>
             </div>
-            <div class="page-header-meta">
-                <div>Medical Services Unit</div>
-                <div>{{ date('F d, Y') }}</div>
-            </div>
         </div>
-    </div>
 
-    <div class="page-footer" aria-hidden="true">
-        <div class="page-footer-inner">
-            <div class="page-footer-copy">
-                General Santos Avenue, Lower Bicutan, Taguig City, Philippines 1632
-                <br>Direct Line (02) 8837 5658 to 60 | Website: www.pup.edu.ph | Email: taguig@pup.edu.ph
+        <div class="page-footer" aria-hidden="true">
+            <div class="page-footer-inner">
+                <div class="page-footer-copy">
+                    General Santos Avenue, Lower Bicutan, Taguig City, Philippines 1632
+                    <br>Direct Line (02) 8837 5658 to 60 | Website: www.pup.edu.ph | Email: taguig@pup.edu.ph
+                </div>
+                <div class="page-footer-motto">The Country's First PolytechnicU</div>
             </div>
-            <div class="page-footer-motto">The Country's First PolytechnicU</div>
-        </div>
-        <div class="page-footer-generated">
-            <div class="signature-note">This is system-generated, signature is not required.</div>
-            <div class="privacy-note">
-                This document contains personal-identifiable information that is subject to Data Privacy.<br>
-                Please keep this document protected and in a safe place.
+            <div class="page-footer-generated">
+                <div class="signature-note">This is system-generated, signature is not required.</div>
+                <div class="privacy-note">
+                    This document contains personal-identifiable information that is subject to Data Privacy.<br>
+                    Please keep this document protected and in a safe place.
+                </div>
             </div>
         </div>
-    </div>
+    @endunless
 
     @if($isMarReport)
         <header class="mar-pdf-header official-inventory-header">
@@ -1933,7 +1940,7 @@
                     </td>
                     <td>
                         <span class="meta-label">Date of Submission:</span>
-                        <span class="meta-value">{{ $marReportAsOf->format('F d, Y') }}</span>
+                        <span class="meta-value">{{ $marReportSubmittedAt->format('F d, Y') }}</span>
                     </td>
                 </tr>
                 <tr>

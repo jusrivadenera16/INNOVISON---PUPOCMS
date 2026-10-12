@@ -55,6 +55,13 @@
             : route('walkin.employeeDocument', ['employeeProfile' => $employeeProfile->id, 'document' => 'student_photo']))
         : null;
     $employeeDocuments = collect($employeeDocuments ?? []);
+    $canManageNewEmployeeHealthForm = (bool) ($canRequestNewEmployeeHealthForm ?? false);
+    $canRequestNewEmployeeHealthForm = $canManageNewEmployeeHealthForm && !$activeNewHealthFormRequest;
+    $canViewExistingNewEmployeeHealthFormRequest = $canManageNewEmployeeHealthForm && (bool) $activeNewHealthFormRequest;
+    $existingNewHealthFormCategory = data_get($activeNewHealthFormRequest?->metadata, 'category')
+        ?: ($employeeProfile?->health_form_category ?: 'General Health Form');
+    $existingNewHealthFormRemarks = data_get($activeNewHealthFormRequest?->metadata, 'remarks')
+        ?: ($activeNewHealthFormRequest?->admin_note ?: '');
     $medicalCondition = method_exists($employeeProfile, 'hasMedicalCondition') && $employeeProfile->hasMedicalCondition()
         ? 'With Medical Condition'
         : 'No Medical Condition';
@@ -1443,6 +1450,40 @@
         transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
     }
 
+    .employee-action-readonly-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        min-height: 46px;
+        padding: 11px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        background: #f8fafc;
+        color: #172033;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .employee-action-readonly-row span:first-child {
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .employee-action-request-notice {
+        padding: 12px 14px;
+        border: 1px solid #f0b429;
+        border-radius: 9px;
+        background: #fffbeb;
+        color: #7c2d12;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.5;
+    }
+
     .employee-action-cancel:hover,
     .employee-action-cancel:focus-visible,
     .employee-action-submit:hover,
@@ -1487,6 +1528,22 @@
         border-color: #475569;
         background: #1e293b;
         color: #f8fafc;
+    }
+
+    [data-theme="dark"] .employee-action-readonly-row {
+        border-color: #475569;
+        background: #1e293b;
+        color: #f8fafc;
+    }
+
+    [data-theme="dark"] .employee-action-readonly-row span:first-child {
+        color: #94a3b8;
+    }
+
+    [data-theme="dark"] .employee-action-request-notice {
+        border-color: rgba(250, 204, 21, .36);
+        background: rgba(120, 53, 15, .24);
+        color: #fde68a;
     }
 
     [data-theme="dark"] .employee-action-select-wrap button.employee-action-select-trigger {
@@ -1644,10 +1701,10 @@
                         </svg>
                     </button>
                     <div class="employee-profile-actions-menu" id="employeeProfileActionsMenu" role="menu" aria-hidden="true">
-                        @if($canRequestNewEmployeeHealthForm)
+                        @if($canManageNewEmployeeHealthForm)
                             <button type="button" id="openNewEmployeeHealthFormModal" role="menuitem">
-                                <span>Request New Health Form</span>
-                                <span aria-hidden="true">+</span>
+                                <span>{{ $canViewExistingNewEmployeeHealthFormRequest ? 'View Existing Request' : 'Request New Health Form' }}</span>
+                                <span aria-hidden="true">@if($canViewExistingNewEmployeeHealthFormRequest)&rarr;@else+@endif</span>
                             </button>
                         @endif
                         @if($canRequestEmployeeFileCorrection)
@@ -1836,43 +1893,73 @@
 </div>
 
 @if($canRequestEmployeeHealthActions)
-    @if($canRequestNewEmployeeHealthForm)
+    @if($canManageNewEmployeeHealthForm)
     <div class="employee-action-modal" id="newEmployeeHealthFormModal" aria-hidden="true">
         <div class="employee-action-card" role="dialog" aria-modal="true" aria-labelledby="newEmployeeHealthFormTitle">
             <div class="employee-action-head">
                 <div class="employee-action-head-main">
                     <span class="employee-action-head-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span>
                     <div>
-                        <h3 id="newEmployeeHealthFormTitle">Request New Health Form</h3>
-                        <p>Ask this {{ $employeeProfileTypeLabel }} to submit an updated Health Examination Record.</p>
+                        <h3 id="newEmployeeHealthFormTitle">{{ $canViewExistingNewEmployeeHealthFormRequest ? 'Existing Health Form Request' : 'Request New Health Form' }}</h3>
+                        <p>{{ $canViewExistingNewEmployeeHealthFormRequest ? 'Review the active Health Form request for this ' . $employeeProfileTypeLabel . '.' : 'Ask this ' . $employeeProfileTypeLabel . ' to submit an updated Health Examination Record.' }}</p>
                     </div>
                 </div>
                 <button type="button" class="employee-action-close" id="closeNewEmployeeHealthFormModal" aria-label="Close new health form modal">
                     <x-outline-icon name="x-mark" />
                 </button>
             </div>
-            <form method="POST" action="{{ route('admin.employee_health_profile.request_health_form', $employeeProfile->id) }}" class="employee-action-body">
-                @csrf
-                <div class="employee-action-field">
-                    <label for="newEmployeeHealthFormCategory">Category / Purpose</label>
-                    <div class="employee-action-select-wrap">
-                        <select id="newEmployeeHealthFormCategory" name="category" class="employee-action-select-source" required>
-                            <option value="">Select category</option>
-                            @foreach(($employeeHealthFormCategories ?? collect()) as $category)
-                                <option value="{{ $category }}">{{ $category }}</option>
-                            @endforeach
-                        </select>
+            @if($canViewExistingNewEmployeeHealthFormRequest)
+                <div class="employee-action-body">
+                    <div class="employee-action-readonly-row">
+                        <span>Status</span>
+                        <strong>{{ ucwords(str_replace('_', ' ', $activeNewHealthFormRequest->status)) }}</strong>
+                    </div>
+                    <div class="employee-action-readonly-row">
+                        <span>Category / Purpose</span>
+                        <strong>{{ $existingNewHealthFormCategory }}</strong>
+                    </div>
+                    <div class="employee-action-readonly-row">
+                        <span>Requested At</span>
+                        <strong>{{ optional($activeNewHealthFormRequest->requested_at)->format('M d, Y h:i A') ?: 'N/A' }}</strong>
+                    </div>
+                    @if(filled($existingNewHealthFormRemarks))
+                        <div class="employee-action-readonly-row">
+                            <span>Remarks</span>
+                            <strong>{{ $existingNewHealthFormRemarks }}</strong>
+                        </div>
+                    @endif
+                    <div class="employee-action-request-notice">
+                        A Health Form request is already active for this record. No new request can be sent until this request is completed or closed.
+                    </div>
+                    <div class="employee-action-actions">
+                        <button type="button" class="employee-action-cancel" id="cancelNewEmployeeHealthFormModal">Close</button>
+                        <button type="button" class="employee-action-submit" id="viewExistingEmployeeHealthFormRecord">View Health Form Record</button>
                     </div>
                 </div>
-                <div class="employee-action-field">
-                    <label for="newEmployeeHealthFormRemarks">Remarks</label>
-                    <textarea id="newEmployeeHealthFormRemarks" name="remarks" placeholder="Optional note for why a new form is needed.">{{ old('remarks') }}</textarea>
-                </div>
-                <div class="employee-action-actions">
-                    <button type="button" class="employee-action-cancel" id="cancelNewEmployeeHealthFormModal">Cancel</button>
-                    <button type="submit" class="employee-action-submit">Send Request</button>
-                </div>
-            </form>
+            @else
+                <form method="POST" action="{{ route('admin.employee_health_profile.request_health_form', $employeeProfile->id) }}" class="employee-action-body">
+                    @csrf
+                    <div class="employee-action-field">
+                        <label for="newEmployeeHealthFormCategory">Category / Purpose</label>
+                        <div class="employee-action-select-wrap">
+                            <select id="newEmployeeHealthFormCategory" name="category" class="employee-action-select-source" required>
+                                <option value="">Select category</option>
+                                @foreach(($employeeHealthFormCategories ?? collect()) as $category)
+                                    <option value="{{ $category }}">{{ $category }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="employee-action-field">
+                        <label for="newEmployeeHealthFormRemarks">Remarks</label>
+                        <textarea id="newEmployeeHealthFormRemarks" name="remarks" placeholder="Optional note for why a new form is needed.">{{ old('remarks') }}</textarea>
+                    </div>
+                    <div class="employee-action-actions">
+                        <button type="button" class="employee-action-cancel" id="cancelNewEmployeeHealthFormModal">Cancel</button>
+                        <button type="submit" class="employee-action-submit">Send Request</button>
+                    </div>
+                </form>
+            @endif
         </div>
     </div>
     @endif
@@ -2091,6 +2178,12 @@
     document.getElementById('openNewEmployeeHealthFormModal')?.addEventListener('click', function () {
         setEmployeeProfileActionsMenu(false);
         setEmployeeActionModal(newEmployeeHealthFormModal, true);
+    });
+
+    document.getElementById('viewExistingEmployeeHealthFormRecord')?.addEventListener('click', function () {
+        setEmployeeActionModal(newEmployeeHealthFormModal, false);
+        document.querySelector('[data-profile-tab-target="docsPanel"]')?.click();
+        document.getElementById('docsPanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
     document.getElementById('openEmployeeCorrectionModal')?.addEventListener('click', function () {

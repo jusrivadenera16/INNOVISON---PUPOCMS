@@ -12,6 +12,7 @@ use App\Models\Appointment;
 use App\Models\AppointmentFeedback;
 use App\Models\ClinicServiceOption;
 use App\Models\Consultation;
+use App\Models\ConsultationEvaluation;
 use App\Models\DependentsProfile;
 use App\Models\HealthFormCategory;
 use App\Models\HealthFormSubmission;
@@ -234,6 +235,37 @@ class AppointmentController extends Controller
                         'link' => url('/student/history'),
                     ];
                 }
+            }
+        }
+
+        if (Schema::hasTable('eval_form')) {
+            $evaluations = ConsultationEvaluation::query()
+                ->where('user_id', $user->id)
+                ->whereIn('status', ['sent', 'submitted'])
+                ->with('consultation')
+                ->latest('updated_at')
+                ->get();
+
+            foreach ($evaluations as $evaluation) {
+                $isSubmitted = $evaluation->status === 'submitted' && $evaluation->submitted_at;
+                $consultationDate = optional($evaluation->consultation?->consultation_date)->format('M d');
+                $notifications[] = [
+                    'id' => $this->buildNotificationId('consultation-evaluation', [
+                        $evaluation->id,
+                        $evaluation->status,
+                        optional($evaluation->updated_at)->timestamp,
+                    ]),
+                    'type' => $isSubmitted ? 'success' : 'info',
+                    'icon' => $isSubmitted ? 'OK' : '!',
+                    'message' => $isSubmitted
+                        ? 'Thank you for submitting your service evaluation.'
+                        : 'The clinic invited you to evaluate your recent ' . strtolower($evaluation->serviceLabel())
+                            . ($consultationDate ? " ({$consultationDate})." : '.'),
+                    'time' => $isSubmitted
+                        ? ($evaluation->submitted_at?->diffForHumans() ?? 'Evaluation submitted')
+                        : ($evaluation->sent_at?->diffForHumans() ?? 'New service evaluation'),
+                    'link' => route('student.evaluation.show', ['evaluation' => $evaluation->id]),
+                ];
             }
         }
 
@@ -811,7 +843,7 @@ class AppointmentController extends Controller
                     ->orWhereDate('expires_at', '>=', now(config('app.timezone'))->toDateString());
             })
             ->latest()
-            ->take(8)
+            ->take(15)
             ->get()
             ->map(fn (Announcement $announcement) => [
                 'id' => $announcement->id,
@@ -4469,6 +4501,134 @@ public function account(Request $request)
         return redirect('/student/account?view=notifications')->with('success', 'Thank you for sharing your feedback.');
     }
 
+    public function showEvaluationForm(ConsultationEvaluation $evaluation)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::guard('student')->user() ?: Auth::user();
+        if (!$user || $evaluation->user_id !== $user->id) {
+            return redirect('/student/history')->with('error', 'This service evaluation form is not available to this account.');
+        }
+
+        $evaluation->load('consultation');
+
+        if ($evaluation->status !== 'submitted' && !$evaluation->opened_at) {
+            $evaluation->forceFill([
+                'opened_at' => now(),
+            ])->save();
+        }
+
+        return view('student.evaluation_form', [
+            'evaluation' => $evaluation,
+            'consultation' => $evaluation->consultation,
+        ]);
+    }
+
+    public function previewEvaluationForm()
+    {
+        $evaluation = new ConsultationEvaluation([
+            'status' => 'preview',
+            'feedback' => '',
+        ]);
+        $evaluation->id = 0;
+
+        $consultation = new Consultation([
+            'service' => 'Medical Consultation',
+        ]);
+        $consultation->consultation_date = now()->toDateString();
+
+        return view('student.evaluation_form', [
+            'evaluation' => $evaluation,
+            'consultation' => $consultation,
+            'isPreview' => true,
+        ]);
+    }
+
+    public function storeEvaluation(Request $request, ConsultationEvaluation $evaluation)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::guard('student')->user() ?: Auth::user();
+        if (!$user || $evaluation->user_id !== $user->id) {
+            return redirect('/student/history')->with('error', 'This service evaluation form is not available to this account.');
+        }
+
+        if ($evaluation->status === 'submitted' && $evaluation->submitted_at) {
+            return redirect()
+                ->route('student.evaluation.show', ['evaluation' => $evaluation->id])
+                ->with('success', 'Your service evaluation has already been submitted.');
+        }
+
+        $sqdCodes = array_map(static fn (int $number): string => 'SQD' . $number, range(0, 8));
+        $evaluationRules = [
+            'consent' => ['accepted'],
+            'client_type' => [
+                'required',
+                Rule::in([
+                    'Faculty',
+                    'Administrative Employee',
+                    'Student',
+                    'Alumni',
+                    'Parent of a Student',
+                    'Industry Partner',
+                    'Visitor/Guest',
+                ]),
+            ],
+            'sex' => ['required', Rule::in(['Male', 'Female', 'Prefer not to say'])],
+            'age_group' => [
+                'required',
+                Rule::in([
+                    '19 or lower',
+                    '20-34 years old',
+                    '35-49 years old',
+                    '50-64 years old',
+                    '65 or higher',
+                    'Prefer not to say',
+                ]),
+            ],
+            'cc1' => ['required', Rule::in(['1', '2', '3', '4'])],
+            'cc2' => ['required', Rule::in(['1', '2', '3', '4'])],
+            'cc3' => ['required', Rule::in(['1', '2', '3'])],
+            'suggestions' => ['nullable', 'string', 'max:1500'],
+            'sqd_answers' => ['required', 'array'],
+        ];
+
+        foreach ($sqdCodes as $sqdCode) {
+            $evaluationRules["sqd_answers.{$sqdCode}"] = ['required', 'integer', 'between:0,5'];
+        }
+
+        $validated = $request->validate($evaluationRules);
+        $sqdAnswers = collect($validated['sqd_answers'])
+            ->only($sqdCodes)
+            ->map(static fn ($value): int => (int) $value)
+            ->all();
+
+        $evaluation->forceFill([
+            'status' => 'submitted',
+            'consent_at' => now(),
+            'client_type' => $validated['client_type'],
+            'sex' => $validated['sex'],
+            'age_group' => $validated['age_group'],
+            'cc1' => $validated['cc1'],
+            'cc2' => $validated['cc2'],
+            'cc3' => $validated['cc3'],
+            'sqd_answers' => $sqdAnswers,
+            'rating' => $sqdAnswers['SQD0'] ?? null,
+            'feedback' => trim((string) ($validated['suggestions'] ?? '')),
+            'suggestions' => trim((string) ($validated['suggestions'] ?? '')),
+            'submitted_at' => now(),
+        ])->save();
+
+        ActivityLog::create([
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'action' => 'Service Evaluation Submitted',
+            'description' => "Submitted a service evaluation for {$evaluation->serviceLabel()}.",
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        return redirect('/student/account?view=notifications')->with('success', 'Thank you for evaluating our clinic service.');
+    }
+
 
     // -------------------------------
     // 5. CANCEL APPOINTMENT
@@ -5075,6 +5235,9 @@ public function storeDependentProfile(Request $request)
         return back()->withInput()->with('error', 'Dependent profile storage is not ready yet. Please run the latest database migration.');
     }
 
+    $dependentBirthdayMin = '1950-01-01';
+    $dependentBirthdayMax = Carbon::today()->subYears(15)->toDateString();
+
     $validated = $request->validate([
         'id_number' => ['nullable', 'string', 'max:120'],
         'first_name' => ['required', 'string', 'max:120'],
@@ -5082,19 +5245,27 @@ public function storeDependentProfile(Request $request)
         'last_name' => ['required', 'string', 'max:120'],
         'suffix_name' => ['nullable', 'string', 'max:120'],
         'email' => ['required', 'email', 'max:255'],
-        'birthday' => ['required', 'date', 'before_or_equal:today'],
-        'age' => ['required', 'integer', 'min:0', 'max:120'],
+        'birthday' => ['required', 'date', 'after_or_equal:' . $dependentBirthdayMin, 'before_or_equal:' . $dependentBirthdayMax],
+        'age' => ['required', 'integer', 'min:15', 'max:100'],
         'sex' => ['required', 'string', 'max:40'],
         'civil_status' => ['required', 'string', 'max:80'],
         'street' => ['required', 'string', 'max:255'],
         'barangay' => ['required', 'string', 'max:120'],
         'municipality' => ['required', 'string', 'max:120'],
         'province' => ['required', 'string', 'max:120'],
-        'contact_no' => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'contact_no' => ['required', 'string', 'size:11', 'regex:/^09\d{9}$/'],
         'landline' => ['nullable', 'string', 'max:20', 'regex:/^(?:[0-9+\-\s()]+|N\/?A|NONE)$/i'],
         'emergency_contact_name' => ['required', 'string', 'max:255'],
-        'emergency_contact_no' => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'emergency_contact_no' => ['required', 'string', 'size:11', 'regex:/^09\d{9}$/'],
         'dependent_profile_certified' => ['accepted'],
+    ], [
+        'contact_no.size' => 'Please put an 11-digit mobile number starting with 09.',
+        'contact_no.regex' => 'Please put an 11-digit mobile number starting with 09.',
+        'emergency_contact_no.size' => 'Please put an 11-digit mobile number starting with 09.',
+        'emergency_contact_no.regex' => 'Please put an 11-digit mobile number starting with 09.',
+        'birthday.after_or_equal' => 'Birthday must be January 1, 1950 or later.',
+        'birthday.before_or_equal' => 'Age must be at least 15 years old.',
+        'age.min' => 'Age must be at least 15 years old.',
     ]);
 
     $validated['first_name'] = trim((string) ($user->first_name ?? '')) ?: $validated['first_name'];
@@ -5220,13 +5391,6 @@ private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
     $employeePrefill = $this->buildEmployeeHealthFormPrefill($user, $employeeProfile);
     $displayName = trim((string) ($user->name ?? ''));
 
-    $employeeCourseOptions = array_merge([
-        [
-            'code' => 'N/A',
-            'name' => 'Not Applicable',
-            'label' => 'Not Applicable',
-        ],
-    ], $this->healthFormCourseOptions());
     $healthFormCategories = $this->healthFormCategoriesForAudience(
         $this->employeeHealthFormCategoryAudience($user)
     );
@@ -5239,7 +5403,6 @@ private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
         'employeeProfile',
         'employeePrefill',
         'displayName',
-        'employeeCourseOptions',
         'healthFormCategories',
         'defaultEmployeeHealthFormCategory',
         'adminForm'
@@ -5555,6 +5718,9 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
         $employeeNumberRule->ignore($existingEmployeeProfile->id);
     }
 
+    $employeeBirthdayMin = '1950-01-01';
+    $employeeBirthdayMax = Carbon::today()->subYears(15)->toDateString();
+
     $validated = $request->validate([
         'employee_number' => [
             'nullable',
@@ -5570,17 +5736,16 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
         'barangay' => ['required', 'string', 'max:120'],
         'city_municipality' => ['required', 'string', 'max:120'],
         'province' => ['required', 'string', 'max:120'],
-        'contact_no' => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'contact_no' => ['required', 'string', 'size:11', 'regex:/^09\d{9}$/'],
         'emergency_contact_person' => ['required', 'string', 'max:255'],
-        'emergency_contact_no' => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'emergency_contact_no' => ['required', 'string', 'size:11', 'regex:/^09\d{9}$/'],
         'form_date' => ['required', 'date'],
         'office' => ['required', 'string', 'max:255'],
-        'course_college' => ['nullable', 'string', 'max:160'],
         'school_year' => ['nullable', 'string', 'max:40'],
         'age' => ['required', 'numeric', 'min:15', 'max:100'],
         'sex' => ['required', 'string', 'max:40'],
         'civil_status' => ['required', 'string', 'max:80'],
-        'birthday' => ['required', 'date'],
+        'birthday' => ['required', 'date', 'after_or_equal:' . $employeeBirthdayMin, 'before_or_equal:' . $employeeBirthdayMax],
         'past_medical_history' => ['nullable', 'array'],
         'past_medical_history.*' => ['string', 'max:80'],
         'past_medical_history_others' => ['nullable', 'string', 'max:255'],
@@ -5650,6 +5815,9 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
         'employee_health_profile_certified' => ['accepted'],
     ], [
         'employee_number.unique' => 'This employee number is already registered. Please use the correct employee number for this account.',
+        'birthday.after_or_equal' => 'Birthday must be January 1, 1950 or later.',
+        'birthday.before_or_equal' => 'Age must be at least 15 years old.',
+        'age.min' => 'Age must be at least 15 years old.',
     ]);
 
     $employeeSignatureMethod = (string) $validated['employee_signature_method'];
@@ -5788,7 +5956,6 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
         'emergency_contact_no' => $validated['emergency_contact_no'],
         'form_date' => $validated['form_date'],
         'office' => $validated['office'],
-        'course_college' => $validated['course_college'] ?? null,
         'school_year' => $validated['school_year'] ?? null,
         'age' => $validated['age'],
         'sex' => $validated['sex'],
@@ -6385,14 +6552,35 @@ public function storeHealthForm(Request $request)
     $applicantDocumentDateRule = $applicantDocumentsRequired
         ? ['required', 'date', 'after_or_equal:' . $applicantDocumentDateMin, 'before_or_equal:' . $applicantDocumentDateMax]
         : ['nullable', 'date'];
+    $studentYearRule = $isDedicatedStudentForm
+        ? ['required', 'string', Rule::in(['1st Year', '2nd Year', '3rd Year', '4th Year'])]
+        : ['nullable', 'string', Rule::in(['1st Year', '2nd Year', '3rd Year', '4th Year'])];
+    $studentSectionRule = $isDedicatedStudentForm
+        ? ['required', 'string', Rule::in(['1', '2', '3', '4'])]
+        : ['nullable', 'string', Rule::in(['1', '2', '3', '4'])];
+    $studentMobileRule = ['required', 'string', 'size:11', 'regex:/^09\d{9}$/'];
+    $studentZipcodeRule = ['required', 'digits:4'];
+    $healthFormBirthdayMin = '1950-01-01';
+    $healthFormBirthdayMax = Carbon::today()->subYears(15)->toDateString();
 
     $request->validate([
         'student_id'        => 'nullable|string|max:255',
         'reference_number'  => $referenceNumberRules,
         'school_year'       => ['required', 'string', 'regex:/^\d{4}-\d{4}$/'],
+        'year'              => $studentYearRule,
+        'section'           => $studentSectionRule,
         'home_address'      => 'required|string|max:255',
-        'zipcode'           => 'required|string|max:20',
-        'birthday'          => 'required|date',
+        'home_address_street' => 'required|string|max:255',
+        'home_address_barangay' => 'required|string|max:120',
+        'home_address_city_municipality' => 'required|string|max:120',
+        'home_address_province' => 'required|string|max:120',
+        'zipcode'           => $studentZipcodeRule,
+        'birthday'          => [
+            'required',
+            'date',
+            'after_or_equal:' . $healthFormBirthdayMin,
+            'before_or_equal:' . $healthFormBirthdayMax,
+        ],
         'student_photo'     => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'student_photo', ['image', 'mimes:jpeg,png,jpg', 'max:1024']),
         'health_declaration' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'health_declaration', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'], $applicantDocumentsRequired),
         'age'               => 'required|numeric|min:15|max:100',
@@ -6405,10 +6593,10 @@ public function storeHealthForm(Request $request)
             ? ['required', 'string', 'max:120', Rule::in($studentHealthFormCategoryValues)]
             : ['nullable', 'string', 'max:120'],
         'blood_type'        => 'required|string|max:20',
-        'contact_no'        => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'contact_no'        => $studentMobileRule,
         'guardian_name'     => 'required|string|max:255',
         'landline'          => ['required', 'string', 'max:20', 'regex:/^(?:[0-9+\-\s()]+|N\/?A|NONE)$/i'],
-        'cellphone'         => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'cellphone'         => $studentMobileRule,
         'has_illness'       => 'required|string|in:Yes,No',
         'medical_history'   => 'nullable|array',
         'medical_history.*' => 'string|max:100',
@@ -6454,6 +6642,15 @@ public function storeHealthForm(Request $request)
         'guardian_signature_upload' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
         'digital_signature_existing' => 'nullable|string|max:255',
         'health_profile_certified' => 'accepted',
+    ], [
+        'contact_no.size' => 'Please put an 11-digit mobile number starting with 09.',
+        'contact_no.regex' => 'Please put an 11-digit mobile number starting with 09.',
+        'cellphone.size' => 'Please put an 11-digit mobile number starting with 09.',
+        'cellphone.regex' => 'Please put an 11-digit mobile number starting with 09.',
+        'zipcode.digits' => 'ZIP Code must contain exactly 4 digits.',
+        'birthday.after_or_equal' => 'Birthday must be January 1, 1950 or later.',
+        'birthday.before_or_equal' => 'Age must be at least 15 years old.',
+        'age.min' => 'Age must be at least 15 years old.',
     ]);
 
     $signatureMethod = (string) $request->input('signature_method', 'draw');
@@ -6615,6 +6812,10 @@ public function storeHealthForm(Request $request)
 
     $user->DOB = $request->input('birthday');
     $user->contact_no = $request->input('contact_no');
+    if ($isDedicatedStudentForm) {
+        $user->year = $request->input('year');
+        $user->section = $request->input('section');
+    }
     $resolvedGender = trim((string) $request->input('sex'));
     if ($resolvedGender !== '') {
         $user->gender = $resolvedGender;
@@ -7073,6 +7274,10 @@ public function showHealthFormSubmissionDocument(HealthFormSubmission $submissio
     $path = ltrim((string) ($profileData[$document] ?? ''), '/');
     if ($path === '' && $document === 'chest_xray_result') {
         $path = ltrim((string) ($profileData['chest_xray_document'] ?? ''), '/');
+    }
+    if ($path === '' && $document === 'student_photo' && $submission->employee_health_profile_id) {
+        $employeeProfile = $submission->employeeHealthProfile;
+        $path = ltrim((string) ($profileData['employee_photo'] ?? $employeeProfile?->student_photo ?? ''), '/');
     }
     $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
 
