@@ -11,6 +11,8 @@ class ConsultationEvaluation extends Model
 
     protected $fillable = [
         'consultation_id',
+        'source_type',
+        'source_id',
         'user_id',
         'requested_by_user_id',
         'status',
@@ -51,5 +53,14 @@ class ConsultationEvaluation extends Model
     public function requestedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'requested_by_user_id');
+    }
+
+    public function serviceLabel(): string
+    {
+        return match ((string) $this->source_type) {
+            'applicant_approval' => 'Applicant Health Form Review',
+            'employee_approval' => 'Employee Health Examination',
+            default => trim((string) ($this->consultation?->service ?? '')) ?: 'Medical Consultation',
+        };
     }
 }

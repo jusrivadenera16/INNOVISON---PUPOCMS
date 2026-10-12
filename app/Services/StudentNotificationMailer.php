@@ -226,17 +226,19 @@ class StudentNotificationMailer
     }
 
     /**
-     * Invites a student to complete the service evaluation for a consultation.
+     * Invites a client to complete the service evaluation for a clinic service.
      *
      * @return array{status: 'sent'|'skipped'|'failed'}
      */
     public function sendServiceEvaluationNotice(User $recipient, ConsultationEvaluation $evaluation): array
     {
+        $service = $evaluation->serviceLabel();
+
         return $this->send(
             $recipient,
             'Please evaluate your PUP Taguig Clinic service',
             'How was your clinic service experience?',
-            'You recently completed a consultation with the PUP Taguig Clinic. If you have a moment, please evaluate the service you received. Your feedback helps us improve our care and support.',
+            "Please take a moment to evaluate your recent {$service} at the PUP Taguig Clinic. Your feedback helps us improve our care and support.",
             'Evaluate the Service',
             route('student.evaluation.show', ['evaluation' => $evaluation->id])
         );

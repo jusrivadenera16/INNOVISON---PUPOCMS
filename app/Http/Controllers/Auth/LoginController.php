@@ -16,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -1572,6 +1573,10 @@ class LoginController extends Controller
         }
 
         if ($existingUser) {
+            $isAssistedIntakeIdentity = Str::startsWith(
+                Str::lower(trim((string) $existingUser->student_id)),
+                'assisted-'
+            );
             $existingAccountAccessRole = $this->resolveExistingAccountAccessRole($existingUser);
             if ($existingAccountAccessRole !== null) {
                 $role = $existingAccountAccessRole;
@@ -1656,6 +1661,9 @@ class LoginController extends Controller
             }
 
             $existingUser->save();
+            if ($isAssistedIntakeIdentity) {
+                $this->syncAssistedIntakeRecords($existingUser);
+            }
             $this->syncAdminHubProfileFromIdp($existingUser, $idpSubjectSeed);
             $this->ensureDefaultClinicAdminProfile($existingUser, $role);
             return $existingUser;
@@ -1710,6 +1718,39 @@ class LoginController extends Controller
         $this->ensureDefaultClinicAdminProfile($user, $role);
 
         return $user;
+    }
+
+    private function syncAssistedIntakeRecords(User $user): void
+    {
+        if (Schema::hasTable('appointments') && Schema::hasColumn('appointments', 'user_id')) {
+            $appointmentFields = [
+                'student_id' => trim((string) $user->student_id),
+                'student_number' => trim((string) $user->student_number),
+                'name' => trim((string) $user->name),
+                'email' => trim((string) $user->email),
+            ];
+            $appointmentUpdates = [];
+
+            foreach ($appointmentFields as $column => $value) {
+                if ($value !== '' && Schema::hasColumn('appointments', $column)) {
+                    $appointmentUpdates[$column] = $value;
+                }
+            }
+
+            if ($appointmentUpdates !== []) {
+                DB::table('appointments')
+                    ->where('user_id', $user->id)
+                    ->update($appointmentUpdates);
+            }
+        }
+
+        if (Schema::hasTable('consultations')
+            && Schema::hasColumn('consultations', 'user_id')
+            && Schema::hasColumn('consultations', 'name')) {
+            DB::table('consultations')
+                ->where('user_id', $user->id)
+                ->update(['name' => trim((string) $user->name)]);
+        }
     }
 
     private function enrichUserWithPuptasData(User $user): void

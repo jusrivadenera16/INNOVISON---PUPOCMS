@@ -923,7 +923,7 @@ class WalkInController extends Controller
         }
 
         if ($idpUserId !== '' && trim((string) $user->student_id) === '') {
-            $user->student_id = $this->resolveUniqueStudentId($idpUserId);
+            $user->student_id = $this->resolveUniqueStudentId($idpUserId, $user->exists ? (int) $user->id : null);
         }
 
         \Log::debug('User fields set', [
@@ -1738,14 +1738,17 @@ class WalkInController extends Controller
         ]);
 
         if ($validated['decision'] === 'skip') {
-            return redirect()->back()->with('success', 'The service evaluation email was not sent.');
+            return redirect()->route($this->walkinRouteName($request, 'index'))
+                ->with('success', 'Consultation completed successfully.');
         }
 
         $consultation = Consultation::with('user')->findOrFail($validated['consultation_id']);
         $student = $consultation->user;
 
         if (!$student) {
-            return redirect()->back()->with('error', 'The patient account for this consultation could not be found.');
+            return redirect()->route($this->walkinRouteName($request, 'index'))
+                ->with('success', 'Consultation completed successfully.')
+                ->with('error', 'The patient account for this evaluation could not be found, so the email was not sent.');
         }
 
         $evaluation = ConsultationEvaluation::firstOrNew([
@@ -1753,14 +1756,19 @@ class WalkInController extends Controller
         ]);
 
         if ($evaluation->exists && $evaluation->status === 'sent' && $evaluation->sent_at) {
-            return redirect()->back()->with('success', 'The service evaluation link was already sent to the patient email address.');
+            return redirect()->route($this->walkinRouteName($request, 'index'))
+                ->with('success', 'Consultation completed successfully. The service evaluation link was already sent to the patient.');
         }
 
         if ($evaluation->exists && $evaluation->status === 'submitted' && $evaluation->submitted_at) {
-            return redirect()->back()->with('success', 'The patient has already submitted this service evaluation.');
+            return redirect()->route($this->walkinRouteName($request, 'index'))
+                ->with('success', 'Consultation completed successfully. The patient has already submitted this service evaluation.');
         }
 
         $evaluation->fill([
+            'consultation_id' => $consultation->id,
+            'source_type' => 'consultation',
+            'source_id' => $consultation->id,
             'user_id' => $student->id,
             'requested_by_user_id' => optional($request->user())->id,
             'status' => 'pending',
@@ -1768,8 +1776,17 @@ class WalkInController extends Controller
         $evaluation->save();
         $evaluation->load('consultation');
 
-        $mailResult = app(StudentNotificationMailer::class)
-            ->sendServiceEvaluationNotice($student, $evaluation);
+        try {
+            $mailResult = app(StudentNotificationMailer::class)
+                ->sendServiceEvaluationNotice($student, $evaluation);
+        } catch (\Throwable $exception) {
+            Log::warning('Service evaluation email failed after consultation.', [
+                'consultation_id' => $consultation->id,
+                'evaluation_id' => $evaluation->id,
+                'error' => $exception->getMessage(),
+            ]);
+            $mailResult = ['status' => 'failed'];
+        }
 
         if ($mailResult['status'] === 'sent') {
             $evaluation->forceFill([
@@ -1777,19 +1794,130 @@ class WalkInController extends Controller
                 'sent_at' => now(),
             ])->save();
 
-            return redirect()->back()->with('success', 'The service evaluation link was sent to the patient email address.');
+            return redirect()->route($this->walkinRouteName($request, 'index'))
+                ->with('success', 'Consultation completed successfully. The service evaluation link was emailed to the patient.');
         }
 
         $evaluation->forceFill([
             'status' => $mailResult['status'] === 'skipped' ? 'email_skipped' : 'email_failed',
         ])->save();
 
-        return redirect()->back()->with(
-            'error',
-            $mailResult['status'] === 'skipped'
-                ? 'The service evaluation was saved, but the email was not sent because email notifications are disabled or no valid email address is available.'
-                : 'The service evaluation was saved, but the email could not be sent. Check the mail settings and try again.'
-        );
+        return redirect()->route($this->walkinRouteName($request, 'index'))
+            ->with('success', 'Consultation completed successfully.')
+            ->with(
+                'error',
+                $mailResult['status'] === 'skipped'
+                    ? 'The evaluation email was not sent because notifications are disabled or no valid email address is available.'
+                    : 'The evaluation email could not be sent. Check the mail settings and try again.'
+            );
+    }
+
+    public function sendApprovalEvaluation(Request $request)
+    {
+        $validated = $request->validate([
+            'source_type' => ['required', Rule::in(['applicant_approval', 'employee_approval'])],
+            'source_id' => ['required', 'integer', 'min:1'],
+            'decision' => ['required', Rule::in(['send', 'skip'])],
+        ]);
+
+        $sourceType = $validated['source_type'];
+        $profile = $sourceType === 'employee_approval'
+            ? EmployeeHealthProfile::with('user')->find($validated['source_id'])
+            : HealthProfile::with('user')->find($validated['source_id']);
+
+        if (!$profile) {
+            return response()->json(['success' => false, 'message' => 'The approved health record could not be found.'], 404);
+        }
+
+        $isApproved = $sourceType === 'employee_approval'
+            ? strtolower(trim((string) $profile->submission_status)) === 'approved'
+                && in_array(trim((string) $profile->clearance_status), ['Fully Cleared', 'Issued'], true)
+            : in_array(trim((string) $profile->clearance_status), ['Fully Cleared', 'Issued'], true);
+
+        if (!$isApproved) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Evaluation invitations are available only after the health record is fully approved.',
+            ], 409);
+        }
+
+        if ($validated['decision'] === 'skip') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Approval completed. The service evaluation was skipped.',
+            ]);
+        }
+
+        $recipient = $profile->user;
+        if (!$recipient) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Approval is complete, but there is no linked account to receive the evaluation email.',
+            ], 422);
+        }
+
+        $evaluation = ConsultationEvaluation::firstOrNew([
+            'source_type' => $sourceType,
+            'source_id' => $profile->id,
+        ]);
+
+        if ($evaluation->status === 'submitted' && $evaluation->submitted_at) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Approval completed. This service evaluation has already been submitted.',
+            ]);
+        }
+
+        if ($evaluation->status === 'sent' && $evaluation->sent_at) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Approval completed. The service evaluation link was already sent.',
+            ]);
+        }
+
+        $evaluation->fill([
+            'consultation_id' => null,
+            'user_id' => $recipient->id,
+            'requested_by_user_id' => optional($request->user())->id,
+            'status' => 'pending',
+        ]);
+        $evaluation->save();
+
+        try {
+            $mailResult = app(StudentNotificationMailer::class)
+                ->sendServiceEvaluationNotice($recipient, $evaluation);
+        } catch (\Throwable $exception) {
+            Log::warning('Service evaluation email failed after health record approval.', [
+                'source_type' => $sourceType,
+                'source_id' => $profile->id,
+                'evaluation_id' => $evaluation->id,
+                'error' => $exception->getMessage(),
+            ]);
+            $mailResult = ['status' => 'failed'];
+        }
+
+        if ($mailResult['status'] === 'sent') {
+            $evaluation->forceFill([
+                'status' => 'sent',
+                'sent_at' => now(),
+            ])->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Approval completed. The service evaluation link was emailed.',
+            ]);
+        }
+
+        $evaluation->forceFill([
+            'status' => $mailResult['status'] === 'skipped' ? 'email_skipped' : 'email_failed',
+        ])->save();
+
+        return response()->json([
+            'success' => false,
+            'message' => $mailResult['status'] === 'skipped'
+                ? 'Approval is complete, but the evaluation email was not sent because notifications are disabled or no valid email is available.'
+                : 'Approval is complete, but the evaluation email could not be sent. Check the mail settings and try again.',
+        ], 422);
     }
 
     private function finalReviewApplicantQuery()
@@ -2160,7 +2288,13 @@ class WalkInController extends Controller
 
         abort_if(!$student, 404);
         $student->loadMissing('healthProfile', 'dependentProfile');
-        $this->ensureWalkinHealthProfile($student);
+        $isUnmatchedAssistedIdentity = Str::startsWith(
+            Str::lower(trim((string) $student->student_id)),
+            'assisted-'
+        );
+        if (!$isUnmatchedAssistedIdentity) {
+            $this->ensureWalkinHealthProfile($student);
+        }
         $user_source = $this->normalizeConsultationSource($request->query('source', 'walkin'));
         $consultationDraft = ConsultationDraft::query()
             ->where('patient_user_id', $student->id)
@@ -3288,13 +3422,6 @@ PROMPT;
         $completedAppointment = $consultationResult['appointment'] ?? null;
         $consultationId = (int) ($consultationResult['consultation_id'] ?? 0);
 
-        if ($consultationId > 0) {
-            $request->session()->flash('consultation_evaluation_prompt', [
-                'consultation_id' => $consultationId,
-                'patient_name' => (string) $student->name,
-            ]);
-        }
-
         $request->session()->forget($consultationSessionKey);
         $request->session()->forget($appointmentNumberSessionKey);
         ConsultationDraft::query()
@@ -3302,13 +3429,19 @@ PROMPT;
             ->where('consultation_source', $requestedSource)
             ->delete();
 
-        // Redirect logic
-        if ($requestedSource === 'online') {
-            return redirect($this->adminBasePrefix($request) . '/appointments')
-                ->with('success', 'Online consultation completed!');
+        $redirect = redirect()->route($this->walkinRouteName($request, 'form'), [
+            'student_id' => $student->student_number ?: $student->student_id,
+            'source' => $requestedSource,
+        ])->with('success', 'Consultation completed successfully.');
+
+        if ($consultationId > 0) {
+            $redirect->with('consultation_evaluation_prompt', [
+                'consultation_id' => $consultationId,
+                'patient_name' => (string) $student->name,
+            ]);
         }
 
-        return redirect()->route($this->walkinRouteName($request, 'index'))->with('consultation_done', true);
+        return $redirect;
     }
 
     public function updateHealthProfileInformation(Request $request, HealthProfile $healthProfile)
@@ -3855,6 +3988,8 @@ PROMPT;
                 : 'Employee approved and Health Examination Record PDF saved.',
             'lookup_source' => 'local_employee_reference',
             'pdf_path' => $employeeProfile->staff_health_form_pdf_path,
+            'evaluation_source_type' => $hasPendingFinding ? null : 'employee_approval',
+            'evaluation_source_id' => $hasPendingFinding ? null : $employeeProfile->id,
         ]);
     }
 
@@ -4321,6 +4456,8 @@ PROMPT;
                 'redirect_url' => $redirectUrl,
                 'webhook_synced' => (bool) ($webhookResult['success'] ?? false),
                 'lookup_source' => $isLocalOnlyApproval ? 'local_employee_reference' : 'puptas',
+                'evaluation_source_type' => $hasPendingFinding ? null : 'applicant_approval',
+                'evaluation_source_id' => $hasPendingFinding ? null : $profile->id,
             ]);
         } catch (\Exception $e) {
             Log::error('Applicant approval exception', [

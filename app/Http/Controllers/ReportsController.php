@@ -854,6 +854,10 @@ class ReportsController extends Controller
             return null;
         }
 
+        if ($consultation->relationLoaded('user')) {
+            return $consultation->getRelation('user');
+        }
+
         $userId = $consultation->user_id ?? null;
         if ($userId) {
             $cacheKey = 'id:' . $userId;
@@ -2523,7 +2527,7 @@ class ReportsController extends Controller
             unset($dimension);
 
             $evaluationItems = (clone $submittedQuery)
-                ->select(['id', 'consultation_id', 'client_type', 'submitted_at', 'rating', 'suggestions'])
+                ->select(['id', 'consultation_id', 'source_type', 'client_type', 'submitted_at', 'rating', 'suggestions'])
                 ->with('consultation:id,service,consultation_date')
                 ->latest('submitted_at')
                 ->paginate(10)

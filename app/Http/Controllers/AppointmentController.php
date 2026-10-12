@@ -259,7 +259,7 @@ class AppointmentController extends Controller
                     'icon' => $isSubmitted ? 'OK' : '!',
                     'message' => $isSubmitted
                         ? 'Thank you for submitting your service evaluation.'
-                        : 'The clinic invited you to evaluate the service you received during your recent consultation.'
+                        : 'The clinic invited you to evaluate your recent ' . strtolower($evaluation->serviceLabel())
                             . ($consultationDate ? " ({$consultationDate})." : '.'),
                     'time' => $isSubmitted
                         ? ($evaluation->submitted_at?->diffForHumans() ?? 'Evaluation submitted')
@@ -4506,7 +4506,7 @@ public function account(Request $request)
         /** @var \App\Models\User|null $user */
         $user = Auth::guard('student')->user() ?: Auth::user();
         if (!$user || $evaluation->user_id !== $user->id) {
-            return redirect('/student/history')->with('error', 'Evaluation form not available for this consultation.');
+            return redirect('/student/history')->with('error', 'This service evaluation form is not available to this account.');
         }
 
         $evaluation->load('consultation');
@@ -4548,7 +4548,7 @@ public function account(Request $request)
         /** @var \App\Models\User|null $user */
         $user = Auth::guard('student')->user() ?: Auth::user();
         if (!$user || $evaluation->user_id !== $user->id) {
-            return redirect('/student/history')->with('error', 'Evaluation form not available for this consultation.');
+            return redirect('/student/history')->with('error', 'This service evaluation form is not available to this account.');
         }
 
         if ($evaluation->status === 'submitted' && $evaluation->submitted_at) {
@@ -4620,8 +4620,8 @@ public function account(Request $request)
         ActivityLog::create([
             'user_id' => $user->id,
             'user_name' => $user->name,
-            'action' => 'Consultation Service Evaluation Submitted',
-            'description' => "Submitted a service evaluation for Consultation #{$evaluation->consultation_id}.",
+            'action' => 'Service Evaluation Submitted',
+            'description' => "Submitted a service evaluation for {$evaluation->serviceLabel()}.",
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);

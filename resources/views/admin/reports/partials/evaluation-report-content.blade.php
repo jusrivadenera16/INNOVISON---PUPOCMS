@@ -112,7 +112,7 @@
                                     <div class="evaluation-card-meta">Submitted {{ optional($evaluation->submitted_at)->format('M d, Y g:i A') }}</div>
                                 </div>
                                 <div class="evaluation-chip-row">
-                                    <span class="evaluation-chip">{{ $evaluation->consultation?->service ?: 'Clinic service' }}</span>
+                                    <span class="evaluation-chip">{{ $evaluation->serviceLabel() }}</span>
                                     @if($evaluation->consultation?->consultation_date)
                                         <span class="evaluation-chip">Consultation {{ $evaluation->consultation->consultation_date->format('M d, Y') }}</span>
                                     @endif

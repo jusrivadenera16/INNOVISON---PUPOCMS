@@ -1,12 +1,13 @@
 @php
     $evaluationPrompt = session('consultation_evaluation_prompt');
     $hasEvaluationPrompt = is_array($evaluationPrompt) && !empty($evaluationPrompt['consultation_id']);
+    $isConsultationForm = request()->routeIs('walkin.form', 'assistant.walkin.form');
     $evaluationPromptRoute = request()->is('assistant/*')
         ? 'assistant.walkin.consultation-evaluation'
         : 'walkin.consultation-evaluation';
 @endphp
 
-@if($hasEvaluationPrompt)
+@if($hasEvaluationPrompt && $isConsultationForm)
     <style>
         .consultation-evaluation-prompt {
             position: fixed;
@@ -201,6 +202,51 @@
             color: #70131b;
         }
 
+        html[data-theme="dark"] .consultation-evaluation-dialog {
+            background: #111827;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, .56);
+        }
+
+        html[data-theme="dark"] .consultation-evaluation-dialog h2 {
+            color: #f8fafc;
+        }
+
+        html[data-theme="dark"] .consultation-evaluation-dialog > p {
+            color: #cbd5e1;
+        }
+
+        html[data-theme="dark"] .consultation-evaluation-points {
+            background: #30151d;
+        }
+
+        html[data-theme="dark"] .consultation-evaluation-point {
+            border-bottom-color: rgba(250, 204, 21, .16);
+            color: #f1d9dc;
+        }
+
+        html[data-theme="dark"] .consultation-evaluation-action:not(.primary) {
+            border-color: #475569;
+            background: #1f2937;
+            color: #f8fafc;
+        }
+
+        html[data-theme="dark"] .consultation-evaluation-action.primary {
+            border-color: #86111f;
+            background: #86111f;
+            color: #ffffff;
+        }
+
+        html[data-theme="dark"] .consultation-evaluation-action:hover,
+        html[data-theme="dark"] .consultation-evaluation-action:focus-visible {
+            border-color: #facc15;
+            background: #facc15;
+            color: #70131b;
+        }
+
+        html[data-theme="dark"] .consultation-evaluation-close {
+            color: #cbd5e1;
+        }
+
         .consultation-evaluation-action svg {
             width: 14px;
             height: 14px;
@@ -289,7 +335,13 @@
 
             const closeButton = prompt.querySelector('[data-close-consultation-evaluation]');
             closeButton?.addEventListener('click', function () {
-                prompt.remove();
+                const form = prompt.querySelector('.consultation-evaluation-actions');
+                const skipButton = form?.querySelector('[name="decision"][value="skip"]');
+                if (form && skipButton && typeof form.requestSubmit === 'function') {
+                    form.requestSubmit(skipButton);
+                } else {
+                    skipButton?.click();
+                }
             });
         });
     </script>

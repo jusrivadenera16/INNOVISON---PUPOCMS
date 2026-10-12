@@ -357,6 +357,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::post('/admin/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->middleware('module.permission:walkin.encode_assessment|walkin.edit_information')->name('walkin.health-profile-information.update');
         Route::post('/admin/walkin/store', [WalkInController::class, 'store'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.store');
         Route::post('/admin/walkin/consultation-evaluation', [WalkInController::class, 'sendConsultationEvaluation'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.consultation-evaluation');
+        Route::post('/admin/walkin/approval-evaluation', [WalkInController::class, 'sendApprovalEvaluation'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('admin.walkin.approval-evaluation');
         Route::post('/admin/walkin/consultation-draft', [WalkInController::class, 'saveConsultationDraft'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.consultation-draft');
         Route::post('/admin/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->middleware('module.permission:walkin.encode_assessment')->name('admin.walkin.applicant_encoding');
         Route::post('/admin/walkin/student-assessment', [WalkInController::class, 'saveStudentAssessment'])->middleware('module.permission:walkin.encode_assessment|walkin.employee_lookup')->name('admin.walkin.student_assessment');
@@ -569,6 +570,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::post('/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->middleware('module.permission:walkin.encode_assessment|walkin.edit_information')->name('walkin.health-profile-information.update');
         Route::post('/walkin/store', [WalkInController::class, 'store'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.store');
         Route::post('/walkin/consultation-evaluation', [WalkInController::class, 'sendConsultationEvaluation'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.consultation-evaluation');
+        Route::post('/walkin/approval-evaluation', [WalkInController::class, 'sendApprovalEvaluation'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('walkin.approval-evaluation');
         Route::post('/walkin/consultation-draft', [WalkInController::class, 'saveConsultationDraft'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.consultation-draft');
         Route::post('/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.applicant_encoding');
         Route::post('/walkin/student-assessment', [WalkInController::class, 'saveStudentAssessment'])->middleware('module.permission:walkin.encode_assessment|walkin.employee_lookup')->name('walkin.student_assessment');

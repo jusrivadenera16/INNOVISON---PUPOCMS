@@ -1722,56 +1722,6 @@
     .consultation-main .btn-save.is-finalizing::before {
         transform: translateX(0);
     }
-    .consultation-success-overlay {
-        position: fixed;
-        z-index: 9999;
-        inset: 0;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        background: rgba(15, 23, 42, .58);
-        backdrop-filter: blur(5px);
-    }
-    .consultation-success-overlay.is-open {
-        display: flex;
-    }
-    .consultation-success-card {
-        width: min(360px, calc(100vw - 30px));
-        padding: 28px 22px;
-        border: 1px solid rgba(250, 204, 21, .48);
-        border-radius: 18px;
-        background: #ffffff;
-        box-shadow: 0 24px 54px rgba(15, 23, 42, .3);
-        text-align: center;
-        animation: consultationSuccessPop .38s cubic-bezier(.2, .9, .25, 1.2);
-    }
-    .consultation-success-check {
-        width: 76px;
-        height: 76px;
-        display: grid;
-        place-items: center;
-        margin: 0 auto 14px;
-        border-radius: 999px;
-        background: #70131b;
-        color: #facc15;
-        box-shadow: 0 12px 26px rgba(112, 19, 27, .24);
-    }
-    .consultation-success-check svg {
-        width: 39px;
-        height: 39px;
-        stroke-width: 2.8;
-    }
-    .consultation-success-card strong {
-        display: block;
-        color: #70131b;
-        font-size: 20px;
-        font-weight: 900;
-    }
-    @keyframes consultationSuccessPop {
-        from { opacity: 0; transform: scale(.72) translateY(18px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
-    }
     .consultation-main .btn-cancel {
         position: relative;
         z-index: 0;
@@ -4426,7 +4376,7 @@
     $draftValue = static function (string $key, $default = '') use ($consultationDraftData) {
         return old($key, array_key_exists($key, $consultationDraftData) ? $consultationDraftData[$key] : $default);
     };
-    $consultationDraftStorageKey = 'consultation-draft:' . $patientIdNumberForSubmit . ':' . ($user_source ?? 'walkin');
+    $consultationDraftStorageKey = 'consultation-draft:' . $patientIdNumberForSubmit . ':' . ($user_source ?? 'walkin') . ':' . ($appointmentNumber ?: ($consultationStartedAt ?? 'new'));
     $studentInitials = collect(preg_split('/\s+/', trim((string) $student->name)) ?: [])
         ->filter()
         ->take(2)
@@ -4669,7 +4619,6 @@
                                 </option>
                             @endforeach
                         </select>
-                        <div class="form-help">Required for MAR reporting.</div>
                     </div>
                     <div class="form-group visit-field">
                         <div class="consult-certificate-label-row">
@@ -4703,7 +4652,6 @@
                                 @endif
                             @endforeach
                         </select>
-                        <div class="form-help">Choose the specific subcategory configured under the clearance type.</div>
                     </div>
                 </div>
             </section>
@@ -4844,15 +4792,6 @@
                 </div>
             </section>
         </form>
-    </div>
-</div>
-
-<div class="consultation-success-overlay" id="consultationSuccessOverlay" aria-live="assertive" aria-hidden="true">
-    <div class="consultation-success-card">
-        <div class="consultation-success-check" aria-hidden="true">
-            <x-outline-icon name="check" />
-        </div>
-        <strong>Done Consultation</strong>
     </div>
 </div>
 
@@ -5201,7 +5140,6 @@
         const inventorySearchEmpty = document.getElementById('inventorySearchEmpty');
         const consultationForm = document.getElementById('consultationForm');
         const finalizeButton = document.getElementById('finalizeConsultationButton');
-        const consultationSuccessOverlay = document.getElementById('consultationSuccessOverlay');
         const certificateSelect = document.getElementById('consultCertificate');
         const addSubcategoryButton = document.getElementById('consultAddSubcategoryButton');
         const marSubcategoryModal = document.getElementById('consultationMarSubcategoryModal');
@@ -6142,22 +6080,11 @@
                 return;
             }
 
-            event.preventDefault();
-            try {
-                localStorage.removeItem(consultationDraftStorageKey);
-            } catch (error) {
-                console.warn('Unable to clear the local consultation draft.', error);
-            }
             isSubmittingConsultation = true;
             finalizeButton.classList.add('is-finalizing');
             finalizeButton.setAttribute('aria-disabled', 'true');
             const label = finalizeButton.querySelector('span');
             if (label) label.textContent = 'Finalizing Consultation...';
-            consultationSuccessOverlay?.classList.add('is-open');
-            consultationSuccessOverlay?.setAttribute('aria-hidden', 'false');
-            window.setTimeout(function () {
-                consultationForm.submit();
-            }, 850);
         });
 
         const syncAllPopulatedFields = function () {
@@ -6179,7 +6106,15 @@
         }
 
         saveConsultationDraftButton?.addEventListener('click', saveConsultationDraft);
+        @if(session('consultation_evaluation_prompt'))
+            try {
+                localStorage.removeItem(consultationDraftStorageKey);
+            } catch (error) {
+                console.warn('Unable to clear the finalized consultation draft.', error);
+            }
+        @else
         window.addEventListener('beforeunload', persistLocalConsultationDraft);
+        @endif
 
         medicineEntries.forEach(updateMedicineEntry);
         updateMedicineSelections();

@@ -1722,42 +1722,44 @@
 </head>
 <body class="{{ $isPdfMode ? 'pdf-mode' : '' }} {{ $isOfficialFormReport ? 'official-form-report' : '' }} {{ $isMarReport ? 'mar-form-report' : '' }} {{ ($isInventoryReport || $isAppointmentReport) ? 'official-inventory-template' : '' }}">
 
-    <div class="page-header" aria-hidden="true">
-        <div class="page-header-inner">
-            <div class="page-header-left">
-                @if($canRenderPdfImages)
-                    <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo">
-                @else
-                    <span class="pdf-logo-fallback">PUP</span>
-                @endif
-                <div class="page-header-copy">
-                    <strong>PUP TAGUIG</strong>
-                    <span>{{ strtoupper($title) }}</span>
+    @unless($isMarReport)
+        <div class="page-header" aria-hidden="true">
+            <div class="page-header-inner">
+                <div class="page-header-left">
+                    @if($canRenderPdfImages)
+                        <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo">
+                    @else
+                        <span class="pdf-logo-fallback">PUP</span>
+                    @endif
+                    <div class="page-header-copy">
+                        <strong>PUP TAGUIG</strong>
+                        <span>{{ strtoupper($title) }}</span>
+                    </div>
+                </div>
+                <div class="page-header-meta">
+                    <div>Medical Services Unit</div>
+                    <div>{{ date('F d, Y') }}</div>
                 </div>
             </div>
-            <div class="page-header-meta">
-                <div>Medical Services Unit</div>
-                <div>{{ date('F d, Y') }}</div>
-            </div>
         </div>
-    </div>
 
-    <div class="page-footer" aria-hidden="true">
-        <div class="page-footer-inner">
-            <div class="page-footer-copy">
-                General Santos Avenue, Lower Bicutan, Taguig City, Philippines 1632
-                <br>Direct Line (02) 8837 5658 to 60 | Website: www.pup.edu.ph | Email: taguig@pup.edu.ph
+        <div class="page-footer" aria-hidden="true">
+            <div class="page-footer-inner">
+                <div class="page-footer-copy">
+                    General Santos Avenue, Lower Bicutan, Taguig City, Philippines 1632
+                    <br>Direct Line (02) 8837 5658 to 60 | Website: www.pup.edu.ph | Email: taguig@pup.edu.ph
+                </div>
+                <div class="page-footer-motto">The Country's First PolytechnicU</div>
             </div>
-            <div class="page-footer-motto">The Country's First PolytechnicU</div>
-        </div>
-        <div class="page-footer-generated">
-            <div class="signature-note">This is system-generated, signature is not required.</div>
-            <div class="privacy-note">
-                This document contains personal-identifiable information that is subject to Data Privacy.<br>
-                Please keep this document protected and in a safe place.
+            <div class="page-footer-generated">
+                <div class="signature-note">This is system-generated, signature is not required.</div>
+                <div class="privacy-note">
+                    This document contains personal-identifiable information that is subject to Data Privacy.<br>
+                    Please keep this document protected and in a safe place.
+                </div>
             </div>
         </div>
-    </div>
+    @endunless
 
     @if($isMarReport)
         <header class="mar-pdf-header official-inventory-header">

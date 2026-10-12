@@ -9245,7 +9245,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             }
         });
 
-        toasts.forEach((toast) => {
+        const initializeToast = (toast) => {
             let dismissed = false;
             const dismiss = () => {
                 if (dismissed) return;
@@ -9260,7 +9260,78 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
             toast.querySelector('[data-admin-flash-toast-close]')?.addEventListener('click', dismiss);
             window.setTimeout(dismiss, 5000);
-        });
+        };
+
+        toasts.forEach(initializeToast);
+
+        window.showAdminToast = function (type, message, title) {
+            const presentations = {
+                success: {
+                    title: 'Success message',
+                    icon: '<path stroke-linecap="round" stroke-linejoin="round" d="m9 12.75 2.25 2.25L15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />'
+                },
+                error: {
+                    title: 'Error message',
+                    icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />'
+                },
+                warning: {
+                    title: 'Warning message',
+                    icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3h.008v.008H12v-.008ZM10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />'
+                },
+                info: {
+                    title: 'Information',
+                    icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 11v5m0-8h.008M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />'
+                }
+            };
+            const normalizedType = Object.prototype.hasOwnProperty.call(presentations, type) ? type : 'info';
+            const presentation = presentations[normalizedType];
+            const text = String(message || '').trim();
+            if (!text) return null;
+
+            let stack = document.querySelector('.admin-flash-toast-stack');
+            if (!stack) {
+                stack = document.createElement('div');
+                stack.className = 'admin-flash-toast-stack';
+                stack.setAttribute('aria-live', 'polite');
+                stack.setAttribute('aria-atomic', 'false');
+                document.body.appendChild(stack);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `admin-flash-toast is-${normalizedType}`;
+            toast.setAttribute('role', normalizedType === 'error' ? 'alert' : 'status');
+            toast.setAttribute('data-admin-flash-toast', '');
+
+            const icon = document.createElement('span');
+            icon.className = 'admin-flash-toast-icon';
+            icon.setAttribute('aria-hidden', 'true');
+            icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">${presentation.icon}</svg>`;
+
+            const copy = document.createElement('span');
+            const heading = document.createElement('strong');
+            heading.className = 'admin-flash-toast-title';
+            heading.textContent = String(title || presentation.title);
+            const body = document.createElement('span');
+            body.className = 'admin-flash-toast-message';
+            body.textContent = text;
+            copy.append(heading, body);
+
+            const close = document.createElement('button');
+            close.type = 'button';
+            close.className = 'admin-flash-toast-close';
+            close.setAttribute('data-admin-flash-toast-close', '');
+            close.setAttribute('aria-label', 'Dismiss message');
+            close.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>';
+
+            const timer = document.createElement('span');
+            timer.className = 'admin-flash-toast-timer';
+            timer.setAttribute('aria-hidden', 'true');
+
+            toast.append(icon, copy, close, timer);
+            stack.appendChild(toast);
+            initializeToast(toast);
+            return toast;
+        };
     })();
 </script>
 
