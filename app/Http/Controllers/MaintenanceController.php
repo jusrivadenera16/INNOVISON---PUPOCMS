@@ -26,7 +26,7 @@ class MaintenanceController extends Controller
         $lastUpdated = SystemSetting::getValue('maintenance_last_updated', null);
 
         return response()
-            ->view('maintenance', compact('estimatedCompletion', 'lastUpdated'))
+            ->view('maintenance', compact('estimatedCompletion', 'lastUpdated'), 503)
             ->withHeaders($headers);
     }
 }
