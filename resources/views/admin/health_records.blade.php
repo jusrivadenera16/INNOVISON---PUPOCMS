@@ -7369,57 +7369,8 @@
         $pendingApprovalRecordIds = [];
         $pendingConditionalRecordIds = [];
 
-        $isOfficialStudentNumber = static function ($value): bool {
-            $studentNumber = strtoupper(trim((string) $value));
-
-            return $studentNumber !== ''
-                && !\Illuminate\Support\Str::startsWith($studentNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
-                && preg_match('/^\d{4}-\d{5}-[A-Z]{2}-\d+$/', $studentNumber) === 1;
-        };
-
-        $resolveHealthRecordUserType = function ($record) use ($isOfficialStudentNumber) {
-            $user = optional($record->user);
-            $rawType = strtolower(trim((string) (
-                $user->user_type
-                ?: $user->idp_role
-                ?: $user->user_role
-                ?: ''
-            )));
-            $clinicAccountType = $record->user?->clinicAccountTypeKey();
-            $hasStudentNumber = collect([
-                $record->student_number ?? null,
-                $user->student_number,
-            ])->contains($isOfficialStudentNumber);
-
-            if (in_array($clinicAccountType, ['student', 'applicant'], true)) {
-                return $hasStudentNumber ? 'Student' : 'Applicant';
-            }
-
-            if (str_contains($rawType, 'dependent') || str_contains($rawType, 'guest')) {
-                return 'Guest';
-            }
-            if (str_contains($rawType, 'admin')
-                || str_contains($rawType, 'nurse')
-                || str_contains($rawType, 'clinic staff')
-                || str_contains($rawType, 'clinic_staff')
-                || str_contains($rawType, 'employee')
-                || str_contains($rawType, 'non_teaching')
-                || str_contains($rawType, 'staff')) {
-                return 'Admin';
-            }
-            if (str_contains($rawType, 'faculty')) {
-                return 'Faculty';
-            }
-            if (in_array((string) ($record->record_source ?? 'health'), ['employee', 'staff'], true)) {
-                return 'Faculty';
-            }
-
-            if (str_contains($rawType, 'applicant') || str_contains($rawType, 'student')) {
-                return $hasStudentNumber ? 'Student' : 'Applicant';
-            }
-
-            return $hasStudentNumber ? 'Student' : 'Applicant';
-        };
+        $resolveHealthRecordUserType = static fn ($record) =>
+            \App\Support\HealthRecordIdentityResolver::userType($record);
 
         $resolveHealthRecordIdentifier = function ($record) use ($resolveHealthRecordUserType) {
             $user = optional($record->user);
@@ -7440,15 +7391,11 @@
             };
 
             if (in_array($userType, ['faculty', 'admin', 'employee', 'staff'], true)) {
+                $employeeNumber = \App\Support\HealthRecordIdentityResolver::employeeNumber($record);
+
                 return [
                     'label' => 'Employee Number',
-                    'value' => $firstIdentifier([
-                        $record->employee_number,
-                        $user->employee_number,
-                        $record->reference_number,
-                        $record->student_number,
-                        $user->student_number,
-                    ]),
+                    'value' => $employeeNumber ?? '-',
                 ];
             }
 
@@ -7492,7 +7439,10 @@
             $summaryRecordKey = (string) ($summaryRecord->record_key ?? ($summaryRecordSource . ':' . $summaryRecord->id));
             $summaryStatus = trim((string) ($summaryRecord->clearance_status ?? ''));
             $summaryIsApproved = in_array($summaryStatus, ['Issued', 'Fully Cleared'], true);
-            $summaryIsConditional = !$summaryIsApproved && (
+            $summaryIsRevokedPending = $summaryRecordSource === 'health'
+                && filled($summaryRecord->clearance_revoked_at ?? null)
+                && in_array($summaryStatus, ['Pending', 'For Verification'], true);
+            $summaryIsConditional = !$summaryIsApproved && !$summaryIsRevokedPending && (
                 in_array($summaryStatus, ['Pending/Conditional', 'Pending Resubmission', 'Rejected'], true)
                 || trim((string) ($summaryRecord->pending_reason ?? '')) !== ''
                 || trim((string) ($summaryRecord->medical_condition_remarks ?? '')) !== ''
@@ -7721,7 +7671,11 @@
                     $recordStatus = trim((string) ($record->clearance_status ?? ''));
                     $recordStatusNormalized = strtolower($recordStatus);
                     $recordPulloutStatus = $recordIsEmployee ? '' : trim((string) ($record->pullout_status ?? ''));
-                    $isConditional = !in_array($recordStatus, ['Issued', 'Fully Cleared'], true) && (
+                    $recordIsRevokedPending = $recordSource === 'health'
+                        && filled($record->clearance_revoked_at ?? null)
+                        && in_array($recordStatus, ['Pending', 'For Verification'], true);
+                    $isConditional = !in_array($recordStatus, ['Issued', 'Fully Cleared'], true)
+                        && !$recordIsRevokedPending && (
                         in_array($recordStatus, ['Pending/Conditional', 'Rejected'], true)
                         || trim((string) ($record->pending_reason ?? '')) !== ''
                         || trim((string) ($record->medical_condition_remarks ?? '')) !== ''

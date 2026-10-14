@@ -20,8 +20,10 @@ class HealthProfileEncryptionTransitionTest extends TestCase
         $profile->other_med_allergies = 'None';
         $profile->vaccine_history = ['brand' => 'Example'];
 
-        $this->assertNotSame('Asthma', $profile->getRawOriginal('medical_history_encrypted'));
-        $this->assertNotSame('Peanuts', $profile->getRawOriginal('food_allergies_encrypted'));
+        $this->assertNull($profile->getAttributes()['medical_history']);
+        $this->assertNull($profile->getAttributes()['food_allergies']);
+        $this->assertNotNull($profile->getAttributes()['medical_history_encrypted']);
+        $this->assertNotNull($profile->getAttributes()['food_allergies_encrypted']);
         $this->assertSame(['Asthma'], $profile->medical_history);
         $this->assertSame('None', $profile->other_illness);
         $this->assertSame('Peanuts', $profile->food_allergies);

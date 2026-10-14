@@ -1883,12 +1883,6 @@ class ReportsController extends Controller
             });
         }
 
-        if ($conditionFilter === 'yes') {
-            $query->withMedicalCondition();
-        } elseif ($conditionFilter === 'no') {
-            $query->withoutMedicalCondition();
-        }
-
         return [$query, $search, $courseFilter, $userTypeFilter, $genderFilter, $conditionFilter, $statusFilter];
     }
 
@@ -2232,9 +2226,15 @@ class ReportsController extends Controller
 
     public function exportHealthFormsLogbook(Request $request)
     {
-        [$query] = $this->healthFormsLogbookQuery($request);
+        [$query, , , , , $conditionFilter] = $this->healthFormsLogbookQuery($request);
 
         $records = $query->orderByDesc('created_at')->get();
+        if ($conditionFilter === 'yes') {
+            $records = $records->filter(fn (HealthProfile $record) => $record->hasMedicalCondition())->values();
+        } elseif ($conditionFilter === 'no') {
+            $records = $records->reject(fn (HealthProfile $record) => $record->hasMedicalCondition())->values();
+        }
+
         $filename = 'health-forms-approval-logbook-' . now()->format('Ymd-His') . '.csv';
 
         return response()->streamDownload(function () use ($records) {

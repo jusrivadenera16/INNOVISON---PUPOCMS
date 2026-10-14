@@ -90,6 +90,61 @@ class EncryptedStudentMedicalHistoryBackfillTest extends TestCase
         $this->assertSame(['brand' => 'Example'], $fresh->vaccine_history_encrypted);
     }
 
+    public function test_plaintext_purge_requires_verified_mirrors_and_keeps_model_reads_working(): void
+    {
+        $migration = require base_path('database/migrations/2026_10_05_000000_add_encrypted_student_medical_history_columns.php');
+        $migration->up();
+
+        $profile = HealthProfile::withoutGlobalScopes()->create([
+            'user_id' => null,
+            'medical_history' => ['Asthma'],
+            'other_illness' => 'None',
+            'food_allergies' => 'Peanuts',
+            'medicine_allergies' => ['Aspirin'],
+            'other_med_allergies' => 'None',
+            'vaccine_history' => ['brand' => 'Example'],
+        ]);
+
+        $this->assertSame(0, Artisan::call('health:encrypt-student-medical-history', ['--apply' => true]));
+        Config::set('health_data_encryption.enabled', true);
+
+        $this->assertSame(0, Artisan::call('health:purge-plaintext-health-data'));
+        $this->assertNotNull(DB::table('health_profiles')->where('id', $profile->id)->value('medical_history'));
+
+        $this->assertSame(0, Artisan::call('health:purge-plaintext-health-data', ['--apply' => true]));
+
+        $raw = DB::table('health_profiles')->where('id', $profile->id)->first();
+        $this->assertNull($raw->medical_history);
+        $this->assertNull($raw->other_illness);
+        $this->assertNull($raw->food_allergies);
+
+        $fresh = HealthProfile::withoutGlobalScopes()->findOrFail($profile->id);
+        $this->assertSame(['Asthma'], $fresh->medical_history);
+        $this->assertSame('None', $fresh->other_illness);
+        $this->assertSame('Peanuts', $fresh->food_allergies);
+        $this->assertSame(['Aspirin'], $fresh->medicine_allergies);
+    }
+
+    public function test_plaintext_purge_keeps_source_when_ciphertext_cannot_be_verified(): void
+    {
+        $migration = require base_path('database/migrations/2026_10_05_000000_add_encrypted_student_medical_history_columns.php');
+        $migration->up();
+
+        $profile = HealthProfile::withoutGlobalScopes()->create([
+            'user_id' => null,
+            'medical_history' => ['Asthma'],
+        ]);
+
+        $this->assertSame(0, Artisan::call('health:encrypt-student-medical-history', ['--apply' => true]));
+        Config::set('health_data_encryption.enabled', true);
+        DB::table('health_profiles')->where('id', $profile->id)->update([
+            'medical_history_encrypted' => 'not-valid-ciphertext',
+        ]);
+
+        $this->assertSame(1, Artisan::call('health:purge-plaintext-health-data', ['--apply' => true]));
+        $this->assertNotNull(DB::table('health_profiles')->where('id', $profile->id)->value('medical_history'));
+    }
+
     private function encryptedColumns(): array
     {
         return [

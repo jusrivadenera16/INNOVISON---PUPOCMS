@@ -3212,9 +3212,9 @@
                                     <span class="address-field-icon" aria-hidden="true">
                                         <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M7 9h10M7 13h6M7 16h4"></path></svg>
                                     </span>
-                                    <input id="employee_number" type="text" name="employee_number" class="form-control" value="{{ $employeeValue('employee_number', $user->employee_number ?? '') }}">
+                                    <input id="employee_number" type="text" name="employee_number" class="form-control" value="{{ $employeeValue('employee_number', $user->employee_number ?? '') }}" placeholder="e.g. 06002" maxlength="5" inputmode="numeric" pattern="[0-9]{5}" title="Enter the 5-digit employee number.">
                                 </div>
-                                <small class="field-hint">Example: FA001TG2026</small>
+                                <small class="field-hint">Enter the 5-digit employee number.</small>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="office">College / Department <span class="required">*</span></label>

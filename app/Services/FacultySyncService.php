@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\EmployeeNumber;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -182,7 +183,7 @@ class FacultySyncService
             return true;
         }
 
-        return $employeeNumber !== '' && in_array($employeeNumber, $this->uniqueNormalizedValues([
+        $employeeNumberCandidates = [
             $faculty['faculty_code'] ?? null,
             $faculty['identifier'] ?? null,
             $faculty['employee_number'] ?? null,
@@ -195,7 +196,17 @@ class FacultySyncService
             $profile['identifier'] ?? null,
             $profile['employee_number'] ?? null,
             $profile['employee_no'] ?? null,
-        ]), true);
+        ];
+        $normalizedEmployeeNumber = EmployeeNumber::normalize($employeeNumber);
+        if ($normalizedEmployeeNumber !== null) {
+            foreach ($employeeNumberCandidates as $candidate) {
+                if (EmployeeNumber::normalize($candidate) === $normalizedEmployeeNumber) {
+                    return true;
+                }
+            }
+        }
+
+        return $employeeNumber !== '' && in_array($employeeNumber, $this->uniqueNormalizedValues($employeeNumberCandidates), true);
     }
 
     private function uniqueNormalizedValues(array $values): array

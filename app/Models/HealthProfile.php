@@ -33,6 +33,7 @@ class HealthProfile extends Model
         'is_smoker', 'is_drinker', 'covid_vaccinated', 'vaccine_history',
         'pwd_id_proof',
         'medical_certificate', 'doctor_name', 'med_cert_date', 'med_cert_findings', 'med_cert_findings_details', 'medical_assessment_upload', 'clearance_status',
+        'clearance_revoked_at',
         'assessment_date',
         'blood_pressure',
         'pulse_rate',
@@ -84,6 +85,7 @@ class HealthProfile extends Model
 
     protected $casts = [
         'puptas_synced_at' => 'datetime',
+        'clearance_revoked_at' => 'datetime',
         'documents_valid' => 'boolean',
         'no_allergies' => 'boolean',
         'medical_history' => 'array',
@@ -123,6 +125,11 @@ class HealthProfile extends Model
     public function reviewStartedBy()
     {
         return $this->belongsTo(User::class, 'review_started_by_user_id');
+    }
+
+    public function medicalAssessments()
+    {
+        return $this->hasMany(StudentMedicalAssessment::class)->latest();
     }
 
     public function pulloutRequestedBy()

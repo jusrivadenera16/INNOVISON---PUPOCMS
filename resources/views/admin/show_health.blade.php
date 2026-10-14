@@ -917,6 +917,202 @@
         font-weight: 800;
         line-height: 1.5;
     }
+    .medical-assessment-card {
+        width: min(760px, 100%);
+    }
+    #medicalAssessmentModal {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+    #medicalAssessmentModal .medical-assessment-card {
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100vh - 40px);
+        overflow: hidden;
+    }
+    #medicalAssessmentModal .correction-head {
+        flex: 0 0 auto;
+    }
+    #medicalAssessmentModal .correction-body {
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+    @supports (height: 100dvh) {
+        #medicalAssessmentModal .medical-assessment-card {
+            max-height: calc(100dvh - 40px);
+        }
+    }
+    @media (max-width: 640px) {
+        #medicalAssessmentModal {
+            padding: 10px;
+        }
+        #medicalAssessmentModal .medical-assessment-card {
+            max-height: calc(100vh - 20px);
+        }
+        #medicalAssessmentModal .correction-head,
+        #medicalAssessmentModal .correction-body {
+            padding: 14px;
+        }
+    }
+    .medical-assessment-history {
+        display: grid;
+        gap: 9px;
+        max-height: 200px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+    .medical-assessment-current {
+        padding-bottom: 14px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .medical-assessment-current h4,
+    .medical-assessment-history-head h4 {
+        margin: 0;
+        color: #172033;
+        font-size: 14px;
+        font-weight: 900;
+    }
+    .medical-assessment-snapshot {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px 18px;
+        margin-top: 12px;
+    }
+    .medical-assessment-snapshot-group {
+        min-width: 0;
+        padding-left: 10px;
+        border-left: 2px solid #facc15;
+    }
+    .medical-assessment-snapshot-group.is-wide {
+        grid-column: 1 / -1;
+    }
+    .medical-assessment-snapshot-group h5 {
+        margin: 0 0 6px;
+        color: #70131B;
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+    .medical-assessment-snapshot-group p {
+        margin: 4px 0 0;
+        color: #334155;
+        font-size: 12px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+    .medical-assessment-snapshot-group p strong {
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+    .medical-assessment-history-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    .medical-assessment-history-section {
+        display: grid;
+        gap: 10px;
+    }
+    .medical-assessment-add-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 38px;
+        padding: 8px 12px;
+        border: 1px solid #70131B;
+        border-radius: 8px;
+        background: #70131B;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .medical-assessment-add-button svg {
+        width: 17px;
+        height: 17px;
+    }
+    .medical-assessment-add-button:hover,
+    .medical-assessment-add-button:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        outline: none;
+    }
+    .medical-assessment-form {
+        display: grid;
+        gap: 14px;
+    }
+    .medical-assessment-form[hidden] {
+        display: none !important;
+    }
+    .medical-assessment-entry {
+        border: 1px solid #f3c7c7;
+        border-radius: 8px;
+        padding: 12px 14px;
+        background: #fffafa;
+        color: #111827;
+    }
+    .medical-assessment-entry-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 5px 12px;
+    }
+    .medical-assessment-entry-head strong {
+        color: #70131B;
+        font-size: 14px;
+    }
+    .medical-assessment-entry-head time,
+    .medical-assessment-entry small {
+        color: #64748b;
+        font-size: 11px;
+    }
+    .medical-assessment-entry p {
+        display: grid;
+        gap: 2px;
+        margin: 9px 0 0;
+        font-size: 13px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+    .medical-assessment-entry p span {
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+    .medical-assessment-entry small {
+        display: block;
+        margin-top: 9px;
+    }
+    @media (max-width: 640px) {
+        .medical-assessment-snapshot {
+            grid-template-columns: minmax(0, 1fr);
+        }
+        .medical-assessment-snapshot-group.is-wide {
+            grid-column: auto;
+        }
+        .medical-assessment-history-head {
+            align-items: flex-start;
+        }
+    }
+    .field-error {
+        display: block;
+        margin-top: 6px;
+        color: #b91c1c;
+        font-size: 12px;
+        font-weight: 800;
+    }
     .correction-doc-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2517,6 +2713,54 @@
         color: #fde68a !important;
     }
 
+    [data-theme="dark"] .medical-assessment-entry {
+        border-color: #334155;
+        background: #182334;
+        color: #f8fafc;
+    }
+
+    [data-theme="dark"] .medical-assessment-entry-head strong {
+        color: #facc15;
+    }
+
+    [data-theme="dark"] .medical-assessment-entry-head time,
+    [data-theme="dark"] .medical-assessment-entry small,
+    [data-theme="dark"] .medical-assessment-entry p span {
+        color: #94a3b8;
+    }
+
+    [data-theme="dark"] .medical-assessment-current {
+        border-color: #334155;
+    }
+
+    [data-theme="dark"] .medical-assessment-current h4,
+    [data-theme="dark"] .medical-assessment-history-head h4 {
+        color: #f8fafc;
+    }
+
+    [data-theme="dark"] .medical-assessment-snapshot-group h5 {
+        color: #facc15;
+    }
+
+    [data-theme="dark"] .medical-assessment-snapshot-group p {
+        color: #cbd5e1;
+    }
+
+    [data-theme="dark"] .medical-assessment-snapshot-group p strong {
+        color: #94a3b8;
+    }
+
+    [data-theme="dark"] #medicalAssessmentModal .correction-note {
+        border-color: rgba(250, 204, 21, .28);
+        background: rgba(120, 53, 15, .22);
+        color: #fde68a;
+    }
+
+    [data-theme="dark"] #medicalAssessmentModal .field-error,
+    [data-theme="dark"] #returnToPendingModal .field-error {
+        color: #fca5a5;
+    }
+
     [data-theme="dark"] #returnToPendingModal .correction-info-row {
         border-color: rgba(148, 163, 184, .22) !important;
         background: #182334 !important;
@@ -2677,7 +2921,7 @@
     $profileIsDependent = ($healthFormAudience ?? null) === 'dependent'
         || str_contains($profileUserType, 'dependent')
         || str_contains($profileUserType, 'guest');
-    $profileIsLocalStudent = !$profileIsDependent && ($healthFormAudience ?? null) === 'student';
+    $profileIsLocalStudent = (bool) ($isStudentHealthProfile ?? false);
     $profileIsLocalOnly = $profileIsLocalStudent
         || $profileIsDependent
         || in_array($profileClinicAccountType, ['faculty', 'non_teaching_staff'], true)
@@ -2739,9 +2983,11 @@
         && (optional(auth()->user())->canAccessPermission('health_records.request_health_form') ?? false);
     $canRequestNewHealthForm = $canManageNewHealthForm && !$activeNewHealthFormRequest;
     $canViewExistingNewHealthFormRequest = $canManageNewHealthForm && (bool) $activeNewHealthFormRequest;
-    $canReturnToPending = !$profileIsDependent && !$isPulloutPending && !$isPulledOut
+    $canRevokeClearance = $profileIsLocalStudent && !$isPulloutPending && !$isPulledOut
         && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
-        && (optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false);
+        && (optional(auth()->user())->canAccessPermission('health_records.revoke_clearance') ?? false);
+    $canUpdateMedicalAssessment = $profileIsLocalStudent && !$isPulloutPending && !$isPulledOut
+        && (optional(auth()->user())->canAccessPermission('health_records.update_assessment') ?? false);
     $canRequestPullout = !$profileIsDependent && in_array($profileStatusRaw, ['Issued', 'Fully Cleared'], true)
         && !$isPulloutPending
         && !$isPulledOut
@@ -2905,9 +3151,15 @@
                             <span aria-hidden="true">&minus;</span>
                         </button>
                     @endif
-                    @if($canReturnToPending)
+                    @if($canUpdateMedicalAssessment)
+                        <button type="button" id="openMedicalAssessmentModal">
+                            Update Medical Assessment
+                            <span aria-hidden="true">+</span>
+                        </button>
+                    @endif
+                    @if($canRevokeClearance)
                         <button type="button" id="openReturnToPendingModal">
-                            Return to Pending
+                            Revoke Clearance
                             <span aria-hidden="true">&crarr;</span>
                         </button>
                     @endif
@@ -3697,28 +3949,28 @@
 </div>
 @endif
 
-@if($canReturnToPending)
+@if($canRevokeClearance)
     <div class="correction-modal" id="returnToPendingModal" aria-hidden="true">
         <div class="correction-card return-pending-card" role="dialog" aria-modal="true" aria-labelledby="returnPendingTitle">
             <div class="correction-head">
                 <div class="correction-head-title">
                     <span class="correction-head-icon"><x-outline-icon name="clock" /></span>
                     <div>
-                        <h3 id="returnPendingTitle">Return to Pending Approval</h3>
-                        <p>Move this approved health record back to clinic review.</p>
+                        <h3 id="returnPendingTitle">Revoke Clearance</h3>
+                        <p>Revoke this student clearance and send the record back for clinic review.</p>
                     </div>
                 </div>
-                <button type="button" class="correction-close" id="closeReturnToPendingModal" aria-label="Close return to pending confirmation">
+                <button type="button" class="correction-close" id="closeReturnToPendingModal" aria-label="Close revoke clearance confirmation">
                     <x-outline-icon name="x-mark" />
                 </button>
             </div>
-            <form method="POST" action="{{ route('admin.health_profile.return_to_pending', $profile->id) }}" class="correction-body">
+            <form method="POST" action="{{ route('admin.health_profile.revoke_clearance', $profile->id) }}" class="correction-body">
                 @csrf
                 <div class="return-pending-summary">
                     <span class="return-pending-icon"><x-outline-icon name="exclamation-triangle" /></span>
                     <div>
                         <strong>{{ $profileName }}</strong>
-                        <p>This will remove the approval status and place the record under Pending Approval. Submitted profile details and uploaded documents will remain saved.</p>
+                        <p>The approval and Student MAR issuance will be removed. The record will return to Pending Approval; submitted details and documents stay saved. PUPTAS will not be changed by this action.</p>
                     </div>
                 </div>
                 <div class="correction-info-list">
@@ -3728,18 +3980,165 @@
                     </div>
                     <div class="correction-info-row">
                         <span>Next Status</span>
-                        <strong>For Verification</strong>
+                        <strong>Pending Approval</strong>
                     </div>
                     <div class="correction-info-row">
-                        <span>PUPTAS Sync</span>
-                        <strong>Will be preserved</strong>
+                        <span>Student MAR</span>
+                        <strong>Issuance will be removed</strong>
                     </div>
+                </div>
+                <div class="correction-field">
+                    <label for="revokeClearanceReason">Reason for revocation</label>
+                    <textarea id="revokeClearanceReason" name="revoke_reason" required maxlength="1000" placeholder="Explain why this clearance is being revoked.">{{ old('revoke_reason') }}</textarea>
+                    @error('revoke_reason')<small class="field-error">{{ $message }}</small>@enderror
                 </div>
                 <div class="correction-actions">
                     <button type="button" class="correction-cancel" id="cancelReturnToPendingModal">Cancel</button>
-                    <button type="submit" class="correction-submit">Confirm Return</button>
+                    <button type="submit" class="correction-submit">Confirm Revocation</button>
                 </div>
             </form>
+        </div>
+    </div>
+@endif
+
+@if($canUpdateMedicalAssessment)
+    <div class="correction-modal" id="medicalAssessmentModal" aria-hidden="true">
+        <div class="correction-card medical-assessment-card" role="dialog" aria-modal="true" aria-labelledby="medicalAssessmentTitle">
+            <div class="correction-head">
+                <div class="correction-head-title">
+                    <span class="correction-head-icon"><x-outline-icon name="clipboard-document-list" /></span>
+                    <div>
+                        <h3 id="medicalAssessmentTitle">Update Medical Assessment</h3>
+                        <p>Add a dated assessment entry for {{ $profileName }}. Existing entries and remarks will remain visible.</p>
+                    </div>
+                </div>
+                <button type="button" class="correction-close" id="closeMedicalAssessmentModal" aria-label="Close medical assessment">
+                    <x-outline-icon name="x-mark" />
+                </button>
+            </div>
+            <div class="correction-body">
+                @php
+                    $existingAssessmentRemarks = trim((string) ($profile->med_assessment_remarks ?: $profile->assessment_remarks));
+                    $existingConditionRemarks = trim((string) $profile->medical_condition_remarks);
+                    $existingMedicalConditions = collect(is_array($profile->medical_history) ? $profile->medical_history : [])
+                        ->map(fn ($condition) => trim((string) $condition))
+                        ->filter();
+                    $otherIllness = trim((string) $profile->other_illness);
+                    if ($otherIllness !== '') {
+                        $existingMedicalConditions->push($otherIllness);
+                    }
+                    if ($existingConditionRemarks !== '') {
+                        $existingMedicalConditions->push($existingConditionRemarks);
+                    }
+                    $existingMedicalConditions = $existingMedicalConditions->unique()->values();
+                    if ($existingMedicalConditions->isEmpty() && $profile->has_illness === 'Yes') {
+                        $existingMedicalConditions->push('Illness reported; details not recorded.');
+                    }
+                    $existingMedicalFindings = collect([
+                        'Medical certificate' => collect([
+                            $profile->med_cert_findings,
+                            $profile->med_cert_findings_details,
+                        ])->map(fn ($value) => trim((string) $value))->filter()->implode(' - '),
+                        'Chest X-ray' => collect([
+                            $profile->xray_findings,
+                            $profile->xray_findings_details,
+                        ])->map(fn ($value) => trim((string) $value))->filter()->implode(' - '),
+                    ])->filter(fn ($value) => $value !== '');
+                @endphp
+                <section class="medical-assessment-current" aria-label="Current health record snapshot">
+                    <h4>Current Health Record</h4>
+                    <div class="medical-assessment-snapshot">
+                        <div class="medical-assessment-snapshot-group is-wide">
+                            <h5>Existing Remarks</h5>
+                            @if($existingAssessmentRemarks !== '')
+                                <p><strong>Assessment</strong><br>{{ $existingAssessmentRemarks }}</p>
+                            @endif
+                            @if($existingConditionRemarks !== '')
+                                <p><strong>Medical condition</strong><br>{{ $existingConditionRemarks }}</p>
+                            @endif
+                            @if($existingAssessmentRemarks === '' && $existingConditionRemarks === '')
+                                <p>No remarks recorded.</p>
+                            @endif
+                        </div>
+                        <div class="medical-assessment-snapshot-group">
+                            <h5>Medical Conditions / Illness</h5>
+                            @forelse($existingMedicalConditions as $condition)
+                                <p>{{ $condition }}</p>
+                            @empty
+                                <p>{{ $profile->has_illness === 'No' ? 'None declared.' : 'No condition details recorded.' }}</p>
+                            @endforelse
+                        </div>
+                        <div class="medical-assessment-snapshot-group">
+                            <h5>Existing Findings</h5>
+                            @forelse($existingMedicalFindings as $findingLabel => $findingValue)
+                                <p><strong>{{ $findingLabel }}</strong><br>{{ $findingValue }}</p>
+                            @empty
+                                <p>No findings recorded.</p>
+                            @endforelse
+                        </div>
+                    </div>
+                </section>
+
+                <section class="medical-assessment-history-section" aria-label="Medical assessment history">
+                    <div class="medical-assessment-history-head">
+                        <h4>Assessment History</h4>
+                        <button type="button" class="medical-assessment-add-button" id="openMedicalAssessmentForm" aria-controls="medicalAssessmentForm" aria-expanded="false">
+                            <x-outline-icon name="plus" />
+                            <span>Add Update</span>
+                        </button>
+                    </div>
+                    <div class="medical-assessment-history">
+                    @forelse($medicalAssessmentHistory as $assessmentEntry)
+                        <article class="medical-assessment-entry">
+                            <div class="medical-assessment-entry-head">
+                                <strong>{{ $assessmentEntry->condition_or_illness ?: 'Assessment update' }}</strong>
+                                <time>{{ optional($assessmentEntry->created_at)->format('M d, Y h:i A') }}</time>
+                            </div>
+                            @if(filled($assessmentEntry->findings))
+                                <p><span>Findings</span>{{ $assessmentEntry->findings }}</p>
+                            @endif
+                            @if(filled($assessmentEntry->remarks))
+                                <p><span>Remarks</span>{{ $assessmentEntry->remarks }}</p>
+                            @endif
+                            @if(filled($assessmentEntry->reason))
+                                <p><span>Reason for update</span>{{ $assessmentEntry->reason }}</p>
+                            @endif
+                            <small>Recorded by {{ $assessmentEntry->recordedBy?->name ?? 'Clinic staff' }}</small>
+                        </article>
+                    @empty
+                        <div class="correction-note">No medical assessment updates have been added.</div>
+                    @endforelse
+                    </div>
+                </section>
+                <form method="POST" action="{{ route('admin.health_profile.medical_assessments.store', $profile->id) }}" id="medicalAssessmentForm" class="medical-assessment-form" hidden>
+                    @csrf
+                    <div class="correction-note">Each field is optional. Add at least one condition, finding, or remark to save an update. Reason is optional.</div>
+                    <div class="correction-field">
+                        <label for="conditionOrIllness">Medical condition / illness</label>
+                        <textarea id="conditionOrIllness" name="condition_or_illness" maxlength="1000" placeholder="Enter the assessed medical condition or illness.">{{ old('condition_or_illness') }}</textarea>
+                        @error('condition_or_illness')<small class="field-error">{{ $message }}</small>@enderror
+                    </div>
+                    <div class="correction-field">
+                        <label for="medicalAssessmentFindings">Findings</label>
+                        <textarea id="medicalAssessmentFindings" name="findings" maxlength="3000" placeholder="Add the findings from this assessment.">{{ old('findings') }}</textarea>
+                        @error('findings')<small class="field-error">{{ $message }}</small>@enderror
+                    </div>
+                    <div class="correction-field">
+                        <label for="medicalAssessmentRemarks">Remarks / clinical notes</label>
+                        <textarea id="medicalAssessmentRemarks" name="remarks" maxlength="2000" placeholder="Add relevant assessment remarks.">{{ old('remarks') }}</textarea>
+                        @error('remarks')<small class="field-error">{{ $message }}</small>@enderror
+                    </div>
+                    <div class="correction-field">
+                        <label for="medicalAssessmentReason">Reason for update</label>
+                        <textarea id="medicalAssessmentReason" name="reason" maxlength="1000" placeholder="Explain why this assessment is being added.">{{ old('reason') }}</textarea>
+                        @error('reason')<small class="field-error">{{ $message }}</small>@enderror
+                    </div>
+                    <div class="correction-actions">
+                        <button type="button" class="correction-cancel" id="cancelMedicalAssessmentForm">Cancel</button>
+                        <button type="submit" class="correction-submit">Save Update</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 @endif
@@ -3939,6 +4338,14 @@
     const openReturnToPendingModal = document.getElementById('openReturnToPendingModal');
     const closeReturnToPendingModal = document.getElementById('closeReturnToPendingModal');
     const cancelReturnToPendingModal = document.getElementById('cancelReturnToPendingModal');
+    const medicalAssessmentModal = document.getElementById('medicalAssessmentModal');
+    const openMedicalAssessmentModal = document.getElementById('openMedicalAssessmentModal');
+    const closeMedicalAssessmentModal = document.getElementById('closeMedicalAssessmentModal');
+    const medicalAssessmentForm = document.getElementById('medicalAssessmentForm');
+    const openMedicalAssessmentForm = document.getElementById('openMedicalAssessmentForm');
+    const cancelMedicalAssessmentForm = document.getElementById('cancelMedicalAssessmentForm');
+    const shouldOpenMedicalAssessmentModal = {{ $errors->hasAny(['condition_or_illness', 'findings', 'remarks', 'reason']) ? 'true' : 'false' }};
+    const shouldOpenRevokeClearanceModal = @json($errors->has('revoke_reason'));
 
     function setCorrectionDropdownOpen(wrapper, open) {
         if (!wrapper) return;
@@ -4158,8 +4565,58 @@
         setReturnToPendingModal(true);
     });
 
+    function setMedicalAssessmentModal(open) {
+        if (!medicalAssessmentModal) return;
+        medicalAssessmentModal.classList.toggle('is-open', open);
+        medicalAssessmentModal.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
+
+    function setMedicalAssessmentFormOpen(open) {
+        if (!medicalAssessmentForm) return;
+        medicalAssessmentForm.hidden = !open;
+        openMedicalAssessmentForm?.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open) {
+            requestAnimationFrame(function () {
+                medicalAssessmentForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                document.getElementById('conditionOrIllness')?.focus({ preventScroll: true });
+            });
+        }
+    }
+
+    openMedicalAssessmentModal?.addEventListener('click', function () {
+        setProfileActionsMenu(false);
+        setMedicalAssessmentModal(true);
+    });
+
+    closeMedicalAssessmentModal?.addEventListener('click', function () {
+        setMedicalAssessmentModal(false);
+    });
+
+    openMedicalAssessmentForm?.addEventListener('click', function () {
+        setMedicalAssessmentFormOpen(true);
+    });
+
+    cancelMedicalAssessmentForm?.addEventListener('click', function () {
+        setMedicalAssessmentFormOpen(false);
+    });
+
+    medicalAssessmentModal?.addEventListener('click', function (event) {
+        if (event.target === medicalAssessmentModal) {
+            setMedicalAssessmentModal(false);
+        }
+    });
+
     if (shouldOpenPulloutModal) {
         setPulloutRequestModal(true);
+    }
+
+    if (shouldOpenMedicalAssessmentModal) {
+        setMedicalAssessmentModal(true);
+        setMedicalAssessmentFormOpen(true);
+    }
+
+    if (shouldOpenRevokeClearanceModal) {
+        setReturnToPendingModal(true);
     }
 
     closeReturnToPendingModal?.addEventListener('click', function () {
