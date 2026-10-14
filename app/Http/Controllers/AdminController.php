@@ -18,6 +18,7 @@ use App\Models\MedicineType;
 use App\Models\Setting;
 use App\Models\SystemSetting;
 use App\Models\Admin;
+use App\Models\AdminHub;
 use App\Services\FacultySyncService;
 use App\Services\AnnouncementContent;
 use App\Services\GuisisApiService;
@@ -39,6 +40,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\File;
 use Illuminate\Validation\ValidationException;
 use App\Models\HealthProfile;
+use App\Models\StudentMedicalAssessment;
 use App\Models\EmployeeHealthProfile;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -49,6 +51,7 @@ use Illuminate\Validation\Rule;
 use App\Models\IntegrationClient;
 use App\Services\StudentNotificationMailer;
 use App\Services\MarClearanceIssuanceService;
+use App\Support\SensitiveLogRedactor;
 
 class AdminController extends Controller
 {
@@ -179,16 +182,28 @@ class AdminController extends Controller
         ];
 
         $aliases = $roleAliases[$userTypeFilter] ?? [$userTypeFilter];
+        $adminHubEmails = $userTypeFilter === 'admin' ? $this->adminHubEmailSubquery() : null;
 
         if (in_array($userTypeFilter, ['faculty', 'admin', 'dependent'], true)) {
-            $query->whereHas('user', function ($userQuery) use ($aliases) {
-                $userQuery->where(function ($builder) use ($aliases) {
-                    foreach ($aliases as $alias) {
-                        foreach (['user_type', 'user_role', 'idp_role'] as $roleColumn) {
-                            $builder->orWhereRaw("LOWER(COALESCE({$roleColumn}, '')) LIKE ?", ['%' . $alias . '%']);
+            $query->where(function ($recordQuery) use ($aliases, $userTypeFilter, $adminHubEmails) {
+                $recordQuery->whereHas('user', function ($userQuery) use ($aliases) {
+                    $userQuery->where(function ($builder) use ($aliases) {
+                        foreach ($aliases as $alias) {
+                            foreach (['user_type', 'user_role', 'idp_role'] as $roleColumn) {
+                                $builder->orWhereRaw("LOWER(COALESCE({$roleColumn}, '')) LIKE ?", ['%' . $alias . '%']);
+                            }
                         }
-                    }
+                    });
                 });
+
+                if ($userTypeFilter === 'admin') {
+                    $recordQuery->orWhereHas('user.adminHubProfile');
+                    if ($adminHubEmails) {
+                        $recordQuery->orWhereHas('user', function ($userQuery) use ($adminHubEmails) {
+                            $userQuery->whereIn('email', clone $adminHubEmails);
+                        });
+                    }
+                }
             });
 
             return;
@@ -228,7 +243,8 @@ class AdminController extends Controller
         }
 
         if ($userTypeFilter === 'applicant') {
-            $query->where(function ($missingNumberQuery) use ($studentNumberPattern) {
+            $adminHubEmails = $this->adminHubEmailSubquery();
+            $query->where(function ($missingNumberQuery) use ($studentNumberPattern, $adminHubEmails) {
                 $missingNumberQuery
                     ->where(function ($profileNumberQuery) use ($studentNumberPattern) {
                         $profileNumberQuery->whereNull('student_number')
@@ -239,7 +255,23 @@ class AdminController extends Controller
                         $userQuery->whereNotNull('student_number')
                             ->where('student_number', '!=', '')
                             ->whereRaw('student_number REGEXP ?', [$studentNumberPattern]);
+                    })
+                    ->whereDoesntHave('user', function ($userQuery) {
+                        $userQuery->where(function ($roleQuery) {
+                            foreach (['faculty', 'admin', 'superadmin', 'super_admin', 'clinic_staff', 'clinic staff', 'nurse', 'employee', 'non_teaching', 'staff'] as $role) {
+                                foreach (['user_type', 'user_role', 'idp_role'] as $roleColumn) {
+                                    $roleQuery->orWhereRaw("LOWER(COALESCE({$roleColumn}, '')) LIKE ?", ['%' . $role . '%']);
+                                }
+                            }
+                        });
+                    })
+                    ->whereDoesntHave('user.adminHubProfile');
+
+                if ($adminHubEmails) {
+                    $missingNumberQuery->whereDoesntHave('user', function ($userQuery) use ($adminHubEmails) {
+                        $userQuery->whereIn('email', clone $adminHubEmails);
                     });
+                }
             });
         }
     }
@@ -264,16 +296,89 @@ class AdminController extends Controller
             'dependent' => ['dependent', 'dependents'],
         ];
         $aliases = $roleAliases[$userTypeFilter] ?? [$userTypeFilter];
+        $adminHubEmails = $userTypeFilter === 'admin' ? $this->adminHubEmailSubquery() : null;
 
-        $query->whereHas('user', function ($userQuery) use ($aliases) {
-            $userQuery->where(function ($builder) use ($aliases) {
-                foreach ($aliases as $alias) {
-                    foreach (['user_type', 'user_role', 'idp_role'] as $roleColumn) {
-                        $builder->orWhereRaw("LOWER(COALESCE({$roleColumn}, '')) LIKE ?", ['%' . $alias . '%']);
+        $query->where(function ($recordQuery) use ($aliases, $userTypeFilter, $adminHubEmails) {
+            $recordQuery->whereHas('user', function ($userQuery) use ($aliases) {
+                $userQuery->where(function ($builder) use ($aliases) {
+                    foreach ($aliases as $alias) {
+                        foreach (['user_type', 'user_role', 'idp_role'] as $roleColumn) {
+                            $builder->orWhereRaw("LOWER(COALESCE({$roleColumn}, '')) LIKE ?", ['%' . $alias . '%']);
+                        }
                     }
-                }
+                });
             });
+
+            if ($userTypeFilter === 'admin') {
+                $recordQuery->orWhereHas('user.adminHubProfile');
+                if ($adminHubEmails) {
+                    $recordQuery->orWhereHas('user', function ($userQuery) use ($adminHubEmails) {
+                        $userQuery->whereIn('email', clone $adminHubEmails);
+                    });
+                }
+            }
         });
+    }
+
+    private function adminHubEmailSubquery()
+    {
+        if (!Schema::hasTable('admin_hub') || !AdminHub::hasColumn('email')) {
+            return null;
+        }
+
+        $query = DB::table('admin_hub')
+            ->select('email')
+            ->whereNotNull('email')
+            ->where('email', '!=', '');
+
+        if (AdminHub::hasColumn('role')) {
+            $query->whereIn('role', ['admin_designee', 'designee']);
+        } elseif (AdminHub::hasColumn('access_level')) {
+            $query->where('access_level', 'designee');
+        }
+
+        return $query;
+    }
+
+    private function attachAdminHubProfilesByEmail($records): void
+    {
+        if (!Schema::hasTable('admin_hub') || !AdminHub::hasColumn('email')) {
+            return;
+        }
+
+        $users = collect($records)
+            ->map(fn ($record) => $record->user ?? null)
+            ->filter()
+            ->unique('id')
+            ->values();
+        $emails = $users
+            ->pluck('email')
+            ->map(fn ($email) => strtolower(trim((string) $email)))
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($emails->isEmpty()) {
+            return;
+        }
+
+        $profilesByEmail = AdminHub::query()
+            ->whereIn(DB::raw('LOWER(email)'), $emails->all())
+            ->orderBy('id')
+            ->get()
+            ->groupBy(fn (AdminHub $profile) => strtolower(trim((string) $profile->email)));
+
+        foreach ($users as $user) {
+            if ($user->adminHubProfile) {
+                continue;
+            }
+
+            $email = strtolower(trim((string) $user->email));
+            $profile = $profilesByEmail->get($email)?->first();
+            if ($profile) {
+                $user->setRelation('adminHubProfile', $profile);
+            }
+        }
     }
 
     private function employeeHealthFormCategoryAudience(?User $user): string
@@ -2086,8 +2191,8 @@ class AdminController extends Controller
             } catch (\Throwable $exception) {
                 \Log::warning('GuiSIS student number batch sync failed', [
                     'user_id' => $user->id,
-                    'email' => $email,
-                    'error' => $exception->getMessage(),
+                    'email' => SensitiveLogRedactor::email($email),
+                    ...SensitiveLogRedactor::exceptionContext($exception),
                 ]);
                 $summary['failed']++;
                 $summary['details'][] = [
@@ -2906,6 +3011,21 @@ class AdminController extends Controller
         return 'applicant';
     }
 
+    private function isStudentHealthProfile(HealthProfile $profile): bool
+    {
+        $user = $profile->user;
+        if (!$user || $this->resolveAdminHealthProfileAudience($profile) !== 'student') {
+            return false;
+        }
+
+        $studentRoles = ['student', 'ojt', 'student_ojt', 'student / ojt'];
+        $userType = strtolower(trim((string) $user->user_type));
+        $idpRole = str_replace(['-', ' '], '_', strtolower(trim((string) $user->idp_role)));
+
+        return ($user->hasOfficialStudentHealthIdentity())
+            && (in_array($userType, $studentRoles, true) || in_array($idpRole, $studentRoles, true));
+    }
+
     public function viewHealth(Request $request)
     {
         $search = trim((string) $request->query('q', ''));
@@ -2927,7 +3047,9 @@ class AdminController extends Controller
         $issuedPerPage = in_array($perPageInput, $allowedPerPage, true) ? $perPageInput : '20';
 
         $query = HealthProfile::with([
-            'user',
+            'user.adminHubProfile',
+            'user.adminProfile',
+            'user.employeeHealthProfile',
             'latestApprovedHealthFormSubmission',
         ])->notPulledOut();
 
@@ -3009,7 +3131,11 @@ class AdminController extends Controller
             });
         }
 
-        $employeeQuery = EmployeeHealthProfile::with('user');
+        $employeeQuery = EmployeeHealthProfile::with([
+            'user.adminHubProfile',
+            'user.adminProfile',
+            'user.employeeHealthProfile',
+        ]);
 
         if ($search !== '') {
             $employeeQuery->where(function ($builder) use ($search) {
@@ -3190,6 +3316,7 @@ class AdminController extends Controller
                 ?: 0;
         };
         $issuedCombinedRecords = $issuedRecords->merge($issuedEmployeeRecords);
+        $this->attachAdminHubProfilesByEmail($issuedCombinedRecords);
         $issuedCombinedRecords = match ($sortFilter) {
             'alphabetical' => $issuedCombinedRecords->sort(function ($left, $right) use ($healthRecordName, $healthRecordApprovedTimestamp) {
                 $comparison = strnatcasecmp($healthRecordName($left), $healthRecordName($right));
@@ -3241,6 +3368,7 @@ class AdminController extends Controller
             )
             ->sortByDesc(fn ($record) => optional($record->updated_at)->timestamp ?: 0)
             ->values();
+        $this->attachAdminHubProfilesByEmail($records);
 
         $courseOptions = HealthProfile::query()
             ->notPulledOut()
@@ -3495,7 +3623,10 @@ class AdminController extends Controller
         foreach ($records as $summaryRecord) {
             $summaryStatus = trim((string) ($summaryRecord->clearance_status ?? ''));
             $summaryIsApproved = in_array($summaryStatus, ['Issued', 'Fully Cleared'], true);
-            $summaryIsConditional = !$summaryIsApproved && (
+            $summaryIsRevokedPending = (string) ($summaryRecord->record_source ?? 'health') === 'health'
+                && filled($summaryRecord->clearance_revoked_at ?? null)
+                && in_array($summaryStatus, ['Pending', 'For Verification'], true);
+            $summaryIsConditional = !$summaryIsApproved && !$summaryIsRevokedPending && (
                 in_array($summaryStatus, ['Pending/Conditional', 'Pending Resubmission', 'Rejected'], true)
                 || trim((string) ($summaryRecord->pending_reason ?? '')) !== ''
                 || trim((string) ($summaryRecord->medical_condition_remarks ?? '')) !== ''
@@ -3537,6 +3668,14 @@ class AdminController extends Controller
             ->latest('requested_at')
             ->first();
         $healthFormAudience = $this->resolveAdminHealthProfileAudience($profile);
+        $isStudentHealthProfile = $this->isStudentHealthProfile($profile);
+        $medicalAssessmentHistory = $isStudentHealthProfile
+            ? StudentMedicalAssessment::with('recordedBy')
+                ->where('health_profile_id', $profile->id)
+                ->latest('created_at')
+                ->latest('id')
+                ->get()
+            : collect();
         $healthFormCategories = HealthFormCategory::query()
             ->where('is_active', true)
             ->availableFor($healthFormAudience)
@@ -3604,7 +3743,9 @@ class AdminController extends Controller
             'healthFormSubmissions',
             'healthProfileHistory',
             'currentHealthFormSubmission',
-            'activeNewHealthFormRequest'
+            'activeNewHealthFormRequest',
+            'medicalAssessmentHistory',
+            'isStudentHealthProfile'
         ));
     }
 
@@ -4350,79 +4491,152 @@ class AdminController extends Controller
             ->with('success', $message);
     }
 
-    public function returnHealthProfileToPending(Request $request, $id)
+    public function revokeHealthProfileClearance(Request $request, $id)
     {
-        $profile = HealthProfile::with('user')->findOrFail($id);
-        $previousStatus = trim((string) $profile->clearance_status);
-
-        if (!in_array($previousStatus, ['Issued', 'Fully Cleared'], true)) {
-            return redirect()->route('admin.show_health', $profile->id)
-                ->with('error', 'Only approved health records can be returned to pending approval.');
-        }
-
-        $previousVerifiedAt = $profile->verified_at;
-        $previousApprovedBy = $profile->approved_by_user_id;
-        $previousPuptasStatus = $profile->puptas_sync_status;
-        $previousPuptasSyncedAt = $profile->puptas_synced_at;
-
-        $profile->clearance_status = 'For Verification';
-        $profile->physical_assessment_status = 'Not Yet Conducted';
-        $profile->pending_reason = trim((string) ($profile->pending_reason ?? '')) ?: 'Returned to pending approval for document review.';
-        $profile->verified_at = null;
-        $profile->approved_by_user_id = null;
-        $profile->puptas_synced_at = $previousPuptasSyncedAt ?? $profile->puptas_synced_at;
-        $profile->save();
-        try {
-            app(MarClearanceIssuanceService::class)->syncApprovedHealthProfile($profile, false);
-        } catch (\Throwable $exception) {
-            \Log::warning('Health profile MAR issuance cleanup failed.', [
-                'health_profile_id' => $profile->id,
-                'clearance_status' => $profile->clearance_status,
-                'error' => $exception->getMessage(),
-            ]);
-        }
-        $this->updateCurrentHealthFormSubmissionStatus($profile, HealthFormSubmission::STATUS_SUBMITTED);
-
-        if ($profile->puptas_sync_status === null || $profile->puptas_sync_status === 'not_applicable') {
-            $this->updatePuptasSyncState($profile, $previousPuptasStatus ?? null, $profile->puptas_sync_message ?? 'Approved health clearance remains in its original sync state while pending review.');
-        }
-
-        if ($profile->user) {
-            $profile->user->is_health_profile_completed = 0;
-            $profile->user->save();
-        }
-
-        ActivityLog::create([
-            'user_id' => auth()->id(),
-            'user_name' => auth()->user()?->name ?? auth()->user()?->email ?? 'System',
-            'user_role' => strtolower((string) (auth()->user()?->user_role ?? '')),
-            'action' => 'Approved Health Profile Returned to Pending',
-            'module' => 'Health Records',
-            'event_type' => 'health_profile_returned_to_pending',
-            'description' => 'Approved health profile #' . $profile->id . ' was returned to Pending Approval without deleting submitted profile data.',
-            'route_name' => optional($request->route())->getName(),
-            'http_method' => 'POST',
-            'request_path' => '/' . ltrim((string) $request->path(), '/'),
-            'status_code' => 200,
-            'subject_type' => HealthProfile::class,
-            'subject_id' => (string) $profile->id,
-            'metadata' => [
-                'health_profile_id' => $profile->id,
-                'reference_number' => $profile->reference_number,
-                'student_id' => $profile->student_id,
-                'previous_status' => $previousStatus,
-                'previous_verified_at' => optional($previousVerifiedAt)->toDateTimeString(),
-                'previous_approved_by_user_id' => $previousApprovedBy,
-                'previous_puptas_sync_status' => $previousPuptasStatus,
-                'preserved_puptas_synced_at' => optional($previousPuptasSyncedAt)->toDateTimeString(),
-            ],
-            'ip_address' => $request->ip(),
-            'user_agent' => substr((string) $request->userAgent(), 0, 255),
+        $validated = $request->validate([
+            'revoke_reason' => ['required', 'string', 'max:1000'],
         ]);
+        $actor = Auth::guard('admin')->user();
+
+        DB::transaction(function () use ($request, $id, $validated, $actor): void {
+            $profile = HealthProfile::with('user')->lockForUpdate()->findOrFail($id);
+            abort_unless($this->isStudentHealthProfile($profile), 404);
+
+            if (!in_array(trim((string) $profile->clearance_status), ['Issued', 'Fully Cleared'], true)
+                || in_array($profile->pullout_status, [HealthProfile::PULLOUT_PENDING, HealthProfile::PULLOUT_COMPLETED], true)) {
+                throw ValidationException::withMessages([
+                    'revoke_reason' => 'Only an active, approved student clearance can be revoked.',
+                ]);
+            }
+
+            $previousStatus = trim((string) $profile->clearance_status);
+            $previousVerifiedAt = $profile->verified_at;
+            $previousApprovedBy = $profile->approved_by_user_id;
+            $previousPuptasStatus = $profile->puptas_sync_status;
+            $previousPuptasSyncedAt = $profile->puptas_synced_at;
+
+            $profile->clearance_status = 'For Verification';
+            $profile->clearance_revoked_at = now();
+            $profile->physical_assessment_status = 'Not Yet Conducted';
+            $profile->pending_reason = trim((string) $validated['revoke_reason']);
+            $profile->verified_at = null;
+            $profile->approved_by_user_id = null;
+            $profile->puptas_synced_at = $previousPuptasSyncedAt ?? $profile->puptas_synced_at;
+            $profile->save();
+
+            app(MarClearanceIssuanceService::class)->syncApprovedHealthProfileForWorkflow(
+                $profile,
+                \App\Models\MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW,
+                false
+            );
+            $this->updateCurrentHealthFormSubmissionStatus($profile, HealthFormSubmission::STATUS_SUBMITTED);
+
+            if ($profile->puptas_sync_status === null || $profile->puptas_sync_status === 'not_applicable') {
+                $this->updatePuptasSyncState(
+                    $profile,
+                    $previousPuptasStatus,
+                    $profile->puptas_sync_message ?? 'The student clearance was revoked locally and returned for clinic review.'
+                );
+            }
+
+            if ($profile->user) {
+                $profile->user->is_health_profile_completed = 0;
+                $profile->user->save();
+            }
+
+            ActivityLog::create([
+                'user_id' => $actor?->id,
+                'user_name' => $actor?->name ?? $actor?->email ?? 'System',
+                'user_role' => strtolower((string) ($actor?->user_role ?? '')),
+                'action' => 'Student Clearance Revoked',
+                'module' => 'Health Records',
+                'event_type' => 'student_health_clearance_revoked',
+                'description' => 'Student health profile #' . $profile->id . ' clearance was revoked and returned to Pending Approval.',
+                'route_name' => optional($request->route())->getName(),
+                'http_method' => 'POST',
+                'request_path' => '/' . ltrim((string) $request->path(), '/'),
+                'status_code' => 200,
+                'subject_type' => HealthProfile::class,
+                'subject_id' => (string) $profile->id,
+                'metadata' => [
+                    'health_profile_id' => $profile->id,
+                    'reference_number' => $profile->reference_number,
+                    'student_id' => $profile->student_id,
+                    'previous_status' => $previousStatus,
+                    'previous_verified_at' => optional($previousVerifiedAt)->toDateTimeString(),
+                    'previous_approved_by_user_id' => $previousApprovedBy,
+                    'previous_puptas_sync_status' => $previousPuptasStatus,
+                    'preserved_puptas_synced_at' => optional($previousPuptasSyncedAt)->toDateTimeString(),
+                ],
+                'ip_address' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 255),
+            ]);
+        });
 
         return redirect()
             ->route('admin.health_records', ['tab' => 'pending_approval'])
-            ->with('success', 'Approved health record returned to Pending Approval.');
+            ->with('success', 'Student clearance revoked. The record is back in Pending Approval.');
+    }
+
+    public function storeStudentMedicalAssessment(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'condition_or_illness' => ['nullable', 'required_without_all:findings,remarks', 'string', 'max:1000'],
+            'findings' => ['nullable', 'string', 'max:3000'],
+            'remarks' => ['nullable', 'string', 'max:2000'],
+            'reason' => ['nullable', 'string', 'max:1000'],
+        ], [
+            'condition_or_illness.required_without_all' => 'Add at least one clinical detail: medical condition, findings, or remarks.',
+        ]);
+        $actor = Auth::guard('admin')->user();
+
+        DB::transaction(function () use ($request, $id, $validated, $actor) {
+            $profile = HealthProfile::with('user')->lockForUpdate()->findOrFail($id);
+            abort_unless($this->isStudentHealthProfile($profile), 404);
+            abort_unless(!in_array($profile->pullout_status, [HealthProfile::PULLOUT_PENDING, HealthProfile::PULLOUT_COMPLETED], true), 404);
+
+            $previousAssessmentId = StudentMedicalAssessment::query()
+                ->where('health_profile_id', $profile->id)
+                ->latest('id')
+                ->value('id');
+
+            $assessment = StudentMedicalAssessment::create([
+                'health_profile_id' => $profile->id,
+                'recorded_by_user_id' => $actor?->id,
+                'condition_or_illness' => trim((string) ($validated['condition_or_illness'] ?? '')) ?: null,
+                'findings' => trim((string) ($validated['findings'] ?? '')) ?: null,
+                'remarks' => trim((string) ($validated['remarks'] ?? '')) ?: null,
+                'reason' => trim((string) ($validated['reason'] ?? '')) ?: null,
+            ]);
+
+            ActivityLog::create([
+                'user_id' => $actor?->id,
+                'user_name' => $actor?->name ?? $actor?->email ?? 'System',
+                'user_role' => strtolower((string) ($actor?->user_role ?? '')),
+                'action' => 'Student Medical Assessment Added',
+                'module' => 'Health Records',
+                'event_type' => 'student_medical_assessment_added',
+                'description' => 'A new medical assessment entry was added for student health profile #' . $profile->id . '.',
+                'route_name' => optional($request->route())->getName(),
+                'http_method' => 'POST',
+                'request_path' => '/' . ltrim((string) $request->path(), '/'),
+                'status_code' => 200,
+                'subject_type' => HealthProfile::class,
+                'subject_id' => (string) $profile->id,
+                'metadata' => [
+                    'health_profile_id' => $profile->id,
+                    'assessment_id' => $assessment->id,
+                    'previous_assessment_id' => $previousAssessmentId,
+                    'clearance_status_unchanged' => true,
+                ],
+                'ip_address' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 255),
+            ]);
+
+        });
+
+        return redirect()->route('admin.show_health', $id)
+            ->with('success', 'Medical assessment added to the student record.');
     }
 
     public function requestHealthProfilePullout(Request $request, $id)
@@ -5050,6 +5264,7 @@ public function updateClearance(Request $request, $id)
 
     // Update Status
     $record->clearance_status = $requestedStatus;
+    $record->clearance_revoked_at = null;
     $record->pending_reason   = $isApproval ? null : $request->pending_reason;
     $record->medical_condition_remarks = $request->input('medical_condition_remarks');
     $record->physical_assessment_status = $request->input('physical_assessment_status');
@@ -5077,7 +5292,7 @@ public function updateClearance(Request $request, $id)
             \Log::warning('Health profile MAR issuance synchronization failed.', [
                 'health_profile_id' => $record->id,
                 'clearance_status' => $requestedStatus,
-                'error' => $exception->getMessage(),
+                ...SensitiveLogRedactor::exceptionContext($exception),
             ]);
         }
 
@@ -5131,7 +5346,7 @@ public function updateClearance(Request $request, $id)
                 } catch (\Throwable $exception) {
                     \Log::error('Unable to save approved Health Form PDF snapshot.', [
                         'health_profile_id' => $record->id,
-                        'error' => $exception->getMessage(),
+                        ...SensitiveLogRedactor::exceptionContext($exception),
                     ]);
                 }
 
@@ -5187,7 +5402,13 @@ public function updateClearance(Request $request, $id)
                                 'failed',
                                 $syncResult['message'] ?? 'The PUPTAS sync attempt failed.',
                             );
-                            \Log::error("PUPTAS Sync Failed for reference {$referenceNumber} / student_id {$idpStudentId}: " . ($syncResult['message'] ?? 'Unknown error'));
+                            \Log::error('PUPTAS health clearance sync failed.', [
+                                'health_profile_id' => $record->id,
+                                'reference_number' => SensitiveLogRedactor::identifier($referenceNumber),
+                                'student_id' => SensitiveLogRedactor::identifier($idpStudentId),
+                                'status' => $syncResult['status'] ?? null,
+                                'error_type' => $syncResult['error_type'] ?? 'webhook_error',
+                            ]);
                         } else {
                             $this->updatePuptasSyncState($record, 'synced', 'Approved health clearance synced to PUPTAS.', true);
                         }
@@ -5195,7 +5416,12 @@ public function updateClearance(Request $request, $id)
                         $referenceNumber = trim((string) (($record->reference_number ?? '') ?: ($record->student_number ?? '') ?: optional($record->user)->student_number));
                         $idpStudentId = trim((string) (optional($record->user)->student_id ?: $record->student_id));
                         $this->updatePuptasSyncState($record, 'failed', $e->getMessage());
-                        \Log::error("PUPTAS Sync Failed for reference {$referenceNumber} / student_id {$idpStudentId}: " . $e->getMessage());
+                        \Log::error('PUPTAS health clearance sync exception.', [
+                            'health_profile_id' => $record->id,
+                            'reference_number' => SensitiveLogRedactor::identifier($referenceNumber),
+                            'student_id' => SensitiveLogRedactor::identifier($idpStudentId),
+                            ...SensitiveLogRedactor::exceptionContext($e),
+                        ]);
                     }
                 }
             } else {
@@ -5544,7 +5770,7 @@ public function updateClearance(Request $request, $id)
             \Log::warning('Health profile MAR issuance cleanup failed.', [
                 'health_profile_id' => $record->id,
                 'clearance_status' => $record->clearance_status,
-                'error' => $exception->getMessage(),
+                ...SensitiveLogRedactor::exceptionContext($exception),
             ]);
         }
         $this->updateCurrentHealthFormSubmissionStatus($record, HealthFormSubmission::STATUS_SUBMITTED);
@@ -5612,7 +5838,7 @@ public function updateClearance(Request $request, $id)
             \Log::warning('Health profile MAR issuance cleanup failed.', [
                 'health_profile_id' => $record->id,
                 'clearance_status' => $record->clearance_status,
-                'error' => $exception->getMessage(),
+                ...SensitiveLogRedactor::exceptionContext($exception),
             ]);
         }
         $this->updateCurrentHealthFormSubmissionStatus($record, HealthFormSubmission::STATUS_SUBMITTED);

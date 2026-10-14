@@ -6,6 +6,7 @@ use App\Models\DependentsProfile;
 use App\Models\EmployeeHealthProfile;
 use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
+use App\Models\StudentMedicalAssessment;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
 
@@ -16,12 +17,13 @@ class BackfillEncryptedStudentMedicalHistory extends Command
         {--force : Refresh existing encrypted mirror values; requires --apply}
         {--chunk=100 : Number of records processed per batch}';
 
-    protected $description = 'Backfill encrypted mirror values for health profiles and historical submissions.';
+    protected $description = 'Backfill encrypted mirror values for health profiles, medical assessments, and historical submissions.';
 
     private const PROFILE_MODELS = [
         'student' => [HealthProfile::class, 'health_profiles'],
         'employee' => [EmployeeHealthProfile::class, 'health_profile_emp'],
         'dependent' => [DependentsProfile::class, 'dependents_profiles'],
+        'medical assessment' => [StudentMedicalAssessment::class, 'student_medical_assessments'],
         'submission' => [HealthFormSubmission::class, 'health_form_submissions'],
     ];
 
@@ -59,9 +61,11 @@ class BackfillEncryptedStudentMedicalHistory extends Command
             $written = 0;
             $skipped = 0;
 
-            $recordLabel = $label === 'submission'
-                ? 'historical submission'
-                : "{$label} health profile";
+            $recordLabel = match ($label) {
+                'submission' => 'historical submission',
+                'medical assessment' => 'medical assessment',
+                default => "{$label} health profile",
+            };
             $this->info(($apply ? 'Apply mode: ' : 'Dry run: ') . "Found {$total} {$recordLabel}(s).");
 
             $query->chunkById($chunkSize, function ($profiles) use ($apply, $force, $fieldMap, &$written, &$skipped): void {

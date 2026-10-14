@@ -183,6 +183,11 @@
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
                             <span><strong>Update assessment</strong><small>Edit nurse review and assessment details</small></span>
                         </label>
+                        <label class="um-action-permission">
+                            <input type="checkbox" name="module_permissions[]" value="health_records.revoke_clearance" data-module-action>
+                            <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
+                            <span><strong>Revoke student clearance</strong><small>Return an issued student record to Pending Approval</small></span>
+                        </label>
                         <div class="um-action-permission is-locked">
                             <span class="um-action-lock" aria-hidden="true"><x-outline-icon name="shield-check" /></span>
                             <span><strong>Final approval &amp; signing</strong><small>Restricted to Super Admin</small></span>

@@ -2,6 +2,9 @@
 
 namespace App\Models\Concerns;
 
+use DateTimeInterface;
+use Illuminate\Contracts\Support\Arrayable;
+
 trait EncryptsHealthProfileFields
 {
     public function getCasts()
@@ -52,18 +55,56 @@ trait EncryptsHealthProfileFields
         return $sourceCast !== '' ? $this->castAttribute($key, $encryptedValue) : $encryptedValue;
     }
 
+    public function attributesToArray()
+    {
+        $attributes = parent::attributesToArray();
+
+        foreach ($this->encryptedHealthFieldMap() as $sourceColumn => $encryptedColumn) {
+            unset($attributes[$encryptedColumn]);
+
+            if (!config('health_data_encryption.enabled', false)
+                || !array_key_exists($sourceColumn, $attributes)) {
+                continue;
+            }
+
+            $value = $this->getAttribute($sourceColumn);
+            if ($value instanceof DateTimeInterface) {
+                $value = $this->serializeDate($value);
+            } elseif ($value instanceof Arrayable) {
+                $value = $value->toArray();
+            }
+
+            $attributes[$sourceColumn] = $value;
+        }
+
+        return $attributes;
+    }
+
+    protected function getArrayableAttributes()
+    {
+        $attributes = parent::getArrayableAttributes();
+
+        foreach ($this->encryptedHealthFieldMap() as $encryptedColumn) {
+            unset($attributes[$encryptedColumn]);
+        }
+
+        return $attributes;
+    }
+
     public function setAttribute($key, $value)
     {
-        $result = parent::setAttribute($key, $value);
-
         if (config('health_data_encryption.enabled', false) && is_string($key)) {
             $encryptedColumn = $this->encryptedHealthFieldMap()[$key] ?? null;
             if ($encryptedColumn !== null) {
+                parent::setAttribute($key, $value);
                 parent::setAttribute($encryptedColumn, parent::getAttribute($key));
+                parent::setAttribute($key, null);
+
+                return $this;
             }
         }
 
-        return $result;
+        return parent::setAttribute($key, $value);
     }
 
     protected function encryptedHealthFieldMap(): array

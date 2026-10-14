@@ -109,6 +109,14 @@ class AllHealthProfileEncryptionTest extends TestCase
         $this->assertStringNotContainsString('Private Avenue', (string) $dependentRaw->home_address_encrypted);
         $this->assertStringNotContainsString('private@example.test', (string) $submissionRaw->profile_snapshot_encrypted);
         $this->assertStringNotContainsString('medical follow-up', (string) $submissionRaw->remarks_encrypted);
+        $this->assertNull($studentRaw->home_address);
+        $this->assertNull($studentRaw->medical_history);
+        $this->assertNull($employeeRaw->emergency_contact_person);
+        $this->assertNull($employeeRaw->past_medical_history);
+        $this->assertNull($dependentRaw->birthday);
+        $this->assertNull($dependentRaw->home_address);
+        $this->assertNull($submissionRaw->profile_snapshot);
+        $this->assertNull($submissionRaw->remarks);
 
         $freshStudent = HealthProfile::withoutGlobalScopes()->findOrFail($student->id);
         $freshEmployee = EmployeeHealthProfile::withoutGlobalScopes()->findOrFail($employee->id);

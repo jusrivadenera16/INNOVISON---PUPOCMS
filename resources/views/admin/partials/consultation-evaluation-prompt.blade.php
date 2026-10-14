@@ -129,6 +129,11 @@
             margin-top: 16px;
         }
 
+        .consultation-evaluation-actions.is-submitting {
+            pointer-events: none;
+            opacity: .78;
+        }
+
         .consultation-evaluation-action {
             position: relative;
             display: inline-flex;
@@ -313,7 +318,7 @@
                 </div>
             </div>
 
-            <form method="POST" action="{{ route($evaluationPromptRoute) }}" class="consultation-evaluation-actions">
+            <form method="POST" action="{{ route($evaluationPromptRoute) }}" class="consultation-evaluation-actions" data-loader-scope="screen">
                 @csrf
                 <input type="hidden" name="consultation_id" value="{{ (int) $evaluationPrompt['consultation_id'] }}">
                 <button type="submit" name="decision" value="skip" class="consultation-evaluation-action"><span>Skip</span></button>
@@ -334,11 +339,29 @@
             if (!prompt) return;
 
             const closeButton = prompt.querySelector('[data-close-consultation-evaluation]');
+            const actionsForm = prompt.querySelector('.consultation-evaluation-actions');
+
+            actionsForm?.addEventListener('submit', function (event) {
+                if (actionsForm.dataset.submitting === 'true') {
+                    event.preventDefault();
+                    return;
+                }
+
+                actionsForm.dataset.submitting = 'true';
+                actionsForm.classList.add('is-submitting');
+                closeButton?.setAttribute('aria-disabled', 'true');
+
+                const submitter = event.submitter;
+                const label = submitter?.querySelector('span');
+                if (label) {
+                    label.textContent = submitter.value === 'send' ? 'Sending Evaluation...' : 'Skipping...';
+                }
+            });
+
             closeButton?.addEventListener('click', function () {
-                const form = prompt.querySelector('.consultation-evaluation-actions');
-                const skipButton = form?.querySelector('[name="decision"][value="skip"]');
-                if (form && skipButton && typeof form.requestSubmit === 'function') {
-                    form.requestSubmit(skipButton);
+                const skipButton = actionsForm?.querySelector('[name="decision"][value="skip"]');
+                if (actionsForm && skipButton && typeof actionsForm.requestSubmit === 'function') {
+                    actionsForm.requestSubmit(skipButton);
                 } else {
                     skipButton?.click();
                 }

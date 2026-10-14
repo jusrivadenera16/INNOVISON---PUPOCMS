@@ -29,6 +29,7 @@ use App\Services\StudentNotificationMailer;
 use App\Services\EmployeeHealthFormPdfService;
 use App\Services\EmployeeHealthFormHistoryService;
 use App\Services\HealthFileStorage;
+use App\Support\SensitiveLogRedactor;
 use App\Services\HealthFormPdfSnapshotService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Hash;
@@ -805,7 +806,10 @@ class WalkInController extends Controller
 
     private function resolveLocalUserFromApplicant(array $applicant, bool $persist = true, ?string $referenceNumber = null): ?User
     {
-        \Log::debug('PUPTAS applicant data', ['applicant' => $applicant, 'referenceNumber' => $referenceNumber]);
+        \Log::debug('PUPTAS applicant data received', [
+            'applicant_fields' => array_keys($applicant),
+            'reference_number' => SensitiveLogRedactor::identifier($referenceNumber),
+        ]);
 
         $studentNumber = trim((string) (
             data_get($applicant, 'user.student_number')
@@ -827,10 +831,10 @@ class WalkInController extends Controller
         ));
 
         \Log::debug('Extracted fields', [
-            'studentNumber' => $studentNumber,
-            'referenceNumber' => $resolvedReferenceNumber,
-            'idpUserId' => $idpUserId,
-            'email' => $email,
+            'student_number' => SensitiveLogRedactor::identifier($studentNumber),
+            'reference_number' => SensitiveLogRedactor::identifier($resolvedReferenceNumber),
+            'idp_user_id' => SensitiveLogRedactor::identifier($idpUserId),
+            'email' => SensitiveLogRedactor::email($email),
         ]);
 
         $user = User::query()
@@ -895,11 +899,11 @@ class WalkInController extends Controller
             : trim((string) (data_get($applicant, 'full_name') ?: data_get($applicant, 'name')));
 
         \Log::debug('Name extraction results', [
-            'firstName' => $firstName,
-            'middleName' => $middleName,
-            'lastName' => $lastName,
-            'fullName' => $fullName,
-            'applicantAllKeys' => array_keys($applicant),
+            'first_name' => SensitiveLogRedactor::name($firstName),
+            'middle_name' => SensitiveLogRedactor::name($middleName),
+            'last_name' => SensitiveLogRedactor::name($lastName),
+            'full_name' => SensitiveLogRedactor::name($fullName),
+            'applicant_fields' => array_keys($applicant),
         ]);
 
         $fallbackFirstName = $firstName !== '' ? $firstName : 'Applicant';
@@ -927,9 +931,9 @@ class WalkInController extends Controller
         }
 
         \Log::debug('User fields set', [
-            'student_id' => $user->student_id,
-            'student_number' => $user->student_number,
-            'reference_number' => $user->reference_number,
+            'student_id' => SensitiveLogRedactor::identifier((string) $user->student_id),
+            'student_number' => SensitiveLogRedactor::identifier((string) $user->student_number),
+            'reference_number' => SensitiveLogRedactor::identifier((string) $user->reference_number),
         ]);
 
         if ($firstName !== '') {
@@ -1783,7 +1787,7 @@ class WalkInController extends Controller
             Log::warning('Service evaluation email failed after consultation.', [
                 'consultation_id' => $consultation->id,
                 'evaluation_id' => $evaluation->id,
-                'error' => $exception->getMessage(),
+                ...SensitiveLogRedactor::exceptionContext($exception),
             ]);
             $mailResult = ['status' => 'failed'];
         }
@@ -1891,7 +1895,7 @@ class WalkInController extends Controller
                 'source_type' => $sourceType,
                 'source_id' => $profile->id,
                 'evaluation_id' => $evaluation->id,
-                'error' => $exception->getMessage(),
+                ...SensitiveLogRedactor::exceptionContext($exception),
             ]);
             $mailResult = ['status' => 'failed'];
         }
@@ -2960,7 +2964,9 @@ PROMPT;
             $decoded = $this->decodeAiVerificationText($text);
 
             if (!$decoded) {
-                Log::warning('AI ID verification returned non-JSON text.', ['text' => $text]);
+                Log::warning('AI ID verification returned non-JSON text.', [
+                    'response_length' => strlen($text),
+                ]);
 
                 return response()->json([
                     'status' => 'parse_error',
@@ -2978,7 +2984,7 @@ PROMPT;
             ]);
         } catch (\Throwable $exception) {
             Log::error('AI ID verification failed.', [
-                'message' => $exception->getMessage(),
+                ...SensitiveLogRedactor::exceptionContext($exception),
             ]);
 
             return response()->json([
@@ -3399,7 +3405,7 @@ PROMPT;
                         'consultation_id' => $consultation->id,
                         'user_id' => $student->id,
                         'certificate_type' => $certificateType,
-                        'error' => $exception->getMessage(),
+                        ...SensitiveLogRedactor::exceptionContext($exception),
                     ]);
                 }
             }
@@ -3708,9 +3714,9 @@ PROMPT;
             ], 422);
         } catch (\Throwable $e) {
             Log::error('Applicant encoding exception', [
-                'error' => $e->getMessage(),
-                'reference_number' => $request->input('reference_number'),
+                'reference_number' => SensitiveLogRedactor::identifier((string) $request->input('reference_number')),
                 'user_id' => auth()->id(),
+                ...SensitiveLogRedactor::exceptionContext($e),
             ]);
 
             return response()->json([
@@ -3934,9 +3940,9 @@ PROMPT;
         } catch (\Throwable $exception) {
             Log::warning('Employee MAR issuance synchronization failed.', [
                 'employee_profile_id' => $employeeProfile->id,
-                'reference_number' => $referenceNumber,
+                'reference_number' => SensitiveLogRedactor::identifier($referenceNumber),
                 'clearance_status' => $clearanceStatus,
-                'error' => $exception->getMessage(),
+                ...SensitiveLogRedactor::exceptionContext($exception),
             ]);
         }
 
@@ -4328,9 +4334,9 @@ PROMPT;
             } catch (\Throwable $exception) {
                 Log::warning('Applicant MAR issuance synchronization failed.', [
                     'health_profile_id' => $profile->id,
-                    'reference_number' => $referenceNumber,
+                    'reference_number' => SensitiveLogRedactor::identifier($referenceNumber),
                     'clearance_status' => $clearanceStatus,
-                    'error' => $exception->getMessage(),
+                    ...SensitiveLogRedactor::exceptionContext($exception),
                 ]);
             }
 
@@ -4353,8 +4359,8 @@ PROMPT;
             }
 
             Log::info('Applicant reference decision saved', [
-                'reference_number' => $referenceNumber,
-                'student_id' => $studentId,
+                'reference_number' => SensitiveLogRedactor::identifier($referenceNumber),
+                'student_id' => SensitiveLogRedactor::identifier($studentId),
                 'health_profile_id' => $profile->id,
                 'clearance_status' => $clearanceStatus,
                 'webhook_success' => (bool) ($webhookResult['success'] ?? false),
@@ -4367,8 +4373,8 @@ PROMPT;
                 } catch (\Throwable $exception) {
                     Log::error('Unable to save approved applicant Health Form PDF snapshot.', [
                         'health_profile_id' => $profile->id,
-                        'reference_number' => $referenceNumber,
-                        'error' => $exception->getMessage(),
+                        'reference_number' => SensitiveLogRedactor::identifier($referenceNumber),
+                        ...SensitiveLogRedactor::exceptionContext($exception),
                     ]);
                 }
 
@@ -4461,9 +4467,9 @@ PROMPT;
             ]);
         } catch (\Exception $e) {
             Log::error('Applicant approval exception', [
-                'error' => $e->getMessage(),
-                'reference_number' => $request->input('reference_number'),
+                'reference_number' => SensitiveLogRedactor::identifier((string) $request->input('reference_number')),
                 'user_id' => auth()->id(),
+                ...SensitiveLogRedactor::exceptionContext($e),
             ]);
 
             return response()->json([
@@ -4604,6 +4610,7 @@ PROMPT;
                 $clearanceDecision = trim((string) ($validated['clearance_decision'] ?? ''));
                 if ($clearanceDecision === 'approve') {
                     $profile->clearance_status = 'Fully Cleared';
+                    $profile->clearance_revoked_at = null;
                     $profile->documents_valid = true;
                     $profile->verified_at = now();
                     $profile->review_closed_at = now();
@@ -4630,6 +4637,7 @@ PROMPT;
                         ]);
                 } elseif ($clearanceDecision === 'pending') {
                     $profile->clearance_status = 'Pending/Conditional';
+                    $profile->clearance_revoked_at = null;
                     $profile->documents_valid = false;
                     $profile->verified_at = null;
                     $profile->approved_by_user_id = null;
@@ -4664,9 +4672,9 @@ PROMPT;
                 } catch (\Throwable $exception) {
                     Log::warning('Student MAR issuance synchronization failed.', [
                         'health_profile_id' => $profile->id,
-                        'reference_number' => $referenceNumber,
+                        'reference_number' => SensitiveLogRedactor::identifier($referenceNumber),
                         'clearance_status' => $profile->clearance_status,
-                        'error' => $exception->getMessage(),
+                        ...SensitiveLogRedactor::exceptionContext($exception),
                     ]);
                 }
             }
@@ -4709,9 +4717,9 @@ PROMPT;
             ], 422);
         } catch (\Throwable $e) {
             Log::error('Student/OJT assessment save exception', [
-                'error' => $e->getMessage(),
-                'reference_number' => $request->input('reference_number'),
+                'reference_number' => SensitiveLogRedactor::identifier((string) $request->input('reference_number')),
                 'user_id' => auth()->id(),
+                ...SensitiveLogRedactor::exceptionContext($e),
             ]);
 
             return response()->json([
@@ -4738,15 +4746,15 @@ PROMPT;
                 \Log::info('Linked pending medical assessment to user', [
                     'user_id' => $user->id,
                     'assessment_id' => $assessment->id,
-                    'reference_number' => $assessment->reference_number,
-                    'email' => $email,
+                    'reference_number' => SensitiveLogRedactor::identifier((string) $assessment->reference_number),
+                    'email' => SensitiveLogRedactor::email($email),
                 ]);
             }
         } catch (\Exception $e) {
             \Log::warning('Failed to link pending medical assessments', [
                 'user_id' => $user->id,
-                'email' => $email,
-                'error' => $e->getMessage(),
+                'email' => SensitiveLogRedactor::email($email),
+                ...SensitiveLogRedactor::exceptionContext($e),
             ]);
         }
     }

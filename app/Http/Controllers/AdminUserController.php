@@ -9,6 +9,7 @@ use App\Models\HealthProfile;
 use App\Models\User;
 use App\Services\FacultySyncService;
 use App\Services\ModulePermissionService;
+use App\Support\EmployeeNumber;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -245,9 +246,14 @@ class AdminUserController extends Controller
                 }
             }
 
-            if (trim((string) ($recordMeta['faculty_identifier'] ?? '')) === '') {
-                $recordMeta['faculty_identifier'] = $facultyMeta['faculty_code']
-                    ?? ($facultyRecord['student_id'] ?? null);
+            $facultyEmployeeNumber = EmployeeNumber::normalize($facultyMeta['employee_number'] ?? null);
+            $recordMeta['faculty_identifier'] = $facultyEmployeeNumber
+                ?? EmployeeNumber::normalize($recordMeta['faculty_identifier'] ?? null)
+                ?? EmployeeNumber::normalize($facultyMeta['faculty_code'] ?? null)
+                ?? EmployeeNumber::normalize($facultyRecord['student_id'] ?? null);
+            if ($facultyEmployeeNumber !== null) {
+                $recordMeta['employee_number'] = $facultyEmployeeNumber;
+                $record['student_id'] = $facultyEmployeeNumber;
             }
 
             foreach (['first_name', 'middle_name', 'last_name'] as $namePart) {
@@ -370,7 +376,7 @@ class AdminUserController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'admin_email' => ['nullable', 'email', 'max:255'],
             'admin_uuid' => ['nullable', 'uuid', 'max:255'],
-            'employee_number' => ['nullable', 'string', 'max:255'],
+            'employee_number' => ['nullable', 'regex:/^\d{5}$/'],
             'access_level' => ['nullable', Rule::in(['clinic_staff', 'designee'])],
             'office' => ['nullable', 'string', 'max:255'],
             'module_permissions' => ['nullable', 'array'],
@@ -601,7 +607,7 @@ class AdminUserController extends Controller
             'last_name' => ['nullable', 'string', 'max:255'],
             'full_name' => ['nullable', 'string', 'max:255'],
             'admin_uuid' => ['nullable', 'uuid', 'max:255'],
-            'employee_number' => ['nullable', 'string', 'max:255'],
+            'employee_number' => ['nullable', 'regex:/^\d{5}$/'],
             'birthday' => ['nullable', 'date'],
             'age' => ['nullable', 'integer', 'min:0', 'max:150'],
             'gender' => ['nullable', 'string', 'max:50'],
@@ -822,7 +828,7 @@ class AdminUserController extends Controller
                 'max:255',
                 Rule::unique('admin_hub', 'admin_uuid')->ignore($admin->id),
             ],
-            'employee_number' => ['nullable', 'string', 'max:255'],
+            'employee_number' => ['nullable', 'regex:/^\d{5}$/'],
             'birthday' => ['nullable', 'date'],
             'age' => ['nullable', 'integer', 'min:0', 'max:150'],
             'gender' => ['nullable', 'string', 'max:50'],
@@ -1257,9 +1263,10 @@ class AdminUserController extends Controller
                 $studentNumber = trim((string) ($user->student_number ?? ''));
                 $studentId = trim((string) ($user->student_id ?? ''));
                 $resolvedIdentifier = $this->resolveUserDisplayIdentifier($user, $linkedAdmin);
-                // Employee health profiles are the source of truth for local employee numbers.
-                // Do not repurpose a local user ID or a stale admin profile value as an employee number.
-                $employeeNumber = trim((string) ($employeeHealthProfile?->employee_number ?? ''));
+                $employeeNumber = EmployeeNumber::normalize($employeeHealthProfile?->employee_number)
+                    ?? EmployeeNumber::normalize($user->employee_number)
+                    ?? EmployeeNumber::normalize($linkedAdminHub?->employee_number)
+                    ?? EmployeeNumber::normalize($linkedAdmin?->employee_number);
                 $adminUuid = trim((string) ($linkedAdminHub?->admin_uuid ?? ''));
                 if ($adminUuid === '' && $this->isUuid($studentId)) {
                     $adminUuid = $studentId;
@@ -1369,8 +1376,8 @@ class AdminUserController extends Controller
                 }
 
                 $adminId = trim((string) ($admin->admin_id ?? ''));
-                $employeeNumber = trim((string) ($admin->employee_number ?? ''));
-                $identifier = $adminId !== '' ? $adminId : ($employeeNumber !== '' ? $employeeNumber : $email);
+                $employeeNumber = EmployeeNumber::normalize($admin->employee_number);
+                $identifier = $adminId !== '' ? $adminId : ($employeeNumber !== null ? $employeeNumber : $email);
 
                 return [
                     'id' => $identifier,
@@ -1453,10 +1460,9 @@ class AdminUserController extends Controller
                 $email = trim((string) ($faculty['email'] ?? $fields['email'] ?? ''));
                 $role = trim((string) ($faculty['faculty_type'] ?? $fields['faculty_type'] ?? $faculty['role'] ?? $fields['role'] ?? $faculty['access_level'] ?? $fields['access_level'] ?? 'Faculty'));
                 $status = strtolower(trim((string) ($faculty['status'] ?? $fields['status'] ?? 'active')));
-                $facultyCode = trim((string) ($faculty['faculty_code'] ?? $fields['faculty_code'] ?? $faculty['identifier'] ?? $faculty['employee_number'] ?? $fields['employee_number'] ?? $faculty['employee_no'] ?? $fields['employee_no'] ?? ''));
-                $employeeNumber = $facultyCode;
+                $employeeNumber = EmployeeNumber::fromFaculty($faculty);
                 $adminUuid = $facultySyncService->resolveFacultyUuid($faculty);
-                $recordId = $employeeNumber !== '' ? $employeeNumber : ($adminUuid ?: ($email !== '' ? $email : 'faculty'));
+                $recordId = $employeeNumber !== null ? $employeeNumber : ($adminUuid ?: ($email !== '' ? $email : 'faculty'));
 
                 if (in_array($status, ['1', 'true', 'active', 'enabled'], true)) {
                     $status = 'active';
@@ -1488,10 +1494,10 @@ class AdminUserController extends Controller
                     'is_external' => true,
                     'meta' => [
                         'faculty_id' => $faculty['faculty_id'] ?? $fields['faculty_id'] ?? null,
-                        'faculty_code' => $employeeNumber !== '' ? $employeeNumber : null,
+                        'faculty_code' => $employeeNumber,
                         'faculty_uuid' => $faculty['faculty_uuid'] ?? $fields['faculty_uuid'] ?? data_get($profile, 'faculty_uuid'),
                         'idp_user_id' => $faculty['idp_user_id'] ?? $fields['idp_user_id'] ?? data_get($profile, 'idp_user_id'),
-                        'employee_number' => $employeeNumber !== '' ? $employeeNumber : null,
+                        'employee_number' => $employeeNumber,
                         'admin_uuid' => $adminUuid,
                         'faculty_type' => $faculty['faculty_type'] ?? null,
                         'department' => $faculty['department'] ?? null,
@@ -1634,15 +1640,15 @@ class AdminUserController extends Controller
             $fields['idp_user_id'] ?? null,
             data_get($profile, 'idp_user_id'),
         ]);
-        $employeeNumber = (string) $this->firstFilledValue([
-            $user['employee_number'] ?? null,
-            $user['employee_no'] ?? null,
-            $user['employee_id'] ?? null,
-            $user['faculty_code'] ?? null,
-            $user['student_number'] ?? null,
-            $fields['employee_number'] ?? null,
-            data_get($profile, 'employee_number'),
-        ]);
+        $employeeNumber = EmployeeNumber::fromFaculty([
+            'employee_number' => $user['employee_number'] ?? null,
+            'employee_no' => $user['employee_no'] ?? null,
+            'employee_id' => $user['employee_id'] ?? null,
+            'faculty_code' => $user['faculty_code'] ?? null,
+            'identifier' => $user['identifier'] ?? null,
+            'fields' => $fields,
+            'profile' => $profile,
+        ]) ?? '';
 
         if ($displayName === '' && $email === '' && $idpUserId === '') {
             return null;
@@ -1802,8 +1808,9 @@ class AdminUserController extends Controller
                     : ($normalizedName !== '' && isset($facultyByName[$normalizedName])
                         ? $facultyByName[$normalizedName]
                         : null);
-                $employeeNumber = trim((string) ($admin->employee_number ?? ''));
-                if (!$matchedFaculty && $employeeNumber !== '') {
+                $storedEmployeeNumber = EmployeeNumber::normalize($admin->employee_number);
+                $employeeNumber = $storedEmployeeNumber;
+                if (!$matchedFaculty && $employeeNumber !== null) {
                     $matchedFaculty = $facultyByIdentifier[strtolower($employeeNumber)] ?? null;
                 }
                 $firstName = trim((string) ($admin->first_name ?? ''));
@@ -1829,10 +1836,12 @@ class AdminUserController extends Controller
                         $displayName = $matchedDisplayName;
                     }
                 }
-                $facultyIdentifier = trim((string) (
-                    data_get($matchedFaculty, 'meta.faculty_code')
-                    ?: ($matchedFaculty['student_id'] ?? '')
-                ));
+                $facultyIdentifier = EmployeeNumber::normalize(data_get($matchedFaculty, 'meta.employee_number'))
+                    ?? EmployeeNumber::normalize($matchedFaculty['student_id'] ?? null);
+                $employeeNumber = $facultyIdentifier
+                    ?? $storedEmployeeNumber
+                    ?? EmployeeNumber::normalize($linkedUser?->employeeHealthProfile?->employee_number)
+                    ?? EmployeeNumber::normalize($linkedUser?->employee_number);
                 $matchedFacultyUuid = strtolower(trim((string) data_get($matchedFaculty, 'meta.admin_uuid', '')));
                 if ($adminUuid === '' && $this->isUuid($matchedFacultyUuid)) {
                     $adminUuid = $matchedFacultyUuid;
@@ -1846,16 +1855,7 @@ class AdminUserController extends Controller
                     $status = 'active';
                 }
 
-                $resolvedIdentifier = $employeeNumber !== ''
-                    ? $employeeNumber
-                    : ($facultyIdentifier !== ''
-                    ? $facultyIdentifier
-                    : ($linkedUser
-                        ? $this->resolveDisplayIdentifier(
-                            trim((string) ($linkedUser->student_number ?? '')),
-                            trim((string) ($linkedUser->student_id ?? ''))
-                        )
-                        : ''));
+                $resolvedIdentifier = $employeeNumber ?? '';
 
                 return [
                     'id' => (string) $admin->id,
@@ -2119,9 +2119,10 @@ class AdminUserController extends Controller
         }
 
         if ($idpRole === 'faculty') {
-            $facultyCode = trim((string) ($linkedAdmin?->employee_number ?? ''));
-
-            return $this->resolveDisplayIdentifier('', $facultyCode !== '' ? $facultyCode : $studentId);
+            return EmployeeNumber::normalize($user->employeeHealthProfile?->employee_number)
+                ?? EmployeeNumber::normalize($user->employee_number)
+                ?? EmployeeNumber::normalize($linkedAdmin?->employee_number)
+                ?? '';
         }
 
         if ($idpRole === 'admin') {
@@ -2220,12 +2221,12 @@ class AdminUserController extends Controller
         }
 
         $values = [
-            'employee_number' => $this->firstFilledValue([
+            'employee_number' => $this->resolveEmployeeNumber([
                 $input['employee_number'] ?? null,
+                $employeeProfile?->employee_number,
+                $user?->employee_number,
                 $adminHub->employee_number ?? null,
                 $admin?->employee_number,
-                $user?->employee_number,
-                $employeeProfile?->employee_number,
             ]),
             'birthday' => $birthday,
             'age' => $age,
@@ -2265,9 +2266,25 @@ class AdminUserController extends Controller
 
         foreach ($values as $column => $value) {
             if (AdminHub::hasColumn($column)) {
+                if ($column === 'employee_number' && $value === null) {
+                    continue;
+                }
+
                 $adminHub->setAttribute($column, $value !== '' ? $value : null);
             }
         }
+    }
+
+    private function resolveEmployeeNumber(array $values): ?string
+    {
+        foreach ($values as $value) {
+            $employeeNumber = EmployeeNumber::normalize($value);
+            if ($employeeNumber !== null) {
+                return $employeeNumber;
+            }
+        }
+
+        return null;
     }
 
     private function firstFilledValue(array $values, ?callable $accept = null)

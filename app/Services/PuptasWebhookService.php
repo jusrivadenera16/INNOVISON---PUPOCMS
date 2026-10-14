@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ApiErrorLog;
+use App\Support\SensitiveLogRedactor;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -592,7 +593,7 @@ class PuptasWebhookService
             'attempts' => $this->lastLookupAttempts,
             'user_id' => auth()->id(),
             'error_type' => $errorType,
-            'message' => $message,
+            'message_present' => trim($message) !== '',
         ]);
 
         try {
@@ -620,7 +621,7 @@ class PuptasWebhookService
             ]);
         } catch (\Throwable $exception) {
             Log::debug('Unable to persist PUPTAS API error log', [
-                'error' => $exception->getMessage(),
+                ...SensitiveLogRedactor::exceptionContext($exception),
             ]);
         }
     }
@@ -973,23 +974,23 @@ class PuptasWebhookService
 
             if ($response->successful()) {
                 Log::info('PUPTAS webhook sent successfully', [
-                    'reference_number' => $referenceNumber,
-                    'student_id' => $studentId,
+                    'reference_number' => SensitiveLogRedactor::identifier($referenceNumber),
+                    'student_id' => SensitiveLogRedactor::identifier($studentId),
                     'timestamp' => $timestamp,
                     'nonce' => $nonce,
                 ]);
                 return ['success' => true, 'message' => 'Synced successfully'];
             }
 
-            $errorMessage = $this->extractWebhookFailureMessage($response->body());
             Log::error('PUPTAS webhook failed', [
                 'status' => $response->status(),
-                'reference_number' => $referenceNumber,
-                'student_id' => $studentId,
+                'reference_number' => SensitiveLogRedactor::identifier($referenceNumber),
+                'student_id' => SensitiveLogRedactor::identifier($studentId),
                 'timestamp' => $timestamp,
                 'nonce' => $nonce,
-                'error' => $response->body(),
+                'response_bytes' => strlen($response->body()),
             ]);
+            $errorMessage = $this->extractWebhookFailureMessage($response->body());
             return [
                 'success' => false,
                 'message' => $errorMessage,
@@ -1001,7 +1002,7 @@ class PuptasWebhookService
             Log::error('PUPTAS webhook exception', [
                 'status' => $status,
                 'error_type' => $status === 429 ? 'rate_limited' : 'exception',
-                'error' => $e->getMessage(),
+                ...SensitiveLogRedactor::exceptionContext($e),
             ]);
             return [
                 'success' => false,

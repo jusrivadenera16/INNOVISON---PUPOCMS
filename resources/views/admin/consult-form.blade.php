@@ -637,6 +637,12 @@
         color: #64748b;
         font-size: 11px;
     }
+    .inventory-tally-expiry {
+        margin-top: 5px;
+        color: #475569;
+        font-size: 11px;
+        line-height: 1.4;
+    }
     .inventory-tally-actions {
         display: none;
         justify-content: flex-end;
@@ -698,6 +704,9 @@
     html[data-theme="dark"] .inventory-tally-name,
     html[data-theme="dark"] .btn-cancel {
         color: #f8fafc;
+    }
+    html[data-theme="dark"] .inventory-tally-expiry {
+        color: #cbd5e1;
     }
     html[data-theme="dark"] .form-control,
     html[data-theme="dark"] .choice-card,
@@ -2927,6 +2936,10 @@
     .medicine-dispensing-card .medicine-entry .clinic-select-display {
         padding: 12px 56px 12px 14px;
     }
+    .medicine-dispensing-card .medicine-entry input[data-medicine-quantity] {
+        box-sizing: border-box;
+        padding: 12px 30px 12px 16px !important;
+    }
     .medicine-dispensing-card .medicine-entry .clinic-select-display::after {
         right: 22px;
     }
@@ -4451,7 +4464,7 @@
             </div>
         @endif
 
-        <form action="{{ route($walkinStoreRoute) }}" method="POST" id="consultationForm">
+        <form action="{{ route($walkinStoreRoute) }}" method="POST" id="consultationForm" data-no-navigation-loader>
             @csrf
             <input type="hidden" name="student_number" value="{{ $patientIdNumberForSubmit }}">
             <input type="hidden" name="user_role" value="{{ $studentDisplayRole }}">
@@ -5013,6 +5026,9 @@
                         @if($item->hasDispensingConversion())
                             | {{ $drawerStockDisplay }} {{ $item->unit }} in storage
                         @endif
+                    </div>
+                    <div class="inventory-tally-expiry">
+                        Expiration date: {{ optional($item->expiration_date)->format('M d, Y') ?: 'Not recorded' }}
                     </div>
                     <div class="inventory-tally-actions">
                         <button type="button" class="inventory-issue-button" data-issue-medicine="{{ $item->id }}">Issue</button>
@@ -6084,7 +6100,7 @@
             finalizeButton.classList.add('is-finalizing');
             finalizeButton.setAttribute('aria-disabled', 'true');
             const label = finalizeButton.querySelector('span');
-            if (label) label.textContent = 'Finalizing Consultation...';
+            if (label) label.textContent = 'Saving Consultation...';
         });
 
         const syncAllPopulatedFields = function () {

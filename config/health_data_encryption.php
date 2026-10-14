@@ -65,6 +65,12 @@ return [
             'assessment_date' => 'assessment_date_encrypted',
             'final_review_draft_data' => 'final_review_draft_data_encrypted',
         ],
+        'student_medical_assessments' => [
+            'condition_or_illness' => 'condition_or_illness_encrypted',
+            'findings' => 'findings_encrypted',
+            'remarks' => 'remarks_encrypted',
+            'reason' => 'reason_encrypted',
+        ],
         'health_profile_emp' => [
             'home_address' => 'home_address_encrypted',
             'street' => 'street_encrypted',

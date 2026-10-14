@@ -289,9 +289,12 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
     Route::post('/health-profile/{id}/request-health-form', [AdminController::class, 'requestNewHealthForm'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_health_form'])
         ->name('admin.health_profile.request_health_form');
-    Route::post('/health-profile/{id}/return-to-pending', [AdminController::class, 'returnHealthProfileToPending'])
-        ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
-        ->name('admin.health_profile.return_to_pending');
+    Route::post('/health-profile/{id}/revoke-clearance', [AdminController::class, 'revokeHealthProfileClearance'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.revoke_clearance'])
+        ->name('admin.health_profile.revoke_clearance');
+    Route::post('/health-profile/{id}/medical-assessments', [AdminController::class, 'storeStudentMedicalAssessment'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.update_assessment'])
+        ->name('admin.health_profile.medical_assessments.store');
     Route::post('/health-profile/{id}/pullout/request', [AdminController::class, 'requestHealthProfilePullout'])
         ->middleware('role:superadmin')
         ->name('admin.health_profile.pullout.request');

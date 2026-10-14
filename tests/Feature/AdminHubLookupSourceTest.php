@@ -156,6 +156,7 @@ class AdminHubLookupSourceTest extends TestCase
                     'name' => 'Rhyan Molinar',
                     'fields' => [
                         'faculty_code' => 'FA0010TG2023',
+                        'employee_number' => '06002',
                         'idp_user_id' => $facultyUuid,
                         'first_name' => 'Rhyan',
                         'middle_name' => 'Santos',
@@ -183,6 +184,7 @@ class AdminHubLookupSourceTest extends TestCase
         $this->assertSame('Santos', $matches->first()['middle_name']);
         $this->assertSame('Rhyan Santos Molinar', $matches->first()['name']);
         $this->assertSame($facultyUuid, $matches->first()['meta']['admin_uuid']);
+        $this->assertSame('06002', $matches->first()['meta']['employee_number']);
         $this->assertSame($facultyUuid, $matches->first()['meta']['idp_user_id']);
     }
 
@@ -207,6 +209,7 @@ class AdminHubLookupSourceTest extends TestCase
                     'identifier' => 'FA0010TG2023',
                     'fields' => [
                         'faculty_code' => 'FA0010TG2023',
+                        'employee_number' => '06002',
                         'idp_user_id' => $facultyUuid,
                         'first_name' => 'Rhyan',
                         'middle_name' => 'Santos',
@@ -230,6 +233,7 @@ class AdminHubLookupSourceTest extends TestCase
         $this->assertSame('Santos', $record['middle_name']);
         $this->assertSame('Rhyan Santos Molinar', $record['name']);
         $this->assertSame($facultyUuid, $record['meta']['admin_uuid']);
+        $this->assertSame('06002', $record['meta']['employee_number']);
         $this->assertDatabaseHas('admin_hub', [
             'email' => 'rvmolinar@pup.edu.ph',
             'admin_uuid' => null,
@@ -251,7 +255,7 @@ class AdminHubLookupSourceTest extends TestCase
                         'middle_name' => 'Santos',
                         'last_name' => 'Reyes',
                         'email' => 'maria.reyes@pup.edu.ph',
-                        'employee_number' => 'EMP-100',
+                        'employee_number' => '06002',
                         'role' => 'faculty',
                         'status' => 'active',
                     ]],
@@ -274,7 +278,7 @@ class AdminHubLookupSourceTest extends TestCase
         $this->assertNotNull($record);
         $this->assertSame('Maria Santos Reyes', $record['name']);
         $this->assertSame('maria.reyes@pup.edu.ph', $record['email']);
-        $this->assertSame('EMP-100', $record['meta']['employee_number']);
+        $this->assertSame('06002', $record['meta']['employee_number']);
         $this->assertSame('idp_admin_user', $record['meta']['lookup_source']);
         $this->assertTrue($record['can_onboard']);
 

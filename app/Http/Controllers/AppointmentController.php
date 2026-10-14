@@ -31,6 +31,8 @@ use App\Services\EmployeeHealthFormHistoryService;
 use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
 use App\Services\HealthProfileSnapshotService;
+use App\Support\EmployeeNumber;
+use App\Support\SensitiveLogRedactor;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -528,7 +530,7 @@ class AppointmentController extends Controller
                 'outcome' => $lookup['outcome'] ?? null,
                 'status' => $lookup['status'] ?? null,
                 'attempts' => $lookup['attempts'] ?? null,
-                'message' => $lookup['message'] ?? null,
+                'message_present' => trim((string) ($lookup['message'] ?? '')) !== '',
                 'has_data' => is_array($lookup['data'] ?? null),
                 'has_reference_number' => trim((string) data_get($lookup, 'data.reference_number', data_get($lookup, 'data.user.reference_number', ''))) !== '',
             ]);
@@ -547,7 +549,7 @@ class AppointmentController extends Controller
                 'outcome' => $lookup['outcome'] ?? null,
                 'status' => $lookup['status'] ?? null,
                 'attempts' => $lookup['attempts'] ?? null,
-                'message' => $lookup['message'] ?? null,
+                'message_present' => trim((string) ($lookup['message'] ?? '')) !== '',
                 'has_data' => is_array($lookup['data'] ?? null),
                 'has_reference_number' => trim((string) data_get($lookup, 'data.reference_number', data_get($lookup, 'data.user.reference_number', ''))) !== '',
             ]);
@@ -2001,7 +2003,7 @@ class AppointmentController extends Controller
                 Log::warning('GUISIS My Account email lookup failed', [
                     'user_id' => $user->id,
                     'status' => $emailResult['status'] ?? null,
-                    'message' => $emailResult['message'] ?? null,
+                    'message_present' => trim((string) ($emailResult['message'] ?? '')) !== '',
                 ]);
 
                 return [
@@ -2036,12 +2038,11 @@ class AppointmentController extends Controller
                 } else {
                     Log::warning('GUISIS My Account personal info lookup failed', [
                         'user_id' => $user->id,
-                        'student_number' => $studentNumber,
+                        'student_number' => SensitiveLogRedactor::identifier($studentNumber),
                         'status' => $personalResult['status'] ?? null,
-                        'message' => $personalResult['message'] ?? null,
-                        'endpoint' => $personalResult['endpoint'] ?? null,
-                        'attempted_paths' => $personalResult['attempted_paths'] ?? null,
-                        'attempted_urls' => $personalResult['attempted_urls'] ?? null,
+                        'message_present' => trim((string) ($personalResult['message'] ?? '')) !== '',
+                        'attempted_path_count' => count((array) ($personalResult['attempted_paths'] ?? [])),
+                        'attempted_url_count' => count((array) ($personalResult['attempted_urls'] ?? [])),
                     ]);
                 }
 
@@ -2051,9 +2052,9 @@ class AppointmentController extends Controller
                 } else {
                     Log::warning('GUISIS My Account address lookup failed', [
                         'user_id' => $user->id,
-                        'student_number' => $studentNumber,
+                        'student_number' => SensitiveLogRedactor::identifier($studentNumber),
                         'status' => $addressResult['status'] ?? null,
-                        'message' => $addressResult['message'] ?? null,
+                        'message_present' => trim((string) ($addressResult['message'] ?? '')) !== '',
                     ]);
                 }
             }
@@ -2234,12 +2235,12 @@ class AppointmentController extends Controller
 
                 Log::info('GUISIS My Account address did not include zipcode', [
                     'user_id' => $user->id,
-                    'student_number' => $resolvedStudentNumber,
+                    'student_number' => SensitiveLogRedactor::identifier($resolvedStudentNumber),
                     'address_type' => data_get($addressInfo, 'addressType'),
                     'top_level_keys' => array_keys($addressInfo),
                     'city_keys' => is_array($cityPayload) ? array_keys($cityPayload) : null,
-                    'city_zip_code' => data_get($addressInfo, 'city.zipCode'),
-                    'city_postal_code' => data_get($addressInfo, 'city.postalCode'),
+                    'has_city_zip_code' => trim((string) data_get($addressInfo, 'city.zipCode')) !== '',
+                    'has_city_postal_code' => trim((string) data_get($addressInfo, 'city.postalCode')) !== '',
                     'province_keys' => is_array($provincePayload) ? array_keys($provincePayload) : null,
                 ]);
             }
@@ -2279,7 +2280,7 @@ class AppointmentController extends Controller
         } catch (\Throwable $exception) {
             Log::warning('GUISIS My Account synchronization failed', [
                 'user_id' => $user->id,
-                'error' => $exception->getMessage(),
+                ...SensitiveLogRedactor::exceptionContext($exception),
             ]);
 
             return [
@@ -3674,7 +3675,7 @@ public function account(Request $request)
                 } catch (\Throwable $exception) {
                     \Log::warning('Unable to create fallback Health Form PDF snapshot for student health record.', [
                         'health_profile_id' => $healthProfile->id,
-                        'error' => $exception->getMessage(),
+                        ...SensitiveLogRedactor::exceptionContext($exception),
                     ]);
                 }
             }
@@ -3980,7 +3981,7 @@ public function account(Request $request)
             Log::error('Health requirement resubmission failed', [
                 'user_id' => $user->id,
                 'health_profile_id' => $healthProfile->id,
-                'message' => $e->getMessage(),
+                ...SensitiveLogRedactor::exceptionContext($e),
             ]);
 
             return back()->withInput()
@@ -4120,7 +4121,7 @@ public function account(Request $request)
                 'user_id' => $user->id,
                 'profile_type' => $usesEmployeeHealthForm ? 'employee' : 'student',
                 'profile_id' => $healthProfile->id,
-                'message' => $e->getMessage(),
+                ...SensitiveLogRedactor::exceptionContext($e),
             ]);
 
             return back()->withInput()
@@ -4178,7 +4179,7 @@ public function account(Request $request)
             Log::error('Health Declaration upload failed', [
                 'user_id' => $user->id,
                 'health_profile_id' => $healthProfile->id,
-                'message' => $e->getMessage(),
+                ...SensitiveLogRedactor::exceptionContext($e),
             ]);
 
             return back()->withInput()
@@ -4314,7 +4315,7 @@ public function account(Request $request)
             Log::error('Health record e-signature upload failed', [
                 'user_id' => $user->id,
                 'health_profile_id' => $healthProfile->id,
-                'message' => $e->getMessage(),
+                ...SensitiveLogRedactor::exceptionContext($e),
             ]);
 
             return back()->withInput()
@@ -5504,7 +5505,7 @@ private function ensureEmployeeHealthDeclaration(EmployeeHealthProfile $profile,
         Log::warning('Unable to generate employee health declaration PDF.', [
             'employee_health_profile_id' => $profile->id,
             'user_id' => $profile->user_id,
-            'error' => $exception->getMessage(),
+            ...SensitiveLogRedactor::exceptionContext($exception),
         ]);
 
         return $existingPath !== '' ? $existingPath : null;
@@ -5542,7 +5543,11 @@ private function buildEmployeeHealthFormPrefill(User $user, ?EmployeeHealthProfi
         'last_name' => trim((string) (optional($employeeProfile)->last_name ?: data_get($facultyProfile, 'last_name') ?: $user->last_name)),
         'suffix_name' => trim((string) (optional($employeeProfile)->suffix_name ?: data_get($facultyProfile, 'suffix_name') ?: data_get($facultyProfile, 'suffixName') ?: $user->suffix_name)),
         'email' => trim((string) ($user->email ?: data_get($facultyProfile, 'email') ?: optional($linkedAdminProfile)->email)),
-        'employee_number' => trim((string) (optional($employeeProfile)->employee_number ?: data_get($facultyProfile, 'faculty_code') ?: $user->employee_number ?: data_get($facultyProfile, 'faculty_id') ?: data_get($facultyProfile, 'id'))),
+        'employee_number' => EmployeeNumber::fromFaculty($facultyProfile ?? [])
+            ?? EmployeeNumber::normalize(optional($employeeProfile)->employee_number)
+            ?? EmployeeNumber::normalize($user->employee_number)
+            ?? EmployeeNumber::normalize(optional($linkedAdminProfile)->employee_number)
+            ?? '',
         'office' => trim((string) (optional($employeeProfile)->office ?: data_get($facultyProfile, 'department') ?: optional($linkedAdminProfile)->office)),
         'birthday' => $birthday,
         'age' => $age,
@@ -5581,19 +5586,33 @@ private function fetchPuptFlssFacultyProfileForUser(User $user): ?array
                 ->first(function (array $faculty) use ($user): bool {
                     $facultyEmail = strtolower(trim((string) ($faculty['email'] ?? '')));
                     $userEmail = strtolower(trim((string) ($user->email ?? '')));
-                    $facultyIdentifier = strtolower(trim((string) (
-                        $faculty['faculty_code']
-                        ?? $faculty['faculty_id']
-                        ?? $faculty['id']
-                        ?? ''
-                    )));
+                    $facultyIdentifiers = array_filter(array_map(
+                        fn ($value) => strtolower(trim((string) $value)),
+                        [
+                            EmployeeNumber::fromFaculty($faculty),
+                            $faculty['faculty_code'] ?? '',
+                            $faculty['employee_number'] ?? '',
+                            $faculty['employee_no'] ?? '',
+                            data_get($faculty, 'fields.faculty_code'),
+                            data_get($faculty, 'fields.identifier'),
+                            data_get($faculty, 'profile.faculty_code'),
+                            data_get($faculty, 'profile.identifier'),
+                            $faculty['faculty_id'] ?? '',
+                            data_get($faculty, 'fields.faculty_id'),
+                            $faculty['id'] ?? '',
+                        ]
+                    ));
                     $userIdentifiers = array_filter(array_map(
                         fn ($value) => strtolower(trim((string) $value)),
-                        [$user->employee_number ?? '', $user->student_id ?? '']
+                        [
+                            EmployeeNumber::normalize($user->employee_number),
+                            $user->employee_number ?? '',
+                            $user->student_id ?? '',
+                        ]
                     ));
 
                     return ($facultyEmail !== '' && $facultyEmail === $userEmail)
-                        || ($facultyIdentifier !== '' && in_array($facultyIdentifier, $userIdentifiers, true));
+                        || array_intersect($facultyIdentifiers, $userIdentifiers) !== [];
                 });
 
             if (is_array($matchedFaculty)) {
@@ -5603,7 +5622,7 @@ private function fetchPuptFlssFacultyProfileForUser(User $user): ?array
     } catch (\Throwable $exception) {
         Log::warning('PUPT-FLSS employee health form prefill unavailable', [
             'user_id' => $user->id,
-            'error' => $exception->getMessage(),
+            ...SensitiveLogRedactor::exceptionContext($exception),
         ]);
     }
 
@@ -5725,7 +5744,7 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
         'employee_number' => [
             'nullable',
             'string',
-            'max:120',
+            'regex:/^\d{5}$/',
             $employeeNumberRule,
         ],
         'first_name' => ['required', 'string', 'max:120'],
@@ -7096,8 +7115,9 @@ public function storeHealthForm(Request $request)
             if (!$webhookResult['success']) {
                 \Log::warning('PUPTAS webhook sync failed after health form submission', [
                     'user_id' => $user->id,
-                    'reference_number' => $officialReference,
-                    'webhook_message' => $webhookResult['message'] ?? 'Unknown error',
+                    'reference_number' => SensitiveLogRedactor::identifier($officialReference),
+                    'status' => $webhookResult['status'] ?? null,
+                    'error_type' => $webhookResult['error_type'] ?? 'webhook_error',
                 ]);
             }
         }
@@ -7207,7 +7227,7 @@ public function downloadHealthForm()
         } catch (\Throwable $exception) {
             \Log::warning('Unable to create fallback Health Form PDF snapshot for download.', [
                 'health_profile_id' => $profile->id,
-                'error' => $exception->getMessage(),
+                ...SensitiveLogRedactor::exceptionContext($exception),
             ]);
         }
     }
