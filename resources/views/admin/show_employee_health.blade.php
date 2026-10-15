@@ -62,24 +62,6 @@
         ?: ($employeeProfile?->health_form_category ?: 'General Health Form');
     $existingNewHealthFormRemarks = data_get($activeNewHealthFormRequest?->metadata, 'remarks')
         ?: ($activeNewHealthFormRequest?->admin_note ?: '');
-    $medicalCondition = method_exists($employeeProfile, 'hasMedicalCondition') && $employeeProfile->hasMedicalCondition()
-        ? 'With Medical Condition'
-        : 'No Medical Condition';
-    $examinationFindings = collect([
-        $employeeProfile?->head_findings,
-        $employeeProfile?->eyes_findings,
-        $employeeProfile?->ears_findings,
-        $employeeProfile?->throat_findings,
-        $employeeProfile?->chest_lungs_findings,
-        $employeeProfile?->breast_findings,
-        $employeeProfile?->heart_murmur,
-        $employeeProfile?->heart_rhythm,
-        $employeeProfile?->abdomen_findings,
-        $employeeProfile?->extremities_findings,
-        $employeeProfile?->vertebral_column_findings,
-        $employeeProfile?->skin_findings,
-        $employeeProfile?->scars_findings,
-    ])->flatten()->filter(fn ($item) => filled($item))->implode(', ');
 @endphp
 
 @push('styles')
@@ -449,6 +431,36 @@
         margin-top: 16px;
     }
 
+    .health-profile-wrap .employee-health-version-shell { transition: grid-template-columns .22s ease; }
+    .health-profile-wrap .employee-health-version-shell.is-versions-collapsed { grid-template-columns: 44px minmax(0, 1fr); gap: 10px; }
+    .health-profile-wrap .employee-health-version-shell.is-version-nav-hidden { grid-template-columns: minmax(0, 1fr); }
+    .health-profile-wrap .employee-health-version-shell.is-version-nav-hidden .profile-version-sidebar { display: none; }
+    .health-profile-wrap .employee-health-version-shell.is-versions-collapsed .profile-version-sidebar { align-items: center; padding: 6px; }
+    .health-profile-wrap .employee-health-version-shell .profile-version-sidebar-head { align-items: center; }
+    .health-profile-wrap .employee-health-version-shell.is-versions-collapsed .profile-version-sidebar-title,
+    .health-profile-wrap .employee-health-version-shell.is-versions-collapsed .profile-history-count,
+    .health-profile-wrap .employee-health-version-shell.is-versions-collapsed .profile-version-nav { display: none; }
+    .health-profile-wrap .employee-health-version-shell.is-versions-collapsed .profile-version-sidebar-head { justify-content: center; margin: 0; padding: 0; border: 0; }
+    .health-profile-wrap .employee-health-version-shell .profile-version-sidebar-controls { display: flex; align-items: center; gap: 8px; }
+    .health-profile-wrap .profile-version-collapse-toggle {
+        display: inline-grid;
+        flex: 0 0 auto;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border: 1px solid #cbd5e1;
+        border-radius: 7px;
+        background: #ffffff;
+        color: #70131B;
+        cursor: pointer;
+    }
+    .health-profile-wrap .profile-version-collapse-toggle:hover,
+    .health-profile-wrap .profile-version-collapse-toggle:focus-visible { border-color: #facc15; background: #fff7ed; outline: none; }
+    .health-profile-wrap .profile-version-collapse-toggle svg { width: 17px; height: 17px; transform: rotate(180deg); transition: transform .2s ease; }
+    .health-profile-wrap .employee-health-version-shell.is-versions-collapsed .profile-version-collapse-toggle svg { transform: none; }
+    .health-profile-wrap .employee-health-version-shell .profile-version-pane[hidden] { display: none; }
+
     .health-profile-wrap .profile-version-sidebar {
         min-width: 0;
         padding: 14px;
@@ -655,6 +667,196 @@
 
     .health-profile-wrap .profile-meta.is-wide { grid-column: span 2; }
     .health-profile-wrap .profile-meta.is-full { grid-column: 1 / -1; }
+
+    .health-profile-wrap .health-overview {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .health-profile-wrap .health-overview-card {
+        min-width: 0;
+        padding: 14px 16px;
+        border: 1px solid rgba(139, 0, 0, 0.24);
+        border-radius: 8px;
+        background: #ffffff;
+    }
+
+    .health-profile-wrap .health-overview-heading {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .health-profile-wrap .health-overview-heading-icon,
+    .health-profile-wrap .health-overview-metric-icon {
+        display: inline-grid;
+        flex: 0 0 auto;
+        place-items: center;
+        color: #a20b32;
+        background: #fff0f3;
+        border-radius: 50%;
+    }
+
+    .health-profile-wrap .health-overview-heading-icon {
+        width: 38px;
+        height: 38px;
+    }
+
+    .health-profile-wrap .health-overview-heading-icon svg {
+        width: 19px;
+        height: 19px;
+    }
+
+    .health-profile-wrap .health-overview-heading-copy h4 {
+        margin: 0;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 900;
+        line-height: 1.2;
+    }
+
+    .health-profile-wrap .health-overview-heading-copy p {
+        margin: 3px 0 0;
+        color: #64748b;
+        font-size: 11px;
+        line-height: 1.35;
+    }
+
+    .health-profile-wrap .health-overview-metrics {
+        display: grid;
+        min-width: 0;
+        margin-top: 10px;
+    }
+
+    .health-profile-wrap .health-overview-metrics.is-three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .health-profile-wrap .health-overview-metrics.is-four {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .health-profile-wrap .health-overview-metrics.is-two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .health-profile-wrap .health-overview-metrics.is-six {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .health-profile-wrap .health-overview-metrics.is-seven {
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+
+    #healthPanel .employee-health-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-six,
+    #healthPanel .employee-health-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-seven { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    #healthPanel .employee-health-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-six .health-overview-metric:nth-child(4n),
+    #healthPanel .employee-health-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-seven .health-overview-metric:nth-child(4n) { border-right: 0; }
+    #healthPanel .employee-health-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-six .health-overview-metric:nth-child(n + 5),
+    #healthPanel .employee-health-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-seven .health-overview-metric:nth-child(n + 5) { border-top: 1px solid #e5eaf0; }
+
+    .health-profile-wrap .health-overview-metric {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        min-height: 58px;
+        padding: 4px 12px;
+        border-right: 1px solid #e5eaf0;
+    }
+
+    .health-profile-wrap .health-overview-metric:last-child {
+        border-right: 0;
+    }
+
+    .health-profile-wrap .health-overview-metric.is-stacked {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: center;
+        gap: 7px;
+        min-height: 104px;
+        padding: 8px 6px;
+        text-align: center;
+    }
+
+    .health-profile-wrap .health-overview-metric-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .health-profile-wrap .health-overview-metric-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .health-profile-wrap .health-overview-metric-icon.is-positive {
+        color: #087443;
+        background: #e8f8ef;
+    }
+
+    .health-profile-wrap .health-overview-metric-copy {
+        display: grid;
+        min-width: 0;
+        gap: 3px;
+    }
+
+    .health-profile-wrap .health-overview-metric.is-stacked .health-overview-metric-copy {
+        justify-items: center;
+        gap: 5px;
+    }
+
+    .health-profile-wrap .health-overview-metric-label {
+        color: #71809a;
+        font-size: 9px;
+        font-weight: 900;
+        line-height: 1.2;
+        text-transform: uppercase;
+    }
+
+    .health-profile-wrap .health-overview-metric-value {
+        color: #111827;
+        font-size: 13px;
+        font-weight: 900;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+    }
+
+    .health-profile-wrap .health-overview-metric-unit {
+        color: #64748b;
+        font-size: 10px;
+        line-height: 1.2;
+    }
+
+    .health-profile-wrap .health-overview-findings {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr);
+        align-items: center;
+        gap: 12px;
+        margin-top: 10px;
+        padding: 12px;
+        border: 1px solid #e5eaf0;
+        border-radius: 8px;
+        background: #fbfcfe;
+    }
+
+    .health-profile-wrap .health-overview-findings .health-overview-metric-label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .health-profile-wrap .health-overview-findings .health-overview-metric-value {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .health-profile-wrap .health-overview-lower {
+        display: grid;
+        grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+        gap: 12px;
+    }
 
     #summaryPanel .profile-grid {
         grid-template-columns: 1fr;
@@ -870,9 +1072,41 @@
     [data-theme="dark"] .health-profile-wrap .profile-timeline-card,
     [data-theme="dark"] .health-profile-wrap .doc-file,
     [data-theme="dark"] .health-profile-wrap .profile-version-sidebar,
-    [data-theme="dark"] .health-profile-wrap .profile-version-content {
+    [data-theme="dark"] .health-profile-wrap .profile-version-content,
+    [data-theme="dark"] .health-profile-wrap .health-overview-card,
+    [data-theme="dark"] .health-profile-wrap .health-overview-findings {
         background: #182334;
         border-color: #475569;
+    }
+
+    [data-theme="dark"] .health-profile-wrap .health-overview-card {
+        border-color: rgba(250, 204, 21, 0.34);
+    }
+
+    [data-theme="dark"] .health-profile-wrap .health-overview-heading-copy h4,
+    [data-theme="dark"] .health-profile-wrap .health-overview-metric-value {
+        color: #f8fafc;
+    }
+
+    [data-theme="dark"] .health-profile-wrap .health-overview-heading-copy p,
+    [data-theme="dark"] .health-profile-wrap .health-overview-metric-label,
+    [data-theme="dark"] .health-profile-wrap .health-overview-metric-unit {
+        color: #cbd5e1;
+    }
+
+    [data-theme="dark"] .health-profile-wrap .health-overview-metric {
+        border-color: #334155;
+    }
+
+    [data-theme="dark"] .health-profile-wrap .health-overview-heading-icon,
+    [data-theme="dark"] .health-profile-wrap .health-overview-metric-icon {
+        background: #3b1f2c;
+        color: #fda4af;
+    }
+
+    [data-theme="dark"] .health-profile-wrap .health-overview-metric-icon.is-positive {
+        color: #86efac;
+        background: #173b2d;
     }
 
     [data-theme="dark"] .health-profile-wrap .profile-version-sidebar-head,
@@ -921,6 +1155,19 @@
 
     [data-theme="dark"] .health-profile-wrap .profile-version-choice.is-active .profile-version-choice-copy small {
         color: #fde68a;
+    }
+
+    [data-theme="dark"] .health-profile-wrap .profile-version-collapse-toggle {
+        border-color: #475569;
+        background: #1e293b;
+        color: #facc15;
+    }
+
+    [data-theme="dark"] .health-profile-wrap .profile-version-collapse-toggle:hover,
+    [data-theme="dark"] .health-profile-wrap .profile-version-collapse-toggle:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
     }
 
     [data-theme="dark"] .health-profile-wrap .profile-quick-icon,
@@ -1600,6 +1847,9 @@
         #summaryPanel .profile-grid { grid-template-columns: 1fr; }
         #healthPanel .profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .health-profile-wrap .profile-version-shell { grid-template-columns: minmax(200px, 230px) minmax(0, 1fr); }
+        .health-profile-wrap .health-overview-lower { grid-template-columns: 1fr; }
+        #healthPanel .employee-health-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-six,
+        #healthPanel .employee-health-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-seven { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     }
 
     @media (max-width: 768px) {
@@ -1615,13 +1865,49 @@
         .health-profile-wrap .doc-grid { grid-template-columns: 1fr; }
         #summaryPanel .profile-meta { grid-template-columns: 1fr; gap: 4px; }
         #healthPanel .profile-grid { grid-template-columns: 1fr; }
+        .health-profile-wrap .health-overview-metrics.is-four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .health-profile-wrap .health-overview-metrics.is-six,
+        .health-profile-wrap .health-overview-metrics.is-seven { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .health-profile-wrap .health-overview-metrics.is-four .health-overview-metric:nth-child(2n) { border-right: 0; }
+        .health-profile-wrap .health-overview-metrics.is-four .health-overview-metric:nth-child(n + 3) { border-top: 1px solid #e5eaf0; }
+        .health-profile-wrap .health-overview-metrics.is-six .health-overview-metric:nth-child(4n),
+        .health-profile-wrap .health-overview-metrics.is-seven .health-overview-metric:nth-child(4n) { border-right: 1px solid #e5eaf0; }
+        .health-profile-wrap .health-overview-metrics.is-six .health-overview-metric:nth-child(n + 5),
+        .health-profile-wrap .health-overview-metrics.is-seven .health-overview-metric:nth-child(n + 5) { border-top: 0; }
+        .health-profile-wrap .health-overview-metrics.is-six .health-overview-metric:nth-child(3n),
+        .health-profile-wrap .health-overview-metrics.is-seven .health-overview-metric:nth-child(3n) { border-right: 0; }
+        .health-profile-wrap .health-overview-metrics.is-six .health-overview-metric:nth-child(n + 4),
+        .health-profile-wrap .health-overview-metrics.is-seven .health-overview-metric:nth-child(n + 4) { border-top: 1px solid #e5eaf0; }
         .health-profile-wrap .profile-meta.is-wide,
         .health-profile-wrap .profile-meta.is-full { grid-column: auto; }
         .health-profile-wrap .profile-version-shell { grid-template-columns: 1fr; }
+        .health-profile-wrap .employee-health-version-shell.is-versions-collapsed { grid-template-columns: 1fr; }
+        .health-profile-wrap .employee-health-version-shell.is-versions-collapsed .profile-version-sidebar { align-items: flex-end; padding: 8px; }
+        .health-profile-wrap .employee-health-version-shell.is-versions-collapsed .profile-version-sidebar-head { width: 100%; justify-content: flex-end; }
         .health-profile-wrap .profile-switch { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 3px; }
         .health-profile-wrap .profile-tab { flex: 0 0 auto; }
         .health-profile-wrap .profile-switch-head { align-items: flex-start; }
         .employee-action-checks { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 480px) {
+        .health-profile-wrap .health-overview-metrics.is-three { grid-template-columns: 1fr; }
+        .health-profile-wrap .health-overview-metrics.is-three .health-overview-metric {
+            border-right: 0;
+            border-top: 1px solid #e5eaf0;
+        }
+        .health-profile-wrap .health-overview-metrics.is-three .health-overview-metric:first-child { border-top: 0; }
+        .health-profile-wrap .health-overview-metrics.is-six,
+        .health-profile-wrap .health-overview-metrics.is-seven { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .health-profile-wrap .health-overview-metrics.is-six .health-overview-metric:nth-child(3n),
+        .health-profile-wrap .health-overview-metrics.is-seven .health-overview-metric:nth-child(3n) { border-right: 1px solid #e5eaf0; }
+        .health-profile-wrap .health-overview-metrics.is-six .health-overview-metric:nth-child(n + 4),
+        .health-profile-wrap .health-overview-metrics.is-seven .health-overview-metric:nth-child(n + 4) { border-top: 0; }
+        .health-profile-wrap .health-overview-metrics.is-six .health-overview-metric:nth-child(2n),
+        .health-profile-wrap .health-overview-metrics.is-seven .health-overview-metric:nth-child(2n) { border-right: 0; }
+        .health-profile-wrap .health-overview-metrics.is-six .health-overview-metric:nth-child(n + 3),
+        .health-profile-wrap .health-overview-metrics.is-seven .health-overview-metric:nth-child(n + 3) { border-top: 1px solid #e5eaf0; }
+        .health-profile-wrap .health-overview-card { padding: 12px; }
     }
 </style>
 @endpush
@@ -1746,44 +2032,368 @@
         </section>
 
         <section class="profile-panel" id="healthPanel" role="tabpanel" hidden>
-            <div class="profile-version-pane-head">
-                <div><h3>Current Employee Health Profile</h3><p>Latest medical information and examination details.</p></div>
-                <span class="profile-history-badge">Current</span>
+            @php
+                $employeeHealthProfileHistory = collect($employeeHealthProfileHistory ?? []);
+                $currentEmployeeHealthVersion = $employeeHealthProfileHistory->firstWhere('is_current', true)
+                    ?: $employeeHealthProfileHistory->first();
+                $previousEmployeeHealthVersions = $employeeHealthProfileHistory
+                    ->reject(fn (array $version): bool => (bool) ($version['is_current'] ?? false))
+                    ->values();
+                $employeeHealthVersionCount = $employeeHealthProfileHistory->count();
+                $hasEmployeeHealthVersionHistory = $employeeHealthVersionCount > 1;
+                $employeeHealthProfileForRestore = $employeeProfile;
+                $employeeHealthVersionsForDisplay = collect([$currentEmployeeHealthVersion])
+                    ->filter()
+                    ->merge($previousEmployeeHealthVersions)
+                    ->values();
+            @endphp
+            <div class="profile-version-shell employee-health-version-shell{{ $hasEmployeeHealthVersionHistory ? '' : ' is-versions-collapsed is-version-nav-hidden' }}">
+                @if($hasEmployeeHealthVersionHistory)
+                    <aside class="profile-version-sidebar" aria-label="Employee Health Profile versions">
+                        <div class="profile-version-sidebar-head">
+                            <div class="profile-version-sidebar-title">
+                                <h3>Profile Versions</h3>
+                                <p>Select a version to review its saved health information.</p>
+                            </div>
+                            <div class="profile-version-sidebar-controls">
+                                <span class="profile-history-count">{{ $employeeHealthVersionCount }}</span>
+                                <button type="button" class="profile-version-collapse-toggle" data-profile-versions-toggle aria-expanded="true" aria-controls="employeeHealthProfileVersionNav" aria-label="Collapse profile versions" title="Collapse profile versions">
+                                    <x-outline-icon name="chevron-right" />
+                                </button>
+                            </div>
+                        </div>
+                        <div class="profile-version-nav" id="employeeHealthProfileVersionNav" role="tablist" aria-label="Employee Health Profile versions">
+                            @foreach($employeeHealthVersionsForDisplay as $version)
+                                @php
+                                    $versionSubmission = $version['submission'] ?? null;
+                                    $versionTarget = !empty($version['is_current'])
+                                        ? 'employeeCurrentHealthProfileVersion'
+                                        : 'employeeHealthProfileVersion' . $versionSubmission?->id;
+                                    $versionDate = $versionSubmission?->approved_at
+                                        ?: $versionSubmission?->submitted_at
+                                        ?: $versionSubmission?->requested_at;
+                                @endphp
+                                <button
+                                    type="button"
+                                    class="profile-version-choice{{ !empty($version['is_current']) ? ' is-active' : '' }}"
+                                    data-profile-version-target="{{ $versionTarget }}"
+                                    role="tab"
+                                    aria-selected="{{ !empty($version['is_current']) ? 'true' : 'false' }}"
+                                    aria-controls="{{ $versionTarget }}"
+                                >
+                                    <span class="profile-version-choice-number">{{ !empty($version['is_current']) ? (($version['version'] ?? null) ? 'V' . $version['version'] : 'LIVE') : 'V' . ($version['version'] ?? '') }}</span>
+                                    <span class="profile-version-choice-copy">
+                                        <strong>{{ !empty($version['is_current']) ? 'Current Health Profile' : ($versionSubmission?->category ?: 'Employee Health Form') }}</strong>
+                                        <small>{{ $versionDate ? $versionDate->format('M d, Y') : ($version['profile']?->form_date ? $formatDate($version['profile']->form_date) : 'Latest saved information') }}</small>
+                                    </span>
+                                </button>
+                            @endforeach
+                        </div>
+                    </aside>
+                @endif
+
+                <div class="profile-version-content">
+                    @foreach($employeeHealthVersionsForDisplay as $version)
+                        @php
+                            $employeeProfile = $version['profile'] ?? $employeeHealthProfileForRestore;
+                            $versionSubmission = $version['submission'] ?? null;
+                            $versionIsCurrent = (bool) ($version['is_current'] ?? false);
+                            $versionTarget = $versionIsCurrent
+                                ? 'employeeCurrentHealthProfileVersion'
+                                : 'employeeHealthProfileVersion' . $versionSubmission?->id;
+                            $versionStatus = trim((string) ($employeeProfile?->clearance_status ?: $employeeProfile?->submission_status ?: $versionSubmission?->status ?: 'Not Processed'));
+                            $versionStatusClass = in_array(strtolower($versionStatus), ['issued', 'fully cleared', 'approved'], true)
+                                ? 'profile-status-issued'
+                                : (in_array(strtolower($versionStatus), ['pending', 'for verification', 'pending resubmission'], true)
+                                    ? 'profile-status-pending'
+                                    : 'profile-status-default');
+                            $versionMedicalCondition = method_exists($employeeProfile, 'hasMedicalCondition') && $employeeProfile->hasMedicalCondition()
+                                ? 'With Medical Condition'
+                                : 'No Medical Condition';
+                            $versionExaminationFindings = collect([
+                                $employeeProfile?->head_findings,
+                                $employeeProfile?->eyes_findings,
+                                $employeeProfile?->ears_findings,
+                                $employeeProfile?->throat_findings,
+                                $employeeProfile?->chest_lungs_findings,
+                                $employeeProfile?->breast_findings,
+                                $employeeProfile?->heart_murmur,
+                                $employeeProfile?->heart_rhythm,
+                                $employeeProfile?->abdomen_findings,
+                                $employeeProfile?->extremities_findings,
+                                $employeeProfile?->vertebral_column_findings,
+                                $employeeProfile?->skin_findings,
+                                $employeeProfile?->scars_findings,
+                            ])->flatten()->filter(fn ($item) => filled($item))->implode(', ');
+                            $versionDateSuffix = $versionIsCurrent ? 'current' : ($versionSubmission?->id ?? $loop->index);
+                        @endphp
+                        <section class="profile-version-pane{{ $versionIsCurrent ? ' is-active' : '' }}" id="{{ $versionTarget }}" role="tabpanel" aria-hidden="{{ $versionIsCurrent ? 'false' : 'true' }}" @if(!$versionIsCurrent) hidden @endif>
+                            <div class="profile-version-pane-head">
+                                <div>
+                                    <h3>{{ $versionIsCurrent ? 'Current Employee Health Profile' : 'Employee Health Profile - Version ' . ($version['version'] ?? '') }}</h3>
+                                    <p>{{ $versionIsCurrent ? 'Latest medical information and examination details.' : 'Saved medical information from this employee health form submission.' }}</p>
+                                </div>
+                                <span class="profile-history-badge {{ $versionIsCurrent ? '' : $versionStatusClass }}">{{ $versionIsCurrent ? 'Current' : $versionStatus }}</span>
+                            </div>
+            <div class="health-overview">
+                <section class="health-overview-card" aria-labelledby="employeeMedicalStatusHeading-{{ $versionDateSuffix }}">
+                    <div class="health-overview-heading">
+                        <span class="health-overview-heading-icon" aria-hidden="true"><x-outline-icon name="clipboard-document-list" /></span>
+                        <div class="health-overview-heading-copy">
+                            <h4 id="employeeMedicalStatusHeading-{{ $versionDateSuffix }}">Medical Status</h4>
+                            <p>Summary of the latest medical evaluation.</p>
+                        </div>
+                    </div>
+                    <div class="health-overview-metrics is-three">
+                        <div class="health-overview-metric">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
+                            <span class="health-overview-metric-copy">
+                                <span class="health-overview-metric-label">Medical Condition</span>
+                                <span class="health-overview-metric-value">{{ $versionMedicalCondition }}</span>
+                            </span>
+                        </div>
+                        <div class="health-overview-metric">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-check" /></span>
+                            <span class="health-overview-metric-copy">
+                                <span class="health-overview-metric-label">Submission Status</span>
+                                <span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->submission_status ?: $versionStatus) }}</span>
+                            </span>
+                        </div>
+                        <div class="health-overview-metric">
+                            <span class="health-overview-metric-icon {{ $employeeProfile?->documents_valid ? 'is-positive' : '' }}" aria-hidden="true"><x-outline-icon name="shield-check" /></span>
+                            <span class="health-overview-metric-copy">
+                                <span class="health-overview-metric-label">Documents</span>
+                                <span class="health-overview-metric-value">{{ $employeeProfile?->documents_valid ? 'Validated' : 'Not Validated' }}</span>
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="health-overview-lower">
+                    <section class="health-overview-card" aria-labelledby="employeeBodyMeasurementsHeading-{{ $versionDateSuffix }}">
+                        <div class="health-overview-heading">
+                            <span class="health-overview-heading-icon" aria-hidden="true"><x-outline-icon name="chart-bar" /></span>
+                            <div class="health-overview-heading-copy">
+                            <h4 id="employeeBodyMeasurementsHeading-{{ $versionDateSuffix }}">Body Measurements</h4>
+                                <p>Physical measurement details.</p>
+                            </div>
+                        </div>
+                        <div class="health-overview-metrics is-three">
+                            <div class="health-overview-metric">
+                                <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="user-circle" /></span>
+                                <span class="health-overview-metric-copy">
+                                    <span class="health-overview-metric-label">Height</span>
+                                    <span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->height) }}</span>
+                                    @if(filled($employeeProfile?->height))<span class="health-overview-metric-unit">ft</span>@endif
+                                </span>
+                            </div>
+                            <div class="health-overview-metric">
+                                <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="clipboard-document-list" /></span>
+                                <span class="health-overview-metric-copy">
+                                    <span class="health-overview-metric-label">Weight</span>
+                                    <span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->weight) }}</span>
+                                    @if(filled($employeeProfile?->weight))<span class="health-overview-metric-unit">lbs</span>@endif
+                                </span>
+                            </div>
+                            <div class="health-overview-metric">
+                                <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="chart-bar" /></span>
+                                <span class="health-overview-metric-copy">
+                                    <span class="health-overview-metric-label">BMI</span>
+                                    <span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->bmi) }}</span>
+                                    @if(filled($employeeProfile?->bmi))<span class="health-overview-metric-unit">kg/m²</span>@endif
+                                </span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="health-overview-card" aria-labelledby="employeeVitalSignsHeading-{{ $versionDateSuffix }}">
+                        <div class="health-overview-heading">
+                            <span class="health-overview-heading-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
+                            <div class="health-overview-heading-copy">
+                            <h4 id="employeeVitalSignsHeading-{{ $versionDateSuffix }}">Vital Signs</h4>
+                                <p>Latest recorded vital signs.</p>
+                            </div>
+                        </div>
+                        <div class="health-overview-metrics is-four">
+                            <div class="health-overview-metric">
+                                <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="heart" /></span>
+                                <span class="health-overview-metric-copy">
+                                    <span class="health-overview-metric-label">Blood Pressure</span>
+                                    <span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->bp) }}</span>
+                                    @if(filled($employeeProfile?->bp))<span class="health-overview-metric-unit">mmHg</span>@endif
+                                </span>
+                            </div>
+                            <div class="health-overview-metric">
+                                <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
+                                <span class="health-overview-metric-copy">
+                                    <span class="health-overview-metric-label">Pulse Rate</span>
+                                    <span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->hr) }}</span>
+                                    @if(filled($employeeProfile?->hr))<span class="health-overview-metric-unit">bpm</span>@endif
+                                </span>
+                            </div>
+                            <div class="health-overview-metric">
+                                <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
+                                <span class="health-overview-metric-copy">
+                                    <span class="health-overview-metric-label">Respiratory Rate</span>
+                                    <span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->rr) }}</span>
+                                    @if(filled($employeeProfile?->rr))<span class="health-overview-metric-unit">breaths/min</span>@endif
+                                </span>
+                            </div>
+                            <div class="health-overview-metric">
+                                <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
+                                <span class="health-overview-metric-copy">
+                                    <span class="health-overview-metric-label">Temperature</span>
+                                    <span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->temperature) }}</span>
+                                    @if(filled($employeeProfile?->temperature))<span class="health-overview-metric-unit">°C</span>@endif
+                                </span>
+                            </div>
+                        </div>
+                    </section>
+                </div>
             </div>
-            <div class="profile-grid">
-                <div class="profile-meta"><div class="profile-meta-k">Medical Condition</div><div class="profile-meta-v">{{ $medicalCondition }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Submission Status</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->submission_status) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Documents Valid</div><div class="profile-meta-v">{{ $yesNo($employeeProfile?->documents_valid) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Height</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->height) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Weight</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->weight) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">BMI</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->bmi) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Blood Pressure</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->bp) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Pulse Rate</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->hr) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Respiratory Rate</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->rr) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Temperature</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->temperature) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Distress Status</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->vital_signs_distress_status) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Fit Status</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->fit_status) }}</div></div>
-                <div class="profile-meta is-wide"><div class="profile-meta-k">Past Medical History</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->past_medical_history) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Hospitalization</div><div class="profile-meta-v">{{ $yesNo($employeeProfile?->previous_hospitalization) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Hospitalization Details</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->previous_hospitalization_details) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Operation / Surgery</div><div class="profile-meta-v">{{ $yesNo($employeeProfile?->operation_surgery) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Operation Details</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->operation_surgery_details) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Family History</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->family_history) }}</div></div>
-                <div class="profile-meta is-wide"><div class="profile-meta-k">Current Medications</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->current_medications) }}</div></div>
-                <div class="profile-meta is-full"><div class="profile-meta-k">Allergies</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->allergies) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Cigarette Smoking</div><div class="profile-meta-v">{{ $yesNo($employeeProfile?->cigarette_smoking) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Alcohol Drinking</div><div class="profile-meta-v">{{ $yesNo($employeeProfile?->alcohol_drinking) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Traveled Abroad</div><div class="profile-meta-v">{{ $yesNo($employeeProfile?->traveled_abroad) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">PWD / Disability</div><div class="profile-meta-v">{{ $yesNo($employeeProfile?->has_disability) }}</div></div>
-                <div class="profile-meta is-wide"><div class="profile-meta-k">Disability Type</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->disability_type) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Chest X-ray Result</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->chest_xray_result) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Working Impression</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->working_impression) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Follow-up Date</div><div class="profile-meta-v">{{ $formatDate($employeeProfile?->follow_up_on) }}</div></div>
-                <div class="profile-meta is-wide"><div class="profile-meta-k">For Work-up</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->for_work_up) }}</div></div>
-                <div class="profile-meta is-wide"><div class="profile-meta-k">Referred To</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->referred_to) }}</div></div>
-                <div class="profile-meta is-full"><div class="profile-meta-k">Examination Findings</div><div class="profile-meta-v">{{ $formatValue($examinationFindings) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Certified At</div><div class="profile-meta-v">{{ $formatDateTime($employeeProfile?->certified_at) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Verified At</div><div class="profile-meta-v">{{ $formatDateTime($employeeProfile?->verified_at) }}</div></div>
+            <div class="health-overview">
+                <section class="health-overview-card" aria-labelledby="employeeMedicalHistoryHeading-{{ $versionDateSuffix }}">
+                    <div class="health-overview-heading">
+                        <span class="health-overview-heading-icon" aria-hidden="true"><x-outline-icon name="clipboard-document-list" /></span>
+                        <div class="health-overview-heading-copy">
+                            <h4 id="employeeMedicalHistoryHeading-{{ $versionDateSuffix }}">Medical History</h4>
+                            <p>Details of past and existing medical conditions.</p>
+                        </div>
+                    </div>
+                    <div class="health-overview-metrics is-six">
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="clipboard-document-list" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Past Medical History</span><span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->past_medical_history) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="briefcase" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Hospitalization</span><span class="health-overview-metric-value">{{ $yesNo($employeeProfile?->previous_hospitalization) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Hospitalization Details</span><span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->previous_hospitalization_details) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Operation / Surgery</span><span class="health-overview-metric-value">{{ $yesNo($employeeProfile?->operation_surgery) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Operation Details</span><span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->operation_surgery_details) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="users" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Family History</span><span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->family_history) }}</span></span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="health-overview-card" aria-labelledby="employeeMedicationLifestyleHeading-{{ $versionDateSuffix }}">
+                    <div class="health-overview-heading">
+                        <span class="health-overview-heading-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
+                        <div class="health-overview-heading-copy">
+                            <h4 id="employeeMedicationLifestyleHeading-{{ $versionDateSuffix }}">Medications, Allergies &amp; Lifestyle</h4>
+                            <p>Information about medications, allergies and lifestyle habits.</p>
+                        </div>
+                    </div>
+                    <div class="health-overview-metrics is-seven">
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Current Medications</span><span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->current_medications) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="exclamation-triangle" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Allergies</span><span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->allergies) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="exclamation-circle" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Cigarette Smoking</span><span class="health-overview-metric-value">{{ $yesNo($employeeProfile?->cigarette_smoking) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="information-circle" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Alcohol Drinking</span><span class="health-overview-metric-value">{{ $yesNo($employeeProfile?->alcohol_drinking) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="globe-alt" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Traveled Abroad</span><span class="health-overview-metric-value">{{ $yesNo($employeeProfile?->traveled_abroad) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="accessibility-person" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">PWD / Disability</span><span class="health-overview-metric-value">{{ $yesNo($employeeProfile?->has_disability) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Disability Type</span><span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->disability_type) }}</span></span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="health-overview-card" aria-labelledby="employeeMedicalAssessmentHeading-{{ $versionDateSuffix }}">
+                    <div class="health-overview-heading">
+                        <span class="health-overview-heading-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
+                        <div class="health-overview-heading-copy">
+                            <h4 id="employeeMedicalAssessmentHeading-{{ $versionDateSuffix }}">Medical Examination &amp; Assessment</h4>
+                            <p>Results and assessment based on the latest medical examination.</p>
+                        </div>
+                    </div>
+                    <div class="health-overview-metrics is-seven">
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Distress Status</span><span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->vital_signs_distress_status) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="check" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Fit Status</span><span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->fit_status) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Chest X-ray Result</span><span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->chest_xray_result) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Working Impression</span><span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->working_impression) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="calendar-days" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Follow-up Date</span><span class="health-overview-metric-value">{{ $formatDate($employeeProfile?->follow_up_on) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-clock" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">For Work-up</span><span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->for_work_up) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="users" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Referred To</span><span class="health-overview-metric-value">{{ $formatValue($employeeProfile?->referred_to) }}</span></span>
+                        </div>
+                    </div>
+                    <div class="health-overview-findings">
+                        <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span>
+                        <span>
+                            <span class="health-overview-metric-label">Examination Findings</span>
+                            <span class="health-overview-metric-value">{{ $formatValue($versionExaminationFindings) }}</span>
+                        </span>
+                    </div>
+                </section>
+
+                <section class="health-overview-card" aria-labelledby="employeeCertificationHeading-{{ $versionDateSuffix }}">
+                    <div class="health-overview-heading">
+                        <span class="health-overview-heading-icon" aria-hidden="true"><x-outline-icon name="shield-check" /></span>
+                        <div class="health-overview-heading-copy">
+                            <h4 id="employeeCertificationHeading-{{ $versionDateSuffix }}">Certification &amp; Verification</h4>
+                            <p>Record of certification and verification of medical evaluation.</p>
+                        </div>
+                    </div>
+                    <div class="health-overview-metrics is-two">
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="calendar-days" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Certified At</span><span class="health-overview-metric-value">{{ $formatDateTime($employeeProfile?->certified_at) }}</span></span>
+                        </div>
+                        <div class="health-overview-metric is-stacked">
+                            <span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="shield-check" /></span>
+                            <span class="health-overview-metric-copy"><span class="health-overview-metric-label">Verified At</span><span class="health-overview-metric-value">{{ $formatDateTime($employeeProfile?->verified_at) }}</span></span>
+                        </div>
+                    </div>
+                </section>
             </div>
             <div class="profile-timeline-card">
                 <h4 class="profile-timeline-title">Employee Health Record Timeline</h4>
@@ -1792,9 +2402,14 @@
                     <div class="profile-timeline-step"><span class="timeline-node"><x-outline-icon name="check" /></span><strong>Profile Submitted</strong><span>{{ $formatDate($employeeProfile?->form_date) }}</span><small>Employee health information was submitted.</small></div>
                     <div class="profile-timeline-step"><span class="timeline-node"><x-outline-icon name="check" /></span><strong>Assessment Completed</strong><span>{{ $formatDate($employeeProfile?->certified_at) }}</span><small>Assessment details were recorded.</small></div>
                     <div class="profile-timeline-step"><span class="timeline-node"><x-outline-icon name="check" /></span><strong>Verified</strong><span>{{ $formatDate($employeeProfile?->verified_at) }}</span><small>Profile verification status.</small></div>
-                    <div class="profile-timeline-step"><span class="timeline-node"><x-outline-icon name="check" /></span><strong>{{ $status }}</strong><span>{{ $formatDate($employeeProfile?->updated_at) }}</span><small>Current clearance state.</small></div>
+                    <div class="profile-timeline-step"><span class="timeline-node"><x-outline-icon name="check" /></span><strong>{{ $versionStatus }}</strong><span>{{ $formatDate($employeeProfile?->updated_at) }}</span><small>{{ $versionIsCurrent ? 'Current clearance state.' : 'Recorded clearance state for this profile version.' }}</small></div>
                 </div>
             </div>
+                        </section>
+                    @endforeach
+                </div>
+            </div>
+            @php $employeeProfile = $employeeHealthProfileForRestore; @endphp
         </section>
 
         <section class="profile-panel" id="docsPanel" role="tabpanel" hidden>
@@ -2276,6 +2891,39 @@
             });
 
             root.querySelectorAll('.profile-version-pane').forEach(function (pane) {
+                const isActive = pane.id === targetId;
+                pane.classList.toggle('is-active', isActive);
+                pane.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+                pane.hidden = !isActive;
+            });
+        });
+    });
+
+    document.querySelectorAll('.health-profile-wrap .employee-health-version-shell [data-profile-versions-toggle]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const shell = button.closest('.employee-health-version-shell');
+            if (!shell) return;
+
+            const collapsed = shell.classList.toggle('is-versions-collapsed');
+            button.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            button.setAttribute('aria-label', collapsed ? 'Expand profile versions' : 'Collapse profile versions');
+            button.setAttribute('title', collapsed ? 'Expand profile versions' : 'Collapse profile versions');
+        });
+    });
+
+    document.querySelectorAll('.health-profile-wrap .employee-health-version-shell [data-profile-version-target]').forEach(function (choice) {
+        choice.addEventListener('click', function () {
+            const targetId = choice.dataset.profileVersionTarget;
+            const shell = choice.closest('.employee-health-version-shell');
+            if (!shell || !targetId) return;
+
+            shell.querySelectorAll('[data-profile-version-target]').forEach(function (item) {
+                const isActive = item === choice;
+                item.classList.toggle('is-active', isActive);
+                item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+
+            shell.querySelectorAll('.profile-version-pane').forEach(function (pane) {
                 const isActive = pane.id === targetId;
                 pane.classList.toggle('is-active', isActive);
                 pane.setAttribute('aria-hidden', isActive ? 'false' : 'true');

@@ -3105,6 +3105,9 @@
                 method="POST"
                 enctype="multipart/form-data"
                 id="employeeHealthForm"
+                @if(!($adminForm ?? false))
+                    data-session-activity-url="{{ route('student.health_form.employee.activity') }}"
+                @endif
             >
                 @csrf
                 <input type="hidden" name="employee_consent_acknowledged" id="employeeConsentAcknowledged" value="{{ old('employee_consent_acknowledged') ? '1' : '' }}">
@@ -3823,6 +3826,61 @@
 
             const form = document.getElementById('employeeHealthForm');
             if (!form) return;
+
+            const sessionActivityUrl = form.dataset.sessionActivityUrl;
+            if (sessionActivityUrl) {
+                const csrfToken = form.querySelector('input[name="_token"]')?.value || '';
+                const heartbeatInterval = 4 * 60 * 1000;
+                let lastHeartbeatAt = Date.now();
+                let lastAttemptAt = 0;
+                let heartbeatInFlight = false;
+
+                const refreshSessionForActivity = async () => {
+                    const now = Date.now();
+                    if (
+                        !csrfToken
+                        || document.visibilityState !== 'visible'
+                        || isSubmitting
+                        || heartbeatInFlight
+                        || now - lastHeartbeatAt < heartbeatInterval
+                        || now - lastAttemptAt < 60 * 1000
+                    ) {
+                        return;
+                    }
+
+                    lastAttemptAt = now;
+                    heartbeatInFlight = true;
+
+                    try {
+                        const response = await fetch(sessionActivityUrl, {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        });
+
+                        if (response.redirected) {
+                            window.location.assign(response.url);
+                            return;
+                        }
+
+                        if (response.ok) lastHeartbeatAt = Date.now();
+                    } catch (error) {
+                        // A later user interaction can retry if the request fails.
+                    } finally {
+                        heartbeatInFlight = false;
+                    }
+                };
+
+                ['pointerdown', 'keydown', 'input', 'change', 'touchstart', 'wheel'].forEach((eventName) => {
+                    form.addEventListener(eventName, refreshSessionForActivity, { passive: true });
+                });
+                window.addEventListener('scroll', refreshSessionForActivity, { passive: true });
+                document.addEventListener('visibilitychange', refreshSessionForActivity);
+            }
 
             const totalSteps = 6;
             const stepNames = @json($healthFormSteps);

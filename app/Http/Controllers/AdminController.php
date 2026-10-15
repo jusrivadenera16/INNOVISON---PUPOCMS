@@ -969,7 +969,7 @@ class AdminController extends Controller
             ->whereDate('date', today())
             ->count();
         $completed = Appointment::where('status', 'Completed')->count();
-        $cancelled = Appointment::where('status', 'Cancelled')->count();
+        $cancelled = Appointment::whereIn('status', ['Cancelled', 'Rejected'])->count();
 
         $inventoryTotal = Item::count();
         $inventoryInStock = Item::where('quantity', '>', 0)
@@ -1180,7 +1180,7 @@ class AdminController extends Controller
             ['label' => 'Pending', 'value' => $pending, 'class' => 'warning'],
             ['label' => 'Scheduled Today', 'value' => $upcoming, 'class' => 'success'],
             ['label' => 'Completed', 'value' => $completed, 'class' => 'info'],
-            ['label' => 'Cancelled', 'value' => $cancelled, 'class' => 'danger'],
+            ['label' => 'Cancelled / Rejected', 'value' => $cancelled, 'class' => 'danger'],
         ];
 
         $inventoryChartStats = [
@@ -3745,7 +3745,8 @@ class AdminController extends Controller
             'currentHealthFormSubmission',
             'activeNewHealthFormRequest',
             'medicalAssessmentHistory',
-            'isStudentHealthProfile'
+            'isStudentHealthProfile',
+            'healthFormAudience'
         ));
     }
 
@@ -3896,12 +3897,32 @@ class AdminController extends Controller
             ]]);
         }
 
+        $employeeHealthProfileHistory = $employeeVersionHistory
+            ->map(function (array $version) use ($employeeProfile, $employeeProfileForDisplay): array {
+                $submission = $version['submission'] ?? null;
+                $version['profile'] = $submission
+                    ? $this->employeeProfileFromSubmission($employeeProfile, $submission)
+                    : $employeeProfileForDisplay;
+
+                return $version;
+            });
+
+        if (!$employeeHealthProfileHistory->contains(fn (array $version): bool => (bool) ($version['is_current'] ?? false))) {
+            $employeeHealthProfileHistory->prepend([
+                'submission' => null,
+                'version' => null,
+                'is_current' => true,
+                'profile' => $employeeProfileForDisplay,
+            ]);
+        }
+
         $employeeProfile = $employeeProfileForDisplay;
 
         return view('admin.show_employee_health', compact(
             'employeeProfile',
             'employeeDocuments',
             'employeeVersionHistory',
+            'employeeHealthProfileHistory',
             'displaySubmission',
             'employeeHealthFormCategories',
             'employeeHealthFormAudience',
@@ -6053,7 +6074,7 @@ public function updateClearance(Request $request, $id)
     $appointments = Appointment::all();
     $total = Appointment::count();
     $approved = Appointment::where('status', 'Approved')->count();
-    $cancelled = Appointment::where('status', 'Cancelled')->count();
+    $cancelled = Appointment::whereIn('status', ['Cancelled', 'Rejected'])->count();
     
 
     $lowStockCount = Item::whereColumn('quantity', '<=', 'minimum_stock')->where('quantity', '>', 0)->count(); 
@@ -7302,14 +7323,53 @@ public function deleteItem($id)
     // --- 3. SETTINGS & PROFILE ---
     public function updateSettings(Request $request)
     {
-        $settingsPermission = $request->boolean('preferences_form')
+        $settingsPermission = ($request->boolean('preferences_form') || $request->boolean('admin_appointment_alert_only'))
             ? 'settings.preferences'
             : 'settings.clinic';
         abort_unless(optional($request->user())->canAccessPermission($settingsPermission), 403);
 
+        if ($request->boolean('admin_appointment_alert_only')) {
+            $request->validate([
+                'admin_appointment_email_alerts' => ['required', 'boolean'],
+            ]);
+
+            $admin = $request->user();
+            $wasEnabled = (bool) $admin->admin_appointment_email_alerts;
+            $isEnabled = $request->boolean('admin_appointment_email_alerts');
+            $admin->admin_appointment_email_alerts = $isEnabled;
+            $admin->save();
+
+            \App\Models\ActivityLog::create([
+                'user_id' => $admin->id,
+                'user_name' => $admin->name,
+                'user_role' => strtolower((string) $admin->user_role),
+                'action' => 'Admin Appointment Email Alert Updated',
+                'module' => 'Settings',
+                'event_type' => 'update',
+                'description' => $wasEnabled === $isEnabled
+                    ? 'Saved admin appointment email alert preference.'
+                    : ($isEnabled ? 'Enabled admin appointment email alerts.' : 'Disabled admin appointment email alerts.'),
+                'route_name' => optional($request->route())->getName(),
+                'http_method' => $request->method(),
+                'request_path' => '/' . ltrim($request->path(), '/'),
+                'status_code' => 200,
+                'subject_type' => 'user',
+                'subject_id' => (string) $admin->getKey(),
+                'metadata' => ['from' => $wasEnabled, 'to' => $isEnabled],
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            return response()->json([
+                'message' => 'Admin appointment email preference saved.',
+                'enabled' => $isEnabled,
+            ]);
+        }
+
         if ($request->boolean('preferences_form')) {
             $closureRequired = Rule::requiredIf($request->boolean('clinic_closure_enabled'));
             $request->validate([
+                'admin_appointment_email_alerts' => ['sometimes', 'boolean'],
                 'appointment_reminder_hours' => ['required', 'integer', 'in:0,1,3,24,48'],
                 'pending_compliance_reminder_days' => ['required', 'integer', 'in:0,1,3,7,14,30'],
                 'pending_compliance_reminder_max_count' => ['required', 'integer', 'between:1,10'],
@@ -7333,9 +7393,12 @@ public function deleteItem($id)
 
         $settings = Setting::first();
         if(!$settings) { $settings = new Setting(); }
+        $currentAdmin = $request->user();
+        $adminAlertBefore = (bool) $currentAdmin->admin_appointment_email_alerts;
+        $adminAlertAfter = $request->boolean('admin_appointment_email_alerts');
 
         $auditedPreferenceFields = [
-            'admin_live_notifications', 'email_notifications', 'appointment_reminder_hours',
+            'appointment_reminder_hours',
             'pending_compliance_reminder_days', 'pending_compliance_reminder_max_count',
             'notification_quiet_hours_enabled', 'notification_quiet_hours_start',
             'notification_quiet_hours_end', 'clinic_closure_enabled',
@@ -7361,8 +7424,6 @@ public function deleteItem($id)
         }
 
         if ($request->boolean('preferences_form')) {
-            $settings->admin_live_notifications = $request->boolean('admin_live_notifications');
-            $settings->email_notifications = $request->boolean('email_notifications');
             $settings->appointment_reminder_hours = (int) $request->input('appointment_reminder_hours', 24);
             $settings->pending_compliance_reminder_days = (int) $request->input('pending_compliance_reminder_days', 7);
             $settings->pending_compliance_reminder_max_count = (int) $request->input('pending_compliance_reminder_max_count', 3);
@@ -7378,10 +7439,17 @@ public function deleteItem($id)
             $settings->clinic_closure_message = $request->input('clinic_closure_message') ?: null;
         }
 
-        $cancelledForClosure = DB::transaction(function () use ($settings, $request) {
+        $cancelledForClosure = DB::transaction(function () use ($settings, $request, $currentAdmin, $adminAlertAfter) {
             $settings->save();
 
-            if (!$request->boolean('preferences_form') || !$settings->clinic_closure_enabled) {
+            if (!$request->boolean('preferences_form')) {
+                return 0;
+            }
+
+            $currentAdmin->admin_appointment_email_alerts = $adminAlertAfter;
+            $currentAdmin->save();
+
+            if (!$settings->clinic_closure_enabled) {
                 return 0;
             }
 
@@ -7394,6 +7462,11 @@ public function deleteItem($id)
         }
         if ($request->boolean('preferences_form')) {
             $logParts[] = 'system preferences';
+            if ($adminAlertBefore !== $adminAlertAfter) {
+                $logParts[] = $adminAlertAfter
+                    ? 'enabled new appointment email alerts for this admin account'
+                    : 'disabled new appointment email alerts for this admin account';
+            }
             if ($cancelledForClosure > 0) {
                 $logParts[] = "cancelled {$cancelledForClosure} appointment(s) within the clinic closure window";
             }
@@ -7436,6 +7509,10 @@ public function deleteItem($id)
         'subject_id'  => (string) $settings->getKey(),
         'metadata'    => [
             'changed_settings' => $changedSettings,
+            'admin_appointment_email_alerts' => $adminAlertBefore === $adminAlertAfter ? null : [
+                'from' => $adminAlertBefore,
+                'to' => $adminAlertAfter,
+            ],
             'cancelled_appointments' => $cancelledForClosure,
             'save_mode' => $request->expectsJson() ? 'automatic' : 'manual',
         ],
@@ -7858,10 +7935,6 @@ public function exportInventory()
 
     $appointment->status = 'Completed';
     $appointment->save();
-
-    if ($appointment->user) {
-        app(StudentNotificationMailer::class)->sendAppointmentNotice($appointment->user, $appointment, 'feedback');
-    }
 
     $logDescription = "Completed Appointment #$id for {$appointment->name}.";
 

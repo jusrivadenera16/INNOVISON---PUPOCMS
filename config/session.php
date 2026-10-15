@@ -35,7 +35,7 @@ return [
 
     // Student routes have a shorter server-side idle window without changing
     // the global lifetime used by the admin workspace.
-    'student_idle_timeout' => env('STUDENT_IDLE_TIMEOUT', 15),
+    'student_idle_timeout' => env('STUDENT_IDLE_TIMEOUT', 30),
 
     'expire_on_close' => false,
 

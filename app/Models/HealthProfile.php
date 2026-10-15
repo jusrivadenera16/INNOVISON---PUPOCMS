@@ -16,7 +16,7 @@ class HealthProfile extends Model
 
     protected $fillable = [
         'user_id', 
-        'student_id', 'student_number', 'reference_number', 'health_form_category',
+        'student_id', 'student_number', 'reference_number', 'sis_reference_number', 'health_form_category',
         'suffix_name',
         'school_year', 'home_address', 'street', 'barangay', 'municipality', 'province', 'zipcode', 'birthday', 'student_photo', 'health_declaration',
         'digital_signature', 'guardian_signature',

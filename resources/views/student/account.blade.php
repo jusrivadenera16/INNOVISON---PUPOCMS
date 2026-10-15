@@ -7969,7 +7969,7 @@
                 <div class="stat-item">
                     <span class="stat-icon"><x-outline-icon name="x-mark" /></span>
                     <span class="stat-val">{{ $cancelledCount ?? 0 }}</span>
-                    <span class="stat-label">Cancelled</span>
+                    <span class="stat-label">Cancelled / Rejected</span>
                 </div>
             </div>
         </div>
@@ -8739,12 +8739,17 @@ document.addEventListener('DOMContentLoaded', function () {
             ->unique()
             ->values();
         $documentModalUsesClinicReplacement = $missingDocumentUploadKeys->isEmpty() && $clinicResubmissionUploadKeys->isNotEmpty();
-        $recordStudentNumber = trim((string) (
-            optional($healthProfileRecord)->student_number
-            ?: ($accountProfileData['student_number'] ?? $user->student_number ?? '')
-        ));
-        if ($looksLikeReferenceNumber($recordStudentNumber)) {
-            $recordStudentNumber = '';
+        $recordStudentNumber = '';
+        foreach ([
+            optional($healthProfileRecord)->student_number,
+            $accountProfileData['student_number'] ?? '',
+            $user->student_number ?? '',
+        ] as $studentNumberCandidate) {
+            $studentNumberCandidate = trim((string) $studentNumberCandidate);
+            if (!$looksLikeReferenceNumber($studentNumberCandidate)) {
+                $recordStudentNumber = $studentNumberCandidate;
+                break;
+            }
         }
         $recordBirthday = trim((string) optional($healthProfileRecord)->birthday);
         $recordBirthday = $recordBirthday !== '' ? optional(\Carbon\Carbon::parse($recordBirthday))->format('M d, Y') : '-';

@@ -838,8 +838,7 @@
     body.settings-modal-open .admin-header,
     body.settings-modal-open .medicine-alert-fab,
     body.settings-modal-open .medicine-alert-panel,
-    body.settings-modal-open .medicine-hover-hint,
-    body.settings-modal-open .admin-live-alert {
+    body.settings-modal-open .medicine-hover-hint {
         z-index: 1 !important;
         pointer-events: none !important;
     }
@@ -2329,7 +2328,7 @@
                     <div class="modal-head-badge">WF</div>
                     <div class="modal-head-copy">
                         <h3>Workflow Settings</h3>
-                        <p>Manage admin alerts, appointment behavior, access hours, reminders, and temporary clinic availability.</p>
+                        <p>Manage appointment behavior, access hours, reminders, and temporary clinic availability.</p>
                     </div>
                 </div>
                 <button type="button" class="modal-head-close" onclick="closeSettingsModal('workflowSettingsModal')" aria-label="Close">
@@ -2347,17 +2346,6 @@
                 <input type="hidden" name="notification_quiet_hours_end" value="{{ substr((string) ($settings->notification_quiet_hours_end ?: '07:00'), 0, 5) }}">
                 <div class="modal-body">
                     <div class="workflow-settings">
-                        <section class="workflow-setting-group">
-                            <h4>Admin Workflow</h4>
-                            <p>These options affect the admin live notification alert and appointment approval only.</p>
-                            <div class="switch-list">
-                                <div class="switch-item">
-                                    <input type="checkbox" name="admin_live_notifications" id="adminLiveNotifications" {{ $settings->admin_live_notifications !== false ? 'checked' : '' }}>
-                                    <label for="adminLiveNotifications">Enable Admin Live Notifications</label>
-                                </div>
-                            </div>
-                        </section>
-
                         <section class="workflow-setting-group">
                             <h4>Student Assistant Admin Access</h4>
                             <p>Admin Workspace access follows the clinic operating days and hours: <strong>{{ app(\App\Services\ClinicWorkflowService::class)->clinicScheduleLabel() }}</strong>.</p>

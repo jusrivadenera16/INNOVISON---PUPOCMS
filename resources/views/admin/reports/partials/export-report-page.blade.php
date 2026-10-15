@@ -1431,12 +1431,12 @@
                     </div>
                 </div>
                 <div class="export-filter-field">
-                    <label for="exportHealthSchoolYear">School Year</label>
+                    <label for="exportHealthYearLevel">Year Level</label>
                     <div class="export-filter-select-wrap">
-                        <select class="export-filter-select export-filter-custom-source" id="exportHealthSchoolYear" name="school_year">
-                            <option value="">All School Years</option>
-                            @foreach(($healthFormSchoolYears ?? collect()) as $schoolYear)
-                                <option value="{{ $schoolYear }}" {{ request('school_year') === $schoolYear ? 'selected' : '' }}>{{ $schoolYear }}</option>
+                        <select class="export-filter-select export-filter-custom-source" id="exportHealthYearLevel" name="year_level">
+                            <option value="">All Year Levels</option>
+                            @foreach(($healthFormYearLevels ?? collect()) as $yearLevel)
+                                <option value="{{ $yearLevel }}" {{ request('year_level') === $yearLevel ? 'selected' : '' }}>{{ $yearLevel }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -1452,6 +1452,17 @@
                                 'date_asc' => 'Oldest First',
                             ] as $value => $label)
                                 <option value="{{ $value }}" {{ request('sort', 'name_asc') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="export-filter-field">
+                    <label for="exportHealthIdentifierType">ID Basis</label>
+                    <div class="export-filter-select-wrap">
+                        <select class="export-filter-select export-filter-custom-source" id="exportHealthIdentifierType" name="identifier_type">
+                            <option value="">All ID Types</option>
+                            @foreach(($healthFormIdentifierTypes ?? []) as $value => $label)
+                                <option value="{{ $value }}" {{ request('identifier_type') === $value ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>

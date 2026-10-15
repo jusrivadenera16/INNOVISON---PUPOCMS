@@ -37,6 +37,7 @@ class AdminHubIdpLinkingTest extends TestCase
             $table->string('student_number')->nullable()->unique();
             $table->string('employee_number')->nullable();
             $table->string('reference_number')->nullable();
+            $table->string('sis_reference_number')->nullable()->unique();
             $table->string('first_name');
             $table->string('middle_name')->nullable();
             $table->string('last_name');
@@ -46,6 +47,7 @@ class AdminHubIdpLinkingTest extends TestCase
             $table->string('idp_role')->nullable();
             $table->string('user_type')->nullable();
             $table->string('student_type')->nullable();
+            $table->string('applicant_type')->nullable();
             $table->string('status')->default('active');
             $table->string('password');
             $table->rememberToken();
@@ -56,6 +58,7 @@ class AdminHubIdpLinkingTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->string('reference_number')->nullable();
+            $table->string('sis_reference_number')->nullable()->unique();
             $table->string('clearance_status')->nullable();
             $table->string('pullout_status')->nullable();
             $table->timestamps();
@@ -695,13 +698,17 @@ class AdminHubIdpLinkingTest extends TestCase
         $html = view('student.partials.clinic_account_type_selector', ['studentPendingAdmission' => false])->render();
         $this->assertSame(5, preg_match_all('/<input[^>]+name="clinic_account_type"/', $html));
         $this->assertStringContainsString('Returnee', $html);
+        $this->assertStringContainsString('id="healthRoleApplicantTypeNew"', $html);
+        $this->assertStringContainsString('Incoming Freshman (ARN)', $html);
+        $this->assertStringContainsString('id="healthRoleApplicantTypeTransferee"', $html);
+        $this->assertStringNotContainsString('id="healthRoleStudentTypeTransferee"', $html);
         $this->assertStringContainsString('Non-teaching Staff / Admins', $html);
         $this->assertStringContainsString('Guest', $html);
         $this->assertStringNotContainsString('Guest / Dependent', $html);
         $this->assertStringContainsString('Confirm your account type', $html);
         $this->assertStringContainsString('Proceeding...', $html);
         $locked = view('student.partials.clinic_account_type_selector', ['studentPendingAdmission' => true])->render();
-        $this->assertSame(11, preg_match_all('/<input[^>]+type="radio"[^>]+disabled[^>]*>/', $locked));
+        $this->assertSame(12, preg_match_all('/<input[^>]+type="radio"[^>]+disabled[^>]*>/', $locked));
         $this->assertStringContainsString(route('student.account_type.options'), $html);
     }
 
@@ -715,6 +722,14 @@ class AdminHubIdpLinkingTest extends TestCase
 
         $this->actingAs($user, 'student')
             ->postJson('/student/account-type', ['clinic_account_type' => 'student'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('student_type');
+
+        $this->actingAs($user->fresh(), 'student')
+            ->postJson('/student/account-type', [
+                'clinic_account_type' => 'student',
+                'student_type' => 'transferee',
+            ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('student_type');
 
@@ -732,6 +747,117 @@ class AdminHubIdpLinkingTest extends TestCase
         $this->assertSame('Student', $savedUser->user_type);
         $this->assertSame('returnee', $savedUser->student_type);
         $this->assertFalse($savedUser->needsClinicAccountTypeSelection());
+    }
+
+    public function test_new_and_transferee_can_be_saved_under_applicant_account_type(): void
+    {
+        foreach (User::APPLICANT_TYPES as $applicantType) {
+            $user = $this->upsertFromIdp([
+                'id' => 'applicant-' . $applicantType,
+                'email' => 'applicant-' . $applicantType . '@example.test',
+                'roles' => '',
+            ]);
+
+            if ($applicantType === 'new') {
+                $this->actingAs($user, 'student')
+                    ->postJson('/student/account-type', ['clinic_account_type' => 'applicant'])
+                    ->assertUnprocessable()
+                    ->assertJsonValidationErrors('applicant_type');
+            }
+
+            $this->actingAs($user->fresh(), 'student')
+                ->postJson('/student/account-type', [
+                    'clinic_account_type' => 'applicant',
+                    'applicant_type' => $applicantType,
+                ])
+                ->assertOk();
+
+            $savedUser = $user->fresh();
+            $this->assertSame('Applicant', $savedUser->user_type);
+            $this->assertSame($applicantType, $savedUser->applicant_type);
+            $this->assertNull($savedUser->student_type);
+            $this->assertSame('applicant', $savedUser->clinicAccountTypeKey());
+            $this->assertFalse($savedUser->needsClinicAccountTypeSelection());
+            $this->assertSame(
+                $applicantType === 'transferee' ? 'health.form.transferee' : 'health.form',
+                $savedUser->clinicHealthFormRoute()
+            );
+        }
+    }
+
+    public function test_transferee_health_form_routes_are_restricted_to_transferee_applicants(): void
+    {
+        $transfereeFormRoute = \Illuminate\Support\Facades\Route::getRoutes()->getByName('health.form.transferee');
+        $transfereeStoreRoute = \Illuminate\Support\Facades\Route::getRoutes()->getByName('store.health.form.transferee');
+        $this->assertSame('student/health-form/transferee', $transfereeFormRoute->uri());
+        $this->assertContains('GET', $transfereeFormRoute->methods());
+        $this->assertSame('student/health-form/transferee', $transfereeStoreRoute->uri());
+        $this->assertContains('POST', $transfereeStoreRoute->methods());
+
+        $transferee = $this->upsertFromIdp([
+            'id' => 'transferee-form-route',
+            'email' => 'transferee-form-route@example.test',
+            'roles' => '',
+        ]);
+        $this->actingAs($transferee, 'student')
+            ->postJson('/student/account-type', [
+                'clinic_account_type' => 'applicant',
+                'applicant_type' => 'transferee',
+            ])
+            ->assertOk();
+
+        $transferee->refresh();
+        $this->assertSame('applicant', $transferee->clinicHealthFormAudience());
+        $this->assertSame('health.form.transferee', $transferee->clinicHealthFormRoute());
+        $this->assertSame(204, $this->checkFormRoute($transferee, 'health.form.transferee')->getStatusCode());
+        $this->assertSame(204, $this->checkFormRoute($transferee, 'store.health.form.transferee')->getStatusCode());
+        $this->assertSame(route('health.form.transferee'), $this->checkFormRoute($transferee, 'health.form')->getTargetUrl());
+        $this->assertSame(route('health.form.transferee'), $this->checkFormRoute($transferee, 'store.health.form')->getTargetUrl());
+        $this->assertSame(route('health.form.transferee'), $this->checkFormRoute($transferee, 'health.form.student')->getTargetUrl());
+        $this->assertSame(route('health.form.transferee'), $this->checkFormRoute($transferee, 'store.health.form.student')->getTargetUrl());
+
+        $newApplicant = $this->upsertFromIdp([
+            'id' => 'new-applicant-form-route',
+            'email' => 'new-applicant-form-route@example.test',
+            'roles' => '',
+        ]);
+        $this->actingAs($newApplicant, 'student')
+            ->postJson('/student/account-type', [
+                'clinic_account_type' => 'applicant',
+                'applicant_type' => 'new',
+            ])
+            ->assertOk();
+
+        $newApplicant->refresh();
+        $this->assertSame('health.form', $newApplicant->clinicHealthFormRoute());
+        $this->assertSame(route('health.form'), $this->checkFormRoute($newApplicant, 'health.form.transferee')->getTargetUrl());
+        $this->assertSame(route('health.form'), $this->checkFormRoute($newApplicant, 'store.health.form.transferee')->getTargetUrl());
+    }
+
+    public function test_transferee_sis_reference_is_saved_locally_without_directory_lookup(): void
+    {
+        Http::fake();
+        $user = $this->upsertFromIdp([
+            'id' => 'transferee-sis-reference',
+            'email' => 'transferee-sis-reference@example.test',
+            'roles' => '',
+        ]);
+        $user->user_type = 'Applicant';
+        $user->applicant_type = 'transferee';
+        $user->save();
+
+        \Illuminate\Support\Facades\Auth::guard('student')->setUser($user);
+        $request = \Illuminate\Http\Request::create('/student/health-form/reference/validate', 'GET', [
+            'reference_number' => '0123-4567-8901',
+            'form_mode' => 'transferee',
+        ]);
+
+        $response = (new AppointmentController())->validateHealthFormReference($request);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('0123-4567-8901', $user->fresh()->sis_reference_number);
+        $this->assertSame('0123-4567-8901', $response->getData(true)['reference_number']);
+        Http::assertNothingSent();
     }
 
     public function test_existing_student_without_student_type_does_not_require_selector(): void
@@ -803,6 +929,8 @@ class AdminHubIdpLinkingTest extends TestCase
         $payload = ['clinic_account_type' => $type];
         if ($type === 'student') {
             $payload['student_type'] = 'regular';
+        } elseif ($type === 'applicant') {
+            $payload['applicant_type'] = 'new';
         }
         $request = \Illuminate\Http\Request::create('/student/account-type', 'POST', $payload + $extra);
         $request->headers->set('Accept', 'application/json');

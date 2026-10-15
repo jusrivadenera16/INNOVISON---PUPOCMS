@@ -79,24 +79,18 @@ class StudentNotificationMailerTest extends TestCase
         Mail::assertNothingSent();
     }
 
-    public function test_notification_email_is_skipped_when_global_email_notifications_are_disabled(): void
+    public function test_notification_email_uses_the_account_preference_without_a_global_system_gate(): void
     {
         config()->set('services.student_notifications.enabled', true);
         Mail::fake();
 
-        $mailer = new class extends StudentNotificationMailer {
-            protected function globalEmailNotificationsEnabled(): bool
-            {
-                return false;
-            }
-        };
-
         $student = new User([
             'name' => 'Test Student',
             'email' => 'student@example.test',
+            'notification_email_enabled' => true,
         ]);
 
-        $result = $mailer->send(
+        $result = app(StudentNotificationMailer::class)->send(
             $student,
             'Appointment update - PUP Taguig Clinic',
             'Appointment update',
@@ -105,8 +99,10 @@ class StudentNotificationMailerTest extends TestCase
             url('/student/history')
         );
 
-        $this->assertSame('skipped', $result['status']);
-        Mail::assertNothingSent();
+        $this->assertSame('sent', $result['status']);
+        Mail::assertSent(StudentPortalNotificationMail::class, function (StudentPortalNotificationMail $mail) {
+            return $mail->hasTo('student@example.test');
+        });
     }
 
     public function test_health_clearance_approval_uses_the_portal_health_record_message(): void

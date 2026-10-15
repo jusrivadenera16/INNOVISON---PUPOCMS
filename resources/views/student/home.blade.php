@@ -4808,40 +4808,42 @@ html.home-reveal-enabled .home-announcement-card.home-scroll-reveal.is-next-far 
         </div>
 
         @php
-          $feedbackSlides = collect($recentFeedback ?? []);
+          $evaluationSlides = collect($recentEvaluations ?? []);
         @endphp
-        <section class="comments-section feedback-showcase" aria-labelledby="feedbacksTitle">
+        <section class="comments-section feedback-showcase" aria-labelledby="evaluationTitle">
           <header class="section-head feedback-heading">
-            <span class="feedback-kicker">What Students Are Saying</span>
-            <h3 id="feedbacksTitle">Feedbacks</h3>
+            <span class="feedback-kicker">SERVICE EVALUATION</span>
+            <h3 id="evaluationTitle">What PUPians Are Saying</h3>
           </header>
 
           <div class="feedback-stage">
-            @forelse($feedbackSlides as $feedback)
+            @forelse($evaluationSlides as $evaluation)
               @php
-                $feedbackRating = max(1, min(5, (int) ($feedback['rating'] ?? 5)));
+                $evaluationRating = (int) ($evaluation['rating'] ?? 0);
               @endphp
               <article class="feedback-slide">
                 <span class="feedback-quote" aria-hidden="true">&ldquo;</span>
-                <div class="feedback-stars" aria-label="{{ $feedbackRating }} out of 5 stars">
-                  @for($star = 1; $star <= 5; $star++)
-                    <span class="{{ $star <= $feedbackRating ? 'is-filled' : '' }}" aria-hidden="true">&#9733;</span>
-                  @endfor
-                </div>
+                @if($evaluationRating >= 1 && $evaluationRating <= 5)
+                  <div class="feedback-stars" aria-label="{{ $evaluationRating }} out of 5 stars">
+                    @for($star = 1; $star <= 5; $star++)
+                      <span class="{{ $star <= $evaluationRating ? 'is-filled' : '' }}" aria-hidden="true">&#9733;</span>
+                    @endfor
+                  </div>
+                @endif
                 <div class="feedback-identity">
                   <svg class="avatar" role="img" aria-label="User avatar"><use href="#avatar-placeholder"></use></svg>
                   <div class="feedback-copy">
-                    <h4>{{ $feedback['name'] }}</h4>
-                    <span class="comment-meta">{{ $feedback['role'] }} &middot; {{ $feedback['time'] }}</span>
-                    <p>{{ $feedback['message'] }}</p>
+                    <h4>{{ $evaluation['name'] }}</h4>
+                    <span class="comment-meta">{{ $evaluation['role'] }} &middot; {{ $evaluation['time'] }}</span>
+                    <p>{{ $evaluation['message'] }}</p>
                   </div>
                 </div>
               </article>
             @empty
               <article class="feedback-slide is-empty">
                 <div class="feedback-copy">
-                  <h4>No feedback has been shared yet.</h4>
-                  <p>Student feedback will appear here after a clinic visit is completed.</p>
+                  <h4>No suggestions have been shared yet.</h4>
+                  <p>Suggestions from submitted service evaluations will appear here.</p>
                 </div>
               </article>
             @endforelse

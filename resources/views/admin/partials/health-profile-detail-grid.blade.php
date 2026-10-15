@@ -60,6 +60,86 @@
     }
 @endphp
 
+@if(in_array($healthFormAudience ?? null, ['student', 'applicant'], true))
+    <div class="health-overview">
+        <section class="health-overview-card" aria-label="Medical Status">
+            <div class="health-overview-heading"><span class="health-overview-heading-icon" aria-hidden="true"><x-outline-icon name="clipboard-document-list" /></span><div class="health-overview-heading-copy"><h4>Medical Status</h4><p>Summary of the latest medical evaluation.</p></div></div>
+            <div class="health-overview-metrics is-three">
+                <div class="health-overview-metric"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Medical Condition</span><span class="health-overview-metric-value">{{ $historyMedicalCondition }}</span></span></div>
+                <div class="health-overview-metric"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-check" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Physical Assessment</span><span class="health-overview-metric-value">{{ $healthValue('physical_assessment_status') }}</span></span></div>
+                <div class="health-overview-metric"><span class="health-overview-metric-icon {{ !empty($healthData['documents_valid']) ? 'is-positive' : '' }}" aria-hidden="true"><x-outline-icon name="shield-check" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Documents</span><span class="health-overview-metric-value">{{ !empty($healthData['documents_valid']) ? 'Validated' : 'Not Validated' }}</span></span></div>
+            </div>
+        </section>
+
+        <section class="health-overview-card" aria-label="Body Measurements">
+            <div class="health-overview-heading"><span class="health-overview-heading-icon" aria-hidden="true"><x-outline-icon name="chart-bar" /></span><div class="health-overview-heading-copy"><h4>Body Measurements</h4><p>Physical measurement details.</p></div></div>
+            <div class="health-overview-metrics is-two">
+                <div class="health-overview-metric"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="user-circle" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Height</span><span class="health-overview-metric-value">{{ $healthValue('height') }}</span></span></div>
+                <div class="health-overview-metric"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="chart-bar" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Weight</span><span class="health-overview-metric-value">{{ $healthValue('weight') }}</span></span></div>
+            </div>
+        </section>
+
+        <section class="health-overview-card" aria-label="Vital Signs">
+            <div class="health-overview-heading"><span class="health-overview-heading-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span><div class="health-overview-heading-copy"><h4>Vital Signs</h4><p>Latest recorded vital signs.</p></div></div>
+            <div class="health-overview-metrics is-four">
+                <div class="health-overview-metric"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="heart" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Blood Pressure</span><span class="health-overview-metric-value">{{ $healthValue('blood_pressure') }}</span></span></div>
+                <div class="health-overview-metric"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Pulse Rate</span><span class="health-overview-metric-value">{{ $healthValue('pulse_rate') }}</span></span></div>
+                <div class="health-overview-metric"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Respiratory Rate</span><span class="health-overview-metric-value">{{ $healthValue('respiratory_rate') }}</span></span></div>
+                <div class="health-overview-metric"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Temperature</span><span class="health-overview-metric-value">{{ $healthValue('temperature') }}</span></span></div>
+            </div>
+        </section>
+
+        <section class="health-overview-card" aria-label="Medical History">
+            <div class="health-overview-heading"><span class="health-overview-heading-icon" aria-hidden="true"><x-outline-icon name="clipboard-document-list" /></span><div class="health-overview-heading-copy"><h4>Medical History</h4><p>Details of past and existing medical conditions.</p></div></div>
+            <div class="health-overview-metrics is-seven">
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="clipboard-document-list" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Known Medical Illness</span><span class="health-overview-metric-value">{{ $healthValue('has_illness') }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Medical History</span><span class="health-overview-metric-value">{{ $historyMedicalHistory }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Other Illness / Notes</span><span class="health-overview-metric-value">{{ $healthValue('other_illness') }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="user-circle" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Has Disability</span><span class="health-overview-metric-value">{{ $healthValue('has_disability') }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Disability Type</span><span class="health-overview-metric-value">{{ $healthValue('disability_type') }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">COVID Positive</span><span class="health-overview-metric-value">{{ $healthValue('covid_positive') }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="calendar-days" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">COVID Positive Date</span><span class="health-overview-metric-value">{{ $formatProfileDate($healthData['covid_positive_date'] ?? null) }}</span></span></div>
+            </div>
+        </section>
+
+        <section class="health-overview-card" aria-label="Medications, Allergies and Lifestyle">
+            <div class="health-overview-heading"><span class="health-overview-heading-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span><div class="health-overview-heading-copy"><h4>Medications, Allergies &amp; Lifestyle</h4><p>Information about allergies and lifestyle habits.</p></div></div>
+            <div class="health-overview-metrics is-eight">
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon {{ !empty($healthData['no_allergies']) ? 'is-positive' : '' }}" aria-hidden="true"><x-outline-icon name="shield-check" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">No Known Allergies</span><span class="health-overview-metric-value">{{ $healthBoolean('no_allergies') }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="exclamation-triangle" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Food Allergies</span><span class="health-overview-metric-value">{{ $healthValue('food_allergies') }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="exclamation-triangle" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Medicine Allergies</span><span class="health-overview-metric-value">{{ $historyMedicineAllergies }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Other Medicine Allergies</span><span class="health-overview-metric-value">{{ $healthValue('other_med_allergies') }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="exclamation-circle" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Cigarette Smoking</span><span class="health-overview-metric-value">{{ $healthValue('is_smoker') }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="exclamation-circle" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Alcohol Drinking</span><span class="health-overview-metric-value">{{ $healthValue('is_drinker') }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="shield-check" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">COVID Vaccinated</span><span class="health-overview-metric-value">{{ $healthValue('covid_vaccinated') }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Vaccination History</span><span class="health-overview-metric-value">{{ $historyVaccineHistory }}</span></span></div>
+            </div>
+        </section>
+
+        <section class="health-overview-card" aria-label="Medical Examination and Assessment">
+            <div class="health-overview-heading"><span class="health-overview-heading-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span><div class="health-overview-heading-copy"><h4>Medical Examination &amp; Assessment</h4><p>Results and notes from the recorded medical examination.</p></div></div>
+            <div class="health-overview-metrics is-six">
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="user-circle" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Medical Certificate Doctor</span><span class="health-overview-metric-value">{{ $firstHealthValue(['doctor_name', 'medical_certificate_issued_by']) }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="calendar-days" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Medical Certificate Date</span><span class="health-overview-metric-value">{{ $formatProfileDate($firstHealthValue(['med_cert_date', 'medical_certificate_issued_at'], null)) }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-check" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Medical Certificate Result</span><span class="health-overview-metric-value">{{ $healthValue('med_cert_findings') }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="calendar-days" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Chest X-ray Date</span><span class="health-overview-metric-value">{{ $formatProfileDate($firstHealthValue(['xray_date', 'chest_xray_date'], null)) }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-check" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Chest X-ray Result</span><span class="health-overview-metric-value">{{ $firstHealthValue(['xray_findings', 'chest_xray_result_text']) }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Pending Reason</span><span class="health-overview-metric-value">{{ $healthValue('pending_reason') }}</span></span></div>
+            </div>
+            <div class="health-overview-findings"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span><span><span class="health-overview-metric-label">Student-Declared Medical Findings</span><span class="health-overview-metric-value">{{ $healthValue('med_cert_findings_details') }}</span></span></div>
+            <div class="health-overview-findings"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span><span><span class="health-overview-metric-label">Student-Declared X-ray Findings</span><span class="health-overview-metric-value">{{ $healthValue('xray_findings_details') }}</span></span></div>
+            <div class="health-overview-findings"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span><span><span class="health-overview-metric-label">Assessment Remarks</span><span class="health-overview-metric-value">{{ $firstHealthValue(['assessment_remarks', 'med_assessment_remarks']) }}</span></span></div>
+        </section>
+
+        <section class="health-overview-card" aria-label="Certification and Verification">
+            <div class="health-overview-heading"><span class="health-overview-heading-icon" aria-hidden="true"><x-outline-icon name="shield-check" /></span><div class="health-overview-heading-copy"><h4>Certification &amp; Verification</h4><p>Record of medical assessment and verification.</p></div></div>
+            <div class="health-overview-metrics is-two">
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="calendar-days" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Assessment Date</span><span class="health-overview-metric-value">{{ $formatProfileDate($healthData['assessment_date'] ?? null) }}</span></span></div>
+                <div class="health-overview-metric is-stacked"><span class="health-overview-metric-icon" aria-hidden="true"><x-outline-icon name="shield-check" /></span><span class="health-overview-metric-copy"><span class="health-overview-metric-label">Verified At</span><span class="health-overview-metric-value">{{ $formatProfileDate($healthData['verified_at'] ?? null) }}</span></span></div>
+            </div>
+        </section>
+    </div>
+@else
 <div class="profile-grid">
     <div class="profile-meta"><div class="profile-meta-k">Medical Condition</div><div class="profile-meta-v">{{ $historyMedicalCondition }}</div></div>
     <div class="profile-meta"><div class="profile-meta-k">Physical Assessment</div><div class="profile-meta-v">{{ $healthValue('physical_assessment_status') }}</div></div>
@@ -104,3 +184,4 @@
 
     <div class="profile-meta is-full"><div class="profile-meta-k">Assessment Remarks</div><div class="profile-meta-v">{{ $healthValue('assessment_remarks') }}</div></div>
 </div>
+@endif

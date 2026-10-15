@@ -5887,7 +5887,7 @@
                                             </button>
                                             @endif
                                             @if($canRejectAppointments)
-                                            <a href="{{ url($basePrefix . '/appointments/' . $appt->id . '/Cancelled') }}" class="appointment-action-menu-item is-reject btn-reject btn-cancel" title="Reject" data-id="{{ $appt->id }}" data-name="{{ $appointmentMeta['display_name'] }}" data-service="{{ $appt->service }}" data-date="{{ $appt->date }}" data-time="{{ $appt->time }}" data-status-target="Cancelled">
+                                            <a href="{{ url($basePrefix . '/appointments/' . $appt->id . '/Rejected') }}" class="appointment-action-menu-item is-reject btn-reject btn-cancel" title="Reject" data-id="{{ $appt->id }}" data-name="{{ $appointmentMeta['display_name'] }}" data-service="{{ $appt->service }}" data-date="{{ $appt->date }}" data-time="{{ $appt->time }}" data-status-target="Rejected">
                                                 <x-outline-icon name="x-mark" />
                                                 Reject
                                             </a>
@@ -6187,7 +6187,7 @@
             <div class="appointment-detail-actions" id="appointmentDetailActions" hidden>
                 <button type="button" class="dialog-btn dialog-btn-secondary" onclick="closeInfoModal()"><span>Cancel</span></button>
                 @if($canRejectAppointments)
-                <a id="mRejectAction" href="#" class="dialog-btn dialog-btn-reject btn-reject btn-cancel" data-status-target="Cancelled">
+                <a id="mRejectAction" href="#" class="dialog-btn dialog-btn-reject btn-reject btn-cancel" data-status-target="Rejected">
                     <x-outline-icon name="x-mark" />
                     <span>Reject</span>
                 </a>

@@ -152,8 +152,6 @@ Route::middleware(['auth:student', 'student.idle', 'account.active', 'idp.sessio
             return response()->json(['status' => 'success']);
         });
 
-        Route::get('/student/feedbacks', [AppointmentController::class, 'feedbackIndex'])->name('student.feedback.index');
-
         Route::post('/student/account-type', [\App\Http\Controllers\ClinicAccountTypeController::class, 'store'])
             ->middleware('throttle:10,1')
             ->name('student.account_type.store');
@@ -164,8 +162,13 @@ Route::middleware(['auth:student', 'student.idle', 'account.active', 'idp.sessio
         Route::middleware(\App\Http\Middleware\EnsureClinicAccountType::class)->group(function () {
 
         // 1. Route para ipakita ang blankong form
+        Route::post('/student/health-form/employee/activity', fn () => response()->noContent())
+            ->middleware('throttle:12,1')
+            ->withoutMiddleware('audit')
+            ->name('student.health_form.employee.activity');
         Route::get('/student/health-form', [AppointmentController::class, 'showHealthForm'])->name('health.form');
         Route::get('/student/health-form/student', [AppointmentController::class, 'showHealthForm'])->name('health.form.student');
+        Route::get('/student/health-form/transferee', [AppointmentController::class, 'showHealthForm'])->name('health.form.transferee');
         Route::get('/student/health-form/employee', [AppointmentController::class, 'showEmployeeHealthForm'])->name('health.form.employee');
         Route::get('/student/health-form/staff', [AppointmentController::class, 'showStaffHealthForm'])->name('health.form.staff');
         Route::get('/student/dependent-profile', [AppointmentController::class, 'showDependentProfileForm'])->name('dependent.profile.form');
@@ -187,6 +190,7 @@ Route::middleware(['auth:student', 'student.idle', 'account.active', 'idp.sessio
         // 2. Route para i-save ang data (Dito galing ang form submit)
         Route::post('/student/store-health-form', [AppointmentController::class, 'storeHealthForm'])->name('store.health.form');
         Route::post('/student/health-form/student', [AppointmentController::class, 'storeHealthForm'])->name('store.health.form.student');
+        Route::post('/student/health-form/transferee', [AppointmentController::class, 'storeHealthForm'])->name('store.health.form.transferee');
         Route::get('/student/store-health-form', function () {
             return redirect()->route('health.form')
                 ->with('error', 'Your previous submission was interrupted. Please review the form, re-upload your files, and submit again.');
@@ -227,14 +231,13 @@ Route::middleware(['auth:student', 'student.idle', 'account.active', 'idp.sessio
         Route::post('/student/barcode-register', [AppointmentController::class, 'storeBarcode'])->name('barcode.store');
         Route::post('/student/barcode-validate', [AppointmentController::class, 'validateBarcodeScan'])->name('barcode.validate');
         Route::post('/student/reset-barcode', [AppointmentController::class, 'resetBarcode'])->name('barcode.reset');
+        Route::get('/student/notifications/feed', [AppointmentController::class, 'notificationsFeed'])->name('student.notifications.feed');
         Route::get('/student/notifications/{notificationId}', [AppointmentController::class, 'openNotification'])->name('student.notifications.open');
         Route::post('/student/notifications/mark-all-read', [AppointmentController::class, 'markAllNotificationsRead'])->name('student.notifications.read_all');
         Route::post('/student/notifications/preferences', [AppointmentController::class, 'updateNotificationPreferences'])->name('student.notifications.preferences');
         Route::get('/student/evaluation-form/preview', [AppointmentController::class, 'previewEvaluationForm'])->name('student.evaluation.preview');
         Route::get('/student/evaluations/{evaluation}', [AppointmentController::class, 'showEvaluationForm'])->name('student.evaluation.show');
         Route::post('/student/evaluations/{evaluation}', [AppointmentController::class, 'storeEvaluation'])->name('student.evaluation.store');
-        Route::get('/student/appointments/{appointment}/feedback', [AppointmentController::class, 'showFeedbackForm'])->name('student.feedback.show');
-        Route::post('/student/appointments/{appointment}/feedback', [AppointmentController::class, 'storeFeedback'])->name('student.feedback.store');
     });
 
     Route::get('/account', [AppointmentController::class, 'index'])->name('account');
@@ -389,7 +392,6 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::get('/admin/reports/health-forms-logbook/export', [ReportsController::class, 'exportHealthFormsLogbook'])
             ->middleware(['module.permission:reports.export_reports', 'superadmin.export'])
             ->name('reports.health-forms-logbook.export');
-        Route::get('/admin/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->middleware('module.permission:reports.feedbacks')->name('reports.feedbacks');
         Route::get('/admin/reports/evaluation-reports', [ReportsController::class, 'serviceEvaluationReport'])->middleware('module.permission:reports.service_evaluation')->name('reports.evaluation-reports');
         Route::get('/admin/reports/digital-logbook/pulled-out-records', [ReportsController::class, 'pulledOutRecords'])
             ->middleware('role:superadmin')
@@ -598,7 +600,6 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::get('/reports/health-forms-logbook/export', [ReportsController::class, 'exportHealthFormsLogbook'])
             ->middleware(['module.permission:reports.export_reports', 'superadmin.export'])
             ->name('reports.health-forms-logbook.export');
-        Route::get('/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->middleware('module.permission:reports.feedbacks')->name('reports.feedbacks');
         Route::get('/reports/evaluation-reports', [ReportsController::class, 'serviceEvaluationReport'])->middleware('module.permission:reports.service_evaluation')->name('reports.evaluation-reports');
         Route::middleware(['module.permission:reports.export_reports', 'superadmin.export'])->group(function () {
             Route::get('/reports/export-hub', [ReportsController::class, 'exportHub'])->name('reports.exportHub');

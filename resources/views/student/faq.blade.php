@@ -1099,7 +1099,7 @@
                     <div class="stat-row"><span>Pending Requests</span><span class="stat-val" style="color:#b45309;">{{ $pendingCount ?? 0 }}</span></div>
                     <div class="stat-row"><span>Upcoming</span><span class="stat-val" style="color:#15803d;">{{ $upcomingCount ?? 0 }}</span></div>
                     <div class="stat-row"><span>Completed</span><span class="stat-val">{{ $completedCount ?? 0 }}</span></div>
-                    <div class="stat-row"><span>Cancelled</span><span class="stat-val" style="color:#b91c1c;">{{ $cancelledCount ?? 0 }}</span></div>
+                    <div class="stat-row"><span>Cancelled / Rejected</span><span class="stat-val" style="color:#b91c1c;">{{ $cancelledCount ?? 0 }}</span></div>
                     <a href="{{ url('/student/history') }}" class="btn-action">
                         View Full History
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">

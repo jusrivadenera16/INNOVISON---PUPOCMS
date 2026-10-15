@@ -69,6 +69,11 @@ class User extends Authenticatable
         'ojt',
     ];
 
+    public const APPLICANT_TYPES = [
+        'new',
+        'transferee',
+    ];
+
     public function hasExistingClinicHealthRecord(): bool
     {
         if ((bool) ($this->is_health_profile_completed ?? false)) {
@@ -106,7 +111,8 @@ class User extends Authenticatable
         $accountType = $this->clinicAccountTypeKey();
 
         return $accountType === null
-            || ($accountType === 'student' && !in_array($this->student_type, self::STUDENT_TYPES, true));
+            || ($accountType === 'student' && !in_array($this->student_type, self::STUDENT_TYPES, true))
+            || ($accountType === 'applicant' && !in_array($this->applicant_type, self::APPLICANT_TYPES, true));
     }
 
     public static function userTypeForClinicAccountType(string $type): ?string
@@ -218,6 +224,10 @@ class User extends Authenticatable
             return null;
         }
 
+        if ($accountType === 'applicant' && $this->applicant_type === 'transferee') {
+            return 'applicant';
+        }
+
         if ($this->hasPendingAdmissionReference()) {
             return 'applicant';
         }
@@ -259,6 +269,12 @@ class User extends Authenticatable
 
     public function clinicHealthFormRoute(): ?string
     {
+        if ($this->clinicHealthFormAudience() === 'applicant'
+            && $this->clinicAccountTypeKey() === 'applicant'
+            && $this->applicant_type === 'transferee') {
+            return 'health.form.transferee';
+        }
+
         return match ($this->clinicHealthFormAudience()) {
             'applicant' => 'health.form',
             'student' => 'health.form.student',
@@ -295,6 +311,8 @@ class User extends Authenticatable
     'idp_role',
     'user_type',
     'student_type',
+    'applicant_type',
+    'sis_reference_number',
     'status',
     'password',
     'api_pin',
@@ -307,6 +325,7 @@ class User extends Authenticatable
     'notification_read_map',
     'notification_email_enabled',
     'notification_system_enabled',
+    'admin_appointment_email_alerts',
     'module_permissions',
 
 ];
@@ -334,6 +353,7 @@ class User extends Authenticatable
         'notification_read_map' => 'array',
         'notification_email_enabled' => 'boolean',
         'notification_system_enabled' => 'boolean',
+        'admin_appointment_email_alerts' => 'boolean',
         'module_permissions' => 'array',
     ];
 
