@@ -1390,6 +1390,34 @@
         gap: 18px;
         align-items: start;
     }
+    .health-profile-version-shell { transition: grid-template-columns .22s ease; }
+    .health-profile-version-shell.is-versions-collapsed { grid-template-columns: 44px minmax(0, 1fr); gap: 10px; }
+    .health-profile-version-shell.is-version-nav-hidden { grid-template-columns: minmax(0, 1fr); }
+    .health-profile-version-shell.is-version-nav-hidden .profile-version-sidebar { display: none; }
+    .health-profile-version-shell.is-versions-collapsed .profile-version-sidebar { align-items: center; padding: 6px; }
+    .health-profile-version-shell .profile-version-sidebar-head { align-items: center; }
+    .health-profile-version-shell.is-versions-collapsed .profile-version-sidebar-title,
+    .health-profile-version-shell.is-versions-collapsed .profile-history-count,
+    .health-profile-version-shell.is-versions-collapsed .profile-version-nav { display: none; }
+    .health-profile-version-shell.is-versions-collapsed .profile-version-sidebar-head { justify-content: center; margin: 0; padding: 0; border: 0; }
+    .profile-version-sidebar-controls { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+    .profile-version-collapse-toggle {
+        display: inline-grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        flex: 0 0 auto;
+        border: 1px solid #d7dee8;
+        border-radius: 8px;
+        background: #fff;
+        color: #70131B;
+        cursor: pointer;
+        transition: background .18s ease, border-color .18s ease, color .18s ease;
+    }
+    .profile-version-collapse-toggle:hover,
+    .profile-version-collapse-toggle:focus-visible { border-color: #facc15; background: #fffbea; outline: none; }
+    .profile-version-collapse-toggle svg { width: 17px; height: 17px; transform: rotate(180deg); transition: transform .22s ease; }
+    .health-profile-version-shell.is-versions-collapsed .profile-version-collapse-toggle svg { transform: none; }
     .profile-version-sidebar {
         position: sticky;
         top: var(--profile-version-sticky-top);
@@ -1930,6 +1958,91 @@
     }
 
     .profile-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    #healthPanel .health-overview { display: grid; gap: 12px; margin-top: 16px; }
+    #healthPanel .health-overview-card { min-width: 0; padding: 14px 16px; border: 1px solid rgba(139, 0, 0, .24); border-radius: 8px; background: #fff; }
+    #healthPanel .health-overview-heading { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    #healthPanel .health-overview-heading-icon,
+    #healthPanel .health-overview-metric-icon { display: inline-grid; flex: 0 0 auto; place-items: center; color: #a20b32; background: #fff0f3; border-radius: 50%; }
+    #healthPanel .health-overview-heading-icon { width: 38px; height: 38px; }
+    #healthPanel .health-overview-heading-icon svg { width: 19px; height: 19px; }
+    #healthPanel .health-overview-heading-copy h4 { margin: 0; color: #111827; font-size: 14px; font-weight: 900; line-height: 1.2; }
+    #healthPanel .health-overview-heading-copy p { margin: 3px 0 0; color: #64748b; font-size: 11px; line-height: 1.35; }
+    #healthPanel .health-overview-metrics { display: grid; min-width: 0; margin-top: 10px; }
+    #healthPanel .health-overview-metrics.is-two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #healthPanel .health-overview-metrics.is-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    #healthPanel .health-overview-metrics.is-four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    #healthPanel .health-overview-metrics.is-six { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    #healthPanel .health-overview-metrics.is-seven { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    #healthPanel .health-overview-metrics.is-eight { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+    #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-six,
+    #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-seven,
+    #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-eight { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-six .health-overview-metric:nth-child(4n),
+    #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-seven .health-overview-metric:nth-child(4n),
+    #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-eight .health-overview-metric:nth-child(4n) { border-right: 0; }
+    #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-six .health-overview-metric:nth-child(n + 5),
+    #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-seven .health-overview-metric:nth-child(n + 5),
+    #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-eight .health-overview-metric:nth-child(n + 5) { border-top: 1px solid #e5eaf0; }
+    #healthPanel .health-overview-metric { display: grid; grid-template-columns: 36px minmax(0, 1fr); align-items: center; gap: 9px; min-width: 0; min-height: 58px; padding: 4px 10px; border-right: 1px solid #e5eaf0; }
+    #healthPanel .health-overview-metric:last-child { border-right: 0; }
+    #healthPanel .health-overview-metric.is-stacked { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 7px; min-height: 104px; padding: 8px 6px; text-align: center; }
+    #healthPanel .health-overview-metric-icon { width: 36px; height: 36px; }
+    #healthPanel .health-overview-metric-icon svg { width: 18px; height: 18px; }
+    #healthPanel .health-overview-metric-icon.is-positive { color: #087443; background: #e8f8ef; }
+    #healthPanel .health-overview-metric-copy { display: grid; min-width: 0; gap: 3px; }
+    #healthPanel .health-overview-metric.is-stacked .health-overview-metric-copy { justify-items: center; gap: 5px; }
+    #healthPanel .health-overview-metric-label { color: #71809a; font-size: 9px; font-weight: 900; line-height: 1.2; text-transform: uppercase; }
+    #healthPanel .health-overview-metric-value { color: #111827; font-size: 13px; font-weight: 900; line-height: 1.25; overflow-wrap: anywhere; }
+    #healthPanel .health-overview-findings { display: grid; grid-template-columns: 36px minmax(0, 1fr); align-items: center; gap: 12px; margin-top: 10px; padding: 12px; border: 1px solid #e5eaf0; border-radius: 8px; background: #fbfcfe; }
+    #healthPanel .health-overview-findings .health-overview-metric-label { display: block; margin-bottom: 5px; }
+    #healthPanel .health-overview-findings .health-overview-metric-value { display: block; font-size: 12px; font-weight: 700; }
+    #healthPanel .health-overview-findings + .health-overview-findings { margin-top: 8px; }
+    @media (max-width: 768px) {
+        #healthPanel .health-overview-metrics.is-four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        #healthPanel .health-overview-metrics.is-four .health-overview-metric:nth-child(2n) { border-right: 0; }
+        #healthPanel .health-overview-metrics.is-four .health-overview-metric:nth-child(n + 3) { border-top: 1px solid #e5eaf0; }
+        #healthPanel .health-overview-metrics.is-six,
+        #healthPanel .health-overview-metrics.is-seven,
+        #healthPanel .health-overview-metrics.is-eight { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        #healthPanel .health-overview-metrics.is-six .health-overview-metric:nth-child(4n),
+        #healthPanel .health-overview-metrics.is-seven .health-overview-metric:nth-child(4n),
+        #healthPanel .health-overview-metrics.is-eight .health-overview-metric:nth-child(4n) { border-right: 1px solid #e5eaf0; }
+        #healthPanel .health-overview-metrics.is-six .health-overview-metric:nth-child(n + 5),
+        #healthPanel .health-overview-metrics.is-seven .health-overview-metric:nth-child(n + 5),
+        #healthPanel .health-overview-metrics.is-eight .health-overview-metric:nth-child(n + 5) { border-top: 0; }
+        #healthPanel .health-overview-metrics.is-six .health-overview-metric:nth-child(2n),
+        #healthPanel .health-overview-metrics.is-seven .health-overview-metric:nth-child(2n),
+        #healthPanel .health-overview-metrics.is-eight .health-overview-metric:nth-child(2n) { border-right: 0; }
+        #healthPanel .health-overview-metrics.is-six .health-overview-metric:nth-child(n + 3),
+        #healthPanel .health-overview-metrics.is-seven .health-overview-metric:nth-child(n + 3),
+        #healthPanel .health-overview-metrics.is-eight .health-overview-metric:nth-child(n + 3) { border-top: 1px solid #e5eaf0; }
+        #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-six,
+        #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-seven,
+        #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-eight { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-six .health-overview-metric:nth-child(2n),
+        #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-seven .health-overview-metric:nth-child(2n),
+        #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-eight .health-overview-metric:nth-child(2n) { border-right: 0; }
+        #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-six .health-overview-metric:nth-child(n + 3),
+        #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-seven .health-overview-metric:nth-child(n + 3),
+        #healthPanel .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-eight .health-overview-metric:nth-child(n + 3) { border-top: 1px solid #e5eaf0; }
+        #healthPanel .health-overview-card { padding: 12px; }
+    }
+    [data-theme="dark"] #healthPanel .health-overview-card { background: #182334; border-color: rgba(250, 204, 21, .34); }
+    [data-theme="dark"] #healthPanel .health-overview-heading-copy h4,
+    [data-theme="dark"] #healthPanel .health-overview-metric-value { color: #f8fafc; }
+    [data-theme="dark"] #healthPanel .health-overview-heading-copy p,
+    [data-theme="dark"] #healthPanel .health-overview-metric-label,
+    [data-theme="dark"] #healthPanel .health-overview-metric-unit { color: #cbd5e1; }
+    [data-theme="dark"] #healthPanel .health-overview-metric { border-color: #334155; }
+    [data-theme="dark"] #healthPanel .health-overview-heading-icon,
+    [data-theme="dark"] #healthPanel .health-overview-metric-icon { background: #3b1f2c; color: #fda4af; }
+    [data-theme="dark"] #healthPanel .health-overview-metric-icon.is-positive { color: #86efac; background: #173b2d; }
+    [data-theme="dark"] #healthPanel .health-overview-findings { background: #111827; border-color: #334155; }
+    @media (max-width: 480px) {
+        #healthPanel .health-overview-metrics.is-three { grid-template-columns: 1fr; }
+        #healthPanel .health-overview-metrics.is-three .health-overview-metric { border-right: 0; border-top: 1px solid #e5eaf0; }
+        #healthPanel .health-overview-metrics.is-three .health-overview-metric:first-child { border-top: 0; }
+    }
     #summaryPanel .profile-grid,
     #healthPanel .profile-grid {
         grid-template-columns: 1fr;
@@ -2208,6 +2321,9 @@
         background: #111827;
         border-color: #334155;
     }
+    [data-theme="dark"] .profile-version-collapse-toggle { background: #111827; border-color: #475569; color: #facc15; }
+    [data-theme="dark"] .profile-version-collapse-toggle:hover,
+    [data-theme="dark"] .profile-version-collapse-toggle:focus-visible { background: #342b16; border-color: #facc15; }
     [data-theme="dark"] .profile-version-sidebar-head,
     [data-theme="dark"] .profile-version-pane-head {
         border-color: #334155;
@@ -2535,6 +2651,11 @@
             max-height: none;
             overflow: visible;
         }
+        .health-profile-version-shell.is-versions-collapsed { grid-template-columns: 1fr; }
+        .health-profile-version-shell.is-versions-collapsed .profile-version-sidebar { align-items: flex-end; padding: 8px; }
+        .health-profile-version-shell.is-versions-collapsed .profile-version-sidebar-head { width: 100%; justify-content: flex-end; }
+        .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-seven,
+        .health-profile-version-shell:not(.is-versions-collapsed) .health-overview-metrics.is-eight { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .profile-version-nav {
             display: flex;
             gap: 8px;
@@ -3036,7 +3157,7 @@
                             {{ $profileInitials }}
                         @endif
                     </div>
-                    <div>
+                    <div class="profile-version-sidebar-title">
                         <h2 class="profile-name">{{ $profileName }}</h2>
                         <p class="profile-course-line">{{ $profileCourse }}</p>
                     </div>
@@ -3200,20 +3321,30 @@
                 ->values();
             $currentProfileVersion = $currentProfileHistory['version'] ?? null;
             $profileVersionCount = $previousProfileHistory->count() + 1;
+            $profileVersionAudience = in_array($healthFormAudience ?? null, ['student', 'applicant'], true);
+            $hasProfileVersionHistory = $profileVersionCount > 1;
             $currentProfileDate = optional($currentHealthFormSubmission)->submitted_at ?: ($profile->resubmitted_at ?: $profile->created_at);
         @endphp
 
-        <div class="profile-version-shell">
+        <div class="profile-version-shell{{ $profileVersionAudience ? ' health-profile-version-shell' . ($hasProfileVersionHistory ? '' : ' is-versions-collapsed is-version-nav-hidden') : '' }}">
+            @if(!$profileVersionAudience || $hasProfileVersionHistory)
             <aside class="profile-version-sidebar" aria-label="Health Profile versions">
                 <div class="profile-version-sidebar-head">
-                    <div>
+                    <div class="profile-version-sidebar-title">
                         <h3>Profile Versions</h3>
                         <p>Select a version to review its saved health information.</p>
                     </div>
-                    <span class="profile-history-count">{{ $profileVersionCount }}</span>
+                    <div class="profile-version-sidebar-controls">
+                        <span class="profile-history-count">{{ $profileVersionCount }}</span>
+                        @if($profileVersionAudience)
+                            <button type="button" class="profile-version-collapse-toggle" data-profile-versions-toggle aria-expanded="true" aria-controls="healthProfileVersionNav" aria-label="Collapse profile versions" title="Collapse profile versions">
+                                <x-outline-icon name="chevron-right" />
+                            </button>
+                        @endif
+                    </div>
                 </div>
 
-                <div class="profile-version-nav" role="tablist" aria-label="Health Profile versions">
+                <div class="profile-version-nav" id="healthProfileVersionNav" role="tablist" aria-label="Health Profile versions">
                     <button
                         type="button"
                         class="profile-version-choice is-active"
@@ -3251,6 +3382,7 @@
                     @endforeach
                 </div>
             </aside>
+            @endif
 
             <div class="profile-version-content">
                 <section class="profile-version-pane is-active" id="currentHealthProfileVersion" role="tabpanel">
@@ -3267,6 +3399,7 @@
 
                     @include('admin.partials.health-profile-detail-grid', [
                         'healthData' => $profile->attributesToArray(),
+                        'healthFormAudience' => $healthFormAudience,
                     ])
 
                     @if(!$profileIsLocalOnly)
@@ -3355,6 +3488,7 @@
                             @endif
                             @include('admin.partials.health-profile-detail-grid', [
                                 'healthData' => $history['profile'],
+                                'healthFormAudience' => $healthFormAudience,
                             ])
                         @else
                             <div class="profile-history-empty-detail">
@@ -4507,6 +4641,18 @@
         if (event.target === newHealthFormModal) {
             setNewHealthFormModal(false);
         }
+    });
+
+    document.querySelectorAll('[data-profile-versions-toggle]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const versionShell = button.closest('.health-profile-version-shell');
+            if (!versionShell) return;
+
+            const collapsed = versionShell.classList.toggle('is-versions-collapsed');
+            button.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            button.setAttribute('aria-label', collapsed ? 'Expand profile versions' : 'Collapse profile versions');
+            button.title = collapsed ? 'Expand profile versions' : 'Collapse profile versions';
+        });
     });
 
     document.querySelectorAll('[data-profile-version-target]').forEach(function (button) {

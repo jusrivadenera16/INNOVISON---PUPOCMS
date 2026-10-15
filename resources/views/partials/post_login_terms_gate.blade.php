@@ -899,7 +899,12 @@
 
 @php
     $postLoginIsAdminDashboard = request()->is('admin/dashboard') || request()->is('dashboard');
-    $postLoginUser = $postLoginIsAdminDashboard ? auth()->user() : null;
+    $postLoginIsStudentLanding = request()->is('student/home');
+    $postLoginIsAssistantDashboard = request()->is('assistant/dashboard');
+    $postLoginShowWelcome = $postLoginIsAdminDashboard || $postLoginIsStudentLanding || $postLoginIsAssistantDashboard;
+    $postLoginUser = $postLoginIsStudentLanding
+        ? auth()->guard('student')->user()
+        : ($postLoginShowWelcome ? (auth()->guard('admin')->user() ?? auth()->user()) : null);
     $postLoginName = trim((string) ($postLoginUser?->name ?: 'Clinic User'));
     $postLoginNameParts = preg_split('/\s+/', $postLoginName, -1, PREG_SPLIT_NO_EMPTY) ?: [];
     $postLoginFirstName = $postLoginNameParts[0] ?? 'Clinic User';
@@ -965,7 +970,7 @@
         </div>
     </div>
 
-    @if ($postLoginIsAdminDashboard)
+    @if ($postLoginShowWelcome)
         <div class="post-login-welcome" id="postLoginWelcome" aria-hidden="true">
             <div class="post-login-welcome-card" role="status" aria-live="polite">
                 <span class="post-login-welcome-icon" aria-hidden="true">

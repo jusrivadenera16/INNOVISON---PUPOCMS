@@ -21,12 +21,6 @@ class SendAppointmentReminderEmails extends Command
             return self::SUCCESS;
         }
 
-        if ($workflow->settings()->email_notifications === false) {
-            $this->info('Email notifications are disabled in System Preferences.');
-
-            return self::SUCCESS;
-        }
-
         if ($workflow->notificationsAreQuiet()) {
             $this->info('Appointment reminders are paused during notification quiet hours.');
 

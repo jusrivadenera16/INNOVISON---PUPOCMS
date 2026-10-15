@@ -23,8 +23,8 @@
                     default => 'users',
                 };
                 $accountTypeDescription = match ($accountType) {
-                    'applicant' => 'For incoming freshmen with an ARN (Admission Reference Number).',
-                    'student' => 'For Regular Students, Ladderized, Transferees, Shiftees, and OJT.',
+                    'applicant' => 'For incoming freshmen and transferees.',
+                    'student' => 'For Regular Students, Ladderized, Returnees, Shiftees, and OJT.',
                     'faculty' => 'For teaching personnel and academic staff.',
                     'non_teaching_staff' => 'For administrative and support personnel.',
                     default => 'For guest users needing clinic access.',
@@ -42,31 +42,36 @@
                     </span>
                     <span class="health-role-check" aria-hidden="true"><x-outline-icon name="check" /></span>
                 </label>
-                @if($accountType === 'student')
-                    <div class="health-role-student-type" id="healthRoleStudentType" hidden>
-                        <span class="health-role-student-type-label">Student Type</span>
-                        <div class="health-role-student-type-options" role="radiogroup" aria-label="Choose your student type">
-                            @foreach([
-                                ['value' => 'regular', 'label' => 'Regular'],
-                                ['value' => 'ladderized', 'label' => 'Ladderized'],
-                                ['value' => 'transferee', 'label' => 'Transferee'],
-                                ['value' => 'returnee', 'label' => 'Returnee'],
-                                ['value' => 'shiftee', 'label' => 'Shiftee'],
-                                ['value' => 'ojt', 'label' => 'OJT'],
-                            ] as $studentTypeOption)
-                                <label class="health-role-student-type-choice" for="healthRoleStudentType{{ ucfirst($studentTypeOption['value']) }}">
-                                    <input id="healthRoleStudentType{{ ucfirst($studentTypeOption['value']) }}" type="radio" name="student_type" value="{{ $studentTypeOption['value'] }}" disabled>
+                @if(in_array($accountType, ['applicant', 'student'], true))
+                    <div class="health-role-student-type" id="healthRole{{ ucfirst($accountType) }}Type" hidden>
+                        <span class="health-role-student-type-label">{{ $accountType === 'applicant' ? 'Applicant Type' : 'Student Type' }}</span>
+                        <div class="health-role-student-type-options" role="radiogroup" aria-label="Choose your {{ $accountType }} type">
+                            @foreach($accountType === 'applicant'
+                                ? [
+                                    ['value' => 'new', 'label' => 'Incoming Freshman (ARN)'],
+                                    ['value' => 'transferee', 'label' => 'Transferee'],
+                                ]
+                                : [
+                                    ['value' => 'regular', 'label' => 'Regular'],
+                                    ['value' => 'ladderized', 'label' => 'Ladderized'],
+                                    ['value' => 'returnee', 'label' => 'Returnee'],
+                                    ['value' => 'shiftee', 'label' => 'Shiftee'],
+                                    ['value' => 'ojt', 'label' => 'OJT'],
+                                ] as $studentTypeOption)
+                                <label class="health-role-student-type-choice" for="healthRole{{ ucfirst($accountType) }}Type{{ ucfirst($studentTypeOption['value']) }}">
+                                    <input id="healthRole{{ ucfirst($accountType) }}Type{{ ucfirst($studentTypeOption['value']) }}" type="radio" name="{{ $accountType === 'applicant' ? 'applicant_type' : 'student_type' }}" value="{{ $studentTypeOption['value'] }}" disabled>
                                     <span class="health-role-student-type-radio" aria-hidden="true"></span>
                                     <span>{{ $studentTypeOption['label'] }}</span>
                                 </label>
                             @endforeach
                         </div>
                     </div>
-                    <input type="hidden" id="healthRoleSelectedStudentType" name="student_type" value="">
                 @endif
             </div>
             @endforeach
         </div>
+        <input type="hidden" id="healthRoleSelectedStudentType" name="student_type" value="">
+        <input type="hidden" id="healthRoleSelectedApplicantType" name="applicant_type" value="">
         @if($studentPendingAdmission)
             <p class="health-role-notice">Your admission reference is awaiting clearance. Please continue as an applicant.</p>
         @endif
@@ -457,11 +462,18 @@
         const options = Array.from(roleModal?.querySelectorAll('[data-health-role-option]') || []);
         const optionsContainer = roleModal?.querySelector('.health-role-options');
         const studentTypeField = roleModal?.querySelector('#healthRoleStudentType');
-        const studentTypeInputs = Array.from(roleModal?.querySelectorAll('input[type="radio"][name="student_type"]') || []);
+        const applicantTypeField = roleModal?.querySelector('#healthRoleApplicantType');
+        const studentTypeInputs = Array.from(roleModal?.querySelectorAll('#healthRoleStudentType input[type="radio"][name="student_type"]') || []);
+        const applicantTypeInputs = Array.from(roleModal?.querySelectorAll('#healthRoleApplicantType input[type="radio"][name="applicant_type"]') || []);
+        const allSubtypeInputs = [...studentTypeInputs, ...applicantTypeInputs];
         const selectedStudentTypeInput = roleModal?.querySelector('#healthRoleSelectedStudentType');
+        const selectedApplicantTypeInput = roleModal?.querySelector('#healthRoleSelectedApplicantType');
         const studentOption = options.find(option => option.querySelector('input[name="clinic_account_type"]')?.value === 'student');
+        const applicantOption = options.find(option => option.querySelector('input[name="clinic_account_type"]')?.value === 'applicant');
         const studentLabel = studentOption?.querySelector('.health-role-copy strong');
+        const applicantLabel = applicantOption?.querySelector('.health-role-copy strong');
         const defaultStudentLabel = studentLabel?.textContent?.trim() || 'Student';
+        const defaultApplicantLabel = applicantLabel?.textContent?.trim() || 'Applicant';
         if (!roleModal || !continueLink || !form || !confirmModal || !confirmChoice || !confirmChoiceIcon || !cancelConfirm || !proceedConfirm) return;
         let saving = false;
         let loading = false;
@@ -474,8 +486,8 @@
 
         function updateContinueState() {
             const accountType = selectedAccountType();
-            const studentTypeReady = accountType !== 'student' || selectedStudentType !== '';
-            const canContinue = !loading && !saving && accountType !== '' && studentTypeReady;
+            const subtypeReady = !['student', 'applicant'].includes(accountType) || selectedStudentType !== '';
+            const canContinue = !loading && !saving && accountType !== '' && subtypeReady;
             continueLink.disabled = !canContinue;
             continueLink.classList.toggle('is-visible', canContinue);
         }
@@ -483,35 +495,44 @@
         function resetStudentType() {
             selectedStudentType = '';
             if (selectedStudentTypeInput) selectedStudentTypeInput.value = '';
-            studentTypeInputs.forEach(input => {
+            if (selectedApplicantTypeInput) selectedApplicantTypeInput.value = '';
+            allSubtypeInputs.forEach(input => {
                 input.checked = false;
                 input.disabled = true;
             });
             if (studentTypeField) studentTypeField.hidden = true;
+            if (applicantTypeField) applicantTypeField.hidden = true;
             optionsContainer?.classList.remove('is-student-focus');
             options.forEach(option => option.classList.remove('is-student-focused', 'is-student-closing'));
             if (studentLabel) studentLabel.textContent = defaultStudentLabel;
+            if (applicantLabel) applicantLabel.textContent = defaultApplicantLabel;
         }
 
-        function collapseStudentTypeSelection() {
-            if (!studentOption || !studentTypeField) return;
-            studentTypeField.hidden = true;
-            if (selectedStudentTypeInput) selectedStudentTypeInput.value = selectedStudentType;
-            studentTypeInputs.forEach(input => input.disabled = true);
-            studentOption.classList.add('is-student-closing');
+        function collapseStudentTypeSelection(option, field, inputs) {
+            if (!option || !field) return;
+            field.hidden = true;
+            if (option === applicantOption) {
+                if (selectedApplicantTypeInput) selectedApplicantTypeInput.value = selectedStudentType;
+                if (selectedStudentTypeInput) selectedStudentTypeInput.value = '';
+            } else {
+                if (selectedStudentTypeInput) selectedStudentTypeInput.value = selectedStudentType;
+                if (selectedApplicantTypeInput) selectedApplicantTypeInput.value = '';
+            }
+            inputs.forEach(input => input.disabled = true);
+            option.classList.add('is-student-closing');
             window.setTimeout(() => {
-                studentOption.classList.remove('is-student-closing');
+                option.classList.remove('is-student-closing');
                 optionsContainer?.classList.remove('is-student-focus');
                 options.forEach(option => option.classList.remove('is-student-focused'));
             }, 620);
         }
 
-        function openStudentTypeSelection() {
-            if (!studentOption || !studentTypeField) return;
+        function openStudentTypeSelection(option, field, inputs) {
+            if (!option || !field) return;
             optionsContainer?.classList.add('is-student-focus');
-            options.forEach(option => option.classList.toggle('is-student-focused', option === studentOption));
-            studentTypeField.hidden = false;
-            studentTypeInputs.forEach(input => {
+            options.forEach(item => item.classList.toggle('is-student-focused', item === option));
+            field.hidden = false;
+            inputs.forEach(input => {
                 input.disabled = false;
                 input.checked = input.value === selectedStudentType;
             });
@@ -521,6 +542,7 @@
             return {
                 regular: 'Regular',
                 ladderized: 'Ladderized',
+                new: 'Incoming Freshman (ARN)',
                 transferee: 'Transferee',
                 returnee: 'Returnee',
                 shiftee: 'Shiftee',
@@ -628,10 +650,11 @@
                     item.setAttribute('aria-checked', String(item === option));
                 });
                 errorText.hidden = true;
+                resetStudentType();
                 if (input.value === 'student') {
-                    openStudentTypeSelection();
-                } else {
-                    resetStudentType();
+                    openStudentTypeSelection(studentOption, studentTypeField, studentTypeInputs);
+                } else if (input.value === 'applicant') {
+                    openStudentTypeSelection(applicantOption, applicantTypeField, applicantTypeInputs);
                 }
                 updateContinueState();
             });
@@ -640,8 +663,12 @@
                 if (event.target.closest('.health-role-student-type')) return;
                 const input = option.querySelector('input[name="clinic_account_type"]');
                 if (!input || input.disabled || saving) return;
-                if (input.value === 'student' && input.checked && !optionsContainer?.classList.contains('is-student-focus')) {
-                    openStudentTypeSelection();
+                if (input.checked && !optionsContainer?.classList.contains('is-student-focus')) {
+                    if (input.value === 'student') {
+                        openStudentTypeSelection(studentOption, studentTypeField, studentTypeInputs);
+                    } else if (input.value === 'applicant') {
+                        openStudentTypeSelection(applicantOption, applicantTypeField, applicantTypeInputs);
+                    }
                 }
             });
 
@@ -652,15 +679,21 @@
             });
         });
 
-        studentTypeInputs.forEach(function (input) {
+        allSubtypeInputs.forEach(function (input) {
             input.addEventListener('change', function () {
-                if (!input.value || input.disabled || saving || !studentLabel) return;
+                if (!input.value || input.disabled || saving) return;
                 selectedStudentType = input.value;
-                if (selectedStudentTypeInput) selectedStudentTypeInput.value = selectedStudentType;
-                const selectedLabel = `Student - ${studentTypeLabel(selectedStudentType)}`;
+                const applicantSelection = input.closest('#healthRoleApplicantType') !== null;
+                if (selectedStudentTypeInput) selectedStudentTypeInput.value = applicantSelection ? '' : selectedStudentType;
+                if (selectedApplicantTypeInput) selectedApplicantTypeInput.value = applicantSelection ? selectedStudentType : '';
+                const selectedOption = applicantSelection ? applicantOption : studentOption;
+                const selectedField = applicantSelection ? applicantTypeField : studentTypeField;
+                const selectedInputs = applicantSelection ? applicantTypeInputs : studentTypeInputs;
+                const selectedLabel = `${applicantSelection ? 'Applicant' : 'Student'} - ${studentTypeLabel(selectedStudentType)}`;
                 window.setTimeout(() => {
-                    collapseStudentTypeSelection();
-                    studentLabel.textContent = selectedLabel;
+                    collapseStudentTypeSelection(selectedOption, selectedField, selectedInputs);
+                    if (applicantSelection && applicantLabel) applicantLabel.textContent = selectedLabel;
+                    if (!applicantSelection && studentLabel) studentLabel.textContent = selectedLabel;
                     updateContinueState();
                     continueLink.focus();
                 }, 180);

@@ -694,7 +694,7 @@ class LoginController extends Controller
         return redirect('/student/home');
     }
 
-    public function enterAdminPortal()
+    public function enterAdminPortal(Request $request)
     {
         $user = $this->authenticatedUser();
         abort_unless($user instanceof User && $this->isStudentAssistantAccount($user), 403);
@@ -710,6 +710,7 @@ class LoginController extends Controller
 
         Auth::guard($this->adminGuardName())->login($user);
         Auth::shouldUse($this->adminGuardName());
+        $request->session()->put('admin_activity_summary_pending', true);
 
         return redirect('/assistant/dashboard');
     }
@@ -2255,6 +2256,9 @@ class LoginController extends Controller
             $this->recordAuthEvent($request, 'Login', 'User logged in successfully.', $authenticatedUser);
 
             $redirectPath = $this->resolveRedirectPathForUser($authenticatedUser);
+            if (str_starts_with($redirectPath, '/admin/')) {
+                $request->session()->put('admin_activity_summary_pending', true);
+            }
             $this->queueHealthProfilePrompt($request, $authenticatedUser, $redirectPath);
 
             return redirect($redirectPath);
@@ -2460,6 +2464,9 @@ class LoginController extends Controller
         $this->recordAuthEvent($request, 'Login', 'User logged in successfully via IDP authorization code flow.', $user);
 
         $redirectPath = $this->resolveRedirectPathForUser($user);
+        if (str_starts_with($redirectPath, '/admin/')) {
+            $request->session()->put('admin_activity_summary_pending', true);
+        }
         $this->queueHealthProfilePrompt($request, $user, $redirectPath);
         $redirectResponse = redirect($redirectPath);
         $expireIdpCookiesOnClose = $guard === $this->studentGuardName()

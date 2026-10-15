@@ -14,7 +14,7 @@
     })->count();
     $completedAppointments = $appointments->filter(fn ($appointment) => strtolower(trim((string) $appointment->status)) === 'completed')->count();
     $missedAppointments = $appointments->filter(fn ($appointment) => in_array(strtolower(trim((string) $appointment->status)), ['missed', 'expired'], true))->count();
-    $cancelledAppointments = $appointments->filter(fn ($appointment) => strtolower(trim((string) $appointment->status)) === 'cancelled')->count();
+    $cancelledAppointments = $appointments->filter(fn ($appointment) => in_array(strtolower(trim((string) $appointment->status)), ['cancelled', 'rejected'], true))->count();
     $lastVisitAppointment = $appointments
         ->filter(function ($appointment) {
             return strtolower(trim((string) $appointment->status)) === 'completed';
@@ -119,6 +119,7 @@
                     <button type="button" class="history-modern-filter-btn" data-filter="completed"><x-outline-icon name="check" /> Completed</button>
                     <button type="button" class="history-modern-filter-btn" data-filter="missed"><x-outline-icon name="x-mark" /> Missed</button>
                     <button type="button" class="history-modern-filter-btn" data-filter="cancelled"><x-outline-icon name="clock" /> Cancelled</button>
+                    <button type="button" class="history-modern-filter-btn" data-filter="rejected"><x-outline-icon name="x-mark" /> Rejected</button>
                 </div>
             @endif
 
@@ -126,9 +127,11 @@
                 @forelse($appointments as $appointment)
                     @php
                         $statusNormalized = strtolower(trim((string) $appointment->status));
-                        $statusClass = in_array($statusNormalized, ['pending', 'approved', 'completed', 'missed', 'cancelled', 'expired'], true)
-                            ? 'status-' . $statusNormalized
-                            : 'status-default';
+                        $statusClass = $statusNormalized === 'rejected'
+                            ? 'status-cancelled'
+                            : (in_array($statusNormalized, ['pending', 'approved', 'completed', 'missed', 'cancelled', 'expired'], true)
+                                ? 'status-' . $statusNormalized
+                                : 'status-default');
                         try {
                             $appointmentAt = \Carbon\Carbon::parse($appointment->date . ' ' . $appointment->time);
                         } catch (\Throwable $exception) {
@@ -148,7 +151,7 @@
                         $serviceStatusClass = match ($statusNormalized) {
                             'approved', 'completed' => 'is-status-approved',
                             'pending' => 'is-status-pending',
-                            'missed', 'cancelled', 'expired' => 'is-status-alert',
+                            'missed', 'cancelled', 'rejected', 'expired' => 'is-status-alert',
                             default => 'is-status-default',
                         };
                         $consultationRemarks = $appointment->relationLoaded('historyConsultation')
@@ -168,7 +171,7 @@
                         data-history-month="{{ $appointmentAt->format('F Y') }}"
                     >
                         <span class="history-entry-dot {{ $statusClass }}" aria-hidden="true">
-                            @if(in_array($statusNormalized, ['completed', 'missed', 'expired'], true))
+                            @if(in_array($statusNormalized, ['completed', 'missed', 'rejected', 'expired'], true))
                                 <x-outline-icon name="{{ $statusNormalized === 'completed' ? 'check' : 'x-mark' }}" />
                             @endif
                         </span>
@@ -262,7 +265,7 @@
                 <dl class="history-summary-list">
                     <div><dt><i class="is-upcoming"></i>Upcoming</dt><dd>{{ $upcomingAppointments }}</dd></div>
                     <div><dt><i class="is-completed"></i>Completed</dt><dd>{{ $completedAppointments }}</dd></div>
-                    <div><dt><i></i>Cancelled</dt><dd>{{ $cancelledAppointments }}</dd></div>
+                    <div><dt><i></i>Cancelled / Rejected</dt><dd>{{ $cancelledAppointments }}</dd></div>
                     <div><dt><i class="is-missed"></i>Missed</dt><dd>{{ $missedAppointments }}</dd></div>
                 </dl>
                 <div class="history-summary-total"><span>Total Appointments</span><strong>{{ $totalAppointments }}</strong></div>

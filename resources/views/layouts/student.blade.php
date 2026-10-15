@@ -1137,6 +1137,12 @@
             --toast-accent-soft: #fecaca;
         }
 
+        .student-toast.is-info {
+            --toast-accent: #60a5fa;
+            --toast-accent-soft: #dbeafe;
+            --toast-title: #1d4ed8;
+        }
+
         .student-toast.is-hiding {
             animation: studentToastOut 0.22s ease forwards;
         }
@@ -3331,6 +3337,10 @@
                 </div>
             </div>
         </section>
+        <script type="application/json" id="studentNotificationFeedConfig">@json([
+            'url' => route('student.notifications.feed'),
+            'known_ids' => $studentAllNotifications->pluck('id')->values()->all(),
+        ])</script>
         @endauth
     </div>
 
@@ -3374,6 +3384,160 @@
                 closeButton?.addEventListener('click', dismissToast);
                 window.setTimeout(dismissToast, 5200);
             });
+
+            function showStudentNotificationToast(message, count) {
+                const stack = document.querySelector('[data-student-toast-stack]');
+                if (!stack) return;
+
+                const toast = document.createElement('div');
+                toast.className = 'student-toast is-info';
+                toast.setAttribute('role', 'status');
+                toast.dataset.studentToastLive = '1';
+
+                const icon = document.createElement('span');
+                icon.className = 'student-toast-icon';
+                icon.setAttribute('aria-hidden', 'true');
+                icon.textContent = 'i';
+
+                const content = document.createElement('span');
+                const title = document.createElement('strong');
+                title.className = 'student-toast-title';
+                title.textContent = count === 1 ? 'New clinic notification' : 'New clinic notifications';
+                const copy = document.createElement('span');
+                copy.className = 'student-toast-message';
+                copy.textContent = message;
+                content.append(title, copy);
+
+                const close = document.createElement('button');
+                close.type = 'button';
+                close.className = 'student-toast-close';
+                close.setAttribute('aria-label', 'Dismiss notification');
+                close.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>';
+
+                const dismiss = () => {
+                    toast.classList.add('is-hiding');
+                    window.setTimeout(() => toast.remove(), 240);
+                };
+                close.addEventListener('click', dismiss);
+                toast.append(icon, content, close);
+                stack.append(toast);
+                window.setTimeout(dismiss, 6500);
+            }
+
+            function initStudentNotificationFeed() {
+                const configNode = document.getElementById('studentNotificationFeedConfig');
+                if (!configNode) return;
+
+                let config;
+                try {
+                    config = JSON.parse(configNode.textContent || '{}');
+                } catch (error) {
+                    return;
+                }
+                if (!config.url) return;
+
+                const knownIds = new Set(Array.isArray(config.known_ids) ? config.known_ids.map(String) : []);
+                const badgeOwners = [
+                    document.querySelector('.student-quick-actions-toggle'),
+                    document.getElementById('studentNotifToggleBtn'),
+                ].filter(Boolean);
+
+                const updateUnreadBadge = (count) => {
+                    badgeOwners.forEach((owner) => {
+                        let badge = owner.querySelector('.student-quick-actions-badge');
+                        if (!badge && count > 0) {
+                            badge = document.createElement('span');
+                            badge.className = 'student-quick-actions-badge';
+                            owner.append(badge);
+                        }
+                        if (badge) {
+                            badge.textContent = count > 0 ? String(count) : '';
+                            badge.style.display = count > 0 ? 'inline-flex' : 'none';
+                        }
+                    });
+                };
+
+                const appendNotificationItem = (item, sectionId, isUnread) => {
+                    const list = document.querySelector(`#${sectionId} .student-notif-list`);
+                    if (!list) return;
+                    list.querySelector('.student-notif-empty')?.remove();
+
+                    const article = document.createElement('article');
+                    article.className = `student-notif-item${isUnread ? ' is-unread' : ''}`;
+                    const link = document.createElement('a');
+                    link.className = 'student-notif-item-link';
+                    link.href = item.open_url;
+
+                    const dot = document.createElement('span');
+                    dot.className = `student-notif-dot${isUnread ? '' : ' is-read'}`;
+                    dot.setAttribute('aria-hidden', 'true');
+                    const content = document.createElement('span');
+                    content.className = 'student-notif-content';
+                    const title = document.createElement('span');
+                    title.className = 'student-notif-item-title';
+                    title.textContent = item.message || 'A new clinic update is available.';
+                    const time = document.createElement('span');
+                    time.className = 'student-notif-item-time';
+                    time.textContent = item.time || 'Just now';
+
+                    content.append(title, time);
+                    link.append(dot, content);
+                    article.append(link);
+                    list.prepend(article);
+                };
+
+                let requestInFlight = false;
+                const pullNotifications = async () => {
+                    if (document.hidden || requestInFlight) return;
+                    requestInFlight = true;
+                    try {
+                        const response = await fetch(config.url, {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                            credentials: 'same-origin',
+                            cache: 'no-store',
+                        });
+                        if (!response.ok) return;
+
+                        const payload = await response.json();
+                        const notifications = Array.isArray(payload.notifications) ? payload.notifications : [];
+                        const newNotifications = notifications.filter((item) => item?.id && !knownIds.has(String(item.id)));
+                        notifications.forEach((item) => item?.id && knownIds.add(String(item.id)));
+                        updateUnreadBadge(Number(payload.unread_count || 0));
+
+                        newNotifications.forEach((item) => {
+                            appendNotificationItem(item, 'studentNotifUnreadSection', true);
+                            appendNotificationItem(item, 'studentNotifHistorySection', true);
+                        });
+
+                        if (newNotifications.length > 0) {
+                            const counts = newNotifications.reduce((total, item) => {
+                                if (item.category === 'appointments') total.appointments++;
+                                else if (item.category === 'health-records') total.healthRecords++;
+                                else total.other++;
+                                return total;
+                            }, { appointments: 0, healthRecords: 0, other: 0 });
+                            const parts = [];
+                            if (counts.appointments) parts.push(`${counts.appointments} new appointment update${counts.appointments === 1 ? '' : 's'}`);
+                            if (counts.healthRecords) parts.push(`${counts.healthRecords} new health record update${counts.healthRecords === 1 ? '' : 's'}`);
+                            if (counts.other) parts.push(`${counts.other} other clinic update${counts.other === 1 ? '' : 's'}`);
+                            showStudentNotificationToast(`You have ${parts.join(' and ')}.`, newNotifications.length);
+                        }
+                    } catch (error) {
+                        return;
+                    } finally {
+                        requestInFlight = false;
+                    }
+                };
+
+                pullNotifications();
+                const pollTimer = window.setInterval(pullNotifications, 15000);
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) pullNotifications();
+                });
+                window.addEventListener('beforeunload', () => window.clearInterval(pollTimer), { once: true });
+            }
+
+            initStudentNotificationFeed();
 
             function forceAccessibilityButtonTheme() {
                 document.querySelectorAll('.asw-menu-btn').forEach((button) => {

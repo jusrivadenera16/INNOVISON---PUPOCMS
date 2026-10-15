@@ -46,6 +46,7 @@ class AuditTrailMiddleware
         if (in_array($routeName, [
             'admin.notifications.feed',
             'notifications.feed',
+            'student.notifications.feed',
             'admin.logs',
             'admin.global-search',
         ], true)) {
@@ -55,6 +56,7 @@ class AuditTrailMiddleware
         if (in_array($path, [
             '/admin/notifications/feed',
             '/notifications/feed',
+            '/student/notifications/feed',
             '/admin/activity-logs',
             '/admin/global-search',
         ], true)) {

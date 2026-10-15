@@ -76,6 +76,13 @@
     if ($resolvedAdmissionReference === '-') {
         $resolvedAdmissionReference = '';
     }
+    $isTransfereeHealthRecord = ($user->applicant_type ?? null) === 'transferee';
+    $latestSubmissionSnapshot = $healthSubmissionSnapshotProfile($latestHealthSubmission);
+    $resolvedSisReferenceNumber = trim((string) (
+        optional($healthProfileRecord)->sis_reference_number
+        ?: ($user->sis_reference_number ?? '')
+        ?: ($latestSubmissionSnapshot['sis_reference_number'] ?? '')
+    ));
     $resolvedEmployeeNumber = trim((string) (
         optional($healthProfileRecord)->employee_number
         ?: ($accountProfileData['employee_number'] ?? '')
@@ -149,11 +156,13 @@
     $latestIdentifierLabel = match (true) {
         $isEmployeeHealthRecord => 'Employee Number',
         $isStudentHealthRecord => 'Student Number',
+        $isTransfereeHealthRecord => 'Reference Number',
         default => 'Admission Reference',
     };
     $latestIdentifierValue = match (true) {
         $isEmployeeHealthRecord => $resolvedEmployeeNumber,
         $isStudentHealthRecord => $resolvedStudentNumber,
+        $isTransfereeHealthRecord => $resolvedSisReferenceNumber,
         default => $resolvedAdmissionReference,
     };
     if ($latestIdentifierValue === '') {

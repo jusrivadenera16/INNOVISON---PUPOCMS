@@ -24,7 +24,7 @@ class EnsureStudentSessionIdle
 
         $now = now()->timestamp;
         $lastActivity = (int) $request->session()->get(self::LAST_ACTIVITY_SESSION_KEY, $now);
-        $timeoutMinutes = max(1, (int) config('session.student_idle_timeout', 15));
+        $timeoutMinutes = max(1, (int) config('session.student_idle_timeout', 30));
         $timeoutSeconds = $timeoutMinutes * 60;
 
         if ($lastActivity > 0 && ($now - $lastActivity) >= $timeoutSeconds) {
@@ -35,6 +35,10 @@ class EnsureStudentSessionIdle
                     'session' => "Your student session expired after {$timeoutMinutes} minutes of inactivity. Please sign in again.",
                 ])
             );
+        }
+
+        if ($request->isMethod('GET') && $request->is('student/notifications/feed')) {
+            return $next($request);
         }
 
         $request->session()->put(self::LAST_ACTIVITY_SESSION_KEY, $now);

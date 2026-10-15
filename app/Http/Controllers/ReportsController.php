@@ -8,7 +8,6 @@ use App\Models\MedicalConditions;
 use App\Models\Category;
 use App\Models\Consultation;
 use App\Models\ConsultationEvaluation;
-use App\Models\AppointmentFeedback;
 use App\Models\Appointment;
 use App\Models\ActivityLog;
 use App\Models\ClinicServiceOption;
@@ -2318,73 +2317,6 @@ class ReportsController extends Controller
         ]);
     }
 
-    public function feedbackReport(Request $request)
-    {
-        $query = AppointmentFeedback::query()
-            ->with(['appointment', 'user'])
-            ->whereNotNull('submitted_at');
-
-        $feedbackItems = (clone $query)
-            ->latest('submitted_at')
-            ->paginate(5)
-            ->through(function (AppointmentFeedback $feedback) {
-                $appointment = $feedback->appointment;
-                $user = $feedback->user;
-                $firstName = trim((string) ($user->first_name ?? ''));
-                $lastName = trim((string) ($user->last_name ?? ''));
-                $fallbackName = trim((string) ($user->name ?? ''));
-
-                if ($firstName === '' && $fallbackName !== '') {
-                    $nameParts = preg_split('/\s+/', $fallbackName) ?: [];
-                    $firstName = trim((string) ($nameParts[0] ?? ''));
-                    $lastName = trim((string) ($nameParts[count($nameParts) - 1] ?? ''));
-                }
-
-                $surnameInitial = $lastName !== '' ? strtoupper(substr($lastName, 0, 1)) . '.' : '';
-                $displayName = trim($firstName . ($surnameInitial !== '' ? ' ' . $surnameInitial : ''));
-                if ($displayName === '') {
-                    $displayName = 'Clinic User';
-                }
-
-                $initials = collect(preg_split('/\s+/', $displayName) ?: [])
-                    ->filter()
-                    ->take(2)
-                    ->map(fn ($part) => strtoupper(substr(rtrim($part, '.'), 0, 1)))
-                    ->implode('');
-
-                return (object) [
-                    'id' => $feedback->id,
-                    'name' => $displayName,
-                    'initials' => $initials !== '' ? $initials : 'CU',
-                    'student_number' => trim((string) ($user->student_number ?? '')),
-                    'role' => trim((string) ($appointment->user_type ?? $user->user_role ?? 'User')),
-                    'service' => trim((string) ($appointment->service ?? 'General Consultation')),
-                    'appointment_type' => trim((string) ($appointment->type ?? '')),
-                    'rating' => (int) $feedback->rating,
-                    'score_out_of_ten' => number_format(((int) $feedback->rating) * 2, 1),
-                    'message' => trim((string) $feedback->feedback),
-                    'submitted_at' => $feedback->submitted_at,
-                    'time_ago' => optional($feedback->submitted_at)->diffForHumans() ?? 'Recently',
-                ];
-            });
-
-        $summaryBaseQuery = AppointmentFeedback::query()->whereNotNull('submitted_at');
-
-        $totalFeedbacks = (clone $summaryBaseQuery)->count();
-        $averageRating = round((float) ((clone $summaryBaseQuery)->avg('rating') ?? 0), 1);
-        $clinicScore = round($averageRating * 2, 1);
-        $recommendedCount = (clone $summaryBaseQuery)->where('rating', '>=', 4)->count();
-        $lowRatingCount = (clone $summaryBaseQuery)->where('rating', '<=', 2)->count();
-
-        return view('admin.reports.feedbacks', compact(
-            'feedbackItems',
-            'totalFeedbacks',
-            'clinicScore',
-            'recommendedCount',
-            'lowRatingCount'
-        ));
-    }
-
     public function serviceEvaluationReport(Request $request)
     {
         $dateToRules = ['nullable', 'date'];
@@ -2769,7 +2701,8 @@ private function exportReportsPreview(Request $request, string $reportType)
         'gender' => trim((string) $request->query('gender', '')),
         'condition' => trim((string) $request->query('condition', '')),
         'status' => trim((string) $request->query('status', '')),
-        'school_year' => trim((string) $request->query('school_year', '')),
+        'year_level' => trim((string) $request->query('year_level', '')),
+        'identifier_type' => trim((string) $request->query('identifier_type', '')),
         'sort' => $this->normalizeHealthFormsExportSort((string) $request->query('sort', 'name_asc')),
         'condition_keyword' => trim((string) $request->query('condition_keyword', '')),
         'condition_source' => trim((string) $request->query('condition_source', 'all')),
@@ -2885,15 +2818,12 @@ private function exportReportsPreview(Request $request, string $reportType)
             ->unique()
             ->sort()
             ->values(),
-        'healthFormSchoolYears' => HealthProfile::query()
-            ->select('school_year')
-            ->whereNotNull('school_year')
-            ->get()
-            ->map(fn (HealthProfile $profile) => trim((string) $profile->school_year))
-            ->filter()
-            ->unique()
-            ->sortDesc()
-            ->values(),
+        'healthFormYearLevels' => collect(['1st Year', '2nd Year', '3rd Year', '4th Year']),
+        'healthFormIdentifierTypes' => [
+            'reference_number' => 'Reference Number',
+            'student_number' => 'Student Number',
+            'employee_number' => 'Employee Number',
+        ],
         'healthConditionSuggestions' => $reportType === 'health-forms'
             ? $this->healthConditionKeywordSuggestions()
             : collect(),
@@ -3116,7 +3046,8 @@ private function exportHealthFormsPreviewRecords(Request $request, Carbon $dateF
     $genderFilter = strtolower(trim((string) $request->query('gender', '')));
     $conditionFilter = strtolower(trim((string) $request->query('condition', '')));
     $statusFilter = strtolower(trim((string) $request->query('status', '')));
-    $schoolYearFilter = trim((string) $request->query('school_year', ''));
+    $yearLevelFilter = $this->normalizeHealthFormsYearLevel((string) $request->query('year_level', ''));
+    $identifierTypeFilter = $this->normalizeHealthFormsIdentifierType((string) $request->query('identifier_type', ''));
     $sortMode = $this->normalizeHealthFormsExportSort((string) $request->query('sort', 'name_asc'));
     $conditionKeyword = trim((string) $request->query('condition_keyword', ''));
     $conditionSource = trim((string) $request->query('condition_source', 'all'));
@@ -3164,11 +3095,19 @@ private function exportHealthFormsPreviewRecords(Request $request, Carbon $dateF
         $query->where('clearance_status', 'Rejected');
     }
 
-    if ($schoolYearFilter !== '') {
-        $query->whereRaw('TRIM(school_year) = ?', [$schoolYearFilter]);
+    $records = $query->orderByDesc(DB::raw('COALESCE(verified_at, created_at)'))->get();
+
+    if ($yearLevelFilter !== '') {
+        $records = $records->filter(fn (HealthProfile $record) =>
+            $this->normalizeHealthFormsYearLevel((string) optional($record->user)->year) === $yearLevelFilter
+        )->values();
     }
 
-    $records = $query->orderByDesc(DB::raw('COALESCE(verified_at, created_at)'))->get();
+    if ($identifierTypeFilter !== '') {
+        $records = $records->filter(fn (HealthProfile $record) =>
+            $this->healthFormsRecordHasIdentifierType($record, $identifierTypeFilter)
+        )->values();
+    }
 
     if ($userTypeFilter !== '') {
         $records = $records->filter(function (HealthProfile $record) use ($userTypeFilter) {
@@ -3235,7 +3174,8 @@ public function exportHealthForms(Request $request)
     $genderFilter = strtolower(trim((string) $request->query('gender', '')));
     $conditionFilter = strtolower(trim((string) $request->query('condition', '')));
     $statusFilter = strtolower(trim((string) $request->query('status', '')));
-    $schoolYearFilter = trim((string) $request->query('school_year', ''));
+    $yearLevelFilter = $this->normalizeHealthFormsYearLevel((string) $request->query('year_level', ''));
+    $identifierTypeFilter = $this->normalizeHealthFormsIdentifierType((string) $request->query('identifier_type', ''));
     $sortMode = $this->normalizeHealthFormsExportSort((string) $request->query('sort', 'name_asc'));
     $conditionKeyword = trim((string) $request->query('condition_keyword', ''));
     $conditionSource = trim((string) $request->query('condition_source', 'all'));
@@ -3294,11 +3234,19 @@ public function exportHealthForms(Request $request)
         $query->where('clearance_status', 'Rejected');
     }
 
-    if ($schoolYearFilter !== '') {
-        $query->whereRaw('TRIM(school_year) = ?', [$schoolYearFilter]);
+    $records = $query->orderByDesc(DB::raw('COALESCE(verified_at, created_at)'))->get();
+
+    if ($yearLevelFilter !== '') {
+        $records = $records->filter(fn (HealthProfile $record) =>
+            $this->normalizeHealthFormsYearLevel((string) optional($record->user)->year) === $yearLevelFilter
+        )->values();
     }
 
-    $records = $query->orderByDesc(DB::raw('COALESCE(verified_at, created_at)'))->get();
+    if ($identifierTypeFilter !== '') {
+        $records = $records->filter(fn (HealthProfile $record) =>
+            $this->healthFormsRecordHasIdentifierType($record, $identifierTypeFilter)
+        )->values();
+    }
 
     if ($userTypeFilter !== '') {
         $records = $records->filter(function (HealthProfile $record) use ($userTypeFilter) {
@@ -3859,6 +3807,39 @@ private function normalizeHealthFormsExportSort(string $sortMode): string
     return in_array($sortMode, ['name_asc', 'name_desc', 'date_desc', 'date_asc'], true)
         ? $sortMode
         : 'name_asc';
+}
+
+private function normalizeHealthFormsYearLevel(string $yearLevel): string
+{
+    return match (strtolower(trim($yearLevel))) {
+        '1', '1st', '1st year', 'first', 'first year', 'year 1' => '1st Year',
+        '2', '2nd', '2nd year', 'second', 'second year', 'year 2' => '2nd Year',
+        '3', '3rd', '3rd year', 'third', 'third year', 'year 3' => '3rd Year',
+        '4', '4th', '4th year', 'fourth', 'fourth year', 'year 4' => '4th Year',
+        default => '',
+    };
+}
+
+private function normalizeHealthFormsIdentifierType(string $identifierType): string
+{
+    $identifierType = strtolower(trim($identifierType));
+
+    return in_array($identifierType, ['reference_number', 'student_number', 'employee_number'], true)
+        ? $identifierType
+        : '';
+}
+
+private function healthFormsRecordHasIdentifierType(HealthProfile $record, string $identifierType): bool
+{
+    $user = $record->user;
+    $identifier = match ($identifierType) {
+        'reference_number' => $record->reference_number ?: optional($user)->reference_number,
+        'student_number' => $record->student_number ?: optional($user)->student_number,
+        'employee_number' => $record->getAttribute('employee_number') ?: optional($user)->employee_number,
+        default => null,
+    };
+
+    return trim((string) $identifier) !== '';
 }
 
 private function healthFormsRecordDateSortKey(HealthProfile $record): int

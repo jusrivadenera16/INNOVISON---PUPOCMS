@@ -1366,7 +1366,6 @@
     $digitalLogbookUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/digital-logbook') : url('/admin/reports/digital-logbook');
     $appointmentStatisticsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/appointment-statistics') : url('/admin/reports/appointment-statistics');
     $healthFormsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/health-forms') : url('/admin/reports/health-forms');
-    $feedbacksUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/feedbacks') : url('/admin/reports/feedbacks');
     $evaluationReportsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/evaluation-reports') : url('/admin/reports/evaluation-reports');
     $exportHubUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/export-hub') : url('/admin/reports/export-hub');
     $canAccessReport = fn (string $permission): bool => optional(auth()->user())->canAccessPermission($permission) ?? false;
@@ -1432,17 +1431,6 @@
             <div>
                 <div class="report-main-title">Clinic Records</div>
                 <p class="report-card-copy">Monitor clinic treatments, visit logs, and submitted form activity.</p>
-            </div>
-        </a>
-        @endif
-
-        @if($canAccessReport('reports.feedbacks'))
-        <a href="{{ $feedbacksUrl }}" class="report-card">
-            <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
-            <span class="report-card-icon"><x-outline-icon name="megaphone" /></span>
-            <div>
-                <div class="report-main-title">Feedbacks</div>
-                <p class="report-card-copy">Review patient feedback, ratings, comments, and clinic experience notes to improve care.</p>
             </div>
         </a>
         @endif

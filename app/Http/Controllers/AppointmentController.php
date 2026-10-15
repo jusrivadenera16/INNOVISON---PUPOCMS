@@ -9,7 +9,6 @@ use App\Models\Announcement;
 use App\Models\ActivityLog;
 use App\Services\AnnouncementContent;
 use App\Models\Appointment;
-use App\Models\AppointmentFeedback;
 use App\Models\ClinicServiceOption;
 use App\Models\Consultation;
 use App\Models\ConsultationEvaluation;
@@ -100,15 +99,17 @@ class AppointmentController extends Controller
         return $adminUser;
     }
 
-    private function formatFeedbackDisplayName(?User $user, ?Appointment $appointment = null): string
+    private function formatEvaluationDisplayName(?User $user): string
     {
         $firstName = trim((string) ($user?->first_name ?? ''));
         $lastName = trim((string) ($user?->last_name ?? ''));
 
-        if ($firstName === '' && $lastName === '' && $appointment) {
-            $nameParts = preg_split('/\s+/', trim((string) $appointment->name)) ?: [];
+        if ($firstName === '') {
+            $nameParts = preg_split('/\s+/', trim((string) ($user?->name ?? ''))) ?: [];
             $firstName = $nameParts[0] ?? '';
-            $lastName = count($nameParts) > 1 ? ($nameParts[count($nameParts) - 1] ?? '') : '';
+            if ($lastName === '') {
+                $lastName = count($nameParts) > 1 ? ($nameParts[count($nameParts) - 1] ?? '') : '';
+            }
         }
 
         if ($firstName === '' && $lastName === '') {
@@ -154,7 +155,6 @@ class AppointmentController extends Controller
         $user->loadMissing('healthProfile');
 
         $appointments = Appointment::where('user_id', $user->id)
-            ->with('feedback')
             ->orderBy('updated_at', 'desc')
             ->get();
 
@@ -187,6 +187,15 @@ class AppointmentController extends Controller
                     'time' => $timeAgo,
                     'link' => url('/student/history'),
                 ];
+            } elseif ($appt->status === 'Rejected') {
+                $notifications[] = [
+                    'id' => $this->buildNotificationId('appointment-rejected', [$appt->id, $appt->status, optional($appt->updated_at)->timestamp]),
+                    'type' => 'danger',
+                    'icon' => 'X',
+                    'message' => 'Your appointment request was not approved.',
+                    'time' => $timeAgo,
+                    'link' => url('/student/history'),
+                ];
             } elseif ($appt->status === 'Cancelled') {
                 $cancelledForClosure = str_contains((string) $appt->notes, '[Clinic Closure]');
                 $notifications[] = [
@@ -208,17 +217,6 @@ class AppointmentController extends Controller
                     'message' => "Your {$appt->service} on {$dateStr} at {$timeLabel} expired because it was not approved in time. Tap to book again.",
                     'time' => $timeAgo,
                     'link' => url('/student/booking'),
-                ];
-            } elseif ($appt->status === 'Completed') {
-                $notifications[] = [
-                    'id' => $this->buildNotificationId('appointment-feedback', [$appt->id, $appt->status, optional($appt->updated_at)->timestamp]),
-                    'type' => 'info',
-                    'icon' => '!',
-                    'message' => $appt->feedback
-    ? "You already submitted feedback for {$appt->service} on {$dateStr}."
-    : "Your consultation for {$appt->service} on {$dateStr} has been completed. Please share your feedback.",
-                    'time' => $timeAgo,
-                    'link' => route('student.feedback.show', ['appointment' => $appt->id]),
                 ];
             }
 
@@ -326,6 +324,18 @@ class AppointmentController extends Controller
                     : ($isHealthProfileResubmission
                         ? 'The clinic requested replacement files for your health profile.'
                         : 'Your health profile was submitted and is awaiting medical review.'))),
+                '_health_status' => $pulloutNotification
+                    ? match ($pulloutStatus) {
+                        HealthProfile::PULLOUT_PENDING => 'pullout_pending',
+                        HealthProfile::PULLOUT_COMPLETED => 'pulled_out',
+                        HealthProfile::PULLOUT_RESTORED => 'restored',
+                        default => 'under_review',
+                    }
+                    : ($needsHealthFormCorrection
+                        ? 'correction_requested'
+                        : ($isHealthProfileIssued
+                            ? 'approved'
+                            : ($isHealthProfileResubmission ? 'documents_requested' : 'under_review'))),
                 'time' => $pulloutNotification['time'] ?? ($needsHealthFormCorrection && $healthProfile->resubmission_requested_at
                     ? $healthProfile->resubmission_requested_at->diffForHumans()
                     : 'Health profile status'),
@@ -456,6 +466,8 @@ class AppointmentController extends Controller
     private function decorateStudentNotification(array $notification): array
     {
         $id = strtolower((string) ($notification['id'] ?? ''));
+        $healthStatus = (string) ($notification['_health_status'] ?? '');
+        unset($notification['_health_status']);
 
         $category = match (true) {
             str_starts_with($id, 'appointment-') => 'appointments',
@@ -482,6 +494,7 @@ class AppointmentController extends Controller
         };
 
         $derivedTitle = match (true) {
+            str_starts_with($id, 'appointment-rejected-') => 'Appointment Rejected',
             str_starts_with($id, 'appointment-approved-') => 'Appointment Approved',
             str_starts_with($id, 'appointment-cancelled-') => 'Appointment Cancelled',
             str_starts_with($id, 'appointment-expired-') => 'Appointment Expired',
@@ -495,10 +508,46 @@ class AppointmentController extends Controller
             str_starts_with($id, 'announcement-') => 'Clinic Announcement',
             default => 'Clinic Update',
         };
-        $notification['title'] = trim((string) ($notification['title'] ?? '')) ?: $derivedTitle;
+
+        $isConsultationEvaluation = str_starts_with($id, 'consultation-evaluation-');
+        $appointmentCopy = match (true) {
+            str_starts_with($id, 'appointment-approved-') => ['Appointment Approved', 'Your appointment has been approved.'],
+            str_starts_with($id, 'appointment-rejected-') => ['Appointment Rejected', 'Your appointment request was not approved.'],
+            str_starts_with($id, 'appointment-cancelled-') => ['Appointment Cancelled', 'Your appointment was cancelled.'],
+            str_starts_with($id, 'appointment-expired-') => ['Appointment Request Expired', 'Your appointment request expired before approval.'],
+            str_starts_with($id, 'appointment-reminder-') => ['Appointment Reminder', 'You have an upcoming appointment.'],
+            default => ['Appointment Update', 'Your appointment status has changed.'],
+        };
+        $healthCopy = match (true) {
+            str_starts_with($id, 'health-form-correction-') => ['Health Form Changes Requested', 'The clinic requested updates to your Health Form.'],
+            str_starts_with($id, 'new-health-form-request-') => ['New Health Form Requested', 'The clinic requested a new Health Form.'],
+            $healthStatus === 'approved' => ['Health Form Approved', 'Your Health Form has been approved.'],
+            $healthStatus === 'correction_requested' => ['Health Form Changes Requested', 'The clinic requested updates to your Health Form.'],
+            $healthStatus === 'documents_requested' => ['Health Form Documents Requested', 'The clinic requested replacement documents for your Health Form.'],
+            $healthStatus === 'pullout_pending' => ['Health Record Request Pending', 'The clinic is reviewing a request about your Health Record.'],
+            $healthStatus === 'pulled_out' => ['Health Record Archived', 'Your Health Record was archived by the clinic.'],
+            $healthStatus === 'restored' => ['Health Record Restored', 'Your Health Record has been restored.'],
+            $healthStatus === 'under_review' => ['Health Form Under Review', 'Your Health Form is awaiting clinic review.'],
+            default => ['Health Record Update', 'Your Health Record has a status update. Open your account to review it.'],
+        };
+        $privacySafeTitle = $category === 'appointments'
+            ? $appointmentCopy[0]
+            : ($category === 'health-records' ? $healthCopy[0] : ($isConsultationEvaluation ? 'Clinic Update' : null));
+        $privacySafeMessage = $category === 'appointments'
+            ? $appointmentCopy[1]
+            : ($category === 'health-records' ? $healthCopy[1] : ($isConsultationEvaluation ? 'There is a new update in your clinic account.' : null));
+
+        $notification['title'] = $privacySafeTitle
+            ?? (trim((string) ($notification['title'] ?? '')) ?: $derivedTitle);
+        if ($privacySafeMessage !== null) {
+            $notification['message'] = $privacySafeMessage;
+        }
 
         $notification['action_label'] = match (true) {
             str_starts_with($id, 'appointment-expired-') => 'Book Again',
+            $category === 'appointments' => 'View Appointment',
+            $category === 'health-records' => 'View Health Record',
+            $isConsultationEvaluation => 'Open Update',
             str_starts_with($id, 'appointment-feedback-') => 'Open Feedback',
             str_starts_with($id, 'health-form-correction-'),
             str_starts_with($id, 'new-health-form-request-') => 'Review Form',
@@ -782,11 +831,19 @@ class AppointmentController extends Controller
         }
     }
 
-    private function buildRecentFeedbackCollection(?int $limit = null)
+    private function buildRecentEvaluationCollection(?int $limit = null)
     {
-        $query = AppointmentFeedback::query()
-            ->with(['user', 'appointment'])
+        if (!Schema::hasTable('eval_form') || !Schema::hasColumn('eval_form', 'suggestions')) {
+            return collect();
+        }
+
+        $query = ConsultationEvaluation::query()
+            ->with(['user', 'consultation'])
+            ->where('status', 'submitted')
             ->whereNotNull('submitted_at')
+            ->whereNotNull('consent_at')
+            ->whereNotNull('suggestions')
+            ->whereRaw("TRIM(suggestions) <> ''")
             ->latest('submitted_at');
 
         if ($limit !== null) {
@@ -795,17 +852,17 @@ class AppointmentController extends Controller
 
         return $query
             ->get()
-            ->map(function (AppointmentFeedback $feedback) {
-                $appointment = $feedback->appointment;
-                $user = $feedback->user;
+            ->map(function (ConsultationEvaluation $evaluation) {
+                $user = $evaluation->user;
+                $rating = (int) $evaluation->rating;
 
                 return [
-                    'name' => $this->formatFeedbackDisplayName($user, $appointment),
-                    'role' => trim((string) ($appointment?->user_type ?? $user?->user_role ?? 'Student')),
-                    'time' => optional($feedback->submitted_at)->diffForHumans() ?? 'Recently',
-                    'rating' => (int) $feedback->rating,
-                    'message' => trim((string) $feedback->feedback) !== '' ? trim((string) $feedback->feedback) : 'Shared positive feedback about the clinic experience.',
-                    'service' => trim((string) ($appointment?->service ?? 'Clinic Service')),
+                    'name' => $this->formatEvaluationDisplayName($user),
+                    'role' => trim((string) ($evaluation->client_type ?: $user?->user_role ?: 'Student')),
+                    'time' => optional($evaluation->submitted_at)->diffForHumans() ?? 'Recently',
+                    'rating' => $rating >= 1 && $rating <= 5 ? $rating : null,
+                    'message' => trim((string) $evaluation->suggestions),
+                    'service' => $evaluation->serviceLabel(),
                 ];
             });
     }
@@ -820,10 +877,7 @@ class AppointmentController extends Controller
         }
 
         $this->promoteDesigneeAdminToStudentGuard();
-        $feedbackCount = AppointmentFeedback::query()
-            ->whereNotNull('submitted_at')
-            ->count();
-        $recentFeedback = $this->buildRecentFeedbackCollection(10);
+        $recentEvaluations = $this->buildRecentEvaluationCollection(10);
         $clinicHoursStatus = $this->buildClinicHoursStatus();
         $homeAnnouncements = Announcement::query()
             ->where('status', Announcement::STATUS_ACTIVE)
@@ -858,22 +912,12 @@ class AppointmentController extends Controller
             ])
             ->values();
 
-        return view('student.home', compact('recentFeedback', 'feedbackCount', 'clinicHoursStatus', 'homeAnnouncements'));
+        return view('student.home', compact('recentEvaluations', 'clinicHoursStatus', 'homeAnnouncements'));
     }
 
     private function buildClinicHoursStatus(): array
     {
         return app(ClinicWorkflowService::class)->clinicHoursStatus();
-    }
-
-    public function feedbackIndex()
-    {
-        $allFeedback = $this->buildRecentFeedbackCollection();
-
-        return view('student.feedback-index', [
-            'allFeedback' => $allFeedback,
-            'feedbackCount' => $allFeedback->count(),
-        ]);
     }
 
     private function looksLikeIdpIdentifier(?string $value, ?User $user = null): bool
@@ -1557,13 +1601,26 @@ class AppointmentController extends Controller
     private function buildHealthFormPrefill(User $user, ?Admin $linkedAdminProfile = null, ?HealthProfile $healthProfile = null): array
     {
         $linkedAdminProfile = $linkedAdminProfile ?: $this->resolveLinkedAdminProfile($user);
+        $isTransfereeApplicant = $user->clinicAccountTypeKey() === 'applicant'
+            && $user->applicant_type === 'transferee';
         $isInitialDirectLadderizedStudent = $this->canEnterInitialDirectLadderizedStudentNumber($user, $healthProfile);
         $guisisAccountData = $this->isStudentAccount($user) && !$isInitialDirectLadderizedStudent
             ? $this->buildGuisisAccountData($user)
             : ['available' => false];
         $studentNumberReference = $this->enrolledStudentReferenceNumber($user, $healthProfile, $guisisAccountData);
         $storedAdmissionReference = $this->resolveReferenceNumber($user, $healthProfile);
-        if ($isInitialDirectLadderizedStudent) {
+        if ($isTransfereeApplicant) {
+            $applicantLookup = [
+                'success' => false,
+                'outcome' => 'skipped_transferee_sis_reference',
+                'status' => null,
+                'message' => 'Transferee SIS Reference Number is verified locally.',
+                'data' => null,
+            ];
+            $applicantData = null;
+            $lookupOutcome = 'skipped_transferee_sis_reference';
+            $referenceMode = 'sis_reference';
+        } elseif ($isInitialDirectLadderizedStudent) {
             $applicantLookup = [
                 'success' => false,
                 'outcome' => 'skipped_direct_student',
@@ -1605,7 +1662,7 @@ class AppointmentController extends Controller
             $referenceMode = $this->resolveHealthReferenceMode($user, $linkedAdminProfile, $applicantData, $lookupOutcome);
         }
         $applicantIdentity = $this->normalizePuptasApplicantIdentity($applicantData);
-        $manualStudentNumberAllowed = $this->canUseManualStudentNumberMode(
+        $manualStudentNumberAllowed = !$isTransfereeApplicant && $this->canUseManualStudentNumberMode(
             $user,
             $healthProfile,
             $applicantData,
@@ -2514,7 +2571,9 @@ class AppointmentController extends Controller
             }
         }
 
-        $studentType = strtolower(trim((string) ($user?->student_type ?? '')));
+        $studentType = strtolower(trim((string) (
+            $user?->student_type ?: (($user?->applicant_type ?? null) === 'transferee' ? 'transferee' : '')
+        )));
         if ($studentType === '' || $studentType === 'regular') {
             return 'Student';
         }
@@ -2524,7 +2583,9 @@ class AppointmentController extends Controller
 
     private function studentDeclarationCategoryForUser(User $user, string $category): string
     {
-        $studentType = strtolower(trim((string) $user->student_type));
+        $studentType = strtolower(trim((string) (
+            $user->student_type ?: ($user->applicant_type === 'transferee' ? 'transferee' : '')
+        )));
 
         if ($studentType === 'ladderized') {
             return 'Ladderized Program';
@@ -3001,7 +3062,7 @@ class AppointmentController extends Controller
         $appointments = Appointment::where('user_id', $user->id)->get();
         $upcoming = $appointments->where('status', 'Approved');
         $pending = $appointments->where('status', 'Pending');
-        $history = $appointments->whereIn('status', ['Completed', 'Cancelled', 'Expired']);
+        $history = $appointments->whereIn('status', ['Completed', 'Cancelled', 'Rejected', 'Expired']);
 
         return view('student.home', compact('upcoming', 'pending', 'history'));
     }
@@ -3172,6 +3233,7 @@ class AppointmentController extends Controller
         $appointment->user_type = Appointment::normalizeUserType($user->user_role);
         $appointment->save(); // Dito lang dapat magtatapos ang command.
 
+        app(\App\Services\AdminAppointmentAlertMailer::class)->sendNewAppointmentAlert($appointment);
         app(StudentNotificationMailer::class)->sendAppointmentNotice($user, $appointment, 'booked');
 
         $successMessage = $appointment->status === 'Approved'
@@ -3332,7 +3394,7 @@ public function account(Request $request)
     $pendingCount   = $appointments->where('status', 'Pending')->count();
     $approvedCount  = $appointments->where('status', 'Approved')->count();
     $completedCount = $appointments->where('status', 'Completed')->count();
-    $cancelledCount = $appointments->where('status', 'Cancelled')->count();
+    $cancelledCount = $appointments->whereIn('status', ['Cancelled', 'Rejected'])->count();
 
     // 4. Notification Logic
     $notifications = collect($this->getStudentNotifications($user))->values();
@@ -4392,6 +4454,29 @@ public function account(Request $request)
         return redirect($notification['link'] ?? '/student/account');
     }
 
+    public function notificationsFeed()
+    {
+        $user = Auth::guard('student')->user();
+        if (!$user) {
+            return response()->json(['notifications' => [], 'unread_count' => 0], 401);
+        }
+
+        $unreadNotifications = collect($this->getStudentNotifications($user))
+            ->where('is_unread', true)
+            ->values();
+
+        return response()->json([
+            'unread_count' => $unreadNotifications->count(),
+            'notifications' => $unreadNotifications->map(fn (array $notification) => [
+                'id' => (string) $notification['id'],
+                'category' => (string) ($notification['category'] ?? 'system'),
+                'message' => (string) ($notification['message'] ?? 'A new clinic update is available.'),
+                'time' => (string) ($notification['time'] ?? 'Just now'),
+                'open_url' => route('student.notifications.open', ['notificationId' => $notification['id']]),
+            ])->all(),
+        ]);
+    }
+
     public function markAllNotificationsRead()
     {
         /** @var \App\Models\User|null $user */
@@ -4431,75 +4516,6 @@ public function account(Request $request)
             : 'In-system notifications are enabled.';
 
         return redirect('/student/account?view=notifications')->with('success', $message);
-    }
-
-    public function showFeedbackForm(Appointment $appointment)
-    {
-        /** @var \App\Models\User|null $user */
-        $user = Auth::user();
-        if (!$user || $appointment->user_id !== $user->id) {
-            return redirect('/student/history')->with('error', 'Feedback form not available for this appointment.');
-        }
-
-        if ($appointment->status !== 'Completed') {
-            return redirect('/student/history')->with('error', 'You can only send feedback for completed appointments.');
-        }
-
-        $appointment->load('feedback');
-        $consultation = Consultation::query()
-            ->where('user_id', $appointment->user_id)
-            ->whereDate('consultation_date', $appointment->date)
-            ->orderByDesc('time_in')
-            ->first();
-
-        return view('student.feedback', [
-            'appointment' => $appointment,
-            'existingFeedback' => $appointment->feedback,
-            'consultation' => $consultation,
-        ]);
-    }
-
-    public function storeFeedback(Request $request, Appointment $appointment)
-    {
-        /** @var \App\Models\User|null $user */
-        $user = Auth::user();
-        if (!$user || $appointment->user_id !== $user->id) {
-            return redirect('/student/history')->with('error', 'Feedback form not available for this appointment.');
-        }
-
-        if ($appointment->status !== 'Completed') {
-            return redirect('/student/history')->with('error', 'You can only send feedback for completed appointments.');
-        }
-
-        if ($appointment->feedback && $appointment->feedback->submitted_at) {
-            return redirect()
-                ->route('student.feedback.show', ['appointment' => $appointment->id])
-                ->with('success', 'Your feedback has already been submitted and is now view-only.');
-        }
-
-        $validated = $request->validate([
-            'rating' => ['required', 'integer', 'between:1,5'],
-            'feedback' => ['nullable', 'string', 'max:2000'],
-        ]);
-
-        AppointmentFeedback::create([
-            'appointment_id' => $appointment->id,
-            'user_id' => $user->id,
-            'rating' => $validated['rating'],
-            'feedback' => trim((string) ($validated['feedback'] ?? '')),
-            'submitted_at' => now(),
-        ]);
-
-        \App\Models\ActivityLog::create([
-            'user_id'     => $user->id,
-            'user_name'   => $user->name,
-            'action'      => 'Appointment Feedback Submitted',
-            'description' => "Submitted feedback for Appointment #{$appointment->id}.",
-            'ip_address'  => $request->ip(),
-            'user_agent'  => $request->userAgent(),
-        ]);
-
-        return redirect('/student/account?view=notifications')->with('success', 'Thank you for sharing your feedback.');
     }
 
     public function showEvaluationForm(ConsultationEvaluation $evaluation)
@@ -4667,7 +4683,7 @@ public function account(Request $request)
             $pendingCount = $appointments->where('status', 'Pending')->count();
             $upcomingCount = $appointments->where('status', 'Approved')->count();
             $completedCount = $appointments->where('status', 'Completed')->count();
-            $cancelledCount = $appointments->where('status', 'Cancelled')->count();
+            $cancelledCount = $appointments->whereIn('status', ['Cancelled', 'Rejected'])->count();
         }
 
         $faqs = Faq::query()->where('is_active', true)->latest()->get();
@@ -5049,6 +5065,8 @@ public function showHealthForm()
     /** @var \App\Models\User|null $user */
     $user = Auth::guard('student')->user() ?: Auth::user();
     $isDedicatedStudentForm = request()->routeIs('health.form.student');
+    $isDedicatedTransfereeForm = request()->routeIs('health.form.transferee');
+    $isDedicatedStudentWorkflow = $isDedicatedStudentForm || $isDedicatedTransfereeForm;
 
     // Refresh user from database to ensure all fields are populated
     if ($user) {
@@ -5057,6 +5075,12 @@ public function showHealthForm()
 
     if ($this->isDependentProfileUser($user)) {
         return redirect()->route('dependent.profile.form');
+    }
+
+    if (!$isDedicatedTransfereeForm
+        && $user?->clinicAccountTypeKey() === 'applicant'
+        && $user?->applicant_type === 'transferee') {
+        return redirect()->route('health.form.transferee');
     }
 
     if (!$isDedicatedStudentForm && $this->shouldUseEmployeeHealthForm($user)) {
@@ -5091,6 +5115,10 @@ public function showHealthForm()
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
     $healthFormPrefill = $this->buildHealthFormPrefill($user, $linkedAdminProfile, $existingHealthProfile);
     $healthFormPrefill['pending_health_form_request'] = $pendingHealthFormRequest;
+    if ($isDedicatedTransfereeForm && $user?->applicant_type !== 'transferee') {
+        return redirect()->route($user->clinicHealthFormRoute());
+    }
+
     if ($isDedicatedStudentForm) {
         // Keep the GUISIS-resolved number from the shared prefill even when
         // the student opened the initial form without a pending request.
@@ -5114,6 +5142,22 @@ public function showHealthForm()
         $healthFormPrefill['step_1_title'] = 'Student ID';
         $healthFormPrefill['step_1_description'] = 'Enter your Student ID, then complete your health information.';
         $healthFormPrefill['reference_label'] = 'Student ID / Student Number';
+    } elseif ($isDedicatedTransfereeForm) {
+        $sisReference = trim((string) (
+            $user->sis_reference_number
+            ?: optional($existingHealthProfile)->sis_reference_number
+        ));
+        if ($sisReference !== '' && trim((string) $user->sis_reference_number) === '') {
+            $user->sis_reference_number = $sisReference;
+            $user->save();
+        }
+        $healthFormPrefill['reference_mode'] = 'sis_reference';
+        $healthFormPrefill['reference_number'] = $sisReference;
+        $healthFormPrefill['manual_student_number_allowed'] = false;
+        $healthFormPrefill['reference_requires_validation'] = $sisReference === '';
+        $healthFormPrefill['step_1_title'] = 'SIS Reference Number';
+        $healthFormPrefill['step_1_description'] = 'Enter your SIS Reference Number, then complete your health information.';
+        $healthFormPrefill['reference_label'] = 'SIS Reference Number';
     } else {
         $healthFormPrefill['reference_mode'] = 'admission';
         $healthFormPrefill['reference_number'] = trim((string) (
@@ -5127,7 +5171,9 @@ public function showHealthForm()
         $healthFormPrefill['reference_label'] = 'Admission Reference Number';
     }
     $this->persistResolvedUserProfileFields($user, $healthFormPrefill);
-    $this->persistResolvedReferenceNumber($user, $healthFormPrefill['reference_number'] ?? '');
+    if (!$isDedicatedTransfereeForm) {
+        $this->persistResolvedReferenceNumber($user, $healthFormPrefill['reference_number'] ?? '');
+    }
     $calculatedAge = $healthFormPrefill['age'] ?? null;
 
     // Return the view with all required variables
@@ -5136,17 +5182,20 @@ public function showHealthForm()
     $displayLastName = $healthFormPrefill['last_name'] ?? '';
     $displayReferenceNumber = $healthFormPrefill['reference_number'] ?? '';
     $prefill = $healthFormPrefill;
-    $studentHealthFormCategory = $isDedicatedStudentForm
+    $studentHealthFormCategory = $isDedicatedStudentWorkflow
         ? $this->resolvedStudentHealthFormCategory($user, $pendingHealthFormRequest, $existingHealthProfile)
         : '';
-    $studentDeclarationCategory = $isDedicatedStudentForm
+    $studentDeclarationCategory = $isDedicatedStudentWorkflow
         ? $this->studentDeclarationCategoryForUser($user, $studentHealthFormCategory)
         : 'Student';
-    $studentDeclarationPurpose = $this->studentDeclarationPurposeText($studentDeclarationCategory, $user->student_type);
+    $studentTypeForDeclaration = $isDedicatedTransfereeForm ? 'transferee' : $user->student_type;
+    $studentDeclarationPurpose = $this->studentDeclarationPurposeText($studentDeclarationCategory, $studentTypeForDeclaration);
     $studentHealthFormCategoryConfigured = $studentHealthFormCategory !== '';
 
     return view(
-        $isDedicatedStudentForm ? 'student.health_form_student' : 'student.health_form',
+        $isDedicatedTransfereeForm
+            ? 'student.health_form_transferee'
+            : ($isDedicatedStudentForm ? 'student.health_form_student' : 'student.health_form'),
         compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill', 'pendingHealthFormRequest', 'studentHealthFormCategory', 'studentDeclarationPurpose', 'studentHealthFormCategoryConfigured')
     );
 }
@@ -6135,12 +6184,45 @@ public function validateHealthFormReference(Request $request)
 
     $formMode = strtolower(trim((string) $request->input('form_mode')));
     $isStudentFormVerification = $formMode === 'student';
+    $isTransfereeFormVerification = $formMode === 'transferee';
     $isApplicantFormVerification = $formMode === 'applicant';
     $requestedReferenceMode = trim((string) $request->input('reference_mode_selected'));
     $isAdmissionFormVerification = $isApplicantFormVerification
         || (!$isStudentFormVerification && $requestedReferenceMode === 'admission');
 
     $submittedReference = strtoupper(trim((string) $request->input('reference_number')));
+    if ($isTransfereeFormVerification) {
+        if (!$user || $user->applicant_type !== 'transferee') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This SIS Reference Number option is only available for transferee applicants.',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'reference_number' => [
+                'required', 'string', 'size:14', 'regex:/^\d{4}-\d{4}-\d{4}$/',
+                Rule::unique('users', 'sis_reference_number')->ignore($user->id),
+                Rule::unique('health_profiles', 'sis_reference_number')->ignore($existingHealthProfile?->id),
+            ],
+        ], [
+            'reference_number.size' => 'Enter a valid SIS Reference Number in the format 0000-0000-0000.',
+            'reference_number.regex' => 'Enter a valid SIS Reference Number in the format 0000-0000-0000.',
+            'reference_number.unique' => 'This SIS Reference Number is already linked to another account.',
+        ]);
+
+        $sisReference = trim((string) $validated['reference_number']);
+        $user->sis_reference_number = $sisReference;
+        $user->save();
+        RateLimiter::clear($this->healthReferenceAttemptKey($request, $user));
+
+        return response()->json([
+            'success' => true,
+            'reference_number' => $sisReference,
+            'message' => 'SIS Reference Number format accepted. No external SIS lookup is performed.',
+        ]);
+    }
+
     if ($isAdmissionFormVerification && $this->isLocalHealthFormTestReference($submittedReference)) {
         $this->persistResolvedReferenceNumber($user, $submittedReference, $existingHealthProfile);
         RateLimiter::clear($this->healthReferenceAttemptKey($request, $user));
@@ -6414,14 +6496,25 @@ public function storeHealthForm(Request $request)
     /** @var \App\Models\User|null $user */
     $user = Auth::guard('student')->user() ?: Auth::user();
     $isDedicatedStudentForm = $request->routeIs('store.health.form.student');
+    $isDedicatedTransfereeForm = $request->routeIs('store.health.form.transferee');
+    $isDedicatedStudentWorkflow = $isDedicatedStudentForm || $isDedicatedTransfereeForm;
     if ($this->isDependentProfileUser($user)) {
         return redirect()->route('dependent.profile.form')
             ->with('info', 'Please complete the Dependent Information Form assigned to your account.');
     }
 
+    if (!$isDedicatedTransfereeForm
+        && $user?->clinicAccountTypeKey() === 'applicant'
+        && $user?->applicant_type === 'transferee') {
+        return redirect()->route('health.form.transferee');
+    }
+
     if ($this->shouldUseEmployeeHealthForm($user)) {
         return redirect()->route('health.form.employee')
             ->with('info', 'Please use the Faculty, Administrative Employee, and Dependent Health Examination Record.');
+    }
+    if ($isDedicatedTransfereeForm && $user?->applicant_type !== 'transferee') {
+        return redirect()->route($user->clinicHealthFormRoute());
     }
     $existingHealthProfile = $user?->relationLoaded('healthProfile') && $user?->healthProfile
         ? $user->healthProfile
@@ -6456,10 +6549,31 @@ public function storeHealthForm(Request $request)
     $studentNumberReference = $user ? $this->enrolledStudentReferenceNumber($user, $existingHealthProfile) : '';
     $manualStudentNumberRequested = $isDedicatedStudentForm
         && $this->wantsManualStudentNumberMode($request);
-    $admissionReferenceRequested = !$isDedicatedStudentForm;
+    $admissionReferenceRequested = !$isDedicatedStudentWorkflow;
     $manualStudentNumberReference = '';
+    $transfereeSisReference = '';
 
-    if ($manualStudentNumberRequested) {
+    if ($isDedicatedTransfereeForm) {
+        $validated = $request->validate([
+            'reference_number' => [
+                'required', 'string', 'size:14', 'regex:/^\d{4}-\d{4}-\d{4}$/',
+                Rule::unique('users', 'sis_reference_number')->ignore($user->id),
+                Rule::unique('health_profiles', 'sis_reference_number')->ignore($existingHealthProfile?->id),
+            ],
+        ], [
+            'reference_number.size' => 'Enter a valid SIS Reference Number in the format 0000-0000-0000.',
+            'reference_number.regex' => 'Enter a valid SIS Reference Number in the format 0000-0000-0000.',
+            'reference_number.unique' => 'This SIS Reference Number is already linked to another account.',
+        ]);
+        $transfereeSisReference = trim((string) $validated['reference_number']);
+        if (strtoupper(trim((string) $user->sis_reference_number)) !== strtoupper($transfereeSisReference)) {
+            throw ValidationException::withMessages([
+                'reference_number' => 'Verify your SIS Reference Number before submitting the form.',
+            ]);
+        }
+        $accountApplicantData = null;
+        $referenceMode = 'sis_reference';
+    } elseif ($manualStudentNumberRequested) {
         if (!$isDedicatedStudentForm) {
             $manualModeLookup = $this->fetchPuptasApplicantLookupForUser($user);
             $manualModeApplicantData = is_array($manualModeLookup['data'] ?? null)
@@ -6486,22 +6600,24 @@ public function storeHealthForm(Request $request)
         $manualStudentNumberReference = $this->normalizeManualStudentNumber($request->input('reference_number'));
     }
 
-    if ($manualStudentNumberReference !== '') {
-        $studentNumberReference = $manualStudentNumberReference;
-        $accountApplicantData = null;
-        $referenceMode = 'student_number';
-    } elseif (!$admissionReferenceRequested && $studentNumberReference !== '') {
-        $accountApplicantData = null;
-        $referenceMode = 'student_number';
-    } else {
-        $accountLookup = $this->fetchPuptasApplicantLookupForUser($user);
-        $accountApplicantData = is_array($accountLookup['data'] ?? null) ? $accountLookup['data'] : null;
-        $referenceMode = $this->resolveHealthReferenceMode(
-            $user,
-            $linkedAdminProfile,
-            $accountApplicantData,
-            (string) ($accountLookup['outcome'] ?? 'not_found')
-        );
+    if (!$isDedicatedTransfereeForm) {
+        if ($manualStudentNumberReference !== '') {
+            $studentNumberReference = $manualStudentNumberReference;
+            $accountApplicantData = null;
+            $referenceMode = 'student_number';
+        } elseif (!$admissionReferenceRequested && $studentNumberReference !== '') {
+            $accountApplicantData = null;
+            $referenceMode = 'student_number';
+        } else {
+            $accountLookup = $this->fetchPuptasApplicantLookupForUser($user);
+            $accountApplicantData = is_array($accountLookup['data'] ?? null) ? $accountLookup['data'] : null;
+            $referenceMode = $this->resolveHealthReferenceMode(
+                $user,
+                $linkedAdminProfile,
+                $accountApplicantData,
+                (string) ($accountLookup['outcome'] ?? 'not_found')
+            );
+        }
     }
     if ($referenceMode === 'verification_unavailable') {
         throw ValidationException::withMessages([
@@ -6529,16 +6645,19 @@ public function storeHealthForm(Request $request)
     ]);
 
     $isStudentNumberReferenceMode = $referenceMode === 'student_number';
-    $manualStudentDocumentsRequired = !$isDedicatedStudentForm && $manualStudentNumberReference !== '';
+    $isSisReferenceMode = $referenceMode === 'sis_reference';
+    $manualStudentDocumentsRequired = !$isDedicatedStudentWorkflow && $manualStudentNumberReference !== '';
     $applicantDocumentsRequired = $referenceMode === 'admission' || $manualStudentDocumentsRequired;
     $referenceNumberRules = $isStudentNumberReferenceMode
         ? ['required', 'string', 'max:120', 'regex:/^\d{4}-\d{5}-[A-Za-z]{2}-\d+$/']
-        : ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$/'];
+        : ($isSisReferenceMode
+            ? ['required', 'string', 'size:14', 'regex:/^\d{4}-\d{4}-\d{4}$/']
+            : ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$/']);
 
-    $resolvedStudentHealthFormCategory = $isDedicatedStudentForm
+    $resolvedStudentHealthFormCategory = $isDedicatedStudentWorkflow
         ? $this->resolvedStudentHealthFormCategory($user, $pendingHealthFormRequest, $existingHealthProfile)
         : '';
-    if ($isDedicatedStudentForm) {
+    if ($isDedicatedStudentWorkflow) {
         if ($resolvedStudentHealthFormCategory === '') {
             throw ValidationException::withMessages([
                 'health_form_category' => 'No Health Form Category is configured for your selected student type. Please contact the clinic administrator.',
@@ -6553,7 +6672,7 @@ public function storeHealthForm(Request $request)
     }
 
     $studentHealthFormCategoryValues = ['Student'];
-    if ($isDedicatedStudentForm) {
+    if ($isDedicatedStudentWorkflow) {
         $studentHealthFormCategoryValues = array_values(array_unique(array_merge(
             $studentHealthFormCategoryValues,
             $this->healthFormCategoriesForAudience('student')->pluck('name')->all()
@@ -6571,10 +6690,10 @@ public function storeHealthForm(Request $request)
     $applicantDocumentDateRule = $applicantDocumentsRequired
         ? ['required', 'date', 'after_or_equal:' . $applicantDocumentDateMin, 'before_or_equal:' . $applicantDocumentDateMax]
         : ['nullable', 'date'];
-    $studentYearRule = $isDedicatedStudentForm
+    $studentYearRule = $isDedicatedStudentWorkflow
         ? ['required', 'string', Rule::in(['1st Year', '2nd Year', '3rd Year', '4th Year'])]
         : ['nullable', 'string', Rule::in(['1st Year', '2nd Year', '3rd Year', '4th Year'])];
-    $studentSectionRule = $isDedicatedStudentForm
+    $studentSectionRule = $isDedicatedStudentWorkflow
         ? ['required', 'string', Rule::in(['1', '2', '3', '4'])]
         : ['nullable', 'string', Rule::in(['1', '2', '3', '4'])];
     $studentMobileRule = ['required', 'string', 'size:11', 'regex:/^09\d{9}$/'];
@@ -6608,7 +6727,7 @@ public function storeHealthForm(Request $request)
         'suffix_name'        => 'nullable|string|max:120',
         'course_code'       => 'nullable|string|max:30',
         'course_college'    => 'nullable|string|max:255',
-        'health_form_category' => $isDedicatedStudentForm
+        'health_form_category' => $isDedicatedStudentWorkflow
             ? ['required', 'string', 'max:120', Rule::in($studentHealthFormCategoryValues)]
             : ['nullable', 'string', 'max:120'],
         'blood_type'        => 'required|string|max:20',
@@ -6653,10 +6772,10 @@ public function storeHealthForm(Request $request)
         'med_cert_findings' => $applicantDocumentsRequired ? 'required|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review' : 'nullable|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review',
         'med_cert_findings_details' => 'required_if:med_cert_findings,With Findings|nullable|string|max:1000',
         'signature_method' => 'required|in:draw,upload',
-        'consent_acknowledged' => $isDedicatedStudentForm ? 'accepted' : 'nullable',
+        'consent_acknowledged' => $isDedicatedStudentWorkflow ? 'accepted' : 'nullable',
         'digital_signature_data' => 'nullable|string',
         'digital_signature_upload' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
-        'guardian_signature_method' => $isDedicatedStudentForm ? 'nullable|in:draw,upload' : 'nullable',
+        'guardian_signature_method' => $isDedicatedStudentWorkflow ? 'nullable|in:draw,upload' : 'nullable',
         'guardian_signature_data' => 'nullable|string',
         'guardian_signature_upload' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
         'digital_signature_existing' => 'nullable|string|max:255',
@@ -6686,7 +6805,7 @@ public function storeHealthForm(Request $request)
     }
 
     $isMinorStudent = (int) $request->input('age', 0) < 18;
-    if ($isMinorStudent && $isDedicatedStudentForm) {
+    if ($isMinorStudent && $isDedicatedStudentWorkflow) {
         $guardianSignatureMethod = (string) $request->input('guardian_signature_method', 'draw');
         if ($guardianSignatureMethod === 'draw' && trim((string) $request->input('guardian_signature_data')) === '') {
             throw ValidationException::withMessages([
@@ -6831,7 +6950,7 @@ public function storeHealthForm(Request $request)
 
     $user->DOB = $request->input('birthday');
     $user->contact_no = $request->input('contact_no');
-    if ($isDedicatedStudentForm) {
+    if ($isDedicatedStudentWorkflow) {
         $user->year = $request->input('year');
         $user->section = $request->input('section');
     }
@@ -6843,6 +6962,9 @@ public function storeHealthForm(Request $request)
         $user->suffix_name = $this->normalizeOptionalNamePart($request->input('suffix_name'));
     }
     $user->reference_number = $officialReference;
+    if ($isDedicatedTransfereeForm) {
+        $user->sis_reference_number = $transfereeSisReference;
+    }
     $user->save();
 
     $oldPaths = [];
@@ -6871,12 +6993,15 @@ public function storeHealthForm(Request $request)
             $guardianSignaturePath = null;
         }
 
-        if ($isDedicatedStudentForm && !empty($digitalSignaturePath)) {
+        if ($isDedicatedStudentWorkflow && !empty($digitalSignaturePath)) {
             $categorySelected = $this->normalizeStudentHealthFormCategory($request->input('health_form_category', ''));
             if ($categorySelected === '') {
                 $categorySelected = $this->normalizeStudentHealthFormCategory(optional($pendingHealthFormRequest)->category) ?: 'Student';
             }
-            $declarationPurpose = $this->studentDeclarationPurposeText($categorySelected, $user->student_type);
+            $declarationPurpose = $this->studentDeclarationPurposeText(
+                $categorySelected,
+                $isDedicatedTransfereeForm ? 'transferee' : $user->student_type
+            );
             $purposeUnderline1 = $declarationPurpose['purpose'];
             $purposeUnderline2 = $declarationPurpose['endorsement'];
 
@@ -6921,7 +7046,7 @@ public function storeHealthForm(Request $request)
             $declarationPdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('student.print_declaration_form', [
                 'user' => $user,
                 'studentFullName' => $studentFullName,
-                'studentNumber' => $officialReference,
+                'studentNumber' => $isDedicatedTransfereeForm ? $transfereeSisReference : $officialReference,
                 'course' => $resolvedCourseCollege,
                 'age' => $request->input('age'),
                 'guardianName' => $request->input('guardian_name'),
@@ -6943,9 +7068,9 @@ public function storeHealthForm(Request $request)
 
         $submittedHealthFormCategory = trim((string) $request->input('health_form_category', ''));
         if ($submittedHealthFormCategory === '') {
-            $submittedHealthFormCategory = optional($pendingHealthFormRequest)->category ?: ($isDedicatedStudentForm ? 'Student' : 'General');
+            $submittedHealthFormCategory = optional($pendingHealthFormRequest)->category ?: ($isDedicatedStudentWorkflow ? 'Student' : 'General');
         }
-        if ($isDedicatedStudentForm) {
+        if ($isDedicatedStudentWorkflow) {
             $submittedHealthFormCategory = $resolvedStudentHealthFormCategory ?: 'Student';
         }
 
@@ -6953,6 +7078,11 @@ public function storeHealthForm(Request $request)
                 'student_id'         => $request->student_id,
                 'student_number'     => $referenceMode === 'student_number' ? $officialReference : $this->resolveStudentNumber($user, $existingHealthProfile, $accountApplicantData),
                 'reference_number'   => $officialReference,
+                ...(Schema::hasColumn('health_profiles', 'sis_reference_number') ? [
+                    'sis_reference_number' => $isDedicatedTransfereeForm
+                        ? $transfereeSisReference
+                        : optional($existingHealthProfile)->sis_reference_number,
+                ] : []),
                 'school_year'        => $request->school_year,
                 'home_address'       => $request->home_address,
                 ...(\Schema::hasColumn('health_profiles', 'street') ? [
@@ -7025,7 +7155,7 @@ public function storeHealthForm(Request $request)
             ];
 
         if (Schema::hasColumn('health_profiles', 'guardian_signature')) {
-            $healthProfileData['guardian_signature'] = $isDedicatedStudentForm && $isMinorStudent
+            $healthProfileData['guardian_signature'] = $isDedicatedStudentWorkflow && $isMinorStudent
                 ? $guardianSignaturePath
                 : null;
         }

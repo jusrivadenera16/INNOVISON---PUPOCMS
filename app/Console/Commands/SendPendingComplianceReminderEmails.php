@@ -24,12 +24,6 @@ class SendPendingComplianceReminderEmails extends Command
             return self::SUCCESS;
         }
 
-        if ($workflow->settings()->email_notifications === false) {
-            $this->info('Email notifications are disabled in System Preferences.');
-
-            return self::SUCCESS;
-        }
-
         if ($workflow->notificationsAreQuiet()) {
             $this->info('Pending compliance reminders are paused during notification quiet hours.');
 

@@ -16,7 +16,7 @@ class EnsureStudentSessionIdleTest extends TestCase
     {
         parent::setUp();
 
-        Config::set('session.student_idle_timeout', 15);
+        Config::set('session.student_idle_timeout', 30);
         Config::set('services.idp.logout_url', '');
         Config::set('services.idp.cookie_secure', false);
         Auth::guard('student')->setUser($this->makeUser());
@@ -36,7 +36,7 @@ class EnsureStudentSessionIdleTest extends TestCase
     {
         Carbon::setTestNow('2026-09-30 10:00:00');
         $request = $this->requestWithSession();
-        $request->session()->put('student_last_activity_at', now()->subMinutes(14)->timestamp);
+        $request->session()->put('student_last_activity_at', now()->subMinutes(29)->timestamp);
 
         $response = app(EnsureStudentSessionIdle::class)->handle(
             $request,
@@ -48,11 +48,28 @@ class EnsureStudentSessionIdleTest extends TestCase
         $this->assertAuthenticated('student');
     }
 
-    public function test_student_is_logged_out_after_fifteen_minutes_of_inactivity(): void
+    public function test_notification_poll_does_not_refresh_the_idle_marker(): void
     {
-        Carbon::setTestNow('2026-09-30 10:15:00');
+        Carbon::setTestNow('2026-09-30 10:00:00');
+        $request = $this->requestWithSession('/student/notifications/feed');
+        $lastActivity = now()->subMinutes(29)->timestamp;
+        $request->session()->put('student_last_activity_at', $lastActivity);
+
+        $response = app(EnsureStudentSessionIdle::class)->handle(
+            $request,
+            fn () => response('allowed')
+        );
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame($lastActivity, $request->session()->get('student_last_activity_at'));
+        $this->assertAuthenticated('student');
+    }
+
+    public function test_student_is_logged_out_after_thirty_minutes_of_inactivity(): void
+    {
+        Carbon::setTestNow('2026-09-30 10:30:00');
         $request = $this->requestWithSession('/student/health-record/document/health_form');
-        $request->session()->put('student_last_activity_at', now()->subMinutes(15)->timestamp);
+        $request->session()->put('student_last_activity_at', now()->subMinutes(30)->timestamp);
 
         $response = app(EnsureStudentSessionIdle::class)->handle(
             $request,
@@ -67,7 +84,7 @@ class EnsureStudentSessionIdleTest extends TestCase
 
     public function test_without_a_student_session_the_request_is_untouched(): void
     {
-        Carbon::setTestNow('2026-09-30 10:15:00');
+        Carbon::setTestNow('2026-09-30 10:30:00');
         Auth::guard('student')->logout();
         $request = $this->requestWithSession();
         $request->session()->put('student_last_activity_at', now()->subHours(2)->timestamp);

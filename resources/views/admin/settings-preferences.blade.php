@@ -45,13 +45,14 @@
         display: grid;
         gap: 12px;
     }
+    .preferences-settings-page::before { content: none; }
     .preferences-settings-page .settings-section-hero {
         align-items: center;
         margin-bottom: 0;
         padding: 14px 16px;
         border-radius: 12px;
         border-color: var(--preferences-line);
-        box-shadow: 0 8px 22px rgba(15, 23, 42, .05);
+        box-shadow: none;
     }
     .preferences-settings-page .settings-section-hero > div:first-child {
         display: grid;
@@ -107,7 +108,7 @@
         border-radius: 12px;
         border: 1px solid var(--preferences-line);
         background: rgba(255, 255, 255, .96);
-        box-shadow: 0 8px 22px rgba(15, 23, 42, .045);
+        box-shadow: none;
     }
     .preferences-settings-page .settings-panel-head {
         align-items: center;
@@ -293,7 +294,7 @@
     html[data-theme="dark"] .preferences-settings-page .settings-panel {
         background: rgba(15, 23, 42, .94);
         border-color: rgba(148, 163, 184, .2);
-        box-shadow: 0 12px 28px rgba(0, 0, 0, .2);
+        box-shadow: none;
     }
     html[data-theme="dark"] .preferences-settings-page .settings-edit-btn {
         background: rgba(15, 23, 42, .7) !important;
@@ -303,6 +304,7 @@
     html[data-theme="dark"] .preferences-settings-page .settings-field,
     html[data-theme="dark"] .preferences-settings-page .settings-form-grid,
     html[data-theme="dark"] .preferences-settings-page .settings-action-row { border-color: rgba(148, 163, 184, .16); }
+    html[data-theme="dark"] .preferences-settings-page .settings-field-note { color: #cbd5e1; }
     @media (max-width: 640px) {
         .preferences-settings-page .settings-section-hero > div:first-child { grid-template-columns: 44px minmax(0, 1fr); }
         .preferences-settings-page .preferences-title-icon { width: 44px; height: 44px; }
@@ -333,6 +335,8 @@
         padding: 0;
         border-bottom: 1px solid var(--preferences-line);
     }
+    .preferences-settings-page .preferences-admin-grid { border-bottom: 0; }
+    .preferences-settings-page .preferences-admin-grid .settings-field::after { display: none !important; }
     .preferences-settings-page .preferences-general-grid .settings-field {
         min-height: 72px;
         padding: 9px 14px;
@@ -353,6 +357,11 @@
         align-items: center;
         gap: 8px;
         min-height: 28px;
+    }
+    .preferences-settings-page .settings-field-note {
+        color: var(--preferences-muted);
+        font-size: 11px;
+        line-height: 1.45;
     }
     .preferences-settings-page .settings-field .preferences-switch-label {
         color: var(--preferences-text);
@@ -828,8 +837,7 @@
     $quietHoursEnabled = (bool) ($settings->notification_quiet_hours_enabled ?? false);
     $quietHoursStart = substr((string) ($settings->notification_quiet_hours_start ?: '20:00'), 0, 5);
     $quietHoursEnd = substr((string) ($settings->notification_quiet_hours_end ?: '07:00'), 0, 5);
-    $adminNotificationsEnabled = (string) old('admin_live_notifications', $settings->admin_live_notifications !== false ? '1' : '0') === '1';
-    $emailNotificationsEnabled = (string) old('email_notifications', $settings->email_notifications !== false ? '1' : '0') === '1';
+    $adminAppointmentAlertsEnabled = (string) old('admin_appointment_email_alerts', auth()->user()->admin_appointment_email_alerts ? '1' : '0') === '1';
     $closureEnabled = (bool) $settings->clinic_closure_enabled;
     $closureStartsValue = optional($settings->clinic_closure_starts_at)->format('Y-m-d\\TH:i');
     $closureEndsValue = optional($settings->clinic_closure_ends_at)->format('Y-m-d\\TH:i');
@@ -856,7 +864,7 @@
     <section class="settings-section-hero">
         <div>
             <h1 class="settings-section-title"><span class="preferences-title-icon"><x-outline-icon name="code-bracket-square" /></span><span>System Preferences</span></h1>
-            <p>Configure live alerts, email delivery, reminders, and clinic closures.</p>
+            <p>Configure admin appointment alerts, student email reminders, and clinic closures.</p>
         </div>
     </section>
 
@@ -880,7 +888,7 @@
 
                 <div class="preferences-workflow-content">
                     <div class="preferences-subheading">
-                        <span>General Preferences</span>
+                        <span>Notification Settings</span>
                         <span class="preferences-autosave-meta">
                             <span class="preferences-autosave-status" data-preferences-autosave-status aria-live="polite"></span>
                             <span data-preferences-last-saved>
@@ -892,27 +900,24 @@
                             </span>
                         </span>
                     </div>
-                    <div class="settings-form-grid preferences-general-grid">
+                    <div class="preferences-subheading">Admin Appointment Email Alerts</div>
+                    <p class="settings-field-note" style="padding:0 10px 8px;margin:0;">Optional alerts are sent for new online appointments to admin accounts that enable them. This account is off by default.</p>
+                    <div class="settings-form-grid preferences-general-grid preferences-admin-grid">
                         <div class="settings-field">
-                            <label for="admin_live_notifications">Admin Live Alert</label>
-                            <input type="hidden" name="admin_live_notifications" value="0">
-                            <label class="switch preferences-switch-row" for="admin_live_notifications">
-                                <input type="checkbox" id="admin_live_notifications" name="admin_live_notifications" value="1" {{ $adminNotificationsEnabled ? 'checked' : '' }}>
+                            <label for="admin_appointment_email_alerts">New Online Appointment Email Alert</label>
+                            <input type="hidden" name="admin_appointment_email_alerts" value="0">
+                            <label class="switch preferences-switch-row" for="admin_appointment_email_alerts">
+                                <input type="checkbox" id="admin_appointment_email_alerts" name="admin_appointment_email_alerts" value="1" {{ $adminAppointmentAlertsEnabled ? 'checked' : '' }}>
                                 <span class="slider" aria-hidden="true"></span>
                                 <span class="preferences-switch-label is-on">Enabled</span>
                                 <span class="preferences-switch-label is-off">Disabled</span>
                             </label>
+                            <span class="settings-field-note">Your choice applies to this account. Only opted-in admins receive the alert.</span>
                         </div>
-                        <div class="settings-field">
-                            <label for="email_notifications">Email Notifications</label>
-                            <input type="hidden" name="email_notifications" value="0">
-                            <label class="switch preferences-switch-row" for="email_notifications">
-                                <input type="checkbox" id="email_notifications" name="email_notifications" value="1" {{ $emailNotificationsEnabled ? 'checked' : '' }}>
-                                <span class="slider" aria-hidden="true"></span>
-                                <span class="preferences-switch-label is-on">Enabled</span>
-                                <span class="preferences-switch-label is-off">Disabled</span>
-                            </label>
-                        </div>
+                    </div>
+                    <div class="preferences-subheading">Student Reminder Schedule</div>
+                    <p class="settings-field-note" style="padding:0 10px 8px;margin:0;">Reminder timing and quiet hours apply clinic-wide. Each student controls email delivery from their own account.</p>
+                    <div class="settings-form-grid preferences-general-grid preferences-student-grid">
                         <div class="settings-field">
                             <label for="appointment_reminder_hours">Appointment Reminder</label>
                             <select id="appointment_reminder_hours" name="appointment_reminder_hours" required>
@@ -957,7 +962,7 @@
                         </div>
                     </div>
 
-                    <div class="preferences-subheading">Reminder Preview</div>
+                    <div class="preferences-subheading">Student Reminder Preview</div>
                     <div class="preferences-reminder-preview" aria-live="polite">
                         <div class="preferences-preview-item">
                             <x-outline-icon name="calendar" />
@@ -1014,8 +1019,7 @@
                 @method('PUT')
                 <input type="hidden" name="preferences_form" value="1">
                 <input type="hidden" name="closure_form" value="1">
-                <input type="hidden" name="admin_live_notifications" value="{{ $settings->admin_live_notifications !== false ? '1' : '0' }}">
-                <input type="hidden" name="email_notifications" value="{{ $settings->email_notifications !== false ? '1' : '0' }}">
+                <input type="hidden" name="admin_appointment_email_alerts" value="{{ $adminAppointmentAlertsEnabled ? '1' : '0' }}">
                 <input type="hidden" name="appointment_reminder_hours" value="{{ $currentReminderHours }}">
                 <input type="hidden" name="pending_compliance_reminder_days" value="{{ $currentComplianceReminderDays }}">
                 <input type="hidden" name="pending_compliance_reminder_max_count" value="{{ $currentComplianceReminderMax }}">
@@ -1074,7 +1078,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const closurePreferencesForm = document.querySelector('#temporaryClosureForm');
     const autosaveStatus = document.querySelector('[data-preferences-autosave-status]');
     const lastSaved = document.querySelector('[data-preferences-last-saved]');
-    const pendingStorageKey = 'pup-clinic-workflow-preferences-pending';
+    const pendingStorageKey = 'pup-clinic-workflow-preferences-pending-{{ auth()->id() }}';
     let autosaveTimer = null;
     let autosaveRunning = false;
     let autosaveQueued = false;
@@ -1093,7 +1097,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function syncClosurePreferences() {
         if (!closurePreferencesForm) return;
         [
-            'admin_live_notifications', 'email_notifications', 'appointment_reminder_hours',
+            'admin_appointment_email_alerts',
+            'appointment_reminder_hours',
             'pending_compliance_reminder_days', 'pending_compliance_reminder_max_count',
             'notification_quiet_hours_enabled', 'notification_quiet_hours_start',
             'notification_quiet_hours_end'
@@ -1196,6 +1201,36 @@ document.addEventListener('DOMContentLoaded', function () {
         throw lastError || new Error('Unable to save preferences.');
     }
 
+    async function saveAdminAppointmentAlert() {
+        const alertField = generalPreferencesForm?.querySelector('#admin_appointment_email_alerts');
+        const tokenField = generalPreferencesForm?.querySelector('[name="_token"]');
+        if (!alertField || !tokenField) return;
+
+        const formData = new FormData();
+        formData.append('_token', tokenField.value);
+        formData.append('_method', 'PUT');
+        formData.append('admin_appointment_alert_only', '1');
+        formData.append('admin_appointment_email_alerts', alertField.checked ? '1' : '0');
+        showAutosaveStatus('Saving admin alert...', 'saving');
+
+        try {
+            const response = await fetch(generalPreferencesForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            });
+            if (!response.ok) throw new Error('Unable to save admin alert.');
+            await response.json();
+            showAutosaveStatus('Admin alert saved', 'saved');
+        } catch (error) {
+            showAutosaveStatus('Admin alert not saved', 'error');
+        }
+    }
+
     function showAutosaveStatus(message, state) {
         if (!autosaveStatus) return;
         window.clearTimeout(autosaveStatusTimer);
@@ -1241,6 +1276,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     generalPreferencesForm?.addEventListener('change', function (event) {
         if (!event.target.matches('input[type="checkbox"], select')) return;
+
+        if (event.target.id === 'admin_appointment_email_alerts') {
+            window.clearTimeout(autosaveTimer);
+            storePendingPreferences();
+            saveAdminAppointmentAlert();
+            return;
+        }
 
         storePendingPreferences();
         syncClosurePreferences();

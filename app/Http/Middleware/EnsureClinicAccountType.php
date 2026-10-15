@@ -26,11 +26,23 @@ class EnsureClinicAccountType
         $audience = $user->clinicHealthFormAudience();
         $expected = match ($request->route()->getName()) {
             'health.form', 'store.health.form', 'store.health.form.fallback' => 'applicant',
+            'health.form.transferee', 'store.health.form.transferee' => 'applicant',
             'health.form.student', 'store.health.form.student' => 'student',
             'health.form.employee', 'store.health.form.employee', 'health.form.staff', 'store.health.form.staff' => 'employee',
             'dependent.profile.form', 'dependent.profile.store' => 'dependent',
             default => null,
         };
+        if (in_array($request->route()->getName(), ['health.form.transferee', 'store.health.form.transferee'], true)
+            && $user->applicant_type !== 'transferee') {
+            return redirect()->route($user->clinicHealthFormRoute());
+        }
+
+        if (in_array($request->route()->getName(), ['health.form', 'store.health.form', 'store.health.form.fallback'], true)
+            && $user->clinicAccountTypeKey() === 'applicant'
+            && $user->applicant_type === 'transferee') {
+            return redirect()->route($user->clinicHealthFormRoute());
+        }
+
         if ($expected !== null && $audience !== $expected) {
             return redirect()->route($user->clinicHealthFormRoute());
         }

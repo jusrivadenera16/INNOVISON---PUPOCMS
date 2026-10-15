@@ -9,12 +9,9 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Schema;
 
 class StudentNotificationMailer
 {
-    private ?bool $globalEmailNotificationsEnabled = null;
-
     /**
      * Sends a transactional email for a student-facing portal notification.
      * Local testing may safely redirect delivery to one configured mailbox.
@@ -31,10 +28,6 @@ class StudentNotificationMailer
         array $statusCard = []
     ): array {
         if (!config('services.student_notifications.enabled', false)) {
-            return ['status' => 'skipped'];
-        }
-
-        if (!$this->globalEmailNotificationsEnabled()) {
             return ['status' => 'skipped'];
         }
 
@@ -183,13 +176,6 @@ class StudentNotificationMailer
                 'action_url' => url('/student/history'),
                 'status_card' => $this->appointmentStatusCard($appointment, 'rescheduled', $schedule, $service),
             ],
-            'feedback' => [
-                'subject' => 'Share feedback about your clinic visit',
-                'title' => 'Your consultation is complete',
-                'message' => "Your consultation for {$service} has been completed. Please share your feedback with the clinic.",
-                'action_label' => 'Share Feedback',
-                'action_url' => route('student.feedback.show', ['appointment' => $appointment->id]),
-            ],
             'reminder' => [
                 'subject' => 'Appointment reminder - PUP Taguig Clinic',
                 'title' => 'Your appointment is coming up',
@@ -238,7 +224,7 @@ class StudentNotificationMailer
             $recipient,
             'Please evaluate your PUP Taguig Clinic service',
             'How was your clinic service experience?',
-            "Please take a moment to evaluate your recent {$service} at the PUP Taguig Clinic. Your feedback helps us improve our care and support.",
+            "Please take a moment to evaluate your recent {$service} at the PUP Taguig Clinic. Your responses and suggestions help us improve our care and support.",
             'Evaluate the Service',
             route('student.evaluation.show', ['evaluation' => $evaluation->id])
         );
@@ -256,21 +242,6 @@ class StudentNotificationMailer
         }
 
         return $this->isValidEmail($recipient) ? $recipient : null;
-    }
-
-    protected function globalEmailNotificationsEnabled(): bool
-    {
-        if ($this->globalEmailNotificationsEnabled !== null) {
-            return $this->globalEmailNotificationsEnabled;
-        }
-
-        if (!Schema::hasTable('settings')) {
-            return $this->globalEmailNotificationsEnabled = true;
-        }
-
-        return $this->globalEmailNotificationsEnabled = app(ClinicWorkflowService::class)
-            ->settings()
-            ->email_notifications !== false;
     }
 
     private function isValidEmail(string $email): bool
