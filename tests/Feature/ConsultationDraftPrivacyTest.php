@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\ConsultationDraft;
+use App\Services\HealthDataEncrypter;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
@@ -16,6 +17,9 @@ class ConsultationDraftPrivacyTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        Config::set('health_data_encryption.key', 'base64:' . base64_encode(str_repeat('h', 32)));
+        Config::set('health_data_encryption.legacy_app_key_fallback', true);
 
         Config::set('database.default', 'sqlite');
         Config::set('database.connections.sqlite.database', ':memory:');
@@ -46,7 +50,7 @@ class ConsultationDraftPrivacyTest extends TestCase
         $this->assertSame(['remarks' => 'Sensitive clinical note'], $draft->payload);
         $this->assertSame([], json_decode($attributes['payload'], true));
         $this->assertNotSame('Sensitive clinical note', $attributes['payload_encrypted']);
-        $this->assertSame(['remarks' => 'Sensitive clinical note'], Crypt::decrypt($attributes['payload_encrypted']));
+        $this->assertSame(['remarks' => 'Sensitive clinical note'], app(HealthDataEncrypter::class)->decrypt($attributes['payload_encrypted'], true));
         $this->assertArrayNotHasKey('payload', $draft->toArray());
         $this->assertArrayNotHasKey('payload_encrypted', $draft->toArray());
     }
@@ -90,7 +94,29 @@ class ConsultationDraftPrivacyTest extends TestCase
 
         $this->assertSame([], json_decode($raw->payload, true));
         $this->assertNotSame(json_encode($payload), $raw->payload_encrypted);
-        $this->assertSame($payload, Crypt::decrypt($raw->payload_encrypted));
+        $this->assertSame($payload, app(HealthDataEncrypter::class)->decrypt($raw->payload_encrypted, true));
+    }
+
+    public function test_force_reencrypts_legacy_draft_payload_with_the_dedicated_key(): void
+    {
+        $this->migration()->up();
+        $payload = ['remarks' => 'Legacy clinical note'];
+        $id = DB::table('consultation_drafts')->insertGetId([
+            'payload' => '[]',
+            'payload_encrypted' => Crypt::encrypt($payload),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->assertSame(0, Artisan::call('consultation-drafts:encrypt', ['--force' => true]));
+        $this->assertSame(0, Artisan::call('consultation-drafts:encrypt', [
+            '--force' => true,
+            '--apply' => true,
+        ]));
+
+        $rawPayload = DB::table('consultation_drafts')->where('id', $id)->value('payload_encrypted');
+        $this->assertSame($payload, app(HealthDataEncrypter::class)->decryptWithDedicatedKey($rawPayload, true));
+        $this->assertSame($payload, ConsultationDraft::withoutGlobalScopes()->findOrFail($id)->payload);
     }
 
     public function test_cleanup_expires_drafts_one_day_after_their_latest_save(): void

@@ -7,6 +7,13 @@ return [
             FILTER_VALIDATE_BOOLEAN
         ),
 
+    'key' => env('HEALTH_DATA_ENCRYPTION_KEY', ''),
+    'cipher' => env('HEALTH_DATA_ENCRYPTION_CIPHER', env('APP_CIPHER', 'AES-256-CBC')),
+    'legacy_app_key_fallback' => filter_var(
+        env('HEALTH_DATA_ENCRYPTION_LEGACY_APP_KEY_FALLBACK', true),
+        FILTER_VALIDATE_BOOLEAN
+    ),
+
     // Keep identity/search columns plain so admin lookup remains indexable.
     'fields' => [
         'health_profiles' => [

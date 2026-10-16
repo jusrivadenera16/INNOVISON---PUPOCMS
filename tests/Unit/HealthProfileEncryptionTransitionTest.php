@@ -11,6 +11,7 @@ class HealthProfileEncryptionTransitionTest extends TestCase
     public function test_enabled_transition_writes_and_reads_encrypted_mirrors(): void
     {
         Config::set('health_data_encryption.enabled', true);
+        Config::set('health_data_encryption.key', 'base64:' . base64_encode(str_repeat('h', 32)));
 
         $profile = new HealthProfile();
         $profile->medical_history = ['Asthma'];
@@ -35,6 +36,7 @@ class HealthProfileEncryptionTransitionTest extends TestCase
     public function test_enabled_transition_falls_back_to_plaintext_when_mirror_is_missing(): void
     {
         Config::set('health_data_encryption.enabled', true);
+        Config::set('health_data_encryption.key', 'base64:' . base64_encode(str_repeat('h', 32)));
 
         $profile = new HealthProfile();
         $profile->setRawAttributes([

@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Crypt;
+use App\Services\HealthDataEncrypter;
 use App\Models\Concerns\ExcludesInactiveUserRecords;
 
 class ConsultationDraft extends Model
@@ -29,7 +29,7 @@ class ConsultationDraft extends Model
     {
         $encryptedPayload = $this->attributes['payload_encrypted'] ?? null;
         if (is_string($encryptedPayload) && $encryptedPayload !== '') {
-            $payload = Crypt::decrypt($encryptedPayload);
+            $payload = app(HealthDataEncrypter::class)->decrypt($encryptedPayload, true);
 
             return is_array($payload) ? $payload : null;
         }
@@ -50,7 +50,7 @@ class ConsultationDraft extends Model
     public function setPayloadAttribute($value): void
     {
         $payload = is_array($value) ? $value : [];
-        $this->attributes['payload_encrypted'] = Crypt::encrypt($payload);
+        $this->attributes['payload_encrypted'] = app(HealthDataEncrypter::class)->encrypt($payload, true);
         $this->attributes['payload'] = json_encode([], JSON_THROW_ON_ERROR);
     }
 

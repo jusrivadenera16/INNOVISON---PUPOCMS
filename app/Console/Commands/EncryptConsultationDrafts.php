@@ -3,18 +3,20 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Crypt;
+use App\Services\HealthDataEncrypter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 class EncryptConsultationDrafts extends Command
 {
-    protected $signature = 'consultation-drafts:encrypt {--apply : Encrypt draft payloads and clear their legacy plaintext JSON}';
+    protected $signature = 'consultation-drafts:encrypt
+        {--apply : Encrypt draft payloads and clear their legacy plaintext JSON}
+        {--force : Re-encrypt existing payloads with the dedicated health-data key}';
 
     protected $description = 'Verify and encrypt consultation draft payloads before clearing their legacy JSON copies.';
 
-    public function handle(): int
+    public function handle(HealthDataEncrypter $encrypter): int
     {
         if (!Schema::hasTable('consultation_drafts') || !Schema::hasColumn('consultation_drafts', 'payload_encrypted')) {
             $this->error('Run the consultation-draft encrypted-payload migration before this command.');
@@ -23,12 +25,15 @@ class EncryptConsultationDrafts extends Command
         }
 
         $apply = (bool) $this->option('apply');
+        $force = (bool) $this->option('force');
         $verified = 0;
         $updated = 0;
         $unverified = 0;
 
         DB::table('consultation_drafts')->orderBy('id')->chunkById(100, function ($drafts) use (
             $apply,
+            $force,
+            $encrypter,
             &$verified,
             &$updated,
             &$unverified
@@ -42,7 +47,7 @@ class EncryptConsultationDrafts extends Command
 
                 try {
                     $encryptedPayload = is_string($draft->payload_encrypted ?? null)
-                        ? Crypt::decrypt($draft->payload_encrypted)
+                        ? $encrypter->decrypt($draft->payload_encrypted, true)
                         : null;
                 } catch (Throwable $exception) {
                     $unverified++;
@@ -56,8 +61,10 @@ class EncryptConsultationDrafts extends Command
                 }
 
                 if ($hasEncryptedPayload && $legacyPayload === []) {
-                    $verified++;
-                    continue;
+                    if (!$force) {
+                        $verified++;
+                        continue;
+                    }
                 }
 
                 if (!$hasEncryptedPayload) {
@@ -70,7 +77,7 @@ class EncryptConsultationDrafts extends Command
                 }
 
                 try {
-                    $wasUpdated = DB::transaction(function () use ($draft, $legacyPayload, $encryptedPayload, $hasEncryptedPayload): bool {
+                    $wasUpdated = DB::transaction(function () use ($draft, $legacyPayload, $encryptedPayload, $hasEncryptedPayload, $force, $encrypter): bool {
                         $current = DB::table('consultation_drafts')
                             ->where('id', $draft->id)
                             ->lockForUpdate()
@@ -85,10 +92,10 @@ class EncryptConsultationDrafts extends Command
                             return false;
                         }
 
-                        $ciphertext = $hasEncryptedPayload
+                        $ciphertext = $hasEncryptedPayload && !$force
                             ? $current->payload_encrypted
-                            : Crypt::encrypt($encryptedPayload);
-                        $decrypted = Crypt::decrypt($ciphertext);
+                            : $encrypter->encrypt($encryptedPayload, true);
+                        $decrypted = $encrypter->decryptWithDedicatedKey($ciphertext, true);
                         if ($decrypted !== $encryptedPayload) {
                             return false;
                         }

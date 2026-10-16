@@ -2,9 +2,9 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Services\HealthDataEncrypter;
 
 return new class extends Migration
 {
@@ -30,7 +30,7 @@ return new class extends Migration
             ->orderBy('id')
             ->chunkById(100, function ($drafts): void {
                 foreach ($drafts as $draft) {
-                    $payload = Crypt::decrypt($draft->payload_encrypted);
+                    $payload = app(HealthDataEncrypter::class)->decrypt($draft->payload_encrypted, true);
                     if (!is_array($payload)) {
                         throw new RuntimeException('A consultation draft payload could not be restored.');
                     }

@@ -7,14 +7,16 @@ use App\Models\EmployeeHealthProfile;
 use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
 use App\Models\StudentMedicalAssessment;
+use App\Services\HealthDataEncrypter;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Facades\Schema;
 
 class BackfillEncryptedStudentMedicalHistory extends Command
 {
     protected $signature = 'health:encrypt-student-medical-history
         {--apply : Write encrypted mirror values to the database}
-        {--force : Refresh existing encrypted mirror values; requires --apply}
+        {--force : Refresh existing encrypted mirror values, including legacy APP_KEY ciphertext}
         {--chunk=100 : Number of records processed per batch}';
 
     protected $description = 'Backfill encrypted mirror values for health profiles, medical assessments, and historical submissions.';
@@ -31,12 +33,6 @@ class BackfillEncryptedStudentMedicalHistory extends Command
     {
         $apply = (bool) $this->option('apply');
         $force = (bool) $this->option('force');
-        if ($force && !$apply) {
-            $this->error('--force requires --apply because it overwrites encrypted mirror values.');
-
-            return self::FAILURE;
-        }
-
         $chunkSize = max(1, (int) $this->option('chunk'));
         $totalWritten = 0;
         $totalSkipped = 0;
@@ -93,13 +89,27 @@ class BackfillEncryptedStudentMedicalHistory extends Command
 
                     if ($apply) {
                         $profile->forceFill($encryptedValues)->saveQuietly();
+                        $profile->refresh();
+
+                        foreach ($encryptedValues as $encryptedColumn => $expectedValue) {
+                            $sourceColumn = array_search($encryptedColumn, $fieldMap, true);
+                            $ciphertext = $profile->getRawOriginal($encryptedColumn);
+                            if ($sourceColumn === false || !is_string($ciphertext)) {
+                                throw new \RuntimeException('An encrypted health field could not be verified after writing.');
+                            }
+
+                            app(HealthDataEncrypter::class)->decryptWithDedicatedKey($ciphertext);
+                            if (!$this->valuesMatch($expectedValue, $profile->getAttribute($sourceColumn))) {
+                                throw new \RuntimeException('An encrypted health field did not round-trip after writing.');
+                            }
+                        }
                     }
 
                     $written++;
                 }
             });
 
-            $labelText = $apply ? 'Written' : 'Would write';
+            $labelText = $apply ? 'Written and verified' : ($force ? 'Would refresh' : 'Would write');
             $this->info("{$label}: {$labelText} {$written} profile(s); skipped {$skipped} profile(s).");
             $totalWritten += $written;
             $totalSkipped += $skipped;
@@ -115,7 +125,7 @@ class BackfillEncryptedStudentMedicalHistory extends Command
             $this->warn('No data was changed. Re-run with --apply only after reviewing the count.');
         }
 
-        $label = $apply ? 'Written' : 'Would write';
+        $label = $apply ? 'Written and verified' : ($force ? 'Would refresh' : 'Would write');
         $this->info("Total: {$label} {$totalWritten} profile(s); skipped {$totalSkipped} profile(s).");
 
         return self::SUCCESS;
@@ -131,5 +141,40 @@ class BackfillEncryptedStudentMedicalHistory extends Command
                 && Schema::hasColumn($tableName, $encryptedColumn),
             ARRAY_FILTER_USE_BOTH
         );
+    }
+
+    private function valuesMatch($left, $right): bool
+    {
+        if ($left instanceof \DateTimeInterface) {
+            $left = $left->format('Y-m-d\TH:i:s.uP');
+        }
+
+        if ($right instanceof \DateTimeInterface) {
+            $right = $right->format('Y-m-d\TH:i:s.uP');
+        }
+
+        if ($left instanceof Arrayable) {
+            $left = $left->toArray();
+        } elseif (is_object($left)) {
+            $left = get_object_vars($left);
+        }
+
+        if ($right instanceof Arrayable) {
+            $right = $right->toArray();
+        } elseif (is_object($right)) {
+            $right = get_object_vars($right);
+        }
+
+        if (is_array($left) && is_array($right)) {
+            foreach ($left as $key => $value) {
+                if (!array_key_exists($key, $right) || !$this->valuesMatch($value, $right[$key])) {
+                    return false;
+                }
+            }
+
+            return count($left) === count($right);
+        }
+
+        return $left === $right || (is_numeric($left) && is_numeric($right) && (string) $left === (string) $right);
     }
 }
