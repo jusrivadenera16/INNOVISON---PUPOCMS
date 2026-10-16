@@ -39,9 +39,8 @@ Use `--chunk=50` or another value if the database needs smaller batches. Use `--
 
 Before a production rollout, verify the backup and application key. The migration's `down()` method removes only the six mirror columns. It does not remove or alter the original source columns. Do not rotate `APP_KEY` during this process; existing encrypted values become unreadable after a key rotation.
 
-## Not finished yet
+## Phase 3 status at the time (superseded by phase 5)
 
-- The application still reads the plaintext source columns for reports, workflows, filtering, and form writes.
-- The source columns must not be deleted after this phase.
-- The next phase must add dual-write and encrypted-read handling, then replace SQL filters such as `scopeWithMedicalCondition()` with a non-sensitive derived flag before plaintext removal.
+- At this phase, reports, workflows, filtering, and form writes still used plaintext source columns.
+- Later phases added encrypted reads and writes, removed SQL filters on encrypted health values, and cleared verified plaintext values from the local database. See `HEALTH_DATA_ENCRYPTION_PHASE_5.md` for the current rollout state.
 - The database-backed backfill test is currently blocked by the checkout's pre-existing Laravel 8 / Doctrine DBAL 4.4 dependency mismatch. The feature-flagged model transition tests pass, and PHP lint/static checks pass.

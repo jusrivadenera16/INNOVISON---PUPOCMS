@@ -2082,6 +2082,40 @@
     #healthPanel .profile-meta.is-wide,
     #healthPanel .profile-meta.is-full { grid-column: auto; }
 
+    #summaryPanel .profile-information-sections { display: grid; gap: 18px; padding-top: 12px; }
+    #summaryPanel .profile-information-section { min-width: 0; padding-bottom: 18px; border-bottom: 1px solid #e5eaf0; }
+    #summaryPanel .profile-information-section:last-child { padding-bottom: 0; border-bottom: 0; }
+    #summaryPanel .profile-information-section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    #summaryPanel .profile-information-section-icon {
+        display: inline-grid;
+        flex: 0 0 auto;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: #fff0f3;
+        color: #a20b32;
+    }
+    #summaryPanel .profile-information-section-icon svg { width: 17px; height: 17px; }
+    #summaryPanel .profile-information-section-head h4 { margin: 0; color: #70131B; font-size: 14px; font-weight: 900; }
+    #summaryPanel .profile-information-section-head p { margin: 3px 0 0; color: #64748b; font-size: 11px; line-height: 1.35; }
+    #summaryPanel .profile-information-section .profile-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
+    #summaryPanel .profile-information-section .profile-meta {
+        display: flex;
+        min-height: 72px;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 5px;
+        padding: 11px 12px;
+        border-radius: 8px;
+        background: #f8fafc;
+        box-shadow: none;
+    }
+    #summaryPanel .profile-information-section .profile-meta-k { color: #64748b; }
+    #summaryPanel .profile-information-section .profile-meta-v { color: #111827; }
+    #summaryPanel .profile-information-section .profile-meta.is-full { grid-column: 1 / -1; }
+
     .profile-timeline-card {
         padding: 18px;
         margin-top: 12px;
@@ -2280,6 +2314,11 @@
     [data-theme="dark"] .profile-meta-k,
     [data-theme="dark"] .doc-missing { color: #cbd5e1; }
     [data-theme="dark"] .profile-meta { background: #111827; border-color: #334155; }
+    [data-theme="dark"] #summaryPanel .profile-information-section { border-color: #334155; }
+    [data-theme="dark"] #summaryPanel .profile-information-section-icon { background: #3b1f2c; color: #fda4af; }
+    [data-theme="dark"] #summaryPanel .profile-information-section-head h4 { color: #facc15; }
+    [data-theme="dark"] #summaryPanel .profile-information-section .profile-meta { background: #111827; border-color: #334155; }
+    [data-theme="dark"] #summaryPanel .profile-information-section .profile-meta-v { color: #f8fafc; }
     [data-theme="dark"] .profile-meta-icon,
     [data-theme="dark"] .profile-quick-icon {
         background: #111827;
@@ -2585,6 +2624,7 @@
             grid-template-columns: repeat(3, minmax(0, 1fr));
         }
         .profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        #summaryPanel .profile-information-section .profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .profile-version-shell {
             grid-template-columns: minmax(200px, 230px) minmax(0, 1fr);
         }
@@ -2630,6 +2670,7 @@
         }
         .profile-grid,
         .doc-grid { grid-template-columns: 1fr; }
+        #summaryPanel .profile-information-section .profile-grid { grid-template-columns: 1fr; }
         .profile-switch-sticky {
             padding: 12px;
         }
@@ -3289,26 +3330,66 @@
         </div>
 
     <div class="profile-panel is-active" id="summaryPanel">
-        <div class="profile-grid">
-            <div class="profile-meta"><div class="profile-meta-k">Student Name</div><div class="profile-meta-v">{{ $profile->user->name ?? 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Student Number</div><div class="profile-meta-v">{{ $displayStudentNumber }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Course</div><div class="profile-meta-v">{{ $profile->course_college ?: ($profile->user->course ?? 'N/A') }}</div></div>
+        <div class="profile-information-sections">
+            <section class="profile-information-section" aria-labelledby="profilePersonalDetailsHeading">
+                <div class="profile-information-section-head">
+                    <span class="profile-information-section-icon" aria-hidden="true"><x-outline-icon name="user-circle" /></span>
+                    <div><h4 id="profilePersonalDetailsHeading">Personal Details</h4><p>Identity and personal information.</p></div>
+                </div>
+                <div class="profile-grid">
+                    <div class="profile-meta"><div class="profile-meta-k">Student Name</div><div class="profile-meta-v">{{ $profile->user->name ?? 'N/A' }}</div></div>
+                    <div class="profile-meta"><div class="profile-meta-k">Student Number</div><div class="profile-meta-v">{{ $displayStudentNumber }}</div></div>
+                    <div class="profile-meta"><div class="profile-meta-k">Gender</div><div class="profile-meta-v">{{ $profile->sex ?: 'N/A' }}</div></div>
+                    <div class="profile-meta"><div class="profile-meta-k">Civil Status</div><div class="profile-meta-v">{{ $profile->civil_status ?: 'N/A' }}</div></div>
+                    <div class="profile-meta"><div class="profile-meta-k">Age</div><div class="profile-meta-v">{{ $profile->age ?: ($calculatedAge ?: 'N/A') }}</div></div>
+                    <div class="profile-meta"><div class="profile-meta-k">Blood Type</div><div class="profile-meta-v">{{ $profile->blood_type ?: 'N/A' }}</div></div>
+                </div>
+            </section>
 
-            <div class="profile-meta"><div class="profile-meta-k">Year / Section</div><div class="profile-meta-v">{{ trim(($profile->user->year ?? '') . '-' . ($profile->user->section ?? '')) ?: 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Email</div><div class="profile-meta-v">{{ $profile->user->email ?? 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Status</div><div class="profile-meta-v">{{ in_array($profile->clearance_status, ['Pending', 'For Verification'], true) ? 'For Verification' : ($profile->clearance_status ?: 'Not Processed') }}</div></div>
+            <section class="profile-information-section" aria-labelledby="profileAcademicInformationHeading">
+                <div class="profile-information-section-head">
+                    <span class="profile-information-section-icon" aria-hidden="true"><x-outline-icon name="academic-cap" /></span>
+                    <div><h4 id="profileAcademicInformationHeading">Academic Information</h4><p>Course and current year or section.</p></div>
+                </div>
+                <div class="profile-grid">
+                    <div class="profile-meta"><div class="profile-meta-k">Course</div><div class="profile-meta-v">{{ $profile->course_college ?: ($profile->user->course ?? 'N/A') }}</div></div>
+                    <div class="profile-meta"><div class="profile-meta-k">Year / Section</div><div class="profile-meta-v">{{ trim(($profile->user->year ?? '') . '-' . ($profile->user->section ?? '')) ?: 'N/A' }}</div></div>
+                </div>
+            </section>
 
-            <div class="profile-meta"><div class="profile-meta-k">Gender</div><div class="profile-meta-v">{{ $profile->sex ?: 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Civil Status</div><div class="profile-meta-v">{{ $profile->civil_status ?: 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Age</div><div class="profile-meta-v">{{ $profile->age ?: ($calculatedAge ?: 'N/A') }}</div></div>
+            <section class="profile-information-section" aria-labelledby="profileHealthRecordDetailsHeading">
+                <div class="profile-information-section-head">
+                    <span class="profile-information-section-icon" aria-hidden="true"><x-outline-icon name="clipboard-document-list" /></span>
+                    <div><h4 id="profileHealthRecordDetailsHeading">Health Record Details</h4><p>Clearance status and submitted health record information.</p></div>
+                </div>
+                <div class="profile-grid">
+                    <div class="profile-meta"><div class="profile-meta-k">Status</div><div class="profile-meta-v">{{ in_array($profile->clearance_status, ['Pending', 'For Verification'], true) ? 'For Verification' : ($profile->clearance_status ?: 'Not Processed') }}</div></div>
+                    <div class="profile-meta"><div class="profile-meta-k">Height</div><div class="profile-meta-v">{{ $profile->height ?: 'N/A' }}</div></div>
+                    <div class="profile-meta"><div class="profile-meta-k">Weight</div><div class="profile-meta-v">{{ $profile->weight ?: 'N/A' }}</div></div>
+                    <div class="profile-meta"><div class="profile-meta-k">Submitted At</div><div class="profile-meta-v">{{ optional(optional($currentHealthFormSubmission)->submitted_at ?: $profile->resubmitted_at ?: $profile->created_at)->format('M d, Y h:i A') ?: 'N/A' }}</div></div>
+                </div>
+            </section>
 
-            <div class="profile-meta"><div class="profile-meta-k">Blood Type</div><div class="profile-meta-v">{{ $profile->blood_type ?: 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Height</div><div class="profile-meta-v">{{ $profile->height ?: 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Weight</div><div class="profile-meta-v">{{ $profile->weight ?: 'N/A' }}</div></div>
+            <section class="profile-information-section" aria-labelledby="profileContactInformationHeading">
+                <div class="profile-information-section-head">
+                    <span class="profile-information-section-icon" aria-hidden="true"><x-outline-icon name="envelope" /></span>
+                    <div><h4 id="profileContactInformationHeading">Contact Information</h4><p>Account email address.</p></div>
+                </div>
+                <div class="profile-grid">
+                    <div class="profile-meta"><div class="profile-meta-k">Email</div><div class="profile-meta-v">{{ $profile->user->email ?? 'N/A' }}</div></div>
+                </div>
+            </section>
 
-            <div class="profile-meta"><div class="profile-meta-k">Guardian Name</div><div class="profile-meta-v">{{ $profile->guardian_name ?: 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Guardian Contact</div><div class="profile-meta-v">{{ $profile->cellphone ?: ($profile->contact_no ?: 'N/A') }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Submitted At</div><div class="profile-meta-v">{{ optional(optional($currentHealthFormSubmission)->submitted_at ?: $profile->resubmitted_at ?: $profile->created_at)->format('M d, Y h:i A') ?: 'N/A' }}</div></div>
+            <section class="profile-information-section" aria-labelledby="profileGuardianInformationHeading">
+                <div class="profile-information-section-head">
+                    <span class="profile-information-section-icon" aria-hidden="true"><x-outline-icon name="users" /></span>
+                    <div><h4 id="profileGuardianInformationHeading">Guardian Information</h4><p>Guardian details for emergencies.</p></div>
+                </div>
+                <div class="profile-grid">
+                    <div class="profile-meta"><div class="profile-meta-k">Guardian Name</div><div class="profile-meta-v">{{ $profile->guardian_name ?: 'N/A' }}</div></div>
+                    <div class="profile-meta"><div class="profile-meta-k">Guardian Contact</div><div class="profile-meta-v">{{ $profile->cellphone ?: ($profile->contact_no ?: 'N/A') }}</div></div>
+                </div>
+            </section>
         </div>
     </div>
 

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Services\HealthDataEncrypter;
 use App\Models\Concerns\ExcludesInactiveUserRecords;
 
 class ConsultationDraft extends Model
@@ -19,9 +20,39 @@ class ConsultationDraft extends Model
         'payload',
     ];
 
-    protected $casts = [
-        'payload' => 'array',
+    protected $hidden = [
+        'payload',
+        'payload_encrypted',
     ];
+
+    public function getPayloadAttribute($value): ?array
+    {
+        $encryptedPayload = $this->attributes['payload_encrypted'] ?? null;
+        if (is_string($encryptedPayload) && $encryptedPayload !== '') {
+            $payload = app(HealthDataEncrypter::class)->decrypt($encryptedPayload, true);
+
+            return is_array($payload) ? $payload : null;
+        }
+
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (!is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        $payload = json_decode($value, true);
+
+        return is_array($payload) ? $payload : null;
+    }
+
+    public function setPayloadAttribute($value): void
+    {
+        $payload = is_array($value) ? $value : [];
+        $this->attributes['payload_encrypted'] = app(HealthDataEncrypter::class)->encrypt($payload, true);
+        $this->attributes['payload'] = json_encode([], JSON_THROW_ON_ERROR);
+    }
 
     public function patient(): BelongsTo
     {

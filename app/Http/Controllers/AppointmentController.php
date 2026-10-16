@@ -1408,6 +1408,11 @@ class AppointmentController extends Controller
         return trim((string) data_get($applicantData, 'student_number')) === '';
     }
 
+    private function configuredCurrentSchoolYear(): string
+    {
+        return app(\App\Services\AcademicYearService::class)->label();
+    }
+
     private function resolveSchoolYear(?array $applicantData, User $user): string
     {
         $providedSchoolYear = trim((string) (
@@ -1761,6 +1766,8 @@ class AppointmentController extends Controller
             default => $this->resolveClinicReferenceNumber($user, $healthProfile),
         };
 
+        $configuredSchoolYear = $this->configuredCurrentSchoolYear();
+
         return [
             'reference_mode' => $referenceMode,
             'manual_student_number_allowed' => $manualStudentNumberAllowed,
@@ -1810,6 +1817,7 @@ class AppointmentController extends Controller
             'reference_number' => $resolvedReferenceNumber,
             'student_number' => $this->resolveStudentNumber($user, $healthProfile, $applicantData),
             'school_year_from_puptas' => trim((string) $applicantIdentity['school_year']) !== '',
+            'school_year_from_preferences' => true,
             'email' => (string) (
                 $applicantIdentity['email']
                 ?: optional(optional($healthProfile)->user)->email
@@ -1830,7 +1838,8 @@ class AppointmentController extends Controller
             'home_address_city_municipality' => trim((string) (optional($healthProfile)->municipality ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_city_municipality') : ''))),
             'home_address_province' => trim((string) (optional($healthProfile)->province ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_province') : ''))),
             'zipcode' => $resolvedZipcode,
-            'school_year' => (string) (optional($healthProfile)->school_year ?? $this->resolveSchoolYear($applicantData, $user)),
+            'school_year' => $configuredSchoolYear
+                ?: (string) (optional($healthProfile)->school_year ?? $this->resolveSchoolYear($applicantData, $user)),
             'height' => (string) ($this->extractMeasurementNumber(optional($healthProfile)->height ?? $user->height ?? '') ?? ''),
             'weight' => (string) ($this->extractMeasurementNumber(optional($healthProfile)->weight ?? $user->weight ?? '') ?? ''),
             'birthday' => $resolvedBirthday,
@@ -2868,12 +2877,13 @@ class AppointmentController extends Controller
             HealthProfileSnapshotService::DOCUMENT_FIELDS,
             ['digital_signature', 'guardian_signature']
         ));
+        $snapshotColumn = config('health_data_encryption.enabled', false)
+            && Schema::hasColumn('health_form_submissions', 'profile_snapshot_encrypted')
+                ? 'profile_snapshot_encrypted'
+                : 'profile_snapshot';
         $isReferenced = HealthFormSubmission::query()
-            ->where(function ($query) {
-                $query->whereNotNull('profile_snapshot')
-                    ->orWhereNotNull('profile_snapshot_encrypted');
-            })
-            ->get(['profile_snapshot', 'profile_snapshot_encrypted'])
+            ->whereNotNull($snapshotColumn)
+            ->get([$snapshotColumn])
             ->contains(function (HealthFormSubmission $submission) use ($normalizedPath, $snapshotFields): bool {
                 $snapshot = $submission->snapshotProfile();
 
@@ -5282,7 +5292,7 @@ public function storeDependentProfile(Request $request)
     }
 
     if (!Schema::hasTable('dependents_profiles')) {
-        return back()->withInput()->with('error', 'Dependent profile storage is not ready yet. Please run the latest database migration.');
+        return back()->with('error', 'Dependent profile storage is not ready yet. Please contact the clinic administrator.');
     }
 
     $dependentBirthdayMin = '1950-01-01';
@@ -5439,6 +5449,9 @@ private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
     }
 
     $employeePrefill = $this->buildEmployeeHealthFormPrefill($user, $employeeProfile);
+    $configuredSchoolYear = $this->configuredCurrentSchoolYear();
+    $employeePrefill['school_year'] = $configuredSchoolYear;
+    $employeePrefill['school_year_from_preferences'] = true;
     $displayName = trim((string) ($user->name ?? ''));
 
     $healthFormCategories = $this->healthFormCategoriesForAudience(
@@ -5448,7 +5461,7 @@ private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
         $this->employeeHealthFormCategoryAudience($user)
     );
 
-    return view('student.health_form_employee', compact(
+    return view('student.health_form_employee', array_merge(compact(
         'user',
         'employeeProfile',
         'employeePrefill',
@@ -5456,7 +5469,7 @@ private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
         'healthFormCategories',
         'defaultEmployeeHealthFormCategory',
         'adminForm'
-    ));
+    ), ['currentSchoolYear' => $configuredSchoolYear]));
 }
 
 private function canUseAdminEmployeeHealthForm(User $user): bool
@@ -5603,7 +5616,6 @@ private function buildEmployeeHealthFormPrefill(User $user, ?EmployeeHealthProfi
         'civil_status' => trim((string) (optional($employeeProfile)->civil_status ?: optional($linkedAdminProfile)->civil_status)),
         'sex' => $this->normalizeSexValue(trim((string) (optional($employeeProfile)->sex ?: data_get($facultyProfile, 'profile.gender') ?: data_get($facultyProfile, 'gender') ?: $user->gender ?: optional($linkedAdminProfile)->gender))),
         'course_college' => trim((string) (optional($employeeProfile)->course_college ?: $user->course)),
-        'school_year' => trim((string) (optional($employeeProfile)->school_year ?: $user->year)),
         'contact_no' => trim((string) (optional($employeeProfile)->contact_no ?: $user->contact_no ?: optional($linkedAdminProfile)->contact_no)),
         'street_address' => trim((string) (optional($employeeProfile)->street ?: ($addressParts[0] ?? ''))),
         'barangay' => trim((string) (optional($employeeProfile)->barangay ?: ($addressParts[1] ?? ''))),
@@ -5788,6 +5800,7 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
 
     $employeeBirthdayMin = '1950-01-01';
     $employeeBirthdayMax = Carbon::today()->subYears(15)->toDateString();
+    $configuredSchoolYear = $this->configuredCurrentSchoolYear();
 
     $validated = $request->validate([
         'employee_number' => [
@@ -5810,6 +5823,9 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
         'form_date' => ['required', 'date'],
         'office' => ['required', 'string', 'max:255'],
         'school_year' => ['nullable', 'string', 'max:40'],
+        'school_year_not_applicable' => ['nullable', 'boolean'],
+        'school_year_from' => $configuredSchoolYear !== '' ? ['nullable'] : ['nullable', 'integer', 'digits:4', 'between:1950,2100', 'required_with:school_year_to'],
+        'school_year_to' => $configuredSchoolYear !== '' ? ['nullable'] : ['nullable', 'integer', 'digits:4', 'between:1950,2100', 'required_with:school_year_from'],
         'age' => ['required', 'numeric', 'min:15', 'max:100'],
         'sex' => ['required', 'string', 'max:40'],
         'civil_status' => ['required', 'string', 'max:80'],
@@ -5883,10 +5899,35 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
         'employee_health_profile_certified' => ['accepted'],
     ], [
         'employee_number.unique' => 'This employee number is already registered. Please use the correct employee number for this account.',
+        'school_year_from.required_with' => 'Select both the starting and ending school years.',
+        'school_year_to.required_with' => 'Select both the starting and ending school years.',
         'birthday.after_or_equal' => 'Birthday must be January 1, 1950 or later.',
         'birthday.before_or_equal' => 'Age must be at least 15 years old.',
         'age.min' => 'Age must be at least 15 years old.',
     ]);
+
+    $schoolYearFrom = trim((string) ($validated['school_year_from'] ?? ''));
+    $schoolYearTo = trim((string) ($validated['school_year_to'] ?? ''));
+    if ($configuredSchoolYear !== '') {
+        $validated['school_year'] = $configuredSchoolYear;
+    } elseif ($request->boolean('school_year_not_applicable')) {
+        $validated['school_year'] = null;
+    } elseif ($schoolYearFrom !== '' && $schoolYearTo !== '') {
+        if ((int) $schoolYearTo !== (int) $schoolYearFrom + 1) {
+            throw ValidationException::withMessages([
+                'school_year_to' => 'The ending year must be one year after the starting year.',
+            ]);
+        }
+
+        $validated['school_year'] = sprintf('%04d-%04d', (int) $schoolYearFrom, (int) $schoolYearTo);
+    } else {
+        $legacySchoolYear = trim((string) (
+            $validated['school_year']
+            ?? $existingEmployeeProfile?->school_year
+            ?? ''
+        ));
+        $validated['school_year'] = $legacySchoolYear !== '' ? $legacySchoolYear : null;
+    }
 
     $employeeSignatureMethod = (string) $validated['employee_signature_method'];
     if ($employeeSignatureMethod === 'draw' && trim((string) $request->input('employee_signature')) === '') {
@@ -6630,7 +6671,8 @@ public function storeHealthForm(Request $request)
     $resolvedCourseCode = $resolvedCourse['code'];
     $resolvedCourseCollege = $resolvedCourse['name'];
 
-    $resolvedSchoolYear = trim((string) $request->input('school_year'));
+    $resolvedSchoolYear = $this->configuredCurrentSchoolYear()
+        ?: trim((string) $request->input('school_year'));
     if ($resolvedSchoolYear === '') {
         $resolvedSchoolYear = trim((string) (
             optional($existingHealthProfile)->school_year
@@ -7262,8 +7304,7 @@ public function storeHealthForm(Request $request)
             ->with('show_health_print_reminder', !$isHealthFormCorrectionMode);
 
     } catch (\Exception $e) {
-   
-        return back()->withInput()->with('error', 'Something went wrong: ' . $e->getMessage());
+        return back()->with('error', 'We could not save your health form. Please try again or contact the clinic.');
     }
 }
 
@@ -7370,7 +7411,10 @@ public function downloadHealthForm()
     $pdf = $this->buildStudentHealthFormPdf($profile);
     $fileName = $this->studentHealthFormFileName($profile, $user);
 
-    return $pdf->download($fileName);
+    $response = $pdf->download($fileName);
+    $response->headers->add(HealthFileStorage::NO_STORE_HEADERS);
+
+    return $response;
 }
 
 public function showHealthFormSubmissionPdf(HealthFormSubmission $submission)

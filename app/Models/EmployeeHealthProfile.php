@@ -111,6 +111,7 @@ class EmployeeHealthProfile extends Model
     protected $casts = [
         'form_date' => 'date',
         'birthday' => 'date',
+        'age' => 'integer',
         'past_medical_history' => 'array',
         'previous_hospitalization' => 'boolean',
         'operation_surgery' => 'boolean',

@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\HealthProfile;
+use App\Services\HealthDataEncrypter;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -19,12 +21,15 @@ class EncryptedStudentMedicalHistoryBackfillTest extends TestCase
         Config::set('database.default', 'sqlite');
         Config::set('database.connections.sqlite.database', ':memory:');
         Config::set('health_data_encryption.enabled', false);
+        Config::set('health_data_encryption.key', 'base64:' . base64_encode(str_repeat('h', 32)));
+        Config::set('health_data_encryption.legacy_app_key_fallback', true);
         DB::purge('sqlite');
         DB::reconnect('sqlite');
 
         Schema::create('health_profiles', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('user_id')->nullable();
+            $table->unsignedTinyInteger('age')->nullable();
             $table->json('medical_history')->nullable();
             $table->text('other_illness')->nullable();
             $table->string('food_allergies')->nullable();
@@ -123,6 +128,7 @@ class EncryptedStudentMedicalHistoryBackfillTest extends TestCase
         $this->assertSame('None', $fresh->other_illness);
         $this->assertSame('Peanuts', $fresh->food_allergies);
         $this->assertSame(['Aspirin'], $fresh->medicine_allergies);
+        $this->assertTrue($fresh->hasMedicalCondition());
     }
 
     public function test_plaintext_purge_keeps_source_when_ciphertext_cannot_be_verified(): void
@@ -143,6 +149,63 @@ class EncryptedStudentMedicalHistoryBackfillTest extends TestCase
 
         $this->assertSame(1, Artisan::call('health:purge-plaintext-health-data', ['--apply' => true]));
         $this->assertNotNull(DB::table('health_profiles')->where('id', $profile->id)->value('medical_history'));
+    }
+
+    public function test_plaintext_purge_accepts_an_integer_source_matching_its_decrypted_string_mirror(): void
+    {
+        $migration = require base_path('database/migrations/2026_10_05_000000_add_encrypted_student_medical_history_columns.php');
+        $migration->up();
+        $profileFieldsMigration = require base_path('database/migrations/2026_10_08_000001_add_encrypted_health_profile_fields.php');
+        $profileFieldsMigration->up();
+
+        $profile = HealthProfile::withoutGlobalScopes()->create([
+            'user_id' => null,
+            'age' => 42,
+        ]);
+
+        DB::table('health_profiles')->where('id', $profile->id)->update([
+            'age_encrypted' => Crypt::encryptString('42'),
+        ]);
+        Config::set('health_data_encryption.enabled', true);
+
+        $this->assertSame(0, Artisan::call('health:purge-plaintext-health-data'));
+        $this->assertSame(42, DB::table('health_profiles')->where('id', $profile->id)->value('age'));
+
+        $this->assertSame(0, Artisan::call('health:purge-plaintext-health-data', ['--apply' => true]));
+        $this->assertNull(DB::table('health_profiles')->where('id', $profile->id)->value('age'));
+        $this->assertEquals(42, HealthProfile::withoutGlobalScopes()->findOrFail($profile->id)->age);
+    }
+
+    public function test_force_dry_run_and_apply_rotate_legacy_app_key_mirrors(): void
+    {
+        $migration = require base_path('database/migrations/2026_10_05_000000_add_encrypted_student_medical_history_columns.php');
+        $migration->up();
+
+        $profile = HealthProfile::withoutGlobalScopes()->create([
+            'user_id' => null,
+            'medical_history' => null,
+            'food_allergies' => null,
+        ]);
+        DB::table('health_profiles')->where('id', $profile->id)->update([
+            'medical_history_encrypted' => Crypt::encryptString(json_encode(['Asthma'], JSON_THROW_ON_ERROR)),
+            'food_allergies_encrypted' => Crypt::encryptString('Peanuts'),
+        ]);
+        Config::set('health_data_encryption.enabled', true);
+
+        $this->assertSame(0, Artisan::call('health:encrypt-student-medical-history', ['--force' => true]));
+        $legacyCiphertext = DB::table('health_profiles')->where('id', $profile->id)->value('food_allergies_encrypted');
+        $this->assertSame('Peanuts', Crypt::decryptString($legacyCiphertext));
+
+        $this->assertSame(0, Artisan::call('health:encrypt-student-medical-history', [
+            '--force' => true,
+            '--apply' => true,
+        ]));
+
+        $raw = DB::table('health_profiles')->where('id', $profile->id)->first();
+        $encrypter = app(HealthDataEncrypter::class);
+        $this->assertSame('Peanuts', $encrypter->decryptWithDedicatedKey($raw->food_allergies_encrypted));
+        $this->assertSame('["Asthma"]', $encrypter->decryptWithDedicatedKey($raw->medical_history_encrypted));
+        $this->assertSame(['Asthma'], HealthProfile::withoutGlobalScopes()->findOrFail($profile->id)->medical_history);
     }
 
     private function encryptedColumns(): array

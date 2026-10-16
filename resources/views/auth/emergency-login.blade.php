@@ -1007,7 +1007,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25a3.75 3.75 0 0 0-7.5 0V9m10.5 0H5.25A1.5 1.5 0 0 0 3.75 10.5v7.5A1.5 1.5 0 0 0 5.25 19.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5A1.5 1.5 0 0 0 18.75 9Z" />
                         </svg>
-                        Unlock System
+                        Login
                     </button>
                 </form>
                 @elseif($step === 'enroll')

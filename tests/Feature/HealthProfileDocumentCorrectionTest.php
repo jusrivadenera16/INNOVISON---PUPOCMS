@@ -5,12 +5,15 @@ namespace Tests\Feature;
 use App\Http\Controllers\AdminController;
 use App\Models\HealthProfile;
 use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 class HealthProfileDocumentCorrectionTest extends TestCase
 {
+    use DatabaseTransactions;
+
     public function test_it_keeps_an_approved_record_approved_when_document_correction_is_requested(): void
     {
         $user = User::factory()->create([

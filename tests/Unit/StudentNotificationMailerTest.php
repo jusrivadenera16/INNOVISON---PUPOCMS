@@ -115,13 +115,21 @@ class StudentNotificationMailerTest extends TestCase
             'email' => 'student@example.test',
         ]);
 
-        $result = app(StudentNotificationMailer::class)->sendHealthRecordNotice($student, 'approved');
+        $result = app(StudentNotificationMailer::class)->sendHealthRecordNotice($student, 'approved', [
+            'reference_number' => '06002',
+        ]);
 
         $this->assertSame('sent', $result['status']);
         Mail::assertSent(StudentPortalNotificationMail::class, function (StudentPortalNotificationMail $mail) {
+            $details = $mail->statusCard['details'] ?? [];
+            $detailLabels = array_column($details, 'label');
+            $detailValues = array_column($details, 'value');
+
             return $mail->title === 'Your health clearance is approved!'
                 && $mail->actionLabel === 'Open Health Record'
-                && $mail->statusCard['tone'] === 'success';
+                && $mail->statusCard['tone'] === 'success'
+                && !in_array('Reference Number', $detailLabels, true)
+                && !in_array('06002', $detailValues, true);
         });
     }
 

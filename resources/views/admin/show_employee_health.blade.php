@@ -560,6 +560,8 @@
         color: #ffffff;
     }
 
+    .health-profile-wrap .profile-version-choice.is-active .profile-version-choice-copy strong { color: #ffffff; }
+
     .health-profile-wrap .profile-version-choice-number {
         display: grid;
         place-items: center;
@@ -876,6 +878,37 @@
     #summaryPanel .profile-meta-k {
         margin-bottom: 0;
     }
+
+    #summaryPanel .employee-profile-sections { display: grid; gap: 18px; padding-top: 12px; }
+    #summaryPanel .employee-profile-section { min-width: 0; padding-bottom: 18px; border-bottom: 1px solid #e5eaf0; }
+    #summaryPanel .employee-profile-section:last-child { padding-bottom: 0; border-bottom: 0; }
+    #summaryPanel .employee-profile-section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    #summaryPanel .employee-profile-section-icon {
+        display: inline-grid;
+        flex: 0 0 auto;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: #fff0f3;
+        color: #a20b32;
+    }
+    #summaryPanel .employee-profile-section-icon svg { width: 17px; height: 17px; }
+    #summaryPanel .employee-profile-section-head h4 { margin: 0; color: #70131B; font-size: 14px; font-weight: 900; }
+    #summaryPanel .employee-profile-section-head p { margin: 3px 0 0; color: #64748b; font-size: 11px; line-height: 1.35; }
+    #summaryPanel .employee-profile-section .profile-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
+    #summaryPanel .employee-profile-section .profile-meta {
+        display: flex;
+        min-height: 72px;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 5px;
+        padding: 11px 12px;
+    }
+    #summaryPanel .employee-profile-section .profile-meta.is-full { grid-column: 1 / -1; }
+    #summaryPanel .employee-profile-section .profile-meta-k { color: #64748b; }
+    #summaryPanel .employee-profile-section .profile-meta-v { color: #111827; }
 
     #healthPanel .profile-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1241,6 +1274,11 @@
         background: #111827;
         border-color: #334155;
     }
+
+    [data-theme="dark"] #summaryPanel .employee-profile-section { border-color: #334155; }
+    [data-theme="dark"] #summaryPanel .employee-profile-section-icon { background: #3b1f2c; color: #fda4af; }
+    [data-theme="dark"] #summaryPanel .employee-profile-section-head h4 { color: #facc15; }
+    [data-theme="dark"] #summaryPanel .employee-profile-section .profile-meta-v { color: #f8fafc; }
 
     .health-profile-wrap .employee-profile-actions {
         position: relative;
@@ -1845,6 +1883,7 @@
         .health-profile-wrap .profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .health-profile-wrap .profile-timeline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         #summaryPanel .profile-grid { grid-template-columns: 1fr; }
+        #summaryPanel .employee-profile-section .profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         #healthPanel .profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .health-profile-wrap .profile-version-shell { grid-template-columns: minmax(200px, 230px) minmax(0, 1fr); }
         .health-profile-wrap .health-overview-lower { grid-template-columns: 1fr; }
@@ -1864,6 +1903,7 @@
         .health-profile-wrap .profile-timeline,
         .health-profile-wrap .doc-grid { grid-template-columns: 1fr; }
         #summaryPanel .profile-meta { grid-template-columns: 1fr; gap: 4px; }
+        #summaryPanel .employee-profile-section .profile-grid { grid-template-columns: 1fr; }
         #healthPanel .profile-grid { grid-template-columns: 1fr; }
         .health-profile-wrap .health-overview-metrics.is-four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .health-profile-wrap .health-overview-metrics.is-six,
@@ -2009,25 +2049,60 @@
                 <div><h3>Personal Information</h3><p>Information submitted in the employee health form.</p></div>
                 <span class="profile-history-badge">Employee</span>
             </div>
-            <div class="profile-grid">
-                <div class="profile-meta"><div class="profile-meta-k">Employee Name</div><div class="profile-meta-v">{{ $displayName }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Employee Number</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->employee_number ?: $employeeUser?->employee_number) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Email</div><div class="profile-meta-v">{{ $formatValue($employeeUser?->email) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">First Name</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->first_name) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Middle Name</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->middle_name) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Last Name</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->last_name) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Birthday</div><div class="profile-meta-v">{{ $formatDate($employeeProfile?->birthday) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Age</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->age) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Sex</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->sex) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Civil Status</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->civil_status) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Office / Department</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->office) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Health Form Category</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->health_form_category) }}</div></div>
-                <div class="profile-meta is-full"><div class="profile-meta-k">Home Address</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->home_address) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Contact No.</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->contact_no ?: $employeeUser?->contact_no) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Emergency Contact</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->emergency_contact_person) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Emergency Contact No.</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->emergency_contact_no) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">School Year</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->school_year) }}</div></div>
-                <div class="profile-meta"><div class="profile-meta-k">Form Date</div><div class="profile-meta-v">{{ $formatDate($employeeProfile?->form_date) }}</div></div>
+            <div class="employee-profile-sections">
+                <section class="employee-profile-section" aria-labelledby="employeePersonalDetailsHeading">
+                    <div class="employee-profile-section-head">
+                        <span class="employee-profile-section-icon" aria-hidden="true"><x-outline-icon name="user-circle" /></span>
+                        <div><h4 id="employeePersonalDetailsHeading">Personal Details</h4><p>Identity and personal information.</p></div>
+                    </div>
+                    <div class="profile-grid">
+                        <div class="profile-meta"><div class="profile-meta-k">Employee Name</div><div class="profile-meta-v">{{ $displayName }}</div></div>
+                        <div class="profile-meta"><div class="profile-meta-k">First Name</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->first_name) }}</div></div>
+                        <div class="profile-meta"><div class="profile-meta-k">Middle Name</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->middle_name) }}</div></div>
+                        <div class="profile-meta"><div class="profile-meta-k">Last Name</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->last_name) }}</div></div>
+                        <div class="profile-meta"><div class="profile-meta-k">Birthday</div><div class="profile-meta-v">{{ $formatDate($employeeProfile?->birthday) }}</div></div>
+                        <div class="profile-meta"><div class="profile-meta-k">Age</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->age) }}</div></div>
+                        <div class="profile-meta"><div class="profile-meta-k">Sex</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->sex) }}</div></div>
+                        <div class="profile-meta"><div class="profile-meta-k">Civil Status</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->civil_status) }}</div></div>
+                    </div>
+                </section>
+
+                <section class="employee-profile-section" aria-labelledby="employeeWorkDetailsHeading">
+                    <div class="employee-profile-section-head">
+                        <span class="employee-profile-section-icon" aria-hidden="true"><x-outline-icon name="briefcase" /></span>
+                        <div><h4 id="employeeWorkDetailsHeading">Employment Details</h4><p>Employee number and clinic record information.</p></div>
+                    </div>
+                    <div class="profile-grid">
+                        <div class="profile-meta"><div class="profile-meta-k">Employee Number</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->employee_number ?: $employeeUser?->employee_number) }}</div></div>
+                        <div class="profile-meta"><div class="profile-meta-k">Office / Department</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->office) }}</div></div>
+                        <div class="profile-meta"><div class="profile-meta-k">Health Form Category</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->health_form_category) }}</div></div>
+                        <div class="profile-meta"><div class="profile-meta-k">School Year</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->school_year) }}</div></div>
+                        <div class="profile-meta"><div class="profile-meta-k">Form Date</div><div class="profile-meta-v">{{ $formatDate($employeeProfile?->form_date) }}</div></div>
+                    </div>
+                </section>
+
+                <section class="employee-profile-section" aria-labelledby="employeeContactInformationHeading">
+                    <div class="employee-profile-section-head">
+                        <span class="employee-profile-section-icon" aria-hidden="true"><x-outline-icon name="envelope" /></span>
+                        <div><h4 id="employeeContactInformationHeading">Contact Information</h4><p>Contact details and home address.</p></div>
+                    </div>
+                    <div class="profile-grid">
+                        <div class="profile-meta"><div class="profile-meta-k">Email</div><div class="profile-meta-v">{{ $formatValue($employeeUser?->email) }}</div></div>
+                        <div class="profile-meta"><div class="profile-meta-k">Contact No.</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->contact_no ?: $employeeUser?->contact_no) }}</div></div>
+                        <div class="profile-meta is-full"><div class="profile-meta-k">Home Address</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->home_address) }}</div></div>
+                    </div>
+                </section>
+
+                <section class="employee-profile-section" aria-labelledby="employeeEmergencyContactHeading">
+                    <div class="employee-profile-section-head">
+                        <span class="employee-profile-section-icon" aria-hidden="true"><x-outline-icon name="phone" /></span>
+                        <div><h4 id="employeeEmergencyContactHeading">Emergency Contact</h4><p>Person to contact in case of an emergency.</p></div>
+                    </div>
+                    <div class="profile-grid">
+                        <div class="profile-meta"><div class="profile-meta-k">Emergency Contact</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->emergency_contact_person) }}</div></div>
+                        <div class="profile-meta"><div class="profile-meta-k">Emergency Contact No.</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->emergency_contact_no) }}</div></div>
+                    </div>
+                </section>
             </div>
         </section>
 

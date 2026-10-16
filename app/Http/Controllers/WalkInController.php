@@ -188,21 +188,26 @@ class WalkInController extends Controller
     ): void
     {
         $user = auth()->user();
-        $lookupStatus = $found ? 'found' : ($errorMessage ? 'error' : 'not_found');
+        $lookupStatus = $found ? 'found' : ($errorMessage !== null ? 'error' : 'not_found');
+        $maskedReferenceNumber = SensitiveLogRedactor::identifier($referenceNumber);
+        $maskedApplicantName = SensitiveLogRedactor::name($applicantName);
         $description = match ($lookupStatus) {
-            'found' => "Reference lookup successful for: {$referenceNumber}" . ($applicantName ? " ({$applicantName})" : ''),
-            'error' => "Reference lookup error for {$referenceNumber}: {$errorMessage}",
-            'not_found' => "Reference lookup failed - no applicant found for: {$referenceNumber}",
+            'found' => "Reference lookup successful for: {$maskedReferenceNumber}" . ($maskedApplicantName ? " ({$maskedApplicantName})" : ''),
+            'error' => 'Reference lookup error.',
+            'not_found' => "Reference lookup failed - no applicant found for: {$maskedReferenceNumber}",
         };
 
         $activityMetadata = $metadata ?? [];
-        $activityMetadata['reference_number'] = $referenceNumber;
+        $activityMetadata['reference_number'] = $maskedReferenceNumber;
         $activityMetadata['lookup_status'] = $lookupStatus;
-        if ($applicantName) {
-            $activityMetadata['applicant_name'] = $applicantName;
+        if ($maskedApplicantName) {
+            $activityMetadata['applicant_name'] = $maskedApplicantName;
         }
-        if ($errorMessage) {
-            $activityMetadata['error'] = $errorMessage;
+        if (array_key_exists('local_email', $activityMetadata)) {
+            $activityMetadata['local_email'] = SensitiveLogRedactor::email((string) $activityMetadata['local_email']);
+        }
+        if ($errorMessage !== null) {
+            $activityMetadata['error'] = 'Lookup error.';
         }
 
         ActivityLog::create([
@@ -215,10 +220,10 @@ class WalkInController extends Controller
             'description' => $description,
             'route_name' => optional($request->route())->getName(),
             'http_method' => strtoupper((string) $request->method()),
-            'request_path' => '/' . ltrim((string) $request->path(), '/'),
+            'request_path' => '/' . ltrim((string) ($request->route()?->uri() ?? $request->path()), '/'),
             'status_code' => $errorMessage ? 422 : 200,
             'subject_type' => 'applicant',
-            'subject_id' => $referenceNumber,
+            'subject_id' => $maskedReferenceNumber,
             'metadata' => $activityMetadata,
             'ip_address' => $request->ip(),
             'user_agent' => substr((string) $request->userAgent(), 0, 255),
@@ -1983,8 +1988,13 @@ class WalkInController extends Controller
 
     private function employeeDraftQuery()
     {
+        $draftColumn = config('health_data_encryption.enabled', false)
+            && \Illuminate\Support\Facades\Schema::hasColumn('health_profile_emp', 'draft_data_encrypted')
+                ? 'draft_data_encrypted'
+                : 'draft_data';
+
         return EmployeeHealthProfile::with('user')
-            ->whereNotNull('draft_data')
+            ->whereNotNull($draftColumn)
             ->latest('updated_at')
             ->take(50);
     }
@@ -3684,7 +3694,7 @@ PROMPT;
                 'action' => 'Applicant Assessment Encoded',
                 'module' => 'Patient Intake',
                 'event_type' => 'applicant_assessment_encoded',
-                'description' => "Applicant assessment encoded for final review: {$referenceNumber}",
+                'description' => 'Applicant assessment encoded for final review.',
                 'route_name' => optional($request->route())->getName(),
                 'http_method' => 'POST',
                 'request_path' => '/' . ltrim((string) $request->path(), '/'),
@@ -3692,7 +3702,7 @@ PROMPT;
                 'subject_type' => HealthProfile::class,
                 'subject_id' => (string) $profile->id,
                 'metadata' => [
-                    'reference_number' => $referenceNumber,
+                    'reference_number' => SensitiveLogRedactor::identifier($referenceNumber),
                     'health_profile_id' => $profile->id,
                     'clearance_status' => 'For Final Review',
                 ],
@@ -3954,8 +3964,8 @@ PROMPT;
             'module' => 'Patient Intake',
             'event_type' => $hasPendingFinding ? 'employee_pending_compliance' : 'employee_approval',
             'description' => $hasPendingFinding
-                ? "Employee set to pending compliance: {$referenceNumber}"
-                : "Employee approved and Health Examination PDF saved: {$referenceNumber}",
+                ? 'Employee set to pending compliance.'
+                : 'Employee approved and Health Examination PDF saved.',
             'route_name' => optional($request->route())->getName(),
             'http_method' => 'POST',
             'request_path' => '/' . ltrim((string) $request->path(), '/'),
@@ -3963,12 +3973,12 @@ PROMPT;
             'subject_type' => EmployeeHealthProfile::class,
             'subject_id' => (string) $employeeProfile->id,
             'metadata' => [
-                'reference_number' => $referenceNumber,
+                'reference_number' => SensitiveLogRedactor::identifier($referenceNumber),
                 'employee_profile_id' => $employeeProfile->id,
                 'clearance_status' => $clearanceStatus,
                 'findings_status' => $findingsStatus,
-                'pending_reasons' => $pendingReasons,
-                'pdf_path' => $employeeProfile->staff_health_form_pdf_path,
+                'has_pending_reasons' => filled($pendingReasons),
+                'pdf_generated' => filled($employeeProfile->staff_health_form_pdf_path),
                 'lookup_source' => 'local_employee_reference',
             ],
             'ip_address' => $request->ip(),
@@ -4423,8 +4433,8 @@ PROMPT;
                 'module' => 'Patient Intake',
                 'event_type' => $hasPendingFinding ? 'applicant_pending_compliance' : 'applicant_approval',
                 'description' => $hasPendingFinding
-                    ? "Applicant set to pending compliance: {$referenceNumber} (Student ID: {$studentId})"
-                    : "Applicant approved: {$referenceNumber} (Student ID: {$studentId})",
+                    ? 'Applicant set to pending compliance.'
+                    : 'Applicant approved.',
                 'route_name' => optional($request->route())->getName(),
                 'http_method' => 'POST',
                 'request_path' => '/' . ltrim((string) $request->path(), '/'),
@@ -4432,14 +4442,13 @@ PROMPT;
                 'subject_type' => HealthProfile::class,
                 'subject_id' => (string) $profile->id,
                 'metadata' => [
-                    'reference_number' => $referenceNumber,
-                    'student_id' => $studentId,
+                    'reference_number' => SensitiveLogRedactor::identifier($referenceNumber),
+                    'student_id' => SensitiveLogRedactor::identifier($studentId),
                     'health_profile_id' => $profile->id,
                     'clearance_status' => $clearanceStatus,
                     'findings_status' => $findingsStatus,
-                    'pending_reasons' => $pendingReasons,
+                    'has_pending_reasons' => filled($pendingReasons),
                     'webhook_status' => ($webhookResult['success'] ?? false) ? 'success' : 'failed',
-                    'webhook_message' => $webhookResult['message'] ?? null,
                     'lookup_source' => $isLocalOnlyApproval ? 'local_employee_reference' : 'puptas',
                 ],
                 'ip_address' => $request->ip(),
@@ -4686,7 +4695,7 @@ PROMPT;
                 'action' => 'Student/OJT Assessment Saved',
                 'module' => 'Patient Intake',
                 'event_type' => 'student_assessment_saved',
-                'description' => "Student/OJT assessment saved: {$referenceNumber}",
+                'description' => 'Student/OJT assessment saved.',
                 'route_name' => optional($request->route())->getName(),
                 'http_method' => 'POST',
                 'request_path' => '/' . ltrim((string) $request->path(), '/'),
@@ -4694,7 +4703,7 @@ PROMPT;
                 'subject_type' => HealthProfile::class,
                 'subject_id' => (string) $profile->id,
                 'metadata' => [
-                    'reference_number' => $referenceNumber,
+                    'reference_number' => SensitiveLogRedactor::identifier($referenceNumber),
                     'health_profile_id' => $profile->id,
                     'clearance_status' => $profile->clearance_status,
                 ],

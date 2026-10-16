@@ -133,6 +133,12 @@ class HealthFileStorageTest extends TestCase
         $responseContents = ob_get_clean();
 
         $this->assertSame($contents, $responseContents);
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+        $this->assertSame('no-cache', $response->headers->get('Pragma'));
+        $this->assertSame('0', $response->headers->get('Expires'));
+
+        $download = $files->download($path, 'encrypted.pdf');
+        $this->assertStringContainsString('no-store', (string) $download->headers->get('Cache-Control'));
     }
 
     public function test_existing_private_files_can_be_encrypted_and_verified(): void

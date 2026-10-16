@@ -262,7 +262,6 @@ class StudentNotificationMailer
     private function healthApprovalStatusCard(array $details): array
     {
         $approvedAt = trim((string) ($details['approved_at'] ?? '')) ?: now()->format('F j, Y');
-        $referenceNumber = trim((string) ($details['reference_number'] ?? '')) ?: 'Available in the Student Portal';
         $campus = trim((string) ($details['campus'] ?? '')) ?: 'PUP Taguig';
 
         return [
@@ -273,7 +272,6 @@ class StudentNotificationMailer
             'status_value' => 'APPROVED',
             'details' => [
                 ['icon' => '&#128197;', 'label' => 'Date Approved', 'value' => $approvedAt],
-                ['icon' => '#', 'label' => 'Reference Number', 'value' => $referenceNumber],
                 ['icon' => '&#9679;', 'label' => 'Campus', 'value' => $campus],
             ],
         ];

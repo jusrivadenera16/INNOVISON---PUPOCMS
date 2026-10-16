@@ -1133,7 +1133,7 @@
                             <div class="field-helper">Example: Brgy. Central</div>
                         </div>
                         <div class="form-field">
-                            <label class="form-label" for="street">Street / House No. <span class="required">*</span></label>
+                            <label class="form-label" for="street"> House No. / Street <span class="required">*</span></label>
                             <div class="address-field-control">
                                 <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7"></path><path d="M5 9v11h14V9M9 20v-6h6v6"></path></svg></span>
                                 <input id="street" name="street" class="form-control" value="{{ old('street', $prefill['street'] ?? '') }}" required maxlength="255" data-address-part placeholder="e.g., 123 Mabini St.">

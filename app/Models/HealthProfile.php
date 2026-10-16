@@ -88,6 +88,8 @@ class HealthProfile extends Model
         'clearance_revoked_at' => 'datetime',
         'documents_valid' => 'boolean',
         'no_allergies' => 'boolean',
+        'age' => 'integer',
+        'pulse_rate' => 'integer',
         'medical_history' => 'array',
         'medicine_allergies' => 'array',
         'vaccine_history' => 'array',
@@ -195,32 +197,6 @@ class HealthProfile extends Model
             || $this->filledProfileValue($this->medical_condition_remarks);
     }
 
-    public function scopeWithMedicalCondition($query)
-    {
-        return $query->where(function ($builder) {
-            $builder->where('has_disability', 'Yes')
-                ->orWhere('has_illness', 'Yes')
-                ->orWhere(function ($q) {
-                    $this->whereFilledProfileColumn($q, 'medical_history');
-                })
-                ->orWhere(function ($q) {
-                    $this->whereFilledProfileColumn($q, 'other_illness');
-                })
-                ->orWhere(function ($q) {
-                    $this->whereFilledProfileColumn($q, 'food_allergies');
-                })
-                ->orWhere(function ($q) {
-                    $this->whereFilledProfileColumn($q, 'medicine_allergies');
-                })
-                ->orWhere(function ($q) {
-                    $this->whereFilledProfileColumn($q, 'other_med_allergies');
-                })
-                ->orWhere(function ($q) {
-                    $this->whereFilledProfileColumn($q, 'medical_condition_remarks');
-                });
-        });
-    }
-
     public function scopeNotPulledOut($query)
     {
         return $query->where(function ($builder) {
@@ -234,36 +210,6 @@ class HealthProfile extends Model
         return $query->where('pullout_status', self::PULLOUT_COMPLETED);
     }
 
-    public function scopeWithoutMedicalCondition($query)
-    {
-        return $query->where(function ($builder) {
-            $builder->where(function ($q) {
-                    $q->whereNull('has_disability')->orWhere('has_disability', '!=', 'Yes');
-                })
-                ->where(function ($q) {
-                    $q->whereNull('has_illness')->orWhere('has_illness', '!=', 'Yes');
-                })
-                ->where(function ($q) {
-                    $this->whereBlankProfileColumn($q, 'medical_history');
-                })
-                ->where(function ($q) {
-                    $this->whereBlankProfileColumn($q, 'other_illness');
-                })
-                ->where(function ($q) {
-                    $this->whereBlankProfileColumn($q, 'food_allergies');
-                })
-                ->where(function ($q) {
-                    $this->whereBlankProfileColumn($q, 'medicine_allergies');
-                })
-                ->where(function ($q) {
-                    $this->whereBlankProfileColumn($q, 'other_med_allergies');
-                })
-                ->where(function ($q) {
-                    $this->whereBlankProfileColumn($q, 'medical_condition_remarks');
-                });
-        });
-    }
-
     private function filledProfileValue($value): bool
     {
         if (is_array($value)) {
@@ -275,17 +221,4 @@ class HealthProfile extends Model
         return $normalized !== '' && $normalized !== '[]';
     }
 
-    private function whereFilledProfileColumn($query, string $column): void
-    {
-        $query->whereNotNull($column)
-            ->where($column, '!=', '')
-            ->where($column, '!=', '[]');
-    }
-
-    private function whereBlankProfileColumn($query, string $column): void
-    {
-        $query->whereNull($column)
-            ->orWhere($column, '')
-            ->orWhere($column, '[]');
-    }
 }

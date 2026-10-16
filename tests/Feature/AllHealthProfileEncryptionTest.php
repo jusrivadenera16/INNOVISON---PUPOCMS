@@ -21,6 +21,8 @@ class AllHealthProfileEncryptionTest extends TestCase
         Config::set('database.default', 'sqlite');
         Config::set('database.connections.sqlite.database', ':memory:');
         Config::set('health_data_encryption.enabled', true);
+        Config::set('health_data_encryption.key', 'base64:' . base64_encode(str_repeat('h', 32)));
+        Config::set('health_data_encryption.legacy_app_key_fallback', true);
         DB::purge('sqlite');
         DB::reconnect('sqlite');
 

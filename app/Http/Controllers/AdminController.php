@@ -3062,7 +3062,6 @@ class AdminController extends Controller
                     ->orWhere('student_id', 'like', $like)
                     ->orWhere('course_college', 'like', $like)
                     ->orWhere('course_code', 'like', $like)
-                    ->orWhere('sex', 'like', $like)
                     ->orWhere('clearance_status', 'like', $like)
                     ->orWhereHas('user', function ($userQuery) use ($like) {
                         $userQuery->where('name', 'like', $like)
@@ -3448,7 +3447,6 @@ class AdminController extends Controller
                     ->orWhere('student_id', 'like', $like)
                     ->orWhere('course_college', 'like', $like)
                     ->orWhere('course_code', 'like', $like)
-                    ->orWhere('sex', 'like', $like)
                     ->orWhere('clearance_status', 'like', $like)
                     ->orWhereHas('user', function ($userQuery) use ($like) {
                         $userQuery->where('name', 'like', $like)
@@ -4581,8 +4579,8 @@ class AdminController extends Controller
                 'subject_id' => (string) $profile->id,
                 'metadata' => [
                     'health_profile_id' => $profile->id,
-                    'reference_number' => $profile->reference_number,
-                    'student_id' => $profile->student_id,
+                    'reference_number' => SensitiveLogRedactor::identifier((string) $profile->reference_number),
+                    'student_id' => SensitiveLogRedactor::identifier((string) $profile->student_id),
                     'previous_status' => $previousStatus,
                     'previous_verified_at' => optional($previousVerifiedAt)->toDateTimeString(),
                     'previous_approved_by_user_id' => $previousApprovedBy,
@@ -4722,7 +4720,7 @@ class AdminController extends Controller
             'Health Profile Marked as Pulled Out',
             'health_profile_pulled_out',
             'Health profile #' . $profile->id . ' was directly marked as pulled out by a Super Admin. No medical data or files were deleted.',
-            ['reason' => $profile->pullout_reason, 'direct_superadmin_action' => true]
+            ['reason_provided' => filled($profile->pullout_reason), 'direct_superadmin_action' => true]
         );
 
         if ($profile->user) {
@@ -4772,7 +4770,7 @@ class AdminController extends Controller
             'Health Profile Marked as Pulled Out',
             'health_profile_pulled_out',
             'Health profile #' . $profile->id . ' was manually marked as pulled out after external coordination. No medical data or files were deleted.',
-            ['pullout_reference' => $profile->pullout_reference]
+            ['pullout_reference' => SensitiveLogRedactor::identifier((string) $profile->pullout_reference)]
         );
 
         if ($profile->user) {
@@ -4819,7 +4817,7 @@ class AdminController extends Controller
             'Pulled-Out Health Profile Restored',
             'health_profile_pullout_restored',
             'Health profile #' . $profile->id . ' was restored to active access. Its original clearance and medical data were preserved.',
-            ['restore_reason' => $profile->pullout_restore_reason]
+            ['restore_reason_provided' => filled($profile->pullout_restore_reason)]
         );
 
         if ($profile->user) {
@@ -4959,7 +4957,7 @@ class AdminController extends Controller
             'metadata' => array_merge([
                 'health_profile_id' => $profile->id,
                 'user_id' => $profile->user_id,
-                'reference_number' => $profile->reference_number,
+                'reference_number' => SensitiveLogRedactor::identifier((string) $profile->reference_number),
                 'pullout_status' => $profile->pullout_status,
             ], $metadata),
             'ip_address' => $request->ip(),
@@ -5208,7 +5206,10 @@ class AdminController extends Controller
         $studentNumber = trim((string) ($profile->user->student_number ?: $profile->user->student_id ?: $profile->id));
         $fileName = 'health-form-' . preg_replace('/[^A-Za-z0-9\\-_]+/', '-', $studentNumber) . '.pdf';
 
-        return $pdf->download($fileName);
+        $response = $pdf->download($fileName);
+        $response->headers->add(HealthFileStorage::NO_STORE_HEADERS);
+
+        return $response;
     }
 
     public function showHealthPlain($id)
@@ -5822,9 +5823,9 @@ public function updateClearance(Request $request, $id)
             'subject_id' => (string) $record->id,
             'metadata' => [
                 'health_profile_id' => $record->id,
-                'reference_number' => $record->reference_number,
-                'student_id' => $record->student_id,
-                'previous_pending_reason' => $record->pending_reason,
+                'reference_number' => SensitiveLogRedactor::identifier((string) $record->reference_number),
+                'student_id' => SensitiveLogRedactor::identifier((string) $record->student_id),
+                'had_previous_pending_reason' => filled($record->pending_reason),
             ],
             'ip_address' => $request->ip(),
             'user_agent' => substr((string) $request->userAgent(), 0, 255),
@@ -5880,11 +5881,11 @@ public function updateClearance(Request $request, $id)
             'subject_id' => (string) $record->id,
             'metadata' => [
                 'health_profile_id' => $record->id,
-                'reference_number' => $record->reference_number,
-                'student_id' => $record->student_id,
-                'previous_pending_reason' => $previousPendingReason,
-                'previous_tracking_remarks' => $previousTrackingRemarks,
-                'previous_resubmission_required_documents' => $previousDocuments,
+                'reference_number' => SensitiveLogRedactor::identifier((string) $record->reference_number),
+                'student_id' => SensitiveLogRedactor::identifier((string) $record->student_id),
+                'had_previous_pending_reason' => filled($previousPendingReason),
+                'had_previous_tracking_remarks' => filled($previousTrackingRemarks),
+                'previous_resubmission_document_count' => is_array($previousDocuments) ? count($previousDocuments) : 0,
             ],
             'ip_address' => $request->ip(),
             'user_agent' => substr((string) $request->userAgent(), 0, 255),
@@ -6308,8 +6309,12 @@ public function updateClearance(Request $request, $id)
         $settings = Setting::first();
         if(!$settings) { $settings = new Setting(); }
         $cmsProfile = $admin ? $this->buildCmsAdminProfile($admin) : [];
+        $academicYearRange = app(\App\Services\AcademicYearService::class)->configuredRange();
+        $academicYearFrom = $academicYearRange['from'];
+        $academicYearTo = $academicYearRange['to'];
+        $currentSchoolYear = $academicYearFrom . '-' . $academicYearTo;
 
-        return view('admin.settings-preferences', compact('admin', 'settings', 'cmsProfile'));
+        return view('admin.settings-preferences', compact('admin', 'settings', 'cmsProfile', 'currentSchoolYear', 'academicYearFrom', 'academicYearTo'));
     }
 
     public function settingsMedicalConfiguration()
@@ -7382,6 +7387,18 @@ public function deleteItem($id)
             ]);
         }
 
+        if ($request->boolean('school_year_settings_form')) {
+            $academicYearData = $request->validate([
+                'academic_year_from' => ['required', 'integer', 'digits:4', 'between:1950,2099'],
+                'academic_year_to' => ['required', 'integer', 'digits:4', 'between:1951,2100'],
+            ]);
+            if ((int) $academicYearData['academic_year_to'] !== (int) $academicYearData['academic_year_from'] + 1) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'academic_year_to' => 'The ending year must be one year after the starting year.',
+                ]);
+            }
+        }
+
         if ($request->boolean('clinic_hours_form')) {
             $request->validate([
                 'open_time' => ['required', 'date_format:H:i'],
@@ -7408,6 +7425,9 @@ public function deleteItem($id)
         $settingsBefore = $request->boolean('preferences_form')
             ? collect($auditedPreferenceFields)->mapWithKeys(fn ($field) => [$field => $settings->{$field}])->all()
             : [];
+        $schoolYearBefore = $request->boolean('school_year_settings_form')
+            ? app(\App\Services\AcademicYearService::class)->configuredRange()
+            : null;
 
         $settings->clinic_name = $request->input('clinic_name', $settings->clinic_name ?: 'PUP Taguig Clinic');
         $settings->clinic_location = $request->input('clinic_location', $settings->clinic_location ?: 'Santos Ave, Lower Bicutan, Taguig');
@@ -7441,6 +7461,11 @@ public function deleteItem($id)
 
         $cancelledForClosure = DB::transaction(function () use ($settings, $request, $currentAdmin, $adminAlertAfter) {
             $settings->save();
+
+            if ($request->boolean('school_year_settings_form')) {
+                SystemSetting::putValue('academic_year_from', (string) $request->input('academic_year_from'));
+                SystemSetting::putValue('academic_year_to', (string) $request->input('academic_year_to'));
+            }
 
             if (!$request->boolean('preferences_form')) {
                 return 0;
@@ -7478,6 +7503,13 @@ public function deleteItem($id)
         $settingsAfter = $request->boolean('preferences_form')
             ? collect($auditedPreferenceFields)->mapWithKeys(fn ($field) => [$field => $settings->{$field}])->all()
             : [];
+        if ($request->boolean('school_year_settings_form')) {
+            $schoolYearAfter = app(\App\Services\AcademicYearService::class)->configuredRange();
+            $settingsBefore['academic_year_from'] = $schoolYearBefore['from'];
+            $settingsBefore['academic_year_to'] = $schoolYearBefore['to'];
+            $settingsAfter['academic_year_from'] = $schoolYearAfter['from'];
+            $settingsAfter['academic_year_to'] = $schoolYearAfter['to'];
+        }
         $changedSettings = collect($settingsAfter)
             ->filter(fn ($value, $field) => (string) ($settingsBefore[$field] ?? '') !== (string) $value)
             ->mapWithKeys(fn ($value, $field) => [$field => [

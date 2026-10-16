@@ -2,6 +2,7 @@
 
 namespace App\Models\Concerns;
 
+use App\Casts\EncryptedHealthData;
 use DateTimeInterface;
 use Illuminate\Contracts\Support\Arrayable;
 
@@ -17,12 +18,13 @@ trait EncryptsHealthProfileFields
             }
 
             $sourceCast = strtolower((string) ($casts[$sourceColumn] ?? ''));
-            $casts[$encryptedColumn] = in_array($sourceCast, [
+            $format = in_array($sourceCast, [
                 'array',
                 'json',
                 'object',
                 'collection',
-            ], true) ? 'encrypted:' . $sourceCast : 'encrypted';
+            ], true) ? $sourceCast : 'scalar';
+            $casts[$encryptedColumn] = EncryptedHealthData::class . ':' . $format;
         }
 
         return $casts;
