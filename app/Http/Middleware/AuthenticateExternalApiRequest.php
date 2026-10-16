@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\IntegrationClient;
+use App\Services\HealthFileStorage;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -87,7 +88,7 @@ class AuthenticateExternalApiRequest
             );
 
             $startedAt = microtime(true);
-            $response = $next($request);
+            $response = $this->preventResponseCaching($next($request));
             $this->logIntegrationRequest($request, $response, [
                 'integration_client_id' => $client->id,
                 'token_id' => $accessToken->id,
@@ -149,7 +150,7 @@ class AuthenticateExternalApiRequest
                 );
 
                 $startedAt = microtime(true);
-                $response = $next($request);
+                $response = $this->preventResponseCaching($next($request));
                 $this->logIntegrationRequest($request, $response, [
                     'system_key' => $requestedSystem,
                     'system_name' => $requestedSystem,
@@ -184,7 +185,7 @@ class AuthenticateExternalApiRequest
             );
 
             $startedAt = microtime(true);
-            $response = $next($request);
+            $response = $this->preventResponseCaching($next($request));
             $this->logIntegrationRequest($request, $response, [
                 'system_key' => $matchedSystem,
                 'system_name' => $matchedSystem,
@@ -202,13 +203,22 @@ class AuthenticateExternalApiRequest
         }
 
         $startedAt = microtime(true);
-        $response = $next($request);
+        $response = $this->preventResponseCaching($next($request));
         $this->logIntegrationRequest($request, $response, [
             'system_key' => 'legacy',
             'system_name' => 'Legacy API Key',
             'auth_method' => 'legacy-static-key',
             'started_at' => $startedAt,
         ]);
+
+        return $response;
+    }
+
+    private function preventResponseCaching($response)
+    {
+        if (isset($response->headers)) {
+            $response->headers->add(HealthFileStorage::NO_STORE_HEADERS);
+        }
 
         return $response;
     }
@@ -224,14 +234,10 @@ class AuthenticateExternalApiRequest
                 ? (int) $response->getStatusCode()
                 : null;
 
-            $errorMessage = null;
-            if ($statusCode !== null && $statusCode >= 400) {
-                $content = method_exists($response, 'getContent') ? (string) $response->getContent() : '';
-                $decoded = json_decode($content, true);
-                $errorMessage = is_array($decoded)
-                    ? (string) ($decoded['message'] ?? $decoded['error'] ?? mb_substr($content, 0, 500))
-                    : mb_substr($content, 0, 500);
-            }
+            $errorMessage = $statusCode !== null && $statusCode >= 400
+                ? 'External endpoint returned HTTP ' . $statusCode . '.'
+                : null;
+            $endpoint = $request->route()?->uri() ?? '[unmatched]';
 
             DB::table('integration_request_logs')->insert([
                 'integration_client_id' => $context['integration_client_id'] ?? null,
@@ -240,7 +246,7 @@ class AuthenticateExternalApiRequest
                 'system_name' => $context['system_name'] ?? null,
                 'auth_method' => $context['auth_method'] ?? null,
                 'http_method' => $request->method(),
-                'endpoint' => '/' . ltrim($request->path(), '/'),
+                'endpoint' => '/' . ltrim($endpoint, '/'),
                 'status_code' => $statusCode,
                 'response_time_ms' => isset($context['started_at'])
                     ? (int) round((microtime(true) - (float) $context['started_at']) * 1000)

@@ -9,6 +9,12 @@ use RuntimeException;
 
 class HealthFileStorage
 {
+    public const NO_STORE_HEADERS = [
+        'Cache-Control' => 'private, no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma' => 'no-cache',
+        'Expires' => '0',
+    ];
+
     public function __construct(private HealthFileEncryption $encryption)
     {
     }
@@ -251,6 +257,8 @@ class HealthFileStorage
 
     private function responseHeaders(string $contents, array $headers): array
     {
+        $headers = array_merge($headers, self::NO_STORE_HEADERS);
+
         if (!array_key_exists('Content-Length', $headers)) {
             $headers['Content-Length'] = (string) strlen($contents);
         }

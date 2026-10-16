@@ -65,11 +65,13 @@ Keep available for relationships and operational lookup during the first phase:
 - Any draft or snapshot JSON that contains health information must be encrypted as a whole value or split into encrypted fields.
 - `health_profile_id`, `employee_health_profile_id`, status fields, approval timestamps, and document paths remain operational fields.
 
-## Query dependencies to resolve before encryption
+## Query dependency status
 
-- `HealthProfile::scopeWithMedicalCondition()` and `scopeWithoutMedicalCondition()` currently query medical fields directly in the database.
-- Reports read many medical fields after loading the model, which is compatible with encrypted casts, but export/filter behavior must be regression-tested.
-- A non-sensitive derived flag such as `has_medical_condition` may be needed for SQL filtering after the source details are encrypted.
+- Health-condition filters in reports use the decrypted model values after loading records; the unused SQL scopes that queried plaintext medical fields have been removed.
+- Health-record search no longer queries encrypted `sex` values.
+- Employee assessment-draft lookup uses the encrypted mirror when health-data encryption is enabled.
+- Historical health-document reference checks use the encrypted snapshot mirror when encryption is enabled.
+- Regression-test reports, exports, and employee draft review after clearing legacy source values.
 - Names, email addresses, student numbers, and reference numbers should not be encrypted in the first wave because login, lookup, sync, and joins depend on them. If they need stronger protection later, use encrypted values plus a keyed lookup index.
 
 ## Phase 2 prerequisites

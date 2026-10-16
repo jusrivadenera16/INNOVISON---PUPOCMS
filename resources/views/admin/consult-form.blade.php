@@ -4389,7 +4389,8 @@
     $draftValue = static function (string $key, $default = '') use ($consultationDraftData) {
         return old($key, array_key_exists($key, $consultationDraftData) ? $consultationDraftData[$key] : $default);
     };
-    $consultationDraftStorageKey = 'consultation-draft:' . $patientIdNumberForSubmit . ':' . ($user_source ?? 'walkin') . ':' . ($appointmentNumber ?: ($consultationStartedAt ?? 'new'));
+    $legacyConsultationDraftStorageKey = 'consultation-draft:' . $patientIdNumberForSubmit . ':' . ($user_source ?? 'walkin') . ':' . ($appointmentNumber ?: ($consultationStartedAt ?? 'new'));
+    $consultationDraftStorageKey = 'consultation-draft:' . hash_hmac('sha256', $legacyConsultationDraftStorageKey, (string) config('app.key'));
     $studentInitials = collect(preg_split('/\s+/', trim((string) $student->name)) ?: [])
         ->filter()
         ->take(2)
@@ -5177,6 +5178,7 @@
         const saveConsultationDraftUrl = @json(route($walkinStoreRoute === 'assistant.walkin.store' ? 'assistant.walkin.consultation-draft' : 'walkin.consultation-draft'));
         const walkinIndexUrl = @json(route($walkinIndexRoute));
         const consultationDraftStorageKey = @json($consultationDraftStorageKey);
+        const legacyConsultationDraftStorageKey = @json($legacyConsultationDraftStorageKey);
         let isSubmittingConsultation = false;
         let activeUtility = '';
         let lastMarSubcategoryTrigger = null;
@@ -5242,30 +5244,63 @@
             return fields;
         }
 
-        function persistLocalConsultationDraft() {
+        function moveLegacyConsultationDraftsToSessionStorage() {
+            try {
+                const legacyLocalKeys = [];
+                for (let index = 0; index < localStorage.length; index++) {
+                    const key = localStorage.key(index);
+                    if (key && key.startsWith('consultation-draft:')) legacyLocalKeys.push(key);
+                }
+
+                legacyLocalKeys.forEach(function (key) {
+                    const value = localStorage.getItem(key);
+                    if (value === null) return;
+                    const targetKey = key === legacyConsultationDraftStorageKey
+                        ? consultationDraftStorageKey
+                        : key;
+                    if (sessionStorage.getItem(targetKey) === null) sessionStorage.setItem(targetKey, value);
+                    localStorage.removeItem(key);
+                    if (targetKey !== key) sessionStorage.removeItem(key);
+                });
+
+                const currentLegacyDraft = sessionStorage.getItem(legacyConsultationDraftStorageKey);
+                if (currentLegacyDraft !== null) {
+                    if (sessionStorage.getItem(consultationDraftStorageKey) === null) {
+                        sessionStorage.setItem(consultationDraftStorageKey, currentLegacyDraft);
+                    }
+                    sessionStorage.removeItem(legacyConsultationDraftStorageKey);
+                }
+            } catch (error) {
+                console.warn('Unable to migrate the previous consultation draft to this tab session.', error);
+            }
+        }
+
+        function persistSessionConsultationDraft() {
             if (!consultationForm || !consultationDraftStorageKey) return;
 
             try {
-                localStorage.setItem(consultationDraftStorageKey, JSON.stringify({
+                sessionStorage.setItem(consultationDraftStorageKey, JSON.stringify({
                     saved_at: new Date().toISOString(),
                     fields: collectConsultationDraftFields(),
                 }));
             } catch (error) {
-                console.warn('Unable to keep the consultation draft on this device.', error);
+                console.warn('Unable to keep the consultation draft for this tab session.', error);
             }
         }
 
         function scheduleLocalConsultationDraftSave() {
             window.clearTimeout(draftSaveTimer);
-            draftSaveTimer = window.setTimeout(persistLocalConsultationDraft, 250);
+            draftSaveTimer = window.setTimeout(persistSessionConsultationDraft, 250);
         }
 
-        function restoreLocalConsultationDraft() {
+        function restoreSessionConsultationDraft() {
             if (!consultationForm || !consultationDraftStorageKey) return;
+
+            moveLegacyConsultationDraftsToSessionStorage();
 
             let savedDraft;
             try {
-                savedDraft = JSON.parse(localStorage.getItem(consultationDraftStorageKey) || 'null');
+                savedDraft = JSON.parse(sessionStorage.getItem(consultationDraftStorageKey) || 'null');
             } catch (error) {
                 savedDraft = null;
             }
@@ -5306,7 +5341,7 @@
         async function saveConsultationDraft() {
             if (!consultationForm || !saveConsultationDraftButton) return;
 
-            persistLocalConsultationDraft();
+            persistSessionConsultationDraft();
             saveConsultationDraftButton.classList.add('is-saving');
             saveConsultationDraftButton.disabled = true;
             const label = saveConsultationDraftButton.querySelector('span');
@@ -5330,6 +5365,7 @@
                     throw new Error(validationMessage || payload.message || 'The consultation draft could not be saved.');
                 }
 
+                sessionStorage.removeItem(consultationDraftStorageKey);
                 if (label) label.textContent = 'Draft Saved';
                 window.AdminLoading?.showAction('Opening Walk-In');
                 window.setTimeout(function () {
@@ -6124,12 +6160,12 @@
         saveConsultationDraftButton?.addEventListener('click', saveConsultationDraft);
         @if(session('consultation_evaluation_prompt'))
             try {
-                localStorage.removeItem(consultationDraftStorageKey);
+                sessionStorage.removeItem(consultationDraftStorageKey);
             } catch (error) {
                 console.warn('Unable to clear the finalized consultation draft.', error);
             }
         @else
-        window.addEventListener('beforeunload', persistLocalConsultationDraft);
+        window.addEventListener('beforeunload', persistSessionConsultationDraft);
         @endif
 
         medicineEntries.forEach(updateMedicineEntry);
@@ -6137,7 +6173,7 @@
         syncReferralDetails();
         syncCovidPositiveDate();
         syncAllPopulatedFields();
-        restoreLocalConsultationDraft();
+        restoreSessionConsultationDraft();
     })();
 </script>
 @endsection

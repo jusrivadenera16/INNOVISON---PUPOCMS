@@ -3184,14 +3184,14 @@
                                 <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M16 2v4M8 2v4M3 9h18"></path></svg></span>
                                 <input
                                     id="school_year"
-                                    class="form-control field-maroon{{ !empty($prefill['school_year_from_puptas']) ? ' identity-readonly' : '' }}"
+                                    class="form-control field-maroon{{ !empty($prefill['school_year_from_preferences']) || !empty($prefill['school_year_from_puptas']) ? ' identity-readonly' : '' }}"
                                     name="school_year"
-                                    value="{{ old('school_year', $prefill['school_year'] ?? '') }}"
+                                    value="{{ !empty($prefill['school_year_from_preferences']) ? ($prefill['school_year'] ?? '') : old('school_year', $prefill['school_year'] ?? '') }}"
                                     placeholder="YYYY-YYYY"
                                     pattern="\d{4}-\d{4}"
                                     inputmode="numeric"
                                     required
-                                    {{ !empty($prefill['school_year_from_puptas']) ? 'readonly' : '' }}
+                                    {{ !empty($prefill['school_year_from_preferences']) || !empty($prefill['school_year_from_puptas']) ? 'readonly' : '' }}
                                 >
                             </div>
                         </div>

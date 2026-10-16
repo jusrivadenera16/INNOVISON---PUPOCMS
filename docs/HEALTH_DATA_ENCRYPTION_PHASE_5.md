@@ -38,8 +38,10 @@ The command name is retained for compatibility with the earlier student-only rol
 - EncryptedStudentMedicalHistoryBackfillTest: 2 passed
 - Raw database checks confirmed encrypted mirror values for student, employee, and historical submission records.
 
-## Important transition note
+## Plaintext source cleanup
 
-The original source columns remain populated during this compatibility phase because existing SQL scopes, filters, and historical lookup code still depend on them. This means the rollout provides encrypted mirrors and encrypted model reads/writes, but it is not yet the final plaintext-column removal phase. Removing plaintext sources requires replacing those SQL dependencies with non-sensitive derived values and a separate verified migration.
+The source columns remain in the schema for compatibility, but application reads and writes use the encrypted mirrors when health-data encryption is enabled. SQL filters that depended on plaintext health values have been removed or redirected to encrypted mirrors.
+
+Local `clinic_laravel` cleanup completed on 2026-10-16: 291 source values were cleared after verification, with 0 unverified fields. A post-check found 0 non-null plaintext values in mapped source columns, 345 decryptable mirrors, and 0 decryption errors. This is local-only; staging and production databases need their own migration, backfill, dry-run, backup, and purge sequence.
 
 Do not rotate APP_KEY while encrypted values are in use. Run the migration and backfill only after confirming a database backup for the target environment.

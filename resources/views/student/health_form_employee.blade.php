@@ -3037,6 +3037,7 @@
             @php
                 $employeeValue = fn (string $field, $fallback = '') => old($field, data_get($employeeProfile ?? null, $field, data_get($employeePrefill ?? [], $field, $fallback)));
                 $employeeCheckedValues = fn (string $field) => collect(old($field, data_get($employeeProfile ?? null, $field, [])))->filter()->values()->all();
+                $schoolYearValue = trim((string) ($currentSchoolYear ?? data_get($employeePrefill, 'school_year', '')));
                 $employeeName = trim((string) data_get($employeePrefill ?? [], 'first_name') . ' ' . (string) data_get($employeePrefill ?? [], 'middle_name') . ' ' . (string) data_get($employeePrefill ?? [], 'last_name') . ' ' . (string) data_get($employeePrefill ?? [], 'suffix_name'));
                 $employeeName = trim(preg_replace('/\s+/', ' ', $employeeName));
                 if ($employeeName === '') {
@@ -3055,7 +3056,7 @@
                     2 => ['past_medical_history', 'past_medical_history_others', 'previous_hospitalization', 'previous_hospitalization_details', 'operation_surgery', 'operation_surgery_details', 'allergies'],
                     3 => ['family_history', 'family_history_others'],
                     4 => ['cigarette_smoking', 'alcohol_drinking', 'traveled_abroad', 'has_disability', 'disability_type'],
-                    5 => ['working_impression', 'fit_status'],
+                    5 => ['working_impression', 'fit_status', 'student_photo'],
                     6 => ['employee_signature', 'uploaded_signature', 'employee_health_profile_certified'],
                 ];
                 $startStep = collect($employeeErrorGroups)
@@ -3066,7 +3067,7 @@
                     2 => 'Past Medical History',
                     3 => 'Family History',
                     4 => 'Personal History',
-                    5 => '2x2 Photo',
+                    5 => 'Employee Photo',
                     6 => 'E-Signature',
                 ];
                 $selectedPastMedicalHistory = $employeeCheckedValues('past_medical_history');
@@ -3341,14 +3342,15 @@
                                 <small class="field-hint mobile-contact-error" data-mobile-contact-error>Please put an 11-digit mobile number starting with 09.</small>
                             </div>
                             <div class="form-field">
-                                <label class="form-label" for="school_year">School Year</label>
+                                <div class="form-label" id="school_year_label">School Year</div>
+                                <input type="hidden" name="school_year" value="{{ $schoolYearValue }}">
                                 <div class="address-field-control">
                                     <span class="address-field-icon" aria-hidden="true">
                                         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M7 2v4M17 2v4M3 9h18"></path></svg>
                                     </span>
-                                    <input id="school_year" type="text" name="school_year" class="form-control" value="{{ old('school_year', $employeeValue('school_year', $user->year ?? '')) }}">
+                                <input id="school_year_display" class="form-control" value="{{ $schoolYearValue }}" aria-labelledby="school_year_label" autocomplete="off" readonly>
                                 </div>
-                                <small class="field-hint">Example: 2026-2027</small>
+                                <small class="field-hint">Current academic year.</small>
                             </div>
                         </div>
                         </div>
@@ -3369,7 +3371,7 @@
                             </div>
                             <div class="employee-personal-row four employee-address-fields">
                                 <div class="form-field">
-                                    <label class="form-label" for="street_address">Street / House No. <span class="required">*</span></label>
+                                    <label class="form-label" for="street_address">House No / Street <span class="required">*</span></label>
                                     <div class="address-field-control">
                                         <span class="address-field-icon" aria-hidden="true">
                                             <svg viewBox="0 0 24 24">
@@ -3687,15 +3689,15 @@
                 </div>
 
                 <div class="step-panel {{ $startStep === 5 ? '' : 'is-hidden' }}" id="stepPanel5">
-                    <h2 class="section-title step-page-title" data-title-letter="P">2x2 Photo</h2>
-                    <p class="step-fill-note">Upload your required 2x2 photo. Other clinic documents can be submitted later through My Account.</p>
+                    <h2 class="section-title step-page-title" data-title-letter="E">Employee Photo</h2>
+                    <p class="step-fill-note">Upload a clear, front-facing employee photo. Other clinic documents can be submitted later through My Account.</p>
                     <div class="requirement-grid">
                         <div class="requirement-card">
                             <div class="requirement-card-header">
-                                <strong>2x2 Photo (Required)</strong>
+                                <strong>Employee Photo (Required)</strong>
                                 <span class="requirement-badge">JPG/PNG</span>
                             </div>
-                            <p class="requirement-guideline">Upload a formal front-facing photo on a plain white background.</p>
+                            <p class="requirement-guideline">Upload a formal, front-facing photo on a plain white background.</p>
                             <input type="file" name="student_photo" class="form-control" accept=".jpg,.jpeg,.png,image/jpeg,image/png" data-upload-input data-preview-kind="image" required>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             <small>Allowed: JPG/PNG only, max 1MB.</small>

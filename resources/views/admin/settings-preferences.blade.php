@@ -97,6 +97,13 @@
         font-weight: 700;
         line-height: 1.45;
     }
+    .preferences-settings-page .preferences-hero-save-meta {
+        grid-column: 2;
+        grid-row: 3;
+        justify-self: start;
+        flex-wrap: wrap;
+        margin: 3px 0 0;
+    }
     .preferences-settings-page .settings-back-link {
         min-height: 34px;
         border-radius: 8px;
@@ -316,27 +323,69 @@
     }
 
     .preferences-settings-page .preferences-workflow-content {
-        padding: 0 18px;
+        display: grid;
+        gap: 0;
+        padding: 0 18px 18px;
+    }
+    .preferences-settings-page .preferences-category {
+        padding: 16px 0 20px;
+        border-bottom: 1px solid var(--preferences-line);
+    }
+    .preferences-settings-page .preferences-category:last-child {
+        padding-bottom: 8px;
+        border-bottom: 0;
     }
     .preferences-settings-page .preferences-subheading {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 16px 10px 9px;
+        min-height: 38px;
+        margin: 0 0 12px;
+        padding: 7px 12px;
+        border-left: 3px solid rgba(127, 0, 16, .45);
+        background: rgba(127, 0, 16, .045);
         color: var(--preferences-maroon);
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 900;
     }
     html[data-theme="dark"] .preferences-settings-page .preferences-subheading {
         color: #ffffff;
+        border-left-color: rgba(250, 204, 21, .55);
+        background: rgba(250, 204, 21, .055);
     }
     .preferences-settings-page .preferences-general-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
         padding: 0;
-        border-bottom: 1px solid var(--preferences-line);
+        border-bottom: 0;
     }
     .preferences-settings-page .preferences-admin-grid { border-bottom: 0; }
     .preferences-settings-page .preferences-admin-grid .settings-field::after { display: none !important; }
+    .preferences-settings-page .academic-year-picker {
+        position: relative;
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        border-bottom: 1px solid rgba(127, 0, 16, .22);
+    }
+    .preferences-settings-page .academic-year-picker input {
+        flex: 1 1 auto;
+        cursor: pointer;
+        padding-right: 6px !important;
+    }
+    .preferences-settings-page .academic-year-picker-open {
+        display: grid;
+        place-items: center;
+        flex: 0 0 30px;
+        width: 30px;
+        height: 30px;
+        border: 0;
+        background: transparent;
+        color: var(--preferences-muted);
+        cursor: pointer;
+    }
+    .preferences-settings-page .academic-year-picker-open svg { width: 17px; height: 17px; }
+    .preferences-settings-page .academic-year-picker-open:hover,
+    .preferences-settings-page .academic-year-picker-open:focus-visible { color: var(--preferences-maroon); }
     .preferences-settings-page .preferences-general-grid .settings-field {
         min-height: 72px;
         padding: 9px 14px;
@@ -762,6 +811,13 @@
     .preferences-settings-page .preferences-autosave-status.is-saving { color: #a16207; }
     .preferences-settings-page .preferences-autosave-status.is-saved { color: #15803d; }
     .preferences-settings-page .preferences-autosave-status.is-error { color: #b91c1c; }
+    .preferences-settings-page .preferences-hero-save-meta {
+        width: 100%;
+        margin: 3px 0 0;
+    }
+    .preferences-settings-page .preferences-hero-save-meta .preferences-autosave-status {
+        margin-left: 0;
+    }
     .preferences-settings-page .preferences-reminder-preview {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -824,6 +880,114 @@
         .preferences-settings-page .preferences-reminder-preview { grid-template-columns: 1fr; }
         .preferences-settings-page .preferences-autosave-meta { width: 100%; margin-left: 0; }
     }
+    .preferences-settings-page .preferences-admin-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+    .preferences-settings-page .preferences-school-year-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+    .preferences-settings-page .preferences-student-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+    .preferences-settings-page .preferences-school-year-grid .settings-field::after { display: none !important; }
+    .preferences-settings-page .preferences-student-grid .settings-field:nth-child(3n + 1)::after,
+    .preferences-settings-page .preferences-student-grid .settings-field:nth-child(3n + 2)::after { display: block !important; }
+    .preferences-settings-page .preferences-student-grid .settings-field:nth-child(n + 4) {
+        border-top: 1px solid var(--preferences-line);
+    }
+    .preferences-settings-page .preferences-category > .settings-field-note {
+        line-height: 1.55;
+        margin-bottom: 8px !important;
+    }
+    .academic-year-picker-popover {
+        position: fixed;
+        z-index: 1800;
+        width: 272px;
+        padding: 12px;
+        border: 1px solid rgba(127, 0, 16, .2);
+        border-radius: 8px;
+        background: #ffffff;
+        color: #172033;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, .18);
+    }
+    .academic-year-picker-popover[hidden] { display: none !important; }
+    .academic-year-picker-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    .academic-year-picker-head strong { font-size: 13px; }
+    .academic-year-picker-nav {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border: 1px solid rgba(148, 163, 184, .35);
+        border-radius: 5px;
+        background: #ffffff;
+        color: #7f0010;
+        cursor: pointer;
+    }
+    .academic-year-picker-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+    .academic-year-option {
+        min-height: 34px;
+        border: 1px solid rgba(148, 163, 184, .3);
+        border-radius: 4px;
+        background: #ffffff;
+        color: #172033;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .academic-year-option:hover,
+    .academic-year-option[aria-pressed="true"] {
+        border-color: #7f0010;
+        background: #7f0010;
+        color: #ffffff;
+    }
+    .academic-year-option:disabled { opacity: .35; cursor: not-allowed; }
+    html[data-theme="dark"] .preferences-settings-page .academic-year-picker-open { color: #cbd5e1; }
+    html[data-theme="dark"] .academic-year-picker-popover {
+        border-color: rgba(250, 204, 21, .28);
+        background: #111827;
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .academic-year-picker-nav,
+    html[data-theme="dark"] .academic-year-option {
+        border-color: rgba(148, 163, 184, .3);
+        background: #1f2937;
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .academic-year-option:hover,
+    html[data-theme="dark"] .academic-year-option[aria-pressed="true"] {
+        border-color: #facc15;
+        background: #7f0010;
+        color: #facc15;
+    }
+    @media (max-width: 1080px) and (min-width: 641px) {
+        .preferences-settings-page .preferences-student-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+        .preferences-settings-page .preferences-student-grid .settings-field:nth-child(odd)::after { display: block !important; }
+        .preferences-settings-page .preferences-student-grid .settings-field:nth-child(even)::after { display: none !important; }
+        .preferences-settings-page .preferences-student-grid .settings-field:nth-child(n + 3),
+        .preferences-settings-page .preferences-school-year-grid .settings-field:nth-child(n + 3) {
+            border-top: 1px solid var(--preferences-line);
+        }
+    }
+    @media (max-width: 640px) {
+        .preferences-settings-page .preferences-workflow-content { padding-right: 12px; padding-left: 12px; }
+        .preferences-settings-page .preferences-category { padding: 12px 0 16px; }
+        .preferences-settings-page .preferences-subheading { align-items: flex-start; }
+        .preferences-settings-page .preferences-admin-grid,
+        .preferences-settings-page .preferences-school-year-grid,
+        .preferences-settings-page .preferences-student-grid { grid-template-columns: 1fr !important; }
+        .preferences-settings-page .preferences-student-grid .settings-field::after { display: none !important; }
+        .preferences-settings-page .preferences-student-grid .settings-field:nth-child(n),
+        .preferences-settings-page .preferences-school-year-grid .settings-field:nth-child(n) { border-top: 0; }
+    }
 </style>
 @endpush
 
@@ -865,21 +1029,26 @@
         <div>
             <h1 class="settings-section-title"><span class="preferences-title-icon"><x-outline-icon name="code-bracket-square" /></span><span>System Preferences</span></h1>
             <p>Configure admin appointment alerts, student email reminders, and clinic closures.</p>
+            <span class="preferences-autosave-meta preferences-hero-save-meta">
+                <span class="preferences-autosave-status" data-preferences-autosave-status aria-live="polite"></span>
+                <span data-preferences-last-saved>
+                    @if($settings->workflow_preferences_saved_at)
+                        Last saved {{ $settings->workflow_preferences_saved_at->format('M d, Y g:i A') }} by {{ $settings->workflow_preferences_saved_by ?: 'Administrator' }}
+                    @else
+                        Not saved yet
+                    @endif
+                </span>
+            </span>
         </div>
     </section>
 
     <section class="settings-panel preferences-workflow-panel">
-        <div class="settings-panel-head">
-            <div>
-                <h3><x-outline-icon name="cog-6-tooth" />Workflow Settings</h3>
-                <p>These controls use the existing system settings update workflow.</p>
-            </div>
-        </div>
         <div class="settings-panel-body">
             <form id="systemPreferencesForm" action="{{ route('admin.settings.update') }}" method="POST" class="settings-editable-form">
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="preferences_form" value="1">
+                <input type="hidden" name="school_year_settings_form" value="1">
                 <input type="hidden" name="clinic_closure_enabled" value="{{ $closureEnabled ? '1' : '0' }}">
                 <input type="hidden" name="clinic_closure_starts_at" value="{{ $closureStartsValue }}">
                 <input type="hidden" name="clinic_closure_ends_at" value="{{ $closureEndsValue }}">
@@ -887,37 +1056,55 @@
                 <input type="hidden" name="clinic_closure_message" value="{{ $settings->clinic_closure_message }}">
 
                 <div class="preferences-workflow-content">
-                    <div class="preferences-subheading">
-                        <span>Notification Settings</span>
-                        <span class="preferences-autosave-meta">
-                            <span class="preferences-autosave-status" data-preferences-autosave-status aria-live="polite"></span>
-                            <span data-preferences-last-saved>
-                                @if($settings->workflow_preferences_saved_at)
-                                    Last saved {{ $settings->workflow_preferences_saved_at->format('M d, Y g:i A') }} by {{ $settings->workflow_preferences_saved_by ?: 'Administrator' }}
-                                @else
-                                    Not saved yet
-                                @endif
-                            </span>
-                        </span>
-                    </div>
-                    <div class="preferences-subheading">Admin Appointment Email Alerts</div>
-                    <p class="settings-field-note" style="padding:0 10px 8px;margin:0;">Optional alerts are sent for new online appointments to admin accounts that enable them. This account is off by default.</p>
-                    <div class="settings-form-grid preferences-general-grid preferences-admin-grid">
-                        <div class="settings-field">
-                            <label for="admin_appointment_email_alerts">New Online Appointment Email Alert</label>
-                            <input type="hidden" name="admin_appointment_email_alerts" value="0">
-                            <label class="switch preferences-switch-row" for="admin_appointment_email_alerts">
-                                <input type="checkbox" id="admin_appointment_email_alerts" name="admin_appointment_email_alerts" value="1" {{ $adminAppointmentAlertsEnabled ? 'checked' : '' }}>
-                                <span class="slider" aria-hidden="true"></span>
-                                <span class="preferences-switch-label is-on">Enabled</span>
-                                <span class="preferences-switch-label is-off">Disabled</span>
-                            </label>
-                            <span class="settings-field-note">Your choice applies to this account. Only opted-in admins receive the alert.</span>
+                    <section class="preferences-category" aria-labelledby="adminEmailAlertsHeading">
+                        <div class="preferences-subheading" id="adminEmailAlertsHeading">Admin Appointment Email Alerts</div>
+                        <p class="settings-field-note" style="padding:0 10px 8px;margin:0;">Optional alerts are sent for new online appointments to admin accounts that enable them. This account is off by default.</p>
+                        <div class="settings-form-grid preferences-general-grid preferences-admin-grid">
+                            <div class="settings-field">
+                                <label for="admin_appointment_email_alerts">New Online Appointment Email Alert</label>
+                                <input type="hidden" name="admin_appointment_email_alerts" value="0">
+                                <label class="switch preferences-switch-row" for="admin_appointment_email_alerts">
+                                    <input type="checkbox" id="admin_appointment_email_alerts" name="admin_appointment_email_alerts" value="1" {{ $adminAppointmentAlertsEnabled ? 'checked' : '' }}>
+                                    <span class="slider" aria-hidden="true"></span>
+                                    <span class="preferences-switch-label is-on">Enabled</span>
+                                    <span class="preferences-switch-label is-off">Disabled</span>
+                                </label>
+                                <span class="settings-field-note">Your choice applies to this account. Only opted-in admins receive the alert.</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="preferences-subheading">Student Reminder Schedule</div>
-                    <p class="settings-field-note" style="padding:0 10px 8px;margin:0;">Reminder timing and quiet hours apply clinic-wide. Each student controls email delivery from their own account.</p>
-                    <div class="settings-form-grid preferences-general-grid preferences-student-grid">
+                    </section>
+                    <section class="preferences-category" aria-labelledby="currentSchoolYearHeading">
+                        <div class="preferences-subheading" id="currentSchoolYearHeading">Current School Year</div>
+                        <p class="settings-field-note" style="padding:0 10px 8px;margin:0;">Select the academic year used for new health forms. The other year will automatically stay one year apart.</p>
+                        <div class="settings-form-grid preferences-general-grid preferences-school-year-grid">
+                            <div class="settings-field">
+                                <label for="academic_year_from">From Year</label>
+                                <div class="academic-year-picker" data-year-picker>
+                                    <input id="academic_year_from" name="academic_year_from" type="text" value="{{ old('academic_year_from', $academicYearFrom) }}" data-year-picker-input data-year-picker-role="from" readonly required autocomplete="off">
+                                    <button type="button" class="academic-year-picker-open" data-year-picker-open aria-label="Choose starting year" aria-haspopup="dialog" aria-expanded="false"><x-outline-icon name="calendar" /></button>
+                                    <div class="academic-year-picker-popover" data-year-picker-popover role="dialog" aria-label="Choose starting year" hidden>
+                                        <div class="academic-year-picker-head"><button type="button" class="academic-year-picker-nav" data-year-picker-prev aria-label="Previous decade">&lt;</button><strong data-year-picker-period></strong><button type="button" class="academic-year-picker-nav" data-year-picker-next aria-label="Next decade">&gt;</button></div>
+                                        <div class="academic-year-picker-grid" data-year-picker-grid></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="settings-field">
+                                <label for="academic_year_to">To Year</label>
+                                <div class="academic-year-picker" data-year-picker>
+                                    <input id="academic_year_to" name="academic_year_to" type="text" value="{{ old('academic_year_to', $academicYearTo) }}" data-year-picker-input data-year-picker-role="to" readonly required autocomplete="off">
+                                    <button type="button" class="academic-year-picker-open" data-year-picker-open aria-label="Choose ending year" aria-haspopup="dialog" aria-expanded="false"><x-outline-icon name="calendar" /></button>
+                                    <div class="academic-year-picker-popover" data-year-picker-popover role="dialog" aria-label="Choose ending year" hidden>
+                                        <div class="academic-year-picker-head"><button type="button" class="academic-year-picker-nav" data-year-picker-prev aria-label="Previous decade">&lt;</button><strong data-year-picker-period></strong><button type="button" class="academic-year-picker-nav" data-year-picker-next aria-label="Next decade">&gt;</button></div>
+                                        <div class="academic-year-picker-grid" data-year-picker-grid></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="preferences-category" aria-labelledby="studentReminderHeading">
+                        <div class="preferences-subheading" id="studentReminderHeading">Student Reminder Schedule</div>
+                        <p class="settings-field-note" style="padding:0 10px 8px;margin:0;">Reminder timing and quiet hours apply clinic-wide. Each student controls email delivery from their own account.</p>
+                        <div class="settings-form-grid preferences-general-grid preferences-student-grid">
                         <div class="settings-field">
                             <label for="appointment_reminder_hours">Appointment Reminder</label>
                             <select id="appointment_reminder_hours" name="appointment_reminder_hours" required>
@@ -960,29 +1147,34 @@
                             <label for="notification_quiet_hours_end">Quiet Hours End</label>
                             <input id="notification_quiet_hours_end" name="notification_quiet_hours_end" type="time" value="{{ $quietHoursEnd }}" required>
                         </div>
-                    </div>
+                        </div>
+                    </section>
 
-                    <div class="preferences-subheading">Student Reminder Preview</div>
-                    <div class="preferences-reminder-preview" aria-live="polite">
-                        <div class="preferences-preview-item">
-                            <x-outline-icon name="calendar" />
-                            <div><strong>Appointment reminder</strong><span data-appointment-preview></span></div>
+                    <section class="preferences-category" aria-labelledby="studentReminderPreviewHeading">
+                        <div class="preferences-subheading" id="studentReminderPreviewHeading">Reminder Preview</div>
+                        <div class="preferences-reminder-preview" aria-live="polite">
+                            <div class="preferences-preview-item">
+                                <x-outline-icon name="calendar" />
+                                <div><strong>Appointment reminder</strong><span data-appointment-preview></span></div>
+                            </div>
+                            <div class="preferences-preview-item">
+                                <x-outline-icon name="bell" />
+                                <div><strong>Pending compliance reminder</strong><span data-compliance-preview></span></div>
+                            </div>
                         </div>
-                        <div class="preferences-preview-item">
-                            <x-outline-icon name="bell" />
-                            <div><strong>Pending compliance reminder</strong><span data-compliance-preview></span></div>
-                        </div>
-                    </div>
+                    </section>
 
-                    <div class="preferences-subheading">Clinic Operating Schedule</div>
-                    <div class="preferences-schedule-row">
-                        <div class="preferences-schedule-copy">
-                            <x-outline-icon name="clock" />
-                            <span>Clinic operating hours:</span>
-                            <strong>{{ app(\App\Services\ClinicWorkflowService::class)->clinicScheduleLabel() }}</strong>
+                    <section class="preferences-category" aria-labelledby="clinicOperatingHeading">
+                        <div class="preferences-subheading" id="clinicOperatingHeading">Clinic Operating Schedule</div>
+                        <div class="preferences-schedule-row">
+                            <div class="preferences-schedule-copy">
+                                <x-outline-icon name="clock" />
+                                <span>Clinic operating hours:</span>
+                                <strong>{{ app(\App\Services\ClinicWorkflowService::class)->clinicScheduleLabel() }}</strong>
+                            </div>
+                            <a class="preferences-schedule-link" href="{{ route('admin.settings.clinic') }}">Manage Schedule <x-outline-icon name="chevron-right" /></a>
                         </div>
-                        <a class="preferences-schedule-link" href="{{ route('admin.settings.clinic') }}">Manage Schedule <x-outline-icon name="chevron-right" /></a>
-                    </div>
+                    </section>
                 </div>
             </form>
         </div>
@@ -1111,7 +1303,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function preferenceSnapshot() {
         const snapshot = {};
         if (!generalPreferencesForm) return snapshot;
-        generalPreferencesForm.querySelectorAll('input[type="checkbox"], select, input[type="time"]').forEach(function (field) {
+        generalPreferencesForm.querySelectorAll('input[type="checkbox"], select, input[type="time"], input[data-year-picker-input]').forEach(function (field) {
             snapshot[field.name] = field.type === 'checkbox' ? field.checked : field.value;
         });
         return snapshot;
@@ -1168,6 +1360,129 @@ document.addEventListener('DOMContentLoaded', function () {
                 : `${label}, up to ${maxField?.value || 3} reminder(s).${quietText}`;
         }
     }
+
+    const academicYearFromInput = generalPreferencesForm?.querySelector('[data-year-picker-role="from"]');
+    const academicYearToInput = generalPreferencesForm?.querySelector('[data-year-picker-role="to"]');
+    const academicYearPickers = [];
+
+    function syncAcademicYearPair(changedInput) {
+        if (!academicYearFromInput || !academicYearToInput || !changedInput) return;
+        const selectedYear = Number(changedInput.value);
+        if (!Number.isInteger(selectedYear)) return;
+
+        if (changedInput === academicYearToInput) {
+            academicYearFromInput.value = String(selectedYear - 1);
+        } else {
+            academicYearToInput.value = String(selectedYear + 1);
+        }
+    }
+
+    function closeAcademicYearPickers() {
+        academicYearPickers.forEach(function (picker) {
+            picker.popover.hidden = true;
+            picker.trigger.setAttribute('aria-expanded', 'false');
+        });
+    }
+
+    function renderAcademicYearPicker(picker) {
+        const selectedYear = Number(picker.input.value);
+        const decadeStart = picker.decadeStart ?? Math.floor(selectedYear / 10) * 10;
+        picker.decadeStart = decadeStart;
+        picker.period.textContent = `${decadeStart}-${decadeStart + 9}`;
+        picker.grid.replaceChildren();
+        picker.prev.disabled = decadeStart <= 1950;
+        picker.next.disabled = decadeStart >= 2090;
+
+        for (let year = decadeStart; year < decadeStart + 10; year++) {
+            const option = document.createElement('button');
+            option.type = 'button';
+            option.className = 'academic-year-option';
+            option.textContent = String(year);
+            option.setAttribute('aria-pressed', String(year === selectedYear));
+            option.disabled = year < picker.minYear || year > picker.maxYear;
+            option.addEventListener('click', function () {
+                picker.input.value = String(year);
+                picker.decadeStart = Math.floor(year / 10) * 10;
+                syncAcademicYearPair(picker.input);
+                academicYearPickers.forEach(function (yearPicker) {
+                    yearPicker.decadeStart = Math.floor(Number(yearPicker.input.value) / 10) * 10;
+                    renderAcademicYearPicker(yearPicker);
+                });
+                closeAcademicYearPickers();
+                picker.input.dispatchEvent(new Event('change', { bubbles: true }));
+                const pairedInput = picker.input === academicYearFromInput ? academicYearToInput : academicYearFromInput;
+                pairedInput?.dispatchEvent(new Event('change', { bubbles: true }));
+                picker.trigger.focus();
+            });
+            picker.grid.appendChild(option);
+        }
+    }
+
+    function openAcademicYearPicker(picker) {
+        closeAcademicYearPickers();
+        picker.decadeStart = Math.floor(Number(picker.input.value) / 10) * 10;
+        renderAcademicYearPicker(picker);
+        picker.popover.hidden = false;
+        picker.trigger.setAttribute('aria-expanded', 'true');
+        const triggerRect = picker.trigger.getBoundingClientRect();
+        const popoverRect = picker.popover.getBoundingClientRect();
+        const left = Math.max(12, Math.min(triggerRect.left, window.innerWidth - popoverRect.width - 12));
+        const belowTop = triggerRect.bottom + 6;
+        const top = belowTop + popoverRect.height <= window.innerHeight - 12
+            ? belowTop
+            : Math.max(12, triggerRect.top - popoverRect.height - 6);
+        picker.popover.style.left = `${left}px`;
+        picker.popover.style.top = `${top}px`;
+    }
+
+    generalPreferencesForm?.querySelectorAll('[data-year-picker]').forEach(function (wrapper) {
+        const input = wrapper.querySelector('[data-year-picker-input]');
+        const trigger = wrapper.querySelector('[data-year-picker-open]');
+        const popover = wrapper.querySelector('[data-year-picker-popover]');
+        if (!input || !trigger || !popover) return;
+
+        const picker = {
+            wrapper,
+            input,
+            trigger,
+            popover,
+            period: popover.querySelector('[data-year-picker-period]'),
+            grid: popover.querySelector('[data-year-picker-grid]'),
+            prev: popover.querySelector('[data-year-picker-prev]'),
+            next: popover.querySelector('[data-year-picker-next]'),
+            minYear: input.dataset.yearPickerRole === 'to' ? 1951 : 1950,
+            maxYear: input.dataset.yearPickerRole === 'to' ? 2100 : 2099,
+        };
+
+        document.body.appendChild(popover);
+        picker.prev.addEventListener('click', function () {
+            picker.decadeStart = Math.max(1950, picker.decadeStart - 10);
+            renderAcademicYearPicker(picker);
+        });
+        picker.next.addEventListener('click', function () {
+            picker.decadeStart = Math.min(2090, picker.decadeStart + 10);
+            renderAcademicYearPicker(picker);
+        });
+        trigger.addEventListener('click', function () { openAcademicYearPicker(picker); });
+        input.addEventListener('click', function () { openAcademicYearPicker(picker); });
+        academicYearPickers.push(picker);
+    });
+
+    document.addEventListener('pointerdown', function (event) {
+        const insidePicker = academicYearPickers.some(function (picker) {
+            return picker.wrapper.contains(event.target) || picker.popover.contains(event.target);
+        });
+        if (!insidePicker) closeAcademicYearPickers();
+    }, true);
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+        const openPicker = academicYearPickers.find(picker => !picker.popover.hidden);
+        if (!openPicker) return;
+        closeAcademicYearPickers();
+        openPicker.trigger.focus();
+    });
+    window.addEventListener('resize', closeAcademicYearPickers);
+    window.addEventListener('scroll', closeAcademicYearPickers, true);
 
     function delay(milliseconds) {
         return new Promise(function (resolve) { window.setTimeout(resolve, milliseconds); });
@@ -1275,7 +1590,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     generalPreferencesForm?.addEventListener('change', function (event) {
-        if (!event.target.matches('input[type="checkbox"], select')) return;
+        if (!event.target.matches('input[type="checkbox"], select, input[data-year-picker-input]')) return;
 
         if (event.target.id === 'admin_appointment_email_alerts') {
             window.clearTimeout(autosaveTimer);
@@ -1305,6 +1620,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     if (restorePendingPreferences()) {
+        syncAcademicYearPair(academicYearFromInput);
         syncClosurePreferences();
         window.setTimeout(saveGeneralPreferences, 250);
     }

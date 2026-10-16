@@ -104,6 +104,7 @@ class AdminProfileApiTest extends TestCase
                 ],
             ]);
 
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
         $this->assertArrayNotHasKey('id', $response->json('data'));
         $this->assertArrayNotHasKey('admin_id', $response->json('data'));
         $this->assertArrayNotHasKey('user_id', $response->json('data'));
