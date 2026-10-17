@@ -634,7 +634,7 @@
 
 
         <p class="declaration-p">
-            In compliance with the Data Privacy Act of 2012 and its implementing Rules and Regulations, I voluntarily consent to the collection, processing and storage of my personal and health information for the purpose/s of health assessment, treatment/ or research (following research ethics guidelines) for the improvement of healthcare services.
+            {{ config('health_form_privacy.notice') }}
         </p>
 
 

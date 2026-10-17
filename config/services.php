@@ -43,6 +43,7 @@ return [
 
     'ai' => [
         'provider' => env('AI_PROVIDER', 'auto'),
+        'external_processing_enabled' => filter_var(env('AI_EXTERNAL_PROCESSING_ENABLED', false), FILTER_VALIDATE_BOOL),
     ],
 
     'botpress' => [

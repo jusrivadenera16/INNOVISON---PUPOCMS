@@ -351,7 +351,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::get('/admin/walkin/final-review-applicants', [WalkInController::class, 'finalReviewApplicants'])->middleware('module.permission:walkin.review_submission')->name('walkin.final-review-applicants');
         Route::get('/admin/walkin/employee-drafts', [WalkInController::class, 'employeeDrafts'])->middleware('module.permission:walkin.employee_lookup')->name('walkin.employee-drafts');
         Route::get('/admin/walkin/consultation-drafts', [WalkInController::class, 'consultationDrafts'])->middleware('module.permission:walkin.scan_id')->name('walkin.consultation-drafts');
-        Route::post('/admin/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->middleware('module.permission:walkin.scan_id')->name('walkin.verify-id-ai');
+        Route::post('/admin/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->middleware(['module.permission:walkin.scan_id', 'throttle:10,1'])->name('walkin.verify-id-ai');
         Route::post('/admin/walkin/register', [WalkInController::class, 'registerStudent'])->middleware('module.permission:walkin.register_patient')->name('walkin.registerStudent');
         Route::get('/admin/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->middleware('module.permission:walkin.scan_id|walkin.register_patient|walkin.encode_assessment')->name('walkin.form');
         Route::get('/admin/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->middleware('module.permission:walkin.encode_assessment|walkin.review_submission|walkin.edit_information')->name('walkin.healthForm');
@@ -563,7 +563,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::get('/walkin/final-review-applicants', [WalkInController::class, 'finalReviewApplicants'])->middleware('module.permission:walkin.review_submission')->name('walkin.final-review-applicants');
         Route::get('/walkin/employee-drafts', [WalkInController::class, 'employeeDrafts'])->middleware('module.permission:walkin.employee_lookup')->name('walkin.employee-drafts');
         Route::get('/walkin/consultation-drafts', [WalkInController::class, 'consultationDrafts'])->middleware('module.permission:walkin.scan_id')->name('walkin.consultation-drafts');
-        Route::post('/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->middleware('module.permission:walkin.scan_id')->name('walkin.verify-id-ai');
+        Route::post('/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->middleware(['module.permission:walkin.scan_id', 'throttle:10,1'])->name('walkin.verify-id-ai');
         Route::post('/walkin/register', [WalkInController::class, 'registerStudent'])->middleware('module.permission:walkin.register_patient')->name('walkin.registerStudent');
         Route::get('/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->middleware('module.permission:walkin.scan_id|walkin.register_patient|walkin.encode_assessment')->name('walkin.form');
         Route::get('/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->middleware('module.permission:walkin.encode_assessment|walkin.review_submission|walkin.edit_information')->name('walkin.healthForm');

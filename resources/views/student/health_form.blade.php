@@ -4015,6 +4015,12 @@
                             I certify that I have completely filled out all required sections of the official PUP Health Profile and that all information I provided is true and correct.
                         </label>
                     </div>
+                    <div class="certify-row final-certification">
+                        <input id="consent_acknowledged" type="checkbox" name="consent_acknowledged" value="1" required {{ old('consent_acknowledged') ? 'checked' : '' }}>
+                        <label for="consent_acknowledged">
+                            <strong>Data Privacy Consent:</strong> {{ config('health_form_privacy.notice') }}
+                        </label>
+                    </div>
                     <div class="btn-row">
                         <button type="button" class="btn btn-health btn-health-back" data-step-back="5">
                             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -4035,7 +4041,7 @@
 
                 <p class="privacy-note">
                     <span class="privacy-noteD">Data Privacy Notice:</span>
-                    The information you provide is collected for school clinic documentation and health clearance processing only, in compliance with school data privacy requirements.
+                    {{ config('health_form_privacy.notice') }}
                 </p>
             </form>
         </div>

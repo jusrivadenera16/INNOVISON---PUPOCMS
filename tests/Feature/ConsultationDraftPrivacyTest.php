@@ -7,7 +7,6 @@ use App\Services\HealthDataEncrypter;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -19,7 +18,6 @@ class ConsultationDraftPrivacyTest extends TestCase
         parent::setUp();
 
         Config::set('health_data_encryption.key', 'base64:' . base64_encode(str_repeat('h', 32)));
-        Config::set('health_data_encryption.legacy_app_key_fallback', true);
 
         Config::set('database.default', 'sqlite');
         Config::set('database.connections.sqlite.database', ':memory:');
@@ -65,7 +63,7 @@ class ConsultationDraftPrivacyTest extends TestCase
         $payload = ['remarks' => 'Sensitive clinical note'];
         $id = DB::table('consultation_drafts')->insertGetId([
             'payload' => '[]',
-            'payload_encrypted' => Crypt::encrypt($payload),
+            'payload_encrypted' => app(HealthDataEncrypter::class)->encrypt($payload, true),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -97,13 +95,13 @@ class ConsultationDraftPrivacyTest extends TestCase
         $this->assertSame($payload, app(HealthDataEncrypter::class)->decrypt($raw->payload_encrypted, true));
     }
 
-    public function test_force_reencrypts_legacy_draft_payload_with_the_dedicated_key(): void
+    public function test_force_reencrypts_existing_draft_payload_with_the_dedicated_key(): void
     {
         $this->migration()->up();
         $payload = ['remarks' => 'Legacy clinical note'];
         $id = DB::table('consultation_drafts')->insertGetId([
             'payload' => '[]',
-            'payload_encrypted' => Crypt::encrypt($payload),
+            'payload_encrypted' => app(HealthDataEncrypter::class)->encrypt($payload, true),
             'created_at' => now(),
             'updated_at' => now(),
         ]);

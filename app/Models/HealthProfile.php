@@ -80,6 +80,8 @@ class HealthProfile extends Model
         'pullout_restore_reason',
         'pullout_restored_by_user_id',
         'pullout_restored_at',
+        'privacy_consent_version',
+        'privacy_consent_at',
 
     ];
 
@@ -111,6 +113,7 @@ class HealthProfile extends Model
         'pullout_requested_at' => 'datetime',
         'pullout_completed_at' => 'datetime',
         'pullout_restored_at' => 'datetime',
+        'privacy_consent_at' => 'datetime',
 
     ];
 

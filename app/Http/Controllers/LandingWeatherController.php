@@ -76,7 +76,7 @@ class LandingWeatherController extends Controller
             return false;
         }
 
-        return now()->diffInMinutes($weather['cached_at']) < self::CACHE_MINUTES;
+        return now()->diffInMinutes($weather['cached_at'], true) < self::CACHE_MINUTES;
     }
 
     private function normalizeWeather(array $payload): array

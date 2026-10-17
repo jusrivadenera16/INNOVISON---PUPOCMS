@@ -6,7 +6,7 @@ use App\Http\Controllers\AdminUserController;
 use App\Models\Admin;
 use App\Models\User;
 use ReflectionMethod;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class AdminEffectiveRoleLabelTest extends TestCase
 {
@@ -46,8 +46,12 @@ class AdminEffectiveRoleLabelTest extends TestCase
         $assistant = new User(['idp_role' => 'student', 'user_type' => 'Assistant', 'student_number' => '2025-00123-TG-0']);
         $this->assertSame('2025-00123-TG-0', $this->userIdentifier($assistant));
 
-        $faculty = new User(['idp_role' => 'faculty', 'student_id' => 'FAC-009']);
-        $this->assertSame('FAC-009', $this->userIdentifier($faculty));
+        $faculty = new User([
+            'idp_role' => 'faculty',
+            'student_id' => '23bc49da-b339-4bc1-ad6d-5e8da90014f3',
+            'employee_number' => '06002',
+        ]);
+        $this->assertSame('06002', $this->userIdentifier($faculty));
     }
 
     private function roleLabel(string $accessLevel): string

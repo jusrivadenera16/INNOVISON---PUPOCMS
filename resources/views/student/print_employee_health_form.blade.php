@@ -208,7 +208,7 @@
             <tr><td>&nbsp;</td></tr>
             <tr><td>&nbsp;</td><td rowspan="2" class="student-signature-merge"><div class="signature-name">{{ strtoupper($name) }}</div></td></tr>
             <tr><td><span class="label">Throat:</span> <span class="box">{{ $mark($arrayHas($profile->throat_findings, ['no tpc'])) }}</span> No TPC <span class="box">{{ $mark($arrayHas($profile->throat_findings, ['no mass'])) }}</span> No Mass</td></tr>
-            <tr><td><span class="throat-choice-indent"><span class="box">{{ $mark($arrayHas($profile->throat_findings, ['no lymphadenopathy'])) }}</span> No lymphadenopathy</span></td><td rowspan="4" class="consent-merge"><strong>By affixing my signature, I am agreeing to the PUP Data Privacy Policy and giving my consent in the collection and processing of my Personal Information in accordance thereto.</strong></td></tr>
+            <tr><td><span class="throat-choice-indent"><span class="box">{{ $mark($arrayHas($profile->throat_findings, ['no lymphadenopathy'])) }}</span> No lymphadenopathy</span></td><td rowspan="4" class="consent-merge"><strong>{{ config('health_form_privacy.notice') }}</strong></td></tr>
             <tr><td>&nbsp;</td></tr>
             <tr><td><span class="label">Chest/Lungs:</span> <span class="box">{{ $mark($arrayHas($profile->chest_lungs_findings, ['normal'])) }}</span> Normal <span class="box">{{ $mark($arrayHas($profile->chest_lungs_findings, ['wheeze'])) }}</span> Wheeze <span class="box">{{ $mark($arrayHas($profile->chest_lungs_findings, ['rales'])) }}</span> Rales</td></tr>
             <tr><td>&nbsp;</td></tr>

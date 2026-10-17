@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Announcement;
 use App\Models\Appointment;
+use App\Models\DependentsProfile;
 use App\Models\EmployeeHealthProfile;
 use App\Models\Item;
 use App\Models\User;
@@ -149,20 +150,40 @@ class AdminGlobalSearchController extends Controller
         $results = [];
 
         if (Schema::hasTable('health_profiles')) {
+            $needle = mb_strtolower($query);
+            $dependentUserIds = Schema::hasTable('dependents_profiles')
+                ? DependentsProfile::query()
+                    ->get()
+                    ->filter(function (DependentsProfile $profile) use ($needle) {
+                        foreach ([
+                            'id_number', 'idp_user_id', 'email', 'first_name',
+                            'middle_name', 'last_name', 'suffix_name',
+                        ] as $field) {
+                            $value = mb_strtolower(trim((string) $profile->{$field}));
+                            if ($value !== '' && mb_strpos($value, $needle) !== false) {
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    })
+                    ->pluck('user_id')
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all()
+                : [];
+
             $studentResults = User::query()
                 ->with('healthProfile')
                 ->whereHas('healthProfile')
-                ->where(function ($builder) use ($query) {
+                ->where(function ($builder) use ($query, $dependentUserIds) {
                     $this->addLikeConditions($builder, 'users', [
                         'name', 'first_name', 'last_name', 'email', 'student_number', 'student_id', 'reference_number',
                     ], $query);
 
-                    if (Schema::hasTable('dependents_profiles')) {
-                        $builder->orWhereHas('dependentProfile', function ($dependentQuery) use ($query) {
-                            $this->addLikeConditions($dependentQuery, 'dependents_profiles', [
-                                'id_number', 'idp_user_id', 'email', 'first_name', 'last_name',
-                            ], $query);
-                        });
+                    if ($dependentUserIds !== []) {
+                        $builder->orWhereIn('users.id', $dependentUserIds);
                     }
                 })
                 ->limit(self::RESULTS_PER_GROUP)

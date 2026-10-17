@@ -108,10 +108,17 @@ class HealthFileEncryption
     {
         $configuredKey = trim((string) config('health_files.encryption_key', ''));
         if ($configuredKey === '') {
-            throw new RuntimeException('HEALTH_FILES_ENCRYPTION_KEY or APP_KEY is required for private health-file encryption.');
+            throw new RuntimeException('HEALTH_FILES_ENCRYPTION_KEY is required for private health-file encryption.');
         }
 
-        return $this->normalizeKey($configuredKey);
+        $key = $this->normalizeKey($configuredKey);
+        $appKey = trim((string) config('app.key', ''));
+
+        if ($appKey !== '' && hash_equals($this->normalizeKey($appKey), $key)) {
+            throw new RuntimeException('HEALTH_FILES_ENCRYPTION_KEY must be different from APP_KEY.');
+        }
+
+        return $key;
     }
 
     private function normalizeKey(string $configuredKey): string

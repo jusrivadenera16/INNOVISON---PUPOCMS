@@ -72,7 +72,7 @@ class AdminAssistantController extends Controller
 
         return response()->json([
             'type' => 'answer',
-            'message' => 'I can help with commands like "generate MAR", "open appointments", "open inventory", and basic symptom triage guidance. This is guidance only and not a diagnosis.',
+            'message' => 'I can help with clinic commands and built-in guidance. Free-text AI replies are disabled until external data processing is approved.',
             'source' => 'fallback',
         ]);
     }
@@ -349,6 +349,10 @@ class AdminAssistantController extends Controller
 
     private function askAi(string $text): ?string
     {
+        if (!config('services.ai.external_processing_enabled', false)) {
+            return null;
+        }
+
         $provider = strtolower(trim((string) config('services.ai.provider', 'auto')));
         $gemini = app(GeminiClient::class);
 

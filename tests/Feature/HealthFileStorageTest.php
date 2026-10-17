@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Services\HealthFileStorage;
+use App\Services\HealthFileEncryption;
 use App\Services\StoredImageDataUri;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
@@ -141,6 +142,35 @@ class HealthFileStorageTest extends TestCase
         $this->assertStringContainsString('no-store', (string) $download->headers->get('Cache-Control'));
     }
 
+    public function test_file_writes_require_a_dedicated_key(): void
+    {
+        config([
+            'health_files.encryption_enabled' => true,
+            'health_files.encryption_key' => '',
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+
+        app(HealthFileStorage::class)->put('health_profiles/documents/missing-key.pdf', 'private');
+    }
+
+    public function test_app_key_encrypted_file_is_not_accepted_by_normal_reads(): void
+    {
+        config([
+            'app.key' => 'legacy-app-key',
+            'health_files.encryption_enabled' => true,
+            'health_files.encryption_key' => 'local-dedicated-file-key',
+        ]);
+        $path = 'health_profiles/documents/legacy-app-key.pdf';
+        $contents = 'legacy encrypted contents';
+        $encrypted = app(HealthFileEncryption::class)->encryptWithKey($contents, 'legacy-app-key');
+        Storage::disk('health_private')->put($path, $encrypted);
+
+        $this->expectException(\RuntimeException::class);
+
+        app(HealthFileStorage::class)->get($path);
+    }
+
     public function test_existing_private_files_can_be_encrypted_and_verified(): void
     {
         config([
@@ -162,14 +192,12 @@ class HealthFileStorageTest extends TestCase
         config([
             'app.key' => 'local-old-app-key',
             'health_files.encryption_enabled' => true,
-            'health_files.encryption_key' => 'local-old-app-key',
+            'health_files.encryption_key' => 'local-old-dedicated-file-key',
         ]);
         $path = 'health_profiles/documents/rotated.pdf';
         $contents = '%PDF-rotated-private-health-file%';
-        $files = app(HealthFileStorage::class);
-
-        $this->assertTrue($files->put($path, $contents));
-        $oldRaw = Storage::disk('health_private')->get($path);
+        $oldRaw = app(HealthFileEncryption::class)->encryptWithKey($contents, 'local-old-app-key');
+        Storage::disk('health_private')->put($path, $oldRaw);
 
         config(['health_files.encryption_key' => 'local-new-health-file-key']);
 

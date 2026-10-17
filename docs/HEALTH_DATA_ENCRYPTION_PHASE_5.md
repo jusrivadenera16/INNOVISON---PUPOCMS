@@ -13,7 +13,7 @@ The Laravel encryption transition now covers the three health-profile tables and
 
 Sensitive profile fields and consultation draft payloads are encrypted with the dedicated `HEALTH_DATA_ENCRYPTION_KEY`. Array, date, boolean, and scalar values are restored to their normal model types when read. Session encryption and unrelated Laravel encryption continue to use `APP_KEY`.
 
-During key transition, `HEALTH_DATA_ENCRYPTION_LEGACY_APP_KEY_FALLBACK=true` permits reads of existing mirrors encrypted with `APP_KEY`. New writes always use the dedicated health-data key. After rotating existing mirrors and verifying them with the dedicated key, disable the fallback.
+Health-data reads and writes use only the dedicated `HEALTH_DATA_ENCRYPTION_KEY`. There is no automatic `APP_KEY` fallback. Before deployment, verify that every existing encrypted mirror in the target environment can be read with that environment's dedicated key.
 
 Identity and operational lookup fields remain plaintext by design so the admin global search, joins, filters, and workflow status queries continue to work. Names, email addresses, student or employee numbers, reference numbers, and status fields are not encrypted in this phase.
 
@@ -27,9 +27,9 @@ The command name is retained for compatibility with the earlier student-only rol
 
 ## Per-environment key rollout
 
-Generate a unique 32-byte key for each environment, for example with `php -r "echo 'base64:'.base64_encode(random_bytes(32)).PHP_EOL;"`. Store it only in that environment's secret `.env` as `HEALTH_DATA_ENCRYPTION_KEY`; never commit it or reuse the local key. Keep `HEALTH_DATA_ENCRYPTION_LEGACY_APP_KEY_FALLBACK=true` during migration.
+Generate a unique 32-byte key for each environment, for example with `php -r "echo 'base64:'.base64_encode(random_bytes(32)).PHP_EOL;"`. Store it only in that environment's secret `.env` as `HEALTH_DATA_ENCRYPTION_KEY`; never commit it or reuse a key from another environment.
 
-After deployment and migrations, run the health backfill dry-run/apply, followed by `health:encrypt-student-medical-history --force` and `health:encrypt-student-medical-history --force --apply`. Run `consultation-drafts:encrypt --force` and `consultation-drafts:encrypt --force --apply` to migrate or rotate draft payloads. Verify both dry-runs, then set `HEALTH_DATA_ENCRYPTION_LEGACY_APP_KEY_FALLBACK=false`, rebuild Laravel's config cache, and rerun the force dry-runs before any plaintext purge. Keep the staging database backup until the rollout is verified.
+After deployment and migrations, run and review the health backfill dry-run/apply, followed by `health:encrypt-student-medical-history --force` and `health:encrypt-student-medical-history --force --apply` only when existing mirrors need refresh under the configured dedicated key. Run `consultation-drafts:encrypt --force` and `consultation-drafts:encrypt --force --apply` only when draft payloads need migration or refresh. Verify with the dedicated key before any plaintext purge. Keep the target environment's verified backup until the rollout is complete.
 
 ## Admin compatibility
 
@@ -50,6 +50,6 @@ After deployment and migrations, run the health backfill dry-run/apply, followed
 
 The source columns remain in the schema for compatibility, but application reads and writes use the encrypted mirrors when health-data encryption is enabled. SQL filters that depended on plaintext health values have been removed or redirected to encrypted mirrors.
 
-Local `clinic_laravel` cleanup completed on 2026-10-16: 291 source values were cleared after verification, with 0 unverified fields. A post-check found 0 non-null plaintext values in mapped source columns, 345 decryptable mirrors, and 0 decryption errors. The local mirrors were then rotated from `APP_KEY` to a unique local `HEALTH_DATA_ENCRYPTION_KEY`; 23 populated profile/submission rows were rewritten and verified. With legacy fallback disabled, a fresh force dry-run still read all mapped health data. The local consultation-draft migration is applied and there were no drafts to rotate. Staging and production need their own per-environment key and rollout sequence.
+Local `clinic_laravel` cleanup completed on 2026-10-16: 291 source values were cleared after verification, with 0 unverified fields. A post-check found 0 non-null plaintext values in mapped source columns, 345 decryptable mirrors, and 0 decryption errors. The local mirrors were then rotated from `APP_KEY` to a unique local `HEALTH_DATA_ENCRYPTION_KEY`; 23 populated profile/submission rows were rewritten and verified. A fresh force dry-run using only the dedicated key still read all mapped health data. The local consultation-draft migration is applied and there were no drafts to rotate. Staging and production need their own per-environment key and rollout sequence.
 
 Do not rotate `APP_KEY` while sessions or other application-encrypted values use it. Generate a unique `HEALTH_DATA_ENCRYPTION_KEY` per environment and keep it outside source control. Run database mutations only after confirming a backup for the target environment.

@@ -3600,7 +3600,7 @@
                                 I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my on-site consultation for the issuance of medical clearance for <u id="employeeConsentDynamicPurpose" style="font-weight: 700;">{{ $initialEmployeeCategory !== '' ? $initialEmployeeCategory : '[Select Category]' }}</u> are true, correct and complete to the best of my knowledge. I have fully disclosed all the medical condition that may affect in the assessment to endorse my <u id="employeeConsentDynamicEndorsement" style="font-weight: 700;">{{ $initialEmployeeCategory !== '' ? 'fitness for ' . strtolower($initialEmployeeCategory) : '[Select Category]' }}</u> of PUP Taguig Campus.
                             </p>
                             <p>I also understand that the PUP Medical Services and University will not be liable for any untoward incident that may arise due to my failure to disclose accurate information or intentionally providing false and deceptive information.</p>
-                            <p>In compliance with the Data Privacy Act of 2012 and its implementing Rules and Regulations, I voluntarily consent to the collection, processing and storage of my personal and health information for the purpose/s of health assessment, treatment/ or research (following research ethics guidelines) for the improvement of healthcare services.</p>
+                            <p>{{ config('health_form_privacy.notice') }}</p>
                         </div>
                         <label class="student-consent-agreement">
                             <input type="checkbox" id="employeeConsentCheckbox" required>
@@ -3782,7 +3782,7 @@
 
                 <p class="privacy-note">
                     <span class="privacy-noteD">Data Privacy Notice:</span>
-                    The information you provide is collected for school clinic documentation and health clearance processing only, in compliance with school data privacy requirements.
+                    {{ config('health_form_privacy.notice') }}
                 </p>
             </form>
         </div>
