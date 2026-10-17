@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use App\Http\Controllers\WalkInController;
 use App\Models\HealthProfile;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 use ReflectionMethod;
 
 class WalkInHealthProfileAssessmentReviewTest extends TestCase

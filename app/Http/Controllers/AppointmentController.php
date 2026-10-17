@@ -2434,11 +2434,9 @@ class AppointmentController extends Controller
             return false;
         }
 
-        if ($user->relationLoaded('dependentProfile')) {
-            return $user->dependentProfile !== null;
-        }
-
-        return DependentsProfile::query()->where('user_id', $user->id)->exists();
+        return DependentsProfile::withoutGlobalScopes()
+            ->where('user_id', $user->id)
+            ->exists();
     }
 
     private function shouldUseEmployeeHealthForm(?User $user): bool
@@ -5275,11 +5273,7 @@ public function storeDependentProfile(Request $request)
     /** @var \App\Models\User|null $user */
     $user = Auth::guard('student')->user() ?: Auth::user();
     if ($user) {
-        $query = User::query();
-        if (Schema::hasTable('dependents_profiles')) {
-            $query->with('dependentProfile');
-        }
-        $user = $query->find($user->id);
+        $user = User::query()->find($user->id);
     }
 
     if (!$user) {
@@ -5293,6 +5287,11 @@ public function storeDependentProfile(Request $request)
 
     if (!Schema::hasTable('dependents_profiles')) {
         return back()->with('error', 'Dependent profile storage is not ready yet. Please contact the clinic administrator.');
+    }
+
+    if ($this->hasSubmittedDependentProfile($user)) {
+        return redirect('/student/account')
+            ->with('info', 'Your dependent information is already saved. Please contact the clinic to request a correction.');
     }
 
     $dependentBirthdayMin = '1950-01-01';
@@ -5318,6 +5317,7 @@ public function storeDependentProfile(Request $request)
         'emergency_contact_name' => ['required', 'string', 'max:255'],
         'emergency_contact_no' => ['required', 'string', 'size:11', 'regex:/^09\d{9}$/'],
         'dependent_profile_certified' => ['accepted'],
+        'dependent_privacy_consent' => ['accepted'],
     ], [
         'contact_no.size' => 'Please put an 11-digit mobile number starting with 09.',
         'contact_no.regex' => 'Please put an 11-digit mobile number starting with 09.',
@@ -5344,9 +5344,15 @@ public function storeDependentProfile(Request $request)
         $validated['province'],
     ])));
 
-    DependentsProfile::updateOrCreate(
-        ['user_id' => $user->id],
-        [
+    $dependentProfileCreated = \Illuminate\Support\Facades\DB::transaction(function () use ($user, $validated, $homeAddress) {
+        User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+
+        if (DependentsProfile::query()->where('user_id', $user->id)->lockForUpdate()->exists()) {
+            return false;
+        }
+
+        $profileAttributes = [
+            'user_id' => $user->id,
             'idp_user_id' => trim((string) ($user->student_id ?? '')) ?: null,
             'idp_role' => trim((string) ($user->idp_role ?? $user->user_type ?? '')) ?: null,
             'id_number' => trim((string) ($validated['id_number'] ?? '')) ?: null,
@@ -5369,8 +5375,22 @@ public function storeDependentProfile(Request $request)
             'emergency_contact_name' => $validated['emergency_contact_name'],
             'emergency_contact_no' => $validated['emergency_contact_no'],
             'submitted_at' => now(),
-        ]
-    );
+        ];
+        if (Schema::hasColumn('dependents_profiles', 'privacy_consent_version')) {
+            $profileAttributes['privacy_consent_version'] = config('health_form_privacy.consent_version');
+        }
+        if (Schema::hasColumn('dependents_profiles', 'privacy_consent_at')) {
+            $profileAttributes['privacy_consent_at'] = now();
+        }
+        DependentsProfile::create($profileAttributes);
+
+        return true;
+    });
+
+    if (!$dependentProfileCreated) {
+        return redirect('/student/account')
+            ->with('info', 'Your dependent information is already saved. Please contact the clinic to request a correction.');
+    }
 
     $user->first_name = $validated['first_name'];
     $user->middle_name = $validated['middle_name'] ?: null;
@@ -6133,6 +6153,12 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
         'verified_at' => $adminForm ? now() : null,
         'approved_by_user_id' => $adminForm ? $user->id : null,
     ]);
+    if (Schema::hasColumn('health_profile_emp', 'privacy_consent_version')) {
+        $profile->privacy_consent_version = config('health_form_privacy.consent_version');
+    }
+    if (Schema::hasColumn('health_profile_emp', 'privacy_consent_at')) {
+        $profile->privacy_consent_at = now();
+    }
     $profile->save();
 
     if (!$adminForm) {
@@ -6814,7 +6840,7 @@ public function storeHealthForm(Request $request)
         'med_cert_findings' => $applicantDocumentsRequired ? 'required|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review' : 'nullable|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review',
         'med_cert_findings_details' => 'required_if:med_cert_findings,With Findings|nullable|string|max:1000',
         'signature_method' => 'required|in:draw,upload',
-        'consent_acknowledged' => $isDedicatedStudentWorkflow ? 'accepted' : 'nullable',
+        'consent_acknowledged' => ['accepted'],
         'digital_signature_data' => 'nullable|string',
         'digital_signature_upload' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
         'guardian_signature_method' => $isDedicatedStudentWorkflow ? 'nullable|in:draw,upload' : 'nullable',
@@ -7208,6 +7234,13 @@ public function storeHealthForm(Request $request)
 
         if (\Schema::hasColumn('health_profiles', 'suffix_name')) {
             $healthProfileData['suffix_name'] = $this->normalizeOptionalNamePart($request->input('suffix_name'));
+        }
+
+        if (Schema::hasColumn('health_profiles', 'privacy_consent_version')) {
+            $healthProfileData['privacy_consent_version'] = config('health_form_privacy.consent_version');
+        }
+        if (Schema::hasColumn('health_profiles', 'privacy_consent_at')) {
+            $healthProfileData['privacy_consent_at'] = now();
         }
 
         $healthProfile = \App\Models\HealthProfile::updateOrCreate(

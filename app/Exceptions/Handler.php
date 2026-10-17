@@ -14,6 +14,7 @@ class Handler extends ExceptionHandler
         'current_password',
         'password',
         'password_confirmation',
+        'image_data',
     ];
 
     protected function invalid($request, ValidationException $exception)

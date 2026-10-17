@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Mail\EmergencyLoginOtpMail;
 use App\Models\SystemSetting;
-use BaconQrCode\Renderer\Image\Svg;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -42,11 +44,7 @@ class EmergencyTwoFactorService
 
     public function qrCodeSvg(string $provisioningUri): string
     {
-        $renderer = new Svg();
-        $renderer->setHeight(300);
-        $renderer->setWidth(300);
-        $renderer->setMargin(4);
-        $renderer->setRoundDimensions(true);
+        $renderer = new ImageRenderer(new RendererStyle(300, 4), new SvgImageBackEnd());
 
         return (new Writer($renderer))->writeString($provisioningUri);
     }

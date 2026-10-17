@@ -389,19 +389,20 @@ class WalkInController extends Controller
             return null;
         }
 
-        $normalizedIdentifier = strtoupper($identifier);
+        $normalizedIdentifier = mb_strtoupper($identifier);
         $profile = DependentsProfile::query()
             ->with('user.healthProfile')
-            ->where(function ($query) use ($identifier, $normalizedIdentifier) {
+            ->latest()
+            ->get()
+            ->first(function (DependentsProfile $candidate) use ($normalizedIdentifier) {
                 foreach (['id_number', 'idp_user_id', 'email'] as $column) {
-                    if (\Schema::hasColumn('dependents_profiles', $column)) {
-                        $query->orWhere($column, $identifier)
-                            ->orWhereRaw('UPPER(TRIM(' . $column . ')) = ?', [$normalizedIdentifier]);
+                    if (mb_strtoupper(trim((string) $candidate->{$column})) === $normalizedIdentifier) {
+                        return true;
                     }
                 }
-            })
-            ->latest()
-            ->first();
+
+                return false;
+            });
 
         return $profile?->user?->loadMissing('healthProfile', 'dependentProfile');
     }
@@ -2904,23 +2905,49 @@ class WalkInController extends Controller
 
     public function verifyStudentIdWithAi(Request $request)
     {
+        if (!config('services.ai.external_processing_enabled', false)) {
+            return response()->json([
+                'status' => 'external_processing_disabled',
+                'message' => 'AI ID scanning is disabled. Please enter the ID details manually.',
+            ], 503);
+        }
+
         $request->validate([
-            'image_data' => 'required|string',
+            'image_data' => 'required|string|max:6000000',
         ]);
+
+        $imageData = trim((string) $request->input('image_data'));
+        if (!preg_match('/\Adata:image\/(jpeg|png);base64,([A-Za-z0-9+\/]+={0,2})\z/i', $imageData, $imageMatches)) {
+            return response()->json([
+                'status' => 'invalid_image',
+                'message' => 'The captured ID image is invalid. Please capture the card again.',
+            ], 422);
+        }
+
+        $imageBinary = base64_decode($imageMatches[2], true);
+        $imageInfo = is_string($imageBinary) ? @getimagesizefromstring($imageBinary) : false;
+        $declaredMime = 'image/' . strtolower($imageMatches[1]);
+        if (
+            !is_string($imageBinary)
+            || $imageBinary === ''
+            || strlen($imageBinary) > 4500000
+            || !$imageInfo
+            || !in_array($imageInfo['mime'] ?? '', ['image/jpeg', 'image/png'], true)
+            || ($imageInfo['mime'] ?? '') !== $declaredMime
+            || (int) ($imageInfo[0] ?? 0) > 8192
+            || (int) ($imageInfo[1] ?? 0) > 8192
+        ) {
+            return response()->json([
+                'status' => 'invalid_image',
+                'message' => 'The captured ID image is invalid or too large. Please capture the card again.',
+            ], 422);
+        }
 
         $apiKey = trim((string) config('services.openai.api_key'));
         if ($apiKey === '') {
             return response()->json([
                 'status' => 'unavailable',
                 'message' => 'AI verification is not configured yet. Please add OPENAI_API_KEY first.',
-            ], 422);
-        }
-
-        $imageData = trim((string) $request->input('image_data'));
-        if (!Str::startsWith($imageData, 'data:image/')) {
-            return response()->json([
-                'status' => 'invalid_image',
-                'message' => 'The captured ID image is invalid. Please capture the card again.',
             ], 422);
         }
 

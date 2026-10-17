@@ -106,6 +106,8 @@ class EmployeeHealthProfile extends Model
         'resubmitted_at',
         'staff_health_form_pdf_path',
         'draft_data',
+        'privacy_consent_version',
+        'privacy_consent_at',
     ];
 
     protected $casts = [
@@ -136,6 +138,7 @@ class EmployeeHealthProfile extends Model
         'pending_compliance_reminder_count' => 'integer',
         'resubmitted_at' => 'datetime',
         'draft_data' => 'array',
+        'privacy_consent_at' => 'datetime',
     ];
 
     public function user()

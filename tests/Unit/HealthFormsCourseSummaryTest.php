@@ -5,7 +5,7 @@ namespace Tests\Unit;
 use App\Http\Controllers\ReportsController;
 use App\Models\HealthProfile;
 use App\Models\User;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 use ReflectionMethod;
 
 class HealthFormsCourseSummaryTest extends TestCase

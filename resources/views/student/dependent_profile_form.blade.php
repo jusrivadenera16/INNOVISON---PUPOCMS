@@ -393,6 +393,25 @@
             accent-color: var(--clinic-maroon);
         }
 
+        .dependent-privacy-note {
+            margin-top: 20px;
+            padding: 16px;
+            border: 1px solid rgba(127, 29, 45, 0.22);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.72);
+            color: #374151;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .dependent-privacy-note > p {
+            margin: 6px 0 0;
+        }
+
+        .dependent-privacy-note .certify-row {
+            margin-top: 12px;
+        }
+
         .btn-row {
             display: flex;
             justify-content: flex-end;
@@ -1206,6 +1225,14 @@
                     <input id="dependent_profile_certified" type="checkbox" name="dependent_profile_certified" value="1" required {{ old('dependent_profile_certified') ? 'checked' : '' }}>
                     <span>I certify that the information I provided is true and correct.</span>
                 </label>
+                <div class="dependent-privacy-note" role="group" aria-labelledby="dependentPrivacyTitle">
+                    <strong id="dependentPrivacyTitle">Data Privacy Notice</strong>
+                    <p>{{ config('health_form_privacy.notice') }}</p>
+                    <label class="certify-row" for="dependent_privacy_consent">
+                        <input id="dependent_privacy_consent" type="checkbox" name="dependent_privacy_consent" value="1" required {{ old('dependent_privacy_consent') ? 'checked' : '' }}>
+                        <span>I have read and agree to this data privacy notice.</span>
+                    </label>
+                </div>
 
                 <div class="btn-row">
                     <a href="{{ url('/student/home') }}" class="btn-health btn-back"><span>Back</span></a>

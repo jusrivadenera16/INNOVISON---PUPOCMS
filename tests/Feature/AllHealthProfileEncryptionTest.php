@@ -8,6 +8,7 @@ use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -22,7 +23,6 @@ class AllHealthProfileEncryptionTest extends TestCase
         Config::set('database.connections.sqlite.database', ':memory:');
         Config::set('health_data_encryption.enabled', true);
         Config::set('health_data_encryption.key', 'base64:' . base64_encode(str_repeat('h', 32)));
-        Config::set('health_data_encryption.legacy_app_key_fallback', true);
         DB::purge('sqlite');
         DB::reconnect('sqlite');
 
@@ -46,6 +46,13 @@ class AllHealthProfileEncryptionTest extends TestCase
         Schema::create('dependents_profiles', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('user_id')->nullable();
+            $table->string('idp_user_id')->nullable();
+            $table->string('id_number')->nullable();
+            $table->string('first_name')->nullable();
+            $table->string('middle_name')->nullable();
+            $table->string('last_name')->nullable();
+            $table->string('suffix_name')->nullable();
+            $table->string('email')->nullable();
             $table->date('birthday')->nullable();
             $table->string('home_address')->nullable();
             $table->timestamps();
@@ -61,6 +68,8 @@ class AllHealthProfileEncryptionTest extends TestCase
 
         $migration = require base_path('database/migrations/2026_10_08_000001_add_encrypted_health_profile_fields.php');
         $migration->up();
+        $dependentIdentityMigration = require base_path('database/migrations/2026_10_17_000002_add_encrypted_dependent_identity_fields.php');
+        $dependentIdentityMigration->up();
     }
 
     protected function tearDown(): void
@@ -87,6 +96,13 @@ class AllHealthProfileEncryptionTest extends TestCase
         ]);
         $dependent = DependentsProfile::withoutGlobalScopes()->create([
             'user_id' => null,
+            'idp_user_id' => 'dependent-id-123',
+            'id_number' => 'D-123456',
+            'first_name' => 'Private',
+            'middle_name' => 'Middle',
+            'last_name' => 'Identity',
+            'suffix_name' => 'Jr.',
+            'email' => 'private-dependent@example.test',
             'birthday' => '2000-01-01',
             'home_address' => '456 Private Avenue',
         ]);
@@ -109,6 +125,9 @@ class AllHealthProfileEncryptionTest extends TestCase
         $this->assertStringNotContainsString('Juan Dela Cruz', (string) $employeeRaw->emergency_contact_person_encrypted);
         $this->assertStringNotContainsString('Hypertension', (string) $employeeRaw->past_medical_history_encrypted);
         $this->assertStringNotContainsString('Private Avenue', (string) $dependentRaw->home_address_encrypted);
+        $this->assertStringNotContainsString('D-123456', (string) $dependentRaw->id_number_encrypted);
+        $this->assertStringNotContainsString('Private', (string) $dependentRaw->first_name_encrypted);
+        $this->assertStringNotContainsString('private-dependent@example.test', (string) $dependentRaw->email_encrypted);
         $this->assertStringNotContainsString('private@example.test', (string) $submissionRaw->profile_snapshot_encrypted);
         $this->assertStringNotContainsString('medical follow-up', (string) $submissionRaw->remarks_encrypted);
         $this->assertNull($studentRaw->home_address);
@@ -117,6 +136,9 @@ class AllHealthProfileEncryptionTest extends TestCase
         $this->assertNull($employeeRaw->past_medical_history);
         $this->assertNull($dependentRaw->birthday);
         $this->assertNull($dependentRaw->home_address);
+        $this->assertNull($dependentRaw->id_number);
+        $this->assertNull($dependentRaw->first_name);
+        $this->assertNull($dependentRaw->email);
         $this->assertNull($submissionRaw->profile_snapshot);
         $this->assertNull($submissionRaw->remarks);
 
@@ -130,6 +152,12 @@ class AllHealthProfileEncryptionTest extends TestCase
         $this->assertSame('Juan Dela Cruz', $freshEmployee->emergency_contact_person);
         $this->assertSame(['Hypertension'], $freshEmployee->past_medical_history);
         $this->assertSame('456 Private Avenue', $freshDependent->home_address);
+        $this->assertSame('D-123456', $freshDependent->id_number);
+        $this->assertSame('Private', $freshDependent->first_name);
+        $this->assertSame('Middle', $freshDependent->middle_name);
+        $this->assertSame('Identity', $freshDependent->last_name);
+        $this->assertSame('Jr.', $freshDependent->suffix_name);
+        $this->assertSame('private-dependent@example.test', $freshDependent->email);
         $this->assertSame('2000-01-01', $freshDependent->birthday?->format('Y-m-d'));
         $this->assertSame(['Asthma'], $freshSubmission->snapshotProfile()['medical_history']);
         $this->assertSame('Requires medical follow-up.', $freshSubmission->remarks);
@@ -144,5 +172,14 @@ class AllHealthProfileEncryptionTest extends TestCase
 
         $encryptedOnlySubmission = HealthFormSubmission::withoutGlobalScopes()->findOrFail($submission->id);
         $this->assertSame(['medical_history' => ['Asthma']], $encryptedOnlySubmission->snapshotProfile());
+    }
+
+    public function test_app_key_ciphertext_is_not_accepted_as_health_data_ciphertext(): void
+    {
+        $payload = Crypt::encryptString('legacy health data');
+
+        $this->expectException(\Illuminate\Contracts\Encryption\DecryptException::class);
+
+        app(\App\Services\HealthDataEncrypter::class)->decrypt($payload);
     }
 }

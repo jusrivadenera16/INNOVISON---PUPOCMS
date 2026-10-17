@@ -6,11 +6,11 @@ return [
 
     'encryption_enabled' => env('APP_ENV') !== 'testing'
         && filter_var(
-            env('HEALTH_FILES_ENCRYPTION_ENABLED', false),
+            env('HEALTH_FILES_ENCRYPTION_ENABLED', true),
             FILTER_VALIDATE_BOOLEAN
         ),
 
-    'encryption_key' => env('HEALTH_FILES_ENCRYPTION_KEY', env('APP_KEY')),
+    'encryption_key' => env('HEALTH_FILES_ENCRYPTION_KEY', ''),
 
     'legacy_fallback' => filter_var(
         env('HEALTH_FILES_LEGACY_FALLBACK', false),

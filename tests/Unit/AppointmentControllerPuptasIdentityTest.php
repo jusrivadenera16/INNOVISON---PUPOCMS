@@ -7,7 +7,7 @@ use App\Models\Admin;
 use App\Models\HealthProfile;
 use App\Models\User;
 use Carbon\Carbon;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 use ReflectionMethod;
 
 class AppointmentControllerPuptasIdentityTest extends TestCase

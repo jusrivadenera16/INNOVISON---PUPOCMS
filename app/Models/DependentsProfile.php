@@ -36,11 +36,14 @@ class DependentsProfile extends Model
         'emergency_contact_name',
         'emergency_contact_no',
         'submitted_at',
+        'privacy_consent_version',
+        'privacy_consent_at',
     ];
 
     protected $casts = [
         'birthday' => 'date',
         'submitted_at' => 'datetime',
+        'privacy_consent_at' => 'datetime',
     ];
 
     public function user()

@@ -3,16 +3,12 @@
 return [
     'enabled' => env('APP_ENV') !== 'testing'
         && filter_var(
-            env('HEALTH_DATA_ENCRYPTION_ENABLED', false),
+            env('HEALTH_DATA_ENCRYPTION_ENABLED', true),
             FILTER_VALIDATE_BOOLEAN
         ),
 
     'key' => env('HEALTH_DATA_ENCRYPTION_KEY', ''),
     'cipher' => env('HEALTH_DATA_ENCRYPTION_CIPHER', env('APP_CIPHER', 'AES-256-CBC')),
-    'legacy_app_key_fallback' => filter_var(
-        env('HEALTH_DATA_ENCRYPTION_LEGACY_APP_KEY_FALLBACK', true),
-        FILTER_VALIDATE_BOOLEAN
-    ),
 
     // Keep identity/search columns plain so admin lookup remains indexable.
     'fields' => [
@@ -140,6 +136,13 @@ return [
             'draft_data' => 'draft_data_encrypted',
         ],
         'dependents_profiles' => [
+            'idp_user_id' => 'idp_user_id_encrypted',
+            'id_number' => 'id_number_encrypted',
+            'first_name' => 'first_name_encrypted',
+            'middle_name' => 'middle_name_encrypted',
+            'last_name' => 'last_name_encrypted',
+            'suffix_name' => 'suffix_name_encrypted',
+            'email' => 'email_encrypted',
             'birthday' => 'birthday_encrypted',
             'age' => 'age_encrypted',
             'sex' => 'sex_encrypted',

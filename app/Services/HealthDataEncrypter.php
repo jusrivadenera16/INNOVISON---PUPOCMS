@@ -2,11 +2,8 @@
 
 namespace App\Services;
 
-use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Encryption\Encrypter;
-use Illuminate\Support\Facades\Crypt;
 use RuntimeException;
-use Throwable;
 
 class HealthDataEncrypter
 {
@@ -17,21 +14,7 @@ class HealthDataEncrypter
 
     public function decrypt(string $payload, bool $unserialize = false)
     {
-        $encrypter = $this->dedicatedEncrypter();
-
-        try {
-            return $encrypter->decrypt($payload, $unserialize);
-        } catch (DecryptException $dedicatedKeyException) {
-            if (!config('health_data_encryption.legacy_app_key_fallback', true)) {
-                throw $dedicatedKeyException;
-            }
-
-            try {
-                return Crypt::decrypt($payload, $unserialize);
-            } catch (Throwable $legacyKeyException) {
-                throw $dedicatedKeyException;
-            }
-        }
+        return $this->dedicatedEncrypter()->decrypt($payload, $unserialize);
     }
 
     public function decryptWithDedicatedKey(string $payload, bool $unserialize = false)
