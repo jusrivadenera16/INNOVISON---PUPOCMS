@@ -8261,6 +8261,25 @@
         stroke: #70131b !important;
     }
 
+    #verifyApprovalModal .verification-doc-card.is-missing {
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    #verifyApprovalModal .verification-doc-card.is-missing > svg {
+        align-self: center;
+        margin: 0 !important;
+    }
+
+    #verifyApprovalModal .verification-doc-card.is-missing .verification-doc-status {
+        justify-content: center;
+    }
+
+    #verifyApprovalModal .verify-assessment-dropdown.is-direct-review .verify-assessment-trigger svg {
+        display: none;
+    }
+
 </style>
 @endpush
 
@@ -9292,7 +9311,6 @@
                                         <x-outline-icon name="x-mark" />
                                         <strong>{{ $docLabel }}</strong>
                                         <span class="verification-doc-status">Missing upload</span>
-                                        <span class="verification-doc-preview is-empty" aria-hidden="true"></span>
                                     </div>
                                 @endif
                             @endforeach
@@ -10223,7 +10241,7 @@
                             return '<a class="verification-doc-card" href="' + escapeValue(doc.url) + '" target="_blank" rel="noopener noreferrer"><strong>' + escapeValue(docTitle) + '</strong><span class="verification-doc-status verification-doc-status-spacer" aria-hidden="true"></span>' + preview + '<span class="verification-doc-meta">' + format + '</span><span class="verification-doc-open"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.644C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.437 0 .644C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg><span>View Document</span></span></a>';
                         }
 
-                        return '<div class="verification-doc-card is-missing"><strong>' + escapeValue(doc && doc.title ? doc.title : 'Requirement') + '</strong><span class="verification-doc-status">Missing upload</span><span class="verification-doc-preview" aria-hidden="true"></span></div>';
+                        return '<div class="verification-doc-card is-missing"><strong>' + escapeValue(doc && doc.title ? doc.title : 'Requirement') + '</strong><span class="verification-doc-status">Missing upload</span></div>';
                     }).join('');
                 }
                 updateVerificationDocumentCount();
@@ -10435,6 +10453,7 @@
         const isResubmissionRequested = Boolean(verifyNeedsDocumentResubmission?.checked);
         setApplicantAssessmentMenuOpen(false);
         if (verifyApplicantNextStepWrap) {
+            verifyApplicantNextStepWrap.classList.toggle('is-direct-review', !hasMultipleApplicantReviewDestinations);
             verifyApplicantNextStepWrap.hidden = isResubmissionRequested || !hasAvailableReviewDestination;
         }
 
@@ -10442,13 +10461,18 @@
             ? String(recordPayload.walkin_url || '')
             : (destinations[selectedStep] || '');
         const continueLabel = isEmployee
-            ? 'Open Employee Review'
+            ? 'Continue to Approval'
             : 'Continue Assessment';
 
         if (verifyContinueToWalkinBtn) {
             verifyContinueToWalkinBtn.dataset.walkinUrl = destination;
             verifyContinueToWalkinBtn.disabled = !hasAvailableReviewDestination;
             verifyContinueToWalkinBtn.setAttribute('aria-haspopup', hasMultipleApplicantReviewDestinations ? 'menu' : 'false');
+            if (hasMultipleApplicantReviewDestinations) {
+                verifyContinueToWalkinBtn.setAttribute('aria-controls', 'verifyApplicantNextStepMenu');
+            } else {
+                verifyContinueToWalkinBtn.removeAttribute('aria-controls');
+            }
             const label = verifyContinueToWalkinBtn.querySelector('span');
             if (label) label.textContent = continueLabel;
         }
