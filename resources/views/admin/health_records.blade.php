@@ -3660,6 +3660,792 @@
         border-top: 1px solid rgba(112, 19, 27, 0.10);
     }
 
+    #verifyApprovalModal .verify-approval-modal-card {
+        min-height: 0;
+    }
+
+    #verifyApprovalModal .verify-approval-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 14px;
+        gap: 10px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(112, 19, 27, .42) transparent;
+    }
+
+    #verifyApprovalModal .verify-content-section {
+        min-width: 0;
+        padding: 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #ffffff;
+    }
+
+    #verifyApprovalModal .verify-content-section-heading {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        margin-bottom: 8px;
+        color: #0f172a;
+    }
+
+    #verifyApprovalModal .verify-content-section-heading h4 {
+        min-width: 0;
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.3;
+        font-weight: 900;
+        color: inherit;
+    }
+
+    #verifyApprovalModal .verify-section-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        flex: 0 0 22px;
+        border-radius: 6px;
+        background: rgba(143, 34, 48, .14);
+        color: #8f2230;
+    }
+
+    #verifyApprovalModal .verify-section-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    #verifyApprovalModal .verify-approval-student {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    #verifyApprovalModal .verify-approval-meta {
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr);
+        align-items: start;
+        column-gap: 7px;
+        min-width: 0;
+        padding: 8px;
+        border-radius: 8px;
+    }
+
+    #verifyApprovalModal .verify-meta-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        color: #8f2230;
+    }
+
+    #verifyApprovalModal .verify-meta-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    #verifyApprovalModal .verify-approval-meta-k {
+        margin-bottom: 3px;
+        font-size: 10px;
+        line-height: 1.3;
+    }
+
+    #verifyApprovalModal .verify-approval-meta-v {
+        font-size: 14px;
+        line-height: 1.3;
+    }
+
+    #verifyApprovalModal .verify-approval-doc-wrap,
+    #verifyApprovalModal .verify-condition-wrap {
+        padding: 10px;
+        border-radius: 10px;
+    }
+
+    #verifyApprovalModal .verify-approval-doc-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    #verifyApprovalModal .verify-approval-doc-heading .verify-content-section-heading {
+        margin: 0;
+    }
+
+    #verifyApprovalModal .verify-doc-count {
+        flex: 0 0 auto;
+        padding: 4px 8px;
+        border: 1px solid #bbf7d0;
+        border-radius: 999px;
+        background: #ecfdf5;
+        color: #166534;
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    #verifyApprovalModal .verification-doc-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    #verifyApprovalModal .verification-doc-card {
+        min-width: 0;
+        min-height: 0;
+        justify-content: flex-start;
+        gap: 6px;
+        padding: 8px;
+        border-radius: 8px;
+    }
+
+    #verifyApprovalModal .verification-doc-card strong {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.3;
+        overflow-wrap: anywhere;
+    }
+
+    #verifyApprovalModal .verification-doc-card .verification-doc-status {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: #15803d;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    #verifyApprovalModal .verification-doc-card .verification-doc-status-spacer {
+        display: block;
+        width: 100%;
+        height: 18px;
+        min-height: 18px;
+        flex: 0 0 18px;
+        visibility: hidden;
+    }
+
+    #verifyApprovalModal .verification-doc-status::before {
+        content: none;
+    }
+
+    #verifyApprovalModal .verification-doc-status-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        border-radius: 50%;
+        background: #22c55e;
+        color: #ffffff;
+    }
+
+    #verifyApprovalModal .verification-doc-status-icon svg {
+        width: 12px;
+        height: 12px;
+        stroke-width: 3;
+    }
+
+    #verifyApprovalModal .verification-doc-card.is-missing .verification-doc-status {
+        color: #b91c1c;
+    }
+
+    #verifyApprovalModal .verification-doc-card.is-missing .verification-doc-status::before {
+        background: #ef4444;
+    }
+
+    #verifyApprovalModal .verification-doc-preview {
+        height: 128px;
+        min-height: 128px;
+        flex: 0 0 128px;
+        border-radius: 6px;
+    }
+
+    #verifyApprovalModal .health-form-doc-preview {
+        height: 128px;
+        min-height: 128px;
+        flex: 0 0 128px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        background: #ffffff;
+    }
+
+    #verifyApprovalModal .health-form-doc-preview::before {
+        inset: 4px;
+    }
+
+    #verifyApprovalModal .health-form-doc-title {
+        font-size: 12px;
+        line-height: 1.05;
+    }
+
+    #verifyApprovalModal .verification-doc-preview > svg {
+        width: 28px;
+        height: 28px;
+        margin: 0;
+        color: #8f2230;
+    }
+
+    #verifyApprovalModal .verification-doc-meta {
+        min-height: 16px;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1.3;
+    }
+
+    #verifyApprovalModal .verification-doc-open {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 30px;
+        margin-top: auto;
+        padding: 5px 8px;
+        border: 1px solid #8f2230;
+        border-radius: 6px;
+        color: #8f2230;
+        font-size: 12px;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    #verifyApprovalModal .verification-doc-open svg {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 14px;
+        display: block;
+        align-self: center;
+        margin: 0 !important;
+    }
+
+    #verifyApprovalModal .verification-doc-open > span {
+        display: block;
+        line-height: 1.2;
+    }
+
+    #verifyApprovalModal .verify-condition-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    #verifyApprovalModal .verify-condition-item {
+        min-width: 0;
+        padding: 9px 10px;
+        border-radius: 8px;
+    }
+
+    #verifyApprovalModal .verify-condition-item.is-no-condition {
+        position: relative;
+        display: grid;
+        grid-template-columns: 22px minmax(0, 1fr);
+        align-items: start;
+        column-gap: 8px;
+        grid-column: 1 / -1;
+        border-color: #d8dde5;
+        background: #f8fafc;
+    }
+
+    #verifyApprovalModal .verify-condition-status-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        grid-column: 1;
+        grid-row: 1 / span 2;
+        border-radius: 50%;
+        background: #22c55e;
+        color: #ffffff;
+    }
+
+    #verifyApprovalModal .verify-condition-status-icon svg {
+        width: 12px;
+        height: 12px;
+        stroke-width: 3;
+    }
+
+    #verifyApprovalModal .verify-condition-item.is-no-condition > span:not(.verify-condition-status-icon) {
+        margin: 0;
+        color: #166534;
+        font-size: 13px;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+
+    #verifyApprovalModal .verify-condition-item.is-no-condition > span:not(.verify-condition-status-icon),
+    #verifyApprovalModal .verify-condition-item.is-no-condition > strong {
+        grid-column: 2;
+    }
+
+    #verifyApprovalModal .verify-condition-item.is-no-condition strong {
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    #verifyApprovalModal .verify-condition-item.is-with-condition {
+        background: #fff7f7;
+        border-color: #fecaca;
+    }
+
+    #verifyApprovalModal .verify-resubmission-only-form {
+        margin: 0;
+        padding: 14px;
+        border-radius: 12px;
+    }
+
+    #verifyApprovalModal .verify-resubmission-help-note {
+        margin: 0 0 10px;
+        font-size: 13px;
+        line-height: 1.45;
+    }
+
+    #verifyApprovalModal .verify-resubmission-toggle-row {
+        min-height: 44px;
+        margin-bottom: 10px;
+        padding: 10px 12px;
+        border-radius: 8px;
+    }
+
+    #verifyApprovalModal .verify-resubmission-panel {
+        display: none;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 8px;
+    }
+
+    #verifyApprovalModal .verify-resubmission-panel.is-open {
+        display: grid;
+    }
+
+    #verifyApprovalModal .verify-resubmission-option input:disabled {
+        cursor: not-allowed;
+        opacity: .72;
+    }
+
+    #verifyApprovalModal .verify-resubmission-options {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 7px;
+    }
+
+    #verifyApprovalModal .verify-resubmission-option {
+        min-width: 0;
+        min-height: 40px;
+        padding: 8px 9px;
+        border-radius: 7px;
+        font-size: 13px;
+        line-height: 1.35;
+    }
+
+    #verifyApprovalModal .verify-resubmission-only-form .verify-content-section-heading h4 {
+        font-size: 18px;
+    }
+
+    #verifyApprovalModal .verify-resubmission-only-form .verify-section-icon {
+        width: 30px;
+        height: 30px;
+        flex-basis: 30px;
+        border-radius: 7px;
+    }
+
+    #verifyApprovalModal .verify-resubmission-only-form .verify-section-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    #verifyApprovalModal .verify-resubmission-title {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    #verifyApprovalModal .verify-resubmission-only-form .verify-textarea-field textarea {
+        min-height: 60px;
+        font-size: 14px;
+    }
+
+    #verifyApprovalModal .verify-content-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        padding-top: 4px;
+    }
+
+    #verifyApprovalModal .verify-content-action-group {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    #verifyApprovalModal .verify-assessment-dropdown {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    #verifyApprovalModal .verify-assessment-dropdown[hidden],
+    #verifyApprovalModal .verify-assessment-menu[hidden] {
+        display: none !important;
+    }
+
+    #verifyApprovalModal .verify-assessment-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    #verifyApprovalModal .verify-assessment-trigger svg {
+        width: 15px;
+        height: 15px;
+        flex: 0 0 15px;
+        transition: transform .18s ease;
+    }
+
+    #verifyApprovalModal .verify-assessment-trigger[aria-expanded="true"] svg {
+        transform: rotate(180deg);
+    }
+
+    #verifyApprovalModal .verify-assessment-menu {
+        position: absolute;
+        right: 0;
+        bottom: calc(100% + 8px);
+        z-index: 40;
+        display: grid;
+        min-width: 190px;
+        gap: 3px;
+        padding: 5px;
+        border: 1px solid #d8b6bb;
+        border-radius: 9px;
+        background: #ffffff;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, .2);
+    }
+
+    #verifyApprovalModal .verify-content-actions .verify-assessment-menu-item {
+        justify-content: flex-start;
+        min-height: 38px;
+        padding: 8px 10px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: #334155;
+        text-align: left;
+        white-space: nowrap;
+        isolation: auto;
+        transition: background .16s ease, color .16s ease;
+    }
+
+    #verifyApprovalModal .verify-content-actions .verify-assessment-menu-item::before {
+        content: none !important;
+    }
+
+    #verifyApprovalModal .verify-content-actions .verify-assessment-menu-item:hover,
+    #verifyApprovalModal .verify-content-actions .verify-assessment-menu-item:focus-visible {
+        background: #fef3c7;
+        color: #70131b;
+        outline: none;
+    }
+
+    #verifyApprovalModal .verify-content-actions button {
+        min-height: 42px;
+        padding: 9px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #334155;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        cursor: pointer;
+        transition: transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
+    }
+
+    #verifyApprovalModal .verify-content-actions button:disabled {
+        cursor: not-allowed;
+    }
+
+    #verifyApprovalModal .verify-content-actions button > span {
+        position: relative;
+        z-index: 1;
+    }
+
+    #verifyApprovalModal .verify-content-actions button[hidden] {
+        display: none !important;
+    }
+
+    #verifyApprovalModal .verify-content-actions .verify-proposed-withdraw {
+        border-color: #8f2230;
+        background: #70131B;
+        color: #ffffff;
+    }
+
+    #verifyApprovalModal .verify-content-actions .verify-proposed-walkin {
+        border-color: #8f2230;
+        background: #70131B;
+        color: #ffffff;
+    }
+
+    #verifyApprovalModal .verify-content-actions .verify-proposed-withdraw::before,
+    #verifyApprovalModal .verify-content-actions .verify-proposed-walkin::before {
+        content: '';
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 42%;
+        background: linear-gradient(90deg, transparent, rgba(255, 245, 184, .9), transparent);
+        transform: translateX(-150%) skewX(-18deg);
+        transition: transform .48s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    #verifyApprovalModal .verify-content-actions .verify-proposed-withdraw:hover:not(:disabled),
+    #verifyApprovalModal .verify-content-actions .verify-proposed-walkin:hover:not(:disabled),
+    #verifyApprovalModal .verify-content-actions .verify-proposed-withdraw:focus-visible:not(:disabled),
+    #verifyApprovalModal .verify-content-actions .verify-proposed-walkin:focus-visible:not(:disabled) {
+        transform: translateY(-1px);
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        box-shadow: 0 8px 18px rgba(112, 19, 27, .18);
+        outline: none;
+    }
+
+    #verifyApprovalModal .verify-content-actions .verify-proposed-withdraw:hover:not(:disabled) > span,
+    #verifyApprovalModal .verify-content-actions .verify-proposed-walkin:hover:not(:disabled) > span,
+    #verifyApprovalModal .verify-content-actions .verify-proposed-withdraw:focus-visible:not(:disabled) > span,
+    #verifyApprovalModal .verify-content-actions .verify-proposed-walkin:focus-visible:not(:disabled) > span {
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+    }
+
+    #verifyApprovalModal .verify-content-actions .verify-proposed-withdraw:hover:not(:disabled)::before,
+    #verifyApprovalModal .verify-content-actions .verify-proposed-walkin:hover:not(:disabled)::before,
+    #verifyApprovalModal .verify-content-actions .verify-proposed-withdraw:focus-visible:not(:disabled)::before,
+    #verifyApprovalModal .verify-content-actions .verify-proposed-walkin:focus-visible:not(:disabled)::before {
+        transform: translateX(280%) skewX(-18deg);
+    }
+
+    #verifyApprovalModal .verify-content-actions .verify-proposed-withdraw:disabled {
+        border-color: #8f5960;
+        background: #65313a;
+        color: #f0dfe1;
+        opacity: .88;
+    }
+
+    #verifyApprovalModal .verify-content-actions .verify-proposed-withdraw:disabled::before {
+        display: none;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-section {
+        border-color: #334155;
+        background: #111827;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-section-heading,
+    html[data-theme="dark"] #verifyApprovalModal .verify-approval-meta-v,
+    html[data-theme="dark"] #verifyApprovalModal .verify-approval-doc-title,
+    html[data-theme="dark"] #verifyApprovalModal .verify-condition-title {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-section-icon,
+    html[data-theme="dark"] #verifyApprovalModal .verify-meta-icon {
+        color: #fca5a5 !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-approval-meta {
+        border-color: #334155;
+        background: #1e293b;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verification-doc-card {
+        border-color: #334155;
+        background: #1e293b;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verification-doc-card strong {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verification-doc-card .verification-doc-status {
+        color: #86efac !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verification-doc-card.is-missing .verification-doc-status {
+        color: #fca5a5 !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verification-doc-open {
+        border-color: #b44a58;
+        color: #fecdd3 !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verification-doc-status-icon {
+        background: #22c55e;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verification-doc-meta {
+        color: #cbd5e1 !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-doc-count {
+        border-color: #166534;
+        background: #052e16;
+        color: #bbf7d0 !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-actions button:not(.verify-proposed-withdraw):not(.verify-proposed-walkin) {
+        border-color: #475569;
+        background: #1e293b;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-actions .verify-proposed-withdraw {
+        color: #fecaca !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-actions .verify-proposed-walkin {
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-assessment-menu {
+        border-color: #475569;
+        background: #1e293b;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-actions .verify-assessment-menu-item {
+        color: #e2e8f0;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-actions .verify-assessment-menu-item:hover,
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-actions .verify-assessment-menu-item:focus-visible {
+        background: #273449 !important;
+        color: #facc15 !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-actions .verify-proposed-withdraw:hover:not(:disabled),
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-actions .verify-proposed-walkin:hover:not(:disabled),
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-actions .verify-proposed-withdraw:focus-visible:not(:disabled),
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-actions .verify-proposed-walkin:focus-visible:not(:disabled) {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-actions .verify-proposed-withdraw:hover:not(:disabled) > span,
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-actions .verify-proposed-walkin:hover:not(:disabled) > span,
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-actions .verify-proposed-withdraw:focus-visible:not(:disabled) > span,
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-actions .verify-proposed-walkin:focus-visible:not(:disabled) > span {
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-actions .verify-proposed-withdraw:disabled {
+        color: #f0dfe1 !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-condition-item.is-no-condition {
+        border-color: #34445b;
+        background: #182437;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-condition-item.is-no-condition > span:not(.verify-condition-status-icon),
+    html[data-theme="dark"] #verifyApprovalModal .verify-condition-item.is-no-condition strong {
+        color: #e2e8f0 !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-condition-status-icon {
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-condition-item.is-with-condition {
+        border-color: #7f1d1d;
+        background: #3f1d26;
+    }
+
+    @media (max-width: 900px) {
+        #verifyApprovalModal .verify-approval-student {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        #verifyApprovalModal .verification-doc-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        #verifyApprovalModal .verify-resubmission-options {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 600px) {
+        #verifyApprovalModal .verify-approval-body {
+            padding: 10px;
+        }
+
+        #verifyApprovalModal .verification-doc-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        #verifyApprovalModal .verify-resubmission-options {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        #verifyApprovalModal .verify-content-actions {
+            align-items: stretch;
+            flex-direction: column-reverse;
+        }
+
+        #verifyApprovalModal .verify-content-action-group {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        #verifyApprovalModal .verify-content-actions button {
+            width: 100%;
+        }
+
+        #verifyApprovalModal .verify-assessment-dropdown {
+            grid-column: 1 / -1;
+            width: 100%;
+        }
+
+        #verifyApprovalModal .verify-assessment-trigger {
+            justify-content: center;
+            width: 100%;
+        }
+
+        #verifyApprovalModal .verify-assessment-menu {
+            right: 0;
+            left: 0;
+            min-width: 0;
+        }
+    }
+
+    @media (max-width: 420px) {
+        #verifyApprovalModal .verify-approval-student,
+        #verifyApprovalModal .verification-doc-grid,
+        #verifyApprovalModal .verify-condition-grid,
+        #verifyApprovalModal .verify-resubmission-options {
+            grid-template-columns: 1fr;
+        }
+
+        #verifyApprovalModal .verify-approval-doc-heading {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
+
     .verify-approval-actions.is-hidden {
         display: none;
     }
@@ -4054,6 +4840,7 @@
         .readonly-resubmission-options {
             grid-template-columns: 1fr;
         }
+
     }
 
     .verify-approval-btn {
@@ -7347,6 +8134,133 @@
             flex: 1 1 0;
         }
     }
+
+    #verifyApprovalModal .verify-content-section,
+    #verifyApprovalModal .verify-resubmission-only-form {
+        background: #f7f7f8 !important;
+    }
+
+    #verifyApprovalModal .verify-approval-meta,
+    #verifyApprovalModal .verification-doc-card {
+        background: #eff2f6 !important;
+    }
+
+    #verifyApprovalModal .verification-doc-card {
+        border-color: #d8dde5;
+    }
+
+    #verifyApprovalModal .verify-content-section-heading .verify-section-icon {
+        border: 1px solid rgba(143, 34, 48, .35);
+        background: #8f2230 !important;
+        color: #ffffff !important;
+    }
+
+    #verifyApprovalModal .verify-content-section-heading .verify-section-icon svg {
+        color: #ffffff !important;
+        stroke: #ffffff !important;
+    }
+
+    #verifyApprovalModal a.verification-doc-card > svg {
+        display: none;
+    }
+
+    #verifyApprovalModal .verification-doc-preview {
+        background: #ffffff;
+    }
+
+    #verifyApprovalModal .verify-resubmission-panel {
+        border: 1px solid #d8dde5;
+        background: #fbfbfc;
+    }
+
+    #verifyApprovalModal .verify-resubmission-toggle-row,
+    #verifyApprovalModal .verify-resubmission-option,
+    #verifyApprovalModal .verify-resubmission-only-form .verify-textarea-field textarea {
+        border-color: #d8dde5;
+        background: #ffffff;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-content-section,
+    html[data-theme="dark"] #verifyApprovalModal .verify-approval-doc-wrap,
+    html[data-theme="dark"] #verifyApprovalModal .verify-condition-wrap,
+    html[data-theme="dark"] #verifyApprovalModal .verify-approval-review-form {
+        background: #151f30 !important;
+        border-color: #34445b !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-approval-meta,
+    html[data-theme="dark"] #verifyApprovalModal .verification-doc-card,
+    html[data-theme="dark"] #verifyApprovalModal .verify-resubmission-toggle-row,
+    html[data-theme="dark"] #verifyApprovalModal .verify-resubmission-option,
+    html[data-theme="dark"] #verifyApprovalModal .verify-resubmission-only-form .verify-textarea-field textarea {
+        background: #1c2a3d !important;
+        border-color: #3a4b63 !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-resubmission-panel {
+        border-color: #34445b !important;
+        background: #182437 !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verification-doc-preview {
+        border-color: #3a4b63;
+        background: #0f172a;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-condition-status-icon,
+    html[data-theme="dark"] #verifyApprovalModal .verification-doc-status-icon {
+        color: #ffffff !important;
+    }
+
+    #verifyApprovalModal .verification-doc-open {
+        background: transparent !important;
+        border-color: #8f2230 !important;
+        color: #8f2230 !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verification-doc-open {
+        background: transparent !important;
+        border-color: #b44a58 !important;
+        color: #fecdd3 !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-condition-item.is-no-condition {
+        border-color: #34445b !important;
+        background: #182437 !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-condition-item.is-no-condition > span:not(.verify-condition-status-icon),
+    html[data-theme="dark"] #verifyApprovalModal .verify-condition-item.is-no-condition strong {
+        color: #e2e8f0 !important;
+    }
+
+    #verifyApprovalModal .verify-approval-modal-close:hover,
+    #verifyApprovalModal .verify-approval-modal-close:focus-visible {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #70131b !important;
+    }
+
+    #verifyApprovalModal .verify-approval-modal-close:hover svg,
+    #verifyApprovalModal .verify-approval-modal-close:focus-visible svg {
+        color: #70131b !important;
+        stroke: #70131b !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-approval-modal-close:hover,
+    html[data-theme="dark"] #verifyApprovalModal .verify-approval-modal-close:focus-visible {
+        background: #facc15 !important;
+        background-image: none !important;
+        border-color: #facc15 !important;
+        color: #70131b !important;
+    }
+
+    html[data-theme="dark"] #verifyApprovalModal .verify-approval-modal-close:hover svg,
+    html[data-theme="dark"] #verifyApprovalModal .verify-approval-modal-close:focus-visible svg {
+        color: #70131b !important;
+        stroke: #70131b !important;
+    }
+
 </style>
 @endpush
 
@@ -7357,6 +8271,37 @@
         $canSignHealth = $role === \App\Models\User::ROLE_SUPERADMIN;
         $canRequestNewHealthForm = optional(auth()->user())->canAccessPermission('health_records.request_health_form') ?? false;
         $highlightHealthId = trim((string) request()->query('highlight_health', ''));
+        $walkinReviewRouteName = $role === \App\Models\User::ROLE_ADMIN ? 'assistant.walkin.index' : 'walkin.index';
+        $canViewWalkin = optional(auth()->user())->canAccessPermission('walkin.view') ?? false;
+        $canEncodeApplicantInWalkin = optional(auth()->user())->canAccessPermission('walkin.encode_assessment') ?? false;
+        $canReviewApplicantInWalkin = optional(auth()->user())->canAccessPermission('walkin.review_submission') ?? false;
+        $canLookupEmployeeInWalkin = optional(auth()->user())->canAccessPermission('walkin.employee_lookup') ?? false;
+        $walkinReviewUrlFor = static function ($reference, bool $isEmployee = false, string $workflow = 'final_review') use (
+            $canViewWalkin,
+            $canEncodeApplicantInWalkin,
+            $canReviewApplicantInWalkin,
+            $canLookupEmployeeInWalkin,
+            $walkinReviewRouteName
+        ): string {
+            $reference = trim((string) $reference);
+            $workflow = $workflow === 'encode' ? 'encode' : 'final_review';
+            $canOpenLookup = $isEmployee
+                ? $canLookupEmployeeInWalkin
+                : ($workflow === 'encode' ? $canEncodeApplicantInWalkin : $canReviewApplicantInWalkin);
+            if (!$canViewWalkin || !$canOpenLookup || $reference === '' || $reference === '-') {
+                return '';
+            }
+
+            $parameters = [
+                'review_reference' => $reference,
+                'review_type' => $isEmployee ? 'employee' : 'applicant',
+            ];
+            if (!$isEmployee) {
+                $parameters['review_workflow'] = $workflow;
+            }
+
+            return route($walkinReviewRouteName, $parameters);
+        };
     @endphp
 
     @php
@@ -7438,6 +8383,9 @@
             $summaryRecordSource = (string) ($summaryRecord->record_source ?? 'health');
             $summaryRecordKey = (string) ($summaryRecord->record_key ?? ($summaryRecordSource . ':' . $summaryRecord->id));
             $summaryStatus = trim((string) ($summaryRecord->clearance_status ?? ''));
+            if (strcasecmp($summaryStatus, 'Withdrawn') === 0) {
+                continue;
+            }
             $summaryIsApproved = in_array($summaryStatus, ['Issued', 'Fully Cleared'], true);
             $summaryIsRevokedPending = $summaryRecordSource === 'health'
                 && filled($summaryRecord->clearance_revoked_at ?? null)
@@ -7670,19 +8618,23 @@
                         && filled($record->student_photo);
                     $recordStatus = trim((string) ($record->clearance_status ?? ''));
                     $recordStatusNormalized = strtolower($recordStatus);
+                    $recordIsApproved = in_array($recordStatusNormalized, ['issued', 'fully cleared'], true);
+                    $recordIsWithdrawn = strcasecmp($recordStatus, 'Withdrawn') === 0;
                     $recordPulloutStatus = $recordIsEmployee ? '' : trim((string) ($record->pullout_status ?? ''));
                     $recordIsRevokedPending = $recordSource === 'health'
                         && filled($record->clearance_revoked_at ?? null)
                         && in_array($recordStatus, ['Pending', 'For Verification'], true);
-                    $isConditional = !in_array($recordStatus, ['Issued', 'Fully Cleared'], true)
+                    $isConditional = !$recordIsWithdrawn && !in_array($recordStatus, ['Issued', 'Fully Cleared'], true)
                         && !$recordIsRevokedPending && (
                         in_array($recordStatus, ['Pending/Conditional', 'Rejected'], true)
                         || trim((string) ($record->pending_reason ?? '')) !== ''
                         || trim((string) ($record->medical_condition_remarks ?? '')) !== ''
                     );
-                    $healthTabState = $isConditional
-                        ? 'pending_conditional'
-                        : (in_array($recordStatus, ['Pending', 'For Verification', ''], true) ? 'pending_approval' : 'cleared');
+                    $healthTabState = $recordIsWithdrawn
+                        ? 'withdrawn'
+                        : ($isConditional
+                            ? 'pending_conditional'
+                            : (in_array($recordStatus, ['Pending', 'For Verification', ''], true) ? 'pending_approval' : 'cleared'));
                     $recordCourseName = trim((string) ($record->course_college ?: optional($record->user)->course ?: ''));
                     $recordCourseDisplay = $formatHealthCourseYearSection(
                         $recordCourseName,
@@ -7735,6 +8687,7 @@
                     };
                     $recordPayload = [
                         'id' => $record->id,
+                        'record_type' => $recordIsEmployee ? 'employee' : strtolower((string) $recordUserType),
                         'name' => optional($record->user)->name ?: '-',
                         'email' => optional($record->user)->email ?: '-',
                         'reference_number' => $recordIdentifier['value'] ?? '-',
@@ -7747,6 +8700,11 @@
                             : ($recordPulloutStatus === \App\Models\HealthProfile::PULLOUT_COMPLETED
                                 ? 'Pulled Out'
                                 : ($recordStatus ?: 'For Verification')),
+                        'clearance_status' => $recordStatus,
+                        'withdraw_allowed' => !$recordIsWithdrawn && !$recordIsApproved,
+                        'withdraw_disabled_reason' => $recordIsWithdrawn
+                            ? 'This record is already marked as withdrawn.'
+                            : ($recordIsApproved ? 'Approved records cannot be marked as withdrawn here.' : ''),
                         'pending_reason' => $record->pending_reason ?: '',
                         'medical_condition_remarks' => $record->medical_condition_remarks ?: '',
                         'physical_assessment_status' => $record->physical_assessment_status ?: 'Not Yet Conducted',
@@ -7755,6 +8713,13 @@
                         'resubmission_url' => $recordIsEmployee
                             ? route('admin.employee_health_profile.request_resubmission', $record->id)
                             : route('admin.health_profile.request_resubmission', $record->id),
+                        'withdraw_url' => $recordIsEmployee
+                            ? route('admin.employee_health_profile.withdraw', $record->id)
+                            : route('admin.health_profile.withdraw', $record->id),
+                        'walkin_url' => $walkinReviewUrlFor($recordIdentifier['value'] ?? '', $recordIsEmployee),
+                        'walkin_encode_url' => $recordIsEmployee
+                            ? ''
+                            : $walkinReviewUrlFor($recordIdentifier['value'] ?? '', false, 'encode'),
                         'documents' => [
                             [
                                 'title' => '2x2 Photo',
@@ -7831,7 +8796,7 @@
                     data-health-id="{{ $record->id }}"
                     data-health-tab="{{ $healthTabState }}"
                     data-health-condition="{{ $record->hasMedicalCondition() ? 'with_conditions' : 'none' }}"
-                    data-record-payload="{{ e(json_encode($recordPayload)) }}"
+                    data-record-payload="{{ json_encode($recordPayload) }}"
                     data-view-url="{{ (!$recordIsEmployee && in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true)) ? route('admin.show_health', $record->id) : '' }}"
                     title="{{ (!$recordIsEmployee && in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true)) ? 'Click to view' : '' }}"
                     class="{{ implode(' ', array_filter([
@@ -8125,8 +9090,12 @@
                             trim((string) optional($readonlyRecord->user)->section),
                         ])));
                         $readonlyCourseDisplay = trim($readonlyCourseName . ($readonlyYearSection !== '' ? ' ' . $readonlyYearSection : ''));
+                        $readonlyStatusNormalized = strtolower(trim((string) ($readonlyRecord->clearance_status ?? '')));
+                        $readonlyIsWithdrawn = $readonlyStatusNormalized === 'withdrawn';
+                        $readonlyIsApproved = in_array($readonlyStatusNormalized, ['issued', 'fully cleared'], true);
                         $readonlyRecordPayload = [
                             'id' => $readonlyRecord->id,
+                            'record_type' => $readonlyIsEmployee ? 'employee' : strtolower((string) $readonlyUserType),
                             'name' => optional($readonlyRecord->user)->name ?: '-',
                             'email' => optional($readonlyRecord->user)->email ?: '-',
                             'reference_number' => $readonlyReference,
@@ -8137,6 +9106,11 @@
                                 : '-',
                             'course' => $readonlyCourseDisplay !== '' ? $readonlyCourseDisplay : '-',
                             'status' => $readonlyRecord->clearance_status ?: 'For Verification',
+                            'clearance_status' => trim((string) ($readonlyRecord->clearance_status ?? '')),
+                            'withdraw_allowed' => !$readonlyIsWithdrawn && !$readonlyIsApproved,
+                            'withdraw_disabled_reason' => $readonlyIsWithdrawn
+                                ? 'This record is already marked as withdrawn.'
+                                : ($readonlyIsApproved ? 'Approved records cannot be marked as withdrawn here.' : ''),
                             'pending_reason' => $readonlyRecord->pending_reason ?: '',
                             'medical_condition_remarks' => $readonlyRecord->medical_condition_remarks ?: '',
                             'physical_assessment_status' => $readonlyRecord->physical_assessment_status ?: 'Not Yet Conducted',
@@ -8145,6 +9119,13 @@
                             'resubmission_url' => $readonlyIsEmployee
                                 ? route('admin.employee_health_profile.request_resubmission', $readonlyRecord->id)
                                 : route('admin.health_profile.request_resubmission', $readonlyRecord->id),
+                            'withdraw_url' => $readonlyIsEmployee
+                                ? route('admin.employee_health_profile.withdraw', $readonlyRecord->id)
+                                : route('admin.health_profile.withdraw', $readonlyRecord->id),
+                            'walkin_url' => $walkinReviewUrlFor($readonlyIdentifier['value'] ?? '', $readonlyIsEmployee),
+                            'walkin_encode_url' => $readonlyIsEmployee
+                                ? ''
+                                : $walkinReviewUrlFor($readonlyIdentifier['value'] ?? '', false, 'encode'),
                             'documents' => [
                             [
                                 'title' => '2x2 Photo',
@@ -8191,7 +9172,7 @@
                         class="readonly-record-card"
                         data-health-row
                         data-health-id="{{ $readonlyRecord->id }}"
-                        data-record-payload="{{ e(json_encode($readonlyRecordPayload)) }}"
+                        data-record-payload="{{ json_encode($readonlyRecordPayload) }}"
                         data-search-text="{{ strtolower(trim((string) (optional($readonlyRecord->user)->name . ' ' . optional($readonlyRecord->user)->email . ' ' . $readonlyReference))) }}"
                     >
                         <div class="readonly-record-head">
@@ -8232,6 +9213,7 @@
                                         data-review-student-id="{{ $readonlyRecord->student_id ?: optional($readonlyRecord->user)->student_id ?: optional($readonlyRecord->user)->student_number ?: '-' }}"
                                         data-review-approve-url="{{ $readonlyIsEmployee ? '' : route('admin.update_clearance', $readonlyRecord->id) }}"
                                         data-review-resubmission-url="{{ $readonlyIsEmployee ? route('admin.employee_health_profile.request_resubmission', $readonlyRecord->id) : route('admin.health_profile.request_resubmission', $readonlyRecord->id) }}"
+                                        data-review-walkin-url="{{ $walkinReviewUrlFor($readonlyReference, $readonlyIsEmployee) }}"
                                     >
                                         <span>View Info</span>
                                     </button>
@@ -8268,17 +9250,25 @@
                                 @if($document['path'])
                                     @php
                                         $documentUrl = $document['url'];
-                                        $documentExtension = strtolower(pathinfo((string) $document['path'], PATHINFO_EXTENSION));
+                                        $documentExtension = ($document['key'] ?? '') === 'health_form'
+                                            ? 'pdf'
+                                            : strtolower(pathinfo((string) $document['path'], PATHINFO_EXTENSION));
+                                        $isHealthForm = ($document['key'] ?? '') === 'health_form';
                                         $isPreviewImage = in_array($documentExtension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true);
+                                        $documentFormat = $isPreviewImage
+                                            ? strtoupper($documentExtension) . ' image'
+                                            : ($documentExtension === 'pdf' ? 'PDF document' : strtoupper($documentExtension) . ' file');
                                     @endphp
                                     <a
-                                        class="verification-doc-card {{ ($document['key'] ?? '') === 'health_form' ? 'health-form-doc-card' : '' }}"
+                                        class="verification-doc-card"
                                         href="{{ $documentUrl }}"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >
-                                        @if(($document['key'] ?? '') === 'health_form')
-                                            <span class="health-form-doc-preview" aria-hidden="true">
+                                        <strong>{{ $docLabel }}</strong>
+                                        <span class="verification-doc-status verification-doc-status-spacer" aria-hidden="true"></span>
+                                        @if($isHealthForm)
+                                            <span class="verification-doc-preview health-form-doc-preview" aria-hidden="true">
                                                 <span class="health-form-doc-title">
                                                     <span>Health</span>
                                                     <span>Information</span>
@@ -8288,27 +9278,31 @@
                                         @else
                                             <span class="verification-doc-preview">
                                                 @if($isPreviewImage)
-                                                <img src="{{ $documentUrl }}" alt="{{ $docLabel }} preview" loading="lazy">
+                                                    <img src="{{ $documentUrl }}" alt="{{ $docLabel }} preview" loading="lazy">
                                                 @else
-                                                <iframe src="{{ $documentUrl }}" title="{{ $docLabel }} preview" loading="lazy"></iframe>
+                                                    <iframe src="{{ $documentUrl }}#toolbar=0&navpanes=0" title="{{ $docLabel }} preview" loading="lazy" tabindex="-1"></iframe>
                                                 @endif
                                             </span>
                                         @endif
-                                        <strong>{{ $docLabel }}</strong>
-                                        <span>Open in new tab</span>
+                                        <span class="verification-doc-meta">{{ $documentFormat }}</span>
+                                        <span class="verification-doc-open"><x-outline-icon name="eye" /><span>View Document</span></span>
                                     </a>
                                 @else
-                                    <div class="verification-doc-card">
+                                    <div class="verification-doc-card is-missing">
                                         <x-outline-icon name="x-mark" />
                                         <strong>{{ $docLabel }}</strong>
-                                        <span>Missing upload</span>
+                                        <span class="verification-doc-status">Missing upload</span>
+                                        <span class="verification-doc-preview is-empty" aria-hidden="true"></span>
                                     </div>
                                 @endif
                             @endforeach
                         </template>
                         <template data-review-condition-template>
                             @foreach($readonlyConditionItems as $conditionLabel => $conditionValue)
-                                <div class="verify-condition-item">
+                                <div class="verify-condition-item {{ $readonlyHasCondition ? 'is-with-condition' : 'is-no-condition' }}">
+                                    @if(!$readonlyHasCondition)
+                                        <span class="verify-condition-status-icon" aria-hidden="true"><x-outline-icon name="check" /></span>
+                                    @endif
                                     <span>{{ $conditionLabel }}</span>
                                     <strong>{{ $conditionValue }}</strong>
                                 </div>
@@ -8529,8 +9523,8 @@
             <div class="verify-approval-modal-head-main">
                 <div class="verify-approval-modal-badge">VI</div>
                 <div>
-                    <h3 class="verify-approval-modal-title">View Submitted Requirements</h3>
-                    <p class="verify-approval-modal-copy">Review the student information and uploaded clinic requirement files.</p>
+                    <h3 class="verify-approval-modal-title" id="verifyApprovalModalTitle">Health Record Information</h3>
+                    <p class="verify-approval-modal-copy">Review personal information and submitted clinic requirements.</p>
                 </div>
             </div>
             <button type="button" class="verify-approval-modal-close" id="verifyApprovalCloseBtn" aria-label="Close verification popup">
@@ -8538,45 +9532,64 @@
             </button>
         </div>
         <div class="verify-approval-body">
-            <div class="verify-approval-student">
-                <div class="verify-approval-meta">
-                    <div class="verify-approval-meta-k">Student Name</div>
-                    <div class="verify-approval-meta-v" id="verifyApprovalStudentName">-</div>
+            <section class="verify-content-section">
+                <div class="verify-content-section-heading">
+                    <span class="verify-section-icon"><x-outline-icon name="document-text" /></span>
+                    <h4 id="verifyApprovalIdentityHeading">Basic Information</h4>
                 </div>
-                <div class="verify-approval-meta">
-                    <div class="verify-approval-meta-k">Email</div>
-                    <div class="verify-approval-meta-v" id="verifyApprovalStudentNumber">-</div>
+                <div class="verify-approval-student">
+                    <div class="verify-approval-meta">
+                        <span class="verify-meta-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c.4-3.6 2.6-5.5 6.5-5.5s6.1 1.9 6.5 5.5"/></svg></span>
+                        <div><div class="verify-approval-meta-k" id="verifyApprovalNameLabel">Student Name</div><div class="verify-approval-meta-v" id="verifyApprovalStudentName">-</div></div>
+                    </div>
+                    <div class="verify-approval-meta">
+                        <span class="verify-meta-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="m4.5 7 7.5 5.5L19.5 7"/></svg></span>
+                        <div><div class="verify-approval-meta-k">Email Address</div><div class="verify-approval-meta-v" id="verifyApprovalStudentNumber">-</div></div>
+                    </div>
+                    <div class="verify-approval-meta">
+                        <span class="verify-meta-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m2.5 8 9.5-5 9.5 5-9.5 5-9.5-5Z"/><path d="M6.5 10.2v5.1c3.4 2.6 7.6 2.6 11 0v-5.1M21.5 8v7"/></svg></span>
+                        <div><div class="verify-approval-meta-k">Course</div><div class="verify-approval-meta-v" id="verifyApprovalStudentCourse">-</div></div>
+                    </div>
+                    <div class="verify-approval-meta">
+                        <span class="verify-meta-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 3.5h7l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20V5a1.5 1.5 0 0 1 1-1.5Z"/><path d="M14 3.5V8h4M9 12h6M9 15.5h6"/></svg></span>
+                        <div><div class="verify-approval-meta-k" id="verifyApprovalReferenceLabel">Reference Number</div><div class="verify-approval-meta-v" id="verifyApprovalReferenceNumber">-</div></div>
+                    </div>
                 </div>
-                <div class="verify-approval-meta">
-                    <div class="verify-approval-meta-k">Course</div>
-                    <div class="verify-approval-meta-v" id="verifyApprovalStudentCourse">-</div>
-                </div>
-                <div class="verify-approval-meta">
-                    <div class="verify-approval-meta-k" id="verifyApprovalReferenceLabel">Reference Number</div>
-                    <div class="verify-approval-meta-v" id="verifyApprovalReferenceNumber">-</div>
-                </div>
-            </div>
+            </section>
 
-            <div class="verify-approval-doc-wrap">
-                <p class="verify-approval-doc-title">Uploaded Documents</p>
+            <section class="verify-approval-doc-wrap verify-content-section">
+                <div class="verify-approval-doc-heading">
+                    <div class="verify-content-section-heading">
+                        <span class="verify-section-icon"><x-outline-icon name="document-text" /></span>
+                        <h4 class="verify-approval-doc-title">Uploaded Documents</h4>
+                    </div>
+                    <span class="verify-doc-count" id="verificationDocsCount">0 of 0 documents uploaded</span>
+                </div>
                 <div class="verification-doc-grid" id="verificationDocsGrid"></div>
-            </div>
+            </section>
 
-            <div class="verify-condition-wrap">
-                <p class="verify-condition-title">Medical Conditions</p>
+            <section class="verify-condition-wrap verify-content-section">
+                <div class="verify-content-section-heading">
+                    <span class="verify-section-icon"><x-outline-icon name="clipboard-document-list" /></span>
+                    <h4 class="verify-condition-title">Medical Conditions</h4>
+                </div>
                 <div class="verify-condition-grid" id="verificationConditionGrid"></div>
-            </div>
+            </section>
 
             <form method="POST" class="verify-approval-review-form verify-resubmission-only-form" id="verifyDocumentResubmissionForm">
                 @csrf
                 <input type="hidden" name="pending_reason" id="verifyDocumentResubmissionReason" value="Document Resubmission">
                 <input type="hidden" name="return_to" value="health_records">
 
-                <p class="verify-resubmission-help-note">Use this only when uploaded files are blurred, unreadable, unsigned, incorrect, or need replacement.</p>
+                <div class="verify-content-section-heading">
+                    <span class="verify-section-icon"><x-outline-icon name="arrow-path" /></span>
+                    <h4>Document Resubmission</h4>
+                </div>
+                <p class="verify-resubmission-help-note">Select the document(s) that need to be resubmitted. The record owner will be notified to upload a new file.</p>
                 <label class="verify-check-row verify-resubmission-toggle-row">
                     <input type="checkbox" id="verifyNeedsDocumentResubmission" value="1">
                     <span>
-                        <strong>Document Resubmission</strong>
+                        <strong>Request document resubmission</strong>
                     </span>
                 </label>
 
@@ -8584,42 +9597,69 @@
                     <p class="verify-resubmission-title">Documents to Resubmit <span class="required">*</span></p>
                     <div class="verify-resubmission-options">
                         <label class="verify-resubmission-option">
-                            <input type="checkbox" name="resubmission_required_documents[]" value="student_photo">
+                            <input type="checkbox" name="resubmission_required_documents[]" value="student_photo" disabled>
                             <span>2x2 Photo</span>
                         </label>
                         <label class="verify-resubmission-option">
-                            <input type="checkbox" name="resubmission_required_documents[]" value="health_declaration">
+                            <input type="checkbox" name="resubmission_required_documents[]" value="health_declaration" disabled>
                             <span>Health Declaration</span>
                         </label>
                         <label class="verify-resubmission-option">
-                            <input type="checkbox" name="resubmission_required_documents[]" value="medical_certificate">
+                            <input type="checkbox" name="resubmission_required_documents[]" value="medical_certificate" disabled>
                             <span>Medical Certificate</span>
                         </label>
                         <label class="verify-resubmission-option">
-                            <input type="checkbox" name="resubmission_required_documents[]" value="chest_xray_result">
+                            <input type="checkbox" name="resubmission_required_documents[]" value="chest_xray_result" disabled>
                             <span>Chest X-ray Result</span>
                         </label>
                         <label class="verify-resubmission-option">
-                            <input type="checkbox" name="resubmission_required_documents[]" value="pwd_id_proof">
+                            <input type="checkbox" name="resubmission_required_documents[]" value="pwd_id_proof" disabled>
                             <span>PWD ID Proof</span>
                         </label>
                         <label class="verify-resubmission-option">
-                            <input type="checkbox" id="verifyNeedsHealthFormCorrection" name="needs_health_form_correction" value="1">
+                            <input type="checkbox" id="verifyNeedsHealthFormCorrection" name="needs_health_form_correction" value="1" disabled>
                             <span>Health Form Correction</span>
                         </label>
                     </div>
                     <label class="verify-textarea-field">
                         <span>Remarks <small>(Optional)</small></span>
-                        <textarea id="verifyDocumentResubmissionRemarks" rows="3" placeholder="Optional note for the student or clinic tracking."></textarea>
+                        <textarea id="verifyDocumentResubmissionRemarks" rows="3" disabled></textarea>
                     </label>
                 </div>
 
-                <div class="verify-approval-actions verify-resubmission-only-actions is-hidden">
-                    <button type="submit" class="verify-approval-btn verify-approval-btn-resubmit" id="verifyDocumentResubmissionSubmit" disabled>
-                        Request Resubmission
-                    </button>
-                </div>
             </form>
+
+            <form method="POST" class="is-hidden" id="verifyWithdrawHealthRecordForm">
+                @csrf
+            </form>
+            <div class="verify-content-actions" aria-label="Additional review actions">
+                <div class="verify-content-action-group">
+                    <button type="submit" form="verifyWithdrawHealthRecordForm" class="verify-proposed-withdraw" id="verifyWithdrawHealthRecordBtn" disabled><span>Mark as Withdrawn</span></button>
+                    <button type="submit" form="verifyDocumentResubmissionForm" class="verify-proposed-walkin is-hidden" id="verifyDocumentResubmissionSubmit" disabled hidden><span>Request Resubmission</span></button>
+                    <div class="verify-assessment-dropdown" id="verifyApplicantNextStepWrap" hidden>
+                        <select id="verifyApplicantNextStep" aria-label="Applicant assessment route" hidden>
+                            @if($canEncodeApplicantInWalkin)
+                                <option value="encode">Encode Assessment</option>
+                            @endif
+                            @if($canReviewApplicantInWalkin)
+                                <option value="final_review">Final Review</option>
+                            @endif
+                        </select>
+                        <button type="button" class="verify-proposed-walkin verify-assessment-trigger" id="verifyContinueToWalkinBtn" disabled aria-haspopup="menu" aria-expanded="false" aria-controls="verifyApplicantNextStepMenu">
+                            <span>Continue Assessment</span>
+                            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 7.5 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        </button>
+                        <div class="verify-assessment-menu" id="verifyApplicantNextStepMenu" role="menu" aria-label="Assessment route" hidden>
+                            @if($canEncodeApplicantInWalkin)
+                                <button type="button" class="verify-assessment-menu-item" role="menuitem" data-review-step="encode">Encode Assessment</button>
+                            @endif
+                            @if($canReviewApplicantInWalkin)
+                                <button type="button" class="verify-assessment-menu-item" role="menuitem" data-review-step="final_review">Final Review</button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         </div>
     </div>
@@ -9004,6 +10044,43 @@
             return false;
         };
 
+        function setVerifyApprovalModalTitle(payload) {
+            var type = String(payload.record_type || payload.user_type || '').trim().toLowerCase();
+            var titles = {
+                applicant: 'Applicant Information',
+                student: 'Student Information',
+                employee: 'Employee Information',
+                faculty: 'Employee Information',
+                staff: 'Employee Information',
+                admin: 'Admin Information',
+                dependent: 'Dependent Information',
+                guest: 'Dependent Information',
+            };
+            var title = document.getElementById('verifyApprovalModalTitle');
+            var identityHeading = document.getElementById('verifyApprovalIdentityHeading');
+            var nameLabel = document.getElementById('verifyApprovalNameLabel');
+            var nameLabels = {
+                applicant: 'Applicant Name',
+                student: 'Student Name',
+                employee: 'Employee Name',
+                faculty: 'Employee Name',
+                staff: 'Employee Name',
+                admin: 'Admin Name',
+                dependent: 'Dependent Name',
+                guest: 'Dependent Name',
+            };
+
+            if (title) {
+                title.textContent = titles[type] || 'Health Record Information';
+            }
+            if (identityHeading) {
+                identityHeading.textContent = 'Basic Information';
+            }
+            if (nameLabel) {
+                nameLabel.textContent = nameLabels[type] || 'Name';
+            }
+        }
+
         window.openHealthReviewFromButton = function (button) {
             var row = closestMatch(button, '[data-health-row]');
             var payload = {};
@@ -9037,7 +10114,9 @@
             payload.student_id = filledValue(payload.student_id, button.getAttribute('data-review-student-id'));
             payload.approve_url = filledActionUrl(payload.approve_url, button.getAttribute('data-review-approve-url'));
             payload.resubmission_url = filledActionUrl(payload.resubmission_url, button.getAttribute('data-review-resubmission-url'));
+            payload.walkin_url = filledActionUrl(payload.walkin_url, button.getAttribute('data-review-walkin-url'));
 
+            setVerifyApprovalModalTitle(payload);
             setText('verifyApprovalStudentName', payload.name || '-');
             setText('verifyApprovalStudentNumber', payload.email || '-');
             setText('verifyApprovalStudentCourse', payload.course || '-');
@@ -9046,6 +10125,18 @@
 
             if (form) {
                 form.setAttribute('action', payload.approve_url || '');
+            }
+
+            var withdrawForm = getNode('verifyWithdrawHealthRecordForm');
+            var withdrawButton = getNode('verifyWithdrawHealthRecordBtn');
+            if (withdrawForm) {
+                withdrawForm.setAttribute('action', payload.withdraw_url || '');
+            }
+            if (withdrawButton) {
+                withdrawButton.disabled = !payload.withdraw_url || payload.withdraw_allowed === false;
+                withdrawButton.title = !payload.withdraw_url
+                    ? 'Withdrawal is unavailable for this record.'
+                    : (payload.withdraw_disabled_reason || '');
             }
 
             var documentResubmissionForm = getNode('verifyDocumentResubmissionForm');
@@ -9061,24 +10152,36 @@
             if (documentResubmissionToggle) {
                 documentResubmissionToggle.checked = false;
             }
+            var continueToWalkinButton = getNode('verifyContinueToWalkinBtn');
+            if (typeof window.configureHealthRecordReviewDestination === 'function') {
+                window.configureHealthRecordReviewDestination(payload);
+            } else if (continueToWalkinButton) {
+                continueToWalkinButton.dataset.walkinUrl = payload.walkin_url || '';
+                continueToWalkinButton.disabled = !payload.walkin_url;
+            }
             if (documentResubmissionPanel) {
                 documentResubmissionPanel.classList.remove('is-open');
             }
             if (documentResubmissionSubmit) {
                 documentResubmissionSubmit.disabled = true;
+                documentResubmissionSubmit.hidden = true;
             }
+            window.syncVerificationResubmissionActionState?.();
             if (documentResubmissionRemarks) {
                 documentResubmissionRemarks.value = '';
+                documentResubmissionRemarks.disabled = true;
             }
             if (documentResubmissionReason) {
                 documentResubmissionReason.value = 'Document Resubmission';
             }
             Array.prototype.forEach.call(document.querySelectorAll('#verifyDocumentResubmissionForm input[name="resubmission_required_documents[]"]'), function (input) {
                 input.checked = false;
+                input.disabled = true;
             });
             var healthFormCorrectionInput = getNode('verifyNeedsHealthFormCorrection');
             if (healthFormCorrectionInput) {
                 healthFormCorrectionInput.checked = false;
+                healthFormCorrectionInput.disabled = true;
             }
 
             setValue('verifyMedicalRemarks', payload.medical_condition_remarks || '');
@@ -9109,24 +10212,28 @@
                     docsGrid.innerHTML = docs.map(function (doc) {
                         if (doc && doc.url) {
                             var docTitle = doc.title || 'Requirement';
+                            var isPhoto = /photo/i.test(docTitle);
                             var isHealthForm = String(docTitle).toLowerCase() === 'health information form';
-                            if (isHealthForm) {
-                                return '<a class="verification-doc-card health-form-doc-card" href="' + escapeValue(doc.url) + '" target="_blank" rel="noopener noreferrer"><span class="health-form-doc-preview" aria-hidden="true"><span class="health-form-doc-title"><span>Health</span><span>Information</span><span>Form</span></span></span><strong>' + escapeValue(docTitle) + '</strong><span>Open in new tab</span></a>';
-                            }
-
-                            return '<a class="verification-doc-card" href="' + escapeValue(doc.url) + '" target="_blank" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5A3.375 3.375 0 0 0 10.125 2.25H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg><strong>' + escapeValue(doc.title || 'Requirement') + '</strong><span>Open in new tab</span></a>';
+                            var preview = isHealthForm
+                                ? '<span class="verification-doc-preview health-form-doc-preview" aria-hidden="true"><span class="health-form-doc-title"><span>Health</span><span>Information</span><span>Form</span></span></span>'
+                                : (isPhoto
+                                    ? '<span class="verification-doc-preview"><img src="' + escapeValue(doc.url) + '" alt="' + escapeValue(docTitle) + ' preview" loading="lazy"></span>'
+                                    : '<span class="verification-doc-preview"><iframe src="' + escapeValue(doc.url) + '#toolbar=0&navpanes=0" title="' + escapeValue(docTitle) + ' preview" loading="lazy" tabindex="-1"></iframe></span>');
+                            var format = isPhoto ? 'Image file' : (isHealthForm ? 'PDF document' : 'Uploaded file');
+                            return '<a class="verification-doc-card" href="' + escapeValue(doc.url) + '" target="_blank" rel="noopener noreferrer"><strong>' + escapeValue(docTitle) + '</strong><span class="verification-doc-status verification-doc-status-spacer" aria-hidden="true"></span>' + preview + '<span class="verification-doc-meta">' + format + '</span><span class="verification-doc-open"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.644C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.437 0 .644C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg><span>View Document</span></span></a>';
                         }
 
-                        return '<div class="verification-doc-card"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" /></svg><strong>' + escapeValue(doc && doc.title ? doc.title : 'Requirement') + '</strong><span>Missing upload</span></div>';
+                        return '<div class="verification-doc-card is-missing"><strong>' + escapeValue(doc && doc.title ? doc.title : 'Requirement') + '</strong><span class="verification-doc-status">Missing upload</span><span class="verification-doc-preview" aria-hidden="true"></span></div>';
                     }).join('');
                 }
+                updateVerificationDocumentCount();
             }
 
             if (conditionGrid) {
                 var conditionTemplate = row.querySelector('[data-review-condition-template]');
                 conditionGrid.innerHTML = conditionTemplate
                     ? conditionTemplate.innerHTML.trim()
-                    : '<div class="verify-condition-item"><span>Condition</span><strong>No Medical Condition</strong></div>';
+                    : '<div class="verify-condition-item is-no-condition"><span class="verify-condition-status-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg></span><span>Condition</span><strong>No Medical Condition</strong></div>';
             }
 
             if (approveBtn && assessmentStatus && docsValid) {
@@ -9267,13 +10374,106 @@
     const verifyResubmissionInputs = Array.from(document.querySelectorAll('input[name="resubmission_required_documents[]"]'));
     const verifyDocumentResubmissionForm = document.getElementById('verifyDocumentResubmissionForm');
     const verifyNeedsDocumentResubmission = document.getElementById('verifyNeedsDocumentResubmission');
+    const verifyProposedWalkinBtn = document.getElementById('verifyDocumentResubmissionSubmit');
+    const verifyContinueToWalkinBtn = document.getElementById('verifyContinueToWalkinBtn');
+    const verifyApplicantNextStepWrap = document.getElementById('verifyApplicantNextStepWrap');
+    const verifyApplicantNextStep = document.getElementById('verifyApplicantNextStep');
+    const verifyApplicantNextStepMenu = document.getElementById('verifyApplicantNextStepMenu');
+    const verifyWithdrawHealthRecordForm = document.getElementById('verifyWithdrawHealthRecordForm');
+    const verifyWithdrawHealthRecordBtn = document.getElementById('verifyWithdrawHealthRecordBtn');
     const verifyDocumentResubmissionPanel = document.getElementById('verifyDocumentResubmissionPanel');
     const verifyDocumentResubmissionSubmit = document.getElementById('verifyDocumentResubmissionSubmit');
-    const verifyDocumentResubmissionActions = document.querySelector('.verify-resubmission-only-actions');
     const verifyDocumentResubmissionRemarks = document.getElementById('verifyDocumentResubmissionRemarks');
     const verifyDocumentResubmissionReason = document.getElementById('verifyDocumentResubmissionReason');
     const verifyNeedsHealthFormCorrection = document.getElementById('verifyNeedsHealthFormCorrection');
     const verifyDocumentResubmissionInputs = Array.from(document.querySelectorAll('#verifyDocumentResubmissionForm input[name="resubmission_required_documents[]"]'));
+    let activeHealthRecordReviewPayload = {};
+    let hasMultipleApplicantReviewDestinations = false;
+    let hasAvailableReviewDestination = false;
+
+    function setApplicantAssessmentMenuOpen(isOpen) {
+        if (!verifyApplicantNextStepMenu || !verifyContinueToWalkinBtn) return;
+        verifyApplicantNextStepMenu.hidden = !isOpen;
+        verifyContinueToWalkinBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    window.configureHealthRecordReviewDestination = function (payload) {
+        const isNewRecord = payload && typeof payload === 'object';
+        if (isNewRecord) {
+            activeHealthRecordReviewPayload = payload;
+        }
+
+        const recordPayload = activeHealthRecordReviewPayload || {};
+        const isEmployee = String(recordPayload.record_type || '').toLowerCase() === 'employee';
+        const destinations = {
+            encode: String(recordPayload.walkin_encode_url || ''),
+            final_review: String(recordPayload.walkin_url || ''),
+        };
+        const options = verifyApplicantNextStep ? Array.from(verifyApplicantNextStep.options) : [];
+        const validOptions = options.filter(function (option) {
+            const isAvailable = Boolean(destinations[option.value]);
+            option.hidden = !isAvailable;
+            option.disabled = !isAvailable;
+            return isAvailable;
+        });
+        const status = String(recordPayload.clearance_status || '').trim().toLowerCase();
+        let selectedStep = isNewRecord
+            ? (status === 'for final review' ? 'final_review' : 'encode')
+            : (verifyApplicantNextStep?.value || (status === 'for final review' ? 'final_review' : 'encode'));
+
+        if (!validOptions.some(function (option) { return option.value === selectedStep; })) {
+            selectedStep = validOptions[0]?.value || '';
+        }
+        if (verifyApplicantNextStep && selectedStep) {
+            verifyApplicantNextStep.value = selectedStep;
+        }
+
+        hasMultipleApplicantReviewDestinations = !isEmployee && validOptions.length > 1;
+        hasAvailableReviewDestination = isEmployee
+            ? Boolean(recordPayload.walkin_url)
+            : validOptions.length > 0;
+        const isResubmissionRequested = Boolean(verifyNeedsDocumentResubmission?.checked);
+        setApplicantAssessmentMenuOpen(false);
+        if (verifyApplicantNextStepWrap) {
+            verifyApplicantNextStepWrap.hidden = isResubmissionRequested || !hasAvailableReviewDestination;
+        }
+
+        const destination = isEmployee
+            ? String(recordPayload.walkin_url || '')
+            : (destinations[selectedStep] || '');
+        const continueLabel = isEmployee
+            ? 'Open Employee Review'
+            : 'Continue Assessment';
+
+        if (verifyContinueToWalkinBtn) {
+            verifyContinueToWalkinBtn.dataset.walkinUrl = destination;
+            verifyContinueToWalkinBtn.disabled = !hasAvailableReviewDestination;
+            verifyContinueToWalkinBtn.setAttribute('aria-haspopup', hasMultipleApplicantReviewDestinations ? 'menu' : 'false');
+            const label = verifyContinueToWalkinBtn.querySelector('span');
+            if (label) label.textContent = continueLabel;
+        }
+    };
+
+    verifyApplicantNextStep?.addEventListener('change', function () {
+        window.configureHealthRecordReviewDestination();
+    });
+
+    function syncDocumentResubmissionActionState() {
+        const isChecked = Boolean(verifyNeedsDocumentResubmission?.checked);
+        if (verifyContinueToWalkinBtn) {
+            verifyContinueToWalkinBtn.hidden = isChecked || !hasAvailableReviewDestination;
+        }
+        if (verifyApplicantNextStepWrap) {
+            verifyApplicantNextStepWrap.hidden = isChecked || !hasAvailableReviewDestination;
+        }
+        if (isChecked) setApplicantAssessmentMenuOpen(false);
+        if (!verifyProposedWalkinBtn) return;
+        verifyProposedWalkinBtn.hidden = !isChecked;
+        verifyProposedWalkinBtn.classList.toggle('is-hidden', !isChecked);
+        verifyProposedWalkinBtn.disabled = !isChecked || !verifyDocumentResubmissionForm?.getAttribute('action');
+    }
+
+    window.syncVerificationResubmissionActionState = syncDocumentResubmissionActionState;
 
     healthRecordsSearchShell?.addEventListener('submit', function (event) {
         event.preventDefault();
@@ -9582,14 +10782,26 @@
         verifyDocumentResubmissionReason.value = reason;
     }
 
-    function resetDocumentResubmissionForm(actionUrl) {
+    function resetDocumentResubmissionForm(payload) {
+        const recordPayload = payload || {};
         if (verifyDocumentResubmissionForm) {
-            verifyDocumentResubmissionForm.setAttribute('action', actionUrl || '');
+            verifyDocumentResubmissionForm.setAttribute('action', recordPayload.resubmission_url || '');
+        }
+        if (verifyWithdrawHealthRecordForm) {
+            verifyWithdrawHealthRecordForm.setAttribute('action', recordPayload.withdraw_url || '');
+        }
+        if (verifyWithdrawHealthRecordBtn) {
+            verifyWithdrawHealthRecordBtn.disabled = !recordPayload.withdraw_url || recordPayload.withdraw_allowed === false;
+            verifyWithdrawHealthRecordBtn.title = !recordPayload.withdraw_url
+                ? 'Withdrawal is unavailable for this record.'
+                : (recordPayload.withdraw_disabled_reason || '');
         }
 
         if (verifyNeedsDocumentResubmission) {
             verifyNeedsDocumentResubmission.checked = false;
         }
+        window.configureHealthRecordReviewDestination(recordPayload);
+        syncDocumentResubmissionActionState();
 
         if (verifyDocumentResubmissionPanel) {
             verifyDocumentResubmissionPanel.classList.remove('is-open');
@@ -9599,19 +10811,18 @@
             verifyDocumentResubmissionSubmit.disabled = true;
         }
 
-        if (verifyDocumentResubmissionActions) {
-            verifyDocumentResubmissionActions.classList.add('is-hidden');
-        }
-
         if (verifyDocumentResubmissionRemarks) {
             verifyDocumentResubmissionRemarks.value = '';
+            verifyDocumentResubmissionRemarks.disabled = true;
         }
 
         verifyDocumentResubmissionInputs.forEach(function (input) {
             input.checked = false;
+            input.disabled = true;
         });
         if (verifyNeedsHealthFormCorrection) {
             verifyNeedsHealthFormCorrection.checked = false;
+            verifyNeedsHealthFormCorrection.disabled = true;
         }
 
         syncDocumentResubmissionReason();
@@ -9781,18 +10992,25 @@
                 verifyDocumentResubmissionPanel.classList.toggle('is-open', isChecked);
             }
 
-            if (verifyDocumentResubmissionSubmit) {
-                verifyDocumentResubmissionSubmit.disabled = !isChecked;
-            }
+            syncDocumentResubmissionActionState();
 
-            if (verifyDocumentResubmissionActions) {
-                verifyDocumentResubmissionActions.classList.toggle('is-hidden', !isChecked);
+            verifyDocumentResubmissionInputs.forEach(function (input) {
+                input.disabled = !isChecked;
+            });
+            if (verifyNeedsHealthFormCorrection) {
+                verifyNeedsHealthFormCorrection.disabled = !isChecked;
+            }
+            if (verifyDocumentResubmissionRemarks) {
+                verifyDocumentResubmissionRemarks.disabled = !isChecked;
             }
 
             if (!isChecked) {
                 verifyDocumentResubmissionInputs.forEach(function (input) {
                     input.checked = false;
                 });
+                if (verifyNeedsHealthFormCorrection) {
+                    verifyNeedsHealthFormCorrection.checked = false;
+                }
             }
 
             syncDocumentResubmissionReason();
@@ -9838,6 +11056,69 @@
 
             if (!verifyDocumentResubmissionForm.getAttribute('action')) {
                 event.preventDefault();
+            }
+        });
+    }
+
+    if (verifyContinueToWalkinBtn) {
+        verifyContinueToWalkinBtn.addEventListener('click', function () {
+            const isEmployee = String(activeHealthRecordReviewPayload.record_type || '').toLowerCase() === 'employee';
+            if (!isEmployee && hasMultipleApplicantReviewDestinations) {
+                setApplicantAssessmentMenuOpen(verifyApplicantNextStepMenu?.hidden !== false);
+                return;
+            }
+
+            const targetUrl = verifyContinueToWalkinBtn.dataset.walkinUrl || '';
+            if (targetUrl) {
+                window.location.assign(targetUrl);
+            }
+        });
+    }
+
+    verifyApplicantNextStepMenu?.addEventListener('click', function (event) {
+        const option = event.target.closest('[data-review-step]');
+        if (!option || !verifyApplicantNextStep) return;
+
+        const selectedStep = option.getAttribute('data-review-step');
+        const isAvailable = Array.from(verifyApplicantNextStep.options).some(function (item) {
+            return item.value === selectedStep && !item.disabled;
+        });
+        if (!isAvailable) return;
+
+        verifyApplicantNextStep.value = selectedStep;
+        window.configureHealthRecordReviewDestination();
+        const targetUrl = verifyContinueToWalkinBtn?.dataset.walkinUrl || '';
+        if (targetUrl) window.location.assign(targetUrl);
+    });
+
+    document.addEventListener('click', function (event) {
+        if (verifyApplicantNextStepMenu && !verifyApplicantNextStepWrap?.contains(event.target)) {
+            setApplicantAssessmentMenuOpen(false);
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && verifyApplicantNextStepMenu && !verifyApplicantNextStepMenu.hidden) {
+            setApplicantAssessmentMenuOpen(false);
+            verifyContinueToWalkinBtn?.focus();
+            event.stopPropagation();
+        }
+    });
+
+    if (verifyWithdrawHealthRecordForm) {
+        verifyWithdrawHealthRecordForm.addEventListener('submit', function (event) {
+            if (!verifyWithdrawHealthRecordForm.getAttribute('action')) {
+                event.preventDefault();
+                return;
+            }
+
+            if (!window.confirm('Mark this health record as withdrawn? The saved health information, documents, and user account will be kept.')) {
+                event.preventDefault();
+                return;
+            }
+
+            if (verifyWithdrawHealthRecordBtn) {
+                verifyWithdrawHealthRecordBtn.disabled = true;
             }
         });
     }
@@ -10075,46 +11356,51 @@
         });
     }
 
+    function updateVerificationDocumentCount() {
+        const grid = document.getElementById('verificationDocsGrid');
+        const count = document.getElementById('verificationDocsCount');
+        if (!grid || !count) return;
+
+        const documents = grid.querySelectorAll('.verification-doc-card');
+        const uploaded = grid.querySelectorAll('a.verification-doc-card[href]');
+        count.textContent = uploaded.length + ' of ' + documents.length + ' documents uploaded';
+    }
+
     function renderVerificationDocuments(documents) {
         if (!verificationDocsGrid) return;
         const docs = Array.isArray(documents) ? documents : [];
         verificationDocsGrid.innerHTML = docs.map(function (doc) {
             if (doc && doc.url) {
                 const docTitle = doc.title || 'Requirement';
+                const isPhoto = /photo/i.test(docTitle);
                 const isHealthForm = String(docTitle).toLowerCase() === 'health information form';
-                if (isHealthForm) {
-                    return `
-                    <a class="verification-doc-card health-form-doc-card" href="${escapeHtml(doc.url)}" target="_blank" rel="noopener noreferrer">
-                        <span class="health-form-doc-preview" aria-hidden="true">
-                            <span class="health-form-doc-title">
-                                <span>Health</span>
-                                <span>Information</span>
-                                <span>Form</span>
-                            </span>
-                        </span>
-                        <strong>${escapeHtml(docTitle)}</strong>
-                        <span>Open in new tab</span>
-                    </a>
-                `;
-                }
-
+                const preview = isHealthForm
+                    ? '<span class="verification-doc-preview health-form-doc-preview" aria-hidden="true"><span class="health-form-doc-title"><span>Health</span><span>Information</span><span>Form</span></span></span>'
+                    : (isPhoto
+                        ? `<span class="verification-doc-preview"><img src="${escapeHtml(doc.url)}" alt="${escapeHtml(docTitle)} preview" loading="lazy"></span>`
+                        : `<span class="verification-doc-preview"><iframe src="${escapeHtml(doc.url)}#toolbar=0&navpanes=0" title="${escapeHtml(docTitle)} preview" loading="lazy" tabindex="-1"></iframe></span>`);
+                const format = isPhoto ? 'Image file' : (isHealthForm ? 'PDF document' : 'Uploaded file');
                 return `
                     <a class="verification-doc-card" href="${escapeHtml(doc.url)}" target="_blank" rel="noopener noreferrer">
+                        <strong>${escapeHtml(docTitle)}</strong>
+                        <span class="verification-doc-status verification-doc-status-spacer" aria-hidden="true"></span>
+                        ${preview}
+                        <span class="verification-doc-meta">${format}</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5A3.375 3.375 0 0 0 10.125 2.25H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
-                        <strong>${escapeHtml(doc.title || 'Requirement')}</strong>
-                        <span>Open in new tab</span>
+                        <span class="verification-doc-open"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.644C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.437 0 .644C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg><span>View Document</span></span>
                     </a>
                 `;
             }
 
             return `
-                <div class="verification-doc-card">
+                <div class="verification-doc-card is-missing">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" /></svg>
                     <strong>${escapeHtml(doc && doc.title ? doc.title : 'Requirement')}</strong>
-                    <span>Missing upload</span>
+                    <span class="verification-doc-status">Missing upload</span>
                 </div>
             `;
         }).join('');
+        updateVerificationDocumentCount();
     }
 
     function syncApprovalButtonState() {
@@ -10131,10 +11417,22 @@
         }
 
         verifyResubmissionInputs.forEach(function (input) {
+            input.disabled = !isOpen;
             if (!isOpen) {
                 input.checked = false;
             }
         });
+
+        if (verifyNeedsHealthFormCorrection) {
+            verifyNeedsHealthFormCorrection.disabled = !isOpen;
+            if (!isOpen) {
+                verifyNeedsHealthFormCorrection.checked = false;
+            }
+        }
+
+        if (verifyDocumentResubmissionRemarks) {
+            verifyDocumentResubmissionRemarks.disabled = !isOpen;
+        }
     }
 
     function syncResubmissionReason() {
@@ -10198,7 +11496,10 @@
             payload.student_id = reviewFallbackValue(payload.student_id, button.getAttribute('data-review-student-id'));
             payload.approve_url = reviewActionUrl(payload.approve_url, button.getAttribute('data-review-approve-url'));
             payload.resubmission_url = reviewActionUrl(payload.resubmission_url, button.getAttribute('data-review-resubmission-url'));
+            payload.walkin_url = reviewActionUrl(payload.walkin_url, button.getAttribute('data-review-walkin-url'));
         }
+
+        setVerifyApprovalModalTitle(payload);
 
         if (verifyApprovalStudentName) {
             verifyApprovalStudentName.textContent = payload.name || '-';
@@ -10219,7 +11520,7 @@
         if (verifyApprovalForm) {
             verifyApprovalForm.setAttribute('action', payload.approve_url || '');
         }
-        resetDocumentResubmissionForm(payload.resubmission_url || '');
+        resetDocumentResubmissionForm(payload);
         if (verifyMedicalRemarks) {
             verifyMedicalRemarks.value = payload.medical_condition_remarks || '';
         }
@@ -10256,10 +11557,12 @@
             const conditionTemplate = row.querySelector('[data-review-condition-template]');
             verificationConditionGrid.innerHTML = conditionTemplate
                 ? conditionTemplate.innerHTML.trim()
-                : '<div class="verify-condition-item"><span>Condition</span><strong>No Medical Condition</strong></div>';
+                    : '<div class="verify-condition-item is-no-condition"><span class="verify-condition-status-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg></span><span>Condition</span><strong>No Medical Condition</strong></div>';
         }
         if (!row.querySelector('[data-review-documents-template]')) {
             renderVerificationDocuments(payload.documents || []);
+        } else {
+            updateVerificationDocumentCount();
         }
         setVerifyApprovalModalOpenState(true);
     }

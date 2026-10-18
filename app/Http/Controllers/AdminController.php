@@ -3620,6 +3620,9 @@ class AdminController extends Controller
 
         foreach ($records as $summaryRecord) {
             $summaryStatus = trim((string) ($summaryRecord->clearance_status ?? ''));
+            if (strcasecmp($summaryStatus, 'Withdrawn') === 0) {
+                continue;
+            }
             $summaryIsApproved = in_array($summaryStatus, ['Issued', 'Fully Cleared'], true);
             $summaryIsRevokedPending = (string) ($summaryRecord->record_source ?? 'health') === 'health'
                 && filled($summaryRecord->clearance_revoked_at ?? null)
@@ -5457,6 +5460,80 @@ public function updateClearance(Request $request, $id)
 
     return back()->with('error', 'Failed to save to database.');
 }
+
+    public function withdrawHealthProfile($id)
+    {
+        $record = HealthProfile::query()->findOrFail($id);
+
+        return $this->markHealthRecordWithdrawn($record);
+    }
+
+    public function withdrawEmployeeHealthProfile(EmployeeHealthProfile $employeeProfile)
+    {
+        return $this->markHealthRecordWithdrawn($employeeProfile);
+    }
+
+    private function markHealthRecordWithdrawn(HealthProfile|EmployeeHealthProfile $record)
+    {
+        $result = DB::transaction(function () use ($record): string {
+            $record = $record->newQuery()
+                ->lockForUpdate()
+                ->findOrFail($record->getKey());
+            $status = trim((string) $record->clearance_status);
+            $normalizedStatus = strtolower($status);
+
+            if ($normalizedStatus === 'withdrawn') {
+                return 'already_withdrawn';
+            }
+
+            if (in_array($normalizedStatus, ['issued', 'fully cleared'], true)) {
+                return 'already_approved';
+            }
+
+            $record->clearance_status = 'Withdrawn';
+            $record->resubmission_requested_at = null;
+            $record->pending_compliance_reminder_sent_at = null;
+            $record->pending_compliance_reminder_count = 0;
+
+            if ($record instanceof EmployeeHealthProfile) {
+                $record->resubmission_required_fields = null;
+                $correctionRequestQuery = HealthProfileCorrectionRequest::query()
+                    ->where('employee_health_profile_id', $record->id);
+            } else {
+                $record->resubmission_required_documents = null;
+                $correctionRequestQuery = HealthProfileCorrectionRequest::query()
+                    ->where('health_profile_id', $record->id);
+            }
+
+            $record->save();
+
+            $correctionRequestQuery
+                ->where('user_id', $record->user_id)
+                ->whereIn('status', [
+                    HealthProfileCorrectionRequest::STATUS_PENDING,
+                    HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW,
+                    HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+                ])
+                ->update([
+                    'status' => HealthProfileCorrectionRequest::STATUS_CANCELLED,
+                    'reviewed_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+            return 'withdrawn';
+        });
+
+        if ($result !== 'withdrawn') {
+            $message = $result === 'already_approved'
+                ? 'An approved health record cannot be marked as withdrawn here.'
+                : 'This health record is already marked as withdrawn.';
+
+            return back()->with('error', $message);
+        }
+
+        return redirect()->route('admin.health_records')
+            ->with('success', 'Record marked as withdrawn. Its saved health information and documents were kept.');
+    }
 
     public function requestHealthProfileResubmission(Request $request, $id)
     {

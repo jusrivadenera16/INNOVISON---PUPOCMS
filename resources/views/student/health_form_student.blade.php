@@ -1183,6 +1183,31 @@
             font-weight: 800;
         }
 
+        .esign-upload-input.is-visually-hidden {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+
+        .esign-upload-input:focus-visible + .esign-signature-dropzone {
+            outline: 2px solid rgba(127, 29, 45, 0.22);
+            outline-offset: 2px;
+        }
+
+        .esign-signature-dropzone {
+            min-height: 92px;
+        }
+
+        .esign-card.has-upload-preview .esign-signature-dropzone {
+            display: none;
+        }
+
         .esign-status {
             margin-top: 10px;
             color: #64748b;
@@ -2860,6 +2885,8 @@
                 height: 180px;
             }
         }
+
+        @include('student.partials.health_form_upload_ui_styles')
     </style>
 </head>
 <body class="health-form-page">
@@ -3642,7 +3669,7 @@
                                 I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my on-site consultation for the issuance of medical clearance for <u id="consentDynamicPurpose" style="font-weight: 700;">{{ $initialConsentPurpose }}</u> are true, correct and complete to the best of my knowledge. I have fully disclosed all the medical condition that may affect in the assessment to endorse my <u id="consentDynamicEndorsement" style="font-weight: 700;">{{ $initialConsentEndorsement }}</u> of PUP Taguig Campus
                             </p>
                             <p>I also understand that the PUP Medical Services and University will not be liable for any untoward incident that may arise due to my failure to disclose accurate information or intentionally providing false and deceptive information.</p>
-                            <p>{{ config('health_form_privacy.notice') }}</p>
+                            <p>{{ config('health_form_privacy.consent_statement') }}</p>
                         </div>
                         <p class="student-consent-guardian-note" id="studentConsentGuardianNote" hidden>Because you are 17 years old or below, a parent or guardian must also sign the printed consent form.</p>
                         <label class="student-consent-agreement">
@@ -3830,8 +3857,14 @@
                         @endphp
                         <div class="requirement-card" id="pwdUploadWrap" data-requirement-card>
                             <div class="requirement-card-header">
-                                <strong>PWD ID <span class="required">*</span></strong>
-                                <span class="requirement-badge">PDF</span>
+                                <div class="requirement-heading-main">
+                                    <span class="requirement-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h1Z"></path><path d="M14 3v5h5M8 13h8M8 17h5"></path></svg></span>
+                                    <span class="requirement-heading-copy">
+                                        <strong id="pwdIdTitle">PWD ID @unless($pwdLocked)<span class="required">*</span>@endunless</strong>
+                                        <span class="requirement-description">Upload a clear, readable image of the front of your valid PWD ID.</span>
+                                    </span>
+                                </div>
+                                <span class="requirement-badge {{ $pwdLocked ? 'is-on-file' : 'is-required' }}">{{ $pwdLocked ? 'On File' : 'Required' }}</span>
                             </div>
                             <p class="requirement-guideline">Please upload a clear and readable scanned copy of the front of your valid PWD ID.</p>
                             @if($isHealthFormCorrectionMode && $pwdUploaded)
@@ -3840,14 +3873,29 @@
                                     <a href="{{ $documentOpenUrl('pwd_id_proof') }}" target="_blank" rel="noopener">Open</a>
                                 </div>
                             @endif
-                            <input id="pwd_id_proof" type="file" name="pwd_id_proof" class="form-control" accept=".pdf,application/pdf" data-requirement-file data-upload-input data-preview-kind="pdf" data-correction-locked="{{ $pwdLocked ? 'true' : 'false' }}" {{ $pwdLocked ? 'disabled' : '' }}>
+                            <input id="pwd_id_proof" type="file" name="pwd_id_proof" class="form-control requirement-file-input" accept=".pdf,application/pdf" aria-labelledby="pwdIdTitle" data-requirement-file data-upload-input data-preview-kind="pdf" data-correction-locked="{{ $pwdLocked ? 'true' : 'false' }}" {{ $pwdLocked ? 'disabled' : '' }}>
+                            @unless($pwdLocked)
+                                <div class="requirement-dropzone" data-upload-dropzone data-input-id="pwd_id_proof">
+                                    <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+                                    <strong>Drag and drop your file here</strong><span class="requirement-or">or</span>
+                                    <button type="button" class="requirement-pick-button" data-file-picker="pwd_id_proof">Choose File</button>
+                                    <span class="requirement-file-meta">PDF (Max 1 MB)</span><span class="requirement-upload-error" data-upload-error aria-live="polite"></span>
+                                </div>
+                            @endunless
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if($pwdLocked)
                                 <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
                             @elseif($isHealthFormCorrectionMode && $pwdRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new PWD ID Proof.</div>
                             @endif
-                            <small>Required when PWD is selected. Allowed: PDF only, max 1MB.</small>
+                            <button type="button" class="requirement-sample-button" data-sample-guide
+                                data-guide-title="PWD ID"
+                                data-guide-description="Requirements for the PWD ID upload."
+                                data-guide-reminder="Upload a clear, readable image of the front of your valid PWD ID."
+                                data-guide-file-info="Allowed: PDF only, max 1MB.">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                                <span>View Sample Guide</span>
+                            </button>
                         </div>
                         @php
                             $photoRequested = $isDocumentRequested('student_photo');
@@ -3861,8 +3909,14 @@
                         @endphp
                         <div class="requirement-card">
                             <div class="requirement-card-header">
-                                <strong>2x2 Photo (Image) <span class="required">*</span></strong>
-                                <span class="requirement-badge">JPG/PNG</span>
+                                <div class="requirement-heading-main">
+                                    <span class="requirement-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><circle cx="12" cy="9" r="2.5"></circle><path d="M8 17c.8-2 2.1-3 4-3s3.2 1 4 3"></path></svg></span>
+                                    <span class="requirement-heading-copy">
+                                        <strong id="studentPhotoTitle">2x2 Photo (Image) @if(!$isHealthFormCorrectionMode || $photoRequested)<span class="required">*</span>@endif</strong>
+                                        <span class="requirement-description">Formal photo on a plain white background, taken within the last 6 months.</span>
+                                    </span>
+                                </div>
+                                <span class="requirement-badge {{ (!$isHealthFormCorrectionMode || $photoRequested) ? 'is-required' : '' }}">{{ (!$isHealthFormCorrectionMode || $photoRequested) ? 'Required' : ($photoLocked ? 'On File' : 'Optional') }}</span>
                             </div>
                             <p class="requirement-guideline">Must be a formal photo on a plain white background, taken within the last 6 months.</p>
                             <div class="upload-example-grid" aria-label="2x2 photo upload examples">
@@ -3883,20 +3937,47 @@
                                     <a href="{{ $documentOpenUrl('student_photo') }}" target="_blank" rel="noopener">Open</a>
                                 </div>
                             @endif
-                            <input type="file" name="student_photo" class="form-control" accept=".jpg,.jpeg,.png,image/jpeg,image/png" {{ (!$isHealthFormCorrectionMode || $photoRequested) ? 'required' : '' }} {{ $photoLocked ? 'disabled' : '' }} data-upload-input data-preview-kind="image">
+                            <input id="student_photo" type="file" name="student_photo" class="form-control requirement-file-input" accept=".jpg,.jpeg,.png,image/jpeg,image/png" aria-labelledby="studentPhotoTitle" aria-describedby="studentPhotoFileMeta" {{ (!$isHealthFormCorrectionMode || $photoRequested) ? 'required' : '' }} {{ $photoLocked ? 'disabled' : '' }} data-upload-input data-preview-kind="image">
+                            @unless($photoLocked)
+                                <div class="requirement-dropzone" data-upload-dropzone data-input-id="student_photo">
+                                    <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+                                    <strong>Drag and drop your file here</strong><span class="requirement-or">or</span>
+                                    <button type="button" class="requirement-pick-button" data-file-picker="student_photo">Choose File</button>
+                                    <span id="studentPhotoFileMeta" class="requirement-file-meta">JPG or PNG (Max 1 MB)</span><span class="requirement-upload-error" data-upload-error aria-live="polite"></span>
+                                </div>
+                            @endunless
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if($photoLocked)
                                 <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
                             @elseif($isHealthFormCorrectionMode && $photoRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new 2x2 photo.</div>
                             @endif
-                            <small>Allowed: JPG/PNG only, max 1MB. Compress the image if needed to meet the size requirement.</small>
+                            <button type="button" class="requirement-sample-button" data-sample-guide
+                                data-guide-title="2x2 Photo (Image)"
+                                data-guide-description="Sample guide and requirements for the 2x2 photo upload."
+                                data-guide-correct-image="{{ asset('images/upload-guides/photo-formal-upload.jpg') }}"
+                                data-guide-correct-alt="Formal front-facing ID photo on a plain white background"
+                                data-guide-correct-caption="Formal, front-facing photo with even lighting and a plain white background."
+                                data-guide-wrong-image="{{ asset('images/upload-guides/photo-casual-do-not-upload.jpg') }}"
+                                data-guide-wrong-alt="Casual outdoor selfie that should not be uploaded"
+                                data-guide-wrong-caption="No selfies, casual poses, scenery, filters, or distracting backgrounds."
+                                data-guide-reminder="Must be a formal photo on a plain white background, taken within the last 6 months."
+                                data-guide-file-info="Allowed: JPG/PNG only, max 1MB. Compress the image if needed to meet the size requirement.">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                                <span>View Sample Guide</span>
+                            </button>
                         </div>
                         @if($isHealthFormCorrectionMode && $declarationRequested)
                         <div class="requirement-card">
                             <div class="requirement-card-header">
-                                <strong>Declaration of Medical Information and Data Subject Consent Form</strong>
-                                <span class="requirement-badge">PDF/IMG</span>
+                                <div class="requirement-heading-main">
+                                    <span class="requirement-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h1Z"></path><path d="M14 3v5h5M8 13h8M8 17h5"></path></svg></span>
+                                    <span class="requirement-heading-copy">
+                                        <strong id="healthDeclarationTitle">Declaration of Medical Information and Data Subject Consent Form <span class="required">*</span></strong>
+                                        <span class="requirement-description">Upload the signed, clear, and readable declaration and consent form.</span>
+                                    </span>
+                                </div>
+                                <span class="requirement-badge is-required">Required</span>
                             </div>
                             <p class="requirement-guideline">Upload the signed, clear, and readable Declaration of Medical Information and Data Subject Consent Form.</p>
                             <div class="upload-example-grid" aria-label="Declaration of Medical Information and Data Subject Consent Form upload examples">
@@ -3917,14 +3998,35 @@
                                     <a href="{{ $documentOpenUrl('health_declaration') }}" target="_blank" rel="noopener">Open</a>
                                 </div>
                             @endif
-                            <input type="file" name="health_declaration" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ ($isHealthFormCorrectionMode && $declarationRequested) ? 'required' : '' }} {{ $declarationLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            <input id="health_declaration" type="file" name="health_declaration" class="form-control requirement-file-input" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" aria-labelledby="healthDeclarationTitle" aria-describedby="healthDeclarationFileMeta" {{ ($isHealthFormCorrectionMode && $declarationRequested) ? 'required' : '' }} {{ $declarationLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            @unless($declarationLocked)
+                                <div class="requirement-dropzone" data-upload-dropzone data-input-id="health_declaration">
+                                    <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+                                    <strong>Drag and drop your file here</strong><span class="requirement-or">or</span>
+                                    <button type="button" class="requirement-pick-button" data-file-picker="health_declaration">Choose File</button>
+                                    <span id="healthDeclarationFileMeta" class="requirement-file-meta">PDF or IMG (Max 1 MB)</span><span class="requirement-upload-error" data-upload-error aria-live="polite"></span>
+                                </div>
+                            @endunless
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if($declarationLocked)
                                 <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
                             @elseif($isHealthFormCorrectionMode && $declarationRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new declaration form.</div>
                             @endif
-                            <small>Optional during initial submission. Allowed: PDF, JPG, JPEG, or PNG, max 1MB.</small>
+                            <button type="button" class="requirement-sample-button" data-sample-guide
+                                data-guide-title="Declaration of Medical Information and Data Subject Consent Form"
+                                data-guide-description="Sample guide and requirements for the declaration and consent form."
+                                data-guide-correct-image="{{ asset('images/upload-guides/health-declaration-upload-this.png') }}"
+                                data-guide-correct-alt="Signed and readable Declaration of Medical Information and Data Subject Consent Form"
+                                data-guide-correct-caption="Upload the signed, clear, and readable consent form."
+                                data-guide-wrong-image="{{ asset('images/upload-guides/health-declaration-do-not-upload.png') }}"
+                                data-guide-wrong-alt="Unsigned, blurry, or unreadable Declaration of Medical Information and Data Subject Consent Form"
+                                data-guide-wrong-caption="Do not upload without a signature, or if blurry or unreadable."
+                                data-guide-reminder="Upload the signed, clear, and readable Declaration of Medical Information and Data Subject Consent Form."
+                                data-guide-file-info="Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                                <span>View Sample Guide</span>
+                            </button>
                         </div>
                         @endif
                         @php
@@ -3936,8 +4038,14 @@
                         @if($isHealthFormCorrectionMode && $medicalCertificateRequested)
                         <div class="requirement-card {{ old('doctor_name', $prefill['doctor_name'] ?? '') || old('med_cert_date', $prefill['med_cert_date'] ?? '') || $selectedMedCertFindings || old('med_cert_findings_details', $prefill['med_cert_findings_details'] ?? '') ? 'has-old-data' : '' }}" data-requirement-card>
                             <div class="requirement-card-header">
-                                <strong>Medical Certificate</strong>
-                                <span class="requirement-badge">PDF/IMG</span>
+                                <div class="requirement-heading-main">
+                                    <span class="requirement-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h1Z"></path><path d="M14 3v5h5M8 13h8M8 17h5"></path></svg></span>
+                                    <span class="requirement-heading-copy">
+                                        <strong id="medicalCertificateTitle">Medical Certificate <span class="required">*</span></strong>
+                                        <span class="requirement-description">Doctor's signature and PRC License Number must be clearly visible.</span>
+                                    </span>
+                                </div>
+                                <span class="requirement-badge is-required">Required</span>
                             </div>
                             <p class="requirement-guideline">Please ensure the doctor's signature and PRC License Number are clearly visible.</p>
                             <div class="upload-example-grid" aria-label="Medical certificate upload examples">
@@ -3958,14 +4066,35 @@
                                     <a href="{{ $documentOpenUrl('medical_certificate') }}" target="_blank" rel="noopener">Open</a>
                                 </div>
                             @endif
-                            <input type="file" name="medical_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ ($isHealthFormCorrectionMode && $medicalCertificateRequested) ? 'required' : '' }} {{ $medicalCertificateLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            <input id="medical_certificate" type="file" name="medical_certificate" class="form-control requirement-file-input" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" aria-labelledby="medicalCertificateTitle" aria-describedby="medicalCertificateFileMeta" {{ ($isHealthFormCorrectionMode && $medicalCertificateRequested) ? 'required' : '' }} {{ $medicalCertificateLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            @unless($medicalCertificateLocked)
+                                <div class="requirement-dropzone" data-upload-dropzone data-input-id="medical_certificate">
+                                    <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+                                    <strong>Drag and drop your file here</strong><span class="requirement-or">or</span>
+                                    <button type="button" class="requirement-pick-button" data-file-picker="medical_certificate">Choose File</button>
+                                    <span id="medicalCertificateFileMeta" class="requirement-file-meta">PDF or IMG (Max 1 MB)</span><span class="requirement-upload-error" data-upload-error aria-live="polite"></span>
+                                </div>
+                            @endunless
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if($medicalCertificateLocked)
                                 <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
                             @elseif($isHealthFormCorrectionMode && $medicalCertificateRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new medical certificate.</div>
                             @endif
-                            <small>Optional during initial submission. Allowed: PDF, JPG, JPEG, or PNG, max 1MB.</small>
+                            <button type="button" class="requirement-sample-button" data-sample-guide
+                                data-guide-title="Medical Certificate"
+                                data-guide-description="Sample guide and requirements for the medical certificate upload."
+                                data-guide-correct-image="{{ asset('images/upload-guides/medical-certificate-complete.jpg') }}"
+                                data-guide-correct-alt="Complete medical certificate with physician signature and license number"
+                                data-guide-correct-caption="Complete certificate with the doctor's signature and PRC License Number."
+                                data-guide-wrong-image="{{ asset('images/upload-guides/medical-certificate-incomplete.jpg') }}"
+                                data-guide-wrong-alt="Incomplete medical certificate without a physician signature or license number"
+                                data-guide-wrong-caption="Incomplete certificate without visible signature and PRC License Number."
+                                data-guide-reminder="Please ensure the doctor's signature and PRC License Number are clearly visible."
+                                data-guide-file-info="Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                                <span>View Sample Guide</span>
+                            </button>
                             <div class="requirement-extra">
                                 <div class="form-field span-2">
                                     <label class="form-label" for="doctor_name">Doctor's Full Name</label>
@@ -4016,8 +4145,14 @@
                         @if($isHealthFormCorrectionMode && $xrayRequested)
                         <div class="requirement-card {{ old('xray_date', $prefill['xray_date'] ?? '') || $selectedXrayFindings || old('xray_findings_details', $prefill['xray_findings_details'] ?? '') ? 'has-old-data' : '' }}" data-requirement-card>
                             <div class="requirement-card-header">
-                                <strong>Chest X-ray Result</strong>
-                                <span class="requirement-badge">PDF/IMG</span>
+                                <div class="requirement-heading-main">
+                                    <span class="requirement-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4c-2 0-3 2-3 5v7c0 2 1 4 3 4 2 0 3-2 3-5V9c0-3-1-5-3-5ZM16 4c2 0 3 2 3 5v7c0 2-1 4-3 4-2 0-3-2-3-5V9c0-3 1-5 3-5Z"></path><path d="M8 9h.01M16 9h.01M12 8v8M10 12h4"></path></svg></span>
+                                    <span class="requirement-heading-copy">
+                                        <strong id="chestXrayTitle">Chest X-ray Result <span class="required">*</span></strong>
+                                        <span class="requirement-description">Upload the official radiologist's written report, not the film scan.</span>
+                                    </span>
+                                </div>
+                                <span class="requirement-badge is-required">Required</span>
                             </div>
                             <p class="requirement-guideline">Please upload the official radiologist's written report, not the actual film scanning image.</p>
                             <div class="upload-example-grid" aria-label="Chest X-ray upload examples">
@@ -4038,14 +4173,35 @@
                                     <a href="{{ $documentOpenUrl('chest_xray_result') }}" target="_blank" rel="noopener">Open</a>
                                 </div>
                             @endif
-                            <input type="file" name="chest_xray_result" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ ($isHealthFormCorrectionMode && $xrayRequested) ? 'required' : '' }} {{ $xrayLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            <input id="chest_xray_result" type="file" name="chest_xray_result" class="form-control requirement-file-input" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" aria-labelledby="chestXrayTitle" aria-describedby="chestXrayFileMeta" {{ ($isHealthFormCorrectionMode && $xrayRequested) ? 'required' : '' }} {{ $xrayLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            @unless($xrayLocked)
+                                <div class="requirement-dropzone" data-upload-dropzone data-input-id="chest_xray_result">
+                                    <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+                                    <strong>Drag and drop your file here</strong><span class="requirement-or">or</span>
+                                    <button type="button" class="requirement-pick-button" data-file-picker="chest_xray_result">Choose File</button>
+                                    <span id="chestXrayFileMeta" class="requirement-file-meta">PDF or IMG (Max 1 MB)</span><span class="requirement-upload-error" data-upload-error aria-live="polite"></span>
+                                </div>
+                            @endunless
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if($xrayLocked)
                                 <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
                             @elseif($isHealthFormCorrectionMode && $xrayRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new Chest X-ray Result.</div>
                             @endif
-                            <small>Optional during initial submission. Allowed: PDF, JPG, JPEG, or PNG, max 1MB.</small>
+                            <button type="button" class="requirement-sample-button" data-sample-guide
+                                data-guide-title="Chest X-ray Result"
+                                data-guide-description="Sample guide and requirements for the chest X-ray upload."
+                                data-guide-correct-image="{{ asset('images/upload-guides/xray-written-report-upload.jpg') }}"
+                                data-guide-correct-alt="Official written radiologist report"
+                                data-guide-correct-caption="Upload the official written report containing findings and impression."
+                                data-guide-wrong-image="{{ asset('images/upload-guides/xray-film-do-not-upload.jpg') }}"
+                                data-guide-wrong-alt="Physical chest X-ray film that should not be uploaded"
+                                data-guide-wrong-caption="Do not upload a scan or photograph of the X-ray film."
+                                data-guide-reminder="Please upload the official radiologist's written report, not the actual film scanning image."
+                                data-guide-file-info="Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                                <span>View Sample Guide</span>
+                            </button>
                             <div class="requirement-extra">
                                 <div class="form-field">
                                     <label class="form-label" for="xray_date">Date of Examination</label>
@@ -4149,7 +4305,14 @@
                     <div class="esign-grid esign-mode-panel is-hidden" id="signatureUploadPanel">
                         <div class="esign-card">
                             <h3>Upload Signature</h3>
-                            <input id="digital_signature_upload" type="file" name="digital_signature_upload" class="esign-upload-input" accept=".png,.jpg,.jpeg,image/png,image/jpeg" data-upload-input data-preview-kind="image">
+                            <input id="digital_signature_upload" type="file" name="digital_signature_upload" class="esign-upload-input is-visually-hidden" accept=".png,.jpg,.jpeg,image/png,image/jpeg" aria-label="Upload signature image" data-upload-input data-preview-kind="image">
+                            <div class="requirement-dropzone esign-signature-dropzone" data-signature-dropzone data-input-id="digital_signature_upload">
+                                <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+                                <strong>Drag and drop your signature image here</strong>
+                                <span class="requirement-or">or</span>
+                                <button type="button" class="requirement-pick-button" data-signature-picker>Choose File</button>
+                                <span class="requirement-file-meta" data-signature-upload-status>PNG or JPG (Max 1 MB)</span>
+                            </div>
                             <ol class="esign-upload-instructions">
                                 <li>Upload a black PNG signature only.</li>
                                 <li>Use a transparent/no-background signature file.</li>
@@ -4211,7 +4374,14 @@
                         <div class="esign-grid esign-mode-panel is-hidden" id="guardianSignatureUploadPanel">
                             <div class="esign-card">
                                 <h3>Upload Guardian Signature</h3>
-                                <input id="guardian_signature_upload" type="file" name="guardian_signature_upload" class="esign-upload-input" accept=".png,.jpg,.jpeg,image/png,image/jpeg" data-upload-input data-preview-kind="image">
+                                <input id="guardian_signature_upload" type="file" name="guardian_signature_upload" class="esign-upload-input is-visually-hidden" accept=".png,.jpg,.jpeg,image/png,image/jpeg" aria-label="Upload guardian signature image" data-upload-input data-preview-kind="image">
+                                <div class="requirement-dropzone esign-signature-dropzone" data-signature-dropzone data-input-id="guardian_signature_upload">
+                                    <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+                                    <strong>Drag and drop the guardian signature here</strong>
+                                    <span class="requirement-or">or</span>
+                                    <button type="button" class="requirement-pick-button" data-signature-picker>Choose File</button>
+                                    <span class="requirement-file-meta" data-signature-upload-status>PNG or JPG (Max 1 MB)</span>
+                                </div>
                                 <ol class="esign-upload-instructions">
                                     <li>Upload a clear PNG or JPG image of guardian's signature.</li>
                                     <li>Maximum file size is 1MB.</li>
@@ -4269,6 +4439,8 @@
             </div>
         @endif
     </div>
+
+    @include('student.partials.health_form_upload_guide')
 
     <div class="health-error-modal" id="healthErrorModal" aria-hidden="true" data-initial-message="">
         <div class="health-error-card" role="alertdialog" aria-modal="true" aria-labelledby="healthErrorTitle" aria-describedby="healthErrorMessage">
@@ -5704,9 +5876,10 @@
             }
 
             function renderUploadPreview(input) {
-                const previewScope = input.closest('.upload-card, .requirement-card');
+                const previewScope = input.closest('.upload-card, .requirement-card, .esign-card');
                 const preview = previewScope?.querySelector('[data-upload-preview]');
                 if (!preview) return;
+                const signatureStatus = previewScope.querySelector('[data-signature-upload-status]');
 
                 if (preview.dataset.objectUrl) {
                     URL.revokeObjectURL(preview.dataset.objectUrl);
@@ -5715,6 +5888,7 @@
 
                 const file = input.files && input.files[0] ? input.files[0] : null;
                 if (!file) {
+                    if (signatureStatus) signatureStatus.textContent = 'PNG or JPG (Max 1 MB)';
                     previewScope?.classList.remove('has-upload-preview');
                     preview.classList.remove('is-visible');
                     preview.innerHTML = '';
@@ -5725,6 +5899,7 @@
                 const maxSizeLabel = '1MB';
 
                 if (file.size > maxSize) {
+                    if (signatureStatus) signatureStatus.textContent = 'This file is over the 1 MB limit.';
                     preview.innerHTML = `
                         <div class="upload-preview-error">
                             <div class="upload-preview-error-header">
@@ -5748,6 +5923,7 @@
                 }
 
                 input.setCustomValidity('');
+                if (signatureStatus) signatureStatus.textContent = 'Signature image selected.';
 
                 const objectUrl = URL.createObjectURL(file);
                 preview.dataset.objectUrl = objectUrl;
@@ -5843,6 +6019,52 @@
             uploadInputs.forEach((input) => {
                 renderUploadPreview(input);
                 input.addEventListener('change', () => renderUploadPreview(input));
+            });
+            document.querySelectorAll('[data-signature-dropzone]').forEach((dropzone) => {
+                const input = document.getElementById(dropzone.dataset.inputId);
+                const picker = dropzone.querySelector('[data-signature-picker]');
+                const status = dropzone.querySelector('[data-signature-upload-status]');
+                if (!input) return;
+
+                picker?.addEventListener('click', () => {
+                    if (!input.disabled) input.click();
+                });
+                dropzone.addEventListener('dragover', (event) => {
+                    if (input.disabled) return;
+                    event.preventDefault();
+                    dropzone.classList.add('is-dragging');
+                    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+                });
+                dropzone.addEventListener('dragleave', (event) => {
+                    if (!dropzone.contains(event.relatedTarget)) dropzone.classList.remove('is-dragging');
+                });
+                dropzone.addEventListener('drop', (event) => {
+                    event.preventDefault();
+                    dropzone.classList.remove('is-dragging');
+                    const file = event.dataTransfer?.files?.[0];
+                    if (input.disabled || !file) return;
+
+                    const validExtension = /\.(png|jpe?g)$/i.test(file.name);
+                    const validType = !file.type || ['image/png', 'image/jpeg', 'image/pjpeg'].includes(file.type.toLowerCase());
+                    if (!validExtension || !validType) {
+                        if (status) status.textContent = 'Please use a PNG or JPG signature image.';
+                        return;
+                    }
+                    if (file.size > 1024 * 1024) {
+                        if (status) status.textContent = 'This file is over the 1 MB limit.';
+                        return;
+                    }
+
+                    try {
+                        const transfer = new DataTransfer();
+                        transfer.items.add(file);
+                        input.files = transfer.files;
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                        if (status) status.textContent = 'Signature image selected.';
+                    } catch (error) {
+                        if (status) status.textContent = 'Could not attach the dropped file. Please use Choose File.';
+                    }
+                });
             });
             editReferenceBtn?.addEventListener('click', () => {
                 if (!referenceRequiresValidation) {

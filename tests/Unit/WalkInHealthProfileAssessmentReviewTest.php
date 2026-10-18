@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Http\Controllers\WalkInController;
 use App\Models\HealthProfile;
+use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 use ReflectionMethod;
 
@@ -40,6 +41,26 @@ class WalkInHealthProfileAssessmentReviewTest extends TestCase
         $profile->med_cert_findings = 'With Findings';
 
         $this->assertSame([], $this->assessmentReview($profile));
+    }
+
+    public function test_it_restores_saved_referral_details(): void
+    {
+        Config::set('health_data_encryption.key', 'base64:' . base64_encode(str_repeat('v', 32)));
+
+        $profile = new HealthProfile();
+        $profile->clearance_status = 'Fully Cleared';
+        $profile->med_cert_findings = 'With Findings';
+        $profile->referral_details = [
+            'required' => true,
+            'referred_to' => 'Cardiology',
+            'notes' => 'Follow up within two weeks.',
+        ];
+
+        $review = $this->assessmentReview($profile);
+
+        $this->assertTrue($review['referral_required']);
+        $this->assertSame('Cardiology', $review['referral_to']);
+        $this->assertSame('Follow up within two weeks.', $review['referral_notes']);
     }
 
     private function assessmentReview(HealthProfile $profile): array

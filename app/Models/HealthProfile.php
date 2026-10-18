@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Casts\EncryptedHealthData;
 use App\Models\Concerns\EncryptsHealthProfileFields;
 use App\Models\Concerns\ExcludesInactiveUserRecords;
 
@@ -57,6 +58,7 @@ class HealthProfile extends Model
         'review_closed_at',
         'review_started_by_user_id',
         'medical_condition_remarks',
+        'referral_details',
         'physical_assessment_status',
         'encode_remarks',
         'documents_valid',
@@ -110,11 +112,16 @@ class HealthProfile extends Model
         'review_closed_at' => 'datetime',
         'verified_at' => 'datetime',
         'final_review_draft_data' => 'array',
+        'referral_details' => EncryptedHealthData::class . ':array',
         'pullout_requested_at' => 'datetime',
         'pullout_completed_at' => 'datetime',
         'pullout_restored_at' => 'datetime',
         'privacy_consent_at' => 'datetime',
 
+    ];
+
+    protected $hidden = [
+        'referral_details',
     ];
 
     public function user()
