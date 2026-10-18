@@ -305,6 +305,10 @@ class WalkInController extends Controller
                         $exactQuery->orWhere('reference_number', $identifier);
                     }
 
+                    if (\Schema::hasColumn('users', 'sis_reference_number')) {
+                        $exactQuery->orWhere('sis_reference_number', $identifier);
+                    }
+
                     $exactQuery->orWhere('barcode', $identifier)
                         ->orWhere('student_id', $identifier);
                 })->orWhere(function ($normalizedQuery) use ($normalizedIdentifier) {
@@ -314,6 +318,10 @@ class WalkInController extends Controller
 
                     if (\Schema::hasColumn('users', 'student_number')) {
                         $normalizedQuery->orWhereRaw('UPPER(TRIM(student_number)) = ?', [$normalizedIdentifier]);
+                    }
+
+                    if (\Schema::hasColumn('users', 'sis_reference_number')) {
+                        $normalizedQuery->orWhereRaw('UPPER(TRIM(sis_reference_number)) = ?', [$normalizedIdentifier]);
                     }
                 });
             })
@@ -621,9 +629,15 @@ class WalkInController extends Controller
 
         return HealthProfile::query()
             ->with('user')
-            ->where('reference_number', $referenceNumber)
-            ->orWhere('student_number', $referenceNumber)
-            ->orWhere('student_id', $referenceNumber)
+            ->where(function ($query) use ($referenceNumber) {
+                $query->where('reference_number', $referenceNumber)
+                    ->orWhere('student_number', $referenceNumber)
+                    ->orWhere('student_id', $referenceNumber);
+
+                if (\Schema::hasColumn('health_profiles', 'sis_reference_number')) {
+                    $query->orWhere('sis_reference_number', $referenceNumber);
+                }
+            })
             ->latest()
             ->first();
     }
@@ -1261,6 +1275,7 @@ class WalkInController extends Controller
 
         $pendingReason = trim((string) $profile->pending_reason);
         $medicalRemarks = trim((string) $profile->medical_condition_remarks);
+        $referralDetails = is_array($profile->referral_details) ? $profile->referral_details : [];
         $assessmentRemarks = trim((string) $profile->assessment_remarks);
         $medAssessmentRemarks = trim((string) $profile->med_assessment_remarks);
         $clearanceStatus = trim((string) $profile->clearance_status);
@@ -1268,6 +1283,7 @@ class WalkInController extends Controller
             || $profile->respiratory_rate !== null
             || $profile->temperature !== null
             || $pendingReason !== ''
+            || $referralDetails !== []
             || in_array($clearanceStatus, ['Pending/Conditional', 'Fully Cleared', 'Issued'], true)
             || $profile->verified_at !== null;
 
@@ -1338,6 +1354,9 @@ class WalkInController extends Controller
             'clearance_decision' => $clearanceDecision,
             'has_medical_condition' => $hasMedicalCondition,
             'medical_condition' => $medicalCondition,
+            'referral_required' => (bool) ($referralDetails['required'] ?? false),
+            'referral_to' => trim((string) ($referralDetails['referred_to'] ?? '')),
+            'referral_notes' => trim((string) ($referralDetails['notes'] ?? '')),
             'incomplete_requirements' => $hasIncompleteRequirements,
             'resubmission_required_documents' => $profile->resubmission_required_documents ?: [],
             'needs_physician_evaluation' => $needsPhysicianEvaluation,
@@ -1584,6 +1603,11 @@ class WalkInController extends Controller
         ]);
     }
 
+    public function showApplicantPhoto(HealthProfile $healthProfile)
+    {
+        return $this->showApplicantDocument($healthProfile, 'student_photo');
+    }
+
     public function showEmployeeHealthForm(Request $request, EmployeeHealthProfile $employeeProfile)
     {
         $employeeProfile->loadMissing('user');
@@ -1726,6 +1750,23 @@ class WalkInController extends Controller
 {
 
     $mode = $request->query('mode', '');
+    $reviewType = strtolower(trim((string) $request->query('review_type', 'applicant')));
+    if (!in_array($reviewType, ['applicant', 'employee'], true)) {
+        $reviewType = 'applicant';
+    }
+    $reviewWorkflow = strtolower(trim((string) $request->query('review_workflow', 'final_review')));
+    if (!in_array($reviewWorkflow, ['encode', 'final_review'], true)) {
+        $reviewWorkflow = 'final_review';
+    }
+    $reviewPermission = $reviewType === 'employee'
+        ? 'walkin.employee_lookup'
+        : ($reviewWorkflow === 'encode' ? 'walkin.encode_assessment' : 'walkin.review_submission');
+    $reviewReference = optional($request->user())->canAccessPermission($reviewPermission)
+        ? trim((string) $request->query('review_reference', ''))
+        : '';
+    if (mb_strlen($reviewReference) > 120) {
+        $reviewReference = '';
+    }
     $walkins = Appointment::latest()->take(10)->get();
     $finalReviewApplicants = optional($request->user())->canAccessPermission('walkin.review_submission')
         ? $this->finalReviewApplicantQuery()->get()
@@ -1737,7 +1778,7 @@ class WalkInController extends Controller
             ->each(fn (EmployeeHealthProfile $profile) => $profile->setAttribute('draft_record_type', $this->employeeDraftType($profile)))
         : collect();
     
-    return view('admin.walkin', compact('walkins', 'mode', 'finalReviewApplicants', 'employeeDrafts'));
+    return view('admin.walkin', compact('walkins', 'mode', 'reviewReference', 'reviewType', 'reviewWorkflow', 'finalReviewApplicants', 'employeeDrafts'));
 }
 
     public function sendConsultationEvaluation(Request $request)
@@ -2493,10 +2534,20 @@ class WalkInController extends Controller
         }
 
         $student = $isEmployeeLookupScope ? null : $this->findUserByIdentifier($lookup);
+        $normalizedLookup = strtoupper($lookup);
+        $isLocalSisReference = $student && (
+            strtoupper(trim((string) $student->sis_reference_number)) === $normalizedLookup
+            || strtoupper(trim((string) optional($student->healthProfile)->sis_reference_number)) === $normalizedLookup
+        );
         $lookupMessage = $isEmployeeLookupScope
             ? 'No employee or student record matched that ID number in local records.'
             : 'No patient matched that student number in local records or PUPTAS.';
         $lookupStatus = null;
+
+        if ($isLocalSisReference) {
+            $lookupStatus = 'local_sis_reference';
+            $lookupMessage = 'Local SIS reference found in clinic records.';
+        }
 
         if ($isEmployeeLookupScope && $lookup !== '') {
             $student = $this->findUserByEmployeeIdNumber($lookup) ?: $student;
@@ -2525,7 +2576,7 @@ class WalkInController extends Controller
             $lookup !== ''
             && (
                 !$student
-                || ($previewOnly && !$this->looksLikeUuid($lookup))
+                || ($previewOnly && !$isLocalSisReference && !$this->looksLikeUuid($lookup))
             )
         ) {
             $lookupResult = $puptasWebhookService->fetchApplicantByReferenceNumberDetailed($lookup);
@@ -2682,6 +2733,9 @@ class WalkInController extends Controller
                 $rawClearanceStatus !== '' => $rawClearanceStatus,
                 default => 'Awaiting Uploads',
             };
+            $applicantPhotoUrl = $recordType === 'applicant' && filled(optional($healthProfile)->student_photo)
+                ? route($this->walkinRouteName($request, 'applicant-photo'), ['healthProfile' => $healthProfile->id])
+                : null;
             $approvalDateSource = $recordType === 'employee'
                 ? (optional($employeeProfile)->verified_at ?: optional($employeeProfile)->certified_at)
                 : optional($healthProfile)->verified_at;
@@ -2697,6 +2751,7 @@ class WalkInController extends Controller
                     'student_id' => $student->student_id ?: '',
                     'dependent_id_number' => $dependentProfile?->id_number ?: '',
                     'student_name' => $resolvedName,
+                    'applicant_photo_url' => $applicantPhotoUrl,
                     'course' => $resolvedCourse,
                     'year' => $resolvedYear,
                     'section' => $resolvedSection,
@@ -2729,7 +2784,7 @@ class WalkInController extends Controller
                     'name_matches' => $lookupName !== '' ? $this->namesRoughlyMatch($lookupName, $student) : null,
                     'lookup_status' => $lookupStatus,
                     'record_type' => $recordType,
-                    'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_employee_reference', 'local_clinic_reference', 'local_dependent_id'], true)
+                    'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_sis_reference', 'local_employee_reference', 'local_clinic_reference', 'local_dependent_id'], true)
                         ? $lookupStatus
                         : ($recordType === 'student' ? 'local_student_id' : ($recordType === 'dependent' ? 'local_dependent_id' : 'puptas_or_local_user')),
                     'sync_warning' => $lookupStatus === 'local_health_profile'
@@ -2758,6 +2813,7 @@ class WalkInController extends Controller
                 'student_id' => $student->student_id ?: '',
                 'dependent_id_number' => $dependentProfile?->id_number ?: '',
                 'student_name' => $resolvedName,
+                'applicant_photo_url' => $applicantPhotoUrl,
                 'course' => $resolvedCourse,
                 'year' => $resolvedYear,
                 'section' => $resolvedSection,
@@ -2789,7 +2845,7 @@ class WalkInController extends Controller
                 'documents' => $this->healthProfileDocuments($request, $healthProfile),
                 'lookup_status' => $lookupStatus,
                 'record_type' => $recordType,
-                'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_employee_reference', 'local_clinic_reference', 'local_dependent_id'], true)
+                'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_sis_reference', 'local_employee_reference', 'local_clinic_reference', 'local_dependent_id'], true)
                     ? $lookupStatus
                     : ($recordType === 'student' ? 'local_student_id' : ($recordType === 'dependent' ? 'local_dependent_id' : 'puptas_or_local_user')),
                 'sync_warning' => $lookupStatus === 'local_health_profile'
@@ -4055,6 +4111,9 @@ PROMPT;
                 'needs_health_form_correction' => ['nullable', 'boolean'],
                 'other_pending_reason' => ['nullable', 'string', 'max:1000'],
                 'medical_condition' => ['required_if:has_medical_condition,true', 'nullable', 'string', 'max:1000'],
+                'referral_required' => ['nullable', 'boolean'],
+                'referral_to' => ['nullable', 'string', 'max:255'],
+                'referral_notes' => ['nullable', 'string', 'max:2000'],
                 'condition_remarks' => ['nullable', 'string', 'max:2000'],
                 'med_assessment_remarks' => ['nullable', 'string', 'max:2000'],
                 'height' => [$isLocalEmployeeRequest ? 'nullable' : 'required', 'string', 'max:20'],
@@ -4083,6 +4142,24 @@ PROMPT;
             $clearanceDecision = (string) $validated['clearance_decision'];
             $hasPendingFinding = $clearanceDecision === 'pending';
             $hasMedicalCondition = $findingsStatus === 'With Findings' && $request->boolean('has_medical_condition');
+            $referralRequired = !$isLocalEmployeeRequest
+                && $findingsStatus === 'With Findings'
+                && $request->boolean('referral_required');
+            $referralTo = trim((string) ($validated['referral_to'] ?? ''));
+            if ($referralRequired && $referralTo === '') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please enter the referral destination.',
+                    'errors' => ['referral_to' => ['Please enter the referral destination.']],
+                ], 422);
+            }
+            $referralDetails = $referralRequired
+                ? [
+                    'required' => true,
+                    'referred_to' => $referralTo,
+                    'notes' => trim((string) ($validated['referral_notes'] ?? '')),
+                ]
+                : null;
             $hasIncompleteRequirements = $hasPendingFinding && $request->boolean('incomplete_requirements');
             $resubmissionRequiredDocuments = $hasIncompleteRequirements
                 ? array_values($validated['resubmission_required_documents'] ?? [])
@@ -4251,6 +4328,7 @@ PROMPT;
                 $hasPendingFinding,
                 $pendingReasons,
                 $medicalCondition,
+                $referralDetails,
                 $conditionRemarks,
                 $medAssessmentRemarks,
                 $findingsStatus,
@@ -4313,6 +4391,7 @@ PROMPT;
                 $profile->medical_condition_remarks = $hasMedicalCondition
                     ? trim($medicalCondition !== '' ? $medicalCondition : 'With findings')
                     : null;
+                $profile->referral_details = $referralDetails;
                 $profile->assessment_remarks = !$hasPendingFinding && $medAssessmentRemarks !== ''
                     ? $medAssessmentRemarks
                     : $profile->assessment_remarks;
@@ -4524,6 +4603,9 @@ PROMPT;
                 'clearance_decision' => ['nullable', 'string', 'in:approve,pending'],
                 'has_medical_condition' => ['nullable', 'boolean'],
                 'medical_condition' => ['nullable', 'string', 'max:1000'],
+                'referral_required' => ['nullable', 'boolean'],
+                'referral_to' => ['nullable', 'string', 'max:255'],
+                'referral_notes' => ['nullable', 'string', 'max:2000'],
                 'condition_remarks' => ['nullable', 'string', 'max:2000'],
                 'med_assessment_remarks' => ['nullable', 'string', 'max:2000'],
                 'height' => ['nullable', 'string', 'max:20'],
@@ -4537,6 +4619,21 @@ PROMPT;
             ]);
 
             $referenceNumber = trim((string) $validated['reference_number']);
+            $referralRequired = ($validated['findings_status'] ?? '') === 'With Findings'
+                && $request->boolean('referral_required');
+            $referralTo = trim((string) ($validated['referral_to'] ?? ''));
+            if ($referralRequired && $referralTo === '') {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'referral_to' => ['Please enter the referral destination.'],
+                ]);
+            }
+            $referralDetails = $referralRequired
+                ? [
+                    'required' => true,
+                    'referred_to' => $referralTo,
+                    'notes' => trim((string) ($validated['referral_notes'] ?? '')),
+                ]
+                : null;
             $healthProfile = $this->findHealthProfileByReference($referenceNumber);
             $student = $healthProfile?->user
                 ?: $this->findUserByEmployeeIdNumber($referenceNumber)
@@ -4572,7 +4669,7 @@ PROMPT;
                 }
             }
 
-            $profile = DB::transaction(function () use ($student, $healthProfile, $referenceNumber, $validated, $height, $heightInput) {
+            $profile = DB::transaction(function () use ($student, $healthProfile, $referenceNumber, $validated, $height, $heightInput, $referralDetails) {
                 $profile = $healthProfile ?: HealthProfile::firstOrNew(['user_id' => $student->id]);
                 $profile->user_id = $student->id;
                 $profile->student_id = (string) ($profile->student_id ?: $student->student_id ?: $referenceNumber);
@@ -4630,6 +4727,11 @@ PROMPT;
                     $profile->other_illness = $medicalCondition;
                     $profile->medical_condition_remarks = $medicalCondition;
                     $hasAssessmentValue = true;
+                }
+
+                if (array_key_exists('referral_required', $validated)) {
+                    $profile->referral_details = $referralDetails;
+                    $hasAssessmentValue = $hasAssessmentValue || $referralDetails !== null;
                 }
 
                 $medAssessmentRemarks = trim((string) ($validated['med_assessment_remarks'] ?? ''));

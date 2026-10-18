@@ -634,7 +634,7 @@
 
 
         <p class="declaration-p">
-            {{ config('health_form_privacy.notice') }}
+            {{ config('health_form_privacy.consent_statement') }}
         </p>
 
 

@@ -280,9 +280,15 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
     Route::post('/health-profile/{id}/request-resubmission', [AdminController::class, 'requestHealthProfileResubmission'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
         ->name('admin.health_profile.request_resubmission');
+    Route::post('/health-profile/{id}/withdraw', [AdminController::class, 'withdrawHealthProfile'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
+        ->name('admin.health_profile.withdraw');
     Route::post('/employee-health-profile/{employeeProfile}/request-resubmission', [AdminController::class, 'requestEmployeeHealthProfileResubmission'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
         ->name('admin.employee_health_profile.request_resubmission');
+    Route::post('/employee-health-profile/{employeeProfile}/withdraw', [AdminController::class, 'withdrawEmployeeHealthProfile'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
+        ->name('admin.employee_health_profile.withdraw');
     Route::post('/employee-health-profile/{employeeProfile}/request-health-form', [AdminController::class, 'requestNewEmployeeHealthForm'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_health_form'])
         ->name('admin.employee_health_profile.request_health_form');
@@ -356,6 +362,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::get('/admin/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->middleware('module.permission:walkin.scan_id|walkin.register_patient|walkin.encode_assessment')->name('walkin.form');
         Route::get('/admin/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->middleware('module.permission:walkin.encode_assessment|walkin.review_submission|walkin.edit_information')->name('walkin.healthForm');
         Route::get('/admin/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->middleware('module.permission:walkin.encode_assessment|walkin.review_submission')->name('walkin.document');
+        Route::get('/admin/walkin/applicant-photo/{healthProfile}', [WalkInController::class, 'showApplicantPhoto'])->middleware('module.permission:walkin.reference_lookup|walkin.encode_assessment|walkin.review_submission')->name('walkin.applicant-photo');
         Route::get('/admin/walkin/employee-health-form/{employeeProfile}', [WalkInController::class, 'showEmployeeHealthForm'])->middleware('module.permission:walkin.employee_view')->name('walkin.employeeHealthForm');
         Route::get('/admin/walkin/employee-document/{employeeProfile}/{document}', [WalkInController::class, 'showEmployeeDocument'])->middleware('module.permission:walkin.employee_view')->name('walkin.employeeDocument');
         Route::get('/admin/walkin/staff-health-form/{staffProfile}', [WalkInController::class, 'showStaffHealthForm'])->middleware('module.permission:walkin.employee_view')->name('walkin.staffHealthForm');
@@ -568,6 +575,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::get('/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->middleware('module.permission:walkin.scan_id|walkin.register_patient|walkin.encode_assessment')->name('walkin.form');
         Route::get('/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->middleware('module.permission:walkin.encode_assessment|walkin.review_submission|walkin.edit_information')->name('walkin.healthForm');
         Route::get('/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->middleware('module.permission:walkin.encode_assessment|walkin.review_submission')->name('walkin.document');
+        Route::get('/walkin/applicant-photo/{healthProfile}', [WalkInController::class, 'showApplicantPhoto'])->middleware('module.permission:walkin.reference_lookup|walkin.encode_assessment|walkin.review_submission')->name('walkin.applicant-photo');
         Route::get('/walkin/employee-health-form/{employeeProfile}', [WalkInController::class, 'showEmployeeHealthForm'])->middleware('module.permission:walkin.employee_view')->name('walkin.employeeHealthForm');
         Route::get('/walkin/employee-document/{employeeProfile}/{document}', [WalkInController::class, 'showEmployeeDocument'])->middleware('module.permission:walkin.employee_view')->name('walkin.employeeDocument');
         Route::get('/walkin/staff-health-form/{staffProfile}', [WalkInController::class, 'showStaffHealthForm'])->middleware('module.permission:walkin.employee_view')->name('walkin.staffHealthForm');

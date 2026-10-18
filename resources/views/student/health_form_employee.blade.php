@@ -1138,6 +1138,31 @@
             font-weight: 800;
         }
 
+        .esign-upload-input.is-visually-hidden {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+
+        .esign-upload-input:focus-visible + .esign-signature-dropzone {
+            outline: 2px solid rgba(127, 29, 45, 0.22);
+            outline-offset: 2px;
+        }
+
+        .esign-signature-dropzone {
+            min-height: 92px;
+        }
+
+        .esign-card.has-upload-preview .esign-signature-dropzone {
+            display: none;
+        }
+
         .esign-status {
             margin-top: 10px;
             color: #64748b;
@@ -3023,6 +3048,8 @@
                 order: 1 !important;
             }
         }
+
+        @include('student.partials.health_form_upload_ui_styles')
     </style>
 </head>
 <body class="health-form-page">
@@ -3600,7 +3627,7 @@
                                 I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my on-site consultation for the issuance of medical clearance for <u id="employeeConsentDynamicPurpose" style="font-weight: 700;">{{ $initialEmployeeCategory !== '' ? $initialEmployeeCategory : '[Select Category]' }}</u> are true, correct and complete to the best of my knowledge. I have fully disclosed all the medical condition that may affect in the assessment to endorse my <u id="employeeConsentDynamicEndorsement" style="font-weight: 700;">{{ $initialEmployeeCategory !== '' ? 'fitness for ' . strtolower($initialEmployeeCategory) : '[Select Category]' }}</u> of PUP Taguig Campus.
                             </p>
                             <p>I also understand that the PUP Medical Services and University will not be liable for any untoward incident that may arise due to my failure to disclose accurate information or intentionally providing false and deceptive information.</p>
-                            <p>{{ config('health_form_privacy.notice') }}</p>
+                            <p>{{ config('health_form_privacy.consent_statement') }}</p>
                         </div>
                         <label class="student-consent-agreement">
                             <input type="checkbox" id="employeeConsentCheckbox" required>
@@ -3694,13 +3721,38 @@
                     <div class="requirement-grid">
                         <div class="requirement-card">
                             <div class="requirement-card-header">
-                                <strong>Employee Photo (Required)</strong>
-                                <span class="requirement-badge">JPG/PNG</span>
+                                <div class="requirement-heading-main">
+                                    <span class="requirement-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><circle cx="12" cy="9" r="2.5"></circle><path d="M8 17c.8-2 2.1-3 4-3s3.2 1 4 3"></path></svg></span>
+                                    <span class="requirement-heading-copy">
+                                        <strong id="employeePhotoTitle">Employee Photo <span class="required">*</span></strong>
+                                        <span class="requirement-description">Formal, front-facing photo on a plain white background.</span>
+                                    </span>
+                                </div>
+                                <span class="requirement-badge is-required">Required</span>
                             </div>
                             <p class="requirement-guideline">Upload a formal, front-facing photo on a plain white background.</p>
-                            <input type="file" name="student_photo" class="form-control" accept=".jpg,.jpeg,.png,image/jpeg,image/png" data-upload-input data-preview-kind="image" required>
+                            <input id="employee_student_photo" type="file" name="student_photo" class="form-control requirement-file-input" accept=".jpg,.jpeg,.png,image/jpeg,image/png" aria-labelledby="employeePhotoTitle" aria-describedby="employeePhotoFileMeta" data-upload-input data-preview-kind="image" required>
+                            <div class="requirement-dropzone" data-upload-dropzone data-input-id="employee_student_photo">
+                                <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+                                <strong>Drag and drop your file here</strong><span class="requirement-or">or</span>
+                                <button type="button" class="requirement-pick-button" data-file-picker="employee_student_photo">Choose File</button>
+                                <span id="employeePhotoFileMeta" class="requirement-file-meta">JPG or PNG (Max 1 MB)</span><span class="requirement-upload-error" data-upload-error aria-live="polite"></span>
+                            </div>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
-                            <small>Allowed: JPG/PNG only, max 1MB.</small>
+                            <button type="button" class="requirement-sample-button" data-sample-guide
+                                data-guide-title="Employee Photo"
+                                data-guide-description="Sample guide and requirements for the employee photo upload."
+                                data-guide-correct-image="{{ asset('images/upload-guides/photo-formal-upload.jpg') }}"
+                                data-guide-correct-alt="Formal front-facing ID photo on a plain white background"
+                                data-guide-correct-caption="Formal, front-facing photo with even lighting and a plain white background."
+                                data-guide-wrong-image="{{ asset('images/upload-guides/photo-casual-do-not-upload.jpg') }}"
+                                data-guide-wrong-alt="Casual outdoor selfie that should not be uploaded"
+                                data-guide-wrong-caption="No selfies, casual poses, scenery, filters, or distracting backgrounds."
+                                data-guide-reminder="Upload a clear, front-facing formal photo on a plain white background."
+                                data-guide-file-info="Allowed: JPG or PNG only, max 1MB.">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                                <span>View Sample Guide</span>
+                            </button>
                         </div>
                     </div>
                     <div class="btn-row">
@@ -3757,7 +3809,14 @@
                     <div class="esign-grid esign-mode-panel is-hidden" id="employeeSignatureUploadPanel">
                         <div class="esign-card">
                             <h3>Upload Signature</h3>
-                            <input id="uploaded_signature" type="file" name="uploaded_signature" class="esign-upload-input" accept=".png,.jpg,.jpeg,image/png,image/jpeg" data-upload-input data-preview-kind="image">
+                            <input id="uploaded_signature" type="file" name="uploaded_signature" class="esign-upload-input is-visually-hidden" accept=".png,.jpg,.jpeg,image/png,image/jpeg" aria-label="Upload signature image" data-upload-input data-preview-kind="image">
+                            <div class="requirement-dropzone esign-signature-dropzone" data-signature-dropzone data-input-id="uploaded_signature">
+                                <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+                                <strong>Drag and drop your signature image here</strong>
+                                <span class="requirement-or">or</span>
+                                <button type="button" class="requirement-pick-button" data-signature-picker>Choose File</button>
+                                <span class="requirement-file-meta" data-signature-upload-status>PNG or JPG (Max 1 MB)</span>
+                            </div>
                             <ol class="esign-upload-instructions">
                                 <li>Upload a black signature image if you prefer file upload.</li>
                                 <li>PNG with transparent background is recommended.</li>
@@ -3804,6 +3863,8 @@
             </div>
         @endif
     </div>
+
+    @include('student.partials.health_form_upload_guide')
 
     <div class="health-error-modal" id="healthErrorModal" aria-hidden="true" data-initial-message="">
         <div class="health-error-card" role="alertdialog" aria-modal="true" aria-labelledby="healthErrorTitle" aria-describedby="healthErrorMessage">
@@ -4521,6 +4582,7 @@
                 const preview = card?.querySelector('[data-upload-preview]');
                 const targetPreview = preview || previewScope?.querySelector('[data-upload-preview]');
                 if (!previewScope || !targetPreview) return;
+                const signatureStatus = previewScope.querySelector('[data-signature-upload-status]');
 
                 if (targetPreview.dataset.objectUrl) {
                     URL.revokeObjectURL(targetPreview.dataset.objectUrl);
@@ -4531,6 +4593,8 @@
                 card?.classList.toggle('file-selected', !!file);
 
                 if (!file) {
+                    if (signatureStatus) signatureStatus.textContent = 'PNG or JPG (Max 1 MB)';
+                    previewScope.classList.remove('has-upload-preview');
                     targetPreview.classList.remove('is-visible');
                     targetPreview.innerHTML = '';
                     return;
@@ -4538,6 +4602,8 @@
 
                 const maxSize = 1 * 1024 * 1024;
                 if (file.size > maxSize) {
+                    if (signatureStatus) signatureStatus.textContent = 'This file is over the 1 MB limit.';
+                    previewScope.classList.remove('has-upload-preview');
                     targetPreview.innerHTML = `
                         <div class="upload-preview-error">
                             <div class="upload-preview-error-header">
@@ -4552,9 +4618,17 @@
                 }
 
                 input.setCustomValidity('');
+                if (signatureStatus) signatureStatus.textContent = 'Signature image selected.';
 
                 const isImage = file.type.startsWith('image/');
-                const fileMeta = `${file.name} • ${formatFileSize(file.size)}`;
+                const safeName = file.name.replace(/[&<>"']/g, (char) => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;',
+                })[char]);
+                const fileMeta = `${safeName} • ${formatFileSize(file.size)}`;
                 if (isImage) {
                     const objectUrl = URL.createObjectURL(file);
                     targetPreview.dataset.objectUrl = objectUrl;
@@ -4563,7 +4637,7 @@
                             <img src="${objectUrl}" alt="Selected file preview">
                         </div>
                         <div class="upload-preview-body">
-                            <span class="upload-preview-name">${file.name}</span>
+                            <span class="upload-preview-name">${safeName}</span>
                             <span class="upload-preview-meta">${formatFileSize(file.size)}</span>
                         </div>
                     `;
@@ -4573,16 +4647,63 @@
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>
                         </div>
                         <div class="upload-preview-body">
-                            <span class="upload-preview-name">${file.name}</span>
+                            <span class="upload-preview-name">${safeName}</span>
                             <span class="upload-preview-meta">${fileMeta}</span>
                         </div>
                     `;
                 }
+                previewScope.classList.add('has-upload-preview');
                 targetPreview.classList.add('is-visible');
             }
 
             uploadInputs.forEach((input) => {
                 input.addEventListener('change', () => renderUploadPreview(input));
+            });
+            document.querySelectorAll('[data-signature-dropzone]').forEach((dropzone) => {
+                const input = document.getElementById(dropzone.dataset.inputId);
+                const picker = dropzone.querySelector('[data-signature-picker]');
+                const status = dropzone.querySelector('[data-signature-upload-status]');
+                if (!input) return;
+
+                picker?.addEventListener('click', () => {
+                    if (!input.disabled) input.click();
+                });
+                dropzone.addEventListener('dragover', (event) => {
+                    if (input.disabled) return;
+                    event.preventDefault();
+                    dropzone.classList.add('is-dragging');
+                    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+                });
+                dropzone.addEventListener('dragleave', (event) => {
+                    if (!dropzone.contains(event.relatedTarget)) dropzone.classList.remove('is-dragging');
+                });
+                dropzone.addEventListener('drop', (event) => {
+                    event.preventDefault();
+                    dropzone.classList.remove('is-dragging');
+                    const file = event.dataTransfer?.files?.[0];
+                    if (input.disabled || !file) return;
+
+                    const validExtension = /\.(png|jpe?g)$/i.test(file.name);
+                    const validType = !file.type || ['image/png', 'image/jpeg', 'image/pjpeg'].includes(file.type.toLowerCase());
+                    if (!validExtension || !validType) {
+                        if (status) status.textContent = 'Please use a PNG or JPG signature image.';
+                        return;
+                    }
+                    if (file.size > 1024 * 1024) {
+                        if (status) status.textContent = 'This file is over the 1 MB limit.';
+                        return;
+                    }
+
+                    try {
+                        const transfer = new DataTransfer();
+                        transfer.items.add(file);
+                        input.files = transfer.files;
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                        if (status) status.textContent = 'Signature image selected.';
+                    } catch (error) {
+                        if (status) status.textContent = 'Could not attach the dropped file. Please use Choose File.';
+                    }
+                });
             });
 
             function syncSignatureMethod() {
@@ -4597,9 +4718,7 @@
                     if (signatureStatus) signatureStatus.textContent = 'No drawn signature yet.';
                 } else {
                     if (signatureUpload) signatureUpload.value = '';
-                    const uploadPreview = signatureUploadPanel?.querySelector('[data-upload-preview]');
-                    uploadPreview?.classList.remove('is-visible');
-                    if (uploadPreview) uploadPreview.innerHTML = '';
+                    if (signatureUpload) renderUploadPreview(signatureUpload);
                     window.requestAnimationFrame(() => resizeSignatureCanvas());
                 }
             }

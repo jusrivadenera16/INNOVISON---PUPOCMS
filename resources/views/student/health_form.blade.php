@@ -775,136 +775,434 @@
         .requirement-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px;
+            align-items: stretch;
+            gap: 10px;
         }
 
         .requirement-card {
             border: 1px solid rgba(127, 29, 45, 0.18);
-            background: #ffffff;
-            border-radius: 16px;
-            padding: 14px;
-            min-height: 100%;
-            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+            background: linear-gradient(160deg, #ffffff 0%, #fffaf8 100%);
+            border-radius: 12px;
+            padding: 10px;
+            min-width: 0;
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.045);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .requirement-card.file-selected {
             border-color: rgba(127, 29, 45, 0.48);
-            box-shadow: 0 14px 30px rgba(127, 29, 45, 0.12);
-            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(127, 29, 45, 0.10);
+        }
+
+        .requirement-card.has-invalid-file {
+            border-color: #c43138;
+            box-shadow: 0 0 0 2px rgba(196, 49, 56, 0.10);
         }
 
         .requirement-card-header {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: start;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .requirement-heading-main {
             display: flex;
             align-items: flex-start;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 10px;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .requirement-icon {
+            display: grid;
+            place-items: center;
+            width: 32px;
+            height: 32px;
+            flex: 0 0 32px;
+            border-radius: 8px;
+            background: #fff0ef;
+            color: var(--clinic-maroon);
+        }
+
+        .requirement-icon svg {
+            width: 17px;
+            height: 17px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
+        }
+
+        .requirement-heading-copy {
+            min-width: 0;
         }
 
         .requirement-card-header strong {
             display: block;
             color: #70131b;
             font-size: 0.98rem;
-            line-height: 1.35;
+            line-height: 1.3;
+            overflow-wrap: anywhere;
+        }
+
+        .requirement-description {
+            margin: 3px 0 0;
+            color: #647084;
+            font-size: 0.78rem;
+            font-weight: 500;
+            line-height: 1.4;
         }
 
         .requirement-badge {
             flex: 0 0 auto;
             border-radius: 999px;
-            background: #fef3c7;
-            color: #7c2d12;
-            border: 1px solid rgba(250, 204, 21, 0.45);
+            background: #f1f2f4;
+            color: #596170;
+            border: 1px solid rgba(100, 116, 139, 0.08);
             padding: 4px 8px;
             font-size: 0.68rem;
             font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            line-height: 1.2;
+            white-space: nowrap;
         }
 
-        .requirement-guideline {
-            margin: 8px 0 12px;
-            border-left: 4px solid var(--clinic-yellow);
-            border-radius: 12px;
-            background: #fff8db;
-            color: #51340b;
-            padding: 10px 12px;
-            font-size: 0.82rem;
-            line-height: 1.45;
-            font-weight: 650;
+        .requirement-badge.is-required {
+            background: #ffe2e0;
+            color: #a2232e;
         }
 
-        .upload-example-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px;
-            margin: 12px 0;
+        .requirement-badge.is-on-file {
+            background: #e7f5ec;
+            color: #237345;
         }
 
-        .requirement-card.has-upload-preview .upload-example-grid,
-        .requirement-card.has-upload-preview .requirement-guideline {
-            display: none;
+        .requirement-file-input {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+            opacity: 0 !important;
         }
 
-        .upload-example {
-            overflow: hidden;
-            border: 1px solid #d8dee7;
-            border-radius: 8px;
-            background: #ffffff;
-        }
-
-        .upload-example.is-wrong {
-            border-color: #efb3b3;
-        }
-
-        .upload-example.is-correct {
-            border-color: #9bcdae;
-        }
-
-        .upload-example-status {
+        .requirement-dropzone {
             display: flex;
+            min-height: 99px;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            min-height: 34px;
-            padding: 7px 8px;
+            gap: 3px;
+            margin-top: 7px;
+            padding: 8px;
+            border: 1px dashed rgba(127, 29, 45, 0.24);
+            border-radius: 8px;
+            background: rgba(255, 249, 246, 0.85);
+            color: #677084;
+            text-align: center;
+            transition: background 0.15s ease, border-color 0.15s ease;
+        }
+
+        .requirement-file-input:focus-visible + .requirement-dropzone,
+        .requirement-dropzone.is-dragging {
+            outline: 2px solid rgba(127, 29, 45, 0.22);
+            outline-offset: 2px;
+            border-color: var(--clinic-maroon);
+            background: #fff3ef;
+        }
+
+        .requirement-dropzone.is-disabled {
+            background: #f8f9fb;
+            border-color: #d7dce3;
+            color: #98a1ad;
+        }
+
+        .requirement-dropzone-icon {
+            width: 24px;
+            height: 24px;
+            color: var(--clinic-maroon);
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.7;
+        }
+
+        .requirement-dropzone strong {
+            color: #636d7d;
+            font-size: 0.74rem;
+            line-height: 1.3;
+        }
+
+        .requirement-dropzone .requirement-or {
+            font-size: 0.68rem;
+        }
+
+        .requirement-pick-button {
+            min-width: 98px;
+            min-height: 30px;
+            padding: 4px 12px;
+            border: 0;
+            border-radius: 6px;
+            background: var(--clinic-maroon);
             color: #ffffff;
             font-size: 0.72rem;
             font-weight: 800;
-            text-align: center;
+            cursor: pointer;
         }
 
-        .upload-example.is-wrong .upload-example-status {
-            background: #9f2531;
+        .requirement-pick-button:hover,
+        .requirement-pick-button:focus-visible {
+            background: var(--clinic-maroon-dark);
         }
 
-        .upload-example.is-correct .upload-example-status {
-            background: #267447;
+        .requirement-pick-button:disabled {
+            background: #b7bdc7;
+            cursor: not-allowed;
         }
 
-        .upload-example-status span:first-child {
+        .requirement-file-meta {
+            margin-top: 2px;
+            color: #727d8d;
+            font-size: 0.68rem;
+            line-height: 1.2;
+        }
+
+        .requirement-sample-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            min-height: 28px;
+            margin-top: 5px;
+            padding: 3px 9px;
+            border: 1px solid rgba(127, 29, 45, 0.28);
+            border-radius: 999px;
+            background: #ffffff;
+            color: var(--clinic-maroon);
+            font-size: 0.68rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .requirement-sample-button:hover,
+        .requirement-sample-button:focus-visible {
+            background: #fff1ef;
+            border-color: rgba(127, 29, 45, 0.55);
+        }
+
+        .requirement-sample-button svg {
+            width: 13px;
+            height: 13px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
+        }
+
+        .requirement-card.has-upload-preview .requirement-dropzone {
+            display: none;
+        }
+
+        .requirement-sample-dialog {
+            width: min(680px, calc(100% - 28px));
+            max-width: none;
+            max-height: min(90dvh, 760px);
+            padding: 0;
+            overflow: hidden;
+            border: 1px solid rgba(127, 29, 45, 0.18);
+            border-radius: 14px;
+            background: transparent;
+            color: #111827;
+            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+        }
+
+        .requirement-sample-dialog::backdrop {
+            background: rgba(19, 13, 16, 0.64);
+            backdrop-filter: blur(3px);
+        }
+
+        .requirement-sample-card {
+            display: flex;
+            max-height: min(90dvh, 760px);
+            flex-direction: column;
+            background: #ffffff;
+        }
+
+        .requirement-sample-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0dfe0;
+            background: #fffafa;
+        }
+
+        .requirement-sample-heading {
+            display: flex;
+            gap: 9px;
+            min-width: 0;
+        }
+
+        .requirement-sample-heading .requirement-icon {
+            flex: 0 0 34px;
+            width: 34px;
+            height: 34px;
+        }
+
+        .requirement-sample-heading h3 {
+            margin: 0;
+            color: #70131b;
             font-size: 1rem;
+            font-weight: 850;
+            line-height: 1.25;
+        }
+
+        .requirement-sample-heading p {
+            margin: 3px 0 0;
+            color: #687386;
+            font-size: 0.78rem;
+            line-height: 1.35;
+        }
+
+        .requirement-sample-close {
+            display: grid;
+            width: 30px;
+            height: 30px;
+            flex: 0 0 30px;
+            place-items: center;
+            border: 1px solid #e4d6d8;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #667085;
+            cursor: pointer;
+        }
+
+        .requirement-sample-close svg {
+            width: 15px;
+            height: 15px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-width: 2;
+        }
+
+        .requirement-sample-body {
+            overflow-y: auto;
+            padding: 12px 14px 14px;
+        }
+
+        .requirement-sample-examples {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .requirement-sample-example {
+            min-width: 0;
+            overflow: hidden;
+            border: 1px solid #d9e7dc;
+            border-radius: 9px;
+            background: #f7fcf8;
+        }
+
+        .requirement-sample-example.is-wrong {
+            border-color: #f1d6d5;
+            background: #fff8f7;
+        }
+
+        .requirement-sample-example h4 {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+            padding: 7px 9px;
+            color: #267447;
+            font-size: 0.78rem;
+            font-weight: 850;
+        }
+
+        .requirement-sample-example.is-wrong h4 {
+            color: #a2232e;
+        }
+
+        .requirement-sample-example h4 span {
+            display: grid;
+            width: 16px;
+            height: 16px;
+            place-items: center;
+            border-radius: 50%;
+            background: #27844b;
+            color: #ffffff;
+            font-size: 0.65rem;
             line-height: 1;
         }
 
-        .upload-example img {
-            display: block;
-            width: 100%;
-            height: 148px;
-            object-fit: cover;
-            background: #eef1f4;
+        .requirement-sample-example.is-wrong h4 span {
+            background: #c43138;
         }
 
+        .requirement-sample-example img {
+            display: block;
+            width: calc(100% - 16px);
+            height: 184px;
+            margin: 0 8px;
+            border: 1px solid rgba(15, 23, 42, 0.1);
+            border-radius: 5px;
+            background: #ffffff;
+            object-fit: contain;
+        }
 
-        .upload-example-caption {
-            min-height: 48px;
+        .requirement-sample-example p {
+            min-height: 34px;
             margin: 0;
-            padding: 8px 9px;
-            color: #4b5563;
+            padding: 7px 9px;
+            color: #596273;
             font-size: 0.72rem;
-            font-weight: 700;
             line-height: 1.35;
-            text-align: center;
+        }
+
+        .requirement-sample-reminders {
+            display: grid;
+            grid-template-columns: 20px minmax(0, 1fr);
+            gap: 7px;
+            margin-top: 10px;
+            padding: 9px 10px;
+            border-radius: 8px;
+            background: #edf5fc;
+            color: #3e5368;
+        }
+
+        .requirement-sample-reminders > span {
+            display: grid;
+            width: 18px;
+            height: 18px;
+            place-items: center;
+            border-radius: 50%;
+            background: #2584c5;
+            color: #ffffff;
+            font-size: 0.68rem;
+            font-weight: 900;
+        }
+
+        .requirement-sample-reminders strong {
+            display: block;
+            color: #344b63;
+            font-size: 0.74rem;
+        }
+
+        .requirement-sample-reminders p {
+            margin: 3px 0 0;
+            color: #53677d;
+            font-size: 0.7rem;
+            line-height: 1.4;
         }
 
         .requirement-extra {
@@ -1182,6 +1480,31 @@
             font-weight: 800;
         }
 
+        .esign-upload-input.is-visually-hidden {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+
+        .esign-upload-input:focus-visible + .esign-signature-dropzone {
+            outline: 2px solid rgba(127, 29, 45, 0.22);
+            outline-offset: 2px;
+        }
+
+        .esign-signature-dropzone {
+            min-height: 92px;
+        }
+
+        .esign-card.has-upload-preview .esign-signature-dropzone {
+            display: none;
+        }
+
         .esign-status {
             margin-top: 10px;
             color: #64748b;
@@ -1250,7 +1573,6 @@
             font-weight: 700;
         }
 
-        .requirement-card.has-upload-preview > input[type="file"],
         .upload-card.has-upload-preview > input[type="file"] {
             display: none;
         }
@@ -2783,12 +3105,34 @@
         }
 
         @media (max-width: 430px) {
-            .upload-example-grid {
+            .requirement-card {
+                padding: 9px;
+            }
+
+            .requirement-sample-dialog {
+                width: calc(100% - 16px);
+                max-height: 92dvh;
+                border-radius: 11px;
+            }
+
+            .requirement-sample-card {
+                max-height: 92dvh;
+            }
+
+            .requirement-sample-header {
+                padding: 11px 12px;
+            }
+
+            .requirement-sample-body {
+                padding: 10px;
+            }
+
+            .requirement-sample-examples {
                 grid-template-columns: 1fr;
             }
 
-            .upload-example img {
-                height: 180px;
+            .requirement-sample-example img {
+                height: 190px;
             }
         }
     </style>
@@ -3683,24 +4027,39 @@
                         @endphp
                         <div class="requirement-card" id="pwdUploadWrap" data-requirement-card>
                             <div class="requirement-card-header">
-                                <strong>PWD ID <span class="required">*</span></strong>
-                                <span class="requirement-badge">PDF</span>
+                                <div class="requirement-heading-main">
+                                    <span class="requirement-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h1Z"></path><path d="M14 3v5h5M8 13h8M8 17h5"></path></svg>
+                                    </span>
+                                    <span class="requirement-heading-copy">
+                                        <strong>PWD ID @unless($pwdLocked)<span class="required">*</span>@endunless</strong>
+                                        <span class="requirement-description">Upload a clear, readable image of the front of your valid PWD ID.</span>
+                                    </span>
+                                </div>
+                                <span class="requirement-badge {{ $pwdLocked ? 'is-on-file' : 'is-required' }}">{{ $pwdLocked ? 'On File' : 'Required' }}</span>
                             </div>
-                            <p class="requirement-guideline">Please upload a clear and readable scanned copy of the front of your valid PWD ID.</p>
                             @if($isHealthFormCorrectionMode && $pwdUploaded)
                                 <div class="existing-upload-preview">
                                     <span>PWD ID Proof already uploaded.</span>
                                     <a href="{{ $documentOpenUrl('pwd_id_proof') }}" target="_blank" rel="noopener">Open</a>
                                 </div>
                             @endif
-                            <input id="pwd_id_proof" type="file" name="pwd_id_proof" class="form-control" accept=".pdf,application/pdf" data-requirement-file data-upload-input data-preview-kind="pdf" data-correction-locked="{{ $pwdLocked ? 'true' : 'false' }}" {{ $pwdLocked ? 'disabled' : '' }}>
+                            <input id="pwd_id_proof" type="file" name="pwd_id_proof" class="form-control requirement-file-input" accept=".pdf,application/pdf" aria-label="Upload PWD ID proof" data-requirement-file data-upload-input data-preview-kind="pdf" data-correction-locked="{{ $pwdLocked ? 'true' : 'false' }}" {{ $pwdLocked ? 'disabled' : '' }}>
+                            @unless($pwdLocked)
+                                <div class="requirement-dropzone" data-upload-dropzone data-input-id="pwd_id_proof">
+                                    <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+                                    <strong>Drag and drop your file here</strong>
+                                    <span class="requirement-or">or</span>
+                                    <button type="button" class="requirement-pick-button" data-file-picker="pwd_id_proof">Choose File</button>
+                                    <span class="requirement-file-meta">PDF (Max 1 MB)</span>
+                                </div>
+                            @endunless
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if($pwdLocked)
                                 <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
                             @elseif($isHealthFormCorrectionMode && $pwdRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new PWD ID Proof.</div>
                             @endif
-                            <small>Required only when PWD. Allowed: PDF only, max 1MB. Compress the file if needed to meet the size requirement.</small>
                         </div>
                         @php
                             $photoRequested = $isDocumentRequested('student_photo');
@@ -3711,24 +4070,21 @@
                             $declarationRequested = $isDocumentRequested('health_declaration');
                             $declarationUploaded = $hasExistingDocument('health_declaration');
                             $declarationLocked = $isHealthFormCorrectionMode && !$declarationRequested && $declarationUploaded;
+                            $declarationIsRequired = ($applicantDocumentsRequired && !$isHealthFormCorrectionMode)
+                                || ($isHealthFormCorrectionMode && $declarationRequested);
                         @endphp
                         <div class="requirement-card">
                             <div class="requirement-card-header">
-                                <strong>2x2 Photo (Image) <span class="required">*</span></strong>
-                                <span class="requirement-badge">JPG/PNG</span>
-                            </div>
-                            <p class="requirement-guideline">Must be a formal photo on a plain white background, taken within the last 6 months.</p>
-                            <div class="upload-example-grid" aria-label="2x2 photo upload examples">
-                                <div class="upload-example is-wrong">
-                                    <div class="upload-example-status"><span aria-hidden="true">&times;</span> Do Not Upload</div>
-                                    <img src="{{ asset('images/upload-guides/photo-casual-do-not-upload.jpg') }}" alt="Casual outdoor selfie that should not be uploaded">
-                                    <p class="upload-example-caption">No selfies, casual poses, scenery, filters, or distracting backgrounds.</p>
+                                <div class="requirement-heading-main">
+                                    <span class="requirement-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><circle cx="12" cy="9" r="2.5"></circle><path d="M8 17c.8-2 2.1-3 4-3s3.2 1 4 3"></path></svg>
+                                    </span>
+                                    <span class="requirement-heading-copy">
+                                        <strong id="studentPhotoTitle">2x2 Photo (Image) @if(!$isHealthFormCorrectionMode || $photoRequested)<span class="required">*</span>@endif</strong>
+                                        <span class="requirement-description">Formal photo on a plain white background, taken within the last 6 months.</span>
+                                    </span>
                                 </div>
-                                <div class="upload-example is-correct">
-                                    <div class="upload-example-status"><span aria-hidden="true">&#10003;</span> Upload This</div>
-                                    <img src="{{ asset('images/upload-guides/photo-formal-upload.jpg') }}" alt="Formal front-facing ID photo on a plain white background">
-                                    <p class="upload-example-caption">Formal, front-facing photo with even lighting and a plain white background.</p>
-                                </div>
+                                <span class="requirement-badge {{ (!$isHealthFormCorrectionMode || $photoRequested) ? 'is-required' : '' }}">{{ (!$isHealthFormCorrectionMode || $photoRequested) ? 'Required' : 'Optional' }}</span>
                             </div>
                             @if($isHealthFormCorrectionMode && $photoUploaded)
                                 <div class="existing-upload-preview">
@@ -3736,32 +4092,49 @@
                                     <a href="{{ $documentOpenUrl('student_photo') }}" target="_blank" rel="noopener">Open</a>
                                 </div>
                             @endif
-                            <input type="file" name="student_photo" class="form-control" accept=".jpg,.jpeg,.png,image/jpeg,image/png" {{ (!$isHealthFormCorrectionMode || $photoRequested) ? 'required' : '' }} {{ $photoLocked ? 'disabled' : '' }} data-upload-input data-preview-kind="image">
+                            <input id="student_photo" type="file" name="student_photo" class="form-control requirement-file-input" accept=".jpg,.jpeg,.png,image/jpeg,image/png" aria-labelledby="studentPhotoTitle" aria-describedby="studentPhotoFileMeta" {{ (!$isHealthFormCorrectionMode || $photoRequested) ? 'required' : '' }} {{ $photoLocked ? 'disabled' : '' }} data-upload-input data-preview-kind="image">
+                            @if(!$photoLocked)
+                                <div class="requirement-dropzone" data-upload-dropzone data-input-id="student_photo">
+                                    <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+                                    <strong>Drag and drop your file here</strong>
+                                    <span class="requirement-or">or</span>
+                                    <button type="button" class="requirement-pick-button" data-file-picker="student_photo">Choose File</button>
+                                    <span id="studentPhotoFileMeta" class="requirement-file-meta">JPG or PNG (Max 1 MB)</span>
+                                </div>
+                            @endif
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if($photoLocked)
                                 <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
                             @elseif($isHealthFormCorrectionMode && $photoRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new 2x2 photo.</div>
                             @endif
-                            <small>Allowed: JPG/PNG only, max 1MB. Compress the image if needed to meet the size requirement.</small>
+                            <button type="button" class="requirement-sample-button" data-sample-guide
+                                data-guide-title="2x2 Photo (Image)"
+                                data-guide-description="Sample guide and requirements for the 2x2 photo upload."
+                                data-guide-correct-image="{{ asset('images/upload-guides/photo-formal-upload.jpg') }}"
+                                data-guide-correct-alt="Formal front-facing ID photo on a plain white background"
+                                data-guide-correct-caption="Formal, front-facing photo with even lighting and a plain white background."
+                                data-guide-wrong-image="{{ asset('images/upload-guides/photo-casual-do-not-upload.jpg') }}"
+                                data-guide-wrong-alt="Casual outdoor selfie that should not be uploaded"
+                                data-guide-wrong-caption="No selfies, casual poses, scenery, filters, or distracting backgrounds."
+                                data-guide-reminder="Must be a formal photo on a plain white background, taken within the last 6 months."
+                                data-guide-file-info="Allowed: JPG/PNG only, max 1MB. Compress the image if needed to meet the size requirement.">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                                <span>View Sample Guide</span>
+                            </button>
                         </div>
                         <div class="requirement-card">
                             <div class="requirement-card-header">
-                                <strong>Declaration of Medical Information and Data Subject Consent Form @if($applicantDocumentsRequired)<span class="required">*</span>@endif</strong>
-                                <span class="requirement-badge">PDF/IMG</span>
-                            </div>
-                            <p class="requirement-guideline">Upload the signed, clear, and readable Declaration of Medical Information and Data Subject Consent Form.</p>
-                            <div class="upload-example-grid" aria-label="Declaration of Medical Information and Data Subject Consent Form upload examples">
-                                <div class="upload-example is-wrong">
-                                    <div class="upload-example-status"><span aria-hidden="true">&times;</span> Do Not Upload</div>
-                                    <img src="{{ asset('images/upload-guides/health-declaration-do-not-upload.png') }}" alt="Unsigned, blurry, or unreadable Declaration of Medical Information and Data Subject Consent Form that should not be uploaded">
-                                    <p class="upload-example-caption">Do not upload without sign, blurry, or unreadable.</p>
+                                <div class="requirement-heading-main">
+                                    <span class="requirement-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h1Z"></path><path d="M14 3v5h5M8 13h8M8 17h5"></path></svg>
+                                    </span>
+                                    <span class="requirement-heading-copy">
+                                        <strong id="healthDeclarationTitle">Declaration of Medical Information and Data Subject Consent Form @if($declarationIsRequired)<span class="required">*</span>@endif</strong>
+                                        <span class="requirement-description">Upload the signed, clear, and readable declaration and consent form.</span>
+                                    </span>
                                 </div>
-                                <div class="upload-example is-correct">
-                                    <div class="upload-example-status"><span aria-hidden="true">&#10003;</span> Upload This</div>
-                                    <img src="{{ asset('images/upload-guides/health-declaration-upload-this.png') }}" alt="Signed and readable Declaration of Medical Information and Data Subject Consent Form that should be uploaded">
-                                    <p class="upload-example-caption">Upload the signed, clear, and readable consent form.</p>
-                                </div>
+                                <span class="requirement-badge {{ $declarationIsRequired ? 'is-required' : '' }}">{{ $declarationIsRequired ? 'Required' : 'Optional' }}</span>
                             </div>
                             @if($isHealthFormCorrectionMode && $declarationUploaded)
                                 <div class="existing-upload-preview">
@@ -3769,38 +4142,57 @@
                                     <a href="{{ $documentOpenUrl('health_declaration') }}" target="_blank" rel="noopener">Open</a>
                                 </div>
                             @endif
-                            <input type="file" name="health_declaration" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ (($applicantDocumentsRequired && !$isHealthFormCorrectionMode) || ($isHealthFormCorrectionMode && $declarationRequested)) ? 'required' : '' }} {{ $declarationLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            <input id="health_declaration" type="file" name="health_declaration" class="form-control requirement-file-input" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" aria-labelledby="healthDeclarationTitle" aria-describedby="healthDeclarationFileMeta" {{ $declarationIsRequired ? 'required' : '' }} {{ $declarationLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            @if(!$declarationLocked)
+                                <div class="requirement-dropzone" data-upload-dropzone data-input-id="health_declaration">
+                                    <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+                                    <strong>Drag and drop your file here</strong>
+                                    <span class="requirement-or">or</span>
+                                    <button type="button" class="requirement-pick-button" data-file-picker="health_declaration">Choose File</button>
+                                    <span id="healthDeclarationFileMeta" class="requirement-file-meta">PDF or IMG (Max 1 MB)</span>
+                                </div>
+                            @endif
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if($declarationLocked)
                                 <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
                             @elseif($isHealthFormCorrectionMode && $declarationRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new declaration form.</div>
                             @endif
-                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : '' }}Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.</small>
+                            <button type="button" class="requirement-sample-button" data-sample-guide
+                                data-guide-title="Declaration of Medical Information and Data Subject Consent Form"
+                                data-guide-description="Sample guide and requirements for the declaration and consent form."
+                                data-guide-correct-image="{{ asset('images/upload-guides/health-declaration-upload-this.png') }}"
+                                data-guide-correct-alt="Signed and readable Declaration of Medical Information and Data Subject Consent Form"
+                                data-guide-correct-caption="Upload the signed, clear, and readable consent form."
+                                data-guide-wrong-image="{{ asset('images/upload-guides/health-declaration-do-not-upload.png') }}"
+                                data-guide-wrong-alt="Unsigned, blurry, or unreadable Declaration of Medical Information and Data Subject Consent Form"
+                                data-guide-wrong-caption="Do not upload without a signature, or if blurry or unreadable."
+                                data-guide-reminder="Upload the signed, clear, and readable Declaration of Medical Information and Data Subject Consent Form."
+                                data-guide-file-info="Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                                <span>View Sample Guide</span>
+                            </button>
                         </div>
                         @php
                             $medicalCertificateRequested = $isDocumentRequested('medical_certificate');
                             $medicalCertificateUploaded = $hasExistingDocument('medical_certificate');
                             $medicalCertificateLocked = $isHealthFormCorrectionMode && !$medicalCertificateRequested && $medicalCertificateUploaded;
+                            $medicalCertificateIsRequired = ($applicantDocumentsRequired && !$isHealthFormCorrectionMode)
+                                || ($isHealthFormCorrectionMode && $medicalCertificateRequested);
                             $selectedMedCertFindings = old('med_cert_findings', $prefill['med_cert_findings'] ?? '');
                         @endphp
                         <div class="requirement-card {{ old('doctor_name', $prefill['doctor_name'] ?? '') || old('med_cert_date', $prefill['med_cert_date'] ?? '') || $selectedMedCertFindings || old('med_cert_findings_details', $prefill['med_cert_findings_details'] ?? '') ? 'has-old-data' : '' }}" data-requirement-card>
                             <div class="requirement-card-header">
-                                <strong>Medical Certificate @if($applicantDocumentsRequired)<span class="required">*</span>@endif</strong>
-                                <span class="requirement-badge">PDF/IMG</span>
-                            </div>
-                            <p class="requirement-guideline">Please ensure the doctor's signature and PRC License Number are clearly visible.</p>
-                            <div class="upload-example-grid" aria-label="Medical certificate upload examples">
-                                <div class="upload-example is-wrong">
-                                    <div class="upload-example-status"><span aria-hidden="true">&times;</span> Do Not Upload</div>
-                                    <img src="{{ asset('images/upload-guides/medical-certificate-incomplete.jpg') }}" alt="Incomplete medical certificate without a physician signature or license number">
-                                    <p class="upload-example-caption">Incomplete certificate without visible signature and PRC License Number.</p>
+                                <div class="requirement-heading-main">
+                                    <span class="requirement-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h1Z"></path><path d="M14 3v5h5M12 11v6M9 14h6"></path></svg>
+                                    </span>
+                                    <span class="requirement-heading-copy">
+                                        <strong id="medicalCertificateTitle">Medical Certificate @if($medicalCertificateIsRequired)<span class="required">*</span>@endif</strong>
+                                        <span class="requirement-description">Doctor's signature and PRC License Number must be clearly visible.</span>
+                                    </span>
                                 </div>
-                                <div class="upload-example is-correct">
-                                    <div class="upload-example-status"><span aria-hidden="true">&#10003;</span> Upload This</div>
-                                    <img src="{{ asset('images/upload-guides/medical-certificate-complete.jpg') }}" alt="Complete medical certificate with physician signature and license number">
-                                    <p class="upload-example-caption">Complete certificate with the doctor's signature and PRC License Number.</p>
-                                </div>
+                                <span class="requirement-badge {{ $medicalCertificateIsRequired ? 'is-required' : '' }}">{{ $medicalCertificateIsRequired ? 'Required' : 'Optional' }}</span>
                             </div>
                             @if($isHealthFormCorrectionMode && $medicalCertificateUploaded)
                                 <div class="existing-upload-preview">
@@ -3808,14 +4200,36 @@
                                     <a href="{{ $documentOpenUrl('medical_certificate') }}" target="_blank" rel="noopener">Open</a>
                                 </div>
                             @endif
-                            <input type="file" name="medical_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ (($applicantDocumentsRequired && !$isHealthFormCorrectionMode) || ($isHealthFormCorrectionMode && $medicalCertificateRequested)) ? 'required' : '' }} {{ $medicalCertificateLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            <input id="medical_certificate" type="file" name="medical_certificate" class="form-control requirement-file-input" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" aria-labelledby="medicalCertificateTitle" aria-describedby="medicalCertificateFileMeta" {{ $medicalCertificateIsRequired ? 'required' : '' }} {{ $medicalCertificateLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            @if(!$medicalCertificateLocked)
+                                <div class="requirement-dropzone" data-upload-dropzone data-input-id="medical_certificate">
+                                    <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+                                    <strong>Drag and drop your file here</strong>
+                                    <span class="requirement-or">or</span>
+                                    <button type="button" class="requirement-pick-button" data-file-picker="medical_certificate">Choose File</button>
+                                    <span id="medicalCertificateFileMeta" class="requirement-file-meta">PDF or IMG (Max 1 MB)</span>
+                                </div>
+                            @endif
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if($medicalCertificateLocked)
                                 <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
                             @elseif($isHealthFormCorrectionMode && $medicalCertificateRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new medical certificate.</div>
                             @endif
-                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : '' }}Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.</small>
+                            <button type="button" class="requirement-sample-button" data-sample-guide
+                                data-guide-title="Medical Certificate"
+                                data-guide-description="Sample guide and requirements for the medical certificate upload."
+                                data-guide-correct-image="{{ asset('images/upload-guides/medical-certificate-complete.jpg') }}"
+                                data-guide-correct-alt="Complete medical certificate with physician signature and license number"
+                                data-guide-correct-caption="Complete certificate with the doctor's signature and PRC License Number."
+                                data-guide-wrong-image="{{ asset('images/upload-guides/medical-certificate-incomplete.jpg') }}"
+                                data-guide-wrong-alt="Incomplete medical certificate without a physician signature or license number"
+                                data-guide-wrong-caption="Incomplete certificate without visible signature and PRC License Number."
+                                data-guide-reminder="Please ensure the doctor's signature and PRC License Number are clearly visible."
+                                data-guide-file-info="Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                                <span>View Sample Guide</span>
+                            </button>
                             <div class="requirement-extra">
                                 <div class="form-field span-2">
                                     <label class="form-label" for="doctor_name">Doctor's Full Name @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
@@ -3860,25 +4274,22 @@
                             $xrayRequested = $isDocumentRequested('chest_xray_result');
                             $xrayUploaded = $hasExistingDocument('chest_xray_result');
                             $xrayLocked = $isHealthFormCorrectionMode && !$xrayRequested && $xrayUploaded;
+                            $xrayIsRequired = ($applicantDocumentsRequired && !$isHealthFormCorrectionMode)
+                                || ($isHealthFormCorrectionMode && $xrayRequested);
                             $selectedXrayFindings = old('xray_findings', $prefill['xray_findings'] ?? '');
                         @endphp
                         <div class="requirement-card {{ old('xray_date', $prefill['xray_date'] ?? '') || $selectedXrayFindings || old('xray_findings_details', $prefill['xray_findings_details'] ?? '') ? 'has-old-data' : '' }}" data-requirement-card>
                             <div class="requirement-card-header">
-                                <strong>Chest X-ray Result @if($applicantDocumentsRequired)<span class="required">*</span>@endif</strong>
-                                <span class="requirement-badge">PDF/IMG</span>
-                            </div>
-                            <p class="requirement-guideline">Please upload the official radiologist's written report, not the actual film scanning image.</p>
-                            <div class="upload-example-grid" aria-label="Chest X-ray upload examples">
-                                <div class="upload-example is-wrong">
-                                    <div class="upload-example-status"><span aria-hidden="true">&times;</span> Do Not Upload</div>
-                                    <img src="{{ asset('images/upload-guides/xray-film-do-not-upload.jpg') }}" alt="Physical chest X-ray film that should not be uploaded">
-                                    <p class="upload-example-caption">Do not upload a scan or photograph of the X-ray film.</p>
+                                <div class="requirement-heading-main">
+                                    <span class="requirement-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><path d="M8 4c-2 0-3 2-3 5v7c0 2 1 4 3 4 2 0 3-2 3-5V9c0-3-1-5-3-5ZM16 4c2 0 3 2 3 5v7c0 2-1 4-3 4-2 0-3-2-3-5V9c0-3 1-5 3-5Z"></path><path d="M8 9h.01M16 9h.01M12 8v8M10 12h4"></path></svg>
+                                    </span>
+                                    <span class="requirement-heading-copy">
+                                        <strong id="chestXrayTitle">Chest X-ray Result @if($xrayIsRequired)<span class="required">*</span>@endif</strong>
+                                        <span class="requirement-description">Upload the official radiologist's written report, not the film scan.</span>
+                                    </span>
                                 </div>
-                                <div class="upload-example is-correct">
-                                    <div class="upload-example-status"><span aria-hidden="true">&#10003;</span> Upload This</div>
-                                    <img src="{{ asset('images/upload-guides/xray-written-report-upload.jpg') }}" alt="Official written radiologist report that should be uploaded">
-                                    <p class="upload-example-caption">Upload the official written report containing findings and impression.</p>
-                                </div>
+                                <span class="requirement-badge {{ $xrayIsRequired ? 'is-required' : '' }}">{{ $xrayIsRequired ? 'Required' : 'Optional' }}</span>
                             </div>
                             @if($isHealthFormCorrectionMode && $xrayUploaded)
                                 <div class="existing-upload-preview">
@@ -3886,14 +4297,36 @@
                                     <a href="{{ $documentOpenUrl('chest_xray_result') }}" target="_blank" rel="noopener">Open</a>
                                 </div>
                             @endif
-                            <input type="file" name="chest_xray_result" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ (($applicantDocumentsRequired && !$isHealthFormCorrectionMode) || ($isHealthFormCorrectionMode && $xrayRequested)) ? 'required' : '' }} {{ $xrayLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            <input id="chest_xray_result" type="file" name="chest_xray_result" class="form-control requirement-file-input" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" aria-labelledby="chestXrayTitle" aria-describedby="chestXrayFileMeta" {{ $xrayIsRequired ? 'required' : '' }} {{ $xrayLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            @if(!$xrayLocked)
+                                <div class="requirement-dropzone" data-upload-dropzone data-input-id="chest_xray_result">
+                                    <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+                                    <strong>Drag and drop your file here</strong>
+                                    <span class="requirement-or">or</span>
+                                    <button type="button" class="requirement-pick-button" data-file-picker="chest_xray_result">Choose File</button>
+                                    <span id="chestXrayFileMeta" class="requirement-file-meta">PDF or IMG (Max 1 MB)</span>
+                                </div>
+                            @endif
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if($xrayLocked)
                                 <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
                             @elseif($isHealthFormCorrectionMode && $xrayRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new Chest X-ray Result.</div>
                             @endif
-                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : '' }}Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.</small>
+                            <button type="button" class="requirement-sample-button" data-sample-guide
+                                data-guide-title="Chest X-ray Result"
+                                data-guide-description="Sample guide and requirements for the chest X-ray upload."
+                                data-guide-correct-image="{{ asset('images/upload-guides/xray-written-report-upload.jpg') }}"
+                                data-guide-correct-alt="Official written radiologist report"
+                                data-guide-correct-caption="Upload the official written report containing findings and impression."
+                                data-guide-wrong-image="{{ asset('images/upload-guides/xray-film-do-not-upload.jpg') }}"
+                                data-guide-wrong-alt="Physical chest X-ray film that should not be uploaded"
+                                data-guide-wrong-caption="Do not upload a scan or photograph of the X-ray film."
+                                data-guide-reminder="Please upload the official radiologist's written report, not the actual film scanning image."
+                                data-guide-file-info="Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                                <span>View Sample Guide</span>
+                            </button>
                             <div class="requirement-extra">
                                 <div class="form-field">
                                     <label class="form-label" for="xray_date">Date of Examination @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
@@ -3996,7 +4429,14 @@
                     <div class="esign-grid esign-mode-panel is-hidden" id="signatureUploadPanel">
                         <div class="esign-card">
                             <h3>Upload Signature</h3>
-                            <input id="digital_signature_upload" type="file" name="digital_signature_upload" class="esign-upload-input" accept=".png,.jpg,.jpeg,image/png,image/jpeg" data-upload-input data-preview-kind="image">
+                            <input id="digital_signature_upload" type="file" name="digital_signature_upload" class="esign-upload-input is-visually-hidden" accept=".png,.jpg,.jpeg,image/png,image/jpeg" aria-label="Upload signature image" data-upload-input data-preview-kind="image">
+                            <div class="requirement-dropzone esign-signature-dropzone" data-signature-dropzone data-input-id="digital_signature_upload">
+                                <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+                                <strong>Drag and drop your signature image here</strong>
+                                <span class="requirement-or">or</span>
+                                <button type="button" class="requirement-pick-button" data-signature-picker>Choose File</button>
+                                <span class="requirement-file-meta" data-signature-upload-status>PNG or JPG (Max 1 MB)</span>
+                            </div>
                             <ol class="esign-upload-instructions">
                                 <li>Upload a black PNG signature only.</li>
                                 <li>Use a transparent/no-background signature file.</li>
@@ -4018,7 +4458,7 @@
                     <div class="certify-row final-certification">
                         <input id="consent_acknowledged" type="checkbox" name="consent_acknowledged" value="1" required {{ old('consent_acknowledged') ? 'checked' : '' }}>
                         <label for="consent_acknowledged">
-                            <strong>Data Privacy Consent:</strong> {{ config('health_form_privacy.notice') }}
+                            <strong>Data Privacy Consent:</strong> {{ config('health_form_privacy.consent_statement') }}
                         </label>
                     </div>
                     <div class="btn-row">
@@ -4063,6 +4503,47 @@
             </div>
         @endif
     </div>
+
+    <dialog class="requirement-sample-dialog" id="requirementSampleDialog" aria-labelledby="requirementSampleTitle" aria-describedby="requirementSampleDescription">
+        <div class="requirement-sample-card">
+            <header class="requirement-sample-header">
+                <div class="requirement-sample-heading">
+                    <span class="requirement-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                    </span>
+                    <span>
+                        <h3 id="requirementSampleTitle" data-guide-title>Sample Guide</h3>
+                        <p id="requirementSampleDescription" data-guide-description></p>
+                    </span>
+                </div>
+                <button type="button" class="requirement-sample-close" data-guide-close aria-label="Close sample guide">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+                </button>
+            </header>
+            <div class="requirement-sample-body">
+                <div class="requirement-sample-examples">
+                    <section class="requirement-sample-example">
+                        <h4><span aria-hidden="true">&#10003;</span> Correct Example</h4>
+                        <img data-guide-correct-image alt="" loading="lazy">
+                        <p data-guide-correct-caption></p>
+                    </section>
+                    <section class="requirement-sample-example is-wrong">
+                        <h4><span aria-hidden="true">&times;</span> Do Not Upload</h4>
+                        <img data-guide-wrong-image alt="" loading="lazy">
+                        <p data-guide-wrong-caption></p>
+                    </section>
+                </div>
+                <aside class="requirement-sample-reminders">
+                    <span aria-hidden="true">i</span>
+                    <div>
+                        <strong>Additional Reminders</strong>
+                        <p data-guide-reminder></p>
+                        <p data-guide-file-info></p>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </dialog>
 
     <div class="health-error-modal" id="healthErrorModal" aria-hidden="true" data-initial-message="">
         <div class="health-error-card" role="alertdialog" aria-modal="true" aria-labelledby="healthErrorTitle" aria-describedby="healthErrorMessage">
@@ -4735,6 +5216,10 @@
                 pwdProofInput.disabled = !isPwd || isPwdFileLocked;
                 disabilityTypeWrap?.classList.toggle('is-hidden', !isPwd);
                 pwdUploadWrap?.classList.toggle('is-hidden', !isPwd);
+                const pwdDropzone = pwdUploadWrap?.querySelector('[data-upload-dropzone]');
+                const pwdPicker = pwdUploadWrap?.querySelector('[data-file-picker]');
+                pwdDropzone?.classList.toggle('is-disabled', pwdProofInput.disabled);
+                if (pwdPicker) pwdPicker.disabled = pwdProofInput.disabled;
 
                 if (!isPwd) {
                     disabilityTypeInput.value = '';
@@ -5305,9 +5790,10 @@
             }
 
             function renderUploadPreview(input) {
-                const previewScope = input.closest('.upload-card, .requirement-card');
+                const previewScope = input.closest('.upload-card, .requirement-card, .esign-card');
                 const preview = previewScope?.querySelector('[data-upload-preview]');
                 if (!preview) return;
+                const signatureStatus = previewScope.querySelector('[data-signature-upload-status]');
 
                 if (preview.dataset.objectUrl) {
                     URL.revokeObjectURL(preview.dataset.objectUrl);
@@ -5316,6 +5802,7 @@
 
                 const file = input.files && input.files[0] ? input.files[0] : null;
                 if (!file) {
+                    if (signatureStatus) signatureStatus.textContent = 'PNG or JPG (Max 1 MB)';
                     previewScope?.classList.remove('has-upload-preview');
                     preview.classList.remove('is-visible');
                     preview.innerHTML = '';
@@ -5326,6 +5813,7 @@
                 const maxSizeLabel = '1MB';
 
                 if (file.size > maxSize) {
+                    if (signatureStatus) signatureStatus.textContent = 'This file is over the 1 MB limit.';
                     preview.innerHTML = `
                         <div class="upload-preview-error">
                             <div class="upload-preview-error-header">
@@ -5349,6 +5837,7 @@
                 }
 
                 input.setCustomValidity('');
+                if (signatureStatus) signatureStatus.textContent = 'Signature image selected.';
 
                 const objectUrl = URL.createObjectURL(file);
                 preview.dataset.objectUrl = objectUrl;
@@ -5454,8 +5943,137 @@
             loadApplicantAddressLocations();
             uploadInputs.forEach((input) => {
                 renderUploadPreview(input);
-                input.addEventListener('change', () => renderUploadPreview(input));
+                input.addEventListener('change', () => {
+                    input.closest('.requirement-card')?.classList.remove('has-invalid-file');
+                    renderUploadPreview(input);
+                });
             });
+            document.querySelectorAll('[data-file-picker]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const input = document.getElementById(button.dataset.filePicker);
+                    if (!input?.disabled) input?.click();
+                });
+            });
+
+            document.querySelectorAll('[data-upload-dropzone]').forEach((dropzone) => {
+                const input = document.getElementById(dropzone.dataset.inputId);
+                if (!input) return;
+
+                dropzone.addEventListener('dragover', (event) => {
+                    if (input.disabled) return;
+                    event.preventDefault();
+                    dropzone.classList.add('is-dragging');
+                    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+                });
+                dropzone.addEventListener('dragleave', (event) => {
+                    if (!dropzone.contains(event.relatedTarget)) {
+                        dropzone.classList.remove('is-dragging');
+                    }
+                });
+                dropzone.addEventListener('drop', (event) => {
+                    event.preventDefault();
+                    dropzone.classList.remove('is-dragging');
+                    if (input.disabled || !event.dataTransfer?.files?.length) return;
+
+                    try {
+                        const transfer = new DataTransfer();
+                        transfer.items.add(event.dataTransfer.files[0]);
+                        input.files = transfer.files;
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                    } catch (error) {
+                        showErrorModal('This browser could not attach the dropped file. Please use the Choose File button.');
+                    }
+                });
+            });
+
+            document.querySelectorAll('[data-signature-dropzone]').forEach((dropzone) => {
+                const input = document.getElementById(dropzone.dataset.inputId);
+                const picker = dropzone.querySelector('[data-signature-picker]');
+                const status = dropzone.querySelector('[data-signature-upload-status]');
+                if (!input) return;
+
+                picker?.addEventListener('click', () => {
+                    if (!input.disabled) input.click();
+                });
+                dropzone.addEventListener('dragover', (event) => {
+                    if (input.disabled) return;
+                    event.preventDefault();
+                    dropzone.classList.add('is-dragging');
+                    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+                });
+                dropzone.addEventListener('dragleave', (event) => {
+                    if (!dropzone.contains(event.relatedTarget)) dropzone.classList.remove('is-dragging');
+                });
+                dropzone.addEventListener('drop', (event) => {
+                    event.preventDefault();
+                    dropzone.classList.remove('is-dragging');
+                    const file = event.dataTransfer?.files?.[0];
+                    if (input.disabled || !file) return;
+
+                    const validExtension = /\.(png|jpe?g)$/i.test(file.name);
+                    const validType = !file.type || ['image/png', 'image/jpeg', 'image/pjpeg'].includes(file.type.toLowerCase());
+                    if (!validExtension || !validType) {
+                        if (status) status.textContent = 'Please use a PNG or JPG signature image.';
+                        return;
+                    }
+                    if (file.size > 1024 * 1024) {
+                        if (status) status.textContent = 'This file is over the 1 MB limit.';
+                        return;
+                    }
+
+                    try {
+                        const transfer = new DataTransfer();
+                        transfer.items.add(file);
+                        input.files = transfer.files;
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                        if (status) status.textContent = 'Signature image selected.';
+                    } catch (error) {
+                        if (status) status.textContent = 'Could not attach the dropped file. Please use Choose File.';
+                    }
+                });
+            });
+
+            const sampleGuideDialog = document.getElementById('requirementSampleDialog');
+            let activeSampleGuideButton = null;
+            const setGuideText = (selector, value) => {
+                const target = sampleGuideDialog?.querySelector(selector);
+                if (target) target.textContent = value || '';
+            };
+            const setGuideImage = (selector, source, alt) => {
+                const image = sampleGuideDialog?.querySelector(selector);
+                if (!image) return;
+                image.src = source || '';
+                image.alt = alt || '';
+            };
+
+            document.querySelectorAll('[data-sample-guide]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    if (!sampleGuideDialog?.showModal) return;
+                    activeSampleGuideButton = button;
+                    setGuideText('[data-guide-title]', button.dataset.guideTitle);
+                    setGuideText('[data-guide-description]', button.dataset.guideDescription);
+                    setGuideText('[data-guide-correct-caption]', button.dataset.guideCorrectCaption);
+                    setGuideText('[data-guide-wrong-caption]', button.dataset.guideWrongCaption);
+                    setGuideText('[data-guide-reminder]', button.dataset.guideReminder);
+                    setGuideText('[data-guide-file-info]', button.dataset.guideFileInfo);
+                    setGuideImage('[data-guide-correct-image]', button.dataset.guideCorrectImage, button.dataset.guideCorrectAlt);
+                    setGuideImage('[data-guide-wrong-image]', button.dataset.guideWrongImage, button.dataset.guideWrongAlt);
+                    sampleGuideDialog.showModal();
+                });
+            });
+
+            sampleGuideDialog?.querySelector('[data-guide-close]')?.addEventListener('click', () => sampleGuideDialog.close());
+            sampleGuideDialog?.addEventListener('click', (event) => {
+                if (event.target === sampleGuideDialog) sampleGuideDialog.close();
+            });
+            sampleGuideDialog?.addEventListener('close', () => activeSampleGuideButton?.focus());
+
+            document.addEventListener('invalid', (event) => {
+                if (!event.target.matches?.('.requirement-file-input')) return;
+                event.target.closest('.requirement-card')?.classList.add('has-invalid-file');
+                const picker = event.target.closest('.requirement-card')?.querySelector('[data-file-picker]');
+                window.setTimeout(() => picker?.focus(), 0);
+            }, true);
             editReferenceBtn?.addEventListener('click', () => {
                 const isStudentMode = selectedReferenceMode() === 'student_number';
                 if (!referenceRequiresValidation && !isStudentMode) {

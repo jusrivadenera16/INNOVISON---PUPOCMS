@@ -979,7 +979,7 @@
     .confirmation-title {
         margin: 0 0 4px 0;
         color: #ffffff;
-        font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+        font-size: clamp(1.2rem, 2vw, 1.45rem);
         font-weight: 900;
         letter-spacing: 0;
     }
@@ -1029,7 +1029,8 @@
     }
     .confirmation-label {
         display: block;
-        font-size: 10px;
+        font-size: 11px;
+        line-height: 1.25;
         color: #64748b;
         margin-bottom: 3px;
         text-transform: uppercase;
@@ -1038,7 +1039,8 @@
     }
     .confirmation-value {
         color: #111827;
-        font-size: 13px;
+        font-size: 15px;
+        line-height: 1.3;
         font-weight: 900;
         overflow-wrap: anywhere;
     }
@@ -1048,7 +1050,8 @@
         gap: 6px;
         border-radius: 999px;
         padding: 5px 9px;
-        font-size: 10.5px;
+        font-size: 12px;
+        line-height: 1.25;
         font-weight: 800;
         background: #fff3cd;
         color: #b45309;
@@ -1155,17 +1158,17 @@
         line-height: 1.15;
     }
     .confirmation-copy-number {
-        min-height: 32px;
+        min-height: 38px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 6px;
-        padding: 7px 10px;
+        padding: 8px 12px;
         border: 1px solid rgba(245, 158, 11, .48);
         border-radius: 8px;
         background: rgba(255, 255, 255, .82);
         color: #70131b;
-        font-size: 10px;
+        font-size: 12px;
         font-weight: 850;
         cursor: pointer;
         white-space: nowrap;
@@ -1197,7 +1200,8 @@
     .confirmation-next h3 {
         margin: 0 0 8px;
         color: #8f1823;
-        font-size: 11px;
+        font-size: 14px;
+        line-height: 1.3;
         font-weight: 900;
     }
     .confirmation-timeline {
@@ -1243,15 +1247,16 @@
     .confirmation-step strong {
         margin-top: 5px;
         color: #1f2937;
-        font-size: 9px;
+        font-size: 11px;
+        line-height: 1.25;
         font-weight: 850;
     }
     .confirmation-step p {
-        max-width: 108px;
+        max-width: 128px;
         margin: 3px auto 0;
         color: #64748b;
-        font-size: 8px;
-        line-height: 1.35;
+        font-size: 10px;
+        line-height: 1.4;
     }
     .confirmation-actions {
         margin-top: 10px;
@@ -1259,15 +1264,16 @@
         border-top: 1px solid rgba(112, 19, 27, .12);
     }
     .confirmation-btn {
-        min-width: 118px;
-        min-height: 40px;
+        min-width: 132px;
+        min-height: 46px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 9px;
-        padding: 9px 15px;
+        padding: 11px 18px;
         border-radius: 8px;
-        font-size: 11.5px;
+        font-size: 13.5px;
+        line-height: 1.25;
     }
     .confirmation-btn-primary { min-width: 160px; }
     .confirmation-btn svg { width: 16px; height: 16px; }

@@ -3984,6 +3984,8 @@
     }
 
     .applicant-reference-verification-avatar {
+        position: relative;
+        overflow: hidden;
         width: 58px;
         height: 58px;
         flex: 0 0 58px;
@@ -3994,6 +3996,15 @@
         color: #821126;
         font-size: 20px;
         font-weight: 900;
+    }
+
+    .applicant-reference-verification-avatar img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: inherit;
+        object-fit: cover;
     }
 
     .applicant-reference-verification-person-copy {
@@ -11491,7 +11502,10 @@
 
                     <section class="applicant-reference-verification" id="applicantReferenceVerification" aria-live="polite" hidden>
                         <div class="applicant-reference-verification-person">
-                            <span class="applicant-reference-verification-avatar" id="applicantReferenceVerificationAvatar" aria-hidden="true">AP</span>
+                            <span class="applicant-reference-verification-avatar" id="applicantReferenceVerificationAvatar" aria-hidden="true">
+                                <span id="applicantReferenceVerificationInitials">AP</span>
+                                <img id="applicantReferenceVerificationPhoto" alt="" hidden>
+                            </span>
                             <div class="applicant-reference-verification-person-copy">
                                 <strong id="applicantReferenceVerificationName">Applicant Name</strong>
                                 <span class="applicant-reference-record-found">
@@ -11749,11 +11763,21 @@
                                             <input type="checkbox" id="applicantHasMedicalCondition" name="has_medical_condition" value="1">
                                             <span>With Medical Condition</span>
                                         </label>
+                                        <label class="applicant-pending-reason-option" id="applicantReferralOption">
+                                            <input type="checkbox" id="applicantReferralRequired" name="referral_required" value="1">
+                                            <span>Refer for Follow-up</span>
+                                        </label>
                                     </div>
                                 </div>
                                 <div id="applicantMedicalConditionField" class="applicant-condition-field" style="display: none;">
                                     <label for="applicantMedicalCondition">Medical Condition <span style="color: #dc2626;">*</span></label>
                                     <input type="text" id="applicantMedicalCondition" name="medical_condition" placeholder="e.g., Asthma, Diabetes, Hypertension..." class="applicant-condition-input">
+                                </div>
+                                <div id="applicantReferralFields" class="applicant-condition-field" style="display: none;">
+                                    <label for="applicantReferralTo">Referral Destination <span style="color: #dc2626;">*</span></label>
+                                    <input type="text" id="applicantReferralTo" name="referral_to" placeholder="e.g., Physician, specialist, or clinic" class="applicant-condition-input" maxlength="255">
+                                    <label for="applicantReferralNotes">Referral Notes <span style="color: #94a3b8;">(Optional)</span></label>
+                                    <textarea id="applicantReferralNotes" name="referral_notes" placeholder="Reason or follow-up instructions..." class="applicant-condition-textarea" rows="2" maxlength="2000"></textarea>
                                 </div>
                                 <div id="applicantFindingRemarksField" class="applicant-condition-field">
                                     <label for="applicantFindingRemarks">Remarks <span style="color: #94a3b8;">(Optional)</span></label>
@@ -12187,6 +12211,15 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="applicant-lookup-item">
+                            <div class="applicant-lookup-card">
+                                <div class="applicant-lookup-icon is-maroon">RF</div>
+                                <div class="applicant-lookup-content">
+                                    <p class="applicant-lookup-label">Referral</p>
+                                    <p class="applicant-lookup-value" id="applicantViewReferral">N/A</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -12212,6 +12245,7 @@
                     <div class="saved-review-card"><span>Review Result</span><strong id="savedReviewResult">-</strong></div>
                     <div class="saved-review-card"><span>Pending Reasons</span><strong id="savedReviewReasons">-</strong></div>
                     <div class="saved-review-card"><span>Medical Condition</span><strong id="savedReviewCondition">-</strong></div>
+                    <div class="saved-review-card"><span>Referral</span><strong id="savedReviewReferral">-</strong></div>
                     <div class="saved-review-card"><span>Remarks</span><strong id="savedReviewRemarks">-</strong></div>
                     <div class="saved-review-card"><span>Height</span><strong id="savedReviewHeight">-</strong></div>
                     <div class="saved-review-card"><span>Weight</span><strong id="savedReviewWeight">-</strong></div>
@@ -14140,7 +14174,8 @@
         const refStatus       = document.getElementById('applicantRefStatus');
         const findBtn         = document.getElementById('btnFindApplicant');
         const referenceVerification = document.getElementById('applicantReferenceVerification');
-        const referenceVerificationAvatar = document.getElementById('applicantReferenceVerificationAvatar');
+        const referenceVerificationInitials = document.getElementById('applicantReferenceVerificationInitials');
+        const referenceVerificationPhoto = document.getElementById('applicantReferenceVerificationPhoto');
         const referenceVerificationName = document.getElementById('applicantReferenceVerificationName');
         const referenceVerificationRef = document.getElementById('applicantReferenceVerificationRef');
         const referenceVerificationCourse = document.getElementById('applicantReferenceVerificationCourse');
@@ -14185,6 +14220,7 @@
         const viewMedicalCondition = document.getElementById('applicantViewMedicalCondition');
         const viewConditionReasons = document.getElementById('applicantViewConditionReasons');
         const viewConditionRemarks = document.getElementById('applicantViewConditionRemarks');
+        const viewReferral = document.getElementById('applicantViewReferral');
         const documentsButton = document.getElementById('btnViewApplicantDocuments');
         const pendingHistoryWrap = document.getElementById('applicantPendingHistoryWrap');
         const pendingHistoryButton = document.getElementById('btnViewPendingHistory');
@@ -14271,7 +14307,13 @@
         let currentLookupRedirect = '';
         let currentAssessmentReview = {};
         let currentRecordType = 'applicant';
+        const canReviewFinalSubmission = @json($canReviewFinalSubmission);
+        const canEncodeApplicantAssessment = @json($canEncodeAssessment);
+        const canLookupEmployeeRecords = @json($canLookupEmployeeRecords);
         const canApproveFinalReview = @json($canApproveFinalReview);
+        const initialWalkinReviewReference = @json($reviewReference ?? '');
+        const initialWalkinReviewType = @json($reviewType ?? 'applicant');
+        const initialWalkinReviewWorkflow = @json($reviewWorkflow ?? 'final_review');
         const getStudentUrl   = '{{ url($basePrefix . '/walkin/get-student') }}';
         const finalReviewApplicantsUrl = '{{ url($basePrefix . '/walkin/final-review-applicants') }}';
         const employeeDraftsUrl = '{{ url($basePrefix . '/walkin/employee-drafts') }}';
@@ -15099,8 +15141,21 @@
             if (refInput) refInput.value = '';
         }
 
-        function setStatus(type, msg) {
+        function setStatus(type, msg, options = {}) {
             const cleanMessage = String(msg || '').trim();
+            const toastOnly = options.toastOnly === true;
+
+            if (toastOnly && cleanMessage && typeof window.showAdminToast === 'function') {
+                window.showAdminToast(type, cleanMessage);
+                if (refStatus) {
+                    refStatus.className = 'ocr-status';
+                    refStatus.textContent = '';
+                    refStatus.hidden = true;
+                    refStatus.style.display = 'none';
+                }
+                return;
+            }
+
             if (cleanMessage && isClinicLookupMode() && ['success', 'error'].includes(type)) {
                 window.showAdminToast?.(type, cleanMessage);
             }
@@ -15160,6 +15215,8 @@
 
             const fieldValues = {
                 applicantMedicalCondition: savedReview.medical_condition || '',
+                applicantReferralTo: savedReview.referral_to || '',
+                applicantReferralNotes: savedReview.referral_notes || '',
                 applicantFindingRemarks: savedReview.med_assessment_remarks || savedReview.approval_remarks || savedReview.condition_remarks || savedReview.pending_remarks || '',
                 applicantConditionRemarks: savedReview.condition_remarks || savedReview.pending_remarks || savedReview.med_assessment_remarks || savedReview.normal_remarks || '',
                 applicantNormalRemarks: savedReview.normal_remarks || savedReview.approval_remarks || savedReview.med_assessment_remarks || savedReview.condition_remarks || savedReview.pending_remarks || '',
@@ -15180,6 +15237,7 @@
 
             const checkboxValues = {
                 applicantHasMedicalCondition: savedReview.has_medical_condition,
+                applicantReferralRequired: savedReview.referral_required,
                 applicantIncompleteRequirements: savedReview.incomplete_requirements,
                 applicantNeedsPhysicianEvaluation: savedReview.needs_physician_evaluation,
                 applicantNeedsFurtherEvaluation: savedReview.needs_further_evaluation,
@@ -15317,7 +15375,7 @@
         function hasSavedAssessmentReview(review) {
             if (!review || typeof review !== 'object') return false;
             const status = String(review.clearance_status || '').trim();
-            return Boolean(review.findings_status && [
+            return Boolean(review.referral_required) || Boolean(review.findings_status && [
                 'Pending/Conditional',
                 'Pending Resubmission'
             ].includes(status));
@@ -15635,6 +15693,10 @@
                 || savedReview.has_medical_condition === 1
                 || savedReview.has_medical_condition === '1'
                 || String(savedReview.medical_condition || '').trim() !== '';
+            const hasReferral = savedReview.referral_required === true
+                || savedReview.referral_required === 1
+                || savedReview.referral_required === '1'
+                || String(savedReview.referral_to || '').trim() !== '';
             const hasCondition = hasProfileCondition || hasReviewCondition;
             const pendingReasons = [];
             if (savedReview.incomplete_requirements) pendingReasons.push('Document Resubmission');
@@ -15650,6 +15712,10 @@
                 hasCondition,
                 status: hasCondition ? 'With Medical Condition' : 'No Medical Condition',
                 condition: savedReview.medical_condition || profileConditionText || 'N/A',
+                hasReferral,
+                referral: hasReferral
+                    ? [savedReview.referral_to, savedReview.referral_notes].filter(Boolean).join(' - ')
+                    : 'N/A',
                 reasons: pendingReasons.join(', ') || 'N/A',
                 remarks: savedReview.med_assessment_remarks || savedReview.condition_remarks || savedReview.normal_remarks || 'N/A'
             };
@@ -15666,6 +15732,7 @@
             if (viewMedicalCondition) viewMedicalCondition.textContent = summary.condition;
             if (viewConditionReasons) viewConditionReasons.textContent = summary.reasons;
             if (viewConditionRemarks) viewConditionRemarks.textContent = summary.remarks;
+            if (viewReferral) viewReferral.textContent = summary.referral;
 
             return summary;
         }
@@ -15683,6 +15750,9 @@
                 savedReviewResult: savedReview.findings_status || '-',
                 savedReviewReasons: pendingReasons.join(', ') || '-',
                 savedReviewCondition: savedReview.medical_condition || '-',
+                savedReviewReferral: savedReview.referral_required
+                    ? [savedReview.referral_to, savedReview.referral_notes].filter(Boolean).join(' - ')
+                    : '-',
                 savedReviewRemarks: savedReview.med_assessment_remarks || savedReview.condition_remarks || savedReview.normal_remarks || '-',
                 savedReviewHeight: savedReview.height !== null && savedReview.height !== undefined && savedReview.height !== '' ? formatHeightFeet(savedReview.height) : '-',
                 savedReviewWeight: savedReview.weight !== null && savedReview.weight !== undefined && savedReview.weight !== '' ? formatWeightPounds(savedReview.weight) : '-',
@@ -16414,7 +16484,13 @@
             renderSavedAssessmentReview(currentAssessmentReview, referenceNumber);
             const conditionSummary = renderMedicalConditionView(currentAssessmentReview, data);
             if (medicalConditionButton) {
-                medicalConditionButton.classList.toggle('is-visible', Boolean(conditionSummary?.hasCondition));
+                medicalConditionButton.classList.toggle('is-visible', Boolean(conditionSummary?.hasCondition || conditionSummary?.hasReferral));
+                const label = medicalConditionButton.querySelector('[data-condition-button-label]');
+                if (label) {
+                    label.textContent = conditionSummary?.hasReferral && !conditionSummary?.hasCondition
+                        ? 'Referral Details'
+                        : 'Medical Condition';
+                }
             }
             if (savedAssessmentButton) {
                 savedAssessmentButton.classList.toggle('is-visible', hasSavedReview);
@@ -16497,7 +16573,26 @@
                 hasCompletedHealthForm: formComplete
             };
 
-            if (referenceVerificationAvatar) referenceVerificationAvatar.textContent = getApplicantInitials(fullName);
+            if (referenceVerificationInitials) referenceVerificationInitials.textContent = getApplicantInitials(fullName);
+            if (referenceVerificationPhoto) {
+                referenceVerificationPhoto.hidden = true;
+                referenceVerificationPhoto.removeAttribute('src');
+                referenceVerificationPhoto.onerror = null;
+
+                try {
+                    const photoUrl = data.applicant_photo_url ? new URL(data.applicant_photo_url, window.location.href) : null;
+                    if (photoUrl && photoUrl.origin === window.location.origin) {
+                        referenceVerificationPhoto.onerror = () => {
+                            referenceVerificationPhoto.hidden = true;
+                            referenceVerificationPhoto.removeAttribute('src');
+                        };
+                        referenceVerificationPhoto.src = photoUrl.href;
+                        referenceVerificationPhoto.hidden = false;
+                    }
+                } catch (error) {
+                    referenceVerificationPhoto.hidden = true;
+                }
+            }
             if (referenceVerificationName) referenceVerificationName.textContent = fullName;
             if (referenceVerificationRef) referenceVerificationRef.textContent = data.reference_number || reference || 'N/A';
             if (referenceVerificationCourse) referenceVerificationCourse.textContent = data.course || data.course_name || 'N/A';
@@ -16616,10 +16711,11 @@
                     const isDependentRecord = data.record_type === 'dependent';
                     const isStudentRecord = data.record_type === 'student' || isDependentRecord;
                     const isLocalHealthProfile = data.lookup_source === 'local_health_profile';
+                    const isLocalSisReference = data.lookup_source === 'local_sis_reference';
                     const isLocalEmployeeReference = ['local_employee_reference', 'local_clinic_reference'].includes(data.lookup_source);
                     const isLocalEmployeeId = ['local_employee_id', 'local_clinic_id'].includes(data.lookup_source);
                     const isLocalDependentId = data.lookup_source === 'local_dependent_id';
-                    const isLocalOnlyLookup = isStudentRecord || isLocalHealthProfile || isLocalEmployeeReference || isLocalEmployeeId || isLocalDependentId;
+                    const isLocalOnlyLookup = isStudentRecord || isLocalHealthProfile || isLocalSisReference || isLocalEmployeeReference || isLocalEmployeeId || isLocalDependentId;
                     const hasCompletedHealthForm = data.has_completed_health_form === true
                         || data.has_completed_health_form === 1
                         || data.has_completed_health_form === '1';
@@ -16781,7 +16877,7 @@
             const encodeRemarksInput = document.getElementById('applicantEncodeRemarks');
 
             if (!heightInput?.value || !weightInput?.value || !bloodPressureInput?.value.trim() || !pulseRateInput?.value || !respiratoryRateInput?.value || !temperatureInput?.value) {
-                setStatus('error', 'Please complete the height, weight, blood pressure, pulse rate, respiratory rate, and temperature fields.');
+                setStatus('error', 'Please complete the height, weight, blood pressure, pulse rate, respiratory rate, and temperature fields.', { toastOnly: true });
                 return;
             }
 
@@ -16855,6 +16951,9 @@
             const findingsStatusInput = document.querySelector('input[name="applicant_findings_status"]:checked');
             const clearanceDecisionInput = document.querySelector('input[name="applicant_clearance_decision"]:checked');
             const medicalConditionCheckbox = document.getElementById('applicantHasMedicalCondition');
+            const referralRequiredCheckbox = document.getElementById('applicantReferralRequired');
+            const referralToInput = document.getElementById('applicantReferralTo');
+            const referralNotesInput = document.getElementById('applicantReferralNotes');
             const heightInput = document.getElementById('applicantHeight');
             const weightInput = document.getElementById('applicantWeight');
             const bloodPressureInput = document.getElementById('applicantBloodPressure');
@@ -16867,6 +16966,12 @@
             const heightValue = heightInput?.value ? parseHeightFeet(heightInput.value) : null;
             if (heightInput?.value && (heightValue === null || heightValue < 1 || heightValue > 10)) {
                 setStatus('error', 'Height must use feet and inches, e.g., 5\'6".');
+                return;
+            }
+
+            if (findingsStatusInput?.value === 'With Findings' && referralRequiredCheckbox?.checked && !referralToInput?.value.trim()) {
+                setStatus('error', 'Please enter the referral destination.', { toastOnly: true });
+                referralToInput?.focus();
                 return;
             }
 
@@ -16894,6 +16999,9 @@
                     covid_positive_date: covidPositiveInput?.value === 'Yes' ? (covidPositiveDateInput?.value || '') : '',
                     has_medical_condition: Boolean(medicalConditionCheckbox?.checked),
                     medical_condition: medicalConditionCheckbox?.checked ? (medicalConditionInput?.value.trim() || '') : '',
+                    referral_required: Boolean(referralRequiredCheckbox?.checked),
+                    referral_to: referralToInput?.value.trim() || '',
+                    referral_notes: referralNotesInput?.value.trim() || '',
                     condition_remarks: conditionRemarksInput?.value.trim() || '',
                     med_assessment_remarks: findingsStatusInput?.value === 'With Findings'
                         ? (findingRemarksInput?.value.trim() || '')
@@ -16956,6 +17064,9 @@
             const findingsStatusInput = document.querySelector('input[name="applicant_findings_status"]:checked');
             const clearanceDecisionInput = document.querySelector('input[name="applicant_clearance_decision"]:checked');
             const medicalConditionCheckbox = document.getElementById('applicantHasMedicalCondition');
+            const referralRequiredCheckbox = document.getElementById('applicantReferralRequired');
+            const referralToInput = document.getElementById('applicantReferralTo');
+            const referralNotesInput = document.getElementById('applicantReferralNotes');
             const incompleteRequirementsCheckbox = document.getElementById('applicantIncompleteRequirements');
             const physicianEvaluationCheckbox = document.getElementById('applicantNeedsPhysicianEvaluation');
             const furtherEvaluationCheckbox = document.getElementById('applicantNeedsFurtherEvaluation');
@@ -16986,7 +17097,7 @@
             const vitalValue = (input) => String(input?.value ?? '').trim();
 
             if (!findingsStatusInput) {
-                setStatus('error', 'Please select the nurse findings review result.');
+                setStatus('error', 'Please select the nurse findings review result.', { toastOnly: true });
                 return;
             }
             if (!clearanceDecisionInput) {
@@ -16997,6 +17108,7 @@
             const hasFindings = findingsStatusInput.value === 'With Findings';
             const isPendingDecision = clearanceDecisionInput.value === 'pending';
             const hasMedicalCondition = Boolean(medicalConditionCheckbox?.checked);
+            const referralRequired = hasFindings && !isFacultyRecord && Boolean(referralRequiredCheckbox?.checked);
             const hasIncompleteRequirements = Boolean(incompleteRequirementsCheckbox?.checked);
             const needsPhysicianEvaluation = Boolean(physicianEvaluationCheckbox?.checked);
             const needsFurtherEvaluation = Boolean(furtherEvaluationCheckbox?.checked);
@@ -17015,6 +17127,12 @@
                 return;
             }
 
+            if (referralRequired && !referralToInput?.value.trim()) {
+                setStatus('error', 'Please enter the referral destination.', { toastOnly: true });
+                referralToInput?.focus();
+                return;
+            }
+
             if (isPendingDecision && hasIncompleteRequirements && selectedResubmissionDocs.length === 0) {
                 setStatus('error', 'Please select at least one document for resubmission.');
                 return;
@@ -17028,7 +17146,8 @@
             if ([vitalHeightInput, vitalWeightInput, vitalBloodPressureInput, vitalPulseRateInput, vitalRespiratoryRateInput, vitalTemperatureInput].some((input) => !vitalValue(input))) {
                 setStatus('error', isFacultyRecord
                     ? 'Please complete the faculty physical examination vital signs.'
-                    : 'Please complete the height, weight, blood pressure, pulse rate, respiratory rate, and temperature fields.');
+                    : 'Please complete the height, weight, blood pressure, pulse rate, respiratory rate, and temperature fields.',
+                    { toastOnly: true });
                 return;
             }
 
@@ -17061,6 +17180,9 @@
                 temperature: vitalValue(vitalTemperatureInput),
                 covid_positive: isFacultyRecord ? '' : covidPositiveInput.value,
                 covid_positive_date: !isFacultyRecord && covidPositiveInput.value === 'Yes' ? covidPositiveDateInput.value : '',
+                referral_required: referralRequired,
+                referral_to: referralRequired ? referralToInput.value.trim() : '',
+                referral_notes: referralRequired ? (referralNotesInput?.value.trim() || '') : '',
                 med_assessment_remarks: hasFindings
                     ? (findingRemarksInput?.value.trim() || '')
                     : (normalRemarksInput?.value.trim() || '')
@@ -17376,13 +17498,15 @@
 
         const findingsInputs = document.querySelectorAll('input[name="applicant_findings_status"]');
         const clearanceDecisionInputs = document.querySelectorAll('input[name="applicant_clearance_decision"]');
-        const pendingReasonInputs = document.querySelectorAll('#applicantHasMedicalCondition, #applicantIncompleteRequirements, #applicantNeedsPhysicianEvaluation, #applicantNeedsFurtherEvaluation, #applicantNeedsHealthFormCorrection, #applicantOtherPendingReason');
+        const pendingReasonInputs = document.querySelectorAll('#applicantHasMedicalCondition, #applicantReferralRequired, #applicantIncompleteRequirements, #applicantNeedsPhysicianEvaluation, #applicantNeedsFurtherEvaluation, #applicantNeedsHealthFormCorrection, #applicantOtherPendingReason');
         const medicalConditionFields = document.getElementById('applicantConditionFields');
             const clearanceDecisionFields = document.getElementById('applicantClearanceDecisionFields');
             const pendingDecisionFields = document.getElementById('applicantPendingDecisionFields');
             const normalRemarksFields = document.getElementById('applicantNormalRemarksFields');
             const findingRemarksField = document.getElementById('applicantFindingRemarksField');
             const medicalConditionField = document.getElementById('applicantMedicalConditionField');
+            const referralOption = document.getElementById('applicantReferralOption');
+            const referralFields = document.getElementById('applicantReferralFields');
             const otherPendingReasonField = document.getElementById('applicantOtherPendingReasonField');
             const resubmissionDocsField = document.getElementById('applicantResubmissionDocsField');
             const covidPositiveInputs = document.querySelectorAll('input[name="applicant_covid_positive"]');
@@ -17559,6 +17683,7 @@
             const hasFindings = selectedFinding === 'With Findings';
             const hasNormalResult = selectedFinding === 'No Findings / Normal';
             const hasReviewResult = hasFindings || hasNormalResult;
+            const isFacultyRecord = isClinicLookupMode() && !isStudentLookupResult();
             if (hasReviewResult && !selectedDecision) {
                 const approveDecision = document.querySelector('input[name="applicant_clearance_decision"][value="approve"]');
                 if (approveDecision) {
@@ -17568,6 +17693,8 @@
             }
             const isPendingDecision = selectedDecision === 'pending';
             const hasMedicalCondition = Boolean(document.getElementById('applicantHasMedicalCondition')?.checked);
+            const referralToggle = document.getElementById('applicantReferralRequired');
+            const referralRequired = !isFacultyRecord && Boolean(referralToggle?.checked);
             const hasIncompleteRequirements = Boolean(document.getElementById('applicantIncompleteRequirements')?.checked);
             const hasOtherPendingReason = Boolean(document.getElementById('applicantOtherPendingReason')?.checked);
             carryAssessmentRemarksForCurrentChoice();
@@ -17590,6 +17717,21 @@
             if (medicalConditionField) {
                 medicalConditionField.style.display = hasFindings && hasMedicalCondition ? 'flex' : 'none';
             }
+            if (referralOption) {
+                referralOption.style.display = isFacultyRecord ? 'none' : '';
+            }
+            if (referralFields) {
+                referralFields.style.display = !isFacultyRecord && hasFindings && referralRequired ? 'flex' : 'none';
+            }
+            const referralToInput = document.getElementById('applicantReferralTo');
+            if (referralToInput) {
+                referralToInput.required = !isFacultyRecord && hasFindings && referralRequired;
+                if (isFacultyRecord || !hasFindings || !referralRequired) referralToInput.value = '';
+            }
+            const referralNotesInput = document.getElementById('applicantReferralNotes');
+            if (referralNotesInput && (isFacultyRecord || !hasFindings || !referralRequired)) {
+                referralNotesInput.value = '';
+            }
             if (otherPendingReasonField) {
                 otherPendingReasonField.style.display = isPendingDecision && hasOtherPendingReason ? 'flex' : 'none';
             }
@@ -17597,11 +17739,13 @@
                 resubmissionDocsField.style.display = isPendingDecision && hasIncompleteRequirements ? 'flex' : 'none';
             }
 
+            if (isFacultyRecord && referralToggle) referralToggle.checked = false;
             if (!hasFindings) {
                 const conditionInput = document.getElementById('applicantMedicalCondition');
                 if (conditionInput) conditionInput.value = '';
                 const conditionToggle = document.getElementById('applicantHasMedicalCondition');
                 if (conditionToggle) conditionToggle.checked = false;
+                if (referralToggle) referralToggle.checked = false;
             } else {
                 if (!hasMedicalCondition) {
                     const conditionInput = document.getElementById('applicantMedicalCondition');
@@ -18381,6 +18525,30 @@
                     doLookup();
                 }
             });
+        }
+
+        if (initialWalkinReviewReference && backdrop) {
+            if (initialWalkinReviewType === 'employee' && canLookupEmployeeRecords) {
+                backdrop.classList.add('show');
+                currentLookupMode = 'clinic';
+                currentApplicantWorkflow = 'review';
+                resetLookupState();
+                applyLookupMode('clinic');
+                if (refInput) refInput.value = initialWalkinReviewReference;
+                setEntryMode(true);
+                doLookup();
+            } else if (initialWalkinReviewWorkflow === 'encode' && canEncodeApplicantAssessment) {
+                backdrop.classList.add('show');
+                applyLookupMode('applicant');
+                showApplicantReferenceEntry('encode');
+                if (refInput) refInput.value = initialWalkinReviewReference;
+                doLookup();
+            } else if (canReviewFinalSubmission) {
+                backdrop.classList.add('show');
+                markFinalReviewTimeIn(initialWalkinReviewReference).finally(function () {
+                    openFinalReviewReference(initialWalkinReviewReference);
+                });
+            }
         }
 
     })();
