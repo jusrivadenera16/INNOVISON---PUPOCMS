@@ -9,7 +9,10 @@ use App\Models\HealthProfile;
 use App\Models\MarClearanceSubcategorySource;
 use App\Models\StudentMedicalAssessment;
 use App\Models\User;
+use App\Services\HealthFormPdfSnapshotService;
 use App\Services\MarClearanceIssuanceService;
+use App\Services\StudentNotificationMailer;
+use App\Http\Controllers\WalkInController;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,6 +50,7 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
             $table->string('user_role')->nullable();
             $table->string('user_type')->nullable();
             $table->string('idp_role')->nullable();
+            $table->string('student_type')->nullable();
             $table->string('student_number')->nullable();
             $table->string('reference_number')->nullable();
             $table->string('status')->default('active');
@@ -63,8 +67,15 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
             $table->string('reference_number')->nullable();
             $table->string('clearance_status')->nullable();
             $table->string('physical_assessment_status')->nullable();
+            $table->boolean('documents_valid')->default(false);
+            $table->timestamp('clearance_revoked_at')->nullable();
             $table->text('pending_reason')->nullable();
             $table->text('medical_condition_remarks')->nullable();
+            $table->json('resubmission_required_documents')->nullable();
+            $table->timestamp('resubmission_requested_at')->nullable();
+            $table->timestamp('pending_compliance_reminder_sent_at')->nullable();
+            $table->unsignedInteger('pending_compliance_reminder_count')->default(0);
+            $table->timestamp('resubmitted_at')->nullable();
             $table->timestamp('verified_at')->nullable();
             $table->unsignedBigInteger('approved_by_user_id')->nullable();
             $table->string('puptas_sync_status')->nullable();
@@ -81,6 +92,15 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
             $table->string('status')->nullable();
             $table->timestamp('submitted_at')->nullable();
             $table->timestamp('approved_at')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('health_profile_correction_requests', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->unsignedBigInteger('health_profile_id')->nullable();
+            $table->string('status')->nullable();
+            $table->timestamp('reviewed_at')->nullable();
             $table->timestamps();
         });
 
@@ -231,6 +251,131 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
             DB::table('student_medical_assessments')->where('id', $assessment->id)->value('findings_encrypted')
         );
         $this->assertSame('student_medical_assessment_added', ActivityLog::query()->value('event_type'));
+    }
+
+    public function test_regular_student_can_be_approved_without_a_physical_assessment(): void
+    {
+        $student = $this->makeStudent(['student_type' => 'regular']);
+        $superadmin = $this->makeStaff();
+        $superadmin->user_role = User::ROLE_SUPERADMIN;
+        $superadmin->save();
+        $profile = $this->makeProfileFor($student, 'For Verification');
+        $this->actingAs($superadmin, 'admin');
+
+        $issuanceService = \Mockery::mock(MarClearanceIssuanceService::class);
+        $issuanceService->shouldReceive('syncApprovedHealthProfile')
+            ->once()
+            ->with(\Mockery::type(HealthProfile::class), true);
+        $this->app->instance(MarClearanceIssuanceService::class, $issuanceService);
+
+        $mailer = \Mockery::mock(StudentNotificationMailer::class);
+        $mailer->shouldReceive('sendHealthRecordNotice')
+            ->once()
+            ->with(\Mockery::type(User::class), 'approved', \Mockery::type('array'));
+        $this->app->instance(StudentNotificationMailer::class, $mailer);
+
+        $snapshotService = \Mockery::mock(HealthFormPdfSnapshotService::class);
+        $snapshotService->shouldReceive('saveApprovedSnapshot')
+            ->once()
+            ->with(\Mockery::type(HealthProfile::class));
+        $this->app->instance(HealthFormPdfSnapshotService::class, $snapshotService);
+
+        $response = app(AdminController::class)->updateClearance(
+            Request::create('/health-profile/' . $profile->id . '/update', 'PUT', [
+                'clearance_status' => 'Fully Cleared',
+                'physical_assessment_status' => 'Not Yet Conducted',
+                'documents_valid' => 'on',
+            ]),
+            $profile->id
+        );
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('Fully Cleared', $profile->fresh()->clearance_status);
+        $this->assertSame('Not Yet Conducted', $profile->fresh()->physical_assessment_status);
+        $this->assertTrue((bool) $profile->fresh()->documents_valid);
+        $this->assertTrue((bool) $student->fresh()->is_health_profile_completed);
+    }
+
+    public function test_ladderized_student_still_requires_a_completed_physical_assessment_for_approval(): void
+    {
+        $student = $this->makeStudent(['student_type' => 'ladderized']);
+        $superadmin = $this->makeStaff();
+        $superadmin->user_role = User::ROLE_SUPERADMIN;
+        $superadmin->save();
+        $profile = $this->makeProfileFor($student, 'For Verification');
+        $this->actingAs($superadmin, 'admin');
+
+        $response = app(AdminController::class)->updateClearance(
+            Request::create('/health-profile/' . $profile->id . '/update', 'PUT', [
+                'clearance_status' => 'Fully Cleared',
+                'physical_assessment_status' => 'Not Yet Conducted',
+                'documents_valid' => '1',
+            ]),
+            $profile->id
+        );
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('For Verification', $profile->fresh()->clearance_status);
+        $this->assertNull($profile->fresh()->physical_assessment_status);
+    }
+
+    public function test_regular_student_cannot_be_moved_to_applicants_final_review(): void
+    {
+        $student = $this->makeStudent(['student_type' => 'regular']);
+        $profile = $this->makeProfileFor($student, 'Pending/Conditional');
+
+        $response = app(AdminController::class)->markHealthProfileForFinalReview(
+            Request::create('/health-profile/' . $profile->id . '/for-final-review', 'POST'),
+            $profile->id
+        );
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('Pending/Conditional', $profile->fresh()->clearance_status);
+        $this->assertSame(
+            route('admin.health_records', ['tab' => 'pending_compliance']),
+            $response->getTargetUrl()
+        );
+    }
+
+    public function test_regular_student_with_a_legacy_final_review_status_is_hidden_from_applicant_queue(): void
+    {
+        $student = $this->makeStudent(['student_type' => 'regular']);
+        $this->makeProfileFor($student, 'For Final Review');
+
+        $response = app(WalkInController::class)->finalReviewApplicants(
+            Request::create('/walkin/final-review-applicants', 'GET')
+        );
+
+        $this->assertSame([], $response->getData(true)['applicants']);
+    }
+
+    public function test_regular_student_record_can_be_rejected_without_a_physical_assessment(): void
+    {
+        $student = $this->makeStudent(['student_type' => 'regular']);
+        $superadmin = $this->makeStaff();
+        $superadmin->user_role = User::ROLE_SUPERADMIN;
+        $superadmin->save();
+        $profile = $this->makeProfileFor($student, 'For Verification');
+        $this->actingAs($superadmin, 'admin');
+
+        $issuanceService = \Mockery::mock(MarClearanceIssuanceService::class);
+        $issuanceService->shouldReceive('syncApprovedHealthProfile')
+            ->once()
+            ->with(\Mockery::type(HealthProfile::class), false);
+        $this->app->instance(MarClearanceIssuanceService::class, $issuanceService);
+
+        $response = app(AdminController::class)->updateClearance(
+            Request::create('/health-profile/' . $profile->id . '/update', 'PUT', [
+                'clearance_status' => 'Rejected',
+                'physical_assessment_status' => 'Not Yet Conducted',
+                'documents_valid' => '0',
+            ]),
+            $profile->id
+        );
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('Rejected', $profile->fresh()->clearance_status);
+        $this->assertFalse((bool) $student->fresh()->is_health_profile_completed);
     }
 
     public function test_medical_assessment_fields_are_optional_when_at_least_one_clinical_detail_is_provided(): void

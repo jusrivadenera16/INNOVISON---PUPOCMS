@@ -5262,7 +5262,7 @@ public function updateClearance(Request $request, $id)
         'verified_at'      => ['nullable', 'date'],
         'medical_condition_remarks' => ['nullable', 'string'],
         'physical_assessment_status' => ['required', Rule::in(['Not Yet Conducted', 'Completed / Passed'])],
-        'documents_valid' => ['nullable', 'accepted'],
+        'documents_valid' => ['nullable', Rule::in(['yes', 'on', '1', '0'])],
         'resubmission_required_documents' => ['nullable', 'array'],
         'resubmission_required_documents.*' => ['string', Rule::in(['student_photo', 'health_declaration', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])],
     ]);
@@ -5270,6 +5270,8 @@ public function updateClearance(Request $request, $id)
     $record = HealthProfile::with('user')->findOrFail($id);
     $recordClinicAccountType = $record->user?->clinicAccountTypeKey();
     $recordIsLocalOnly = in_array($recordClinicAccountType, ['student', 'faculty', 'non_teaching_staff', 'dependent'], true);
+    $recordIsRegularStudent = $recordClinicAccountType === 'student'
+        && strtolower(trim((string) $record->user?->student_type)) === 'regular';
     $previousStatus = (string) $record->clearance_status;
     $requestedStatus = (string) $request->input('clearance_status');
     $isApproval = in_array($requestedStatus, ['Issued', 'Fully Cleared'], true);
@@ -5283,8 +5285,14 @@ public function updateClearance(Request $request, $id)
         return back()->withInput()->with('error', 'Select at least one document that needs resubmission.');
     }
 
-    if ($isApproval && (!$documentsValid || $request->input('physical_assessment_status') !== 'Completed / Passed')) {
-        return back()->withInput()->with('error', 'Medical clearance can only be issued after documents are marked valid and physical assessment is Completed / Passed.');
+    $assessmentIncomplete = !$recordIsRegularStudent
+        && $request->input('physical_assessment_status') !== 'Completed / Passed';
+    if ($isApproval && (!$documentsValid || $assessmentIncomplete)) {
+        $approvalError = $recordIsRegularStudent
+            ? 'A regular student health record can only be approved after documents are marked valid.'
+            : 'Medical clearance can only be issued after documents are marked valid and physical assessment is Completed / Passed.';
+
+        return back()->withInput()->with('error', $approvalError);
     }
 
     // Update Status
@@ -5857,6 +5865,13 @@ public function updateClearance(Request $request, $id)
     public function markHealthProfileForFinalReview(Request $request, $id)
     {
         $record = HealthProfile::with('user')->findOrFail($id);
+
+        if ($record->user?->clinicAccountTypeKey() === 'student'
+            && strtolower(trim((string) $record->user?->student_type)) === 'regular') {
+            return redirect()
+                ->route('admin.health_records', ['tab' => 'pending_compliance'])
+                ->with('error', 'Regular students cannot be moved to Applicants Final Review.');
+        }
 
         $record->clearance_status = 'For Final Review';
         $record->physical_assessment_status = 'Encoded / For Final Review';

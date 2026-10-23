@@ -86,9 +86,10 @@
             <td class="student-number-label">PUP Student No.:</td>
             <td class="student-number-value">{{ $profile->student_number ?: $profile->user->student_number }}</td>
         </tr>
-        <tr>
-            <td class="line-label home-address-label-cell">Home Address:</td>
-            <td class="line-value home-address-value-cell">{{ $printedHomeAddress }}</td>
+        <tr class="home-address-row">
+            <td class="home-address-cell" colspan="2">
+                <span class="line-label home-address-label">Home Address:</span><span class="line-value home-address-value">{{ $printedHomeAddress }}</span>
+            </td>
             <td class="line-label school-year-label">School Year:</td>
             <td class="line-value">{{ $profile->school_year ?? '2025-2026' }}</td>
         </tr>

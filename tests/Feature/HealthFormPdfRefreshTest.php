@@ -306,6 +306,28 @@ class HealthFormPdfRefreshTest extends TestCase
         $this->assertStringContainsString('font-size: 11px !important', $html);
     }
 
+    public function test_home_address_value_starts_directly_after_its_label(): void
+    {
+        $user = (new User())->forceFill(['name' => 'Address Layout Student']);
+        $profile = (new HealthProfile())->forceFill([
+            'home_address' => '123 Sample Street, Taguig City',
+        ]);
+        $profile->setRelation('user', $user);
+
+        $html = view('student.print_health_form', [
+            'profile' => $profile,
+            'pdfMode' => true,
+            'healthFormIdentity' => [],
+        ])->render();
+
+        $this->assertMatchesRegularExpression(
+            '/<span class="line-label home-address-label">Home Address:<\/span><span class="line-value home-address-value">123 Sample Street, Taguig City<\/span>/',
+            $html
+        );
+        $this->assertStringContainsString('.home-address-label { display: inline-block; width: 72pt;', $html);
+        $this->assertStringContainsString('.home-address-value { display: inline-block; width: 240pt;', $html);
+    }
+
     public function test_very_long_student_name_automatically_uses_a_smaller_single_line_font(): void
     {
         $user = User::forceCreate([

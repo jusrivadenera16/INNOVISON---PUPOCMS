@@ -3903,24 +3903,45 @@ public function account(Request $request)
             return redirect('/login-as-student')->with('error', 'Please login first.');
         }
 
-        $healthProfile = HealthProfile::query()->where('user_id', $user->id)->first();
+        $usesEmployeeHealthForm = $this->shouldUseEmployeeHealthForm($user);
+        $healthProfile = $usesEmployeeHealthForm
+            ? EmployeeHealthProfile::query()->where('user_id', $user->id)->first()
+            : HealthProfile::query()->where('user_id', $user->id)->first();
         if (!$healthProfile) {
             return redirect('/student/account?view=health-record')
                 ->with('error', 'Submit your health profile before uploading replacement requirements.');
         }
 
-        $activeCorrectionRequest = $this->activeHealthProfileCorrectionRequest($healthProfile);
-        $requiredDocuments = collect($activeCorrectionRequest?->required_documents ?? $healthProfile->resubmission_required_documents ?? [])
+        $activeCorrectionRequest = $usesEmployeeHealthForm
+            ? HealthProfileCorrectionRequest::query()
+                ->where('user_id', $user->id)
+                ->where('employee_health_profile_id', $healthProfile->id)
+                ->active()
+                ->latest('requested_at')
+                ->latest('id')
+                ->first()
+            : $this->activeHealthProfileCorrectionRequest($healthProfile);
+        $legacyRequiredDocuments = $usesEmployeeHealthForm
+            ? $healthProfile->resubmission_required_fields
+            : $healthProfile->resubmission_required_documents;
+        $requiredDocuments = collect($activeCorrectionRequest?->required_documents ?? $legacyRequiredDocuments ?? [])
             ->filter()
             ->intersect(['student_photo', 'health_declaration', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])
             ->values();
 
         $statusNormalized = strtolower(trim((string) $healthProfile->clearance_status));
+        $approvedStatuses = $usesEmployeeHealthForm
+            ? ['issued', 'fully cleared', 'approved', 'cleared']
+            : ['issued', 'fully cleared'];
+        $isApprovedStatus = in_array($statusNormalized, $approvedStatuses, true);
+        $preserveApprovalHistory = !empty($healthProfile->verified_at)
+            || !empty($healthProfile->approved_by_user_id)
+            || $isApprovedStatus;
         $allowsResubmission = $statusNormalized === 'pending resubmission'
             || ($requiredDocuments->isNotEmpty() && (
                 str_contains($statusNormalized, 'pending')
                 || str_contains($statusNormalized, 'conditional')
-                || in_array($statusNormalized, ['issued', 'fully cleared'], true)
+                || $isApprovedStatus
             ));
 
         if (!$allowsResubmission || $requiredDocuments->isEmpty()) {
@@ -3928,9 +3949,6 @@ public function account(Request $request)
                 ->with('error', 'There are no replacement requirements requested for this record.');
         }
 
-        $preserveApprovalHistory = !empty($healthProfile->verified_at)
-            || !empty($healthProfile->approved_by_user_id)
-            || in_array(strtolower(trim((string) $healthProfile->clearance_status)), ['issued', 'fully cleared'], true);
         $pendingReasonBeforeUpload = trim((string) $healthProfile->pending_reason);
         $pendingReasonSearch = strtolower($pendingReasonBeforeUpload);
         $requiresManualComplianceAfterUpload = str_contains($pendingReasonSearch, 'others:')
@@ -3940,9 +3958,9 @@ public function account(Request $request)
         $documentRules = [
             'student_photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
             'health_declaration' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
-            'medical_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
-            'chest_xray_result' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
-            'pwd_id_proof' => ['required', 'file', 'mimes:pdf', 'max:1024'],
+            'medical_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'chest_xray_result' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'pwd_id_proof' => ['required', 'file', 'mimes:pdf', 'max:2048'],
         ];
 
         $attributeNames = [
@@ -3959,13 +3977,36 @@ public function account(Request $request)
 
         $request->validate($rules, [], $attributeNames);
 
-        $storageFolders = [
-            'student_photo' => 'health_profiles/photos',
-            'health_declaration' => 'health_profiles/health_declarations',
-            'medical_certificate' => 'health_profiles/medical_certificates',
-            'chest_xray_result' => 'health_profiles/chest_xray_results',
-            'pwd_id_proof' => 'health_profiles/pwd_id_proofs',
-        ];
+        $fieldMap = $usesEmployeeHealthForm
+            ? [
+                'student_photo' => 'student_photo',
+                'health_declaration' => 'health_declaration',
+                'medical_certificate' => 'medical_certificate',
+                'chest_xray_result' => 'chest_xray_document',
+                'pwd_id_proof' => 'pwd_id_proof',
+            ]
+            : [
+                'student_photo' => 'student_photo',
+                'health_declaration' => 'health_declaration',
+                'medical_certificate' => 'medical_certificate',
+                'chest_xray_result' => 'chest_xray_result',
+                'pwd_id_proof' => 'pwd_id_proof',
+            ];
+        $storageFolders = $usesEmployeeHealthForm
+            ? [
+                'student_photo' => 'health_profile_employees/photos',
+                'health_declaration' => 'health_profile_employees/health_declarations',
+                'medical_certificate' => 'health_profile_employees/medical_certificates',
+                'chest_xray_result' => 'health_profile_employees/chest_xray_documents',
+                'pwd_id_proof' => 'health_profile_employees/pwd_id_proofs',
+            ]
+            : [
+                'student_photo' => 'health_profiles/photos',
+                'health_declaration' => 'health_profiles/health_declarations',
+                'medical_certificate' => 'health_profiles/medical_certificates',
+                'chest_xray_result' => 'health_profiles/chest_xray_results',
+                'pwd_id_proof' => 'health_profiles/pwd_id_proofs',
+            ];
 
         $storedPaths = [];
         $oldPaths = [];
@@ -3976,7 +4017,8 @@ public function account(Request $request)
                     continue;
                 }
 
-                $oldPaths[$document] = ltrim((string) $healthProfile->{$document}, '/');
+                $field = $fieldMap[$document];
+                $oldPaths[$document] = ltrim((string) $healthProfile->{$field}, '/');
                 $storedPaths[$document] = $this->healthFiles()->store(
                     $request->file($document),
                     $storageFolders[$document]
@@ -3984,7 +4026,7 @@ public function account(Request $request)
             }
 
             foreach ($storedPaths as $document => $path) {
-                $healthProfile->{$document} = $path;
+                $healthProfile->{$fieldMap[$document]} = $path;
             }
 
             $healthProfile->clearance_status = $requiresManualComplianceAfterUpload ? 'Pending/Conditional' : 'For Verification';
@@ -3994,7 +4036,11 @@ public function account(Request $request)
                 $healthProfile->verified_at = null;
                 $healthProfile->approved_by_user_id = null;
             }
-            $healthProfile->resubmission_required_documents = null;
+            if ($usesEmployeeHealthForm) {
+                $healthProfile->resubmission_required_fields = null;
+            } else {
+                $healthProfile->resubmission_required_documents = null;
+            }
             $healthProfile->resubmission_requested_at = null;
             $healthProfile->resubmitted_at = now();
             $healthProfile->save();
@@ -4019,18 +4065,22 @@ public function account(Request $request)
                 }
             }
 
-            $user->is_health_profile_completed = 0;
-            $user->save();
+            if (!$preserveApprovalHistory) {
+                $user->is_health_profile_completed = 0;
+                $user->save();
+            }
 
-            foreach ($oldPaths as $oldPath) {
-                $this->deleteHealthFileIfUnreferenced($oldPath);
+            if (!$usesEmployeeHealthForm) {
+                foreach ($oldPaths as $oldPath) {
+                    $this->deleteHealthFileIfUnreferenced($oldPath);
+                }
             }
 
             \App\Models\ActivityLog::create([
                 'user_id' => $user->id,
                 'user_name' => $user->name,
                 'action' => 'Health Requirements Resubmitted',
-                'description' => 'Student uploaded replacement health profile requirement files.',
+                'description' => ($usesEmployeeHealthForm ? 'Employee' : 'Student') . ' uploaded replacement health profile requirement files.',
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -4050,7 +4100,8 @@ public function account(Request $request)
 
             Log::error('Health requirement resubmission failed', [
                 'user_id' => $user->id,
-                'health_profile_id' => $healthProfile->id,
+                'profile_type' => $usesEmployeeHealthForm ? 'employee' : 'student',
+                'profile_id' => $healthProfile->id,
                 ...SensitiveLogRedactor::exceptionContext($e),
             ]);
 
@@ -6149,7 +6200,15 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
         'certified_at' => now(),
         'submission_status' => $adminForm ? 'approved' : 'submitted',
         'clearance_status' => $adminForm ? 'Approved' : 'For Verification',
+        'pending_reason' => $adminForm ? $existingEmployeeProfile?->pending_reason : null,
         'documents_valid' => $adminForm ? true : null,
+        'resubmission_required_fields' => $adminForm ? $existingEmployeeProfile?->resubmission_required_fields : null,
+        'resubmission_requested_at' => $adminForm ? $existingEmployeeProfile?->resubmission_requested_at : null,
+        'pending_compliance_reminder_sent_at' => $adminForm ? $existingEmployeeProfile?->pending_compliance_reminder_sent_at : null,
+        'pending_compliance_reminder_count' => $adminForm ? ($existingEmployeeProfile?->pending_compliance_reminder_count ?? 0) : 0,
+        'resubmitted_at' => !$adminForm && $activeEmployeeHealthFormRequest
+            ? now()
+            : $existingEmployeeProfile?->resubmitted_at,
         'verified_at' => $adminForm ? now() : null,
         'approved_by_user_id' => $adminForm ? $user->id : null,
     ]);
@@ -6804,7 +6863,7 @@ public function storeHealthForm(Request $request)
         'landline'          => ['required', 'string', 'max:20', 'regex:/^(?:[0-9+\-\s()]+|N\/?A|NONE)$/i'],
         'cellphone'         => $studentMobileRule,
         'has_illness'       => 'required|string|in:Yes,No',
-        'medical_history'   => 'nullable|array',
+        'medical_history'   => 'exclude_unless:has_illness,Yes|required_without:other_illness|array',
         'medical_history.*' => 'string|max:100',
         'other_illness'     => 'nullable|string|max:1000',
         'food_allergies'    => 'nullable|string|max:255',
@@ -6857,6 +6916,7 @@ public function storeHealthForm(Request $request)
         'birthday.after_or_equal' => 'Birthday must be January 1, 1950 or later.',
         'birthday.before_or_equal' => 'Age must be at least 15 years old.',
         'age.min' => 'Age must be at least 15 years old.',
+        'medical_history.required_without' => 'Select at least one known condition or enter Other Illness / Medical Notes.',
     ]);
 
     $signatureMethod = (string) $request->input('signature_method', 'draw');
@@ -7221,6 +7281,10 @@ public function storeHealthForm(Request $request)
                 'resubmitted_at'      => $isHealthFormCorrectionMode ? now() : optional($existingHealthProfile)->resubmitted_at,
                 'verified_at'        => null,
             ];
+
+        if ($isHealthFormCorrectionMode && Schema::hasColumn('health_profiles', 'medical_condition_remarks')) {
+            $healthProfileData['medical_condition_remarks'] = null;
+        }
 
         if (Schema::hasColumn('health_profiles', 'guardian_signature')) {
             $healthProfileData['guardian_signature'] = $isDedicatedStudentWorkflow && $isMinorStudent

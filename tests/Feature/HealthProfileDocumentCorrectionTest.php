@@ -3,12 +3,16 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AppointmentController;
+use App\Models\EmployeeHealthProfile;
 use App\Models\HealthProfile;
 use App\Models\HealthProfileCorrectionRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class HealthProfileDocumentCorrectionTest extends TestCase
@@ -117,5 +121,108 @@ class HealthProfileDocumentCorrectionTest extends TestCase
 
         $this->assertSame(302, $response->getStatusCode());
         $this->assertSame(' issued ', $profile->fresh()->clearance_status);
+    }
+
+    public function test_student_replacement_upload_returns_the_record_to_verification(): void
+    {
+        $user = User::factory()->create([
+            'user_role' => User::ROLE_STUDENT,
+            'user_type' => 'student',
+        ]);
+        $profile = HealthProfile::query()->create([
+            'user_id' => $user->id,
+            'clearance_status' => 'Pending Resubmission',
+            'pending_reason' => 'Please upload the updated medical certificate.',
+            'resubmission_required_documents' => ['medical_certificate'],
+            'resubmission_requested_at' => now()->subMinute(),
+        ]);
+        $correction = HealthProfileCorrectionRequest::query()->create([
+            'user_id' => $user->id,
+            'health_profile_id' => $profile->id,
+            'profile_kind' => 'student',
+            'type' => HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION,
+            'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
+            'required_documents' => ['medical_certificate'],
+            'requested_at' => now()->subMinute(),
+        ]);
+
+        Storage::fake('health_private');
+        Storage::fake('public');
+        config([
+            'health_files.write_disk' => 'health_private',
+            'health_files.legacy_disk' => 'public',
+            'health_files.legacy_fallback' => true,
+            'health_files.mirror_to_legacy' => false,
+        ]);
+        $this->actingAs($user);
+        $request = Request::create('/student/health-record/resubmit', 'POST', [], [], [
+            'medical_certificate' => UploadedFile::fake()->createWithContent('medical-certificate.pdf', "%PDF-1.4\nreplacement"),
+        ]);
+
+        $response = app(AppointmentController::class)->resubmitHealthRecordRequirements($request);
+
+        $profile->refresh();
+        $correction->refresh();
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('For Verification', $profile->clearance_status);
+        $this->assertNull($profile->pending_reason);
+        $this->assertNull($profile->resubmission_required_documents);
+        $this->assertNotNull($profile->resubmitted_at);
+        $this->assertSame(HealthProfileCorrectionRequest::STATUS_SUBMITTED, $correction->status);
+        Storage::disk('health_private')->assertExists($profile->medical_certificate);
+    }
+
+    public function test_employee_replacement_upload_uses_employee_profile_and_returns_to_verification(): void
+    {
+        $user = User::factory()->create([
+            'user_role' => User::ROLE_ADMIN,
+            'user_type' => 'faculty',
+        ]);
+        $profile = EmployeeHealthProfile::query()->create([
+            'user_id' => $user->id,
+            'employee_number' => '12345',
+            'clearance_status' => 'Approved',
+            'verified_at' => now()->subDay(),
+            'documents_valid' => true,
+            'pending_reason' => 'Please upload the updated medical certificate.',
+            'resubmission_required_fields' => ['medical_certificate'],
+            'resubmission_requested_at' => now()->subMinute(),
+        ]);
+        $correction = HealthProfileCorrectionRequest::query()->create([
+            'user_id' => $user->id,
+            'employee_health_profile_id' => $profile->id,
+            'profile_kind' => 'employee',
+            'type' => HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION,
+            'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
+            'required_documents' => ['medical_certificate'],
+            'requested_at' => now()->subMinute(),
+        ]);
+
+        Storage::fake('health_private');
+        Storage::fake('public');
+        config([
+            'health_files.write_disk' => 'health_private',
+            'health_files.legacy_disk' => 'public',
+            'health_files.legacy_fallback' => true,
+            'health_files.mirror_to_legacy' => false,
+        ]);
+        $this->actingAs($user);
+        $request = Request::create('/student/health-record/resubmit', 'POST', [], [], [
+            'medical_certificate' => UploadedFile::fake()->createWithContent('medical-certificate.pdf', "%PDF-1.4\nreplacement"),
+        ]);
+
+        $response = app(AppointmentController::class)->resubmitHealthRecordRequirements($request);
+
+        $profile->refresh();
+        $correction->refresh();
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('For Verification', $profile->clearance_status);
+        $this->assertNull($profile->pending_reason);
+        $this->assertNull($profile->resubmission_required_fields);
+        $this->assertNotNull($profile->resubmitted_at);
+        $this->assertNotNull($profile->verified_at);
+        $this->assertSame(HealthProfileCorrectionRequest::STATUS_SUBMITTED, $correction->status);
+        $this->assertStringStartsWith('health_profile_employees/medical_certificates/', $profile->medical_certificate);
+        Storage::disk('health_private')->assertExists($profile->medical_certificate);
     }
 }

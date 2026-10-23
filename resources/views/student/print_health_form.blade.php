@@ -41,8 +41,9 @@
         .blood-email-table .email-label { position: relative; left: -10px; width: 14%; padding-left: 0 !important; }
         .email-value { position: relative; left: -10px; width: 43%; overflow: hidden; font-size: 11px !important; white-space: nowrap; text-overflow: clip; }
         .student-full-name { display: inline-block; width: 86%; vertical-align: bottom; }
-        .home-address-label-cell { width: 15% !important; }
-        .home-address-value-cell { width: 47% !important; }
+        .home-address-row > td { vertical-align: top !important; }
+        .home-address-label { display: inline-block; width: 72pt; vertical-align: top; }
+        .home-address-value { display: inline-block; width: 240pt; min-height: 15px; padding-left: 4px !important; border-bottom: 1px solid #000 !important; font-weight: bold; vertical-align: top; overflow-wrap: break-word; word-wrap: break-word; }
         .line-label { padding-right: 4px !important; font-weight: 700; white-space: nowrap; }
         .line-value { padding-left: 4px !important; border-bottom: 1px solid #000 !important; font-weight: bold; overflow-wrap: break-word; word-wrap: break-word; }
         .school-year-label,
