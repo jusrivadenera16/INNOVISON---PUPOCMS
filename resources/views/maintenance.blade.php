@@ -628,7 +628,7 @@
     <section class="maintenance-card" aria-labelledby="maintenance-title">
         <div class="maintenance-visual" aria-hidden="true">
             <div class="maintenance-orbit">
-                <img class="maintenance-emblem" src="{{ asset('images/clinic_logo_transparent.png') }}" alt="">
+                <img class="maintenance-emblem" src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="">
             </div>
         </div>
 

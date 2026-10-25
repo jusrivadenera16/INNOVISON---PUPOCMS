@@ -941,10 +941,11 @@
                         @if($typeSourceMapping)
                             <div class="clearance-data-source-meta">
                                 <strong>MAR data source:</strong>
-                                <span class="clearance-source-chip">{{ $dataSourceLabels[$typeSourceMapping->source_key] ?? $typeSourceMapping->source_key }}</span>
+                                <span class="clearance-source-chip">{{ $dataSourceLabels[$typeSourceMapping->source_key] ?? ($legacyDataSourceLabels[$typeSourceMapping->source_key] ?? $typeSourceMapping->source_key) }}</span>
                                 @if($typeSourceMapping->sourceCategory)
                                     <span class="clearance-source-chip">{{ $typeSourceMapping->sourceCategory->name }}</span>
-                                @elseif(data_get($typeSourceMapping->source_config, 'employee_category'))
+                                @endif
+                                @if(data_get($typeSourceMapping->source_config, 'employee_category'))
                                     <span class="clearance-source-chip">{{ data_get($typeSourceMapping->source_config, 'employee_category') }}</span>
                                 @endif
                                 @if($typeSourceMapping->source_key === 'freshmen_applicants')
@@ -978,10 +979,11 @@
                                     <div class="clearance-subcategory-meta">
                                         @if($subcategorySourceMapping)
                                             MAR data source:
-                                            <span class="clearance-source-chip">{{ $dataSourceLabels[$subcategorySourceMapping->source_key] ?? $subcategorySourceMapping->source_key }}</span>
+                                            <span class="clearance-source-chip">{{ $dataSourceLabels[$subcategorySourceMapping->source_key] ?? ($legacyDataSourceLabels[$subcategorySourceMapping->source_key] ?? $subcategorySourceMapping->source_key) }}</span>
                                             @if($subcategorySourceMapping->sourceCategory)
                                                 <span class="clearance-source-chip">{{ $subcategorySourceMapping->sourceCategory->name }}</span>
-                                            @elseif(data_get($subcategorySourceMapping->source_config, 'employee_category'))
+                                            @endif
+                                            @if(data_get($subcategorySourceMapping->source_config, 'employee_category'))
                                                 <span class="clearance-source-chip">{{ data_get($subcategorySourceMapping->source_config, 'employee_category') }}</span>
                                             @endif
                                             @if($subcategorySourceMapping->source_key === 'freshmen_applicants')
@@ -1075,32 +1077,16 @@
 
                 <fieldset class="clearance-source-fields clearance-data-source-fields clearance-parent-data-source" data-parent-data-source>
                     <legend>MAR data source</legend>
-                    <p class="clearance-data-source-question">Choose which approved records will provide the count.</p>
+                    <p class="clearance-data-source-question">Health-form counts include approved records in the selected category. Consultation counts require a matching Completed appointment.</p>
                     @foreach($dataSourceLabels as $sourceKey => $sourceLabel)
                         <label class="clearance-source-option">
                             <input type="radio" name="source_key" value="{{ $sourceKey }}" data-data-source-key {{ old('_clearance_form') === 'add' && old('source_key') === $sourceKey ? 'checked' : '' }}>
                             <span>{{ $sourceLabel }}</span>
                         </label>
                     @endforeach
-                    <label class="clearance-form-label clearance-data-source-dependent" data-health-source-category hidden>
-                        Existing health form category
-                        <span class="clearance-select-wrap" data-clearance-select data-select-placeholder="Select a health form category">
-                            <select name="source_category_id" class="form-control clearance-select-native">
-                                <option value="">Select a health form category</option>
-                                @foreach($healthFormCategories as $category)
-                                    <option value="{{ $category->id }}" {{ old('_clearance_form') === 'add' && (string) old('source_category_id') === (string) $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                                @endforeach
-                            </select>
-                            <button type="button" class="clearance-select-display" aria-haspopup="listbox" aria-expanded="false">Select a health form category</button>
-                            <span class="clearance-select-menu" role="listbox" aria-label="Health form category options">
-                                @foreach($healthFormCategories as $category)
-                                    <button type="button" class="clearance-select-option" data-select-value="{{ $category->id }}">{{ $category->name }}</button>
-                                @endforeach
-                            </span>
-                        </span>
-                    </label>
                     @include('admin.reports.partials.applicant-clearance-filters')
-                    <p class="clearance-data-source-help">This source is used only when the count is placed on the parent category.</p>
+                    @include('admin.reports.partials.clearance-health-category-select', ['selectedCategoryId' => old('_clearance_form') === 'add' ? old('source_category_id') : null])
+                    <p class="clearance-data-source-help">This source applies to the parent count. If you use subcategories, assign a source to each subcategory instead.</p>
                 </fieldset>
 
                 <div class="clearance-modal-actions">
@@ -1162,32 +1148,16 @@
 
                 <fieldset class="clearance-source-fields clearance-data-source-fields clearance-parent-data-source" data-parent-data-source>
                     <legend>MAR data source</legend>
-                    <p class="clearance-data-source-question">Choose which approved records will provide the count.</p>
+                    <p class="clearance-data-source-question">Health-form counts include approved records in the selected category. Consultation counts require a matching Completed appointment.</p>
                     @foreach($dataSourceLabels as $sourceKey => $sourceLabel)
                         <label class="clearance-source-option">
                             <input type="radio" name="source_key" value="{{ $sourceKey }}" data-data-source-key>
                             <span>{{ $sourceLabel }}</span>
                         </label>
                     @endforeach
-                    <label class="clearance-form-label clearance-data-source-dependent" data-health-source-category hidden>
-                        Existing health form category
-                        <span class="clearance-select-wrap" data-clearance-select data-select-placeholder="Select a health form category">
-                            <select name="source_category_id" class="form-control clearance-select-native">
-                                <option value="">Select a health form category</option>
-                                @foreach($healthFormCategories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                @endforeach
-                            </select>
-                            <button type="button" class="clearance-select-display" aria-haspopup="listbox" aria-expanded="false">Select a health form category</button>
-                            <span class="clearance-select-menu" role="listbox" aria-label="Health form category options">
-                                @foreach($healthFormCategories as $category)
-                                    <button type="button" class="clearance-select-option" data-select-value="{{ $category->id }}">{{ $category->name }}</button>
-                                @endforeach
-                            </span>
-                        </span>
-                    </label>
                     @include('admin.reports.partials.applicant-clearance-filters')
-                    <p class="clearance-data-source-help">This source is used only when the count is placed on the parent category.</p>
+                    @include('admin.reports.partials.clearance-health-category-select', ['selectedCategoryId' => old('_clearance_form') === 'edit' ? old('source_category_id') : null])
+                    <p class="clearance-data-source-help">This source applies to the parent count. If you use subcategories, assign a source to each subcategory instead.</p>
                 </fieldset>
 
                 <div class="clearance-modal-actions">
@@ -1235,31 +1205,15 @@
 
                 <fieldset class="clearance-source-fields clearance-data-source-fields">
                     <legend>MAR data source</legend>
-                    <p class="clearance-data-source-question">Choose which approved records will provide the count for this subcategory.</p>
+                    <p class="clearance-data-source-question">Health-form counts use approved records in the selected category; consultation counts require a matching Completed appointment.</p>
                     @foreach($dataSourceLabels as $sourceKey => $sourceLabel)
                         <label class="clearance-source-option">
                             <input type="radio" name="source_key" value="{{ $sourceKey }}" data-data-source-key {{ old('_clearance_form') === 'add_subcategory' && old('source_key') === $sourceKey ? 'checked' : '' }}>
                             <span>{{ $sourceLabel }}</span>
                         </label>
                     @endforeach
-                    <label class="clearance-form-label clearance-data-source-dependent" data-health-source-category hidden>
-                        Existing health form category
-                        <span class="clearance-select-wrap" data-clearance-select data-select-placeholder="Select a health form category">
-                            <select name="source_category_id" class="form-control clearance-select-native">
-                                <option value="">Select a health form category</option>
-                                @foreach($healthFormCategories as $category)
-                                    <option value="{{ $category->id }}" {{ old('_clearance_form') === 'add_subcategory' && (string) old('source_category_id') === (string) $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                                @endforeach
-                            </select>
-                            <button type="button" class="clearance-select-display" aria-haspopup="listbox" aria-expanded="false">Select a health form category</button>
-                            <span class="clearance-select-menu" role="listbox" aria-label="Health form category options">
-                                @foreach($healthFormCategories as $category)
-                                    <button type="button" class="clearance-select-option" data-select-value="{{ $category->id }}">{{ $category->name }}</button>
-                                @endforeach
-                            </span>
-                        </span>
-                    </label>
                     @include('admin.reports.partials.applicant-clearance-filters')
+                    @include('admin.reports.partials.clearance-health-category-select', ['selectedCategoryId' => old('_clearance_form') === 'add_subcategory' ? old('source_category_id') : null])
                     <p class="clearance-data-source-help">This source determines which approved records are counted for this subcategory.</p>
                 </fieldset>
 
@@ -1309,31 +1263,15 @@
 
                 <fieldset class="clearance-source-fields clearance-data-source-fields">
                     <legend>MAR data source</legend>
-                    <p class="clearance-data-source-question">Choose which approved records will provide the count for this subcategory.</p>
+                    <p class="clearance-data-source-question">Health-form counts use approved records in the selected category; consultation counts require a matching Completed appointment.</p>
                     @foreach($dataSourceLabels as $sourceKey => $sourceLabel)
                         <label class="clearance-source-option">
                             <input type="radio" name="source_key" value="{{ $sourceKey }}" data-data-source-key>
                             <span>{{ $sourceLabel }}</span>
                         </label>
                     @endforeach
-                    <label class="clearance-form-label clearance-data-source-dependent" data-health-source-category hidden>
-                        Existing health form category
-                        <span class="clearance-select-wrap" data-clearance-select data-select-placeholder="Select a health form category">
-                            <select name="source_category_id" class="form-control clearance-select-native">
-                                <option value="">Select a health form category</option>
-                                @foreach($healthFormCategories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                @endforeach
-                            </select>
-                            <button type="button" class="clearance-select-display" aria-haspopup="listbox" aria-expanded="false">Select a health form category</button>
-                            <span class="clearance-select-menu" role="listbox" aria-label="Health form category options">
-                                @foreach($healthFormCategories as $category)
-                                    <button type="button" class="clearance-select-option" data-select-value="{{ $category->id }}">{{ $category->name }}</button>
-                                @endforeach
-                            </span>
-                        </span>
-                    </label>
                     @include('admin.reports.partials.applicant-clearance-filters')
+                    @include('admin.reports.partials.clearance-health-category-select', ['selectedCategoryId' => old('_clearance_form') === 'edit_subcategory' ? old('source_category_id') : null])
                     <p class="clearance-data-source-help">This source determines which approved records are counted for this subcategory.</p>
                 </fieldset>
 
@@ -1536,18 +1474,36 @@ function syncCountPlacementVisibility(modal) {
 
 function syncDataSourceFields(modal) {
     const sourceKey = modal?.querySelector('[data-data-source-key]:checked')?.value || '';
-    const categoryField = modal?.querySelector('[data-health-source-category]');
     const applicantFilterField = modal?.querySelector('[data-applicant-filter-fields]');
-
-    if (categoryField) {
-        categoryField.hidden = sourceKey !== 'health_form_category';
-        categoryField.querySelectorAll('select').forEach(function(input) { input.disabled = sourceKey !== 'health_form_category'; });
-    }
+    const healthCategoryField = modal?.querySelector('[data-health-category-fields]');
 
     if (applicantFilterField) {
         const shouldShow = sourceKey === 'freshmen_applicants';
         applicantFilterField.hidden = !shouldShow;
         applicantFilterField.querySelectorAll('input').forEach(function(input) { input.disabled = !shouldShow; });
+    }
+
+    if (healthCategoryField) {
+        const select = healthCategoryField.querySelector('[data-health-category-select]');
+        const shouldShow = ['student_health_form_category', 'employee_health_form_category'].includes(sourceKey);
+        const allowedAudiences = sourceKey === 'student_health_form_category'
+            ? ['student']
+            : (sourceKey === 'employee_health_form_category' ? ['faculty', 'admin'] : []);
+
+        healthCategoryField.hidden = !shouldShow;
+        if (select) {
+            select.disabled = !shouldShow;
+            Array.from(select.options).forEach(function(option) {
+                if (!option.value) return;
+                const audiences = (option.dataset.audiences || '').split(',').filter(Boolean);
+                const available = audiences.some(function(audience) { return allowedAudiences.includes(audience); });
+                option.hidden = shouldShow && !available;
+                option.disabled = shouldShow && !available;
+            });
+
+            const selectedOption = select.selectedOptions[0];
+            if (selectedOption?.disabled) select.value = '';
+        }
     }
 }
 
@@ -1565,13 +1521,12 @@ function setApplicantFilters(modal, mapping) {
 function setDataSourceMapping(modal, mapping) {
     const data = mapping && typeof mapping === 'object' ? mapping : {};
     const sourceKey = data.source_key || '';
-    const categoryInput = modal?.querySelector('[name="source_category_id"]');
 
     modal?.querySelectorAll('[data-data-source-key]').forEach(function(input) {
         input.checked = input.value === sourceKey;
     });
-    if (categoryInput) categoryInput.value = data.source_category_id || '';
-    syncClearanceSelect(categoryInput?.closest('[data-clearance-select]'));
+    const categorySelect = modal?.querySelector('[data-health-category-select]');
+    if (categorySelect) categorySelect.value = data.source_category_id || data.sourceCategory?.id || '';
     setApplicantFilters(modal, data);
     syncDataSourceFields(modal);
 }

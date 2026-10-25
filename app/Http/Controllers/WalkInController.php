@@ -2259,6 +2259,7 @@ class WalkInController extends Controller
             'covid_positive_date' => ['nullable', 'date'],
             'reason_for_visit' => ['nullable', 'string', 'max:255'],
             'certificate_type' => ['nullable', 'string', 'max:160'],
+            'certificate_details' => ['nullable', 'string', 'max:255'],
             'referral_type' => ['nullable', 'in:none,hospital_without_nurse,hospital_with_nurse,general,others'],
             'referral_details' => ['nullable', 'string', 'max:500'],
             'item_id' => ['nullable', 'array', 'max:5'],
@@ -3229,6 +3230,23 @@ PROMPT;
             ))
             ->pluck('code')
             ->all();
+        $excusedLetterCodes = array_merge(
+            MarClearanceSubcategory::query()
+                ->whereRaw('LOWER(TRIM(name)) = ?', ['excused letter'])
+                ->whereIn('code', $clearanceSubcategoryCodes)
+                ->pluck('code')
+                ->all(),
+            MarClearanceType::query()
+                ->whereRaw('LOWER(TRIM(name)) = ?', ['excused letter'])
+                ->whereIn('code', $clearanceTypeCodes)
+                ->pluck('code')
+                ->all()
+        );
+        $requiresCertificateDetails = in_array(
+            trim((string) $request->input('certificate_type')),
+            $excusedLetterCodes,
+            true
+        );
         $referralCodes = ClinicServiceOption::query()
             ->forGroup(ClinicServiceOption::GROUP_REFERRAL)
             ->active()
@@ -3255,6 +3273,11 @@ PROMPT;
                 $clearanceSubcategoryCodes,
                 $clearanceTypeCodes
             ))],
+            'certificate_details' => [
+                $requiresCertificateDetails ? 'required' : 'nullable',
+                'string',
+                'max:255',
+            ],
             'referral_type' => ['nullable', Rule::in(array_merge(['none'], $referralCodes, ['hospital_without_nurse', 'hospital_with_nurse', 'general', 'others']))],
             'referral_details' => 'required_if:referral_type,others|nullable|string|max:500',
             'item_id' => 'nullable|array|max:5',
@@ -3518,6 +3541,7 @@ PROMPT;
                 'covid_positive_date'  => $request->input('covid_positive_date'),
                 'reason_for_visit'     => $request->input('reason_for_visit'),
                 'certificate_type'     => $request->input('certificate_type') ?: 'none',
+                'certificate_details'  => $requiresCertificateDetails ? trim((string) $request->input('certificate_details')) : null,
                 'referral_type'        => $request->input('referral_type') ?: 'none',
                 'referral_details'     => $request->input('referral_type') === 'others' ? $request->input('referral_details') : null,
                 // Keep the first line in the legacy columns for existing reports and exports.

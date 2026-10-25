@@ -166,6 +166,11 @@ class EmployeeHealthProfile extends Model
         return $this->hasMany(HealthProfileCorrectionRequest::class, 'employee_health_profile_id');
     }
 
+    public function medicalAssessments()
+    {
+        return $this->hasMany(StudentMedicalAssessment::class, 'employee_health_profile_id')->latest();
+    }
+
     public function healthFormSubmissions()
     {
         return $this->hasMany(HealthFormSubmission::class, 'employee_health_profile_id');

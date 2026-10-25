@@ -2560,6 +2560,8 @@ class ReportsController extends Controller
         ->get();
     $marClearanceIssuances = app(MarClearanceIssuanceService::class)
         ->issuancesForReportPeriod($dateFrom, $dateTo);
+    $marExcusedLetterBreakdown = app(MarClearanceIssuanceService::class)
+        ->excusedLetterBreakdown($marClearanceIssuances);
     $gadTables = $this->buildMarGadTables($categories, $dateFrom, $dateTo, $marClearanceIssuances);
     $marServiceSummary = $this->buildMarServiceSummary($dateFrom, $dateTo);
 
@@ -2578,6 +2580,7 @@ class ReportsController extends Controller
         'totalToday' => $totalToday,
         'marClearanceTypes' => $marClearanceTypes,
         'marClearanceIssuances' => $marClearanceIssuances,
+        'marExcusedLetterBreakdown' => $marExcusedLetterBreakdown,
         'marServiceSummary' => $marServiceSummary,
     ]);
 }
@@ -3975,6 +3978,8 @@ public function printReport(Request $request)
             ->get();
         $marClearanceIssuances = app(MarClearanceIssuanceService::class)
             ->issuancesForReportPeriod($dateFrom, $dateTo);
+        $marExcusedLetterBreakdown = app(MarClearanceIssuanceService::class)
+            ->excusedLetterBreakdown($marClearanceIssuances);
         $gadTables = $this->buildMarGadTables(
             $data,
             $dateFrom,
@@ -4065,6 +4070,7 @@ public function printReport(Request $request)
             'gadTables' => $gadTables ?? [],
             'marClearanceTypes' => $marClearanceTypes ?? collect(),
             'marClearanceIssuances' => $marClearanceIssuances ?? collect(),
+            'marExcusedLetterBreakdown' => $marExcusedLetterBreakdown ?? [],
             'marServiceSummary' => $marServiceSummary ?? [],
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
@@ -4095,6 +4101,7 @@ public function printReport(Request $request)
         'gadTables' => $gadTables ?? [],
         'marClearanceTypes' => $marClearanceTypes ?? collect(),
         'marClearanceIssuances' => $marClearanceIssuances ?? collect(),
+        'marExcusedLetterBreakdown' => $marExcusedLetterBreakdown ?? [],
         'marServiceSummary' => $marServiceSummary ?? [],
         'dateFrom' => $dateFrom,
         'dateTo' => $dateTo,

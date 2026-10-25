@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Token Activity - Recent History')
+@section('title', 'Integration Activity')
 @section('disable_voice_inputs', 'true')
 
 @section('content')
@@ -129,9 +129,19 @@
         flex-shrink: 0;
     }
 
+    .activity-dot.is-error {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
     html[data-theme="dark"] .activity-dot {
         background: rgba(255, 255, 255, 0.1);
         color: #f3d6da;
+    }
+
+    html[data-theme="dark"] .activity-dot.is-error {
+        background: rgba(127, 29, 29, .42);
+        color: #fca5a5;
     }
 
     .activity-content {
@@ -293,72 +303,87 @@
 <div class="activity-container">
     <div class="activity-header">
         <div class="activity-title">
-            <h1>Token Activity</h1>
-            <p>History of all generated tokens</p>
+        <h1>Integration Activity</h1>
+        <p>Token events, API requests, and access errors across all integrations.</p>
         </div>
         <a href="{{ route('admin.integration-tokens') }}" class="back-link">
             ← Back to Tokens
         </a>
     </div>
 
-    @if($allTokens->total() > 0)
+    @if($activities->total() > 0)
         <div class="stats-row">
             <div class="stat-card">
-                <div class="stat-label">Total Tokens</div>
-                <div class="stat-value">{{ $allTokens->total() }}</div>
+                <div class="stat-label">Total Activities</div>
+                <div class="stat-value">{{ $activities->total() }}</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Page {{ $allTokens->currentPage() }}</div>
-                <div class="stat-value">of {{ $allTokens->lastPage() }}</div>
+                <div class="stat-label">Page {{ $activities->currentPage() }}</div>
+                <div class="stat-value">of {{ $activities->lastPage() }}</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Per Page</div>
-                <div class="stat-value">{{ $allTokens->perPage() }}</div>
+                <div class="stat-value">{{ $activities->perPage() }}</div>
             </div>
         </div>
 
         <div class="activity-list">
-            @foreach($allTokens as $token)
+            @foreach($activities as $activity)
+                @php
+                    $isActivityError = $activity->event_type === 'error';
+                    $activityDetails = $activity->event_type === 'token'
+                        ? trim(($activity->details ?? 'Token') . ' · Token #' . $activity->event_id)
+                        : trim(implode(' · ', array_filter([
+                            trim(($activity->http_method ?? '') . ' ' . ($activity->endpoint ?? '')) ?: null,
+                            $activity->status_code ? 'HTTP ' . $activity->status_code : null,
+                            $activity->response_time_ms !== null ? $activity->response_time_ms . ' ms' : null,
+                            $activity->ip_address ?? null,
+                            $activity->auth_method ?? null,
+                            $activity->details ?? null,
+                        ])));
+                @endphp
                 <div class="activity-item">
-                    <span class="activity-dot">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/>
-                        </svg>
+                    <span class="activity-dot {{ $isActivityError ? 'is-error' : '' }}">
+                        @if($isActivityError)
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4m0 4h.01"/><circle cx="12" cy="12" r="10"/></svg>
+                        @else
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                        @endif
                     </span>
                     <div class="activity-content">
                         <div class="activity-system">
-                            🔐 Token ID {{ $token->id }} - {{ $token->system_name }}
+                            {{ $activity->system_name ?: 'Unknown system' }} · {{ $activity->title }}
                         </div>
                         <div class="activity-token-name">
-                            {{ $token->name }} (Key: {{ $token->system_key }})
+                            {{ $activityDetails !== '' ? $activityDetails : ($activity->auth_method ?? 'No additional details') }}
                         </div>
                     </div>
                     <div class="activity-time">
-                        <div>{{ $token->created_at->format('M d, Y') }}</div>
-                        <small>{{ $token->created_at->format('h:i A') }}</small>
+                        <div>{{ \Carbon\Carbon::parse($activity->created_at)->format('M d, Y') }}</div>
+                        <small>{{ \Carbon\Carbon::parse($activity->created_at)->format('h:i A') }}</small>
                     </div>
                 </div>
             @endforeach
         </div>
 
-        @if($allTokens->hasPages())
+        @if($activities->hasPages())
             <div class="pagination-container">
-                @if($allTokens->onFirstPage())
+                @if($activities->onFirstPage())
                     <span class="pagination-link disabled">← Previous</span>
                 @else
-                    <a href="{{ $allTokens->previousPageUrl() }}" class="pagination-link">← Previous</a>
+                    <a href="{{ $activities->previousPageUrl() }}" class="pagination-link">← Previous</a>
                 @endif
 
-                @foreach($allTokens->getUrlRange(1, $allTokens->lastPage()) as $page => $url)
-                    @if($page == $allTokens->currentPage())
+                @foreach($activities->getUrlRange(1, $activities->lastPage()) as $page => $url)
+                    @if($page == $activities->currentPage())
                         <span class="pagination-link active">{{ $page }}</span>
                     @else
                         <a href="{{ $url }}" class="pagination-link">{{ $page }}</a>
                     @endif
                 @endforeach
 
-                @if($allTokens->hasMorePages())
-                    <a href="{{ $allTokens->nextPageUrl() }}" class="pagination-link">Next →</a>
+                @if($activities->hasMorePages())
+                    <a href="{{ $activities->nextPageUrl() }}" class="pagination-link">Next →</a>
                 @else
                     <span class="pagination-link disabled">Next →</span>
                 @endif
@@ -366,8 +391,8 @@
         @endif
     @else
         <div class="empty-state">
-            <h3>No Token Activity Yet</h3>
-            <p>No tokens have been generated. Create an integration client and generate a token to see activity here.</p>
+            <h3>No Integration Activity Yet</h3>
+            <p>Token generation, API requests, and access errors will appear here.</p>
             <a href="{{ route('admin.integration-tokens') }}" class="back-link" style="margin-top: 16px;">
                 ← Go Back
             </a>

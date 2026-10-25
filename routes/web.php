@@ -301,9 +301,12 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
     Route::post('/health-profile/{id}/revoke-clearance', [AdminController::class, 'revokeHealthProfileClearance'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.revoke_clearance'])
         ->name('admin.health_profile.revoke_clearance');
-    Route::post('/health-profile/{id}/medical-assessments', [AdminController::class, 'storeStudentMedicalAssessment'])
+    Route::put('/health-profile/{id}/medical-information', [AdminController::class, 'updateStudentMedicalInformation'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.update_assessment'])
-        ->name('admin.health_profile.medical_assessments.store');
+        ->name('admin.health_profile.medical_information.update');
+    Route::put('/employee-health-profile/{employeeProfile}/medical-information', [AdminController::class, 'updateEmployeeMedicalInformation'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.update_assessment'])
+        ->name('admin.employee_health_profile.medical_information.update');
     Route::post('/health-profile/{id}/pullout/request', [AdminController::class, 'requestHealthProfilePullout'])
         ->middleware('role:superadmin')
         ->name('admin.health_profile.pullout.request');
@@ -440,16 +443,14 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
 
         Route::middleware('role:superadmin')->group(function () {
             Route::get('/admin/developer-tools', [AdminController::class, 'developerTools'])->name('admin.developer-tools');
+            Route::post('/admin/developer-tools/clinic-logo', [AdminController::class, 'updateClinicLogo'])->name('admin.developer-tools.clinic-logo.update');
             Route::get('/admin/api-testing', [AdminController::class, 'apiTesting'])->name('admin.api-testing');
             Route::post('/admin/api-testing/sync-student-numbers', [AdminController::class, 'syncMissingStudentNumbers'])->name('admin.api-testing.sync-student-numbers');
             Route::get('/admin/api/health-monitor', [AdminController::class, 'apiHealthMonitor'])->name('admin.api.health-monitor');
             Route::get('/admin/api/error-logs', [AdminController::class, 'apiErrorLogs'])->name('admin.api.error-logs');
             Route::get('/admin/api/system-status', [AdminController::class, 'apiSystemStatus'])->name('admin.api.system-status');
-            Route::put('/admin/integration-pin/settings', [AdminController::class, 'updateIntegrationPinSettings'])->name('admin.integration-pin.update');
-            Route::post('/admin/integration-pin/reset', [AdminController::class, 'resetIntegrationPin'])->name('admin.integration-pin.reset');
-            Route::get('/admin/integration-pin/status', [AdminController::class, 'integrationPinStatus'])->name('admin.integration-pin.status');
-            Route::post('/admin/integration-pin/verify', [AdminController::class, 'verifyIntegrationPin'])->name('admin.integration-pin.verify');
-            Route::post('/admin/reset-key/verify', [AdminController::class, 'verifyResetKey'])->name('admin.reset-key.verify');
+            Route::post('/admin/emergency-credentials/otp/send', [AdminController::class, 'sendEmergencyPasswordResetOtp'])->middleware('throttle:3,1')->name('admin.emergency-credentials.otp.send');
+            Route::post('/admin/emergency-credentials/otp/verify', [AdminController::class, 'verifyEmergencyPasswordResetOtp'])->middleware('throttle:8,1')->name('admin.emergency-credentials.otp.verify');
             Route::put('/admin/emergency-credentials', [AdminController::class, 'updateEmergencyCredentials'])->name('admin.emergency-credentials.update');
             Route::put('/admin/maintenance-policy', [AdminController::class, 'updateMaintenancePolicy'])->name('admin.maintenance-policy.update');
             Route::get('/admin/integration-tokens', [AdminController::class, 'integrationTokens'])->name('admin.integration-tokens');

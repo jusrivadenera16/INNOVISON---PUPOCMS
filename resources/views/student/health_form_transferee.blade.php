@@ -850,6 +850,10 @@
             display: none;
         }
 
+        .requirement-card.has-upload-preview [data-upload-dropzone] {
+            display: none;
+        }
+
         .upload-example {
             overflow: hidden;
             border: 1px solid #d8dee7;
@@ -1986,7 +1990,6 @@
         .student-consent-purpose-display { display: grid; gap: 4px; margin: 0 0 16px; padding: 10px 12px; border: 1px solid #ead4d7; border-radius: 8px; background: #fff7f8; color: #64111d; }
         .student-consent-purpose-display span { font-size: 11px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; }
         .student-consent-purpose-display strong { font-size: 14px; }
-        .student-consent-category-warning { margin: 0 0 16px; padding: 10px 12px; border-left: 3px solid #facc15; background: #fff7d6; color: #64111d; font-size: 12px; font-weight: 800; line-height: 1.4; }
         .student-consent-agreement.is-invalid input { outline: 2px solid #7f1d2d; outline-offset: 2px; box-shadow: 0 0 0 4px rgba(127, 29, 45, .14); }
         .student-consent-continue { display: block; width: 100%; margin-top: 20px; padding: 11px 18px; border: 1px solid #7f1d2d; border-radius: 8px; background: #7f1d2d; color: #fff; font-weight: 800; cursor: pointer; }
         .student-consent-continue:hover, .student-consent-continue:focus-visible { border-color: #facc15; background: #facc15; color: #000; outline: none; }
@@ -3667,10 +3670,6 @@
                             $initialConsentEndorsement = $studentDeclarationPurpose['endorsement'] ?? 'status as a currently enrolled student';
                         @endphp
 
-                        @unless($studentHealthFormCategoryConfigured)
-                            <p class="student-consent-category-warning">No Health Form Category is configured for your selected student type. Please contact the clinic administrator before submitting this form.</p>
-                        @endunless
-
                         <div class="student-consent-purpose-display">
                             <span>Purpose of Medical Clearance</span>
                             <strong>{{ $initialConsentPurpose }}</strong>
@@ -3688,7 +3687,7 @@
                             <input type="checkbox" id="studentConsentCheckbox">
                             <span>I have read and agree to this declaration and consent.</span>
                         </label>
-                        <button type="button" class="student-consent-continue" id="studentConsentContinue" {{ $studentHealthFormCategoryConfigured ? '' : 'disabled' }}>Continue</button>
+                        <button type="button" class="student-consent-continue" id="studentConsentContinue">Continue</button>
                     </section>
                 </div>
 
@@ -5922,6 +5921,22 @@
                     previewScope?.classList.remove('has-upload-preview');
                     preview.classList.remove('is-visible');
                     preview.innerHTML = '';
+                    return;
+                }
+
+                const acceptedTypes = (input.accept || '').split(',').map((type) => type.trim().toLowerCase()).filter(Boolean);
+                const allowedExtensions = acceptedTypes.filter((type) => type.startsWith('.')).map((type) => type.slice(1));
+                const allowedMimeTypes = acceptedTypes.filter((type) => !type.startsWith('.') && !type.includes('*'));
+                const fileExtension = (file.name.split('.').pop() || '').toLowerCase();
+                const extensionAllowed = !allowedExtensions.length || allowedExtensions.includes(fileExtension);
+                const mimeAllowed = !file.type || !allowedMimeTypes.length || allowedMimeTypes.includes(file.type.toLowerCase());
+                if (!extensionAllowed || !mimeAllowed) {
+                    const acceptedLabel = allowedExtensions.map((extension) => extension.toUpperCase()).join(', ');
+                    const message = `This document only accepts ${acceptedLabel || 'the listed'} file types.`;
+                    input.setCustomValidity(message);
+                    previewScope?.classList.remove('has-upload-preview');
+                    preview.classList.remove('is-visible');
+                    showErrorModal(message);
                     return;
                 }
 

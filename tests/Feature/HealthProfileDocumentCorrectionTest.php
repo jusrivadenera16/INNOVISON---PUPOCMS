@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class HealthProfileDocumentCorrectionTest extends TestCase
@@ -224,5 +225,168 @@ class HealthProfileDocumentCorrectionTest extends TestCase
         $this->assertSame(HealthProfileCorrectionRequest::STATUS_SUBMITTED, $correction->status);
         $this->assertStringStartsWith('health_profile_employees/medical_certificates/', $profile->medical_certificate);
         Storage::disk('health_private')->assertExists($profile->medical_certificate);
+    }
+
+    public function test_student_replacement_rejects_a_thirteen_mebibyte_medical_certificate(): void
+    {
+        $user = User::factory()->create([
+            'user_role' => User::ROLE_STUDENT,
+            'user_type' => 'student',
+        ]);
+        $profile = HealthProfile::query()->create([
+            'user_id' => $user->id,
+            'clearance_status' => 'Pending Resubmission',
+            'resubmission_required_documents' => ['medical_certificate'],
+            'resubmission_requested_at' => now()->subMinute(),
+            'medical_certificate' => 'health_profiles/medical_certificates/original.pdf',
+        ]);
+        HealthProfileCorrectionRequest::query()->create([
+            'user_id' => $user->id,
+            'health_profile_id' => $profile->id,
+            'profile_kind' => 'student',
+            'type' => HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION,
+            'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
+            'required_documents' => ['medical_certificate'],
+            'requested_at' => now()->subMinute(),
+        ]);
+
+        Storage::fake('health_private');
+        Storage::fake('public');
+        config([
+            'health_files.write_disk' => 'health_private',
+            'health_files.legacy_disk' => 'public',
+            'health_files.legacy_fallback' => true,
+            'health_files.mirror_to_legacy' => false,
+        ]);
+        $this->actingAs($user);
+        $request = Request::create('/student/health-record/resubmit', 'POST', [], [], [
+            'medical_certificate' => UploadedFile::fake()->create('medical-certificate.pdf', 13 * 1024, 'application/pdf'),
+        ]);
+
+        try {
+            app(AppointmentController::class)->resubmitHealthRecordRequirements($request);
+            $this->fail('A 13 MB replacement file should be rejected.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('medical_certificate', $exception->errors());
+        }
+
+        $this->assertSame('health_profiles/medical_certificates/original.pdf', $profile->fresh()->medical_certificate);
+    }
+
+    public function test_employee_replacement_rejects_a_file_with_an_unsupported_extension(): void
+    {
+        $user = User::factory()->create([
+            'user_role' => User::ROLE_ADMIN,
+            'user_type' => 'faculty',
+        ]);
+        $profile = EmployeeHealthProfile::query()->create([
+            'user_id' => $user->id,
+            'employee_number' => '54321',
+            'clearance_status' => 'Pending Resubmission',
+            'resubmission_required_fields' => ['medical_certificate'],
+            'resubmission_requested_at' => now()->subMinute(),
+        ]);
+        HealthProfileCorrectionRequest::query()->create([
+            'user_id' => $user->id,
+            'employee_health_profile_id' => $profile->id,
+            'profile_kind' => 'employee',
+            'type' => HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION,
+            'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
+            'required_documents' => ['medical_certificate'],
+            'requested_at' => now()->subMinute(),
+        ]);
+
+        Storage::fake('health_private');
+        Storage::fake('public');
+        config([
+            'health_files.write_disk' => 'health_private',
+            'health_files.legacy_disk' => 'public',
+            'health_files.legacy_fallback' => true,
+            'health_files.mirror_to_legacy' => false,
+        ]);
+        $this->actingAs($user);
+        $request = Request::create('/student/health-record/resubmit', 'POST', [], [], [
+            'medical_certificate' => UploadedFile::fake()->createWithContent('medical-certificate.txt', "%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF"),
+        ]);
+
+        try {
+            app(AppointmentController::class)->resubmitHealthRecordRequirements($request);
+            $this->fail('A replacement file with an unsupported extension should be rejected.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('medical_certificate', $exception->errors());
+        }
+    }
+
+    public function test_applicant_cannot_upload_a_document_that_was_not_requested(): void
+    {
+        $user = User::factory()->create([
+            'user_role' => User::ROLE_STUDENT,
+            'user_type' => 'applicant',
+            'applicant_type' => 'new',
+        ]);
+        $profile = HealthProfile::query()->create([
+            'user_id' => $user->id,
+            'clearance_status' => 'Pending Resubmission',
+            'resubmission_required_documents' => ['medical_certificate'],
+            'resubmission_requested_at' => now()->subMinute(),
+        ]);
+        HealthProfileCorrectionRequest::query()->create([
+            'user_id' => $user->id,
+            'health_profile_id' => $profile->id,
+            'profile_kind' => 'student',
+            'type' => HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION,
+            'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
+            'required_documents' => ['medical_certificate'],
+            'requested_at' => now()->subMinute(),
+        ]);
+
+        $this->actingAs($user);
+        $request = Request::create('/student/health-record/resubmit', 'POST', [], [], [
+            'medical_certificate' => UploadedFile::fake()->createWithContent('medical-certificate.pdf', "%PDF-1.4\nreplacement"),
+            'student_photo' => UploadedFile::fake()->image('extra-photo.png'),
+        ]);
+
+        try {
+            app(AppointmentController::class)->resubmitHealthRecordRequirements($request);
+            $this->fail('An unrequested replacement document should be rejected.');
+        } catch (ValidationException $exception) {
+            $this->assertStringContainsString('requested by the clinic', $exception->errors()['medical_certificate'][0]);
+        }
+    }
+
+    public function test_applicant_student_and_employee_document_uploads_reject_unlisted_file_extensions(): void
+    {
+        foreach ([
+            ['user_type' => 'applicant', 'employee' => false],
+            ['user_type' => 'student', 'employee' => false],
+            ['user_type' => 'faculty', 'employee' => true],
+        ] as $account) {
+            $user = User::factory()->create([
+                'user_role' => $account['employee'] ? User::ROLE_ADMIN : User::ROLE_STUDENT,
+                'user_type' => $account['user_type'],
+                'applicant_type' => $account['user_type'] === 'applicant' ? 'new' : null,
+            ]);
+
+            if ($account['employee']) {
+                EmployeeHealthProfile::query()->create([
+                    'user_id' => $user->id,
+                    'employee_number' => 'EMP' . $user->id,
+                ]);
+            } else {
+                HealthProfile::query()->create(['user_id' => $user->id]);
+            }
+
+            $this->actingAs($user);
+            $request = Request::create('/student/health-record/documents', 'POST', [], [], [
+                'medical_certificate' => UploadedFile::fake()->createWithContent('medical-certificate.txt', 'not a supported document'),
+            ]);
+
+            try {
+                app(AppointmentController::class)->uploadHealthRecordDocuments($request);
+                $this->fail("An unsupported medical certificate extension should be rejected for {$account['user_type']}.");
+            } catch (ValidationException $exception) {
+                $this->assertArrayHasKey('medical_certificate', $exception->errors());
+            }
+        }
     }
 }

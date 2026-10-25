@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Consultation;
+use App\Models\Appointment;
 use App\Models\ActivityLog;
 use App\Models\EmployeeHealthProfile;
 use App\Models\HealthFormSubmission;
@@ -17,6 +18,7 @@ use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use InvalidArgumentException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class MarClearanceIssuanceService
 {
@@ -306,7 +308,9 @@ class MarClearanceIssuanceService
     ): ?MarClearanceIssuance {
         $user = $user ?: $consultation->user;
         $certificateType = trim((string) $consultation->certificate_type);
-        if ($certificateType === '' || strtolower($certificateType) === 'none') {
+        if ($certificateType === ''
+            || strtolower($certificateType) === 'none'
+            || !$this->hasCompletedAppointmentForConsultation($consultation)) {
             $this->removeForSourceRecord(
                 MarClearanceSubcategorySource::CONSULTATION,
                 (string) $consultation->id
@@ -379,6 +383,14 @@ class MarClearanceIssuanceService
                 ->whereNotNull('certificate_type')
                 ->whereRaw("TRIM(certificate_type) <> ''")
                 ->whereRaw("LOWER(TRIM(certificate_type)) <> 'none'")
+                ->whereExists(function ($query) {
+                    $query->selectRaw('1')
+                        ->from('appointments')
+                        ->whereColumn('appointments.user_id', 'consultations.user_id')
+                        ->whereColumn('appointments.date', 'consultations.consultation_date')
+                        ->whereRaw("LOWER(TRIM(COALESCE(appointments.status, ''))) = 'completed'")
+                        ->whereRaw("LOWER(TRIM(COALESCE(appointments.service, ''))) = LOWER(TRIM(COALESCE(consultations.service, '')))");
+                })
                 ->pluck('id')
                 ->map(fn ($id): string => (string) $id)
                 ->flip();
@@ -567,6 +579,14 @@ class MarClearanceIssuanceService
             ->whereNotNull('certificate_type')
             ->whereRaw("TRIM(certificate_type) <> ''")
             ->whereRaw("LOWER(TRIM(certificate_type)) <> 'none'")
+            ->whereExists(function ($query) {
+                $query->selectRaw('1')
+                    ->from('appointments')
+                    ->whereColumn('appointments.user_id', 'consultations.user_id')
+                    ->whereColumn('appointments.date', 'consultations.consultation_date')
+                    ->whereRaw("LOWER(TRIM(COALESCE(appointments.status, ''))) = 'completed'")
+                    ->whereRaw("LOWER(TRIM(COALESCE(appointments.service, ''))) = LOWER(TRIM(COALESCE(consultations.service, '')))");
+            })
             ->whereBetween('consultation_date', [$from->toDateString(), $to->toDateString()])
             ->orderBy('id')
             ->get();
@@ -595,6 +615,64 @@ class MarClearanceIssuanceService
             ->concat($historical)
             ->sortBy('approved_at')
             ->values();
+    }
+
+    public function excusedLetterBreakdown(Collection $issuances): array
+    {
+        $consultationIssuances = $issuances->filter(fn (MarClearanceIssuance $issuance): bool =>
+            $issuance->source_workflow === MarClearanceSubcategorySource::CONSULTATION
+        );
+        $consultationIds = $consultationIssuances
+            ->pluck('source_record_id')
+            ->filter(fn ($id): bool => trim((string) $id) !== '')
+            ->unique()
+            ->values();
+
+        if ($consultationIds->isEmpty()) {
+            return [];
+        }
+
+        $detailsByConsultationId = DB::table('consultations')
+            ->whereIn('id', $consultationIds->all())
+            ->whereNull('deleted_at')
+            ->whereNotNull('certificate_details')
+            ->pluck('certificate_details', 'id');
+        $patientTypeNormalizer = app(MarPatientTypeNormalizer::class);
+        $breakdown = [];
+
+        foreach ($consultationIssuances as $issuance) {
+            $isSubcategory = $issuance->clearance_subcategory_id !== null;
+            $targetName = $isSubcategory
+                ? $issuance->subcategory?->name
+                : $issuance->clearanceType?->name;
+            if (strtolower(trim((string) $targetName)) !== 'excused letter') {
+                continue;
+            }
+
+            $description = trim((string) $detailsByConsultationId->get((string) $issuance->source_record_id));
+            $description = preg_replace('/\s+/', ' ', $description) ?? $description;
+            $patientType = $patientTypeNormalizer->normalize($issuance->user_type);
+            if ($description === '' || !in_array($patientType, ['student', 'faculty', 'admin', 'dependent'], true)) {
+                continue;
+            }
+
+            $targetKey = $isSubcategory
+                ? 'subcategory:' . $issuance->clearance_subcategory_id
+                : 'type:' . $issuance->clearance_type_id;
+            $descriptionKey = strtolower($description);
+            $breakdown[$targetKey][$descriptionKey] ??= [
+                'name' => $description,
+                'student' => 0,
+                'faculty' => 0,
+                'admin' => 0,
+                'dependent' => 0,
+            ];
+            $breakdown[$targetKey][$descriptionKey][$patientType]++;
+        }
+
+        return collect($breakdown)
+            ->map(fn (array $details): array => collect($details)->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)->values()->all())
+            ->all();
     }
 
     public function recordApprovedClearance(
@@ -735,10 +813,32 @@ class MarClearanceIssuanceService
                     ) ? 1000 : 0;
             }
 
+            if ($sourceKey === 'transferee_applicants') {
+                return $sourceWorkflow === MarClearanceSubcategorySource::APPLICANT_FINAL_REVIEW
+                    && $this->isTransfereeApplicantSubmission($submission) ? 1000 : 0;
+            }
+
             if ($sourceKey === 'health_form_category') {
                 $category = trim((string) ($submission->category ?: $submission->healthProfile?->health_form_category));
 
-                return $this->matchesSourceCategory($category, $mapping->sourceCategory) ? 900 : 0;
+                return in_array($sourceWorkflow, [
+                    MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW,
+                    MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW,
+                ], true) && $this->matchesSourceCategory($category, $mapping->sourceCategory) ? 850 : 0;
+            }
+
+            if ($sourceKey === 'student_health_form_category') {
+                $category = trim((string) ($submission->category ?: $submission->healthProfile?->health_form_category));
+
+                return $sourceWorkflow === MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW
+                    && $this->matchesSourceCategory($category, $mapping->sourceCategory) ? 900 : 0;
+            }
+
+            if ($sourceKey === 'employee_health_form_category') {
+                $category = trim((string) ($submission->category ?: $submission->healthProfile?->health_form_category));
+
+                return $sourceWorkflow === MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW
+                    && $this->matchesSourceCategory($category, $mapping->sourceCategory) ? 900 : 0;
             }
 
             if ($sourceKey === 'patient_intake' && $sourceWorkflow === MarClearanceSubcategorySource::PATIENT_INTAKE) {
@@ -764,11 +864,28 @@ class MarClearanceIssuanceService
                     ? 1000 : 0;
             }
 
+            if ($sourceKey === 'transferee_applicants') {
+                return $sourceWorkflow === MarClearanceSubcategorySource::APPLICANT_FINAL_REVIEW
+                    && strtolower(trim((string) $profile->user?->applicant_type)) === 'transferee'
+                    ? 1000
+                    : 0;
+            }
+
             if ($sourceKey === 'health_form_category') {
-                return $this->matchesSourceCategory(
-                    (string) $profile->health_form_category,
-                    $mapping->sourceCategory
-                ) ? 900 : 0;
+                return in_array($sourceWorkflow, [
+                    MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW,
+                    MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW,
+                ], true) && $this->matchesSourceCategory((string) $profile->health_form_category, $mapping->sourceCategory) ? 850 : 0;
+            }
+
+            if ($sourceKey === 'student_health_form_category') {
+                return $sourceWorkflow === MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW
+                    && $this->matchesSourceCategory((string) $profile->health_form_category, $mapping->sourceCategory) ? 900 : 0;
+            }
+
+            if ($sourceKey === 'employee_health_form_category') {
+                return $sourceWorkflow === MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW
+                    && $this->matchesSourceCategory((string) $profile->health_form_category, $mapping->sourceCategory) ? 900 : 0;
             }
 
             if ($sourceKey === 'patient_intake' && $sourceWorkflow === MarClearanceSubcategorySource::PATIENT_INTAKE) {
@@ -784,13 +901,18 @@ class MarClearanceIssuanceService
         string $sourceWorkflow
     ): ?array {
         $mappings = $this->activeSourceMappingsForWorkflow($sourceWorkflow, $profile->verified_at ?: now());
-        $category = $this->normalizeSourceCategory($profile->health_form_category);
 
-        return $this->selectConfiguredTarget($mappings, function (MarClearanceSourceMapping $mapping) use ($category, $profile): int {
+        return $this->selectConfiguredTarget($mappings, function (MarClearanceSourceMapping $mapping) use ($profile, $sourceWorkflow): int {
             $sourceKey = trim((string) $mapping->source_key);
 
             if ($sourceKey === 'health_form_category') {
-                return $this->matchesSourceCategory($profile->health_form_category, $mapping->sourceCategory) ? 800 : 0;
+                return $sourceWorkflow === MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW
+                    && $this->matchesSourceCategory((string) $profile->health_form_category, $mapping->sourceCategory) ? 850 : 0;
+            }
+
+            if ($sourceKey === 'employee_health_form_category') {
+                return $sourceWorkflow === MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW
+                    && $this->matchesSourceCategory((string) $profile->health_form_category, $mapping->sourceCategory) ? 900 : 0;
             }
 
             return 0;
@@ -801,6 +923,10 @@ class MarClearanceIssuanceService
         Consultation $consultation,
         string $sourceWorkflow
     ): ?array {
+        if (!$this->hasCompletedAppointmentForConsultation($consultation)) {
+            return null;
+        }
+
         $mappings = $this->activeSourceMappingsForWorkflow($sourceWorkflow, $consultation->consultation_date ?: now());
         $certificateType = $this->normalizeClearanceValue($consultation->certificate_type);
 
@@ -971,7 +1097,8 @@ class MarClearanceIssuanceService
         }
 
         $userType = $this->normalizeClearanceValue(
-            $submission->user?->user_type
+            data_get($submission->snapshotUser(), 'user_type')
+                ?: $submission->user?->user_type
                 ?: $submission->user?->user_role
                 ?: $submission->healthProfile?->user?->user_type
                 ?: $submission->healthProfile?->user?->user_role
@@ -979,6 +1106,10 @@ class MarClearanceIssuanceService
 
         if (str_contains($userType, 'dependent') || str_contains($userType, 'guest')) {
             return [MarClearanceSubcategorySource::PATIENT_INTAKE];
+        }
+
+        if (str_contains($userType, 'applicant')) {
+            return [MarClearanceSubcategorySource::APPLICANT_FINAL_REVIEW];
         }
 
         if (str_contains($userType, 'faculty')
@@ -1224,16 +1355,21 @@ class MarClearanceIssuanceService
             ->exists();
     }
 
+    private function isTransfereeApplicantSubmission(HealthFormSubmission $submission): bool
+    {
+        $applicantType = data_get($submission->snapshotUser(), 'applicant_type')
+            ?: $submission->user?->applicant_type
+            ?: $submission->healthProfile?->user?->applicant_type;
+
+        return strtolower(trim((string) $applicantType)) === 'transferee';
+    }
+
     private function matchesSourceCategory(?string $value, $sourceCategory): bool
     {
         $value = $this->normalizeSourceCategory($value);
         $sourceName = $this->normalizeSourceCategory($sourceCategory?->name);
 
-        if ($value === '' || $sourceName === '') {
-            return false;
-        }
-
-        return $value === $sourceName;
+        return $value !== '' && $sourceName !== '' && $value === $sourceName;
     }
 
     private function normalizeSourceCategory(?string $value): string
@@ -1243,6 +1379,22 @@ class MarClearanceIssuanceService
         $normalized = preg_replace('/\bfreshmen\b/', 'freshman', $normalized) ?? $normalized;
 
         return trim(preg_replace('/\s+/', ' ', $normalized) ?? $normalized);
+    }
+
+    private function hasCompletedAppointmentForConsultation(Consultation $consultation): bool
+    {
+        if (!$consultation->user_id || !$consultation->consultation_date) {
+            return false;
+        }
+
+        $service = strtolower(trim((string) $consultation->service));
+
+        return Appointment::query()
+            ->where('user_id', $consultation->user_id)
+            ->whereDate('date', $consultation->consultation_date)
+            ->whereRaw("LOWER(TRIM(COALESCE(status, ''))) = 'completed'")
+            ->whereRaw("LOWER(TRIM(COALESCE(service, ''))) = ?", [$service])
+            ->exists();
     }
 
     private function isAdmissionReference($value): bool

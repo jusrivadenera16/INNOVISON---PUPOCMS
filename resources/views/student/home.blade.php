@@ -4526,7 +4526,7 @@ html.home-reveal-enabled .home-announcement-card.home-scroll-reveal.is-next-far 
                 <!-- System Loading Layer -->
                 <div class="splash-screen">
                   <div class="splash-logo">
-                    <img src="{{ asset('images/clinic_logo_transparent.png') }}" alt="PUP Taguig Clinic logo">
+                    <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="PUP Taguig Clinic logo">
                     <span>CareSync</span>
                   </div>
                 </div>
@@ -4566,7 +4566,7 @@ html.home-reveal-enabled .home-announcement-card.home-scroll-reveal.is-next-far 
                 
                 <!-- 🌟 LARAVEL DYNAMIC ROUTE ANCHORS (Ginamit ang bago mong SVG Icons) -->
                 <div class="phone-unlocked-logo" aria-hidden="true">
-                  <img src="{{ asset('images/clinic_logo_transparent.png') }}" alt="">
+                  <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="">
                 </div>
 
                 <a href="{{ url('/student/booking') }}" class="btn-action btn-book">
@@ -4861,7 +4861,7 @@ html.home-reveal-enabled .home-announcement-card.home-scroll-reveal.is-next-far 
           <div class="footer-col footer-brand">
             <div class="brand">
               <div class="brand-logo">
-                <img src="{{ asset('images/clinic_logo_transparent.png') }}" alt="PUP Taguig Clinic logo" />
+                <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="PUP Taguig Clinic logo" />
               </div>
               <div>
                 <div class="brand-name">PUP TAGUIG <span class="brand-sub">MEDICAL CLINIC</span></div>

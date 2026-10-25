@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Mail\EmergencyLoginOtpMail;
+use App\Mail\EmergencyPasswordResetOtpMail;
 use App\Models\SystemSetting;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -19,6 +20,9 @@ class EmergencyTwoFactorService
 {
     private const EMAIL_OTP_CACHE_PREFIX = 'emergency-email-otp:';
     private const EMAIL_OTP_RESEND_CACHE_PREFIX = 'emergency-email-otp-resend:';
+    private const PASSWORD_RESET_OTP_CACHE_PREFIX = 'emergency-password-reset-otp:';
+    private const PASSWORD_RESET_OTP_RESEND_CACHE_PREFIX = 'emergency-password-reset-otp-resend:';
+    private const PASSWORD_RESET_OTP_ATTEMPTS_CACHE_PREFIX = 'emergency-password-reset-otp-attempts:';
     private const BACKUP_CODES_SETTING_PREFIX = 'emergency_login_backup_codes:';
     private const SETTING_PREFIX = 'emergency_login_totp:';
     private const USED_TOTP_CACHE_PREFIX = 'emergency-totp-used:';
@@ -191,6 +195,71 @@ class EmergencyTwoFactorService
         Cache::forget(self::EMAIL_OTP_RESEND_CACHE_PREFIX . hash('sha256', $email));
 
         return true;
+    }
+
+    public function sendEmergencyPasswordResetOtp(string $email): array
+    {
+        $email = strtolower(trim($email));
+        $emailHash = hash('sha256', $email);
+        $resendKey = self::PASSWORD_RESET_OTP_RESEND_CACHE_PREFIX . $emailHash;
+        $recipient = $this->emailOtpRecipient($email);
+
+        if (Cache::has($resendKey)) {
+            return ['sent' => false, 'reason' => 'cooldown', 'recipient' => $this->maskedRecipient($recipient)];
+        }
+
+        $code = (string) random_int(100000, 999999);
+        try {
+            Mail::to($recipient)->send(new EmergencyPasswordResetOtpMail($code));
+        } catch (\Throwable $exception) {
+            Log::warning('Emergency password reset OTP delivery failed.', [
+                'mailer' => config('mail.default'),
+                'smtp_host' => config('mail.mailers.smtp.host'),
+                'recipient' => $this->maskedRecipient($recipient),
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return ['sent' => false, 'reason' => 'delivery_failed', 'recipient' => $this->maskedRecipient($recipient)];
+        }
+
+        Cache::put(self::PASSWORD_RESET_OTP_CACHE_PREFIX . $emailHash, Hash::make($code), now()->addMinutes(5));
+        Cache::put(self::PASSWORD_RESET_OTP_ATTEMPTS_CACHE_PREFIX . $emailHash, 0, now()->addMinutes(5));
+        Cache::put($resendKey, true, now()->addSeconds(45));
+
+        return ['sent' => true, 'reason' => null, 'recipient' => $this->maskedRecipient($recipient)];
+    }
+
+    public function verifyEmergencyPasswordResetOtp(string $email, string $code): bool
+    {
+        $code = trim($code);
+        if (!preg_match('/^\d{6}$/', $code)) {
+            return false;
+        }
+
+        $emailHash = hash('sha256', strtolower(trim($email)));
+        $otpKey = self::PASSWORD_RESET_OTP_CACHE_PREFIX . $emailHash;
+        $attemptsKey = self::PASSWORD_RESET_OTP_ATTEMPTS_CACHE_PREFIX . $emailHash;
+        $resendKey = self::PASSWORD_RESET_OTP_RESEND_CACHE_PREFIX . $emailHash;
+
+        if ((int) Cache::get($attemptsKey, 0) >= 5) {
+            Cache::forget($otpKey);
+            return false;
+        }
+
+        $hash = Cache::get($otpKey);
+        if (is_string($hash) && Hash::check($code, $hash)) {
+            Cache::forget($otpKey);
+            Cache::forget($attemptsKey);
+            return true;
+        }
+
+        Cache::add($attemptsKey, 0, now()->addMinutes(5));
+        if (Cache::increment($attemptsKey) >= 5) {
+            Cache::forget($otpKey);
+        }
+
+        return false;
     }
 
     public function emailOtpRecipient(string $email): string

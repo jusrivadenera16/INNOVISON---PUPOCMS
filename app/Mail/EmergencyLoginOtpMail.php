@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Support\ClinicBranding;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -25,7 +26,7 @@ class EmergencyLoginOtpMail extends Mailable
         return $this
             ->subject('Your PUP Taguig Clinic verification code')
             ->view('emails.emergency-login-otp', [
-                'logoUrl' => asset('images/clinic_logo_transparent.png'),
+                'logoUrl' => ClinicBranding::logoUrl(),
             ])
             ->text('emails.emergency-login-otp-text');
     }

@@ -6146,7 +6146,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         ? 'Nurse J.'
         : trim($welcomeFirstName . ($welcomeLastName !== '' ? ' ' . strtoupper(substr($welcomeLastName, 0, 1)) . '.' : ''));
     $avatarInitial = strtoupper(substr($displayName, 0, 1));
-    $brandLogo = asset('images/clinic_logo_transparent.png') . '?v=' . filemtime(public_path('images/clinic_logo_transparent.png'));
+    $brandLogo = \App\Support\ClinicBranding::logoUrl();
     $brandUniversityLogo = asset('images/pup_logo.png');
     \App\Models\Appointment::expireOverduePending();
     $roleLabelMap = [
@@ -6384,7 +6384,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     <div class="header-left">
         <div class="header-brand-lockup">
             <img src="{{ $brandUniversityLogo }}" alt="PUP Logo" class="header-brand-avatar">
-            <img src="{{ $brandLogo }}" alt="Clinic Logo" class="header-brand-avatar header-brand-avatar--clinic">
+            <img src="{{ $brandLogo }}" alt="Clinic Logo" class="header-brand-avatar header-brand-avatar--clinic" data-clinic-logo>
         </div>
         <div class="header-copy">
             <h1 class="header-title">PUP-T MEDICAL CLINIC</h1>

@@ -856,7 +856,7 @@
 
   <main class="lp-container">
     <div class="login-page-brand" aria-label="PUP Taguig Clinic Centralized Access">
-        <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="PUP Taguig Clinic logo" class="login-page-brand__logo">
+        <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="PUP Taguig Clinic logo" class="login-page-brand__logo">
         <div class="login-page-brand__title">PUP TAGUIG CLINIC</div>
         <div class="login-page-brand__subtitle">CENTRALIZED ACCESS</div>
         <span class="login-page-brand__accent" aria-hidden="true"></span>
@@ -1091,7 +1091,7 @@
 
   <div id="loginLoadingOverlay" class="login-loading-overlay" aria-hidden="true">
       <div class="login-loading-card">
-          <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="Loading" class="login-loading-logo">
+          <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="Loading" class="login-loading-logo">
           <div class="login-loading-text">Logging in...</div>
       </div>
   </div>

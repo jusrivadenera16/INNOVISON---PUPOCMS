@@ -94,7 +94,6 @@ return [
         'email' => env('EMERGENCY_ADMIN_EMAIL'),
         'password' => env('EMERGENCY_ADMIN_PASSWORD'),
         'password_hash' => env('EMERGENCY_ADMIN_PASSWORD_HASH'),
-        'password_reset_key' => env('EMERGENCY_PASSWORD_RESET_KEY'),
         'role' => env('EMERGENCY_ADMIN_ROLE', 'admin'),
         'totp_issuer' => env('EMERGENCY_TOTP_ISSUER', 'PUP Taguig Clinic'),
         'email_otp_recipient' => env('EMERGENCY_EMAIL_OTP_RECIPIENT'),
@@ -104,10 +103,6 @@ return [
         'enabled' => filter_var(env('STUDENT_NOTIFICATION_EMAILS_ENABLED', false), FILTER_VALIDATE_BOOL),
         'local_test_recipient' => env('STUDENT_NOTIFICATION_EMAIL_TEST_RECIPIENT'),
         'appointment_reminder_minutes' => (int) env('APPOINTMENT_EMAIL_REMINDER_MINUTES', 15),
-    ],
-
-    'integration_pin' => [
-        'reset_key' => env('INTEGRATION_PIN_RESET_KEY'),
     ],
 
     'external_admin_profile' => [

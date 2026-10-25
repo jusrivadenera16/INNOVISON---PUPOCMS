@@ -3139,6 +3139,7 @@
             >
                 @csrf
                 <input type="hidden" name="employee_consent_acknowledged" id="employeeConsentAcknowledged" value="{{ old('employee_consent_acknowledged') ? '1' : '' }}">
+                <input type="hidden" id="employeeConsentPurpose" name="employee_health_form_category" value="{{ $employeeHealthFormCategory ?? 'Employee' }}">
 
                 @php
                     $streetFallback = $employeeValue('street_address');
@@ -3598,33 +3599,17 @@
                         <h2 id="employeeConsentTitle">Declaration of Medical Information and Data Subject Consent Form</h2>
 
                         @php
-                            $storedEmployeeCategory = data_get($employeeProfile ?? null, 'health_form_category', '');
-                            $initialEmployeeCategory = old(
-                                'employee_health_form_category',
-                                $storedEmployeeCategory !== ''
-                                    ? $storedEmployeeCategory
-                                    : ($defaultEmployeeHealthFormCategory ?? '')
-                            );
-                            $initialEmployeeCategory = collect($healthFormCategories ?? [])
-                                ->contains(fn ($category) => $category->name === $initialEmployeeCategory)
-                                ? $initialEmployeeCategory
-                                : '';
+                            $initialEmployeePurpose = $employeeConsentPurpose['purpose'] ?? 'non-teaching staff employment';
+                            $initialEmployeeEndorsement = $employeeConsentPurpose['endorsement'] ?? 'fitness for employment duties';
                         @endphp
                         <div class="student-consent-purpose-wrap" style="margin: 0 0 16px;">
-                            <label for="employeeConsentPurpose" style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 800; color: #7f1d2d; text-transform: uppercase; letter-spacing: .05em;">
-                                Health Form Category <span style="color: #dc2626;">*</span>
-                            </label>
-                            <select id="employeeConsentPurpose" name="employee_health_form_category" class="form-select" style="width: 100%; padding: 8px 12px; border: 1.5px solid #7f1d2d; border-radius: 8px; font-size: 13.5px; font-weight: 700; background-color: #ffffff; color: #1f2937;" required>
-                                <option value="" disabled {{ $initialEmployeeCategory === '' ? 'selected' : '' }}>-- Select Health Form Category --</option>
-                                @foreach($healthFormCategories ?? [] as $category)
-                                    <option value="{{ $category->name }}" {{ $initialEmployeeCategory === $category->name ? 'selected' : '' }}>{{ $category->name }}</option>
-                                @endforeach
-                            </select>
+                            <span style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 800; color: #7f1d2d; text-transform: uppercase;">Purpose of Medical Clearance</span>
+                            <strong>{{ $initialEmployeePurpose }}</strong>
                         </div>
 
                         <div class="student-consent-copy">
                             <p>
-                                I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my on-site consultation for the issuance of medical clearance for <u id="employeeConsentDynamicPurpose" style="font-weight: 700;">{{ $initialEmployeeCategory !== '' ? $initialEmployeeCategory : '[Select Category]' }}</u> are true, correct and complete to the best of my knowledge. I have fully disclosed all the medical condition that may affect in the assessment to endorse my <u id="employeeConsentDynamicEndorsement" style="font-weight: 700;">{{ $initialEmployeeCategory !== '' ? 'fitness for ' . strtolower($initialEmployeeCategory) : '[Select Category]' }}</u> of PUP Taguig Campus.
+                                I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my on-site consultation for the issuance of medical clearance for <u id="employeeConsentDynamicPurpose" style="font-weight: 700;">{{ $initialEmployeePurpose }}</u> are true, correct and complete to the best of my knowledge. I have fully disclosed all the medical condition that may affect in the assessment to endorse my <u id="employeeConsentDynamicEndorsement" style="font-weight: 700;">{{ $initialEmployeeEndorsement }}</u> of PUP Taguig Campus.
                             </p>
                             <p>I also understand that the PUP Medical Services and University will not be liable for any untoward incident that may arise due to my failure to disclose accurate information or intentionally providing false and deceptive information.</p>
                             <p>{{ config('health_form_privacy.consent_statement') }}</p>
@@ -3957,11 +3942,8 @@
             const errorContinue = document.getElementById('healthErrorContinue');
             const employeeConsentModal = document.getElementById('employeeConsentModal');
             const employeeConsentPurpose = document.getElementById('employeeConsentPurpose');
-            const employeeConsentDynamicPurpose = document.getElementById('employeeConsentDynamicPurpose');
-            const employeeConsentDynamicEndorsement = document.getElementById('employeeConsentDynamicEndorsement');
             const employeeConsentCheckbox = document.getElementById('employeeConsentCheckbox');
             const employeeConsentAgreement = employeeConsentCheckbox?.closest('.student-consent-agreement');
-            const employeeConsentPurposeWrap = employeeConsentPurpose?.closest('.student-consent-purpose-wrap');
             const employeeConsentAcknowledged = document.getElementById('employeeConsentAcknowledged');
             const employeeConsentContinue = document.getElementById('employeeConsentContinue');
             const employeeConsentClose = document.getElementById('employeeConsentClose');
@@ -4313,32 +4295,13 @@
             }
 
             function clearEmployeeConsentValidation() {
-                employeeConsentPurposeWrap?.classList.remove('is-invalid');
                 employeeConsentAgreement?.classList.remove('is-invalid');
-            }
-
-            function updateEmployeeConsentDynamicText() {
-                const selected = employeeConsentPurpose?.value || '';
-                if (selected) {
-                    if (employeeConsentDynamicPurpose) employeeConsentDynamicPurpose.textContent = selected;
-                    if (employeeConsentDynamicEndorsement) employeeConsentDynamicEndorsement.textContent = 'fitness for ' + selected.toLowerCase();
-                } else {
-                    if (employeeConsentDynamicPurpose) employeeConsentDynamicPurpose.textContent = '[Select Category]';
-                    if (employeeConsentDynamicEndorsement) employeeConsentDynamicEndorsement.textContent = '[Select Category]';
-                }
             }
 
             function openEmployeeConsent() {
                 if (!employeeConsentModal) return;
-                updateEmployeeConsentDynamicText();
                 employeeConsentModal.hidden = false;
-                window.setTimeout(() => {
-                    if (!employeeConsentPurpose?.value) {
-                        employeeConsentPurpose?.focus();
-                    } else {
-                        employeeConsentCheckbox?.focus();
-                    }
-                }, 30);
+                window.setTimeout(() => employeeConsentCheckbox?.focus(), 30);
             }
 
             function closeEmployeeConsent() {
@@ -4430,12 +4393,6 @@
                 });
             });
 
-            employeeConsentPurpose?.addEventListener('change', () => {
-                if (employeeConsentAcknowledged) employeeConsentAcknowledged.value = '';
-                employeeConsentPurposeWrap?.classList.remove('is-invalid');
-                updateEmployeeConsentDynamicText();
-            });
-
             employeeConsentCheckbox?.addEventListener('change', () => {
                 if (employeeConsentAcknowledged) employeeConsentAcknowledged.value = '';
                 employeeConsentAgreement?.classList.remove('is-invalid');
@@ -4447,12 +4404,6 @@
             });
 
             employeeConsentContinue?.addEventListener('click', () => {
-                if (!employeeConsentPurpose?.value) {
-                    employeeConsentPurposeWrap?.classList.add('is-invalid');
-                    showError('Please select your purpose.');
-                    employeeConsentPurpose?.focus();
-                    return;
-                }
                 if (!employeeConsentCheckbox?.checked) {
                     employeeConsentAgreement?.classList.add('is-invalid');
                     showError('Please confirm that you have read and agree to the consent form.');
@@ -4597,6 +4548,30 @@
                     previewScope.classList.remove('has-upload-preview');
                     targetPreview.classList.remove('is-visible');
                     targetPreview.innerHTML = '';
+                    return;
+                }
+
+                const acceptedTypes = (input.accept || '').split(',').map((type) => type.trim().toLowerCase()).filter(Boolean);
+                const allowedExtensions = acceptedTypes.filter((type) => type.startsWith('.')).map((type) => type.slice(1));
+                const allowedMimeTypes = acceptedTypes.filter((type) => !type.startsWith('.') && !type.includes('*'));
+                const fileExtension = (file.name.split('.').pop() || '').toLowerCase();
+                const extensionAllowed = !allowedExtensions.length || allowedExtensions.includes(fileExtension);
+                const mimeAllowed = !file.type || !allowedMimeTypes.length || allowedMimeTypes.includes(file.type.toLowerCase());
+                if (!extensionAllowed || !mimeAllowed) {
+                    const acceptedLabel = allowedExtensions.map((extension) => extension.toUpperCase()).join(', ');
+                    const message = `This document only accepts ${acceptedLabel || 'the listed'} file types.`;
+                    input.setCustomValidity(message);
+                    if (signatureStatus) signatureStatus.textContent = message;
+                    previewScope.classList.remove('has-upload-preview');
+                    targetPreview.innerHTML = `
+                        <div class="upload-preview-error">
+                            <div class="upload-preview-error-header">
+                                <span class="upload-preview-error-icon">!</span>
+                                <span class="upload-preview-error-text">${message}</span>
+                            </div>
+                        </div>
+                    `;
+                    targetPreview.classList.add('is-visible');
                     return;
                 }
 

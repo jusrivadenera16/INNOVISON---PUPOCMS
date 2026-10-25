@@ -50,8 +50,10 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Models\IntegrationClient;
 use App\Services\StudentNotificationMailer;
+use App\Services\EmergencyTwoFactorService;
 use App\Services\MarClearanceIssuanceService;
 use App\Support\SensitiveLogRedactor;
+use App\Support\ClinicBranding;
 
 class AdminController extends Controller
 {
@@ -466,28 +468,6 @@ class AdminController extends Controller
         return $user instanceof User ? $user : null;
     }
 
-    private function integrationTokensPinSessionKey(User $user): string
-    {
-        return 'integration_tokens_pin_unlocked_user_' . $user->id;
-    }
-
-    private function integrationTokensAccessState(User $user): array
-    {
-        $pinEnabled = (bool) ($user->api_pin_enabled ?? false);
-        $pagePinEnabled = $pinEnabled && (bool) ($user->api_pin_page_enabled ?? true);
-        $tokenActionPinEnabled = $pinEnabled && (bool) ($user->api_pin_token_action_enabled ?? true);
-
-        return [
-            'disabled' => (bool) ($user->api_pin_disabled ?? false),
-            'pin_enabled' => $pinEnabled,
-            'page_pin_enabled' => $pagePinEnabled,
-            'token_action_pin_enabled' => $tokenActionPinEnabled,
-            'emergency_credentials_pin_enabled' => false,
-            'has_pin' => trim((string) ($user->api_pin ?? '')) !== '',
-            'unlocked' => ! $pinEnabled,
-        ];
-    }
-
     private function emergencyAccessSettings(): array
     {
         $configEnabled = (bool) config('services.emergency.enabled', false);
@@ -574,39 +554,6 @@ class AdminController extends Controller
             : ($configuredPassword !== '' && hash_equals($configuredPassword, $password));
     }
 
-    private function integrationPinResetKeyMatches(string $key): bool
-    {
-        $configuredKey = trim((string) config('services.integration_pin.reset_key', ''));
-        $key = trim($key);
-
-        return $configuredKey !== '' && $key !== '' && hash_equals($configuredKey, $key);
-    }
-
-    private function emergencyPasswordResetKeyMatches(string $key): bool
-    {
-        $configuredKey = trim((string) config('services.emergency.password_reset_key', ''));
-        $key = trim($key);
-
-        return $configuredKey !== '' && $key !== '' && hash_equals($configuredKey, $key);
-    }
-
-    private function ensureSecurityPinForPurpose(Request $request, User $user, string $purpose): void
-    {
-        $state = $this->integrationTokensAccessState($user);
-
-        if ($purpose === 'emergency_credentials') {
-            return;
-        }
-
-        $validated = $request->validate([
-            'pin' => 'required|digits:4',
-        ]);
-
-        if (! Hash::check($validated['pin'], (string) ($user->api_pin ?? ''))) {
-            abort(422, 'Incorrect security PIN.');
-        }
-    }
-
     private function logDeveloperSecurityAction(User $user, string $action, string $description, int $statusCode = 200): void
     {
         try {
@@ -632,47 +579,6 @@ class AdminController extends Controller
             ]);
         } catch (\Throwable) {
             // Recovery controls should remain usable even if audit storage is temporarily unavailable.
-        }
-    }
-
-    private function ensureIntegrationTokensAvailable(User $user): void
-    {
-        $state = $this->integrationTokensAccessState($user);
-
-        if ($state['disabled']) {
-            abort(403, 'Integration Tokens access is disabled.');
-        }
-    }
-
-    private function ensureIntegrationTokensPageAccess(User $user): void
-    {
-        $this->ensureIntegrationTokensAvailable($user);
-
-        $state = $this->integrationTokensAccessState($user);
-
-        if ($state['page_pin_enabled'] && session()->pull($this->integrationTokensPinSessionKey($user)) !== true) {
-            abort(403, 'Integration Tokens access requires PIN verification.');
-        }
-    }
-
-    private function ensureIntegrationTokensPinForRequest(Request $request, User $user): void
-    {
-        $state = $this->integrationTokensAccessState($user);
-
-        if ($state['disabled']) {
-            abort(403, 'Integration Tokens access is disabled.');
-        }
-
-        if (! $state['token_action_pin_enabled']) {
-            return;
-        }
-
-        $validated = $request->validate([
-            'pin' => 'required|digits:4',
-        ]);
-
-        if (! Hash::check($validated['pin'], (string) ($user->api_pin ?? ''))) {
-            abort(422, 'Incorrect Integration PIN.');
         }
     }
 
@@ -1483,6 +1389,40 @@ class AdminController extends Controller
         abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
 
         return view('admin.developer_tools');
+    }
+
+    public function updateClinicLogo(Request $request)
+    {
+        $user = $this->currentAdminUser();
+        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+
+        $validated = $request->validate([
+            'clinic_logo' => ['required', 'image', 'mimes:png,jpg,jpeg,webp', 'max:4096', 'dimensions:max_width=4000,max_height=4000'],
+        ]);
+
+        $file = $validated['clinic_logo'];
+        $relativePath = 'uploads/clinic-branding/clinic-logo-' . Str::uuid() . '.' . $file->extension();
+        $absolutePath = public_path($relativePath);
+        File::ensureDirectoryExists(dirname($absolutePath), 0755, true);
+        $file->move(dirname($absolutePath), basename($absolutePath));
+
+        try {
+            $previousPath = SystemSetting::getValue('clinic_logo_path');
+            DB::transaction(fn () => SystemSetting::putValue('clinic_logo_path', $relativePath));
+        } catch (\Throwable $exception) {
+            File::delete($absolutePath);
+            throw $exception;
+        }
+
+        ClinicBranding::forgetCachedLogoPath();
+
+        if (is_string($previousPath) && ClinicBranding::isManagedLogoPath($previousPath)) {
+            File::delete(public_path($previousPath));
+        }
+
+        return back()
+            ->with('success', 'Clinic logo updated successfully.')
+            ->with('open_developer_options', true);
     }
 
     public function apiTesting(Request $request, FacultySyncService $facultySyncService, GuisisApiService $guisisApiService)
@@ -3011,6 +2951,187 @@ class AdminController extends Controller
         return 'applicant';
     }
 
+    private function medicalAssessmentSnapshotValue(mixed $value): string
+    {
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('M j, Y');
+        }
+
+        if (is_bool($value)) {
+            return $value ? 'Yes' : 'No';
+        }
+
+        if (is_array($value)) {
+            $items = [];
+            foreach ($value as $key => $item) {
+                if (is_array($item)) {
+                    $item = $this->medicalAssessmentSnapshotValue($item);
+                } elseif (is_bool($item)) {
+                    $item = $item ? 'Yes' : 'No';
+                }
+
+                if (!is_scalar($item) || trim((string) $item) === '') {
+                    continue;
+                }
+
+                $items[] = is_string($key)
+                    ? \Illuminate\Support\Str::headline($key) . ': ' . trim((string) $item)
+                    : trim((string) $item);
+            }
+
+            return $items !== [] ? implode('; ', $items) : 'Not recorded';
+        }
+
+        $value = trim((string) ($value ?? ''));
+
+        return $value !== '' ? $value : 'Not recorded';
+    }
+
+    private function healthProfileMedicalAssessmentSnapshot(HealthProfile $profile): array
+    {
+        $fields = [
+            'Medical History' => [
+                'Known illness' => $profile->has_illness,
+                'Medical conditions' => $profile->medical_history,
+                'Other illness' => $profile->other_illness,
+                'Blood type' => $profile->blood_type,
+                'Disability' => $profile->has_disability,
+                'Disability type' => $profile->disability_type,
+            ],
+            'Allergies' => [
+                'No known allergies' => $profile->no_allergies,
+                'Food allergies' => $profile->food_allergies,
+                'Medicine allergies' => $profile->medicine_allergies,
+                'Other medicine allergies' => $profile->other_med_allergies,
+            ],
+            'Lifestyle & Immunization' => [
+                'Smoking' => $profile->is_smoker,
+                'Alcohol use' => $profile->is_drinker,
+                'COVID-19 vaccination' => $profile->covid_vaccinated,
+                'Vaccine history' => $profile->vaccine_history,
+                'COVID-19 positive' => $profile->covid_positive,
+                'COVID-19 positive date' => $profile->covid_positive_date,
+            ],
+            'Vitals & Assessment' => [
+                'Height' => $profile->height,
+                'Weight' => $profile->weight,
+                'Blood pressure' => $profile->blood_pressure,
+                'Pulse rate' => $profile->pulse_rate,
+                'Respiratory rate' => $profile->respiratory_rate,
+                'Temperature' => $profile->temperature,
+                'Assessment date' => $profile->assessment_date,
+                'Physical assessment status' => $profile->physical_assessment_status,
+                'Assessment remarks' => $profile->med_assessment_remarks ?: $profile->assessment_remarks,
+                'Medical condition remarks' => $profile->medical_condition_remarks,
+                'Nurse review remarks' => $profile->pending_reason,
+            ],
+            'Medical Certificate & Imaging' => [
+                '2x2 student photo' => filled($profile->student_photo) ? 'Uploaded' : 'Not uploaded',
+                'Health declaration' => filled($profile->health_declaration) ? 'Uploaded' : 'Not uploaded',
+                'PWD ID proof' => filled($profile->pwd_id_proof) ? 'Uploaded' : 'Not uploaded',
+                'Medical certificate' => filled($profile->medical_certificate) ? 'Uploaded' : 'Not uploaded',
+                'Certificate doctor' => $profile->doctor_name,
+                'Certificate issued by' => $profile->medical_certificate_issued_by,
+                'Certificate date' => $profile->med_cert_date,
+                'Certificate issued date' => $profile->medical_certificate_issued_at,
+                'Certificate findings' => $profile->med_cert_findings,
+                'Certificate findings details' => $profile->med_cert_findings_details,
+                'Chest X-ray report' => filled($profile->chest_xray_result) ? 'Uploaded' : 'Not uploaded',
+                'Chest X-ray result' => $profile->chest_xray_result_text,
+                'Chest X-ray date' => $profile->chest_xray_date ?: $profile->xray_date,
+                'Chest X-ray findings' => $profile->xray_findings,
+                'Chest X-ray findings details' => $profile->xray_findings_details,
+                'Other medical assessment file' => filled($profile->medical_assessment_upload) ? 'Uploaded' : 'Not uploaded',
+            ],
+            'Referral' => [
+                'Referral details' => $profile->referral_details,
+                'Encoded findings' => $profile->encode_remarks,
+            ],
+        ];
+
+        return collect($fields)
+            ->map(fn (array $items) => collect($items)
+                ->map(fn ($value) => $this->medicalAssessmentSnapshotValue($value))
+                ->all())
+            ->all();
+    }
+
+    private function employeeMedicalAssessmentSnapshot(EmployeeHealthProfile $profile): array
+    {
+        $fields = [
+            'Medical & Family History' => [
+                'Past medical history' => $profile->past_medical_history,
+                'Other past medical history' => $profile->past_medical_history_others,
+                'Family history' => $profile->family_history,
+                'Other family history' => $profile->family_history_others,
+                'Disability' => $profile->has_disability,
+                'Disability type' => $profile->disability_type,
+            ],
+            'Hospitalization & Surgery' => [
+                'Previous hospitalization' => $profile->previous_hospitalization,
+                'Hospitalization details' => $profile->previous_hospitalization_details,
+                'Operation / surgery' => $profile->operation_surgery,
+                'Operation / surgery details' => $profile->operation_surgery_details,
+            ],
+            'Medications, Allergies & Lifestyle' => [
+                'Current medications' => $profile->current_medications,
+                'Allergies' => $profile->allergies,
+                'Cigarette smoking' => $profile->cigarette_smoking,
+                'Alcohol drinking' => $profile->alcohol_drinking,
+                'Traveled abroad' => $profile->traveled_abroad,
+            ],
+            'Vital Signs' => [
+                'Distress status' => $profile->vital_signs_distress_status,
+                'Height' => $profile->height,
+                'Weight' => $profile->weight,
+                'BMI' => $profile->bmi,
+                'Blood pressure' => $profile->bp,
+                'Heart rate' => $profile->hr,
+                'Respiratory rate' => $profile->rr,
+                'Temperature' => $profile->temperature,
+            ],
+            'Physical Examination Findings' => [
+                'Head' => $profile->head_findings,
+                'Eyes' => $profile->eyes_findings,
+                'Ears' => $profile->ears_findings,
+                'Throat' => $profile->throat_findings,
+                'Chest & lungs' => $profile->chest_lungs_findings,
+                'Chest X-ray' => $profile->chest_xray_result,
+                'Breast' => $profile->breast_findings,
+                'Heart murmur' => $profile->heart_murmur,
+                'Heart rhythm' => $profile->heart_rhythm,
+                'Abdomen' => $profile->abdomen_findings,
+                'Last menstruation' => $profile->genito_urinary_date_lmp,
+                'Extremities' => $profile->extremities_findings,
+                'Vertebral column' => $profile->vertebral_column_findings,
+                'Skin' => $profile->skin_findings,
+                'Scars' => $profile->scars_findings,
+            ],
+            'Assessment & Follow-up' => [
+                'Working impression' => $profile->working_impression,
+                'Fit status' => $profile->fit_status,
+                'For work-up' => $profile->for_work_up,
+                'Referred to' => $profile->referred_to,
+                'Other referral' => $profile->referred_to_others,
+                'Follow-up date' => $profile->follow_up_on,
+                'Certified at' => $profile->certified_at,
+                'Verified at' => $profile->verified_at,
+            ],
+            'Medical Documents' => [
+                'Medical certificate' => filled($profile->medical_certificate) ? 'Uploaded' : 'Not uploaded',
+                'Chest X-ray document' => filled($profile->chest_xray_document) ? 'Uploaded' : 'Not uploaded',
+                'Health declaration' => filled($profile->health_declaration) ? 'Uploaded' : 'Not uploaded',
+                'PWD ID proof' => filled($profile->pwd_id_proof) ? 'Uploaded' : 'Not uploaded',
+            ],
+        ];
+
+        return collect($fields)
+            ->map(fn (array $items) => collect($items)
+                ->map(fn ($value) => $this->medicalAssessmentSnapshotValue($value))
+                ->all())
+            ->all();
+    }
+
     private function isStudentHealthProfile(HealthProfile $profile): bool
     {
         $user = $profile->user;
@@ -3670,13 +3791,30 @@ class AdminController extends Controller
             ->first();
         $healthFormAudience = $this->resolveAdminHealthProfileAudience($profile);
         $isStudentHealthProfile = $this->isStudentHealthProfile($profile);
-        $medicalAssessmentHistory = $isStudentHealthProfile
+        $canHaveMedicalAssessment = in_array($healthFormAudience, ['student', 'applicant'], true)
+            && in_array($profile->user?->clinicAccountTypeKey(), ['student', 'applicant'], true);
+        $medicalAssessmentHistory = $canHaveMedicalAssessment
             ? StudentMedicalAssessment::with('recordedBy')
                 ->where('health_profile_id', $profile->id)
                 ->latest('created_at')
                 ->latest('id')
                 ->get()
             : collect();
+        $medicalAssessmentSnapshot = $canHaveMedicalAssessment
+            ? $this->healthProfileMedicalAssessmentSnapshot($profile)
+            : [];
+        $medicalAssessmentEditableValues = $canHaveMedicalAssessment
+            ? $profile->only([
+                'has_illness', 'medical_history', 'other_illness', 'blood_type', 'has_disability', 'disability_type',
+                'no_allergies', 'food_allergies', 'medicine_allergies', 'other_med_allergies',
+                'is_smoker', 'is_drinker', 'covid_vaccinated', 'vaccine_history', 'covid_positive', 'covid_positive_date',
+                'height', 'weight', 'blood_pressure', 'pulse_rate', 'respiratory_rate', 'temperature', 'assessment_date',
+                'med_assessment_remarks', 'medical_condition_remarks', 'doctor_name', 'medical_certificate_issued_by',
+                'med_cert_date', 'medical_certificate_issued_at', 'med_cert_findings', 'med_cert_findings_details',
+                'chest_xray_result_text', 'chest_xray_date', 'xray_findings', 'xray_findings_details',
+                'referral_details', 'encode_remarks',
+            ])
+            : [];
         $healthFormCategories = HealthFormCategory::query()
             ->where('is_active', true)
             ->availableFor($healthFormAudience)
@@ -3746,6 +3884,9 @@ class AdminController extends Controller
             'currentHealthFormSubmission',
             'activeNewHealthFormRequest',
             'medicalAssessmentHistory',
+            'medicalAssessmentSnapshot',
+            'medicalAssessmentEditableValues',
+            'canHaveMedicalAssessment',
             'isStudentHealthProfile',
             'healthFormAudience'
         ));
@@ -3782,6 +3923,38 @@ class AdminController extends Controller
         $employeeProfile->loadMissing(['user', 'approvedBy']);
         abort_unless($employeeProfile->user, 404);
 
+        $employeeAccountType = $employeeProfile->user->clinicAccountTypeKey();
+        $medicalAssessmentProfileType = match ($employeeAccountType) {
+            'faculty' => 'Faculty',
+            'non_teaching_staff' => 'Admin',
+            default => null,
+        };
+        $canUpdateMedicalAssessment = $medicalAssessmentProfileType !== null
+            && (optional(auth()->user())->canAccessPermission('health_records.update_assessment') ?? false);
+        $medicalAssessmentHistory = $canUpdateMedicalAssessment
+            ? StudentMedicalAssessment::with('recordedBy')
+                ->where('employee_health_profile_id', $employeeProfile->id)
+                ->latest('created_at')
+                ->latest('id')
+                ->get()
+            : collect();
+        $medicalAssessmentSnapshot = $canUpdateMedicalAssessment
+            ? $this->employeeMedicalAssessmentSnapshot($employeeProfile)
+            : [];
+        $medicalAssessmentEditableValues = $canUpdateMedicalAssessment
+            ? $employeeProfile->only([
+                'past_medical_history', 'past_medical_history_others', 'family_history', 'family_history_others',
+                'has_disability', 'disability_type', 'previous_hospitalization', 'previous_hospitalization_details',
+                'operation_surgery', 'operation_surgery_details', 'current_medications', 'allergies',
+                'cigarette_smoking', 'alcohol_drinking', 'traveled_abroad', 'vital_signs_distress_status',
+                'height', 'weight', 'bmi', 'bp', 'hr', 'rr', 'temperature', 'head_findings', 'eyes_findings',
+                'ears_findings', 'throat_findings', 'chest_lungs_findings', 'chest_xray_result', 'breast_findings',
+                'heart_murmur', 'heart_rhythm', 'abdomen_findings', 'genito_urinary_date_lmp',
+                'extremities_findings', 'vertebral_column_findings', 'skin_findings', 'scars_findings',
+                'working_impression', 'fit_status', 'for_work_up', 'referred_to', 'referred_to_others', 'follow_up_on',
+            ])
+            : [];
+
         $activeNewHealthFormRequest = $this->activeEmployeeNewHealthFormRequest($employeeProfile);
 
         $employeeHealthFormAudience = $this->employeeHealthFormCategoryAudience($employeeProfile->user);
@@ -3793,7 +3966,9 @@ class AdminController extends Controller
             ->values();
         $canRequestNewEmployeeHealthForm = optional(auth()->user())->canAccessPermission('health_records.request_health_form') ?? false;
         $canRequestEmployeeFileCorrection = optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false;
-        $canRequestEmployeeHealthActions = $canRequestNewEmployeeHealthForm || $canRequestEmployeeFileCorrection;
+        $canRequestEmployeeHealthActions = $canRequestNewEmployeeHealthForm
+            || $canRequestEmployeeFileCorrection
+            || $canUpdateMedicalAssessment;
 
         $employeeSubmissions = HealthFormSubmission::query()
             ->where('employee_health_profile_id', $employeeProfile->id)
@@ -3930,7 +4105,12 @@ class AdminController extends Controller
             'canRequestEmployeeHealthActions',
             'canRequestNewEmployeeHealthForm',
             'canRequestEmployeeFileCorrection',
-            'activeNewHealthFormRequest'
+            'activeNewHealthFormRequest',
+            'canUpdateMedicalAssessment',
+            'medicalAssessmentProfileType',
+            'medicalAssessmentHistory',
+            'medicalAssessmentSnapshot',
+            'medicalAssessmentEditableValues'
         ));
     }
 
@@ -4600,65 +4780,241 @@ class AdminController extends Controller
             ->with('success', 'Student clearance revoked. The record is back in Pending Approval.');
     }
 
-    public function storeStudentMedicalAssessment(Request $request, $id)
+    public function updateStudentMedicalInformation(Request $request, $id)
     {
-        $validated = $request->validate([
-            'condition_or_illness' => ['nullable', 'required_without_all:findings,remarks', 'string', 'max:1000'],
-            'findings' => ['nullable', 'string', 'max:3000'],
-            'remarks' => ['nullable', 'string', 'max:2000'],
-            'reason' => ['nullable', 'string', 'max:1000'],
-        ], [
-            'condition_or_illness.required_without_all' => 'Add at least one clinical detail: medical condition, findings, or remarks.',
-        ]);
+        $profile = HealthProfile::with('user')->findOrFail($id);
+        $audience = $this->resolveAdminHealthProfileAudience($profile);
+        abort_unless(in_array($audience, ['student', 'applicant'], true), 404);
+        abort_unless(in_array($profile->user?->clinicAccountTypeKey(), ['student', 'applicant'], true), 404);
+        abort_unless(!in_array($profile->pullout_status, [HealthProfile::PULLOUT_PENDING, HealthProfile::PULLOUT_COMPLETED], true), 404);
+
+        $updates = $this->validatedMedicalInformationUpdates($request, false);
+
+        return $this->saveMedicalInformationUpdates(
+            $request,
+            HealthProfile::class,
+            $profile->id,
+            $updates,
+            $audience,
+            'admin.show_health',
+            ['id' => $profile->id]
+        );
+    }
+
+    public function updateEmployeeMedicalInformation(Request $request, EmployeeHealthProfile $employeeProfile)
+    {
+        $employeeProfile->loadMissing('user');
+        $accountType = $employeeProfile->user?->clinicAccountTypeKey();
+        abort_unless(in_array($accountType, ['faculty', 'non_teaching_staff'], true), 404);
+
+        $updates = $this->validatedMedicalInformationUpdates($request, true);
+
+        return $this->saveMedicalInformationUpdates(
+            $request,
+            EmployeeHealthProfile::class,
+            $employeeProfile->id,
+            $updates,
+            $accountType === 'faculty' ? 'faculty' : 'admin',
+            'admin.employee_health_profile.show',
+            ['employeeProfile' => $employeeProfile->id]
+        );
+    }
+
+    private function validatedMedicalInformationUpdates(Request $request, bool $employee): array
+    {
+        $yesNo = ['nullable', 'string', Rule::in(['Yes', 'No'])];
+        $booleanChoice = ['nullable', 'string', Rule::in(['Yes', 'No'])];
+        $json = ['nullable', 'string', 'max:20000', 'json'];
+        $text = ['nullable', 'string', 'max:5000'];
+        $date = ['nullable', 'date'];
+        $numeric = ['nullable', 'numeric', 'min:0', 'max:100000'];
+
+        $fields = $employee ? [
+            'past_medical_history' => $json,
+            'past_medical_history_others' => $text,
+            'family_history' => $json,
+            'family_history_others' => $text,
+            'has_disability' => $booleanChoice,
+            'disability_type' => ['nullable', 'string', 'max:255'],
+            'previous_hospitalization' => $booleanChoice,
+            'previous_hospitalization_details' => $text,
+            'operation_surgery' => $booleanChoice,
+            'operation_surgery_details' => $text,
+            'current_medications' => $text,
+            'allergies' => $text,
+            'cigarette_smoking' => $booleanChoice,
+            'alcohol_drinking' => $booleanChoice,
+            'traveled_abroad' => $booleanChoice,
+            'vital_signs_distress_status' => ['nullable', 'string', 'max:255'],
+            'height' => ['nullable', 'string', 'max:30'],
+            'weight' => $numeric,
+            'bmi' => $numeric,
+            'bp' => ['nullable', 'string', 'max:50'],
+            'hr' => $numeric,
+            'rr' => $numeric,
+            'temperature' => $numeric,
+            'head_findings' => $json,
+            'eyes_findings' => $json,
+            'ears_findings' => $json,
+            'throat_findings' => $json,
+            'chest_lungs_findings' => $json,
+            'chest_xray_result' => $text,
+            'breast_findings' => $text,
+            'heart_murmur' => ['nullable', 'string', 'max:255'],
+            'heart_rhythm' => ['nullable', 'string', 'max:255'],
+            'abdomen_findings' => $text,
+            'genito_urinary_date_lmp' => $date,
+            'extremities_findings' => $text,
+            'vertebral_column_findings' => $text,
+            'skin_findings' => $json,
+            'scars_findings' => $text,
+            'working_impression' => $text,
+            'fit_status' => ['nullable', 'string', 'max:255'],
+            'for_work_up' => $text,
+            'referred_to' => $json,
+            'referred_to_others' => $text,
+            'follow_up_on' => $date,
+        ] : [
+            'has_illness' => $yesNo,
+            'medical_history' => $json,
+            'other_illness' => $text,
+            'blood_type' => ['nullable', 'string', 'max:50'],
+            'has_disability' => $yesNo,
+            'disability_type' => ['nullable', 'string', 'max:255'],
+            'no_allergies' => $booleanChoice,
+            'food_allergies' => $text,
+            'medicine_allergies' => $json,
+            'other_med_allergies' => $text,
+            'is_smoker' => $yesNo,
+            'is_drinker' => $yesNo,
+            'covid_vaccinated' => $yesNo,
+            'vaccine_history' => $json,
+            'covid_positive' => $yesNo,
+            'covid_positive_date' => $date,
+            'height' => ['nullable', 'string', 'max:30'],
+            'weight' => $numeric,
+            'blood_pressure' => ['nullable', 'string', 'max:50'],
+            'pulse_rate' => $numeric,
+            'respiratory_rate' => $numeric,
+            'temperature' => $numeric,
+            'assessment_date' => $date,
+            'med_assessment_remarks' => $text,
+            'medical_condition_remarks' => $text,
+            'doctor_name' => ['nullable', 'string', 'max:255'],
+            'medical_certificate_issued_by' => ['nullable', 'string', 'max:255'],
+            'med_cert_date' => $date,
+            'medical_certificate_issued_at' => $date,
+            'med_cert_findings' => ['nullable', 'string', 'max:1000'],
+            'med_cert_findings_details' => $text,
+            'chest_xray_result_text' => $text,
+            'chest_xray_date' => $date,
+            'xray_findings' => ['nullable', 'string', 'max:1000'],
+            'xray_findings_details' => $text,
+            'referral_details' => $json,
+            'encode_remarks' => $text,
+        ];
+
+        $rules = ['medical_information' => ['required', 'array']];
+        foreach ($fields as $key => $fieldRules) {
+            $rules['medical_information.' . $key] = $fieldRules;
+        }
+
+        $validated = $request->validate($rules);
+        $submitted = collect($validated['medical_information'] ?? [])->only(array_keys($fields));
+        $booleanFields = $employee
+            ? ['has_disability', 'previous_hospitalization', 'operation_surgery', 'cigarette_smoking', 'alcohol_drinking', 'traveled_abroad']
+            : ['no_allergies'];
+        $jsonFields = $employee
+            ? ['past_medical_history', 'family_history', 'head_findings', 'eyes_findings', 'ears_findings', 'throat_findings', 'chest_lungs_findings', 'skin_findings', 'referred_to']
+            : ['medical_history', 'medicine_allergies', 'vaccine_history', 'referral_details'];
+        $updates = [];
+
+        foreach ($submitted as $key => $value) {
+            if (in_array($key, $booleanFields, true)) {
+                $updates[$key] = $value === null || $value === '' ? null : $value === 'Yes';
+                continue;
+            }
+
+            if (in_array($key, $jsonFields, true)) {
+                if ($value === null || trim($value) === '') {
+                    $updates[$key] = [];
+                    continue;
+                }
+
+                $decoded = json_decode($value, true);
+                if (!is_array($decoded)) {
+                    throw ValidationException::withMessages([
+                        'medical_information.' . $key => 'This value must be a JSON array or object.',
+                    ]);
+                }
+                $updates[$key] = $decoded;
+                continue;
+            }
+
+            $updates[$key] = is_string($value) && trim($value) === '' ? null : $value;
+        }
+
+        return $updates;
+    }
+
+    private function saveMedicalInformationUpdates(
+        Request $request,
+        string $profileClass,
+        int $profileId,
+        array $updates,
+        string $profileType,
+        string $redirectRoute,
+        array $routeParameters
+    ) {
         $actor = Auth::guard('admin')->user();
+        $updatedFields = DB::transaction(function () use ($request, $profileClass, $profileId, $updates, $profileType, $actor): array {
+            $profile = $profileClass::query()->lockForUpdate()->findOrFail($profileId);
+            $profile->fill($updates);
+            $changedFields = array_keys($profile->getDirty());
 
-        DB::transaction(function () use ($request, $id, $validated, $actor) {
-            $profile = HealthProfile::with('user')->lockForUpdate()->findOrFail($id);
-            abort_unless($this->isStudentHealthProfile($profile), 404);
-            abort_unless(!in_array($profile->pullout_status, [HealthProfile::PULLOUT_PENDING, HealthProfile::PULLOUT_COMPLETED], true), 404);
+            if ($changedFields === []) {
+                return [];
+            }
 
-            $previousAssessmentId = StudentMedicalAssessment::query()
-                ->where('health_profile_id', $profile->id)
-                ->latest('id')
-                ->value('id');
-
-            $assessment = StudentMedicalAssessment::create([
-                'health_profile_id' => $profile->id,
-                'recorded_by_user_id' => $actor?->id,
-                'condition_or_illness' => trim((string) ($validated['condition_or_illness'] ?? '')) ?: null,
-                'findings' => trim((string) ($validated['findings'] ?? '')) ?: null,
-                'remarks' => trim((string) ($validated['remarks'] ?? '')) ?: null,
-                'reason' => trim((string) ($validated['reason'] ?? '')) ?: null,
-            ]);
+            $profile->save();
+            $typeLabel = match ($profileType) {
+                'faculty' => 'Faculty',
+                'admin' => 'Admin',
+                'applicant' => 'Applicant',
+                default => 'Student',
+            };
 
             ActivityLog::create([
                 'user_id' => $actor?->id,
                 'user_name' => $actor?->name ?? $actor?->email ?? 'System',
                 'user_role' => strtolower((string) ($actor?->user_role ?? '')),
-                'action' => 'Student Medical Assessment Added',
+                'action' => $typeLabel . ' Medical Information Updated',
                 'module' => 'Health Records',
-                'event_type' => 'student_medical_assessment_added',
-                'description' => 'A new medical assessment entry was added for student health profile #' . $profile->id . '.',
+                'event_type' => strtolower($profileType) . '_medical_information_updated',
+                'description' => 'Medical information was updated for ' . strtolower($typeLabel) . ' health profile #' . $profileId . '.',
                 'route_name' => optional($request->route())->getName(),
-                'http_method' => 'POST',
+                'http_method' => 'PUT',
                 'request_path' => '/' . ltrim((string) $request->path(), '/'),
                 'status_code' => 200,
-                'subject_type' => HealthProfile::class,
-                'subject_id' => (string) $profile->id,
+                'subject_type' => $profileClass,
+                'subject_id' => (string) $profileId,
                 'metadata' => [
-                    'health_profile_id' => $profile->id,
-                    'assessment_id' => $assessment->id,
-                    'previous_assessment_id' => $previousAssessmentId,
+                    'profile_type' => $profileType,
+                    'updated_fields' => $changedFields,
                     'clearance_status_unchanged' => true,
+                    'uploaded_documents_unchanged' => true,
                 ],
                 'ip_address' => $request->ip(),
                 'user_agent' => substr((string) $request->userAgent(), 0, 255),
             ]);
 
+            return $changedFields;
         });
 
-        return redirect()->route('admin.show_health', $id)
-            ->with('success', 'Medical assessment added to the student record.');
+        return redirect()->route($redirectRoute, $routeParameters)->with(
+            'success',
+            $updatedFields === [] ? 'No medical information changes to save.' : 'Medical information updated successfully.'
+        );
     }
 
     public function requestHealthProfilePullout(Request $request, $id)
@@ -6331,8 +6687,9 @@ public function updateClearance(Request $request, $id)
         $definitions = $this->myHealthProfileDocumentDefinitions($employeeProfile);
         abort_unless(isset($definitions[$document]), 404);
 
+        $documentExtensions = $document === 'pwd_id_proof' ? 'pdf' : 'pdf,jpg,jpeg,png';
         $validated = $request->validate([
-            'document' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
+            'document' => ['required', 'file', 'mimes:' . $documentExtensions, 'extensions:' . $documentExtensions, 'max:1024'],
         ], [
             'document.max' => 'The document must not be larger than 1 MB.',
         ]);
@@ -8466,8 +8823,6 @@ public function inventorySummary()
     {
         $user = $this->currentAdminUser();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
-        $this->ensureIntegrationTokensPageAccess($user);
-
         $integrationClients = IntegrationClient::with('tokens')->get();
         $integrationRequestLogs = Schema::hasTable('integration_request_logs')
             ? DB::table('integration_request_logs')
@@ -8481,105 +8836,71 @@ public function inventorySummary()
                 ->limit(100)
                 ->get()
             : collect();
+        $recentActivity = $this->integrationActivityQuery()
+            ->limit(8)
+            ->get();
 
-        return view('admin.integration-tokens', compact('integrationClients', 'integrationRequestLogs', 'apiErrorLogs'));
+        return view('admin.integration-tokens', compact('integrationClients', 'integrationRequestLogs', 'apiErrorLogs', 'recentActivity'));
     }
 
-    public function updateIntegrationPinSettings(Request $request)
+    public function sendEmergencyPasswordResetOtp(Request $request, EmergencyTwoFactorService $twoFactor)
     {
         $user = $this->currentAdminUser();
-        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+        abort_unless($user instanceof User && $this->canAccessApiTesting($user) && $this->isSuperadminAccount($user), 403);
 
-        $validated = $request->validate([
-            'api_pin_disabled' => 'nullable|boolean',
-            'api_pin_enabled' => 'nullable|boolean',
-            'api_pin_page_enabled' => 'nullable|boolean',
-            'api_pin_token_action_enabled' => 'nullable|boolean',
-            'api_pin' => 'nullable|digits:4',
-            'api_pin_confirmation' => 'nullable|same:api_pin',
-            'current_security_pin' => 'nullable|digits:4',
+        $request->session()->forget('emergency_password_reset_otp_verified');
+        $email = strtolower(trim((string) config('services.emergency.email', '')));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return response()->json(['success' => false, 'message' => 'The emergency recovery email is not configured.'], 422);
+        }
+
+        $result = $twoFactor->sendEmergencyPasswordResetOtp($email);
+        if (!($result['sent'] ?? false)) {
+            $status = ($result['reason'] ?? '') === 'cooldown' ? 429 : 503;
+            $message = $status === 429
+                ? 'Please wait before requesting another verification code.'
+                : 'The verification code could not be sent. Check the mail service and try again.';
+            $this->logDeveloperSecurityAction($user, 'Emergency Password Reset OTP Failed', 'Emergency password reset code delivery failed.', $status);
+
+            return response()->json(['success' => false, 'message' => $message], $status);
+        }
+
+        $this->logDeveloperSecurityAction($user, 'Emergency Password Reset OTP Sent', 'A one-time code was sent to the configured emergency recovery email.');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Verification code sent. It expires in 5 minutes.',
+            'recipient' => $result['recipient'],
         ]);
-
-        $disabled = (bool) ($validated['api_pin_disabled'] ?? false);
-        $pinEnabled = ! $disabled && (bool) ($validated['api_pin_enabled'] ?? false);
-        $pagePinEnabled = $pinEnabled && (bool) ($validated['api_pin_page_enabled'] ?? false);
-        $tokenActionPinEnabled = $pinEnabled && (bool) ($validated['api_pin_token_action_enabled'] ?? false);
-        $pin = trim((string) ($validated['api_pin'] ?? ''));
-        $hasExistingPin = trim((string) ($user->api_pin ?? '')) !== '';
-        $wasPinEnabled = (bool) ($user->api_pin_enabled ?? false);
-
-        if ($pinEnabled && ! $hasExistingPin && $pin === '') {
-            return back()->withErrors([
-                'api_pin' => 'Enter and confirm a 4-digit PIN before turning on a protected security option.',
-            ])->withInput();
-        }
-
-        if ($pinEnabled && ! $pagePinEnabled && ! $tokenActionPinEnabled) {
-            return back()->withErrors([
-                'api_pin' => 'Choose at least one PIN-protected action.',
-            ])->withInput();
-        }
-
-        if (! $pinEnabled && $wasPinEnabled && $hasExistingPin) {
-            $currentPin = trim((string) ($validated['current_security_pin'] ?? ''));
-            if ($currentPin === '' || ! Hash::check($currentPin, (string) $user->api_pin)) {
-                return back()->withErrors([
-                    'api_pin' => 'Enter the current PIN before turning off PIN Required.',
-                ])->withInput();
-            }
-        }
-
-        $user->api_pin_disabled = $disabled;
-        $user->api_pin_enabled = $pinEnabled;
-        $user->api_pin_page_enabled = $pagePinEnabled;
-        $user->api_pin_token_action_enabled = $tokenActionPinEnabled;
-        $user->api_pin_emergency_credentials_enabled = false;
-
-        if ($pin !== '') {
-            $user->api_pin = Hash::make($pin);
-            session()->forget($this->integrationTokensPinSessionKey($user));
-        }
-
-        if ($disabled || ! $pinEnabled) {
-            session()->forget($this->integrationTokensPinSessionKey($user));
-        }
-
-        $user->save();
-
-        return back()->with('success', 'PIN Management settings updated.');
     }
 
-    public function resetIntegrationPin(Request $request)
+    public function verifyEmergencyPasswordResetOtp(Request $request, EmergencyTwoFactorService $twoFactor)
     {
         $user = $this->currentAdminUser();
-        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+        abort_unless($user instanceof User && $this->canAccessApiTesting($user) && $this->isSuperadminAccount($user), 403);
 
-        $validated = $request->validate([
-            'pin_reset_key' => 'required|string|max:255',
-            'api_pin' => 'required|digits:4|confirmed',
+        $validated = $request->validate(['code' => ['required', 'digits:6']]);
+        $email = strtolower(trim((string) config('services.emergency.email', '')));
+        $valid = filter_var($email, FILTER_VALIDATE_EMAIL)
+            && $twoFactor->verifyEmergencyPasswordResetOtp($email, (string) $validated['code']);
+
+        if (!$valid) {
+            $this->logDeveloperSecurityAction($user, 'Emergency Password Reset OTP Rejected', 'An invalid or expired emergency password reset code was submitted.', 422);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'The verification code is invalid, expired, or already used.',
+            ], 422);
+        }
+
+        $request->session()->put('emergency_password_reset_otp_verified', [
+            'user_id' => $user->getKey(),
+            'email' => $email,
+            'expires_at' => now()->addMinutes(10)->timestamp,
         ]);
+        $this->logDeveloperSecurityAction($user, 'Emergency Password Reset OTP Verified', 'Emergency recovery email verification succeeded.');
 
-        if (! $this->integrationPinResetKeyMatches((string) $validated['pin_reset_key'])) {
-            return back()->withErrors([
-                'pin_reset_key' => 'Integration PIN reset key is incorrect or not configured.',
-            ])->withInput();
-        }
-
-        if (trim((string) ($user->api_pin ?? '')) !== '' && Hash::check($validated['api_pin'], (string) $user->api_pin)) {
-            return back()->withErrors([
-                'api_pin' => 'New Integration PIN cannot match the previous PIN.',
-            ])->withInput();
-        }
-
-        $user->api_pin = Hash::make($validated['api_pin']);
-        $state = $this->integrationTokensAccessState($user);
-        $user->api_pin_enabled = $state['page_pin_enabled'] || $state['token_action_pin_enabled'];
-        $user->api_pin_disabled = false;
-        $user->save();
-
-        session()->forget($this->integrationTokensPinSessionKey($user));
-
-        return back()->with('success', 'Integration PIN has been reset.');
+        return response()->json(['success' => true, 'message' => 'Email verification complete.']);
     }
 
     public function updateEmergencyCredentials(Request $request)
@@ -8596,7 +8917,6 @@ public function inventorySummary()
             'emergency_role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_SUPERADMIN, 'super_admin'])],
             'emergency_email' => ['required', 'email', 'max:255'],
             'new_emergency_password' => [$action === 'reset' || ! $isConfigured ? 'required' : 'nullable', 'confirmed', 'min:8', 'max:255', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'],
-            'emergency_password_reset_key' => [$action === 'reset' ? 'required' : 'nullable', 'string', 'max:255'],
         ];
 
         $validated = $request->validate($rules, [
@@ -8609,11 +8929,19 @@ public function inventorySummary()
         }
 
         $newPassword = trim((string) ($validated['new_emergency_password'] ?? ''));
-        if ($action === 'reset' && ! $this->emergencyPasswordResetKeyMatches((string) ($validated['emergency_password_reset_key'] ?? ''))) {
-            $this->logDeveloperSecurityAction($user, 'Emergency Credentials Update Failed', 'Emergency password reset failed because the reset key was incorrect.', 422);
+        $otpVerification = $request->session()->get('emergency_password_reset_otp_verified', []);
+        $configuredEmail = strtolower(trim((string) config('services.emergency.email', '')));
+        $otpVerified = is_array($otpVerification)
+            && (int) ($otpVerification['user_id'] ?? 0) === (int) $user->getKey()
+            && hash_equals($configuredEmail, (string) ($otpVerification['email'] ?? ''))
+            && hash_equals($configuredEmail, strtolower(trim((string) $validated['emergency_email'])))
+            && (int) ($otpVerification['expires_at'] ?? 0) >= now()->timestamp;
+
+        if ($action === 'reset' && !$otpVerified) {
+            $this->logDeveloperSecurityAction($user, 'Emergency Credentials Update Failed', 'Emergency password reset was attempted without a valid email OTP verification.', 422);
 
             return back()->withErrors([
-                'emergency_password_reset_key' => 'Emergency password reset key is incorrect or not configured.',
+                'new_emergency_password' => 'Verify the emergency recovery email with a one-time code before saving a new password.',
             ])->withInput();
         }
 
@@ -8637,6 +8965,9 @@ public function inventorySummary()
 
         $this->writeEnvironmentValues($environmentValues);
         $this->clearConfigurationCacheAfterEnvironmentWrite();
+        if ($action === 'reset') {
+            $request->session()->forget('emergency_password_reset_otp_verified');
+        }
 
         $this->logDeveloperSecurityAction(
             $user,
@@ -8682,95 +9013,10 @@ public function inventorySummary()
         return back()->with('success', 'Student maintenance policy updated.');
     }
 
-    public function integrationPinStatus()
-    {
-        $user = $this->currentAdminUser();
-        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
-
-        return response()->json([
-            'success' => true,
-            'state' => $this->integrationTokensAccessState($user),
-        ]);
-    }
-
-    public function verifyIntegrationPin(Request $request)
-    {
-        $user = $this->currentAdminUser();
-        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
-
-        $state = $this->integrationTokensAccessState($user);
-
-        if ($state['disabled']) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Integration Tokens access is disabled.',
-            ], 423);
-        }
-
-        $purpose = (string) $request->input('purpose', 'token_action');
-        $requiresPin = match ($purpose) {
-            'open_integration_tokens' => (bool) $state['page_pin_enabled'],
-            'emergency_credentials' => false,
-            'pin_management' => (bool) ($state['pin_enabled'] ?? false) && trim((string) ($user->api_pin ?? '')) !== '',
-            default => (bool) $state['token_action_pin_enabled'],
-        };
-
-        if (! $requiresPin) {
-            return response()->json([
-                'success' => true,
-                'message' => 'PIN is not required.',
-            ]);
-        }
-
-        $validated = $request->validate([
-            'pin' => 'required|digits:4',
-        ]);
-
-        if (! Hash::check($validated['pin'], (string) ($user->api_pin ?? ''))) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Incorrect Integration PIN.',
-            ], 422);
-        }
-
-        if ($purpose === 'open_integration_tokens') {
-            session()->put($this->integrationTokensPinSessionKey($user), true);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Integration PIN verified.',
-        ]);
-    }
-
-    public function verifyResetKey(Request $request)
-    {
-        $user = $this->currentAdminUser();
-        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
-
-        $validated = $request->validate([
-            'purpose' => ['required', Rule::in(['integration_pin', 'emergency_password'])],
-            'key' => ['required', 'string', 'max:255'],
-        ]);
-
-        $valid = $validated['purpose'] === 'integration_pin'
-            ? $this->integrationPinResetKeyMatches((string) $validated['key'])
-            : $this->emergencyPasswordResetKeyMatches((string) $validated['key']);
-
-        return response()->json([
-            'success' => $valid,
-            'message' => $valid
-                ? 'Reset key is valid.'
-                : 'Reset key is invalid or not configured.',
-        ], $valid ? 200 : 422);
-    }
-
     public function generateIntegrationToken(Request $request)
     {
         $user = $this->currentAdminUser();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
-        $this->ensureIntegrationTokensPinForRequest($request, $user);
-
         $allowedAbilities = [
             'external-admin:read',
             'external-admin:update',
@@ -8780,32 +9026,69 @@ public function inventorySummary()
         $validated = $request->validate([
             'client_id' => 'required|exists:integration_clients,id',
             'token_name' => 'nullable|string|max:100',
+            'rotate' => 'sometimes|boolean',
             'abilities' => 'nullable|array',
             'abilities.*' => 'string|in:' . implode(',', $allowedAbilities),
         ]);
 
         try {
-            $client = IntegrationClient::findOrFail($validated['client_id']);
+            $rotate = (bool) ($validated['rotate'] ?? false);
+            $tokenName = trim((string) ($validated['token_name'] ?? ''));
+            if ($tokenName === '') {
+                $tokenName = 'web-rotation-' . now()->format('Ymd-His');
+            }
 
-            if (!$client->is_active) {
+            $result = DB::transaction(function () use ($validated, $allowedAbilities, $rotate, $tokenName): array {
+                $client = IntegrationClient::query()
+                    ->whereKey($validated['client_id'])
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if (!$client->is_active) {
+                    return ['error' => 'inactive'];
+                }
+
+                $previousToken = $rotate
+                    ? $client->tokens()->orderByDesc('created_at')->first()
+                    : null;
+
+                if (!$rotate && $client->tokens()->exists()) {
+                    return ['error' => 'already_exists'];
+                }
+
+                $abilities = $validated['abilities'] ?? ($previousToken?->abilities ?? $allowedAbilities);
+                $newToken = $client->createToken($tokenName, $abilities);
+
+                if ($rotate) {
+                    $client->tokens()->where('id', '!=', $newToken->accessToken->getKey())->delete();
+                }
+
+                return [
+                    'token' => $newToken,
+                    'abilities' => $abilities,
+                ];
+            });
+
+            if (($result['error'] ?? null) === 'inactive') {
                 return response()->json([
                     'success' => false,
                     'message' => 'This integration client is inactive.',
                 ], 422);
             }
 
-            $abilities = $validated['abilities'] ?? $allowedAbilities;
-            $tokenName = trim((string) ($validated['token_name'] ?? ''));
-
-            if ($tokenName === '') {
-                $tokenName = 'web-rotation-' . now()->format('Ymd-His');
+            if (($result['error'] ?? null) === 'already_exists') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A token already exists. Use Rotate Token to replace it.',
+                ], 409);
             }
 
-            $newToken = $client->createToken($tokenName, $abilities);
+            $newToken = $result['token'];
+            $abilities = $result['abilities'];
 
             return response()->json([
                 'success' => true,
-                'message' => 'Token generated successfully',
+                'message' => $rotate ? 'Token rotated successfully' : 'Token generated successfully',
                 'token' => $newToken->plainTextToken,
                 'token_id' => $newToken->accessToken->id,
                 'abilities' => $abilities,
@@ -8813,9 +9096,14 @@ public function inventorySummary()
                 'created_time' => optional($newToken->accessToken->created_at)->format('h:i A'),
             ]);
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to generate integration token.', [
+                'client_id' => $validated['client_id'] ?? null,
+                'exception' => $e,
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to generate token: ' . $e->getMessage()
+                'message' => 'Failed to generate token. Please try again or contact the system administrator.',
             ], 500);
         }
     }
@@ -8824,8 +9112,6 @@ public function inventorySummary()
     {
         $user = $this->currentAdminUser();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
-        $this->ensureIntegrationTokensPinForRequest($request, $user);
-
         $validated = $request->validate([
             'client_id' => 'required|exists:integration_clients,id',
             'token_id' => 'nullable|integer',
@@ -8865,8 +9151,6 @@ public function inventorySummary()
     {
         $user = $this->currentAdminUser();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
-        $this->ensureIntegrationTokensPinForRequest($request, $user);
-
         $validated = $request->validate([
             'system_key' => 'required|string|unique:integration_clients,system_key|regex:/^[a-z0-9_]+$/',
             'system_name' => 'required|string|max:255'
@@ -8909,20 +9193,68 @@ public function inventorySummary()
     {
         $user = $this->currentAdminUser();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
-        $this->ensureIntegrationTokensAvailable($user);
+        $activities = $this->integrationActivityQuery()
+            ->paginate(50)
+            ->withQueryString();
 
-        $allTokens = \DB::table('personal_access_tokens')
-            ->where('tokenable_type', IntegrationClient::class)
-            ->join('integration_clients', 'personal_access_tokens.tokenable_id', '=', 'integration_clients.id')
-            ->select(
-                'personal_access_tokens.*',
-                'integration_clients.system_name',
-                'integration_clients.system_key'
-            )
-            ->orderBy('personal_access_tokens.created_at', 'desc')
-            ->paginate(50);
+        return view('admin.integration-tokens-activity', compact('activities'));
+    }
 
-        return view('admin.integration-tokens-activity', compact('allTokens'));
+    private function integrationActivityQuery()
+    {
+        $sources = [];
+
+        if (Schema::hasTable('personal_access_tokens') && Schema::hasTable('integration_clients')) {
+            $sources[] = DB::table('personal_access_tokens as pat')
+                ->join('integration_clients as ic', 'pat.tokenable_id', '=', 'ic.id')
+                ->where('pat.tokenable_type', IntegrationClient::class)
+                ->selectRaw("'token' as event_type")
+                ->addSelect('pat.id as event_id', 'ic.system_key', 'ic.system_name')
+                ->selectRaw("'Token generated' as title")
+                ->addSelect('pat.name as details')
+                ->selectRaw('NULL as http_method, NULL as endpoint, NULL as status_code, NULL as response_time_ms, NULL as ip_address, NULL as auth_method')
+                ->addSelect('pat.created_at');
+        }
+
+        if (Schema::hasTable('integration_request_logs')) {
+            $sources[] = DB::table('integration_request_logs as irl')
+                ->selectRaw("CASE WHEN COALESCE(irl.status_code, 0) >= 400 THEN 'error' ELSE 'request' END as event_type")
+                ->addSelect('irl.id as event_id', 'irl.system_key', 'irl.system_name')
+                ->selectRaw("CASE WHEN irl.status_code IN (401, 403) THEN 'API access denied' WHEN COALESCE(irl.status_code, 0) >= 400 THEN 'API request failed' ELSE 'API request' END as title")
+                ->addSelect('irl.error_message as details', 'irl.http_method', 'irl.endpoint', 'irl.status_code', 'irl.response_time_ms', 'irl.ip_address', 'irl.auth_method', 'irl.created_at');
+        }
+
+        if (Schema::hasTable('api_error_logs')) {
+            $sources[] = DB::table('api_error_logs as ael')
+                ->selectRaw("'error' as event_type")
+                ->addSelect('ael.id as event_id')
+                ->selectRaw('ael.system_name as system_key, ael.system_name')
+                ->selectRaw("'External API error' as title")
+                ->addSelect('ael.error_message as details')
+                ->selectRaw('NULL as http_method')
+                ->addSelect('ael.endpoint')
+                ->selectRaw('ael.http_status as status_code')
+                ->addSelect('ael.response_time_ms', 'ael.ip_address')
+                ->selectRaw('ael.error_type as auth_method')
+                ->addSelect('ael.created_at');
+        }
+
+        if (!$sources) {
+            $sources[] = DB::table('integration_clients as ic')
+                ->selectRaw("'token' as event_type, 0 as event_id, ic.system_key, ic.system_name, '' as title, '' as details, NULL as http_method, NULL as endpoint, NULL as status_code, NULL as response_time_ms, NULL as ip_address, NULL as auth_method, NULL as created_at")
+                ->whereRaw('1 = 0');
+        }
+
+        $union = array_shift($sources);
+        foreach ($sources as $source) {
+            $union->unionAll($source);
+        }
+
+        return DB::query()
+            ->fromSub($union, 'integration_activity')
+            ->select('*')
+            ->orderByDesc('created_at')
+            ->orderByDesc('event_id');
     }
 
 }

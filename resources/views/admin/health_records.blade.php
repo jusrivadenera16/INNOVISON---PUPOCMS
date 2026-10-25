@@ -9221,9 +9221,7 @@
                             <div class="readonly-record-identity">
                                 <div class="readonly-record-name-line">
                                     <h4 class="readonly-record-name">{{ optional($readonlyRecord->user)->name ?: 'Unnamed User' }}</h4>
-                                    @if(($userTypeFilter ?? '') === '')
-                                        <span class="health-user-type-badge is-{{ $readonlyUserTypeClass }}">{{ $readonlyUserType }}</span>
-                                    @endif
+                                    <span class="health-user-type-badge is-{{ $readonlyUserTypeClass }}">{{ $readonlyUserType }}</span>
                                 </div>
                                 <p class="readonly-record-sub">{{ optional($readonlyRecord->user)->email ?: '-' }}</p>
                             </div>

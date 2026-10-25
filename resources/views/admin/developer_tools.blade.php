@@ -750,15 +750,104 @@
     }
 
     .dev-logo-label {
+        display: block;
         color: #334155;
         font-size: .82rem;
         font-weight: 900;
     }
 
     .dev-logo-hint {
+        display: block;
         color: #64748b;
         font-size: .76rem;
         line-height: 1.4;
+    }
+
+    .dev-logo-select {
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+        transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+
+    .dev-logo-select:hover,
+    .dev-logo-select:focus-visible {
+        border-color: #eab308;
+        box-shadow: 0 0 0 2px rgba(250,204,21,.24);
+        outline: none;
+    }
+
+    .dev-logo-file-input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        clip-path: inset(50%);
+        border: 0;
+    }
+
+    .dev-logo-file-input:focus-visible + .dev-logo-preview .dev-logo-select {
+        border-color: #eab308;
+        box-shadow: 0 0 0 2px rgba(250,204,21,.24);
+    }
+
+    .dev-logo-feedback {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border: 1px solid #86efac;
+        border-radius: 10px;
+        background: #f0fdf4;
+        color: #166534;
+        font-size: .84rem;
+        font-weight: 800;
+    }
+
+    .dev-logo-feedback.is-error {
+        border-color: #fca5a5;
+        background: #fef2f2;
+        color: #991b1b;
+    }
+
+    .dev-logo-submit {
+        width: 100%;
+        min-height: 52px;
+        margin-top: 14px;
+        padding: 12px 16px;
+        border: 1px solid rgba(112,19,27,.3);
+        border-radius: 999px;
+        background: #7f1725;
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font: inherit;
+        font-weight: 900;
+        cursor: pointer;
+        transition: color .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .dev-logo-submit svg {
+        width: 19px;
+        height: 19px;
+    }
+
+    .dev-logo-submit:hover:not(:disabled),
+    .dev-logo-submit:focus-visible:not(:disabled) {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131b;
+        box-shadow: 0 10px 22px rgba(234,179,8,.22);
+        outline: none;
+    }
+
+    .dev-logo-submit:disabled {
+        opacity: .55;
+        cursor: not-allowed;
     }
 
     .dev-static-action,
@@ -833,7 +922,6 @@
         box-shadow: 0 6px 12px rgba(15,23,42,.16);
     }
 
-    .dev-pin-form,
     .dev-policy-form {
         display: grid;
         gap: 10px;
@@ -896,23 +984,7 @@
         transition: transform .18s ease, background .18s ease;
     }
 
-    .dev-pin-fields {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-        padding: 12px;
-        border-radius: 16px;
-        border: 1px solid rgba(112,19,27,.14);
-        background: rgba(255,255,255,.78);
-    }
-
-    .dev-pin-fields:empty,
-    .dev-pin-fields.is-hidden {
-        display: none;
-    }
-
-    .dev-pin-save,
-    .dev-pin-reset {
+    .dev-maintenance-save {
         position: relative;
         overflow: hidden;
         min-height: 44px;
@@ -925,13 +997,7 @@
         transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
     }
 
-    .dev-pin-reset {
-        background: #ffffff;
-        color: #70131B;
-    }
-
-    .dev-pin-save::after,
-    .dev-pin-reset::after {
+    .dev-maintenance-save::after {
         content: "";
         position: absolute;
         top: -35%;
@@ -944,10 +1010,8 @@
         pointer-events: none;
     }
 
-    .dev-pin-save:hover,
-    .dev-pin-save:focus-visible,
-    .dev-pin-reset:hover,
-    .dev-pin-reset:focus-visible {
+    .dev-maintenance-save:hover,
+    .dev-maintenance-save:focus-visible {
         background: #facc15;
         border-color: #facc15;
         color: #70131B;
@@ -955,38 +1019,18 @@
         transform: translateY(-1px);
     }
 
-    .dev-pin-save:hover::after,
-    .dev-pin-save:focus-visible::after,
-    .dev-pin-reset:hover::after,
-    .dev-pin-reset:focus-visible::after {
+    .dev-maintenance-save:hover::after,
+    .dev-maintenance-save:focus-visible::after {
         left: 128%;
     }
 
-    .dev-pin-error {
+    .dev-form-error {
         padding: 10px 12px;
         border-radius: 12px;
         background: #fee2e2;
         color: #991b1b;
         font-size: .78rem;
         font-weight: 850;
-    }
-
-    .dev-pin-controls {
-        display: grid;
-        gap: 9px;
-    }
-
-    .dev-pin-child-toggles {
-        display: grid;
-        gap: 10px;
-        padding-left: 14px;
-        border-left: 3px solid rgba(143, 24, 39, .18);
-    }
-
-    #devApiPinFields[hidden],
-    #devApiPinControls[hidden],
-    #devApiPinChildToggles[hidden] {
-        display: none !important;
     }
 
     .dev-reset-modal {
@@ -1129,8 +1173,7 @@
     }
 
     .dev-reset-security span,
-    .dev-reset-step-copy,
-    .dev-reset-safe-note {
+    .dev-reset-step-copy {
         color: #64748b;
         font-size: 13px;
         font-weight: 700;
@@ -1156,6 +1199,36 @@
     .dev-reset-step-body {
         display: grid;
         gap: 8px;
+    }
+
+    .dev-reset-step[hidden] {
+        display: none !important;
+    }
+
+    .dev-otp-controls {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .dev-otp-controls input {
+        width: min(220px, 100%);
+        min-height: 44px;
+        padding: 0 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: 2px;
+    }
+
+    .dev-otp-controls input:focus {
+        border-color: #b91c1c;
+        box-shadow: 0 0 0 3px rgba(185, 28, 28, .12);
+        outline: none;
     }
 
     .dev-reset-password-wrap {
@@ -1197,7 +1270,7 @@
         justify-content: center;
     }
 
-    .dev-key-validation {
+    .dev-inline-status {
         display: none;
         align-items: center;
         gap: 8px;
@@ -1208,107 +1281,16 @@
         font-weight: 850;
     }
 
-    .dev-key-validation.is-visible {
+    .dev-inline-status.is-visible {
         display: flex;
     }
 
-    .dev-key-validation.is-valid {
+    .dev-inline-status.is-valid {
         color: #15803d;
     }
 
-    .dev-key-validation.is-invalid {
+    .dev-inline-status.is-invalid {
         color: #b91c1c;
-    }
-
-    .dev-key-validation-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 18px;
-        height: 18px;
-        flex: 0 0 18px;
-    }
-
-    .dev-key-validation-icon svg {
-        width: 17px;
-        height: 17px;
-    }
-
-    .dev-key-validation-spinner {
-        width: 15px;
-        height: 15px;
-        border-radius: 999px;
-        border: 2px solid rgba(100, 116, 139, .24);
-        border-top-color: currentColor;
-        animation: devKeySpin .74s linear infinite;
-    }
-
-    @keyframes devKeySpin {
-        to { transform: rotate(360deg); }
-    }
-
-    .dev-reset-pin-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-    }
-
-    .dev-reset-pin-group label {
-        display: block;
-        margin-bottom: 8px;
-        color: #111827;
-        font-size: 12px;
-        font-weight: 950;
-    }
-
-    .dev-reset-pin-digits {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(36px, 50px));
-        gap: 12px;
-    }
-
-    .dev-reset-pin-digits input {
-        width: 100%;
-        aspect-ratio: 1;
-        border-radius: 8px;
-        border: 1px solid #cbd5e1;
-        background: #ffffff;
-        color: #111827;
-        text-align: center;
-        font-size: 22px;
-        font-weight: 950;
-    }
-
-    .dev-reset-pin-digits input:focus {
-        border-color: #b91c1c;
-        box-shadow: 0 0 0 3px rgba(185, 28, 28, .12);
-        outline: none;
-    }
-
-    .dev-reset-hidden {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    .dev-reset-requirements {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px 16px;
-        width: fit-content;
-        padding: 10px 14px;
-        border-radius: 8px;
-        background: #f8fafc;
-        color: #64748b;
-        font-size: 12px;
-        font-weight: 800;
-    }
-
-    .dev-reset-requirements strong {
-        color: #64748b;
     }
 
     .dev-reset-footer {
@@ -1359,88 +1341,9 @@
         outline: none;
     }
 
-    .dev-reset-safe-note {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 7px;
-        padding: 0 20px 18px;
-        text-align: center;
-    }
-
-    .dev-reset-safe-note svg {
-        width: 14px;
-        height: 14px;
-        flex: 0 0 auto;
-    }
-
-    .dev-enter-pin-dialog {
-        width: min(620px, 100%);
-    }
-
-    .dev-enter-pin-form {
-        padding: 18px 24px 0;
-    }
-
-    .dev-enter-pin-center {
-        display: grid;
-        justify-items: center;
-        gap: 8px;
-        text-align: center;
-        color: #111827;
-    }
-
-    .dev-enter-pin-lock {
-        width: 30px;
-        height: 30px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: #111827;
-    }
-
-    .dev-enter-pin-lock svg {
-        width: 22px;
-        height: 22px;
-    }
-
-    .dev-enter-pin-center strong {
-        font-size: 14px;
-        letter-spacing: .06em;
-        font-weight: 950;
-    }
-
-    .dev-enter-pin-center > span:not(.dev-enter-pin-lock) {
-        color: #475569;
-        font-size: 13px;
-        font-weight: 800;
-    }
-
-    .dev-enter-pin-digits {
-        grid-template-columns: repeat(4, 60px);
-        gap: 22px;
-        margin-top: 8px;
-        justify-content: center;
-    }
-
-    .dev-enter-pin-digits input {
-        border-radius: 10px;
-    }
-
-    .dev-enter-pin-safe {
-        margin-top: 10px;
-        padding: 15px 0 0;
-        border-top: 1px dashed #cbd5e1;
-        text-align: center;
-        color: #475569;
-        font-size: 13px;
-        font-weight: 900;
-    }
-
-    .dev-enter-pin-error {
-        color: #b91c1c;
-        font-size: 13px;
-        font-weight: 900;
+    .dev-reset-submit:disabled {
+        opacity: .55;
+        cursor: not-allowed;
     }
 
     @media (max-width: 640px) {
@@ -1450,11 +1353,6 @@
 
         .dev-reset-head {
             padding: 18px;
-        }
-
-        .dev-reset-pin-grid {
-            grid-template-columns: 1fr;
-            gap: 14px;
         }
 
         .dev-reset-footer {
@@ -1491,8 +1389,14 @@
     }
 
     html[data-theme="dark"] .dev-panel {
-        background: linear-gradient(145deg, #5f0012 0%, #7d0b17 45%, #5a0010 100%);
+        background: #121a24;
         border-color: rgba(250,204,21,.18);
+    }
+
+    html[data-theme="dark"] .dev-panel-body {
+        background: #121a24;
+        color: #e5e7eb;
+        scrollbar-color: rgba(250,204,21,.38) transparent;
     }
 
     html[data-theme="dark"] .dev-card::before {
@@ -1579,8 +1483,7 @@
         color: #cbd5e1;
     }
 
-    html[data-theme="dark"] .dev-live-toggle,
-    html[data-theme="dark"] .dev-pin-fields {
+    html[data-theme="dark"] .dev-live-toggle {
         background: rgba(15, 23, 42, .42);
         border-color: rgba(250, 204, 21, .16);
     }
@@ -1604,6 +1507,99 @@
 
     html[data-theme="dark"] .dev-logo-hint {
         color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .dev-logo-submit {
+        background: rgba(255,255,255,.08);
+        border-color: rgba(250,204,21,.28);
+        color: #f0d15a;
+    }
+
+    html[data-theme="dark"] .dev-logo-submit:hover:not(:disabled),
+    html[data-theme="dark"] .dev-logo-submit:focus-visible:not(:disabled) {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131b;
+    }
+
+    html[data-theme="dark"] .dev-logo-feedback {
+        border-color: rgba(134,239,172,.45);
+        background: rgba(20,83,45,.35);
+        color: #bbf7d0;
+    }
+
+    html[data-theme="dark"] .dev-logo-feedback.is-error {
+        border-color: rgba(252,165,165,.45);
+        background: rgba(127,29,29,.35);
+        color: #fecaca;
+    }
+
+    html[data-theme="dark"] .dev-option-block {
+        background: #1b2633;
+        border-color: rgba(250,204,21,.16);
+        box-shadow: none;
+        color: #e5e7eb;
+    }
+
+    html[data-theme="dark"] .dev-option-row,
+    html[data-theme="dark"] .dev-mini-line,
+    html[data-theme="dark"] .dev-status-item {
+        background: #25313f;
+        color: #e5e7eb;
+    }
+
+    html[data-theme="dark"] .dev-option-pill {
+        background: rgba(250,204,21,.14);
+        color: #facc15;
+    }
+
+    html[data-theme="dark"] .dev-setting-row,
+    html[data-theme="dark"] .dev-password-box,
+    html[data-theme="dark"] .dev-logo-box {
+        background: #202b38;
+        border-color: rgba(250,204,21,.16);
+        color: #e5e7eb;
+    }
+
+    html[data-theme="dark"] .dev-setting-label,
+    html[data-theme="dark"] .dev-password-field label {
+        color: #facc15;
+    }
+
+    html[data-theme="dark"] .dev-setting-value,
+    html[data-theme="dark"] .dev-logo-label {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .dev-setting-subtext,
+    html[data-theme="dark"] .dev-password-note,
+    html[data-theme="dark"] .dev-logo-hint {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .dev-mini-action,
+    html[data-theme="dark"] .dev-icon-action {
+        background: #273342;
+        border-color: rgba(250,204,21,.22);
+        color: #facc15;
+    }
+
+    html[data-theme="dark"] .dev-password-select {
+        background: #25313f;
+        border-color: rgba(250,204,21,.2);
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .dev-logo-placeholder {
+        background: rgba(250,204,21,.1);
+        border-color: rgba(250,204,21,.42);
+        color: #facc15;
+    }
+
+    html[data-theme="dark"] .dev-logo-submit {
+        background: #25313f;
+        border-color: rgba(250,204,21,.24);
+        color: #facc15;
     }
 
     @keyframes devFloat {
@@ -2096,7 +2092,6 @@
                     <h3 class="dev-option-title">Sign-In Controls</h3>
                     <p class="dev-option-copy">Manage emergency fallback access when One Portal is unavailable.</p>
                     @php
-                        $devPinUser = \Illuminate\Support\Facades\Auth::guard('admin')->user() ?? auth()->user();
                         $configEmergencyEmail = (string) config('services.emergency.email', '');
                         $configEmergencyHash = trim((string) config('services.emergency.password_hash', ''));
                         $configEmergencyPassword = (string) config('services.emergency.password', '');
@@ -2113,7 +2108,7 @@
                         <div class="dev-mini-line"><span>Password</span><span class="dev-option-pill">{{ $emergencyConfigured ? 'Configured' : 'Missing' }}</span></div>
                         <div class="dev-mini-line"><span>Source</span><span class="dev-option-pill">{{ $emergencySource }}</span></div>
                     </div>
-                    <form method="POST" action="{{ route('admin.emergency-credentials.update') }}" class="dev-compact-settings" id="devEmergencyCredentialsForm" data-pin-required="0">
+                    <form method="POST" action="{{ route('admin.emergency-credentials.update') }}" class="dev-compact-settings" id="devEmergencyCredentialsForm">
                         @csrf
                         @method('PUT')
                         <input type="hidden" name="emergency_action" id="devEmergencyAction" value="reset">
@@ -2139,141 +2134,51 @@
                         </div>
 
                         @error('new_emergency_password')
-                            <div class="dev-pin-error">{{ $message }}</div>
+                            <div class="dev-form-error">{{ $message }}</div>
                         @enderror
-                        @error('emergency_password_reset_key')
-                            <div class="dev-pin-error">{{ $message }}</div>
-                        @enderror
-                        @error('pin')
-                            <div class="dev-pin-error">{{ $message }}</div>
-                        @enderror
-                    </form>
-                </section>
-
-                <section class="dev-option-block">
-                    <p class="dev-option-kicker">Integrations</p>
-                    <h3 class="dev-option-title">PIN Management</h3>
-                    <p class="dev-option-copy">Control security PIN requirements for Integration Tokens and emergency credential changes.</p>
-                    <form method="POST" action="{{ route('admin.integration-pin.update') }}" class="dev-pin-form">
-                        @csrf
-                        @method('PUT')
-                        <input type="hidden" name="current_security_pin" id="devApiCurrentPin">
-                        @php
-                            $devPinUser = \Illuminate\Support\Facades\Auth::guard('admin')->user() ?? auth()->user();
-                            $legacyPinEnabled = (bool) ($devPinUser->api_pin_enabled ?? false);
-                            $pinEnabled = $legacyPinEnabled;
-                            $pagePinEnabled = $pinEnabled && (bool) ($devPinUser->api_pin_page_enabled ?? true);
-                            $tokenActionPinEnabled = $pinEnabled && (bool) ($devPinUser->api_pin_token_action_enabled ?? true);
-                            $hasPin = trim((string) ($devPinUser->api_pin ?? '')) !== '';
-                            $needsPinSetup = ! $hasPin;
-                        @endphp
-                        <label class="dev-live-toggle">
-                            <span>
-                                <strong>PIN Required</strong>
-                                <span>Turn on PIN protection for selected Integration Token controls.</span>
-                            </span>
-                            <input type="checkbox" name="api_pin_enabled" value="1" id="devApiPinMaster" {{ $pinEnabled ? 'checked' : '' }}>
-                            <span class="dev-toggle-track" aria-hidden="true"><span class="dev-toggle-knob"></span></span>
-                        </label>
-                        <div class="dev-pin-child-toggles" id="devApiPinChildToggles" {{ $pinEnabled ? '' : 'hidden' }}>
-                            <label class="dev-live-toggle">
-                                <span>
-                                    <strong>Integration Token Button</strong>
-                                    <span>Require PIN before opening the Integration Tokens page.</span>
-                                </span>
-                                <input type="checkbox" name="api_pin_page_enabled" value="1" class="dev-api-pin-toggle" {{ $pagePinEnabled ? 'checked' : '' }}>
-                                <span class="dev-toggle-track" aria-hidden="true"><span class="dev-toggle-knob"></span></span>
-                            </label>
-                            <label class="dev-live-toggle">
-                                <span>
-                                    <strong>Token Generation Button</strong>
-                                    <span>Require PIN before generate, rotate, revoke, or create token clients.</span>
-                                </span>
-                                <input type="checkbox" name="api_pin_token_action_enabled" value="1" class="dev-api-pin-toggle" {{ $tokenActionPinEnabled ? 'checked' : '' }}>
-                                <span class="dev-toggle-track" aria-hidden="true"><span class="dev-toggle-knob"></span></span>
-                            </label>
-                        </div>
-                        <div class="dev-pin-fields {{ $needsPinSetup ? '' : 'is-hidden' }}" id="devApiPinFields" {{ $pinEnabled ? '' : 'hidden' }}>
-                            @if($needsPinSetup)
-                                <div class="dev-password-field">
-                                    <label for="devApiPin">4-Digit PIN</label>
-                                    <div class="dev-password-input-wrap">
-                                        <input type="password" id="devApiPin" name="api_pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="Enter 4-digit PIN" autocomplete="new-password">
-                                        <button type="button" class="dev-password-toggle" data-toggle-password="devApiPin" aria-label="Show security PIN">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <path d="M2.25 12s3.5-6.75 9.75-6.75S21.75 12 21.75 12 18.25 18.75 12 18.75 2.25 12 2.25 12Z"/>
-                                                <path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="dev-password-field">
-                                    <label for="devApiPinConfirm">Confirm PIN</label>
-                                    <div class="dev-password-input-wrap">
-                                        <input type="password" id="devApiPinConfirm" name="api_pin_confirmation" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="Confirm 4-digit PIN" autocomplete="new-password">
-                                        <button type="button" class="dev-password-toggle" data-toggle-password="devApiPinConfirm" aria-label="Show confirmed security PIN">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <path d="M2.25 12s3.5-6.75 9.75-6.75S21.75 12 21.75 12 18.25 18.75 12 18.75 2.25 12 2.25 12Z"/>
-                                                <path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                        <div class="dev-pin-controls" id="devApiPinControls" data-has-pin="{{ $hasPin ? '1' : '0' }}" {{ ($pinEnabled || $hasPin) ? '' : 'hidden' }}>
-                            @unless($hasPin)
-                                <div class="dev-password-note">
-                                    Enter and confirm a new 4-digit PIN, then save.
-                                </div>
-                            @endunless
-                            @error('api_pin')
-                                <div class="dev-pin-error">{{ $message }}</div>
-                            @enderror
-                            @if($needsPinSetup)
-                                <button type="submit" class="dev-pin-save">Save Security PIN</button>
-                            @endif
-                            @if($hasPin)
-                                <button type="button" class="dev-pin-reset" id="openResetIntegrationPin">Reset PIN / Forgot PIN</button>
-                            @endif
-                        </div>
                     </form>
                 </section>
 
                 <section class="dev-option-block">
                     <p class="dev-option-kicker">Branding</p>
                     <h3 class="dev-option-title">Clinic Logo</h3>
-                    <p class="dev-option-copy">Static preview for a future logo update workflow.</p>
-                    <div class="dev-logo-preview">
-                        <div class="dev-logo-box">
-                            <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="Current clinic logo">
-                            <div>
-                                <div class="dev-logo-label">Current Logo</div>
-                                <div class="dev-logo-hint">Used in headers and navigation.</div>
+                    <p class="dev-option-copy">Upload the logo shown across clinic pages and headers.</p>
+                    <form method="POST" action="{{ route('admin.developer-tools.clinic-logo.update') }}" enctype="multipart/form-data" id="clinicLogoUploadForm">
+                        @csrf
+                        <input type="file" name="clinic_logo" id="clinicLogoInput" class="dev-logo-file-input" accept="image/png,image/jpeg,image/webp" aria-label="Choose a clinic logo">
+                        <div class="dev-logo-preview">
+                            <div class="dev-logo-box">
+                                <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="Current clinic logo" data-clinic-logo>
+                                <div>
+                                    <div class="dev-logo-label">Current Logo</div>
+                                    <div class="dev-logo-hint">Used in headers and navigation.</div>
+                                </div>
                             </div>
+                            <label class="dev-logo-box dev-logo-select" for="clinicLogoInput" tabindex="0" id="clinicLogoPicker">
+                                <img src="" alt="Selected logo preview" id="clinicLogoSelectedPreview" hidden>
+                                <span class="dev-logo-placeholder" aria-hidden="true" id="clinicLogoPlaceholder">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 5v14"/>
+                                        <path d="M5 12h14"/>
+                                    </svg>
+                                </span>
+                                <span>
+                                    <span class="dev-logo-label" id="clinicLogoFileName">Choose New Logo</span>
+                                    <span class="dev-logo-hint">PNG, JPG, or WebP. Max 4 MB.</span>
+                                </span>
+                            </label>
                         </div>
-                        <div class="dev-logo-box">
-                            <span class="dev-logo-placeholder" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12 5v14"/>
-                                    <path d="M5 12h14"/>
-                                </svg>
-                            </span>
-                            <div>
-                                <div class="dev-logo-label">Add New Logo</div>
-                                <div class="dev-logo-hint">Upload control will be connected later.</div>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" class="dev-static-action" disabled>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M15 8h.01"/>
-                            <path d="M3 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6z"/>
-                            <path d="m3 16 5-5c.9-.9 2.1-.9 3 0l5 5"/>
-                            <path d="m14 14 1-1c.9-.9 2.1-.9 3 0l3 3"/>
-                        </svg>
-                        Update Clinic Logo
-                    </button>
+                        @error('clinic_logo')
+                            <div class="dev-logo-feedback is-error" role="alert">{{ $message }}</div>
+                        @enderror
+                        <button type="submit" class="dev-logo-submit" id="clinicLogoSubmit" disabled>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
+                                <path d="M17 21v-8H7v8M7 3v5h8"/>
+                            </svg>
+                            <span>Update Clinic Logo</span>
+                        </button>
+                    </form>
                 </section>
 
                 <section class="dev-option-block">
@@ -2315,80 +2220,17 @@
                             </div>
                         </div>
                         @error('maintenance_estimated_date')
-                            <div class="dev-pin-error">{{ $message }}</div>
+                            <div class="dev-form-error">{{ $message }}</div>
                         @enderror
                         @error('maintenance_estimated_time')
-                            <div class="dev-pin-error">{{ $message }}</div>
+                            <div class="dev-form-error">{{ $message }}</div>
                         @enderror
                         <div class="dev-password-note">
                             When enabled, students opening the clinic workspace are sent to the maintenance page.
                         </div>
-                        <button type="submit" class="dev-pin-save" id="devMaintenanceSaveButton" {{ $maintenanceEnabled ? '' : 'hidden' }}>Save Student Notice</button>
+                        <button type="submit" class="dev-maintenance-save" id="devMaintenanceSaveButton" {{ $maintenanceEnabled ? '' : 'hidden' }}>Save Student Notice</button>
                     </form>
                 </section>
-            </div>
-        </div>
-    </section>
-</div>
-
-<div class="dev-reset-modal" id="disablePinVerifyModal" aria-hidden="true">
-    <section class="dev-reset-dialog dev-enter-pin-dialog" role="dialog" aria-modal="true" aria-labelledby="disablePinVerifyTitle">
-        <header class="dev-reset-head">
-            <div class="dev-reset-head-main">
-                <span class="dev-reset-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M7.5 10.5V7.75a4.5 4.5 0 0 1 9 0v2.75"/>
-                        <path d="M6.75 10.5h10.5c.83 0 1.5.67 1.5 1.5v6.25c0 .83-.67 1.5-1.5 1.5H6.75c-.83 0-1.5-.67-1.5-1.5V12c0-.83.67-1.5 1.5-1.5Z"/>
-                    </svg>
-                </span>
-                <div>
-                    <h3 id="disablePinVerifyTitle">Enter Pin</h3>
-                    <p>Enter your 4-digit PIN to turn off PIN Required.</p>
-                </div>
-            </div>
-            <button type="button" class="dev-reset-close" id="closeDisablePinVerify" aria-label="Close Enter PIN modal">&times;</button>
-        </header>
-        <div class="dev-reset-form dev-enter-pin-form">
-            <div class="dev-reset-security">
-                <span class="dev-reset-security-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 3.75 5.25 6.5v5.3c0 4.2 2.85 7.35 6.75 8.45 3.9-1.1 6.75-4.25 6.75-8.45V6.5L12 3.75Z"/>
-                        <path d="m9.75 12 1.5 1.5 3.25-3.25"/>
-                    </svg>
-                </span>
-                <div>
-                    <strong>Administrator Verification Required</strong>
-                    <span>Only authorized administrators can change PIN protection.</span>
-                </div>
-            </div>
-            <div class="dev-enter-pin-center">
-                <span class="dev-enter-pin-lock" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
-                        <path d="M7 11h10v9H7z"/>
-                    </svg>
-                </span>
-                <strong>ENTER 4-DIGIT PIN</strong>
-                <span>Please enter your 4-digit Integration PIN.</span>
-                <div class="dev-reset-pin-digits dev-enter-pin-digits" data-pin-target="disableApiPinValue">
-                    <input id="disablePinDigit1" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
-                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="off">
-                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="off">
-                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="off">
-                </div>
-                <input class="dev-reset-hidden" type="password" id="disableApiPinValue" pattern="[0-9]{4}" maxlength="4" tabindex="-1">
-                <div class="dev-enter-pin-error" id="disablePinVerifyError" hidden></div>
-            </div>
-            <div class="dev-enter-pin-safe">Your PIN is encrypted and safe.</div>
-            <div class="dev-reset-footer">
-                <button type="button" class="dev-reset-cancel" id="cancelDisablePinVerify">Cancel</button>
-                <button type="button" class="dev-reset-submit" id="submitDisablePinVerify">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
-                        <path d="M7 11h10v9H7z"/>
-                    </svg>
-                    <span>Verify PIN</span>
-                </button>
             </div>
         </div>
     </section>
@@ -2405,7 +2247,7 @@
                 </span>
                 <div>
                     <h3 id="resetEmergencyPasswordTitle">Reset Emergency Password</h3>
-                    <p>Create a new fallback password using the emergency password reset key.</p>
+                    <p>Verify the emergency recovery email with a one-time code before changing the fallback password.</p>
                 </div>
             </div>
             <button type="button" class="dev-reset-close" id="closeEmergencyPasswordReset" aria-label="Close emergency password reset modal">&times;</button>
@@ -2413,8 +2255,13 @@
         @php
             $resetEmergencyEmail = (string) config('services.emergency.email', '');
             $resetEmergencyRole = (string) config('services.emergency.role', 'admin');
+            $resetOtpVerification = session()->get('emergency_password_reset_otp_verified', []);
+            $resetOtpUser = \Illuminate\Support\Facades\Auth::guard('admin')->user() ?? auth()->user();
+            $resetOtpIsVerified = is_array($resetOtpVerification)
+                && (int) ($resetOtpVerification['user_id'] ?? 0) === (int) ($resetOtpUser?->getAuthIdentifier() ?? 0)
+                && (int) ($resetOtpVerification['expires_at'] ?? 0) >= now()->timestamp;
         @endphp
-        <form method="POST" action="{{ route('admin.emergency-credentials.update') }}" class="dev-reset-form" autocomplete="off">
+        <form method="POST" action="{{ route('admin.emergency-credentials.update') }}" class="dev-reset-form" id="emergencyPasswordResetForm" autocomplete="off" data-otp-verified="{{ $resetOtpIsVerified ? '1' : '0' }}">
             @csrf
             @method('PUT')
             <input type="hidden" name="emergency_action" value="reset">
@@ -2433,33 +2280,37 @@
                 </div>
             </div>
 
-            <div class="dev-reset-step">
+            <div class="dev-reset-step" id="emergencyPasswordOtpStep" {{ $resetOtpIsVerified ? 'hidden' : '' }}>
                 <span class="dev-reset-step-number">1</span>
                 <div class="dev-reset-step-body">
                     <div>
-                        <strong class="dev-reset-step-title">Verify Reset Key</strong>
-                        <span class="dev-reset-step-copy">Enter the Emergency Password reset key from the server environment.</span>
+                        <strong class="dev-reset-step-title">Verify Emergency Email</strong>
+                        <span class="dev-reset-step-copy">Send a one-time code to the configured emergency recovery email.</span>
                     </div>
-                    <div class="dev-reset-password-wrap">
-                        <span class="dev-reset-input-icon" aria-hidden="true">
-                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
-                            </svg>
-                        </span>
-                        <input type="password" id="emergencyPasswordResetKey" name="emergency_password_reset_key" required placeholder="Enter emergency password reset key" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" readonly onfocus="this.removeAttribute('readonly');">
-                        <button type="button" class="dev-reset-eye" data-toggle-password="emergencyPasswordResetKey" aria-label="Show emergency password reset key">
-                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                            </svg>
-                        </button>
+                    <div class="dev-otp-controls">
+                        <button type="button" class="dev-reset-submit" id="sendEmergencyPasswordOtp">Send verification code</button>
                     </div>
-                    <div class="dev-key-validation" id="emergencyPasswordResetKeyStatus" aria-live="polite"></div>
+                    <div class="dev-inline-status" id="emergencyPasswordOtpStatus" aria-live="polite"></div>
                 </div>
             </div>
 
-            <div class="dev-reset-step">
+            <div class="dev-reset-step" id="emergencyPasswordOtpEntry" hidden>
                 <span class="dev-reset-step-number">2</span>
+                <div class="dev-reset-step-body">
+                    <div>
+                        <strong class="dev-reset-step-title">Enter Verification Code</strong>
+                        <span class="dev-reset-step-copy">Enter the 6-digit code sent to <span id="emergencyPasswordOtpRecipient">the configured recovery email</span>.</span>
+                    </div>
+                    <div class="dev-otp-controls">
+                        <input type="text" id="emergencyPasswordOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" aria-label="6-digit verification code">
+                        <button type="button" class="dev-reset-submit" id="verifyEmergencyPasswordOtp">Verify code</button>
+                    </div>
+                    <div class="dev-inline-status" id="emergencyPasswordOtpVerifyStatus" aria-live="polite"></div>
+                </div>
+            </div>
+
+            <div class="dev-reset-step" id="emergencyPasswordFields" hidden>
+                <span class="dev-reset-step-number">3</span>
                 <div class="dev-reset-step-body">
                     <div>
                         <strong class="dev-reset-step-title">Create New Emergency Password</strong>
@@ -2467,156 +2318,30 @@
                     </div>
                     <div class="dev-reset-password-wrap">
                         <span class="dev-reset-input-icon" aria-hidden="true">
-                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
-                            </svg>
+                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" /></svg>
                         </span>
                         <input type="password" id="modalNewEmergencyPassword" name="new_emergency_password" required placeholder="Create emergency password" autocomplete="new-password">
                         <button type="button" class="dev-reset-eye" data-toggle-password="modalNewEmergencyPassword" aria-label="Show new emergency password">
-                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                            </svg>
+                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                         </button>
                     </div>
                     <div class="dev-reset-password-wrap">
                         <span class="dev-reset-input-icon" aria-hidden="true">
-                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
-                            </svg>
+                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" /></svg>
                         </span>
                         <input type="password" id="modalNewEmergencyPasswordConfirm" name="new_emergency_password_confirmation" required placeholder="Confirm emergency password" autocomplete="new-password">
                         <button type="button" class="dev-reset-eye" data-toggle-password="modalNewEmergencyPasswordConfirm" aria-label="Show confirmed emergency password">
-                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                            </svg>
+                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                         </button>
                     </div>
+                    @error('new_emergency_password')
+                        <div class="dev-form-error">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
-            @error('emergency_password_reset_key')
-                <div class="dev-pin-error">{{ $message }}</div>
-            @enderror
-            @error('new_emergency_password')
-                <div class="dev-pin-error">{{ $message }}</div>
-            @enderror
             <div class="dev-reset-footer">
                 <button type="button" class="dev-reset-cancel" id="cancelEmergencyPasswordReset">Cancel</button>
-                <button type="submit" class="dev-reset-submit">Save Password</button>
-            </div>
-        </form>
-    </section>
-</div>
-
-<div class="dev-reset-modal" id="resetIntegrationPinModal" aria-hidden="true">
-    <section class="dev-reset-dialog" role="dialog" aria-modal="true" aria-labelledby="resetIntegrationPinTitle">
-        <header class="dev-reset-head">
-            <div class="dev-reset-head-main">
-                <span class="dev-reset-icon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
-                    </svg>
-                </span>
-                <div>
-                    <h3 id="resetIntegrationPinTitle">Reset Integration PIN</h3>
-                    <p>Verify your identity before creating a new 4-digit Integration PIN.</p>
-                </div>
-            </div>
-            <button type="button" class="dev-reset-close" id="closeResetIntegrationPin" aria-label="Close reset PIN modal">&times;</button>
-        </header>
-        <form method="POST" action="{{ route('admin.integration-pin.reset') }}" class="dev-reset-form">
-            @csrf
-            <div class="dev-reset-security">
-                <span class="dev-reset-security-icon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.75A11.959 11.959 0 0 1 12 2.714Z" />
-                    </svg>
-                </span>
-                <div>
-                    <strong>Security Verification</strong>
-                    <span>Only Super Administrators can reset the Integration PIN.</span>
-                </div>
-            </div>
-
-            <div class="dev-reset-step">
-                <span class="dev-reset-step-number">1</span>
-                <div class="dev-reset-step-body">
-                    <div>
-                        <strong class="dev-reset-step-title">Verify PIN Reset Key</strong>
-                        <span class="dev-reset-step-copy">Enter the Integration PIN reset key from the server environment.</span>
-                    </div>
-                    <div class="dev-reset-password-wrap">
-                        <span class="dev-reset-input-icon" aria-hidden="true">
-                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
-                            </svg>
-                        </span>
-                        <input type="password" id="resetIntegrationPinKey" name="pin_reset_key" required placeholder="Enter Integration PIN reset key" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" readonly onfocus="this.removeAttribute('readonly');">
-                        <button type="button" class="dev-reset-eye" data-toggle-password="resetIntegrationPinKey" aria-label="Show reset key">
-                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="dev-key-validation" id="resetIntegrationPinKeyStatus" aria-live="polite"></div>
-                </div>
-            </div>
-
-            <div class="dev-reset-step">
-                <span class="dev-reset-step-number">2</span>
-                <div class="dev-reset-step-body">
-                    <div>
-                        <strong class="dev-reset-step-title">Create New 4-Digit PIN</strong>
-                        <span class="dev-reset-step-copy">Set and confirm your new 4-digit Integration PIN.</span>
-                    </div>
-                    <div class="dev-reset-pin-grid">
-                        <div class="dev-reset-pin-group">
-                            <label for="resetPinDigit1">New PIN</label>
-                            <div class="dev-reset-pin-digits" data-pin-target="resetApiPin">
-                                <input id="resetPinDigit1" type="password" inputmode="numeric" maxlength="1" autocomplete="off" required>
-                                <input type="password" inputmode="numeric" maxlength="1" autocomplete="off" required>
-                                <input type="password" inputmode="numeric" maxlength="1" autocomplete="off" required>
-                                <input type="password" inputmode="numeric" maxlength="1" autocomplete="off" required>
-                            </div>
-                            <input class="dev-reset-hidden" type="password" id="resetApiPin" name="api_pin" pattern="[0-9]{4}" maxlength="4" tabindex="-1">
-                        </div>
-                        <div class="dev-reset-pin-group">
-                            <label for="resetPinConfirmDigit1">Confirm New PIN</label>
-                            <div class="dev-reset-pin-digits" data-pin-target="resetApiPinConfirm">
-                                <input id="resetPinConfirmDigit1" type="password" inputmode="numeric" maxlength="1" autocomplete="off" required>
-                                <input type="password" inputmode="numeric" maxlength="1" autocomplete="off" required>
-                                <input type="password" inputmode="numeric" maxlength="1" autocomplete="off" required>
-                                <input type="password" inputmode="numeric" maxlength="1" autocomplete="off" required>
-                            </div>
-                            <input class="dev-reset-hidden" type="password" id="resetApiPinConfirm" name="api_pin_confirmation" pattern="[0-9]{4}" maxlength="4" tabindex="-1">
-                        </div>
-                    </div>
-                    <div class="dev-reset-requirements">
-                        <strong>PIN Requirements</strong>
-                        <span>Exactly 4 digits</span>
-                        <span>Numbers only</span>
-                        <span>Cannot match previous PIN</span>
-                    </div>
-                </div>
-            </div>
-            @error('pin_reset_key')
-                <div class="dev-pin-error">{{ $message }}</div>
-            @enderror
-            @error('api_pin')
-                <div class="dev-pin-error">{{ $message }}</div>
-            @enderror
-            <div class="dev-reset-footer">
-                <button type="button" class="dev-reset-cancel" id="cancelResetIntegrationPin">Cancel</button>
-                <button type="submit" class="dev-reset-submit">Reset PIN</button>
-            </div>
-            <div class="dev-reset-safe-note">
-                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
-                </svg>
-                <span>Your security is important to us. All changes are encrypted and secure.</span>
+                <button type="submit" class="dev-reset-submit" id="saveEmergencyPasswordReset" {{ $resetOtpIsVerified ? '' : 'disabled' }}>Save Password</button>
             </div>
         </form>
     </section>
@@ -2652,153 +2377,58 @@
             }
         });
 
-        const pinMasterToggle = document.getElementById('devApiPinMaster');
-        const pinChildToggleWrap = document.getElementById('devApiPinChildToggles');
-        const pinEnabledToggles = Array.from(document.querySelectorAll('.dev-api-pin-toggle'));
-        const pinFields = document.getElementById('devApiPinFields');
-        const pinControls = document.getElementById('devApiPinControls');
-        const pinForm = pinMasterToggle?.closest('form');
-        const pinCurrentInput = document.getElementById('devApiCurrentPin');
-        const emergencyForm = document.getElementById('devEmergencyCredentialsForm');
+        @if (session('open_developer_options') || $errors->has('clinic_logo'))
+            openPanel();
+        @endif
+
+        const clinicLogoInput = document.getElementById('clinicLogoInput');
+        const clinicLogoPicker = document.getElementById('clinicLogoPicker');
+        const clinicLogoSelectedPreview = document.getElementById('clinicLogoSelectedPreview');
+        const clinicLogoPlaceholder = document.getElementById('clinicLogoPlaceholder');
+        const clinicLogoFileName = document.getElementById('clinicLogoFileName');
+        const clinicLogoSubmit = document.getElementById('clinicLogoSubmit');
+        let selectedClinicLogoUrl = null;
+
+        clinicLogoPicker?.addEventListener('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                clinicLogoInput?.click();
+            }
+        });
+
+        clinicLogoInput?.addEventListener('change', () => {
+            const file = clinicLogoInput.files?.[0];
+            if (!file) return;
+
+            if (selectedClinicLogoUrl) URL.revokeObjectURL(selectedClinicLogoUrl);
+            selectedClinicLogoUrl = URL.createObjectURL(file);
+            if (clinicLogoSelectedPreview) {
+                clinicLogoSelectedPreview.src = selectedClinicLogoUrl;
+                clinicLogoSelectedPreview.hidden = false;
+            }
+            if (clinicLogoPlaceholder) clinicLogoPlaceholder.hidden = true;
+            if (clinicLogoFileName) clinicLogoFileName.textContent = file.name;
+            if (clinicLogoSubmit) clinicLogoSubmit.disabled = false;
+        });
+
         const emergencyResetButton = document.getElementById('openEmergencyPasswordReset');
         const emergencyPasswordResetModal = document.getElementById('resetEmergencyPasswordModal');
         const closeEmergencyPasswordResetButton = document.getElementById('closeEmergencyPasswordReset');
         const cancelEmergencyPasswordResetButton = document.getElementById('cancelEmergencyPasswordReset');
-        const resetPinButton = document.getElementById('openResetIntegrationPin');
-        const resetPinModal = document.getElementById('resetIntegrationPinModal');
-        const closeResetPinButton = document.getElementById('closeResetIntegrationPin');
-        const cancelResetPinButton = document.getElementById('cancelResetIntegrationPin');
+        const emergencyPasswordResetForm = document.getElementById('emergencyPasswordResetForm');
+        const emergencyPasswordOtpStep = document.getElementById('emergencyPasswordOtpStep');
+        const sendEmergencyPasswordOtpButton = document.getElementById('sendEmergencyPasswordOtp');
+        const verifyEmergencyPasswordOtpButton = document.getElementById('verifyEmergencyPasswordOtp');
+        const emergencyPasswordOtp = document.getElementById('emergencyPasswordOtp');
+        const emergencyPasswordOtpEntry = document.getElementById('emergencyPasswordOtpEntry');
+        const emergencyPasswordOtpRecipient = document.getElementById('emergencyPasswordOtpRecipient');
+        const emergencyPasswordOtpStatus = document.getElementById('emergencyPasswordOtpStatus');
+        const emergencyPasswordOtpVerifyStatus = document.getElementById('emergencyPasswordOtpVerifyStatus');
+        const emergencyPasswordFields = document.getElementById('emergencyPasswordFields');
+        const saveEmergencyPasswordResetButton = document.getElementById('saveEmergencyPasswordReset');
         const maintenanceToggle = document.getElementById('devMaintenanceModeToggle');
         const maintenanceSaveButton = document.getElementById('devMaintenanceSaveButton');
         const maintenanceForm = maintenanceToggle?.closest('form');
-        const disablePinModal = document.getElementById('disablePinVerifyModal');
-        const closeDisablePinButton = document.getElementById('closeDisablePinVerify');
-        const cancelDisablePinButton = document.getElementById('cancelDisablePinVerify');
-        const submitDisablePinButton = document.getElementById('submitDisablePinVerify');
-        const disablePinValue = document.getElementById('disableApiPinValue');
-        const disablePinError = document.getElementById('disablePinVerifyError');
-        const disablePinFirstDigit = document.getElementById('disablePinDigit1');
-        let bypassDisablePinPrompt = false;
-
-        const syncPinControls = () => {
-            if (!pinMasterToggle || !pinFields || !pinControls) {
-                return;
-            }
-
-            const hasSavedPin = pinControls.dataset.hasPin === '1';
-            pinChildToggleWrap.hidden = !pinMasterToggle.checked;
-            pinFields.hidden = !pinMasterToggle.checked;
-            pinControls.hidden = !pinMasterToggle.checked && !hasSavedPin;
-            if (emergencyForm) {
-                emergencyForm.dataset.pinRequired = '0';
-            }
-        };
-
-        [pinMasterToggle, ...pinEnabledToggles].filter(Boolean).forEach((toggle) => {
-            toggle.addEventListener('change', () => {
-                const hasSavedPin = pinControls?.dataset.hasPin === '1';
-
-                if (toggle === pinMasterToggle && !pinMasterToggle.checked && hasSavedPin && !bypassDisablePinPrompt) {
-                    pinMasterToggle.checked = true;
-                    syncPinControls();
-                    setDisablePinModalOpen(true);
-                    return;
-                }
-
-                if (toggle === pinMasterToggle && pinMasterToggle.checked && !pinEnabledToggles.some((child) => child.checked)) {
-                    pinEnabledToggles.forEach((child) => {
-                        child.checked = true;
-                    });
-                }
-
-                if (toggle !== pinMasterToggle && pinMasterToggle?.checked && !pinEnabledToggles.some((child) => child.checked)) {
-                    toggle.checked = true;
-                }
-
-                syncPinControls();
-
-                if (hasSavedPin) {
-                    pinForm?.requestSubmit();
-                }
-            });
-        });
-        syncPinControls();
-
-        const setDisablePinModalOpen = (isOpen) => {
-            if (!disablePinModal) {
-                return;
-            }
-            disablePinModal.classList.toggle('is-open', isOpen);
-            disablePinModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
-            if (disablePinError) {
-                disablePinError.hidden = true;
-                disablePinError.textContent = '';
-            }
-            if (disablePinValue) {
-                disablePinValue.value = '';
-            }
-            disablePinModal.querySelectorAll('.dev-enter-pin-digits input').forEach((input) => {
-                input.value = '';
-            });
-            if (isOpen) {
-                window.setTimeout(() => disablePinFirstDigit?.focus(), 60);
-            }
-        };
-
-        const verifyPinForDisable = async (pin) => {
-            const response = await fetch('{{ route('admin.integration-pin.verify') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                },
-                body: JSON.stringify({ purpose: 'pin_management', pin }),
-            });
-            const payload = await response.json();
-            if (!response.ok || !payload.success) {
-                throw new Error(payload.message || 'Incorrect PIN.');
-            }
-        };
-
-        closeDisablePinButton?.addEventListener('click', () => setDisablePinModalOpen(false));
-        cancelDisablePinButton?.addEventListener('click', () => setDisablePinModalOpen(false));
-        disablePinModal?.addEventListener('click', (event) => {
-            if (event.target === disablePinModal) {
-                setDisablePinModalOpen(false);
-            }
-        });
-
-        submitDisablePinButton?.addEventListener('click', async () => {
-            const pin = (disablePinValue?.value || '').trim();
-            if (!/^\d{4}$/.test(pin)) {
-                if (disablePinError) {
-                    disablePinError.textContent = 'Enter a valid 4-digit PIN.';
-                    disablePinError.hidden = false;
-                }
-                return;
-            }
-
-            submitDisablePinButton.disabled = true;
-            try {
-                await verifyPinForDisable(pin);
-                if (pinCurrentInput) {
-                    pinCurrentInput.value = pin;
-                }
-                bypassDisablePinPrompt = true;
-                pinMasterToggle.checked = false;
-                syncPinControls();
-                setDisablePinModalOpen(false);
-                pinForm?.requestSubmit();
-            } catch (error) {
-                if (disablePinError) {
-                    disablePinError.textContent = error.message || 'Incorrect PIN.';
-                    disablePinError.hidden = false;
-                }
-            } finally {
-                submitDisablePinButton.disabled = false;
-            }
-        });
 
         maintenanceToggle?.addEventListener('change', () => {
             if (maintenanceSaveButton) {
@@ -2806,25 +2436,6 @@
             }
             if (!maintenanceToggle.checked) {
                 maintenanceForm?.requestSubmit();
-            }
-        });
-
-        const setResetPinModalOpen = (isOpen) => {
-            if (!resetPinModal) {
-                return;
-            }
-            resetPinModal.classList.toggle('is-open', isOpen);
-            resetPinModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
-        };
-
-        resetPinButton?.addEventListener('click', () => {
-            window.setTimeout(() => setResetPinModalOpen(true), 80);
-        });
-        closeResetPinButton?.addEventListener('click', () => setResetPinModalOpen(false));
-        cancelResetPinButton?.addEventListener('click', () => setResetPinModalOpen(false));
-        resetPinModal?.addEventListener('click', function (event) {
-            if (event.target === resetPinModal) {
-                setResetPinModalOpen(false);
             }
         });
 
@@ -2847,95 +2458,85 @@
             }
         });
 
-        const keyValidationCheck = {
-            integration_pin: { timer: null, requestId: 0 },
-            emergency_password: { timer: null, requestId: 0 },
+        const setOtpStatus = (element, message, isError = false) => {
+            if (!element) return;
+            element.textContent = message;
+            element.classList.toggle('is-visible', Boolean(message));
+            element.classList.toggle('is-invalid', isError);
+            element.classList.toggle('is-valid', Boolean(message) && !isError);
         };
 
-        const renderKeyValidation = (statusEl, state, message) => {
-            if (!statusEl) {
-                return;
-            }
-
-            statusEl.classList.remove('is-visible', 'is-valid', 'is-invalid');
-            if (!state) {
-                statusEl.innerHTML = '';
-                return;
-            }
-
-            statusEl.classList.add('is-visible');
-            if (state === 'checking') {
-                statusEl.innerHTML = '<span class="dev-key-validation-spinner" aria-hidden="true"></span><span>Validating...</span>';
-                return;
-            }
-
-            if (state === 'valid') {
-                statusEl.classList.add('is-valid');
-                statusEl.innerHTML = '<span class="dev-key-validation-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span>' + message + '</span>';
-                return;
-            }
-
-            statusEl.classList.add('is-invalid');
-            statusEl.innerHTML = '<span class="dev-key-validation-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span><span>' + message + '</span>';
+        const csrfToken = emergencyPasswordResetForm?.querySelector('input[name="_token"]')?.value || '';
+        const restoreVerifiedOtpState = () => {
+            const verified = emergencyPasswordResetForm?.dataset.otpVerified === '1';
+            if (emergencyPasswordFields) emergencyPasswordFields.hidden = !verified;
+            if (saveEmergencyPasswordResetButton) saveEmergencyPasswordResetButton.disabled = !verified;
+            if (emergencyPasswordOtpEntry) emergencyPasswordOtpEntry.hidden = verified;
+            if (emergencyPasswordOtpStep) emergencyPasswordOtpStep.hidden = verified;
+            if (verified) setOtpStatus(emergencyPasswordOtpVerifyStatus, 'Email verification complete. Set the new password.', false);
         };
+        restoreVerifiedOtpState();
 
-        const setupResetKeyValidation = (inputId, statusId, purpose, validMessage) => {
-            const input = document.getElementById(inputId);
-            const statusEl = document.getElementById(statusId);
-            if (!input || !statusEl) {
+        sendEmergencyPasswordOtpButton?.addEventListener('click', async () => {
+            sendEmergencyPasswordOtpButton.disabled = true;
+            setOtpStatus(emergencyPasswordOtpStatus, 'Sending verification code...');
+            try {
+                const response = await fetch('{{ route('admin.emergency-credentials.otp.send') }}', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok || !payload.success) throw new Error(payload.message || 'Unable to send the verification code.');
+                if (emergencyPasswordOtpRecipient) emergencyPasswordOtpRecipient.textContent = payload.recipient || 'the configured recovery email';
+                if (emergencyPasswordOtpEntry) emergencyPasswordOtpEntry.hidden = false;
+                if (emergencyPasswordOtpStep) emergencyPasswordOtpStep.hidden = false;
+                if (emergencyPasswordFields) emergencyPasswordFields.hidden = true;
+                if (saveEmergencyPasswordResetButton) saveEmergencyPasswordResetButton.disabled = true;
+                if (emergencyPasswordResetForm) emergencyPasswordResetForm.dataset.otpVerified = '0';
+                if (emergencyPasswordOtp) emergencyPasswordOtp.value = '';
+                setOtpStatus(emergencyPasswordOtpStatus, payload.message || 'Verification code sent.');
+                setOtpStatus(emergencyPasswordOtpVerifyStatus, '');
+                emergencyPasswordOtp?.focus();
+            } catch (error) {
+                setOtpStatus(emergencyPasswordOtpStatus, error.message || 'Unable to send the verification code.', true);
+            } finally {
+                sendEmergencyPasswordOtpButton.disabled = false;
+            }
+        });
+
+        emergencyPasswordOtp?.addEventListener('input', () => {
+            emergencyPasswordOtp.value = emergencyPasswordOtp.value.replace(/\D/g, '').slice(0, 6);
+        });
+
+        verifyEmergencyPasswordOtpButton?.addEventListener('click', async () => {
+            const code = (emergencyPasswordOtp?.value || '').trim();
+            if (!/^\d{6}$/.test(code)) {
+                setOtpStatus(emergencyPasswordOtpVerifyStatus, 'Enter the 6-digit verification code.', true);
                 return;
             }
-
-            const runValidation = () => {
-                const key = input.value.trim();
-                const tracker = keyValidationCheck[purpose];
-                window.clearTimeout(tracker.timer);
-
-                if (!key) {
-                    tracker.requestId += 1;
-                    renderKeyValidation(statusEl, null);
-                    return;
-                }
-
-                tracker.timer = window.setTimeout(async () => {
-                    const requestId = tracker.requestId + 1;
-                    tracker.requestId = requestId;
-                    renderKeyValidation(statusEl, 'checking');
-
-                    try {
-                        const response = await fetch('{{ route('admin.reset-key.verify') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            },
-                            body: JSON.stringify({ purpose, key }),
-                        });
-                        const payload = await response.json().catch(() => ({}));
-                        if (tracker.requestId !== requestId || input.value.trim() !== key) {
-                            return;
-                        }
-
-                        if (response.ok && payload.success) {
-                            renderKeyValidation(statusEl, 'valid', validMessage);
-                        } else {
-                            renderKeyValidation(statusEl, 'invalid', payload.message || 'Reset key is invalid.');
-                        }
-                    } catch (error) {
-                        if (tracker.requestId === requestId) {
-                            renderKeyValidation(statusEl, 'invalid', 'Unable to validate reset key.');
-                        }
-                    }
-                }, 450);
-            };
-
-            input.addEventListener('input', runValidation);
-            input.addEventListener('blur', runValidation);
-        };
-
-        setupResetKeyValidation('resetIntegrationPinKey', 'resetIntegrationPinKeyStatus', 'integration_pin', 'Pin Reset Key is Valid');
-        setupResetKeyValidation('emergencyPasswordResetKey', 'emergencyPasswordResetKeyStatus', 'emergency_password', 'Emergency Password Reset Key is Valid');
+            verifyEmergencyPasswordOtpButton.disabled = true;
+            setOtpStatus(emergencyPasswordOtpVerifyStatus, 'Verifying code...');
+            try {
+                const response = await fetch('{{ route('admin.emergency-credentials.otp.verify') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                    body: JSON.stringify({ code }),
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok || !payload.success) throw new Error(payload.message || 'The code is invalid or expired.');
+                if (emergencyPasswordResetForm) emergencyPasswordResetForm.dataset.otpVerified = '1';
+                if (emergencyPasswordOtpEntry) emergencyPasswordOtpEntry.hidden = true;
+                if (emergencyPasswordOtpStep) emergencyPasswordOtpStep.hidden = true;
+                if (emergencyPasswordFields) emergencyPasswordFields.hidden = false;
+                if (saveEmergencyPasswordResetButton) saveEmergencyPasswordResetButton.disabled = false;
+                setOtpStatus(emergencyPasswordOtpVerifyStatus, 'Email verification complete. Set the new password.');
+                document.getElementById('modalNewEmergencyPassword')?.focus();
+            } catch (error) {
+                setOtpStatus(emergencyPasswordOtpVerifyStatus, error.message || 'The code is invalid or expired.', true);
+            } finally {
+                verifyEmergencyPasswordOtpButton.disabled = false;
+            }
+        });
 
         document.querySelectorAll('[data-toggle-password]').forEach((button) => {
             button.addEventListener('click', () => {
@@ -2952,53 +2553,9 @@
             });
         });
 
-        document.querySelectorAll('.dev-reset-pin-digits').forEach((group) => {
-            const target = document.getElementById(group.dataset.pinTarget || '');
-            const digits = Array.from(group.querySelectorAll('input'));
-
-            const syncTarget = () => {
-                if (target) {
-                    target.value = digits.map((input) => input.value).join('');
-                    target.dispatchEvent(new Event('input', { bubbles: true }));
-                }
-            };
-
-            digits.forEach((input, index) => {
-                input.addEventListener('input', () => {
-                    input.value = input.value.replace(/\D/g, '').slice(0, 1);
-                    syncTarget();
-
-                    if (input.value && digits[index + 1]) {
-                        digits[index + 1].focus();
-                    }
-                });
-
-                input.addEventListener('keydown', (event) => {
-                    if (event.key === 'Backspace' && !input.value && digits[index - 1]) {
-                        digits[index - 1].focus();
-                    }
-                });
-
-                input.addEventListener('paste', (event) => {
-                    event.preventDefault();
-                    const pasted = (event.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, digits.length);
-                    pasted.split('').forEach((value, pasteIndex) => {
-                        if (digits[pasteIndex]) {
-                            digits[pasteIndex].value = value;
-                        }
-                    });
-                    syncTarget();
-                    digits[Math.min(pasted.length, digits.length) - 1]?.focus();
-                });
-            });
-        });
-
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape' && panel.classList.contains('is-open')) {
                 closePanel();
-            }
-            if (event.key === 'Escape' && resetPinModal?.classList.contains('is-open')) {
-                setResetPinModalOpen(false);
             }
             if (event.key === 'Escape' && emergencyPasswordResetModal?.classList.contains('is-open')) {
                 setEmergencyPasswordResetModalOpen(false);

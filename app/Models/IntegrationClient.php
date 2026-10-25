@@ -24,4 +24,10 @@ class IntegrationClient extends Model
     {
         return $this->morphMany(\Laravel\Sanctum\PersonalAccessToken::class, 'tokenable');
     }
+
+    public function hasUsedToken(): bool
+    {
+        return $this->is_active
+            && $this->tokens->contains(fn ($token) => $token->last_used_at !== null);
+    }
 }

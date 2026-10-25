@@ -669,7 +669,7 @@
     <main class="preview-shell">
         <header class="preview-header">
             <div class="preview-brand">
-                <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="Clinic Logo">
+                <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="Clinic Logo">
                 <div>
                     <h1>Post Login Loader Preview</h1>
                     <p>Same loader before the Terms and Conditions modal appears.</p>
@@ -751,7 +751,7 @@
                         </div>
                     </div>
                     <div class="loader-bottom-brand">
-                        <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="Clinic Logo" class="loader-bottom-logo">
+                        <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="Clinic Logo" class="loader-bottom-logo">
                         <div class="post-login-loader-text" aria-label="Loading">
                             <span style="--letter-index: 0;">L</span>
                             <span style="--letter-index: 1;">o</span>
