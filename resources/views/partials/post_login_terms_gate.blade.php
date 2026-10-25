@@ -965,7 +965,7 @@
                 </div>
             </div>
             <div class="loader-bottom-brand">
-                <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="Clinic Logo" class="loader-bottom-logo">
+                <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="Clinic Logo" class="loader-bottom-logo">
             </div>
         </div>
     </div>

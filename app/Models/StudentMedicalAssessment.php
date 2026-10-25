@@ -11,6 +11,7 @@ class StudentMedicalAssessment extends Model
 
     protected $fillable = [
         'health_profile_id',
+        'employee_health_profile_id',
         'recorded_by_user_id',
         'condition_or_illness',
         'findings',
@@ -21,6 +22,11 @@ class StudentMedicalAssessment extends Model
     public function healthProfile()
     {
         return $this->belongsTo(HealthProfile::class);
+    }
+
+    public function employeeHealthProfile()
+    {
+        return $this->belongsTo(EmployeeHealthProfile::class, 'employee_health_profile_id');
     }
 
     public function recordedBy()

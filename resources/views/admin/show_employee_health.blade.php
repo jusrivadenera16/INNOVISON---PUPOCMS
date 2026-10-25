@@ -2039,6 +2039,12 @@
                                 <span aria-hidden="true">&rarr;</span>
                             </button>
                         @endif
+                        @if($canUpdateMedicalAssessment)
+                            <button type="button" data-medical-assessment-trigger role="menuitem">
+                                <span>Update Medical Assessment</span>
+                                <span aria-hidden="true">+</span>
+                            </button>
+                        @endif
                     </div>
                 </div>
             @endif
@@ -2705,6 +2711,14 @@
         </div>
     </div>
     @endif
+@endif
+@if($canUpdateMedicalAssessment)
+    @include('admin.partials.medical-assessment-modal', [
+        'medicalAssessmentUpdateUrl' => route('admin.employee_health_profile.medical_information.update', $employeeProfile->id),
+        'medicalAssessmentProfileTypeLabel' => $medicalAssessmentProfileType,
+        'medicalAssessmentEditableValues' => $medicalAssessmentEditableValues,
+        'employeeDocuments' => $employeeDocuments,
+    ])
 @endif
 @endsection
 

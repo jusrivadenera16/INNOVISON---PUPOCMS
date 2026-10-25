@@ -13,25 +13,32 @@
         ->flatMap(fn ($client) => $client->tokens->map(fn ($token) => ['token' => $token, 'client' => $client]))
         ->sortByDesc(fn ($item) => optional($item['token']->created_at)->timestamp ?? 0)
         ->first();
-    $recentTokens = $clients
-        ->flatMap(fn ($client) => $client->tokens->map(fn ($token) => ['token' => $token, 'client' => $client]))
-        ->sortByDesc(fn ($item) => optional($item['token']->created_at)->timestamp ?? 0)
-        ->take(4)
-        ->values();
     $requestLogs = collect($integrationRequestLogs ?? []);
     $errorLogs = collect($apiErrorLogs ?? []);
     $clientLogPayload = $clients->mapWithKeys(function ($client) use ($requestLogs, $errorLogs) {
         $clientKey = strtolower((string) $client->system_key);
         $clientName = strtolower((string) $client->system_name);
         $clientRequestLogs = $requestLogs
-            ->filter(fn ($log) => (int) ($log->integration_client_id ?? 0) === (int) $client->id
-                || strtolower((string) ($log->system_key ?? '')) === $clientKey)
+            ->filter(function ($log) use ($client, $clientKey) {
+                $logClientId = (int) ($log->integration_client_id ?? 0);
+                $logSystemKey = strtolower((string) ($log->system_key ?? ''));
+
+                return $logClientId > 0
+                    ? $logClientId === (int) $client->id
+                    : $logSystemKey === $clientKey;
+            })
             ->take(30)
             ->map(fn ($log) => [
                 'type' => ((int) ($log->status_code ?? 0)) >= 400 ? 'error' : 'request',
-                'title' => trim(($log->http_method ?? 'GET') . ' ' . ($log->endpoint ?? '/')),
+                'title' => in_array((int) ($log->status_code ?? 0), [401, 403], true)
+                    ? 'API access denied'
+                    : trim(($log->http_method ?? 'GET') . ' ' . ($log->endpoint ?? '/')),
                 'status' => $log->status_code ? 'HTTP ' . $log->status_code : 'No status',
-                'meta' => trim(($log->response_time_ms !== null ? $log->response_time_ms . ' ms' : 'No timing') . ' | ' . ($log->ip_address ?? 'No IP')),
+                'meta' => trim(implode(' | ', array_filter([
+                    $log->auth_method ?? null,
+                    $log->response_time_ms !== null ? $log->response_time_ms . ' ms' : null,
+                    $log->ip_address ?? null,
+                ])) ?: 'No additional details'),
                 'message' => $log->error_message ?: 'Request completed.',
                 'time' => $log->created_at ? \Carbon\Carbon::parse($log->created_at)->format('M d, Y h:i A') : 'N/A',
             ])
@@ -67,6 +74,7 @@
                 'key' => $client->system_key,
                 'logs' => $clientRequestLogs->concat($clientErrorLogs)->concat($tokenEvents)
                     ->sortByDesc(fn ($log) => strtotime($log['time']) ?: 0)
+                    ->take(50)
                     ->values(),
             ],
         ];
@@ -201,279 +209,6 @@
         border-color: rgba(255, 255, 255, 0.12);
     }
 
-    .token-pin-modal {
-        position: fixed;
-        inset: 0;
-        z-index: 5010;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        background: rgba(15, 23, 42, 0.56);
-        backdrop-filter: blur(8px);
-    }
-
-    .token-pin-modal.is-open {
-        display: flex;
-    }
-
-    .token-pin-dialog {
-        width: min(620px, 100%);
-        overflow: hidden;
-        border-radius: 18px;
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        background: #ffffff;
-        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.26);
-    }
-
-    .token-pin-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 14px;
-        padding: 20px 22px;
-        background: linear-gradient(135deg, #9d1427 0%, #710012 100%);
-        color: #ffffff;
-    }
-
-    .token-pin-head-main {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-    }
-
-    .token-pin-head-icon,
-    .token-pin-warning-icon,
-    .token-pin-entry-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
-    }
-
-    .token-pin-head-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.16);
-        border: 1px solid rgba(255, 255, 255, 0.22);
-    }
-
-    .token-pin-head-icon svg {
-        width: 24px;
-        height: 24px;
-    }
-
-    .token-pin-head h3 {
-        margin: 0;
-        color: #ffffff !important;
-        font-size: 1.22rem;
-        font-weight: 950;
-    }
-
-    .token-pin-head p {
-        margin: 4px 0 0;
-        color: rgba(255, 255, 255, 0.88) !important;
-        font-size: 0.9rem;
-    }
-
-    .token-pin-close {
-        width: 40px;
-        height: 40px;
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        border-radius: 999px;
-        background: rgba(15, 23, 42, 0.20);
-        color: #ffffff;
-        cursor: pointer;
-        font-size: 26px;
-        line-height: 1;
-    }
-
-    .token-pin-body {
-        display: grid;
-        gap: 16px;
-        padding: 22px;
-    }
-
-    .token-pin-warning {
-        display: flex;
-        gap: 12px;
-        padding: 14px;
-        border-radius: 16px;
-        border: 1px solid rgba(250, 204, 21, 0.34);
-        background: #fff8df;
-        color: #78350f;
-    }
-
-    .token-pin-warning-icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 11px;
-        background: #fff1b8;
-        color: #8a1220;
-    }
-
-    .token-pin-warning strong,
-    .token-pin-warning span {
-        display: block;
-    }
-
-    .token-pin-warning strong {
-        font-weight: 950;
-        color: #70131b;
-    }
-
-    .token-pin-warning span {
-        margin-top: 2px;
-        font-size: 0.85rem;
-        line-height: 1.4;
-    }
-
-    .token-pin-entry {
-        text-align: center;
-        padding: 18px;
-        border-radius: 18px;
-        border: 1px solid rgba(127, 29, 45, 0.12);
-        background: #fffafa;
-    }
-
-    .token-pin-entry-icon {
-        width: 54px;
-        height: 54px;
-        margin: 0 auto 10px;
-        border-radius: 18px;
-        background: #fff1f2;
-        color: #8a1220;
-    }
-
-    .token-pin-entry-icon svg {
-        width: 26px;
-        height: 26px;
-    }
-
-    .token-pin-entry-title {
-        color: #111827;
-        font-size: 1rem;
-        font-weight: 950;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-    }
-
-    .token-pin-entry-copy {
-        margin-top: 5px;
-        color: #64748b;
-        font-size: 0.88rem;
-    }
-
-    .token-pin-digits {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin-top: 16px;
-    }
-
-    .token-pin-digits input {
-        width: 54px;
-        height: 58px;
-        border-radius: 14px;
-        border: 1px solid rgba(127, 29, 45, 0.22);
-        background: #ffffff;
-        color: #111827;
-        text-align: center;
-        font-size: 1.45rem;
-        font-weight: 950;
-        outline: none;
-    }
-
-    .token-pin-digits input:focus {
-        border-color: #facc15;
-        box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.22);
-    }
-
-    .token-pin-hidden {
-        position: absolute;
-        opacity: 0;
-        pointer-events: none;
-        width: 1px;
-        height: 1px;
-    }
-
-    .token-pin-safe {
-        margin-top: 12px;
-        color: #64748b;
-        font-size: 0.82rem;
-        font-weight: 800;
-    }
-
-    .token-pin-error {
-        display: none;
-        padding: 10px 12px;
-        border-radius: 12px;
-        background: #fee2e2;
-        color: #991b1b;
-        font-size: 0.82rem;
-        font-weight: 850;
-    }
-
-    .token-pin-error.is-visible {
-        display: block;
-    }
-
-    .token-pin-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-    }
-
-    .token-pin-cancel,
-    .token-pin-submit {
-        min-height: 42px;
-        border-radius: 12px;
-        padding: 0 18px;
-        font-weight: 950;
-        cursor: pointer;
-    }
-
-    .token-pin-cancel {
-        border: 1px solid rgba(148, 163, 184, 0.34);
-        background: #ffffff;
-        color: #70131b;
-    }
-
-    .token-pin-submit {
-        border: 1px solid #8a1220;
-        background: #8a1220;
-        color: #ffffff;
-    }
-
-    html[data-theme="dark"] .token-pin-dialog,
-    html[data-theme="dark"] .token-pin-entry {
-        background: #111827;
-        border-color: rgba(250, 204, 21, 0.20);
-    }
-
-    html[data-theme="dark"] .token-pin-warning {
-        background: rgba(250, 204, 21, 0.10);
-        border-color: rgba(250, 204, 21, 0.26);
-        color: #fde68a;
-    }
-
-    html[data-theme="dark"] .token-pin-warning strong,
-    html[data-theme="dark"] .token-pin-entry-title {
-        color: #ffffff;
-    }
-
-    html[data-theme="dark"] .token-pin-entry-copy,
-    html[data-theme="dark"] .token-pin-safe {
-        color: #cbd5e1;
-    }
-
-    html[data-theme="dark"] .token-pin-digits input,
-    html[data-theme="dark"] .token-pin-cancel {
-        background: rgba(255, 255, 255, 0.06);
-        color: #f8fafc;
-        border-color: rgba(250, 204, 21, 0.20);
-    }
 
     .integration-primary {
         height: 44px;
@@ -960,6 +695,16 @@
         color: #fff;
     }
 
+    .activity-dot.is-error {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    html[data-theme="dark"] .activity-dot.is-error {
+        background: rgba(127, 29, 29, .42);
+        color: #fca5a5;
+    }
+
     .integration-log-modal {
         position: fixed;
         inset: 0;
@@ -1333,6 +1078,7 @@
                 <select id="integrationStatusFilter" class="integration-filter" aria-label="Filter integrations">
                     <option value="all">All Status</option>
                     <option value="connected">Connected</option>
+                    <option value="not-connected">Not Connected</option>
                     <option value="no-token">No Token</option>
                     <option value="inactive">Inactive</option>
                 </select>
@@ -1408,7 +1154,10 @@
                         @php
                             $latest = $client->tokens->sortByDesc('created_at')->first();
                             $hasToken = (bool) $latest;
-                            $status = !$client->is_active ? 'inactive' : ($hasToken ? 'connected' : 'no-token');
+                            $isConnected = $client->hasUsedToken();
+                            $status = !$client->is_active
+                                ? 'inactive'
+                                : ($isConnected ? 'connected' : ($hasToken ? 'not-connected' : 'no-token'));
                             $initial = strtoupper(substr($client->system_name, 0, 1));
                         @endphp
                         <button
@@ -1421,11 +1170,11 @@
                         >
                             <span class="system-avatar">{{ $initial }}</span>
                             <span>
-                                <span style="font-weight: 600;">{{ $client->system_name }}</span>
-                                <small><span class="status-dot {{ $hasToken && $client->is_active ? '' : 'warn' }}"></span><span class="system-status-text">{{ $client->is_active ? ($hasToken ? 'Connected' : 'No token') : 'Inactive' }}</span></small>
+                                <strong class="system-name">{{ $client->system_name }}</strong>
+                                <small><span class="status-dot {{ $isConnected ? '' : 'warn' }}"></span><span class="system-status-text">{{ !$client->is_active ? 'Inactive' : ($isConnected ? 'Connected' : ($hasToken ? 'Not connected' : 'No token')) }}</span></small>
                             </span>
                             <span class="item-last-used">
-                                {{ $latest && $latest->last_used_at ? $latest->last_used_at->diffForHumans() : ($latest ? 'Never used' : 'No token') }}
+                                {{ $isConnected ? $latest->last_used_at->diffForHumans() : ($latest ? 'Never used' : 'No token') }}
                             </span>
                         </button>
                     @empty
@@ -1439,6 +1188,7 @@
                     @php
                         $latest = $client->tokens->sortByDesc('created_at')->first();
                         $hasToken = (bool) $latest;
+                        $isConnected = $client->hasUsedToken();
                         $initial = strtoupper(substr($client->system_name, 0, 1));
                         $abilities = $latest ? implode(', ', $latest->abilities ?? []) : 'None';
                     @endphp
@@ -1462,8 +1212,8 @@
                                         </button>
                                     </div>
                                 </div>
-                                <span class="connected-pill client-status-pill {{ $hasToken && $client->is_active ? '' : 'muted' }}">
-                                    {{ $client->is_active ? ($hasToken ? 'Connected' : 'No Token') : 'Inactive' }}
+                                <span class="connected-pill client-status-pill {{ $isConnected ? '' : 'muted' }}">
+                                    {{ !$client->is_active ? 'Inactive' : ($isConnected ? 'Connected' : ($hasToken ? 'Not connected' : 'No Token')) }}
                                 </span>
                             </div>
                             <button type="button" class="detail-menu" title="More options">
@@ -1496,8 +1246,8 @@
                             </div>
                             <div class="fact-card">
                                 <span>Last Used</span>
-                                <span style="font-weight: 600; display: block; margin: 4px 0;">{{ $hasToken && $latest->last_used_at ? $latest->last_used_at->diffForHumans() : 'Never' }}</span>
-                                <small>{{ $hasToken && $latest->last_used_at ? $latest->last_used_at->format('M d, h:i A') : 'No API call yet' }}</small>
+                                <span class="token-last-used-value" style="font-weight: 600; display: block; margin: 4px 0;">{{ $isConnected ? $latest->last_used_at->diffForHumans() : 'Never' }}</span>
+                                <small class="token-last-used-time">{{ $isConnected ? $latest->last_used_at->format('M d, h:i A') : 'No API call yet' }}</small>
                             </div>
                             <div class="fact-card">
                                 <span>Expires</span>
@@ -1512,25 +1262,28 @@
                         </div>
 
                         <div class="detail-actions">
-                            <button type="button" class="solid-btn" onclick="generateToken('{{ $client->id }}', '{{ $client->system_name }}')">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 5v14M5 12h14"/>
-                                </svg>
-                                Generate New Token
-                            </button>
-                            <button type="button" class="outline-btn" onclick="generateToken('{{ $client->id }}', '{{ $client->system_name }}')">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>
-                                </svg>
-                                Rotate Token
-                            </button>
-                            <button type="button" class="danger-btn" onclick="revokeToken('{{ $client->id }}', '{{ $client->system_name }}', '{{ $latest->id ?? '' }}')" {{ $hasToken ? '' : 'disabled' }}>
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/>
-                                </svg>
-                                Revoke Token
-                            </button>
-                            <button type="button" class="outline-btn" onclick="openIntegrationLogs('{{ $client->id }}')">
+                            @if ($hasToken)
+                                <button type="button" class="outline-btn rotate-token-btn" onclick="generateToken('{{ $client->id }}', '{{ $client->system_name }}', true)">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>
+                                    </svg>
+                                    Rotate Token
+                                </button>
+                                <button type="button" class="danger-btn" onclick="revokeToken('{{ $client->id }}', '{{ $client->system_name }}', '{{ $latest->id }}')">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/>
+                                    </svg>
+                                    Revoke Token
+                                </button>
+                            @else
+                                <button type="button" class="solid-btn generate-token-btn" onclick="generateToken('{{ $client->id }}', '{{ $client->system_name }}', false)">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 5v14M5 12h14"/>
+                                    </svg>
+                                    Generate Token
+                                </button>
+                            @endif
+                            <button type="button" class="outline-btn view-logs-btn" onclick="openIntegrationLogs('{{ $client->id }}')">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4v15.5A2.5 2.5 0 0 0 6.5 22H20V6a2 2 0 0 0-2-2H4Z"/>
                                 </svg>
@@ -1553,21 +1306,33 @@
                 <a href="{{ route('admin.integration-tokens.activity') }}" class="outline-btn" style="min-height:34px; display: inline-flex; align-items: center;">View All</a>
             </div>
             <div class="activity-list">
-                @forelse($recentTokens as $item)
+                @forelse($recentActivity as $item)
+                    @php
+                        $isActivityError = $item->event_type === 'error';
+                        $activityDetails = $item->event_type === 'token'
+                            ? trim(($item->details ?? 'Token') . ' · Token #' . $item->event_id)
+                            : trim(implode(' · ', array_filter([
+                                trim(($item->http_method ?? '') . ' ' . ($item->endpoint ?? '')) ?: null,
+                                $item->status_code ? 'HTTP ' . $item->status_code : null,
+                                $item->details ?? null,
+                            ])));
+                    @endphp
                     <div class="activity-item">
-                        <span class="activity-dot">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/>
-                            </svg>
+                        <span class="activity-dot {{ $isActivityError ? 'is-error' : '' }}">
+                            @if($isActivityError)
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4m0 4h.01"/><circle cx="12" cy="12" r="10"/></svg>
+                            @else
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                            @endif
                         </span>
                         <span>
-                            <strong>Token generated by {{ $item['client']->system_name }}</strong>
-                            <span>{{ $item['token']->name }}</span>
+                            <strong>{{ $item->system_name ?: 'Unknown system' }} · {{ $item->title }}</strong>
+                            <span>{{ $activityDetails !== '' ? $activityDetails : ($item->auth_method ?? 'No additional details') }}</span>
                         </span>
-                        <small>{{ $item['token']->created_at->diffForHumans() }}</small>
+                        <small>{{ \Carbon\Carbon::parse($item->created_at)->diffForHumans() }}</small>
                     </div>
                 @empty
-                    <div class="no-token-message">No token activity yet.</div>
+                    <div class="no-token-message">No integration activity yet.</div>
                 @endforelse
             </div>
         </section>
@@ -1644,257 +1409,11 @@
     </div>
 </div>
 
-<div class="token-pin-modal" id="tokenActionPinModal" aria-hidden="true">
-    <section class="token-pin-dialog" role="dialog" aria-modal="true" aria-labelledby="tokenActionPinTitle">
-        <header class="token-pin-head">
-            <div class="token-pin-head-main">
-                <span class="token-pin-head-icon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 2.75 4.75 5.5v5.4c0 4.72 3.02 8.92 7.25 10.35 4.23-1.43 7.25-5.63 7.25-10.35V5.5L12 2.75Z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.25 11.25v-1.5a3.25 3.25 0 1 0-6.5 0v1.5m-.5 0h7.5v5.5h-7.5v-5.5Z" />
-                    </svg>
-                </span>
-                <div>
-                    <h3 id="tokenActionPinTitle">Integration PIN</h3>
-                    <p id="tokenActionPinSubtitle">Enter your 4-digit PIN to continue.</p>
-                </div>
-            </div>
-            <button type="button" class="token-pin-close" id="closeTokenActionPinModal" aria-label="Close PIN modal">&times;</button>
-        </header>
-        <form class="token-pin-body" id="tokenActionPinForm">
-            <div class="token-pin-warning">
-                <span class="token-pin-warning-icon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.75A11.959 11.959 0 0 1 12 2.714Z" />
-                    </svg>
-                </span>
-                <div>
-                    <strong>Administrator Verification Required</strong>
-                    <span>Token generation, rotation, revocation, reveal, and copy actions require your Integration PIN.</span>
-                </div>
-            </div>
-            <div class="token-pin-entry">
-                <span class="token-pin-entry-icon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
-                    </svg>
-                </span>
-                <div class="token-pin-entry-title">Enter 4-Digit PIN</div>
-                <div class="token-pin-entry-copy">Please enter your 4-digit Integration PIN.</div>
-                <div class="token-pin-digits" id="tokenActionPinDigits">
-                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="PIN digit 1" required>
-                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="PIN digit 2" required>
-                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="PIN digit 3" required>
-                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="PIN digit 4" required>
-                </div>
-                <input class="token-pin-hidden" type="password" id="tokenActionPinInput" name="pin" pattern="[0-9]{4}" maxlength="4" tabindex="-1">
-                <div class="token-pin-safe">Your PIN is encrypted and safe.</div>
-            </div>
-            <div class="token-pin-error" id="tokenActionPinError"></div>
-            <div class="token-pin-actions">
-                <button type="button" class="token-pin-cancel" id="cancelTokenActionPin">Cancel</button>
-                <button type="submit" class="token-pin-submit">Verify PIN</button>
-            </div>
-        </form>
-    </section>
-</div>
-
 <script>
     let latestGeneratedToken = '';
     let selectedClientId = document.querySelector('.system-item')?.dataset.clientId || null;
-    let integrationPinRequired = null;
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
     const integrationLogData = @json($clientLogPayload);
-    const tokenActionPinModal = document.getElementById('tokenActionPinModal');
-    const tokenActionPinForm = document.getElementById('tokenActionPinForm');
-    const tokenActionPinInput = document.getElementById('tokenActionPinInput');
-    const tokenActionPinDigits = Array.from(document.querySelectorAll('#tokenActionPinDigits input'));
-    const tokenActionPinError = document.getElementById('tokenActionPinError');
-    const tokenActionPinSubtitle = document.getElementById('tokenActionPinSubtitle');
-    const closeTokenActionPinModal = document.getElementById('closeTokenActionPinModal');
-    const cancelTokenActionPin = document.getElementById('cancelTokenActionPin');
-    let tokenActionPinResolver = null;
-
-    function syncTokenActionPinInput() {
-        if (!tokenActionPinInput) {
-            return;
-        }
-        tokenActionPinInput.value = tokenActionPinDigits.map((input) => input.value).join('');
-    }
-
-    function clearTokenActionPin() {
-        tokenActionPinDigits.forEach((input) => {
-            input.value = '';
-        });
-        if (tokenActionPinInput) {
-            tokenActionPinInput.value = '';
-        }
-        if (tokenActionPinError) {
-            tokenActionPinError.textContent = '';
-            tokenActionPinError.classList.remove('is-visible');
-        }
-    }
-
-    function setTokenActionPinModalOpen(isOpen, actionLabel = 'continue') {
-        if (!tokenActionPinModal) {
-            return;
-        }
-        tokenActionPinModal.classList.toggle('is-open', isOpen);
-        tokenActionPinModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
-        if (isOpen) {
-            clearTokenActionPin();
-            if (tokenActionPinSubtitle) {
-                tokenActionPinSubtitle.textContent = `Enter your 4-digit PIN to ${actionLabel}.`;
-            }
-            window.setTimeout(() => tokenActionPinDigits[0]?.focus(), 80);
-        }
-    }
-
-    function openTokenActionPinModal(actionLabel) {
-        return new Promise((resolve) => {
-            tokenActionPinResolver = resolve;
-            setTokenActionPinModalOpen(true, actionLabel);
-        });
-    }
-
-    function resolveTokenActionPin(pin) {
-        if (tokenActionPinResolver) {
-            tokenActionPinResolver(pin);
-            tokenActionPinResolver = null;
-        }
-        setTokenActionPinModalOpen(false);
-    }
-
-    tokenActionPinDigits.forEach((input, index) => {
-        input.addEventListener('input', () => {
-            input.value = input.value.replace(/\D/g, '').slice(0, 1);
-            syncTokenActionPinInput();
-
-            if (input.value && tokenActionPinDigits[index + 1]) {
-                tokenActionPinDigits[index + 1].focus();
-            }
-        });
-
-        input.addEventListener('keydown', (event) => {
-            if (event.key === 'Backspace' && !input.value && tokenActionPinDigits[index - 1]) {
-                tokenActionPinDigits[index - 1].focus();
-            }
-        });
-
-        input.addEventListener('paste', (event) => {
-            event.preventDefault();
-            const pasted = (event.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, tokenActionPinDigits.length);
-            pasted.split('').forEach((value, pasteIndex) => {
-                if (tokenActionPinDigits[pasteIndex]) {
-                    tokenActionPinDigits[pasteIndex].value = value;
-                }
-            });
-            syncTokenActionPinInput();
-            tokenActionPinDigits[Math.min(pasted.length, tokenActionPinDigits.length) - 1]?.focus();
-        });
-    });
-
-    tokenActionPinForm?.addEventListener('submit', (event) => {
-        event.preventDefault();
-        syncTokenActionPinInput();
-        const pin = (tokenActionPinInput?.value || '').trim();
-
-        if (!/^\d{4}$/.test(pin)) {
-            if (tokenActionPinError) {
-                tokenActionPinError.textContent = 'Enter a valid 4-digit Integration PIN.';
-                tokenActionPinError.classList.add('is-visible');
-            }
-            tokenActionPinDigits.find((input) => !input.value)?.focus();
-            return;
-        }
-
-        resolveTokenActionPin(pin);
-    });
-
-    closeTokenActionPinModal?.addEventListener('click', () => resolveTokenActionPin(null));
-    cancelTokenActionPin?.addEventListener('click', () => resolveTokenActionPin(null));
-    tokenActionPinModal?.addEventListener('click', (event) => {
-        if (event.target === tokenActionPinModal) {
-            resolveTokenActionPin(null);
-        }
-    });
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && tokenActionPinModal?.classList.contains('is-open')) {
-            resolveTokenActionPin(null);
-        }
-    });
-
-    async function isIntegrationPinRequired() {
-        try {
-            const response = await fetch('{{ route('admin.integration-pin.status') }}', {
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                }
-            });
-            const data = await response.json();
-            integrationPinRequired = Boolean(data?.state?.token_action_pin_enabled);
-
-            if (data?.state?.disabled) {
-                showAlert('Integration Tokens access is disabled.', true);
-                return null;
-            }
-
-            return integrationPinRequired;
-        } catch (error) {
-            showAlert('Unable to check Integration PIN status.', true);
-            return null;
-        }
-    }
-
-    async function requestIntegrationPin(actionLabel = 'continue') {
-        const required = await isIntegrationPinRequired();
-
-        if (required === null) {
-            return null;
-        }
-
-        if (!required) {
-            return '';
-        }
-
-        const pin = await openTokenActionPinModal(actionLabel);
-
-        if (pin === null) {
-            return null;
-        }
-
-        if (!/^\d{4}$/.test(pin.trim())) {
-            showAlert('Enter a valid 4-digit Integration PIN.', true);
-            return null;
-        }
-
-        const trimmedPin = pin.trim();
-
-        try {
-            const response = await fetch('{{ route('admin.integration-pin.verify') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({ pin: trimmedPin })
-            });
-            const data = await readJsonResponse(response);
-
-            if (!data.success) {
-                showAlert(data.message || 'Incorrect Integration PIN.', true);
-                return null;
-            }
-        } catch (error) {
-            showAlert('Unable to verify Integration PIN.', true);
-            return null;
-        }
-
-        return trimmedPin;
-    }
 
     async function readJsonResponse(response) {
         try {
@@ -2011,9 +1530,6 @@
             return;
         }
 
-        const pin = await requestIntegrationPin('copy this token');
-        if (pin === null) return;
-
         const copyBtn = document.getElementById(`copyDetailToken_${clientId}`);
         const originalContent = copyBtn.innerHTML;
 
@@ -2034,7 +1550,7 @@
 
     let tokenIsVisible = false;
 
-    function updateGeneratedTokenUi(clientId, systemName, data) {
+    function updateGeneratedTokenUi(clientId, systemName, data, rotated = false) {
         const detail = document.querySelector(`.detail-card[data-client-id="${clientId}"]`);
         const systemItem = document.querySelector(`.system-item[data-client-id="${clientId}"]`);
         const tokenId = data.token_id || 'N/A';
@@ -2058,29 +1574,55 @@
             const createdTimeEl = detail.querySelector('.token-created-time');
             const abilityCount = detail.querySelector('.token-ability-count');
             const abilityList = detail.querySelector('.token-ability-list');
+            const lastUsedValue = detail.querySelector('.token-last-used-value');
+            const lastUsedTime = detail.querySelector('.token-last-used-time');
 
-            statusPill?.classList.remove('muted');
-            if (statusPill) statusPill.textContent = 'Connected';
+            statusPill?.classList.add('muted');
+            if (statusPill) statusPill.textContent = 'Not connected';
             if (tokenValue) tokenValue.textContent = `Token ID ${tokenId}  |  ${'*'.repeat(80)}`;
             copyButton?.removeAttribute('disabled');
             if (createdDateEl) createdDateEl.textContent = createdDate;
             if (createdTimeEl) createdTimeEl.textContent = createdTime;
+            if (lastUsedValue) lastUsedValue.textContent = 'Never';
+            if (lastUsedTime) lastUsedTime.textContent = 'No API call yet';
             if (abilityCount) abilityCount.textContent = `${abilities.length} ${abilities.length === 1 ? 'ability' : 'abilities'}`;
             if (abilityList) abilityList.textContent = abilities.length ? abilities.join(', ') : 'None';
+            if (!detail.querySelector('.rotate-token-btn')) {
+                const actionBar = detail.querySelector('.detail-actions');
+                const logsButton = actionBar?.querySelector('.view-logs-btn');
+                const generateButton = actionBar?.querySelector('.generate-token-btn');
+                const rotateButton = document.createElement('button');
+                rotateButton.type = 'button';
+                rotateButton.className = 'outline-btn rotate-token-btn';
+                rotateButton.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg> Rotate Token';
+                rotateButton.onclick = () => generateToken(clientId, systemName, true);
+
+                const newRevokeButton = document.createElement('button');
+                newRevokeButton.type = 'button';
+                newRevokeButton.className = 'danger-btn';
+                newRevokeButton.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/></svg> Revoke Token';
+                newRevokeButton.onclick = () => revokeToken(clientId, systemName, tokenId);
+
+                generateButton?.remove();
+                if (actionBar) {
+                    actionBar.insertBefore(rotateButton, logsButton || null);
+                    actionBar.insertBefore(newRevokeButton, logsButton || null);
+                }
+            }
             if (revokeButton) {
                 revokeButton.removeAttribute('disabled');
-                revokeButton.setAttribute('onclick', `revokeToken('${clientId}', '${String(systemName).replace(/'/g, "\\'")}', '${tokenId}')`);
+                revokeButton.onclick = () => revokeToken(clientId, systemName, tokenId);
             }
         }
 
         if (systemItem) {
-            systemItem.dataset.status = 'connected';
+            systemItem.dataset.status = 'not-connected';
             const statusDot = systemItem.querySelector('.status-dot');
             const statusText = systemItem.querySelector('.system-status-text');
             const lastUsed = systemItem.querySelector('.item-last-used');
 
-            statusDot?.classList.remove('warn');
-            if (statusText) statusText.textContent = 'Connected';
+            statusDot?.classList.add('warn');
+            if (statusText) statusText.textContent = 'Not connected';
             if (lastUsed) lastUsed.textContent = 'Never used';
         }
 
@@ -2089,7 +1631,7 @@
         const lastGeneratedDate = statCards[3]?.querySelector('.stat-value');
         const lastGeneratedSystem = statCards[3]?.querySelector('.stat-sub');
 
-        if (generatedCount) {
+        if (generatedCount && !rotated) {
             const currentCount = Number.parseInt(generatedCount.textContent.trim(), 10);
             generatedCount.textContent = Number.isNaN(currentCount) ? '1' : String(currentCount + 1);
         }
@@ -2104,9 +1646,6 @@
         const eyeIcon = document.getElementById('tokenEyeIcon');
 
         if (!tokenIsVisible) {
-            const pin = await requestIntegrationPin('reveal this token');
-            if (pin === null) return;
-
             // Show token
             tokenBox.textContent = latestGeneratedToken;
             tokenBox.style.fontFamily = "'Courier New', monospace";
@@ -2136,9 +1675,6 @@
             return;
         }
 
-        const pin = await requestIntegrationPin('copy this token');
-        if (pin === null) return;
-
         navigator.clipboard.writeText(latestGeneratedToken).then(() => {
             showAlert('Token copied to clipboard!');
         }).catch(() => {
@@ -2146,11 +1682,11 @@
         });
     }
 
-    async function generateToken(clientId, systemName) {
-        if (!confirm(`Generate a new API token for ${systemName}?`)) return;
-
-        const pin = await requestIntegrationPin(`generate a token for ${systemName}`);
-        if (pin === null) return;
+    async function generateToken(clientId, systemName, rotate = false) {
+        const confirmation = rotate
+            ? `Rotate the API token for ${systemName}? The current token will stop working.`
+            : `Generate an API token for ${systemName}?`;
+        if (!confirm(confirmation)) return;
 
         fetch('{{ route('admin.integration-tokens.generate') }}', {
             method: 'POST',
@@ -2159,7 +1695,7 @@
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': csrfToken
             },
-            body: JSON.stringify({ client_id: clientId, pin })
+            body: JSON.stringify({ client_id: clientId, rotate })
         })
         .then(readJsonResponse)
         .then(data => {
@@ -2168,7 +1704,7 @@
                 document.getElementById('generatedTokenValue').textContent = latestGeneratedToken;
                 document.getElementById('generatedTokenMeta').innerHTML = `<strong>System:</strong> ${systemName} | <strong>Token ID:</strong> ${data.token_id || 'N/A'} | <strong>Abilities:</strong> ${(data.abilities || []).join(', ')}`;
                 document.getElementById('generatedTokenModal').classList.add('show');
-                updateGeneratedTokenUi(clientId, systemName, data);
+                updateGeneratedTokenUi(clientId, systemName, data, rotate);
                 tokenIsVisible = false;
                 document.getElementById('generatedTokenValue').style.fontFamily = 'inherit';
                 document.getElementById('generatedTokenValue').textContent = '*'.repeat(80);
@@ -2193,9 +1729,6 @@
 
         if (!confirm(`Revoke token for ${systemName}? This cannot be undone.`)) return;
 
-        const pin = await requestIntegrationPin(`revoke the token for ${systemName}`);
-        if (pin === null) return;
-
         fetch('{{ route('admin.integration-tokens.revoke') }}', {
             method: 'POST',
             headers: {
@@ -2203,7 +1736,7 @@
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': csrfToken
             },
-            body: JSON.stringify({ client_id: clientId, token_id: tokenId, pin })
+            body: JSON.stringify({ client_id: clientId, token_id: tokenId })
         })
         .then(readJsonResponse)
         .then(data => {
@@ -2224,9 +1757,6 @@
             showAlert('No newly generated token to copy.', true);
             return;
         }
-
-        const pin = await requestIntegrationPin('copy this token');
-        if (pin === null) return;
 
         const copyBtn = document.getElementById('copyButton');
         const originalContent = copyBtn.innerHTML;
@@ -2301,9 +1831,6 @@
             return;
         }
 
-        const pin = await requestIntegrationPin(`create ${systemName}`);
-        if (pin === null) return;
-
         fetch('{{ route('admin.integration-clients.store') }}', {
             method: 'POST',
             headers: {
@@ -2311,7 +1838,7 @@
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': csrfToken
             },
-            body: JSON.stringify({ system_key: systemKey, system_name: systemName, pin })
+            body: JSON.stringify({ system_key: systemKey, system_name: systemName })
         })
         .then(readJsonResponse)
         .then(data => {

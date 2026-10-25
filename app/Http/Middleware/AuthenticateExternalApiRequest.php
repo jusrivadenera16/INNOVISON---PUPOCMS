@@ -24,6 +24,10 @@ class AuthenticateExternalApiRequest
             'services.external_admin_profile.system_header',
             'X-External-System'
         ));
+        $requestedSystem = strtolower(trim((string) $request->header(
+            $systemHeaderName,
+            $request->query('system', '')
+        )));
 
         $providedCredential = trim((string) $request->bearerToken());
 
@@ -32,9 +36,7 @@ class AuthenticateExternalApiRequest
         }
 
         if ($providedCredential === '') {
-            return new JsonResponse([
-                'message' => 'Authentication credentials were not provided.',
-            ], 401);
+            return $this->rejectAccess($request, 401, 'Authentication credentials were not provided.', 'authentication-missing');
         }
 
         $accessToken = null;
@@ -46,30 +48,25 @@ class AuthenticateExternalApiRequest
             $client = $accessToken->tokenable;
 
             if (!$client instanceof IntegrationClient || !$client->is_active) {
-                return new JsonResponse([
-                    'message' => 'Forbidden.',
-                ], 403);
+                return $this->rejectAccess(
+                    $request,
+                    403,
+                    'Forbidden.',
+                    'integration-client-inactive',
+                    $client instanceof IntegrationClient ? $client : null
+                );
             }
-
-            $requestedSystem = strtolower(trim((string) $request->header(
-                $systemHeaderName,
-                $request->query('system', '')
-            )));
 
             if (
                 $requestedSystem !== ''
                 && $requestedSystem !== strtolower($client->system_key)
             ) {
-                return new JsonResponse([
-                    'message' => 'The token does not belong to the requested system.',
-                ], 403);
+                return $this->rejectAccess($request, 403, 'The token does not belong to the requested system.', 'token-system-mismatch', $client);
             }
 
             foreach ($abilities as $ability) {
                 if ($ability !== '' && $accessToken->cant($ability)) {
-                    return new JsonResponse([
-                        'message' => 'The token does not have the required ability.',
-                    ], 403);
+                    return $this->rejectAccess($request, 403, 'The token does not have the required ability.', 'token-ability-denied', $client);
                 }
             }
 
@@ -116,17 +113,10 @@ class AuthenticateExternalApiRequest
             ->filter(fn ($value, $key) => $key !== '' && $value !== '');
 
         if ($expectedKey === '' && $systemKeys->isEmpty()) {
-            return new JsonResponse([
-                'message' => 'External API authentication is not configured.',
-            ], 403);
+            return $this->rejectAccess($request, 403, 'External API authentication is not configured.', 'authentication-not-configured');
         }
 
         if ($systemKeys->isNotEmpty()) {
-            $requestedSystem = strtolower(trim((string) $request->header(
-                $systemHeaderName,
-                $request->query('system', '')
-            )));
-
             if ($requestedSystem !== '') {
                 $expectedSystemKey = $systemKeys->get($requestedSystem);
 
@@ -134,9 +124,7 @@ class AuthenticateExternalApiRequest
                     $expectedSystemKey === null
                     || !hash_equals($expectedSystemKey, $providedCredential)
                 ) {
-                    return new JsonResponse([
-                        'message' => 'Forbidden.',
-                    ], 403);
+                    return $this->rejectAccess($request, 403, 'Forbidden.', 'credential-rejected');
                 }
 
                 $request->attributes->set(
@@ -169,9 +157,7 @@ class AuthenticateExternalApiRequest
                 ));
 
             if ($matchedSystem === null) {
-                return new JsonResponse([
-                    'message' => 'Forbidden.',
-                ], 403);
+                return $this->rejectAccess($request, 403, 'Forbidden.', 'credential-rejected');
             }
 
             $request->attributes->set(
@@ -197,9 +183,7 @@ class AuthenticateExternalApiRequest
         }
 
         if (!hash_equals($expectedKey, $providedCredential)) {
-            return new JsonResponse([
-                'message' => 'Forbidden.',
-            ], 403);
+            return $this->rejectAccess($request, 403, 'Forbidden.', 'credential-rejected');
         }
 
         $startedAt = microtime(true);
@@ -209,6 +193,48 @@ class AuthenticateExternalApiRequest
             'system_name' => 'Legacy API Key',
             'auth_method' => 'legacy-static-key',
             'started_at' => $startedAt,
+        ]);
+
+        return $response;
+    }
+
+    private function rejectAccess(
+        Request $request,
+        int $status,
+        string $message,
+        string $authMethod,
+        ?IntegrationClient $client = null
+    ): JsonResponse {
+        $systemHeaderName = trim((string) config(
+            'services.external_admin_profile.system_header',
+            'X-External-System'
+        ));
+        $requestedSystem = strtolower(trim((string) $request->header(
+            $systemHeaderName,
+            $request->query('system', '')
+        )));
+
+        if (!$client && $requestedSystem !== '' && Schema::hasTable('integration_clients')) {
+            try {
+                $client = IntegrationClient::query()
+                    ->whereRaw('LOWER(system_key) = ?', [$requestedSystem])
+                    ->first();
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        }
+
+        $systemKey = $client?->system_key ?: ($requestedSystem !== '' ? $requestedSystem : 'unknown');
+        $systemName = $client?->system_name ?: ($requestedSystem !== '' ? $requestedSystem : 'Unknown system');
+        $response = new JsonResponse(['message' => $message], $status);
+
+        $this->logIntegrationRequest($request, $response, [
+            'integration_client_id' => $client?->id,
+            'system_key' => mb_substr((string) $systemKey, 0, 255),
+            'system_name' => mb_substr((string) $systemName, 0, 255),
+            'auth_method' => $authMethod,
+            'error_message' => $message,
+            'started_at' => microtime(true),
         ]);
 
         return $response;
@@ -234,9 +260,9 @@ class AuthenticateExternalApiRequest
                 ? (int) $response->getStatusCode()
                 : null;
 
-            $errorMessage = $statusCode !== null && $statusCode >= 400
+            $errorMessage = $context['error_message'] ?? ($statusCode !== null && $statusCode >= 400
                 ? 'External endpoint returned HTTP ' . $statusCode . '.'
-                : null;
+                : null);
             $endpoint = $request->route()?->uri() ?? '[unmatched]';
 
             DB::table('integration_request_logs')->insert([

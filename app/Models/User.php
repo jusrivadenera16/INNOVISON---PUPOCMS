@@ -315,12 +315,6 @@ class User extends Authenticatable
     'sis_reference_number',
     'status',
     'password',
-    'api_pin',
-    'api_pin_enabled',
-    'api_pin_page_enabled',
-    'api_pin_token_action_enabled',
-    'api_pin_emergency_credentials_enabled',
-    'api_pin_disabled',
     'is_health_profile_completed',
     'notification_read_map',
     'notification_email_enabled',
@@ -335,8 +329,8 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
-        'api_pin',
         'remember_token',
+        'profile_photo',
     ];
 
     /**
@@ -344,12 +338,8 @@ class User extends Authenticatable
      */
     protected $casts = [
         'is_admin' => 'boolean',
-        'api_pin_enabled' => 'boolean',
-        'api_pin_page_enabled' => 'boolean',
-        'api_pin_token_action_enabled' => 'boolean',
-        'api_pin_emergency_credentials_enabled' => 'boolean',
-        'api_pin_disabled' => 'boolean',
         'ladderized_student_number_updated_at' => 'datetime',
+        'profile_photo_updated_at' => 'datetime',
         'notification_read_map' => 'array',
         'notification_email_enabled' => 'boolean',
         'notification_system_enabled' => 'boolean',

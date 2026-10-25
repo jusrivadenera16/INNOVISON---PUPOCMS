@@ -3148,7 +3148,7 @@
     $canRevokeClearance = $profileIsLocalStudent && !$isPulloutPending && !$isPulledOut
         && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && (optional(auth()->user())->canAccessPermission('health_records.revoke_clearance') ?? false);
-    $canUpdateMedicalAssessment = $profileIsLocalStudent && !$isPulloutPending && !$isPulledOut
+    $canUpdateMedicalAssessment = ($canHaveMedicalAssessment ?? false) && !$isPulloutPending && !$isPulledOut
         && (optional(auth()->user())->canAccessPermission('health_records.update_assessment') ?? false);
     $canRequestPullout = !$profileIsDependent && in_array($profileStatusRaw, ['Issued', 'Fully Cleared'], true)
         && !$isPulloutPending
@@ -3314,7 +3314,7 @@
                         </button>
                     @endif
                     @if($canUpdateMedicalAssessment)
-                        <button type="button" id="openMedicalAssessmentModal">
+                        <button type="button" data-medical-assessment-trigger>
                             Update Medical Assessment
                             <span aria-hidden="true">+</span>
                         </button>
@@ -4216,147 +4216,11 @@
     </div>
 @endif
 
-@if($canUpdateMedicalAssessment)
-    <div class="correction-modal" id="medicalAssessmentModal" aria-hidden="true">
-        <div class="correction-card medical-assessment-card" role="dialog" aria-modal="true" aria-labelledby="medicalAssessmentTitle">
-            <div class="correction-head">
-                <div class="correction-head-title">
-                    <span class="correction-head-icon"><x-outline-icon name="clipboard-document-list" /></span>
-                    <div>
-                        <h3 id="medicalAssessmentTitle">Update Medical Assessment</h3>
-                        <p>Add a dated assessment entry for {{ $profileName }}. Existing entries and remarks will remain visible.</p>
-                    </div>
-                </div>
-                <button type="button" class="correction-close" id="closeMedicalAssessmentModal" aria-label="Close medical assessment">
-                    <x-outline-icon name="x-mark" />
-                </button>
-            </div>
-            <div class="correction-body">
-                @php
-                    $existingAssessmentRemarks = trim((string) ($profile->med_assessment_remarks ?: $profile->assessment_remarks));
-                    $existingConditionRemarks = trim((string) $profile->medical_condition_remarks);
-                    $existingMedicalConditions = collect(is_array($profile->medical_history) ? $profile->medical_history : [])
-                        ->map(fn ($condition) => trim((string) $condition))
-                        ->filter();
-                    $otherIllness = trim((string) $profile->other_illness);
-                    if ($otherIllness !== '') {
-                        $existingMedicalConditions->push($otherIllness);
-                    }
-                    if ($existingConditionRemarks !== '') {
-                        $existingMedicalConditions->push($existingConditionRemarks);
-                    }
-                    $existingMedicalConditions = $existingMedicalConditions->unique()->values();
-                    if ($existingMedicalConditions->isEmpty() && $profile->has_illness === 'Yes') {
-                        $existingMedicalConditions->push('Illness reported; details not recorded.');
-                    }
-                    $existingMedicalFindings = collect([
-                        'Medical certificate' => collect([
-                            $profile->med_cert_findings,
-                            $profile->med_cert_findings_details,
-                        ])->map(fn ($value) => trim((string) $value))->filter()->implode(' - '),
-                        'Chest X-ray' => collect([
-                            $profile->xray_findings,
-                            $profile->xray_findings_details,
-                        ])->map(fn ($value) => trim((string) $value))->filter()->implode(' - '),
-                    ])->filter(fn ($value) => $value !== '');
-                @endphp
-                <section class="medical-assessment-current" aria-label="Current health record snapshot">
-                    <h4>Current Health Record</h4>
-                    <div class="medical-assessment-snapshot">
-                        <div class="medical-assessment-snapshot-group is-wide">
-                            <h5>Existing Remarks</h5>
-                            @if($existingAssessmentRemarks !== '')
-                                <p><strong>Assessment</strong><br>{{ $existingAssessmentRemarks }}</p>
-                            @endif
-                            @if($existingConditionRemarks !== '')
-                                <p><strong>Medical condition</strong><br>{{ $existingConditionRemarks }}</p>
-                            @endif
-                            @if($existingAssessmentRemarks === '' && $existingConditionRemarks === '')
-                                <p>No remarks recorded.</p>
-                            @endif
-                        </div>
-                        <div class="medical-assessment-snapshot-group">
-                            <h5>Medical Conditions / Illness</h5>
-                            @forelse($existingMedicalConditions as $condition)
-                                <p>{{ $condition }}</p>
-                            @empty
-                                <p>{{ $profile->has_illness === 'No' ? 'None declared.' : 'No condition details recorded.' }}</p>
-                            @endforelse
-                        </div>
-                        <div class="medical-assessment-snapshot-group">
-                            <h5>Existing Findings</h5>
-                            @forelse($existingMedicalFindings as $findingLabel => $findingValue)
-                                <p><strong>{{ $findingLabel }}</strong><br>{{ $findingValue }}</p>
-                            @empty
-                                <p>No findings recorded.</p>
-                            @endforelse
-                        </div>
-                    </div>
-                </section>
-
-                <section class="medical-assessment-history-section" aria-label="Medical assessment history">
-                    <div class="medical-assessment-history-head">
-                        <h4>Assessment History</h4>
-                        <button type="button" class="medical-assessment-add-button" id="openMedicalAssessmentForm" aria-controls="medicalAssessmentForm" aria-expanded="false">
-                            <x-outline-icon name="plus" />
-                            <span>Add Update</span>
-                        </button>
-                    </div>
-                    <div class="medical-assessment-history">
-                    @forelse($medicalAssessmentHistory as $assessmentEntry)
-                        <article class="medical-assessment-entry">
-                            <div class="medical-assessment-entry-head">
-                                <strong>{{ $assessmentEntry->condition_or_illness ?: 'Assessment update' }}</strong>
-                                <time>{{ optional($assessmentEntry->created_at)->format('M d, Y h:i A') }}</time>
-                            </div>
-                            @if(filled($assessmentEntry->findings))
-                                <p><span>Findings</span>{{ $assessmentEntry->findings }}</p>
-                            @endif
-                            @if(filled($assessmentEntry->remarks))
-                                <p><span>Remarks</span>{{ $assessmentEntry->remarks }}</p>
-                            @endif
-                            @if(filled($assessmentEntry->reason))
-                                <p><span>Reason for update</span>{{ $assessmentEntry->reason }}</p>
-                            @endif
-                            <small>Recorded by {{ $assessmentEntry->recordedBy?->name ?? 'Clinic staff' }}</small>
-                        </article>
-                    @empty
-                        <div class="correction-note">No medical assessment updates have been added.</div>
-                    @endforelse
-                    </div>
-                </section>
-                <form method="POST" action="{{ route('admin.health_profile.medical_assessments.store', $profile->id) }}" id="medicalAssessmentForm" class="medical-assessment-form" hidden>
-                    @csrf
-                    <div class="correction-note">Each field is optional. Add at least one condition, finding, or remark to save an update. Reason is optional.</div>
-                    <div class="correction-field">
-                        <label for="conditionOrIllness">Medical condition / illness</label>
-                        <textarea id="conditionOrIllness" name="condition_or_illness" maxlength="1000" placeholder="Enter the assessed medical condition or illness.">{{ old('condition_or_illness') }}</textarea>
-                        @error('condition_or_illness')<small class="field-error">{{ $message }}</small>@enderror
-                    </div>
-                    <div class="correction-field">
-                        <label for="medicalAssessmentFindings">Findings</label>
-                        <textarea id="medicalAssessmentFindings" name="findings" maxlength="3000" placeholder="Add the findings from this assessment.">{{ old('findings') }}</textarea>
-                        @error('findings')<small class="field-error">{{ $message }}</small>@enderror
-                    </div>
-                    <div class="correction-field">
-                        <label for="medicalAssessmentRemarks">Remarks / clinical notes</label>
-                        <textarea id="medicalAssessmentRemarks" name="remarks" maxlength="2000" placeholder="Add relevant assessment remarks.">{{ old('remarks') }}</textarea>
-                        @error('remarks')<small class="field-error">{{ $message }}</small>@enderror
-                    </div>
-                    <div class="correction-field">
-                        <label for="medicalAssessmentReason">Reason for update</label>
-                        <textarea id="medicalAssessmentReason" name="reason" maxlength="1000" placeholder="Explain why this assessment is being added.">{{ old('reason') }}</textarea>
-                        @error('reason')<small class="field-error">{{ $message }}</small>@enderror
-                    </div>
-                    <div class="correction-actions">
-                        <button type="button" class="correction-cancel" id="cancelMedicalAssessmentForm">Cancel</button>
-                        <button type="submit" class="correction-submit">Save Update</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-@endif
+@include('admin.partials.medical-assessment-modal', [
+    'medicalAssessmentUpdateUrl' => route('admin.health_profile.medical_information.update', $profile->id),
+    'medicalAssessmentProfileTypeLabel' => $healthFormAudience === 'applicant' ? 'Applicant' : 'Student',
+    'medicalAssessmentEditableValues' => $medicalAssessmentEditableValues,
+])
 
 @if($canRequestFileCorrection)
     <div class="correction-modal" id="correctionModal" aria-hidden="true">
@@ -4553,13 +4417,6 @@
     const openReturnToPendingModal = document.getElementById('openReturnToPendingModal');
     const closeReturnToPendingModal = document.getElementById('closeReturnToPendingModal');
     const cancelReturnToPendingModal = document.getElementById('cancelReturnToPendingModal');
-    const medicalAssessmentModal = document.getElementById('medicalAssessmentModal');
-    const openMedicalAssessmentModal = document.getElementById('openMedicalAssessmentModal');
-    const closeMedicalAssessmentModal = document.getElementById('closeMedicalAssessmentModal');
-    const medicalAssessmentForm = document.getElementById('medicalAssessmentForm');
-    const openMedicalAssessmentForm = document.getElementById('openMedicalAssessmentForm');
-    const cancelMedicalAssessmentForm = document.getElementById('cancelMedicalAssessmentForm');
-    const shouldOpenMedicalAssessmentModal = {{ $errors->hasAny(['condition_or_illness', 'findings', 'remarks', 'reason']) ? 'true' : 'false' }};
     const shouldOpenRevokeClearanceModal = @json($errors->has('revoke_reason'));
 
     function setCorrectionDropdownOpen(wrapper, open) {
@@ -4792,54 +4649,8 @@
         setReturnToPendingModal(true);
     });
 
-    function setMedicalAssessmentModal(open) {
-        if (!medicalAssessmentModal) return;
-        medicalAssessmentModal.classList.toggle('is-open', open);
-        medicalAssessmentModal.setAttribute('aria-hidden', open ? 'false' : 'true');
-    }
-
-    function setMedicalAssessmentFormOpen(open) {
-        if (!medicalAssessmentForm) return;
-        medicalAssessmentForm.hidden = !open;
-        openMedicalAssessmentForm?.setAttribute('aria-expanded', open ? 'true' : 'false');
-        if (open) {
-            requestAnimationFrame(function () {
-                medicalAssessmentForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                document.getElementById('conditionOrIllness')?.focus({ preventScroll: true });
-            });
-        }
-    }
-
-    openMedicalAssessmentModal?.addEventListener('click', function () {
-        setProfileActionsMenu(false);
-        setMedicalAssessmentModal(true);
-    });
-
-    closeMedicalAssessmentModal?.addEventListener('click', function () {
-        setMedicalAssessmentModal(false);
-    });
-
-    openMedicalAssessmentForm?.addEventListener('click', function () {
-        setMedicalAssessmentFormOpen(true);
-    });
-
-    cancelMedicalAssessmentForm?.addEventListener('click', function () {
-        setMedicalAssessmentFormOpen(false);
-    });
-
-    medicalAssessmentModal?.addEventListener('click', function (event) {
-        if (event.target === medicalAssessmentModal) {
-            setMedicalAssessmentModal(false);
-        }
-    });
-
     if (shouldOpenPulloutModal) {
         setPulloutRequestModal(true);
-    }
-
-    if (shouldOpenMedicalAssessmentModal) {
-        setMedicalAssessmentModal(true);
-        setMedicalAssessmentFormOpen(true);
     }
 
     if (shouldOpenRevokeClearanceModal) {

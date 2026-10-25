@@ -2374,10 +2374,20 @@
             @endif
 
             @php($bookingRestricted = isset($bookingAccess) && empty($bookingAccess['allowed']))
-            <form id="bookingForm" method="POST" action="/student/appointments/store" autocomplete="off">
+            @php($bookingDateValue = $bookingFormLocked ? ($bookingFormAppointment?->date ? \Carbon\Carbon::parse($bookingFormAppointment->date)->toDateString() : '') : old('date', ''))
+            @php($bookingTimeValue = $bookingFormLocked ? ($bookingFormAppointment?->time ? \Carbon\Carbon::parse($bookingFormAppointment->time)->format('H:i') : '') : old('time', ''))
+            @php($bookingServiceValue = $bookingFormLocked ? ($bookingFormAppointment?->service ?? '') : old('service', ''))
+            @php($bookingRemarksValue = $bookingFormLocked ? ($bookingFormAppointment?->remarks ?? '') : old('remarks', ''))
+            <form id="bookingForm" method="POST" action="/student/appointments/store" autocomplete="off" novalidate>
                 @csrf 
                 <div class="booking-form-restricted-shell {{ $bookingRestricted ? 'is-restricted' : '' }}">
-                <fieldset class="booking-disabled-fields" {{ !empty($clinicClosure) || $bookingRestricted ? 'disabled' : '' }}>
+                @if($bookingFormLocked)
+                    <div class="booking-closure-notice" role="status">
+                        <strong>Appointment details locked</strong>
+                        <p>{{ $bookingFormAppointment->status === 'Pending' ? 'Your submitted request is pending clinic review.' : 'Your submitted appointment has been approved.' }} The saved details cannot be edited here.</p>
+                    </div>
+                @endif
+                <fieldset class="booking-disabled-fields" {{ !empty($clinicClosure) || $bookingRestricted || $bookingFormLocked ? 'disabled' : '' }}>
 
                 <div class="booking-subsection-title">
                     <x-outline-icon name="identification" />
@@ -2422,7 +2432,7 @@
                         <label class="input-label">Preferred Date</label>
                         <div class="input-wrapper date-picker-wrapper has-leading-icon">
                             <span class="booking-field-icon" aria-hidden="true"><x-outline-icon name="calendar-days" /></span>
-                            <input id="preferredDate" type="hidden" name="date" value="{{ old('date') }}" required>
+                            <input id="preferredDate" type="hidden" name="date" value="{{ $bookingDateValue }}" required>
                             <input id="preferredDateDisplay" type="text" class="form-control date-display-input" placeholder="Select a date" readonly>
                             <button type="button" class="date-picker-toggle" id="preferredDateToggle" aria-label="Open date picker"><x-outline-icon name="calendar-days" /></button>
                             <div class="date-picker-panel" id="datePickerPanel" hidden>
@@ -2451,7 +2461,7 @@
                         <div class="input-wrapper has-leading-icon">
                             <span class="booking-field-icon" aria-hidden="true"><x-outline-icon name="clock" /></span>
                             <input id="preferredTimeDisplay" type="text" class="form-control time-display-input" readonly placeholder="Select a date first">
-                            <input id="preferredTimeInput" type="hidden" name="time" value="{{ old('time') }}" required>
+                            <input id="preferredTimeInput" type="hidden" name="time" value="{{ $bookingTimeValue }}" required>
                         </div>
                         <div id="timeSlots" class="time-slots-container"></div>
                     <small class="time-slot-hint" id="timeSlotsHint">
@@ -2472,16 +2482,16 @@
                     <div class="input-wrapper service-select-wrap has-leading-icon">
                         <span class="booking-field-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
                         <select name="service" class="form-control service-select" id="serviceTypeSelect" required>
-                            <option value="" disabled selected>Select a Service...</option>
-                            <option value="General Consultation">General Consultation</option>
+                            <option value="" disabled @selected($bookingServiceValue === '')>Select a Service...</option>
+                            <option value="General Consultation" @selected($bookingServiceValue === 'General Consultation')>General Consultation</option>
                             @if(!$hasBloodPressureMonitoringService)
-                                <option value="BP Monitoring">BP Monitoring</option>
+                                <option value="BP Monitoring" @selected($bookingServiceValue === 'BP Monitoring')>BP Monitoring</option>
                             @endif
                             @foreach(($otherServiceOptions ?? []) as $serviceOption)
-                                <option value="{{ $serviceOption->serviceLabel() }}">{{ $serviceOption->serviceLabel() }}</option>
+                                <option value="{{ $serviceOption->serviceLabel() }}" @selected($bookingServiceValue === $serviceOption->serviceLabel())>{{ $serviceOption->serviceLabel() }}</option>
                             @endforeach
                             @foreach(($onlineConsultationOptions ?? []) as $providerOption)
-                                <option value="{{ $providerOption->serviceLabel() }}">{{ $providerOption->serviceLabel() }}</option>
+                                <option value="{{ $providerOption->serviceLabel() }}" @selected($bookingServiceValue === $providerOption->serviceLabel())>{{ $providerOption->serviceLabel() }}</option>
                             @endforeach
                         </select>
                         <button type="button" class="service-select-display" id="serviceTypeDisplay" aria-haspopup="listbox" aria-expanded="false">
@@ -2508,7 +2518,7 @@
                 </div>
 
                 <div class="input-group">
-                    <textarea name="remarks" class="form-control" placeholder="Briefly describe what you are feeling..." rows="3">{{ old('remarks') }}</textarea>
+                    <textarea name="remarks" class="form-control" placeholder="Briefly describe what you are feeling..." rows="3" required>{{ $bookingRemarksValue }}</textarea>
                     <small class="booking-field-help">Please provide as much detail as possible to help our nurse prepare for your consultation.</small>
                 </div>
 
@@ -2661,8 +2671,8 @@
                     <span class="note-header-icon"><x-outline-icon name="bell" /></span>
                     <span>Important Reminder</span>
                 </div>
-                <p>Please arrive 15 minutes before your scheduled appointment time.</p>
-                <p>Bring any relevant medical documents or previous consultation records.</p>
+                <p>Please arrive 5 to 15 minutes before your scheduled appointment time.</p>
+                <p>Bring any relevant medical documents or previous consultation records if applicable.</p>
             </div>
 
             <div class="note-widget legacy-note-widget" hidden>
@@ -2812,11 +2822,13 @@
         const serviceTypeSelect = document.getElementById('serviceTypeSelect');
         const serviceTypeDisplay = document.getElementById('serviceTypeDisplay');
         const serviceTypeMenu = document.getElementById('serviceTypeMenu');
+        const remarksField = bookingForm ? bookingForm.querySelector('[name="remarks"]') : null;
         const serviceTypeOptions = Array.from(document.querySelectorAll('.service-select-option'));
         const serviceTypeWrap = serviceTypeDisplay ? serviceTypeDisplay.closest('.service-select-wrap') : null;
         const headerAvailableSlots = document.getElementById('headerAvailableSlots');
         const headerAvailableSlotsNote = document.getElementById('headerAvailableSlotsNote');
         const bookingClosed = @json(!empty($clinicClosure));
+        const bookingFormLocked = @json($bookingFormLocked);
         const availabilityUrl = @json(url('/student/appointments/availability'));
 
         if (!dateInput || !dateDisplayInput || !dateToggle || !datePickerPanel || !calendarMonthLabel || !calendarDays || !calendarPrev || !calendarNext || !timeInput || !timeDisplay || !timeSlots || !slotsHint) {
@@ -2948,6 +2960,56 @@
 
         function closeDatePanel() {
             datePickerPanel.hidden = true;
+        }
+
+        function showBookingValidationToast() {
+            const stack = document.querySelector('[data-student-toast-stack]');
+            if (!stack) return;
+            stack.querySelectorAll('[data-booking-validation-toast]').forEach(function (toast) {
+                toast.remove();
+            });
+
+            const toast = document.createElement('div');
+            toast.className = 'student-toast is-error';
+            toast.setAttribute('role', 'alert');
+            toast.dataset.bookingValidationToast = '1';
+
+            const icon = document.createElement('span');
+            icon.className = 'student-toast-icon';
+            icon.setAttribute('aria-hidden', 'true');
+            icon.textContent = '!';
+
+            const content = document.createElement('span');
+            const title = document.createElement('strong');
+            title.className = 'student-toast-title';
+            title.textContent = 'Appointment details required';
+            const copy = document.createElement('span');
+            copy.className = 'student-toast-message';
+            copy.textContent = 'Please complete the appointment details.';
+            content.append(title, copy);
+
+            const close = document.createElement('button');
+            close.type = 'button';
+            close.className = 'student-toast-close';
+            close.setAttribute('aria-label', 'Dismiss error message');
+            close.textContent = 'x';
+
+            const timer = document.createElement('span');
+            timer.className = 'student-toast-timer';
+            timer.setAttribute('aria-hidden', 'true');
+
+            let dismissed = false;
+            const dismiss = function () {
+                if (dismissed) return;
+                dismissed = true;
+                toast.classList.add('is-hiding');
+                window.setTimeout(function () { toast.remove(); }, 240);
+            };
+
+            close.addEventListener('click', dismiss);
+            toast.append(icon, content, close, timer);
+            stack.appendChild(toast);
+            window.setTimeout(dismiss, 5000);
         }
 
         if (serviceTypeSelect && serviceTypeDisplay && serviceTypeWrap) {
@@ -3226,7 +3288,13 @@
             timeInput.value = initialTime;
         }
 
-        if (initialDate && parseDateValue(initialDate) && isSelectableDateObj(parseDateValue(initialDate))) {
+        if (bookingFormLocked && initialDate) {
+            dateDisplayInput.value = formatDateDisplay(initialDate);
+            timeDisplay.value = initialTime ? formatTimeLabel(initialTime) : '';
+            timeDisplay.placeholder = '';
+            setTimeSlotsOpenState(false);
+            slotsHint.textContent = 'Submitted appointment details are locked.';
+        } else if (initialDate && parseDateValue(initialDate) && isSelectableDateObj(parseDateValue(initialDate))) {
             const parsedInitial = parseDateValue(initialDate);
             viewMonth = new Date(parsedInitial.getFullYear(), parsedInitial.getMonth(), 1);
             dateDisplayInput.value = formatDateDisplay(initialDate);
@@ -3241,21 +3309,40 @@
 
         if (bookingForm) {
             bookingForm.addEventListener('submit', function (event) {
-                let isValid = true;
+                const missingFields = [];
 
                 if (!dateInput.value) {
-                    isValid = false;
-                    openDatePanel();
+                    missingFields.push('preferred date');
                 }
 
                 if (!timeInput.value) {
-                    isValid = false;
+                    missingFields.push('available time');
                     slotsHint.textContent = 'Please select one available time slot.';
                 }
 
-                if (!isValid) {
+                if (!serviceTypeSelect?.value) {
+                    missingFields.push('service type');
+                }
+
+                if (!remarksField?.value.trim()) {
+                    missingFields.push('reason or symptoms');
+                }
+
+                if (missingFields.length) {
                     event.preventDefault();
                     event.stopPropagation();
+                    showBookingValidationToast();
+
+                    if (!dateInput.value) {
+                        openDatePanel();
+                    } else if (!timeInput.value) {
+                        timeDisplay.focus();
+                    } else if (!serviceTypeSelect?.value) {
+                        serviceTypeDisplay?.focus();
+                        setServiceTypeOpenState(true);
+                    } else {
+                        remarksField?.focus();
+                    }
                     return;
                 }
 

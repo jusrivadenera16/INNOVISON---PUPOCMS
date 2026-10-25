@@ -126,6 +126,29 @@ class Appointment extends Model
         return $this->hasOne(AppointmentFeedback::class);
     }
 
+    public function isReminderDue(int $reminderHours, ?Carbon $at = null): bool
+    {
+        if ($reminderHours <= 0 || $this->status !== 'Approved' || !$this->date || !$this->time) {
+            return false;
+        }
+
+        try {
+            $appointmentAt = Carbon::parse($this->date . ' ' . $this->time);
+        } catch (\Throwable) {
+            return false;
+        }
+
+        $now = $at ? $at->copy() : Carbon::now();
+        $reminderAt = $appointmentAt->copy()->subHours($reminderHours);
+        if (!$appointmentAt->gt($now) || $appointmentAt->gt($now->copy()->addHours($reminderHours))) {
+            return false;
+        }
+
+        $approvedAt = $this->updated_at ?: $this->created_at;
+
+        return !$approvedAt || !$approvedAt->gt($reminderAt);
+    }
+
     /**
      * Scope: Only walk-in appointments
      */

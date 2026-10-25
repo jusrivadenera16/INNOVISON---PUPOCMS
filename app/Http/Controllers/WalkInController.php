@@ -1409,7 +1409,10 @@ class WalkInController extends Controller
         }
 
         $user = $user ?: $profile->user;
-        $medicalHistory = is_array($profile->medical_history) ? $profile->medical_history : [];
+        $medicalHistory = $this->normalizeHealthProfileMedicalHistory(
+            is_array($profile->medical_history) ? $profile->medical_history : [],
+            (string) ($profile->other_illness ?? '')
+        );
         $medicineAllergies = is_array($profile->medicine_allergies) ? $profile->medicine_allergies : [];
         $vaccineHistory = is_array($profile->vaccine_history) ? $profile->vaccine_history : [];
 
@@ -1438,8 +1441,8 @@ class WalkInController extends Controller
             ],
             'medical_history' => [
                 'has_illness' => (string) ($profile->has_illness ?? ''),
-                'medical_history' => implode(', ', array_filter(array_map('strval', $medicalHistory))),
-                'other_illness' => (string) ($profile->other_illness ?? ''),
+                'medical_history' => implode(', ', $medicalHistory['conditions']),
+                'other_illness' => $medicalHistory['other_illness'],
                 'has_disability' => (string) ($profile->has_disability ?? ''),
                 'disability_type' => (string) ($profile->disability_type ?? ''),
                 'food_allergies' => (string) ($profile->food_allergies ?? ''),
@@ -1462,6 +1465,40 @@ class WalkInController extends Controller
                 'xray_findings_details' => (string) ($profile->xray_findings_details ?? ''),
                 'xray_date' => $this->formatHealthProfileDateValue($profile->xray_date),
             ],
+        ];
+    }
+
+    private function normalizeHealthProfileMedicalHistory(array $conditions, ?string $otherIllness): array
+    {
+        $legacyOtherSelected = false;
+        $normalizedConditions = [];
+
+        foreach ($conditions as $condition) {
+            $condition = trim((string) $condition);
+            $normalized = strtolower($condition);
+
+            if ($normalized === 'others') {
+                $legacyOtherSelected = true;
+                continue;
+            }
+
+            if (in_array($normalized, ['tuberculosis', 'primary complex'], true)) {
+                $condition = 'Tuberculosis / Primary Complex';
+            }
+
+            if ($condition !== '') {
+                $normalizedConditions[] = $condition;
+            }
+        }
+
+        $otherIllness = trim((string) $otherIllness);
+        if ($otherIllness === '' && $legacyOtherSelected) {
+            $otherIllness = 'Others';
+        }
+
+        return [
+            'conditions' => array_values(array_unique($normalizedConditions)),
+            'other_illness' => $otherIllness,
         ];
     }
 
@@ -1975,6 +2012,10 @@ class WalkInController extends Controller
     {
         return HealthProfile::with('user')
             ->where('clearance_status', 'For Final Review')
+            ->whereDoesntHave('user', function ($query) {
+                $query->whereRaw("LOWER(TRIM(COALESCE(user_type, ''))) IN ('student', 'ojt', 'student / ojt')")
+                    ->whereRaw("LOWER(TRIM(COALESCE(student_type, ''))) = 'regular'");
+            })
             ->latest('updated_at')
             ->take(30);
     }
@@ -2218,6 +2259,7 @@ class WalkInController extends Controller
             'covid_positive_date' => ['nullable', 'date'],
             'reason_for_visit' => ['nullable', 'string', 'max:255'],
             'certificate_type' => ['nullable', 'string', 'max:160'],
+            'certificate_details' => ['nullable', 'string', 'max:255'],
             'referral_type' => ['nullable', 'in:none,hospital_without_nurse,hospital_with_nurse,general,others'],
             'referral_details' => ['nullable', 'string', 'max:500'],
             'item_id' => ['nullable', 'array', 'max:5'],
@@ -3188,6 +3230,23 @@ PROMPT;
             ))
             ->pluck('code')
             ->all();
+        $excusedLetterCodes = array_merge(
+            MarClearanceSubcategory::query()
+                ->whereRaw('LOWER(TRIM(name)) = ?', ['excused letter'])
+                ->whereIn('code', $clearanceSubcategoryCodes)
+                ->pluck('code')
+                ->all(),
+            MarClearanceType::query()
+                ->whereRaw('LOWER(TRIM(name)) = ?', ['excused letter'])
+                ->whereIn('code', $clearanceTypeCodes)
+                ->pluck('code')
+                ->all()
+        );
+        $requiresCertificateDetails = in_array(
+            trim((string) $request->input('certificate_type')),
+            $excusedLetterCodes,
+            true
+        );
         $referralCodes = ClinicServiceOption::query()
             ->forGroup(ClinicServiceOption::GROUP_REFERRAL)
             ->active()
@@ -3214,6 +3273,11 @@ PROMPT;
                 $clearanceSubcategoryCodes,
                 $clearanceTypeCodes
             ))],
+            'certificate_details' => [
+                $requiresCertificateDetails ? 'required' : 'nullable',
+                'string',
+                'max:255',
+            ],
             'referral_type' => ['nullable', Rule::in(array_merge(['none'], $referralCodes, ['hospital_without_nurse', 'hospital_with_nurse', 'general', 'others']))],
             'referral_details' => 'required_if:referral_type,others|nullable|string|max:500',
             'item_id' => 'nullable|array|max:5',
@@ -3477,6 +3541,7 @@ PROMPT;
                 'covid_positive_date'  => $request->input('covid_positive_date'),
                 'reason_for_visit'     => $request->input('reason_for_visit'),
                 'certificate_type'     => $request->input('certificate_type') ?: 'none',
+                'certificate_details'  => $requiresCertificateDetails ? trim((string) $request->input('certificate_details')) : null,
                 'referral_type'        => $request->input('referral_type') ?: 'none',
                 'referral_details'     => $request->input('referral_type') === 'others' ? $request->input('referral_details') : null,
                 // Keep the first line in the legacy columns for existing reports and exports.
@@ -3609,6 +3674,13 @@ PROMPT;
             $validated['other_illness'] = null;
         }
 
+        $medicalHistory = $this->normalizeHealthProfileMedicalHistory(
+            $csvToArray($validated['medical_history'] ?? ''),
+            ($validated['has_illness'] ?? null) === 'Yes'
+                ? (string) ($validated['other_illness'] ?? '')
+                : null
+        );
+
         if (($validated['has_disability'] ?? null) !== 'Yes') {
             $validated['disability_type'] = null;
         }
@@ -3634,8 +3706,8 @@ PROMPT;
             'home_address' => $validated['home_address'] ?? null,
             'zipcode' => $validated['zipcode'] ?? null,
             'has_illness' => $validated['has_illness'] ?? null,
-            'medical_history' => $csvToArray($validated['medical_history'] ?? ''),
-            'other_illness' => $validated['other_illness'] ?? null,
+            'medical_history' => $medicalHistory['conditions'],
+            'other_illness' => $medicalHistory['other_illness'] !== '' ? $medicalHistory['other_illness'] : null,
             'has_disability' => $validated['has_disability'] ?? null,
             'disability_type' => $validated['disability_type'] ?? null,
             'food_allergies' => $validated['food_allergies'] ?? null,

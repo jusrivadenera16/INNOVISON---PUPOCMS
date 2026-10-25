@@ -2025,6 +2025,7 @@
                     $resolveIssuancePatientType = function ($issuance) use ($marPatientTypeNormalizer) {
                         return $marPatientTypeNormalizer->normalize($issuance->user_type ?? '');
                     };
+                    $marExcusedLetterBreakdown = $marExcusedLetterBreakdown ?? [];
 
                     $countIssuancesBySubcategory = function ($issuances, int $subcategoryId, string $patientType) use ($resolveIssuancePatientType) {
                         return $issuances->filter(function ($issuance) use ($subcategoryId, $resolveIssuancePatientType, $patientType) {
@@ -2040,20 +2041,22 @@
                         })->count();
                     };
 
-                    $clearanceGroups = collect($marClearanceTypes ?? [])->values()->map(function ($clearanceType, $index) use ($marClearanceIssuances, $countIssuancesBySubcategory, $countIssuancesByParent, $alphaLabel) {
+                    $clearanceGroups = collect($marClearanceTypes ?? [])->values()->map(function ($clearanceType, $index) use ($marClearanceIssuances, $marExcusedLetterBreakdown, $countIssuancesBySubcategory, $countIssuancesByParent, $alphaLabel) {
                         $parentRow = [
                             'student' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'student'),
                             'faculty' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'faculty'),
                             'admin' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'admin'),
                             'dependent' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'dependent'),
+                            'details' => $marExcusedLetterBreakdown['type:' . $clearanceType->id] ?? [],
                         ];
-                        $buildRow = function (string $name, int $subcategoryId) use ($marClearanceIssuances, $countIssuancesBySubcategory) {
+                        $buildRow = function (string $name, int $subcategoryId) use ($marClearanceIssuances, $marExcusedLetterBreakdown, $countIssuancesBySubcategory) {
                             return [
                                 'name' => $name,
                                 'student' => $countIssuancesBySubcategory($marClearanceIssuances, $subcategoryId, 'student'),
                                 'faculty' => $countIssuancesBySubcategory($marClearanceIssuances, $subcategoryId, 'faculty'),
                                 'admin' => $countIssuancesBySubcategory($marClearanceIssuances, $subcategoryId, 'admin'),
                                 'dependent' => $countIssuancesBySubcategory($marClearanceIssuances, $subcategoryId, 'dependent'),
+                                'details' => $marExcusedLetterBreakdown['subcategory:' . $subcategoryId] ?? [],
                             ];
                         };
 
@@ -2137,6 +2140,16 @@
                         <td>{{ $parentRow['dependent'] ?: '' }}</td>
                         <td></td>
                     </tr>
+                    @foreach($parentRow['details'] as $detailRow)
+                        <tr>
+                            <td class="text-left" style="padding-left: 45px;">- {{ $detailRow['name'] }}</td>
+                            <td>{{ $displayCount($detailRow['student']) }}</td>
+                            <td>{{ $displayCount($detailRow['faculty']) }}</td>
+                            <td>{{ $displayCount($detailRow['admin']) }}</td>
+                            <td>{{ $displayCount($detailRow['dependent']) }}</td>
+                            <td></td>
+                        </tr>
+                    @endforeach
                     @foreach($clearanceGroup['rows'] as $subcategoryIndex => $subcategoryRow)
                         <tr>
                             <td class="text-left mar-numbered-service" style="padding-left: 30px;">{{ $subcategoryIndex + 1 }}. {{ $subcategoryRow['name'] }}</td>
@@ -2146,6 +2159,16 @@
                             <td>{{ $displayCount($subcategoryRow['dependent']) }}</td>
                             <td></td>
                         </tr>
+                        @foreach($subcategoryRow['details'] as $detailRow)
+                            <tr>
+                                <td class="text-left" style="padding-left: 45px;">- {{ $detailRow['name'] }}</td>
+                                <td>{{ $displayCount($detailRow['student']) }}</td>
+                                <td>{{ $displayCount($detailRow['faculty']) }}</td>
+                                <td>{{ $displayCount($detailRow['admin']) }}</td>
+                                <td>{{ $displayCount($detailRow['dependent']) }}</td>
+                                <td></td>
+                            </tr>
+                        @endforeach
                     @endforeach
                 @empty
                     <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>

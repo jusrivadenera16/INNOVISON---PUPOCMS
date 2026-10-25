@@ -77,12 +77,26 @@ class StudentNotificationPrivacyCopyTest extends TestCase
     {
         $notification = $this->decorate([
             'id' => 'consultation-evaluation-abc123',
+            '_evaluation_status' => 'sent',
             'message' => 'The clinic invited you to evaluate your recent General Consultation (Sep 18).',
         ]);
 
-        $this->assertSame('Clinic Update', $notification['title']);
-        $this->assertSame('There is a new update in your clinic account.', $notification['message']);
-        $this->assertSame('Open Update', $notification['action_label']);
+        $this->assertSame('Clinic Survey', $notification['title']);
+        $this->assertSame('Please complete your clinic visit survey.', $notification['message']);
+        $this->assertSame('System', $notification['category_label']);
+        $this->assertSame('SY', $notification['letter_icon']);
+        $this->assertSame('Take Survey', $notification['action_label']);
+        $this->assertArrayNotHasKey('_evaluation_status', $notification);
+
+        $submitted = $this->decorate([
+            'id' => 'consultation-evaluation-abc123',
+            '_evaluation_status' => 'submitted',
+            'message' => 'Thank you for submitting your service evaluation.',
+        ]);
+
+        $this->assertSame('Survey Submitted', $submitted['title']);
+        $this->assertSame('Thank you for completing your clinic survey.', $submitted['message']);
+        $this->assertSame('View Survey', $submitted['action_label']);
     }
 
     public function test_public_announcement_content_is_preserved(): void

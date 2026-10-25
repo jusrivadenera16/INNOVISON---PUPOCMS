@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Mail\EmergencyLoginOtpMail;
+use App\Mail\EmergencyPasswordResetOtpMail;
 use App\Services\EmergencyTwoFactorService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -101,5 +102,45 @@ class EmergencyTwoFactorServiceTest extends TestCase
         Mail::assertSent(EmergencyLoginOtpMail::class);
         $this->assertFalse($secondAttempt['sent']);
         $this->assertSame('cooldown', $secondAttempt['reason']);
+    }
+
+    public function test_emergency_password_reset_otp_is_separate_one_time_and_rate_limited(): void
+    {
+        config([
+            'mail.default' => 'array',
+            'services.emergency.email_otp_recipient' => null,
+        ]);
+        Mail::fake();
+        $service = app(EmergencyTwoFactorService::class);
+        $email = 'password-reset-' . Str::uuid() . '@example.test';
+
+        $sent = $service->sendEmergencyPasswordResetOtp($email);
+        $mail = Mail::sent(EmergencyPasswordResetOtpMail::class)->first();
+
+        $this->assertTrue($sent['sent']);
+        $this->assertInstanceOf(EmergencyPasswordResetOtpMail::class, $mail);
+        $this->assertFalse($service->verifyEmergencyPasswordResetOtp($email, '000000'));
+        $this->assertTrue($service->verifyEmergencyPasswordResetOtp($email, $mail->code));
+        $this->assertFalse($service->verifyEmergencyPasswordResetOtp($email, $mail->code));
+        $this->assertFalse($service->sendEmergencyPasswordResetOtp($email)['sent']);
+    }
+
+    public function test_emergency_password_reset_otp_is_invalidated_after_five_failed_attempts(): void
+    {
+        config([
+            'mail.default' => 'array',
+            'services.emergency.email_otp_recipient' => null,
+        ]);
+        Mail::fake();
+        $service = app(EmergencyTwoFactorService::class);
+        $email = 'locked-reset-' . Str::uuid() . '@example.test';
+
+        $service->sendEmergencyPasswordResetOtp($email);
+        $mail = Mail::sent(EmergencyPasswordResetOtpMail::class)->first();
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $this->assertFalse($service->verifyEmergencyPasswordResetOtp($email, '000000'));
+        }
+
+        $this->assertFalse($service->verifyEmergencyPasswordResetOtp($email, $mail->code));
     }
 }

@@ -7859,7 +7859,7 @@
     <div id="preloader" role="status" aria-live="polite" aria-label="Loading PUP Taguig Medical Clinic">
         <div class="preloader-content">
             <div class="preloader-logo" aria-hidden="true">
-                <img src="{{ asset('images/clinic_logo_transparent.png') }}" alt="">
+                <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="">
             </div>
             <div class="preloader-brand">
                 <span class="preloader-kicker">PUP Taguig</span>
@@ -8278,7 +8278,7 @@
                             <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo">
                         </span>
                         <span class="logo-frame logo-frame--clinic">
-                            <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="Clinic Logo">
+                            <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="Clinic Logo">
                         </span>
                     </div>
 
@@ -8359,7 +8359,7 @@
                                 <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo">
                             </span>
                             <span class="logo-frame logo-frame--clinic gateway-logo-card">
-                                <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="Clinic Logo">
+                                <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="Clinic Logo">
                             </span>
                         </div>
 

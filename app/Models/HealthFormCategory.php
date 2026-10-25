@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Builder;
 class HealthFormCategory extends Model
 {
     public const AUDIENCE_LABELS = [
-        'applicant' => 'Applicants',
         'student' => 'Students',
         'faculty' => 'Faculty',
         'admin' => 'Admin',
@@ -22,14 +21,6 @@ class HealthFormCategory extends Model
         'transferee' => 'Transferee',
         'returnee' => 'Returnee',
         'shiftee' => 'Shiftee',
-    ];
-
-    public const CONFIGURABLE_STUDENT_TYPES = [
-        'ojt',
-        'ladderized',
-        'transferee',
-        'returnee',
-        'shiftee',
     ];
 
     protected $fillable = [

@@ -1907,6 +1907,13 @@
     .referral-details-group .form-help {
         margin-top: 5px;
     }
+    .certificate-details-group {
+        display: none;
+        margin-top: 14px;
+    }
+    .certificate-details-group.is-visible {
+        display: block;
+    }
 
     /* Dark mode overrides for the consultation form's health-profile styling. */
     html[data-theme="dark"] .consultation-main {
@@ -4651,14 +4658,14 @@
                             <option value="none" {{ $draftValue('certificate_type', 'none') === 'none' ? 'selected' : '' }}>No certificate / clearance</option>
                             @foreach($clearanceTypes as $clearanceType)
                                 @if($clearanceType->allow_direct_use && $clearanceType->sources->contains('source', \App\Models\MarClearanceSubcategorySource::CONSULTATION))
-                                    <option value="{{ $clearanceType->code }}" data-clearance-type-id="{{ $clearanceType->id }}" data-clearance-type-name="{{ $clearanceType->name }}" {{ $draftValue('certificate_type') === $clearanceType->code ? 'selected' : '' }}>
+                                    <option value="{{ $clearanceType->code }}" data-clearance-type-id="{{ $clearanceType->id }}" data-clearance-type-name="{{ $clearanceType->name }}" data-requires-certificate-details="{{ strcasecmp(trim($clearanceType->name), 'Excused Letter') === 0 ? 'true' : 'false' }}" {{ $draftValue('certificate_type') === $clearanceType->code ? 'selected' : '' }}>
                                         {{ $clearanceType->name }}
                                     </option>
                                 @endif
                                 @if($clearanceType->subcategories->isNotEmpty())
                                     <optgroup label="{{ $clearanceType->name }}" data-clearance-type-id="{{ $clearanceType->id }}" data-clearance-type-name="{{ $clearanceType->name }}">
                                         @foreach($clearanceType->subcategories as $subcategory)
-                                            <option value="{{ $subcategory->code }}" data-clearance-type-id="{{ $clearanceType->id }}" data-clearance-type-name="{{ $clearanceType->name }}" {{ $draftValue('certificate_type') === $subcategory->code ? 'selected' : '' }}>
+                                            <option value="{{ $subcategory->code }}" data-clearance-type-id="{{ $clearanceType->id }}" data-clearance-type-name="{{ $clearanceType->name }}" data-requires-certificate-details="{{ strcasecmp(trim($subcategory->name), 'Excused Letter') === 0 ? 'true' : 'false' }}" {{ $draftValue('certificate_type') === $subcategory->code ? 'selected' : '' }}>
                                                 {{ $clearanceType->name }} - {{ $subcategory->name }}
                                             </option>
                                         @endforeach
@@ -4666,6 +4673,12 @@
                                 @endif
                             @endforeach
                         </select>
+                    </div>
+                    <div class="form-group certificate-details-group {{ $draftValue('certificate_type') && $draftValue('certificate_details') !== '' ? 'is-visible' : '' }}" id="certificateDetailsGroup">
+                        <label for="consultCertificateDetails">Excused Letter Details <span class="text-danger">*</span></label>
+                        <input type="text" name="certificate_details" id="consultCertificateDetails" class="form-control @error('certificate_details') is-invalid @enderror" value="{{ $draftValue('certificate_details') }}" maxlength="255" placeholder="e.g., Schedule for check up" autocomplete="off">
+                        <small class="form-help">Enter the patient-specific reason or description for this Excused Letter.</small>
+                        @error('certificate_details')<small class="form-help text-danger">{{ $message }}</small>@enderror
                     </div>
                 </div>
             </section>
@@ -5158,6 +5171,8 @@
         const consultationForm = document.getElementById('consultationForm');
         const finalizeButton = document.getElementById('finalizeConsultationButton');
         const certificateSelect = document.getElementById('consultCertificate');
+        const certificateDetailsGroup = document.getElementById('certificateDetailsGroup');
+        const certificateDetailsInput = document.getElementById('consultCertificateDetails');
         const addSubcategoryButton = document.getElementById('consultAddSubcategoryButton');
         const marSubcategoryModal = document.getElementById('consultationMarSubcategoryModal');
         const marSubcategoryForm = document.getElementById('consultationMarSubcategoryForm');
@@ -5399,6 +5414,17 @@
                 : 'Add a subcategory under any consultation clearance type';
         }
 
+        function syncCertificateDetailsField() {
+            const selected = certificateSelect?.options[certificateSelect.selectedIndex];
+            const showDetails = selected?.dataset.requiresCertificateDetails === 'true';
+
+            certificateDetailsGroup?.classList.toggle('is-visible', showDetails);
+            if (certificateDetailsInput) {
+                certificateDetailsInput.required = showDetails;
+                certificateDetailsInput.disabled = !showDetails;
+            }
+        }
+
         function setConsultationMarError(message) {
             if (!marSubcategoryError) return;
 
@@ -5455,6 +5481,9 @@
             option.textContent = subcategory.label;
             option.dataset.clearanceTypeId = String(subcategory.clearance_type_id);
             option.dataset.clearanceTypeName = subcategory.clearance_type_name;
+            option.dataset.requiresCertificateDetails = String(
+                String(subcategory.name || '').trim().toLowerCase() === 'excused letter'
+            );
             group.appendChild(option);
 
             const shell = certificateSelect.closest('.clinic-select-shell');
@@ -5939,8 +5968,12 @@
             syncDisplay();
         });
 
-        certificateSelect?.addEventListener('change', syncAddSubcategoryButton);
+        certificateSelect?.addEventListener('change', function () {
+            syncAddSubcategoryButton();
+            syncCertificateDetailsField();
+        });
         syncAddSubcategoryButton();
+        syncCertificateDetailsField();
 
         addSubcategoryButton?.addEventListener('click', function () {
             closeClinicSelects();

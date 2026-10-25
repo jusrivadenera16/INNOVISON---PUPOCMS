@@ -8663,6 +8663,16 @@
                     );
                     $recordUserType = $resolveHealthRecordUserType($record);
                     $recordUser = $record->user;
+                    $recordUserTypeKey = strtolower(trim((string) $recordUserType));
+                    $recordUsesApplicantReviewWorkflow = !$recordIsEmployee && (
+                        in_array($recordUserTypeKey, ['applicant', 'transferee'], true)
+                        || strtolower(trim((string) optional($recordUser)->account_type)) === 'applicant'
+                        || strtolower(trim((string) optional($recordUser)->applicant_type)) === 'transferee'
+                    );
+                    $recordIsRegularStudent = !$recordIsEmployee
+                        && !$recordUsesApplicantReviewWorkflow
+                        && optional($recordUser)->clinicAccountTypeKey() === 'student'
+                        && strtolower(trim((string) optional($recordUser)->student_type)) === 'regular';
                     $recordIdentifier = $resolveHealthRecordIdentifier($record);
                     $recordFirstName = trim((string) optional($recordUser)->first_name);
                     $recordMiddleName = trim((string) optional($recordUser)->middle_name);
@@ -8674,7 +8684,6 @@
                     $recordFamilyName = $recordLastName !== ''
                         ? $recordLastName
                         : trim((string) optional($recordUser)->name);
-                    $recordUserTypeKey = strtolower(trim((string) $recordUserType));
                     $recordIsLocalOnly = $recordIsEmployee
                         || in_array($recordUserTypeKey, ['student', 'faculty', 'admin', 'dependent', 'guest'], true);
                     $puptasStatusRaw = strtolower(trim((string) ($record->puptas_sync_status ?? '')));
@@ -8707,6 +8716,8 @@
                     $recordPayload = [
                         'id' => $record->id,
                         'record_type' => $recordIsEmployee ? 'employee' : strtolower((string) $recordUserType),
+                        'applicant_review_workflow' => $recordUsesApplicantReviewWorkflow,
+                        'is_regular_student' => $recordIsRegularStudent,
                         'name' => optional($record->user)->name ?: '-',
                         'email' => optional($record->user)->email ?: '-',
                         'reference_number' => $recordIdentifier['value'] ?? '-',
@@ -8735,10 +8746,10 @@
                         'withdraw_url' => $recordIsEmployee
                             ? route('admin.employee_health_profile.withdraw', $record->id)
                             : route('admin.health_profile.withdraw', $record->id),
-                        'walkin_url' => $walkinReviewUrlFor($recordIdentifier['value'] ?? '', $recordIsEmployee),
-                        'walkin_encode_url' => $recordIsEmployee
-                            ? ''
-                            : $walkinReviewUrlFor($recordIdentifier['value'] ?? '', false, 'encode'),
+                        'walkin_url' => $walkinReviewUrlFor($recordIdentifier['value'] ?? '', !$recordUsesApplicantReviewWorkflow),
+                        'walkin_encode_url' => $recordUsesApplicantReviewWorkflow
+                            ? $walkinReviewUrlFor($recordIdentifier['value'] ?? '', false, 'encode')
+                            : '',
                         'documents' => [
                             [
                                 'title' => '2x2 Photo',
@@ -9063,6 +9074,16 @@
                         $readonlyHasCondition = $readonlyRecord->hasMedicalCondition();
                         $readonlyUserType = $resolveHealthRecordUserType($readonlyRecord);
                         $readonlyUserTypeClass = strtolower($readonlyUserType);
+                        $readonlyUserTypeKey = strtolower(trim((string) $readonlyUserType));
+                        $readonlyUsesApplicantReviewWorkflow = !$readonlyIsEmployee && (
+                            in_array($readonlyUserTypeKey, ['applicant', 'transferee'], true)
+                            || strtolower(trim((string) optional($readonlyRecord->user)->account_type)) === 'applicant'
+                            || strtolower(trim((string) optional($readonlyRecord->user)->applicant_type)) === 'transferee'
+                        );
+                        $readonlyIsRegularStudent = !$readonlyIsEmployee
+                            && !$readonlyUsesApplicantReviewWorkflow
+                            && optional($readonlyRecord->user)->clinicAccountTypeKey() === 'student'
+                            && strtolower(trim((string) optional($readonlyRecord->user)->student_type)) === 'regular';
                         $readonlyIdentifier = $resolveHealthRecordIdentifier($readonlyRecord);
                         $readonlyMedicalHistory = is_array($readonlyRecord->medical_history)
                             ? implode(', ', array_filter($readonlyRecord->medical_history))
@@ -9115,6 +9136,8 @@
                         $readonlyRecordPayload = [
                             'id' => $readonlyRecord->id,
                             'record_type' => $readonlyIsEmployee ? 'employee' : strtolower((string) $readonlyUserType),
+                            'applicant_review_workflow' => $readonlyUsesApplicantReviewWorkflow,
+                            'is_regular_student' => $readonlyIsRegularStudent,
                             'name' => optional($readonlyRecord->user)->name ?: '-',
                             'email' => optional($readonlyRecord->user)->email ?: '-',
                             'reference_number' => $readonlyReference,
@@ -9141,10 +9164,10 @@
                             'withdraw_url' => $readonlyIsEmployee
                                 ? route('admin.employee_health_profile.withdraw', $readonlyRecord->id)
                                 : route('admin.health_profile.withdraw', $readonlyRecord->id),
-                            'walkin_url' => $walkinReviewUrlFor($readonlyIdentifier['value'] ?? '', $readonlyIsEmployee),
-                            'walkin_encode_url' => $readonlyIsEmployee
-                                ? ''
-                                : $walkinReviewUrlFor($readonlyIdentifier['value'] ?? '', false, 'encode'),
+                            'walkin_url' => $walkinReviewUrlFor($readonlyIdentifier['value'] ?? '', !$readonlyUsesApplicantReviewWorkflow),
+                            'walkin_encode_url' => $readonlyUsesApplicantReviewWorkflow
+                                ? $walkinReviewUrlFor($readonlyIdentifier['value'] ?? '', false, 'encode')
+                                : '',
                             'documents' => [
                             [
                                 'title' => '2x2 Photo',
@@ -9198,9 +9221,7 @@
                             <div class="readonly-record-identity">
                                 <div class="readonly-record-name-line">
                                     <h4 class="readonly-record-name">{{ optional($readonlyRecord->user)->name ?: 'Unnamed User' }}</h4>
-                                    @if(($userTypeFilter ?? '') === '')
-                                        <span class="health-user-type-badge is-{{ $readonlyUserTypeClass }}">{{ $readonlyUserType }}</span>
-                                    @endif
+                                    <span class="health-user-type-badge is-{{ $readonlyUserTypeClass }}">{{ $readonlyUserType }}</span>
                                 </div>
                                 <p class="readonly-record-sub">{{ optional($readonlyRecord->user)->email ?: '-' }}</p>
                             </div>
@@ -9232,7 +9253,7 @@
                                         data-review-student-id="{{ $readonlyRecord->student_id ?: optional($readonlyRecord->user)->student_id ?: optional($readonlyRecord->user)->student_number ?: '-' }}"
                                         data-review-approve-url="{{ $readonlyIsEmployee ? '' : route('admin.update_clearance', $readonlyRecord->id) }}"
                                         data-review-resubmission-url="{{ $readonlyIsEmployee ? route('admin.employee_health_profile.request_resubmission', $readonlyRecord->id) : route('admin.health_profile.request_resubmission', $readonlyRecord->id) }}"
-                                        data-review-walkin-url="{{ $walkinReviewUrlFor($readonlyReference, $readonlyIsEmployee) }}"
+                                        data-review-walkin-url="{{ $walkinReviewUrlFor($readonlyReference, !$readonlyUsesApplicantReviewWorkflow) }}"
                                     >
                                         <span>View Info</span>
                                     </button>
@@ -9380,6 +9401,10 @@
                     @php
                         $readonlySource = (string) ($readonlyRecord->record_source ?? 'health');
                         $readonlyIsEmployee = in_array($readonlySource, ['employee', 'staff'], true);
+                        $readonlyUser = $readonlyRecord->user;
+                        $readonlyIsRegularStudent = !$readonlyIsEmployee
+                            && $readonlyUser?->clinicAccountTypeKey() === 'student'
+                            && strtolower(trim((string) $readonlyUser?->student_type)) === 'regular';
                         $pendingComplianceDocumentUrl = function ($documentKey) use ($readonlyIsEmployee, $readonlyRecord) {
                             return $readonlyIsEmployee
                                 ? route('walkin.employeeDocument', ['employeeProfile' => $readonlyRecord->id, 'document' => $documentKey])
@@ -9477,13 +9502,15 @@
                                 <div class="readonly-field readonly-final-review-field">
                                     <span>Move Record</span>
                                     <div class="readonly-review-routing-actions">
-                                        <form method="POST" action="{{ route('admin.health_profile.for_final_review', $readonlyRecord->id) }}">
-                                            @csrf
-                                            <button type="submit" class="readonly-final-review-btn">
-                                                <x-outline-icon name="check" />
-                                                For Final Review
-                                            </button>
-                                        </form>
+                                        @unless($readonlyIsRegularStudent)
+                                            <form method="POST" action="{{ route('admin.health_profile.for_final_review', $readonlyRecord->id) }}">
+                                                @csrf
+                                                <button type="submit" class="readonly-final-review-btn">
+                                                    <x-outline-icon name="check" />
+                                                    For Final Review
+                                                </button>
+                                            </form>
+                                        @endunless
                                         <form method="POST" action="{{ route('admin.health_profile.for_approval', $readonlyRecord->id) }}">
                                             @csrf
                                             <button type="submit" class="readonly-final-review-btn">
@@ -9650,9 +9677,19 @@
             <form method="POST" class="is-hidden" id="verifyWithdrawHealthRecordForm">
                 @csrf
             </form>
+            <form method="POST" class="is-hidden" id="verifyRegularStudentDecisionForm">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="clearance_status" id="verifyRegularStudentDecisionStatus" value="">
+                <input type="hidden" name="physical_assessment_status" value="Not Yet Conducted">
+                <input type="hidden" name="documents_valid" id="verifyRegularStudentDocumentsValid" value="0">
+            </form>
             <div class="verify-content-actions" aria-label="Additional review actions">
                 <div class="verify-content-action-group">
                     <button type="submit" form="verifyWithdrawHealthRecordForm" class="verify-proposed-withdraw" id="verifyWithdrawHealthRecordBtn" disabled><span>Mark as Withdrawn</span></button>
+                    @if($canSignHealth)
+                        <button type="submit" form="verifyRegularStudentDecisionForm" class="verify-proposed-walkin" id="verifyRegularStudentApproveBtn" data-regular-decision="Fully Cleared" hidden><span>Approve</span></button>
+                    @endif
                     <button type="submit" form="verifyDocumentResubmissionForm" class="verify-proposed-walkin is-hidden" id="verifyDocumentResubmissionSubmit" disabled hidden><span>Request Resubmission</span></button>
                     <div class="verify-assessment-dropdown" id="verifyApplicantNextStepWrap" hidden>
                         <select id="verifyApplicantNextStep" aria-label="Applicant assessment route" hidden>
@@ -10399,6 +10436,10 @@
     const verifyApplicantNextStepMenu = document.getElementById('verifyApplicantNextStepMenu');
     const verifyWithdrawHealthRecordForm = document.getElementById('verifyWithdrawHealthRecordForm');
     const verifyWithdrawHealthRecordBtn = document.getElementById('verifyWithdrawHealthRecordBtn');
+    const verifyRegularStudentDecisionForm = document.getElementById('verifyRegularStudentDecisionForm');
+    const verifyRegularStudentDecisionStatus = document.getElementById('verifyRegularStudentDecisionStatus');
+    const verifyRegularStudentDocumentsValid = document.getElementById('verifyRegularStudentDocumentsValid');
+    const verifyRegularStudentApproveBtn = document.getElementById('verifyRegularStudentApproveBtn');
     const verifyDocumentResubmissionPanel = document.getElementById('verifyDocumentResubmissionPanel');
     const verifyDocumentResubmissionSubmit = document.getElementById('verifyDocumentResubmissionSubmit');
     const verifyDocumentResubmissionRemarks = document.getElementById('verifyDocumentResubmissionRemarks');
@@ -10408,6 +10449,7 @@
     let activeHealthRecordReviewPayload = {};
     let hasMultipleApplicantReviewDestinations = false;
     let hasAvailableReviewDestination = false;
+    let canDecideRegularStudentRecord = false;
 
     function setApplicantAssessmentMenuOpen(isOpen) {
         if (!verifyApplicantNextStepMenu || !verifyContinueToWalkinBtn) return;
@@ -10422,7 +10464,10 @@
         }
 
         const recordPayload = activeHealthRecordReviewPayload || {};
-        const isEmployee = String(recordPayload.record_type || '').toLowerCase() === 'employee';
+        const recordType = String(recordPayload.record_type || '').toLowerCase();
+        const isApplicantWorkflow = recordPayload.applicant_review_workflow === true
+            || ['applicant', 'transferee'].includes(recordType);
+        const isRegularStudent = recordPayload.is_regular_student === true;
         const destinations = {
             encode: String(recordPayload.walkin_encode_url || ''),
             final_review: String(recordPayload.walkin_url || ''),
@@ -10435,6 +10480,19 @@
             return isAvailable;
         });
         const status = String(recordPayload.clearance_status || '').trim().toLowerCase();
+        canDecideRegularStudentRecord = isRegularStudent
+            && @json($canSignHealth)
+            && Boolean(recordPayload.approve_url)
+            && !['issued', 'fully cleared', 'withdrawn'].includes(status);
+        if (verifyRegularStudentDecisionForm) {
+            verifyRegularStudentDecisionForm.setAttribute('action', recordPayload.approve_url || '');
+        }
+        if (verifyRegularStudentApproveBtn) {
+            verifyRegularStudentApproveBtn.hidden = !canDecideRegularStudentRecord;
+        }
+        if (verifyWithdrawHealthRecordBtn) {
+            verifyWithdrawHealthRecordBtn.hidden = isRegularStudent;
+        }
         let selectedStep = isNewRecord
             ? (status === 'for final review' ? 'final_review' : 'encode')
             : (verifyApplicantNextStep?.value || (status === 'for final review' ? 'final_review' : 'encode'));
@@ -10446,27 +10504,26 @@
             verifyApplicantNextStep.value = selectedStep;
         }
 
-        hasMultipleApplicantReviewDestinations = !isEmployee && validOptions.length > 1;
-        hasAvailableReviewDestination = isEmployee
-            ? Boolean(recordPayload.walkin_url)
-            : validOptions.length > 0;
+        hasMultipleApplicantReviewDestinations = isApplicantWorkflow && validOptions.length > 1;
+        hasAvailableReviewDestination = isApplicantWorkflow
+            ? validOptions.length > 0
+            : Boolean(recordPayload.walkin_url);
         const isResubmissionRequested = Boolean(verifyNeedsDocumentResubmission?.checked);
         setApplicantAssessmentMenuOpen(false);
         if (verifyApplicantNextStepWrap) {
             verifyApplicantNextStepWrap.classList.toggle('is-direct-review', !hasMultipleApplicantReviewDestinations);
-            verifyApplicantNextStepWrap.hidden = isResubmissionRequested || !hasAvailableReviewDestination;
+            verifyApplicantNextStepWrap.hidden = isRegularStudent || isResubmissionRequested || !hasAvailableReviewDestination;
         }
 
-        const destination = isEmployee
-            ? String(recordPayload.walkin_url || '')
-            : (destinations[selectedStep] || '');
-        const continueLabel = isEmployee
-            ? 'Continue to Approval'
-            : 'Continue Assessment';
+        const destination = isApplicantWorkflow
+            ? (destinations[selectedStep] || '')
+            : String(recordPayload.walkin_url || '');
+        const continueLabel = isApplicantWorkflow ? 'Continue Assessment' : 'Continue to Approval';
 
         if (verifyContinueToWalkinBtn) {
             verifyContinueToWalkinBtn.dataset.walkinUrl = destination;
             verifyContinueToWalkinBtn.disabled = !hasAvailableReviewDestination;
+            verifyContinueToWalkinBtn.hidden = isRegularStudent || !hasAvailableReviewDestination;
             verifyContinueToWalkinBtn.setAttribute('aria-haspopup', hasMultipleApplicantReviewDestinations ? 'menu' : 'false');
             if (hasMultipleApplicantReviewDestinations) {
                 verifyContinueToWalkinBtn.setAttribute('aria-controls', 'verifyApplicantNextStepMenu');
@@ -10484,11 +10541,15 @@
 
     function syncDocumentResubmissionActionState() {
         const isChecked = Boolean(verifyNeedsDocumentResubmission?.checked);
+        const isRegularStudent = activeHealthRecordReviewPayload.is_regular_student === true;
         if (verifyContinueToWalkinBtn) {
-            verifyContinueToWalkinBtn.hidden = isChecked || !hasAvailableReviewDestination;
+            verifyContinueToWalkinBtn.hidden = isRegularStudent || isChecked || !hasAvailableReviewDestination;
         }
         if (verifyApplicantNextStepWrap) {
-            verifyApplicantNextStepWrap.hidden = isChecked || !hasAvailableReviewDestination;
+            verifyApplicantNextStepWrap.hidden = isRegularStudent || isChecked || !hasAvailableReviewDestination;
+        }
+        if (verifyRegularStudentApproveBtn) {
+            verifyRegularStudentApproveBtn.hidden = !canDecideRegularStudentRecord || isChecked;
         }
         if (isChecked) setApplicantAssessmentMenuOpen(false);
         if (!verifyProposedWalkinBtn) return;
@@ -11086,8 +11147,10 @@
 
     if (verifyContinueToWalkinBtn) {
         verifyContinueToWalkinBtn.addEventListener('click', function () {
-            const isEmployee = String(activeHealthRecordReviewPayload.record_type || '').toLowerCase() === 'employee';
-            if (!isEmployee && hasMultipleApplicantReviewDestinations) {
+            const recordType = String(activeHealthRecordReviewPayload.record_type || '').toLowerCase();
+            const isApplicantWorkflow = activeHealthRecordReviewPayload.applicant_review_workflow === true
+                || ['applicant', 'transferee'].includes(recordType);
+            if (isApplicantWorkflow && hasMultipleApplicantReviewDestinations) {
                 setApplicantAssessmentMenuOpen(verifyApplicantNextStepMenu?.hidden !== false);
                 return;
             }
@@ -11144,6 +11207,25 @@
             if (verifyWithdrawHealthRecordBtn) {
                 verifyWithdrawHealthRecordBtn.disabled = true;
             }
+        });
+    }
+
+    if (verifyRegularStudentDecisionForm) {
+        verifyRegularStudentDecisionForm.addEventListener('submit', function (event) {
+            const decision = event.submitter?.getAttribute('data-regular-decision') || '';
+            if (!verifyRegularStudentDecisionForm.getAttribute('action')
+                || decision !== 'Fully Cleared') {
+                event.preventDefault();
+                return;
+            }
+
+            if (verifyRegularStudentDecisionStatus) {
+                verifyRegularStudentDecisionStatus.value = decision;
+            }
+            if (verifyRegularStudentDocumentsValid) {
+                verifyRegularStudentDocumentsValid.value = '1';
+            }
+            if (verifyRegularStudentApproveBtn) verifyRegularStudentApproveBtn.disabled = true;
         });
     }
 

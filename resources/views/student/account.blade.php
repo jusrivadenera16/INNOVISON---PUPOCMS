@@ -293,7 +293,7 @@
         display: grid;
         grid-template-columns: minmax(330px, 0.82fr) minmax(0, 1fr) minmax(0, 1fr);
         gap: 16px;
-        align-items: start;
+        align-items: stretch;
     }
 
     .profile-dashboard .account-layout {
@@ -389,7 +389,7 @@
         gap: 20px;
         position: relative;
         overflow: hidden;
-        clip-path: url(#profileHeroSmoothWave);
+        clip-path: none;
     }
 
     .profile-dashboard .profile-hero::before {
@@ -413,65 +413,8 @@
         display: none;
     }
 
-    .profile-dashboard .profile-hero-wave {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        height: calc(100% + 68px);
-        z-index: 1;
-        pointer-events: none;
-        overflow: visible;
-    }
-
-    .profile-dashboard .profile-hero-wave path {
-        fill: none;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        vector-effect: non-scaling-stroke;
-    }
-
-    .profile-dashboard .profile-hero-wave-echo {
-        stroke: url(#profileHeroWaveEcho);
-    }
-
-    .profile-dashboard .profile-hero-wave-echo.is-near {
-        stroke-width: 1;
-    }
-
-    .profile-dashboard .profile-hero-wave-echo.is-far {
-        stroke-width: .75;
-    }
-
-    .profile-dashboard .profile-hero-wave-main,
-    .profile-dashboard .profile-hero-wave-grow {
-        stroke: url(#profileHeroWaveStroke);
-    }
-
-    .profile-dashboard .profile-hero-wave-main {
-        stroke-width: 1.25;
-    }
-
-    .profile-dashboard .profile-hero-wave-grow.is-middle {
-        stroke-width: 2.75;
-    }
-
-    .profile-dashboard .profile-hero-wave-grow.is-right {
-        stroke-width: 4.5;
-    }
-
-    html[data-theme="dark"] .profile-dashboard .profile-hero-wave path {
-        fill: none;
-    }
-
     .profile-dashboard .profile-hero > * {
         position: relative;
-        z-index: 1;
-    }
-
-    .profile-dashboard .profile-hero > .profile-hero-wave {
-        position: absolute;
         z-index: 1;
     }
 
@@ -497,7 +440,7 @@
     .profile-dashboard .profile-hero-quote {
         position: absolute;
         left: 28px;
-        bottom: 126px;
+        bottom: 72px;
         z-index: 2;
         color: #fffaf2;
         font-family: Georgia, serif;
@@ -665,8 +608,7 @@
     .profile-dashboard .profile-hero.is-photo-expanded .hero-stats,
     .profile-dashboard .profile-hero.is-photo-expanded .hero-active-dot,
     .profile-dashboard .profile-hero.is-photo-expanded .profile-hero-campus,
-    .profile-dashboard .profile-hero.is-photo-expanded .profile-hero-quote,
-    .profile-dashboard .profile-hero.is-photo-expanded .profile-hero-wave {
+    .profile-dashboard .profile-hero.is-photo-expanded .profile-hero-quote {
         display: none;
     }
 
@@ -736,7 +678,7 @@
         grid-row: 1;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         gap: 16px;
-        align-items: start;
+        align-items: stretch;
         margin-bottom: 0;
     }
 
@@ -744,6 +686,12 @@
         display: flex;
         flex-direction: column;
         gap: 12px;
+        align-self: stretch;
+        min-height: 0;
+    }
+
+    .profile-dashboard .profile-column-stack > .profile-form-section:last-child {
+        flex: 1 1 auto;
     }
 
     .profile-dashboard .profile-sections-grid > .profile-column-stack:first-child {
@@ -1495,6 +1443,7 @@
     }
 
     .profile-edit-field input:disabled,
+    .profile-edit-field select:disabled,
     .profile-edit-field textarea:disabled {
         color: #64748b;
         background: #f8fafc;
@@ -1508,6 +1457,50 @@
         font-size: 11px;
         font-style: normal;
         font-weight: 800;
+    }
+
+    .profile-photo-editor {
+        display: grid;
+        grid-template-columns: 76px minmax(0, 1fr);
+        align-items: center;
+        gap: 16px;
+    }
+
+    .profile-photo-preview {
+        display: grid;
+        width: 76px;
+        aspect-ratio: 1;
+        place-items: center;
+        overflow: hidden;
+        border: 1px solid rgba(112, 19, 27, 0.2);
+        border-radius: 50%;
+        background: #f1f5f9;
+        color: #70131b;
+        font-size: 24px;
+        font-weight: 900;
+    }
+
+    .profile-photo-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .profile-photo-controls {
+        display: grid;
+        min-width: 0;
+        gap: 8px;
+    }
+
+    .profile-edit-help {
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1.45;
+    }
+
+    .profile-edit-help.is-error {
+        color: #b91c1c;
     }
 
     .student-number-update-note {
@@ -1808,10 +1801,22 @@
         box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.16);
     }
     html[data-theme="dark"] .profile-edit-field input:disabled,
+    html[data-theme="dark"] .profile-edit-field select:disabled,
     html[data-theme="dark"] .profile-edit-field textarea:disabled {
         background: rgba(15, 23, 42, 0.5);
         border-color: rgba(148, 163, 184, 0.18);
         color: #94a3b8;
+    }
+    html[data-theme="dark"] .profile-photo-preview {
+        background: #1e293b;
+        border-color: rgba(148, 163, 184, 0.35);
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .profile-edit-help {
+        color: #94a3b8;
+    }
+    html[data-theme="dark"] .profile-edit-help.is-error {
+        color: #fca5a5;
     }
     html[data-theme="dark"] .profile-edit-modal-footer {
         background: rgba(15, 23, 42, 0.96);
@@ -2201,6 +2206,9 @@
             grid-row: auto;
             grid-template-columns: 1fr;
             gap: 12px;
+        }
+        .profile-dashboard .profile-column-stack > .profile-form-section:last-child {
+            flex: 0 0 auto;
         }
         .profile-dashboard .profile-card-head {
             grid-column: 1;
@@ -4089,6 +4097,14 @@
     .missing-document-file-name {
         margin-top: 6px;
         color: #8B0000;
+    }
+    .missing-document-client-error {
+        display: block;
+        margin-top: 5px;
+        color: #b42318;
+        font-size: 11px;
+        font-style: normal;
+        font-weight: 750;
     }
     .missing-document-preview {
         display: none;
@@ -7797,6 +7813,16 @@
         : ($user->relationLoaded('healthProfile')
             ? $user->healthProfile
             : \App\Models\HealthProfile::where('user_id', $user->id)->first());
+    $profilePhotoRecord = $clinicMeasurementProfile;
+    $profilePhotoPath = trim((string) ($user->profile_photo ?? ''));
+    $profilePhotoFallbackExists = trim((string) optional($profilePhotoRecord)->student_photo) !== '';
+    $profilePhotoUrl = $profilePhotoPath !== ''
+        ? route('student.health_record.document', ['document' => 'profile_photo'])
+        : ($profilePhotoFallbackExists ? route('student.health_record.document', ['document' => 'student_photo']) : null);
+    $profilePhotoNextChangeAt = $user->profile_photo_updated_at
+        ? $user->profile_photo_updated_at->copy()->addMonthsNoOverflow(6)
+        : null;
+    $profilePhotoChangeLocked = $profilePhotoNextChangeAt && now()->lt($profilePhotoNextChangeAt);
     $clinicProfileApprovalStatus = strtolower(trim((string) optional($clinicMeasurementProfile)->clearance_status));
     $canEditClinicProfileInfo = in_array($clinicProfileApprovalStatus, ['approved', 'issued', 'fully cleared', 'cleared'], true);
     $canOpenProfileEditModal = $canEditClinicProfileInfo || $canUpdateLadderizedStudentNumber;
@@ -7809,12 +7835,21 @@
     $heightDisplay = $heightMatch[0] ?? trim((string) $heightRaw);
     $weightDisplay = $weightMatch[0] ?? trim((string) $weightRaw);
     $showClinicMeasurements = trim((string) $heightRaw) !== '' && trim((string) $weightRaw) !== '';
-    $profileEditErrorFields = ['student_number', 'contact_no', 'address', 'emergency_contact_person', 'emergency_contact_no', 'civil_status', 'height', 'weight'];
+    $profileEditErrorFields = [
+        'student_number', 'contact_no', 'address', 'address_street', 'address_barangay',
+        'address_city_municipality', 'address_province', 'emergency_contact_person',
+        'emergency_contact_no', 'civil_status', 'height', 'weight', 'profile_photo',
+    ];
     $hasProfileEditErrors = isset($errors)
         && collect($profileEditErrorFields)->contains(fn ($field) => $errors->has($field));
     $profileEditCivilStatus = old('civil_status', $accountProfileData['civil_status'] ?? optional($linkedAdminProfile)->civil_status ?? '');
     $profileEditContactNo = old('contact_no', $accountProfileData['contact_number'] ?? $user->contact_no ?? optional($linkedAdminProfile)->contact_no ?? '');
     $profileEditAddress = old('address', $accountProfileData['home_address'] ?? optional($linkedAdminProfile)->address ?? '');
+    $profileAddressPieces = array_pad(array_map('trim', explode(',', (string) $profileEditAddress, 4)), 4, '');
+    $profileEditStreet = old('address_street', trim((string) optional($profilePhotoRecord)->street) ?: $profileAddressPieces[0]);
+    $profileEditBarangay = old('address_barangay', trim((string) optional($profilePhotoRecord)->barangay) ?: $profileAddressPieces[1]);
+    $profileEditCity = old('address_city_municipality', trim((string) optional($profilePhotoRecord)->municipality) ?: $profileAddressPieces[2]);
+    $profileEditProvince = old('address_province', trim((string) optional($profilePhotoRecord)->province) ?: $profileAddressPieces[3]);
     $profileEditEmergencyPerson = old('emergency_contact_person', $accountProfileData['guardian_name'] ?? optional($linkedAdminProfile)->emergency_contact_person ?? '');
     $profileEditEmergencyNo = old('emergency_contact_no', $accountProfileData['cellphone'] ?? optional($linkedAdminProfile)->emergency_contact_no ?? '');
     $profileEditCivilOptions = ['Single', 'Married', 'Widowed', 'Separated'];
@@ -7855,60 +7890,17 @@
     @endif
 
     @if($accountView === 'profile')
-    <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
-        <defs>
-            <clipPath id="profileHeroSmoothWave" clipPathUnits="objectBoundingBox">
-                <path d="M0,0 H1 V0.79 C0.98,0.78 0.95,0.77 0.91,0.77 C0.82,0.77 0.73,0.81 0.64,0.85 C0.55,0.89 0.48,0.91 0.40,0.91 C0.31,0.91 0.22,0.88 0.14,0.84 C0.08,0.81 0.03,0.80 0,0.82 Z" />
-            </clipPath>
-        </defs>
-    </svg>
     <div class="profile-dashboard">
     <div class="profile-hero" id="profileHeroCard">
-        <svg class="profile-hero-wave" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-                <linearGradient id="profileHeroWaveStroke" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stop-color="#facc15" stop-opacity="1" />
-                    <stop offset="48%" stop-color="#facc15" stop-opacity="0.72" />
-                    <stop offset="100%" stop-color="#facc15" stop-opacity="0.28" />
-                </linearGradient>
-                <linearGradient id="profileHeroWaveEcho" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stop-color="#fef08a" stop-opacity="0.38" />
-                    <stop offset="55%" stop-color="#fef9c3" stop-opacity="0.22" />
-                    <stop offset="100%" stop-color="#fef9c3" stop-opacity="0.08" />
-                </linearGradient>
-                <linearGradient id="profileHeroWaveMiddleMask" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="25%" stop-color="black" />
-                    <stop offset="64%" stop-color="white" />
-                </linearGradient>
-                <linearGradient id="profileHeroWaveRightMask" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="60%" stop-color="black" />
-                    <stop offset="100%" stop-color="white" />
-                </linearGradient>
-                <mask id="profileHeroWaveGrowMiddle" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000">
-                    <rect width="1000" height="1000" fill="url(#profileHeroWaveMiddleMask)" />
-                </mask>
-                <mask id="profileHeroWaveGrowRight" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000">
-                    <rect width="1000" height="1000" fill="url(#profileHeroWaveRightMask)" />
-                </mask>
-            </defs>
-            <path class="profile-hero-wave-echo is-far" transform="translate(0 -24)" d="M0 820 C30 800 80 810 140 840 C220 880 310 910 400 910 C480 910 550 890 640 850 C730 810 820 770 910 770 C950 770 980 780 1000 790" />
-            <path class="profile-hero-wave-echo is-near" transform="translate(0 -13)" d="M0 820 C30 800 80 810 140 840 C220 880 310 910 400 910 C480 910 550 890 640 850 C730 810 820 770 910 770 C950 770 980 780 1000 790" />
-            <path class="profile-hero-wave-main" d="M0 820 C30 800 80 810 140 840 C220 880 310 910 400 910 C480 910 550 890 640 850 C730 810 820 770 910 770 C950 770 980 780 1000 790" />
-            <path class="profile-hero-wave-grow is-middle" mask="url(#profileHeroWaveGrowMiddle)" d="M0 820 C30 800 80 810 140 840 C220 880 310 910 400 910 C480 910 550 890 640 850 C730 810 820 770 910 770 C950 770 980 780 1000 790" />
-            <path class="profile-hero-wave-grow is-right" mask="url(#profileHeroWaveGrowRight)" d="M0 820 C30 800 80 810 140 840 C220 880 310 910 400 910 C480 910 550 890 640 850 C730 810 820 770 910 770 C950 770 980 780 1000 790" />
-        </svg>
         <div class="profile-hero-campus" aria-hidden="true"></div>
         <div class="profile-hero-quote" aria-hidden="true">
             <span class="profile-hero-quote-mark">&ldquo;</span>
             <p>Your health is<br>our priority.</p>
         </div>
         <button type="button" class="hero-avatar" id="profilePhotoToggle" aria-label="Expand profile photo" aria-expanded="false">
-            @php
-                $profilePhotoRecord = $usesEmployeeHealthForm
-                    ? ($user->employeeHealthProfile ?? \App\Models\EmployeeHealthProfile::where('user_id', $user->id)->first())
-                    : ($user->healthProfile ?? \App\Models\HealthProfile::where('user_id', $user->id)->first());
-            @endphp
-            @if(!empty($profilePhotoRecord?->student_photo))
+            @if($profilePhotoPath !== '')
+                <img src="{{ route('student.health_record.document', ['document' => 'profile_photo']) }}" alt="Profile photo">
+            @elseif($profilePhotoFallbackExists)
                 <img src="{{ route('student.health_record.document', ['document' => 'student_photo']) }}" alt="Uploaded 2x2 Picture">
             @else
                 {{ strtoupper(substr($displayFullName, 0, 1)) }}
@@ -8327,7 +8319,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="profile-edit-modal" id="profileEditModal" aria-hidden="true">
             <div class="profile-edit-backdrop" data-profile-modal-close></div>
             <section class="profile-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="profileEditModalTitle">
-                <form action="{{ route('student.updateContact') }}" method="POST" id="profileEditForm" class="profile-edit-form">
+                <form action="{{ route('student.updateContact') }}" method="POST" id="profileEditForm" class="profile-edit-form" enctype="multipart/form-data" novalidate>
                     @csrf
                     @if(!empty($linkedAdminProfile))
                         <input type="hidden" name="admin_profile_id" value="{{ $linkedAdminProfile->admin_id }}">
@@ -8392,12 +8384,12 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </label>
                                 <label class="profile-edit-field">
                                     <span>Height (ft)</span>
-                                    <input type="text" name="height" inputmode="decimal" value="{{ old('height', $heightDisplay) }}" placeholder="{{ $guisisPendingText }}" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
+                                    <input type="number" name="height" inputmode="decimal" min="1" max="8" step="0.1" value="{{ old('height', $heightDisplay) }}" placeholder="e.g. 5.5" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
                                     @error('height')<em>{{ $message }}</em>@enderror
                                 </label>
                                 <label class="profile-edit-field">
                                     <span>Weight (lbs)</span>
-                                    <input type="text" name="weight" inputmode="decimal" value="{{ old('weight', $weightDisplay) }}" placeholder="{{ $guisisPendingText }}" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
+                                    <input type="number" name="weight" inputmode="decimal" min="1" max="1500" step="0.1" value="{{ old('weight', $weightDisplay) }}" placeholder="e.g. 132" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
                                     @error('weight')<em>{{ $message }}</em>@enderror
                                 </label>
                                 <label class="profile-edit-field">
@@ -8457,6 +8449,39 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
 
                         <div class="profile-edit-section">
+                            <h3>Profile Photo</h3>
+                            <div class="profile-photo-editor">
+                                <div class="profile-photo-preview" id="profilePhotoPreview" aria-label="Profile photo preview">
+                                    @if($profilePhotoUrl)
+                                        <img src="{{ $profilePhotoUrl }}" alt="Current profile photo">
+                                    @else
+                                        <span>{{ strtoupper(substr($displayFullName, 0, 1)) }}</span>
+                                    @endif
+                                </div>
+                                <div class="profile-photo-controls">
+                                    <label class="profile-edit-field">
+                                        <span>Update Photo</span>
+                                        <input
+                                            type="file"
+                                            name="profile_photo"
+                                            id="profilePhotoInput"
+                                            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                            {{ $profilePhotoChangeLocked ? 'disabled' : '' }}
+                                        >
+                                    </label>
+                                    <small class="profile-edit-help" id="profilePhotoAvailability">
+                                        @if($profilePhotoChangeLocked)
+                                            You can update your photo again on {{ $profilePhotoNextChangeAt->format('F j, Y') }}.
+                                        @else
+                                            JPG or PNG, up to 2 MB. Photo changes are allowed once every six months.
+                                        @endif
+                                    </small>
+                                    @error('profile_photo')<em>{{ $message }}</em>@enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="profile-edit-section">
                             <h3>Contact Information</h3>
                             <div class="profile-edit-grid">
                                 <label class="profile-edit-field">
@@ -8468,11 +8493,41 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <input type="text" name="contact_no" inputmode="tel" value="{{ $profileEditContactNo }}" placeholder="{{ $guisisPendingText }}" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
                                     @error('contact_no')<em>{{ $message }}</em>@enderror
                                 </label>
-                                <label class="profile-edit-field profile-edit-field-wide">
+                                <div class="profile-edit-field profile-edit-field-wide">
                                     <span>Address</span>
-                                    <textarea name="address" rows="3" placeholder="{{ $guisisPendingText }}" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>{{ $profileEditAddress }}</textarea>
+                                    <input type="hidden" name="address" id="profileAddressValue" value="{{ $profileEditAddress }}" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
                                     @error('address')<em>{{ $message }}</em>@enderror
+                                </div>
+                                <label class="profile-edit-field profile-edit-field-wide">
+                                    <span>House No. / Street</span>
+                                    <input type="text" name="address_street" id="profileAddressStreet" value="{{ $profileEditStreet }}" placeholder="House number and street" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
+                                    @error('address_street')<em>{{ $message }}</em>@enderror
                                 </label>
+                                <label class="profile-edit-field">
+                                    <span>Province</span>
+                                    <select name="address_province" id="profileAddressProvince" data-profile-address-level="province" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
+                                        <option value="">Select province</option>
+                                        @if($profileEditProvince !== '')<option value="{{ $profileEditProvince }}" selected>{{ $profileEditProvince }}</option>@endif
+                                    </select>
+                                    @error('address_province')<em>{{ $message }}</em>@enderror
+                                </label>
+                                <label class="profile-edit-field">
+                                    <span>City / Municipality</span>
+                                    <select name="address_city_municipality" id="profileAddressCity" data-profile-address-level="city" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
+                                        <option value="">Select city or municipality</option>
+                                        @if($profileEditCity !== '')<option value="{{ $profileEditCity }}" selected>{{ $profileEditCity }}</option>@endif
+                                    </select>
+                                    @error('address_city_municipality')<em>{{ $message }}</em>@enderror
+                                </label>
+                                <label class="profile-edit-field">
+                                    <span>Barangay</span>
+                                    <select name="address_barangay" id="profileAddressBarangay" data-profile-address-level="barangay" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
+                                        <option value="">Select barangay</option>
+                                        @if($profileEditBarangay !== '')<option value="{{ $profileEditBarangay }}" selected>{{ $profileEditBarangay }}</option>@endif
+                                    </select>
+                                    @error('address_barangay')<em>{{ $message }}</em>@enderror
+                                </label>
+                                <small class="profile-edit-help profile-edit-field-wide" id="profileAddressLookupStatus" aria-live="polite">Address format: street, barangay, city/municipality, province.</small>
                             </div>
                         </div>
 
@@ -8565,11 +8620,11 @@ document.addEventListener('DOMContentLoaded', function () {
             'pwd_id_proof' => 'PWD ID Proof',
         ];
         $resubmissionDocumentMeta = [
-            'student_photo' => ['accept' => '.jpg,.jpeg,.png,image/jpeg,image/png', 'hint' => 'JPG or PNG, up to 1 MB'],
-            'health_declaration' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 1 MB'],
-            'medical_certificate' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
-            'chest_xray_result' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
-            'pwd_id_proof' => ['accept' => '.pdf,application/pdf', 'hint' => 'PDF only, up to 2 MB'],
+            'student_photo' => ['accept' => '.jpg,.jpeg,.png,image/jpeg,image/png', 'extensions' => 'jpg,jpeg,png', 'mimes' => 'image/jpeg,image/png', 'max_bytes' => 1048576, 'max_label' => '1 MB', 'types' => 'JPG or PNG', 'hint' => 'JPG or PNG, up to 1 MB'],
+            'health_declaration' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'extensions' => 'pdf,jpg,jpeg,png', 'mimes' => 'application/pdf,image/jpeg,image/png', 'max_bytes' => 1048576, 'max_label' => '1 MB', 'types' => 'PDF, JPG, or PNG', 'hint' => 'PDF, JPG, or PNG, up to 1 MB'],
+            'medical_certificate' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'extensions' => 'pdf,jpg,jpeg,png', 'mimes' => 'application/pdf,image/jpeg,image/png', 'max_bytes' => 2097152, 'max_label' => '2 MB', 'types' => 'PDF, JPG, or PNG', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
+            'chest_xray_result' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'extensions' => 'pdf,jpg,jpeg,png', 'mimes' => 'application/pdf,image/jpeg,image/png', 'max_bytes' => 2097152, 'max_label' => '2 MB', 'types' => 'PDF, JPG, or PNG', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
+            'pwd_id_proof' => ['accept' => '.pdf,application/pdf', 'extensions' => 'pdf', 'mimes' => 'application/pdf', 'max_bytes' => 2097152, 'max_label' => '2 MB', 'types' => 'PDF only', 'hint' => 'PDF only, up to 2 MB'],
         ];
         $healthRecordDocumentFields = $usesEmployeeHealthForm
             ? [
@@ -9363,7 +9418,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <p class="record-modal-subtitle">Upload the missing requirement files for your health record.</p>
                     </div>
                 </div>
-                <form class="missing-document-body" method="POST" action="{{ $documentModalUsesClinicReplacement ? route('student.health_record.resubmit') : route('student.health_record.documents') }}" enctype="multipart/form-data" id="missingDocumentForm">
+                <form class="missing-document-body" method="POST" action="{{ $documentModalUsesClinicReplacement ? route('student.health_record.resubmit') : route('student.health_record.documents') }}" enctype="multipart/form-data" id="missingDocumentForm" novalidate>
                     @csrf
                     @php
                         $missingDocumentDescriptions = [
@@ -9377,12 +9432,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     @endphp
                     <div class="missing-document-progress">
                         <div>
-                            <p class="missing-document-progress-title">Requirements Progress</p>
+                            <p class="missing-document-progress-title">File Selection</p>
                             <div class="missing-document-progress-track">
                                 <span class="missing-document-progress-bar">
                                     <span class="missing-document-progress-fill" data-missing-document-progress-fill></span>
                                 </span>
-                                <span class="missing-document-progress-count"><span data-missing-document-uploaded-count>0</span> of {{ $missingDocumentCount }} Uploaded</span>
+                                <span class="missing-document-progress-count"><span data-missing-document-uploaded-count>0</span> of {{ $missingDocumentCount }} selected</span>
                             </div>
                         </div>
                         <div class="missing-document-stat">
@@ -9399,8 +9454,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <x-outline-icon name="check" />
                             </span>
                             <div>
-                                <strong>PDF, JPG, PNG</strong>
-                                <span>Accepted</span>
+                                <strong>Per document</strong>
+                                <span>Allowed file types</span>
                             </div>
                         </div>
                         <div class="missing-document-stat">
@@ -9416,7 +9471,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="missing-document-scroll">
                         @foreach($documentUploadKeysForModal as $documentKey)
                             @php
-                                $documentMeta = $resubmissionDocumentMeta[$documentKey] ?? ['accept' => '.pdf,.jpg,.jpeg,.png', 'hint' => 'PDF, JPG, or PNG'];
+                                $documentMeta = $resubmissionDocumentMeta[$documentKey] ?? ['accept' => '.pdf,.jpg,.jpeg,.png', 'extensions' => 'pdf,jpg,jpeg,png', 'mimes' => 'application/pdf,image/jpeg,image/png', 'max_bytes' => 1048576, 'max_label' => '1 MB', 'types' => 'PDF, JPG, or PNG', 'hint' => 'PDF, JPG, or PNG, up to 1 MB'];
                                 $isPhotoRequirement = $documentKey === 'student_photo';
                                 $isDeclarationRequirement = $documentKey === 'health_declaration';
                                 $isMedicalRequirement = $documentKey === 'medical_certificate';
@@ -9440,10 +9495,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                         <span class="missing-document-required">Required</span>
                                     </h3>
                                     <p class="missing-document-description">{{ $missingDocumentDescriptions[$documentKey] ?? 'Upload the required document file.' }}</p>
-                                    <p class="missing-document-meta">Accepted: {{ $isPhotoRequirement ? 'JPG, PNG' : 'PDF, JPG, PNG' }} &nbsp;•&nbsp; Max size: {{ in_array($documentKey, ['medical_certificate', 'chest_xray_result', 'pwd_id_proof'], true) ? '2 MB' : '1 MB' }}</p>
+                                    <p class="missing-document-meta">Accepted: {{ $documentMeta['types'] }} &nbsp;|&nbsp; Max size: {{ $documentMeta['max_label'] }}</p>
                                     @if($errors->has($documentKey))
                                         <em class="field-error-message">{{ $errors->first($documentKey) }}</em>
                                     @endif
+                                    <span class="missing-document-client-error" data-missing-document-client-error aria-live="polite"></span>
                                 </div>
                                 <div class="missing-document-upload-box" data-missing-document-box>
                                     <input
@@ -9452,6 +9508,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                         name="{{ $documentKey }}"
                                         accept="{{ $documentMeta['accept'] }}"
                                         data-missing-document-input
+                                        data-allowed-extensions="{{ $documentMeta['extensions'] }}"
+                                        data-allowed-mime-types="{{ $documentMeta['mimes'] }}"
+                                        data-max-bytes="{{ $documentMeta['max_bytes'] }}"
+                                        data-max-label="{{ $documentMeta['max_label'] }}"
                                         {{ $documentModalUsesClinicReplacement ? 'required' : '' }}
                                     >
                                     <span>
@@ -10131,6 +10191,299 @@ document.addEventListener('DOMContentLoaded', function () {
         openProfileEditModal();
     }
 
+    const profileEditForm = document.getElementById('profileEditForm');
+    const profilePhotoInput = document.getElementById('profilePhotoInput');
+    const profilePhotoPreview = document.getElementById('profilePhotoPreview');
+    let profilePhotoPreviewUrl = '';
+
+    function showProfileEditToast(message, titleText = 'Please check your profile details') {
+        const stack = document.querySelector('[data-student-toast-stack]');
+        if (!stack) return;
+        stack.querySelectorAll('[data-profile-edit-toast]').forEach((toast) => toast.remove());
+
+        const toast = document.createElement('div');
+        toast.className = 'student-toast is-error';
+        toast.setAttribute('role', 'alert');
+        toast.dataset.profileEditToast = '1';
+
+        const icon = document.createElement('span');
+        icon.className = 'student-toast-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = '!';
+
+        const content = document.createElement('span');
+        const title = document.createElement('strong');
+        title.className = 'student-toast-title';
+        title.textContent = titleText;
+        const copy = document.createElement('span');
+        copy.className = 'student-toast-message';
+        copy.textContent = message;
+        content.append(title, copy);
+
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'student-toast-close';
+        close.setAttribute('aria-label', 'Dismiss error message');
+        close.textContent = 'x';
+
+        const timer = document.createElement('span');
+        timer.className = 'student-toast-timer';
+        timer.setAttribute('aria-hidden', 'true');
+
+        let dismissed = false;
+        const dismiss = () => {
+            if (dismissed) return;
+            dismissed = true;
+            toast.classList.add('is-hiding');
+            window.setTimeout(() => toast.remove(), 240);
+        };
+
+        close.addEventListener('click', dismiss);
+        toast.append(icon, content, close, timer);
+        stack.appendChild(toast);
+        window.setTimeout(dismiss, 5000);
+    }
+
+    const profileAddressStreet = document.getElementById('profileAddressStreet');
+    const profileAddressProvince = document.getElementById('profileAddressProvince');
+    const profileAddressCity = document.getElementById('profileAddressCity');
+    const profileAddressBarangay = document.getElementById('profileAddressBarangay');
+    const profileAddressValue = document.getElementById('profileAddressValue');
+    const profileAddressStatus = document.getElementById('profileAddressLookupStatus');
+    const profileAddressApiBase = 'https://psgc.gitlab.io/api';
+    let profileAddressTouched = false;
+
+    function syncProfileAddressValue() {
+        if (!profileAddressValue || !profileAddressTouched) return;
+        profileAddressValue.value = [
+            profileAddressStreet?.value,
+            profileAddressBarangay?.value,
+            profileAddressCity?.value,
+            profileAddressProvince?.value,
+        ].map((part) => String(part || '').trim()).filter(Boolean).join(', ');
+    }
+
+    function normalizeProfileLocation(value) {
+        return String(value || '')
+            .trim()
+            .toLowerCase()
+            .replace(/^(city|municipality)\s+of\s+/, '')
+            .replace(/^(city|municipality)\s+/, '')
+            .replace(/\s+(city|municipality)$/, '')
+            .replace(/^(brgy\.?|barangay)\s+/, '')
+            .replace(/[^a-z0-9]+/g, ' ')
+            .trim();
+    }
+
+    function formatProfileLocation(value, level) {
+        const label = String(value || '').trim();
+        if (level !== 'city') return label;
+        const cityMatch = label.match(/^City of\s+(.+)$/i);
+        if (cityMatch) return `${cityMatch[1].trim()} City`;
+        const municipalityMatch = label.match(/^Municipality of\s+(.+)$/i);
+        if (municipalityMatch) return `${municipalityMatch[1].trim()} Municipality`;
+        return label;
+    }
+
+    function populateProfileAddressSelect(select, items, selectedValue, level, placeholder) {
+        if (!select) return null;
+        select.replaceChildren(new Option(placeholder, ''));
+        const sortedItems = [...items].sort((left, right) => formatProfileLocation(left.name, level).localeCompare(
+            formatProfileLocation(right.name, level), undefined, { sensitivity: 'base' }
+        ));
+        const selectedMatch = sortedItems.find((item) => normalizeProfileLocation(item.name) === normalizeProfileLocation(selectedValue));
+
+        sortedItems.forEach((item) => {
+            const value = formatProfileLocation(item.name, level);
+            if (!value) return;
+            const option = new Option(value, value);
+            option.dataset.locationCode = item.code || '';
+            select.appendChild(option);
+        });
+
+        const resolvedValue = selectedMatch
+            ? formatProfileLocation(selectedMatch.name, level)
+            : String(selectedValue || '').trim();
+        if (resolvedValue && !Array.from(select.options).some((option) => option.value === resolvedValue)) {
+            select.add(new Option(`${resolvedValue} (saved value)`, resolvedValue));
+        }
+        select.value = resolvedValue;
+        return selectedMatch;
+    }
+
+    async function fetchProfileAddressItems(path) {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 10000);
+        try {
+            const response = await fetch(`${profileAddressApiBase}${path}`, {
+                headers: { Accept: 'application/json' },
+                credentials: 'omit',
+                signal: controller.signal,
+            });
+            if (!response.ok) throw new Error(`Address lookup failed with ${response.status}.`);
+            const payload = await response.json();
+            return Array.isArray(payload) ? payload : (Array.isArray(payload.value) ? payload.value : []);
+        } finally {
+            window.clearTimeout(timeout);
+        }
+    }
+
+    async function loadProfileAddressBarangays(cityCode, selectedValue = '') {
+        if (!cityCode) return;
+        const items = await fetchProfileAddressItems(`/cities-municipalities/${encodeURIComponent(cityCode)}/barangays/`);
+        populateProfileAddressSelect(profileAddressBarangay, items, selectedValue, 'barangay', 'Select barangay');
+    }
+
+    async function loadProfileAddressCities(provinceCode, selectedCity = '', selectedBarangay = '') {
+        if (!provinceCode) return;
+        const endpoint = provinceCode === '130000000'
+            ? '/regions/130000000/cities-municipalities/'
+            : `/provinces/${encodeURIComponent(provinceCode)}/cities-municipalities/`;
+        const cities = await fetchProfileAddressItems(endpoint);
+        const selectedCityRecord = populateProfileAddressSelect(profileAddressCity, cities, selectedCity, 'city', 'Select city or municipality');
+        if (selectedCityRecord?.code) {
+            await loadProfileAddressBarangays(selectedCityRecord.code, selectedBarangay);
+        }
+    }
+
+    async function loadProfileAddressOptions() {
+        if (!profileAddressProvince || profileAddressProvince.disabled) return;
+        if (profileAddressStatus) profileAddressStatus.textContent = 'Loading address options...';
+        try {
+            const provinces = [
+                { code: '130000000', name: 'Metro Manila' },
+                ...(await fetchProfileAddressItems('/provinces/')),
+            ];
+            const selectedProvinceRecord = populateProfileAddressSelect(
+                profileAddressProvince,
+                provinces,
+                profileAddressProvince.value,
+                'province',
+                'Select province'
+            );
+            if (selectedProvinceRecord?.code) {
+                await loadProfileAddressCities(selectedProvinceRecord.code, profileAddressCity?.value, profileAddressBarangay?.value);
+            }
+            if (profileAddressStatus) profileAddressStatus.textContent = 'Address options loaded.';
+        } catch (error) {
+            if (profileAddressStatus) {
+                profileAddressStatus.textContent = 'Address options are unavailable. Saved values are preserved; refresh and try again.';
+                profileAddressStatus.classList.add('is-error');
+            }
+        }
+    }
+
+    profileAddressProvince?.addEventListener('change', async () => {
+        profileAddressTouched = true;
+        if (profileAddressCity) profileAddressCity.replaceChildren(new Option('Select city or municipality', ''));
+        if (profileAddressBarangay) profileAddressBarangay.replaceChildren(new Option('Select barangay', ''));
+        syncProfileAddressValue();
+        try {
+            const code = profileAddressProvince.options[profileAddressProvince.selectedIndex]?.dataset.locationCode || '';
+            await loadProfileAddressCities(code);
+            if (profileAddressStatus) profileAddressStatus.textContent = 'Select a city/municipality, then a barangay.';
+        } catch (error) {
+            if (profileAddressStatus) {
+                profileAddressStatus.textContent = 'City and barangay options are unavailable. Please refresh and try again.';
+                profileAddressStatus.classList.add('is-error');
+            }
+        }
+        syncProfileAddressValue();
+    });
+
+    profileAddressCity?.addEventListener('change', async () => {
+        profileAddressTouched = true;
+        if (profileAddressBarangay) profileAddressBarangay.replaceChildren(new Option('Select barangay', ''));
+        syncProfileAddressValue();
+        try {
+            const code = profileAddressCity.options[profileAddressCity.selectedIndex]?.dataset.locationCode || '';
+            await loadProfileAddressBarangays(code);
+            if (profileAddressStatus) profileAddressStatus.textContent = 'Address options loaded.';
+        } catch (error) {
+            if (profileAddressStatus) {
+                profileAddressStatus.textContent = 'Barangay options are unavailable. Please refresh and try again.';
+                profileAddressStatus.classList.add('is-error');
+            }
+        }
+        syncProfileAddressValue();
+    });
+
+    [profileAddressStreet, profileAddressBarangay].forEach((field) => {
+        field?.addEventListener('input', () => {
+            profileAddressTouched = true;
+            syncProfileAddressValue();
+        });
+        field?.addEventListener('change', () => {
+            profileAddressTouched = true;
+            syncProfileAddressValue();
+        });
+    });
+    loadProfileAddressOptions();
+
+    profilePhotoInput?.addEventListener('change', function () {
+        const file = profilePhotoInput.files?.[0];
+        if (!file) return;
+        const extension = file.name.split('.').pop()?.toLowerCase();
+        if (!['jpg', 'jpeg', 'png'].includes(extension) || file.size > 2 * 1024 * 1024) {
+            profilePhotoInput.value = '';
+            showProfileEditToast(file.size > 2 * 1024 * 1024
+                ? 'Profile photos must be JPG or PNG and no larger than 2 MB.'
+                : 'Choose a JPG or PNG profile photo.');
+            return;
+        }
+
+        if (profilePhotoPreviewUrl) URL.revokeObjectURL(profilePhotoPreviewUrl);
+        profilePhotoPreviewUrl = URL.createObjectURL(file);
+        const image = document.createElement('img');
+        image.alt = 'Selected profile photo preview';
+        image.src = profilePhotoPreviewUrl;
+        profilePhotoPreview?.replaceChildren(image);
+    });
+
+    profileEditForm?.addEventListener('submit', function (event) {
+        const heightField = profileEditForm.elements.namedItem('height');
+        const weightField = profileEditForm.elements.namedItem('weight');
+        const measurements = [
+            { field: heightField, label: 'Height', unit: 'feet', min: 1, max: 8 },
+            { field: weightField, label: 'Weight', unit: 'pounds', min: 1, max: 1500 },
+        ];
+
+        for (const measurement of measurements) {
+            if (!measurement.field || measurement.field.disabled || measurement.field.value.trim() === '') continue;
+            const value = Number(measurement.field.value);
+            if (!Number.isFinite(value) || value < measurement.min || value > measurement.max) {
+                event.preventDefault();
+                showProfileEditToast(`${measurement.label} must be between ${measurement.min} and ${measurement.max} ${measurement.unit}.`);
+                measurement.field.focus();
+                return;
+            }
+        }
+
+        const addressFields = [profileAddressStreet, profileAddressBarangay, profileAddressCity, profileAddressProvince]
+            .filter((field) => field && !field.disabled);
+        const filledAddressFields = addressFields.filter((field) => field.value.trim() !== '').length;
+        if (filledAddressFields > 0 && filledAddressFields < addressFields.length) {
+            event.preventDefault();
+            showProfileEditToast('Complete the street, barangay, city or municipality, and province.');
+            addressFields.find((field) => field.value.trim() === '')?.focus();
+            return;
+        }
+        if (filledAddressFields === addressFields.length && addressFields.length > 0
+            && addressFields.map((field) => field.value.trim()).join(', ').length > 255) {
+            event.preventDefault();
+            showProfileEditToast('The complete address must be 255 characters or fewer.');
+            profileAddressStreet?.focus();
+            return;
+        }
+
+        const photoFile = profilePhotoInput?.files?.[0];
+        if (photoFile && photoFile.size > 2 * 1024 * 1024) {
+            event.preventDefault();
+            showProfileEditToast('Profile photos must not exceed 2 MB.');
+            profilePhotoInput.focus();
+        }
+    });
+
     document.querySelectorAll('[data-notification-toggle]').forEach(function (toggle) {
         const detailsId = toggle.getAttribute('aria-controls');
         const details = detailsId ? document.getElementById(detailsId) : null;
@@ -10245,44 +10598,106 @@ document.addEventListener('DOMContentLoaded', function () {
             fillNode.style.width = inputs.length ? `${Math.round((uploadedCount / inputs.length) * 100)}%` : '0%';
         }
     };
+    const missingDocumentFileError = function (input, file) {
+        const allowedExtensions = (input.dataset.allowedExtensions || '').split(',').filter(Boolean);
+        const allowedMimeTypes = (input.dataset.allowedMimeTypes || '').split(',').filter(Boolean);
+        const extension = (file.name.split('.').pop() || '').toLowerCase();
+        const maxBytes = Number(input.dataset.maxBytes || 0);
+        const maxLabel = input.dataset.maxLabel || 'the allowed size';
+        const allowedTypesLabel = input.closest('.missing-document-row')?.querySelector('.missing-document-meta')?.textContent
+            .replace(/^Accepted:\s*/, '').split('|')[0].trim() || 'the listed file types';
+
+        if (!allowedExtensions.includes(extension)) {
+            return `Only ${allowedTypesLabel} files are allowed for this document.`;
+        }
+        if (file.type && allowedMimeTypes.length && !allowedMimeTypes.includes(file.type)) {
+            return `The selected file is not a valid ${allowedTypesLabel} document.`;
+        }
+        if (maxBytes > 0 && file.size > maxBytes) {
+            return `This file is larger than the ${maxLabel} limit.`;
+        }
+
+        return '';
+    };
+
+    const refreshMissingDocumentInput = function (input) {
+        const box = input.closest('[data-missing-document-box]');
+        const row = input.closest('.missing-document-row');
+        let file = input.files && input.files[0] ? input.files[0] : null;
+        const errorNode = row?.querySelector('[data-missing-document-client-error]');
+        const error = file ? missingDocumentFileError(input, file) : '';
+        if (error) {
+            input.value = '';
+            file = null;
+        }
+        if (errorNode) {
+            errorNode.textContent = error;
+        }
+        if (error) showProfileEditToast(error, 'File upload blocked');
+
+        const nameNode = box?.querySelector('[data-missing-document-file-name]');
+        const previewName = box?.querySelector('[data-missing-document-preview-name]');
+        const previewSize = box?.querySelector('[data-missing-document-preview-size]');
+        const previewThumb = box?.querySelector('[data-missing-document-preview-thumb]');
+        if (nameNode) nameNode.textContent = file ? file.name : 'No file chosen';
+        if (previewName) previewName.textContent = file ? file.name : 'Selected file';
+        if (previewSize) {
+            previewSize.textContent = file
+                ? `${(file.size / 1024 / 1024).toFixed(2)} MB / ${input.dataset.maxLabel} limit`
+                : 'Select a valid file to continue';
+        }
+        if (previewThumb) {
+            previewThumb.replaceChildren();
+            if (file && ['jpg', 'jpeg', 'png'].includes((file.name.split('.').pop() || '').toLowerCase())) {
+                const image = document.createElement('img');
+                image.alt = '';
+                image.src = URL.createObjectURL(file);
+                image.onload = function () { URL.revokeObjectURL(image.src); };
+                previewThumb.appendChild(image);
+            } else {
+                previewThumb.textContent = file ? (file.name.split('.').pop() || 'FILE').slice(0, 4).toUpperCase() : 'FILE';
+            }
+        }
+        if (box) box.classList.toggle('is-selected', Boolean(file));
+        syncMissingDocumentProgress();
+    };
+
     document.querySelectorAll('[data-missing-document-input]').forEach(function (input) {
         input.addEventListener('change', function () {
-            const box = input.closest('[data-missing-document-box]');
-            const file = input.files && input.files[0] ? input.files[0] : null;
-            const nameNode = box?.querySelector('[data-missing-document-file-name]');
-            const previewName = box?.querySelector('[data-missing-document-preview-name]');
-            const previewSize = box?.querySelector('[data-missing-document-preview-size]');
-            const previewThumb = box?.querySelector('[data-missing-document-preview-thumb]');
-            if (nameNode) {
-                nameNode.textContent = file ? file.name : 'No file chosen';
-            }
-            if (previewName) {
-                previewName.textContent = file ? file.name : 'Selected file';
-            }
-            if (previewSize) {
-                previewSize.textContent = file
-                    ? `${(file.size / 1024 / 1024).toFixed(2)} MB / upload ready`
-                    : 'Ready to upload';
-            }
-            if (previewThumb) {
-                previewThumb.replaceChildren();
-                if (file && file.type.startsWith('image/')) {
-                    const image = document.createElement('img');
-                    image.alt = '';
-                    image.src = URL.createObjectURL(file);
-                    image.onload = function () {
-                        URL.revokeObjectURL(image.src);
-                    };
-                    previewThumb.appendChild(image);
-                } else {
-                    previewThumb.textContent = file ? (file.name.split('.').pop() || 'FILE').slice(0, 4).toUpperCase() : 'FILE';
-                }
-            }
-            if (box) {
-                box.classList.toggle('is-selected', Boolean(file));
-            }
-            syncMissingDocumentProgress();
+            refreshMissingDocumentInput(input);
         });
+    });
+    document.getElementById('missingDocumentForm')?.addEventListener('submit', function (event) {
+        const inputs = Array.from(this.querySelectorAll('[data-missing-document-input]'));
+        const selectedInputs = inputs.filter((input) => input.files && input.files.length > 0);
+        let firstInvalidRow = null;
+        let firstErrorMessage = '';
+
+        inputs.forEach(function (input) {
+            const file = input.files && input.files[0] ? input.files[0] : null;
+            const row = input.closest('.missing-document-row');
+            const errorNode = row?.querySelector('[data-missing-document-client-error]');
+            let error = file ? missingDocumentFileError(input, file) : '';
+            if (!file && input.required) error = 'Choose the requested document before submitting.';
+            if (errorNode) errorNode.textContent = error;
+            if (error && !firstInvalidRow) {
+                firstInvalidRow = row;
+                firstErrorMessage = error;
+            }
+        });
+
+        if (selectedInputs.length === 0 && !firstInvalidRow && inputs.length) {
+            firstInvalidRow = inputs[0].closest('.missing-document-row');
+            const errorNode = firstInvalidRow?.querySelector('[data-missing-document-client-error]');
+            firstErrorMessage = 'Choose at least one document before submitting.';
+            if (errorNode) errorNode.textContent = firstErrorMessage;
+        }
+
+        if (firstInvalidRow) {
+            event.preventDefault();
+            showProfileEditToast(firstErrorMessage, 'File upload blocked');
+            firstInvalidRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     });
     document.querySelectorAll('[data-missing-document-remove]').forEach(function (button) {
         button.addEventListener('click', function () {

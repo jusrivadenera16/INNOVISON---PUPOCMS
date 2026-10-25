@@ -15822,14 +15822,12 @@
             'Diabetes',
             'Heart Disease',
             'Kidney Disease',
-            'Tuberculosis',
+            'Tuberculosis / Primary Complex',
             'Convulsion / Epilepsy',
             'Migraine',
             'Hyperventilation',
             'High Blood Pressure',
             'Hemophilia',
-            'Primary Complex',
-            'Others',
         ];
         const healthInfoVaccineDoses = [
             ['first_dose', '1st Dose'],
@@ -15882,7 +15880,7 @@
                 fields: [
                     ['has_illness', 'Known Medical Illness', 'select', null, { options: healthInfoYesNoOptions }],
                     ['medical_history', 'Medical History / Conditions', 'checkbox_group', null, { options: healthInfoIllnessOptions, dependsOn: ['has_illness', 'Yes'] }],
-                    ['other_illness', 'Other Illness', 'textarea', null, { dependsOnCheckedValue: ['medical_history', 'Others'] }],
+                    ['other_illness', 'Other Illness', 'textarea', null, { dependsOn: ['has_illness', 'Yes'] }],
                     ['has_disability', 'Has Disability', 'select', null, { options: healthInfoYesNoOptions }],
                     ['disability_type', 'Disability Type', null, null, { dependsOn: ['has_disability', 'Yes'] }],
                     ['no_allergies', 'No Known Allergies', 'checkbox'],
@@ -16080,13 +16078,6 @@
                 const selectedItems = Array.isArray(rawValue)
                     ? rawValue.map(item => String(item))
                     : String(rawValue || '').split(',').map(item => item.trim()).filter(Boolean);
-                if (
-                    fieldKey === 'medical_history' &&
-                    normalizeHealthInfoValue(getHealthInfoFieldValue(section.key, 'other_illness')) !== '' &&
-                    !selectedItems.includes('Others')
-                ) {
-                    selectedItems.push('Others');
-                }
                 return `
                     ${wrapperStart}
                         <label>${escapeApplicantHtml(label)}</label>

@@ -1091,7 +1091,7 @@
             position: fixed;
             top: calc(var(--header-height, 74px) + 16px);
             right: 26px;
-            z-index: 499996;
+            z-index: 1000001 !important;
             display: grid;
             gap: 12px;
             width: min(330px, calc(100vw - 32px));
@@ -1130,17 +1130,20 @@
         .student-toast.is-success {
             --toast-accent: #86efac;
             --toast-accent-soft: #bbf7d0;
+            --toast-progress: #16a34a;
         }
 
         .student-toast.is-error {
             --toast-accent: #fca5a5;
             --toast-accent-soft: #fecaca;
+            --toast-progress: #dc2626;
         }
 
         .student-toast.is-info {
             --toast-accent: #60a5fa;
             --toast-accent-soft: #dbeafe;
             --toast-title: #1d4ed8;
+            --toast-progress: #2563eb;
         }
 
         .student-toast.is-hiding {
@@ -1221,6 +1224,28 @@
             stroke-width: 2;
         }
 
+        .student-toast-timer {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            overflow: hidden;
+            border-radius: 0 0 8px 8px;
+            background: var(--toast-accent-soft);
+        }
+
+        .student-toast-timer::after {
+            content: "";
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--toast-progress);
+            transform-origin: left center;
+            animation: studentToastTimer 5s linear forwards;
+        }
+
         @keyframes studentToastIn {
             to {
                 opacity: 1;
@@ -1232,6 +1257,12 @@
             to {
                 opacity: 0;
                 transform: translateX(18px) scale(0.98);
+            }
+        }
+
+        @keyframes studentToastTimer {
+            to {
+                transform: scaleX(0);
             }
         }
 
@@ -2859,7 +2890,7 @@
                 <a class="brand-link" href="{{ url('/student/home') }}">
                     <span class="brand-badges">
                         <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo" class="brand-img">
-                        <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="Clinic Logo" class="brand-img brand-img--clinic">
+                        <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="Clinic Logo" class="brand-img brand-img--clinic">
                     </span>
                     <span class="brand-text">
                         <span class="brand-title">PUP TAGUIG</span>
@@ -3150,7 +3181,7 @@
                     </div>
                 </div>
                 <div class="loader-bottom-brand">
-                    <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="Clinic Logo" class="loader-bottom-logo">
+                    <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="Clinic Logo" class="loader-bottom-logo">
                     <div class="post-login-logout-text" aria-hidden="true">
                         <span>Signing you out</span><span class="post-login-logout-dots"><span class="post-login-logout-dot">.</span><span class="post-login-logout-dot">.</span><span class="post-login-logout-dot">.</span></span>
                     </div>
@@ -4182,11 +4213,11 @@
             'pwd_id_proof' => 'PWD ID Proof',
         ];
         $studentResubmissionMeta = [
-            'student_photo' => ['accept' => '.jpg,.jpeg,.png,image/jpeg,image/png', 'hint' => 'JPG or PNG, up to 1 MB'],
-            'health_declaration' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 1 MB'],
-            'medical_certificate' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
-            'chest_xray_result' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
-            'pwd_id_proof' => ['accept' => '.pdf,application/pdf', 'hint' => 'PDF only, up to 2 MB'],
+            'student_photo' => ['accept' => '.jpg,.jpeg,.png,image/jpeg,image/png', 'extensions' => ['jpg', 'jpeg', 'png'], 'max_bytes' => 1048576, 'max_label' => '1 MB', 'hint' => 'JPG or PNG, up to 1 MB'],
+            'health_declaration' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'extensions' => ['pdf', 'jpg', 'jpeg', 'png'], 'max_bytes' => 1048576, 'max_label' => '1 MB', 'hint' => 'PDF, JPG, or PNG, up to 1 MB'],
+            'medical_certificate' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'extensions' => ['pdf', 'jpg', 'jpeg', 'png'], 'max_bytes' => 2097152, 'max_label' => '2 MB', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
+            'chest_xray_result' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'extensions' => ['pdf', 'jpg', 'jpeg', 'png'], 'max_bytes' => 2097152, 'max_label' => '2 MB', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
+            'pwd_id_proof' => ['accept' => '.pdf,application/pdf', 'extensions' => ['pdf'], 'max_bytes' => 2097152, 'max_label' => '2 MB', 'hint' => 'PDF only, up to 2 MB'],
         ];
     @endphp
 
@@ -5094,8 +5125,8 @@
                         </svg>
                     </span>
                     <div>
-                        <span class="global-resubmission-progress-label">Upload Progress</span>
-                        <span class="global-resubmission-progress-count"><span data-global-resubmission-selected>0</span> of <span data-global-resubmission-total>{{ $studentResubmissionDocuments->count() }}</span> files uploaded</span>
+                        <span class="global-resubmission-progress-label">File Selection</span>
+                        <span class="global-resubmission-progress-count"><span data-global-resubmission-selected>0</span> of <span data-global-resubmission-total>{{ $studentResubmissionDocuments->count() }}</span> files selected</span>
                     </div>
                     <div class="global-resubmission-progress-track" aria-hidden="true">
                         <span class="global-resubmission-progress-fill" data-global-resubmission-progress-fill></span>
@@ -5169,12 +5200,19 @@
                                             </svg>
                                         </button>
                                     </span>
-                                    <input type="file" name="{{ $documentKey }}" accept="{{ $documentMeta['accept'] }}" required data-global-resubmission-input>
+                                    <input
+                                        type="file"
+                                        name="{{ $documentKey }}"
+                                        accept="{{ $documentMeta['accept'] }}"
+                                        required
+                                        data-global-resubmission-input
+                                        data-allowed-extensions="{{ implode(',', $documentMeta['extensions']) }}"
+                                        data-max-bytes="{{ $documentMeta['max_bytes'] }}"
+                                        data-max-label="{{ $documentMeta['max_label'] }}"
+                                    >
                                 </label>
                             </div>
-                            @error($documentKey)
-                                <span class="global-resubmission-error">{{ $message }}</span>
-                            @enderror
+                            <span class="global-resubmission-error" data-global-resubmission-error @if(!$errors->has($documentKey)) hidden @endif>@error($documentKey){{ $message }}@enderror</span>
                         </div>
                     @endforeach
                 </div>
@@ -5666,6 +5704,7 @@
             transform: translateY(-1px);
         }
         .global-resubmission-error {
+            grid-column: 1 / -1;
             color: #dc2626;
             font-size: 12px;
             font-weight: 800;
@@ -5842,14 +5881,74 @@
             if (!modal) {
                 return;
             }
+            const form = modal.querySelector('.global-resubmission-form');
             document.body.style.overflow = 'hidden';
             modal.querySelector('.global-resubmission-close')?.addEventListener('click', closeGlobalResubmissionModal);
+
+            function showGlobalResubmissionToast(message) {
+                const stack = document.querySelector('[data-student-toast-stack]');
+                if (!stack) return;
+
+                const toast = document.createElement('div');
+                toast.className = 'student-toast is-error';
+                toast.setAttribute('role', 'alert');
+
+                const icon = document.createElement('span');
+                icon.className = 'student-toast-icon';
+                icon.setAttribute('aria-hidden', 'true');
+                icon.textContent = '!';
+
+                const content = document.createElement('span');
+                const title = document.createElement('strong');
+                title.className = 'student-toast-title';
+                title.textContent = 'File not accepted';
+                const copy = document.createElement('span');
+                copy.className = 'student-toast-message';
+                copy.textContent = message;
+                content.append(title, copy);
+
+                const close = document.createElement('button');
+                close.type = 'button';
+                close.className = 'student-toast-close';
+                close.setAttribute('aria-label', 'Dismiss message');
+                close.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>';
+
+                const timer = document.createElement('span');
+                timer.className = 'student-toast-timer';
+
+                const dismiss = function () {
+                    toast.classList.add('is-hiding');
+                    window.setTimeout(function () { toast.remove(); }, 240);
+                };
+                close.addEventListener('click', dismiss);
+                toast.append(icon, content, close, timer);
+                stack.append(toast);
+                window.setTimeout(dismiss, 5000);
+            }
+
+            function validateReplacementFile(input, file) {
+                const extension = (file.name.split('.').pop() || '').toLowerCase();
+                const allowedExtensions = (input.dataset.allowedExtensions || '')
+                    .split(',')
+                    .map(function (value) { return value.trim().toLowerCase(); })
+                    .filter(Boolean);
+                const maxBytes = Number(input.dataset.maxBytes || 0);
+                const maxLabel = input.dataset.maxLabel || 'the allowed size';
+
+                if (!allowedExtensions.includes(extension)) {
+                    return 'This document only accepts ' + allowedExtensions.map(function (value) { return value.toUpperCase(); }).join(', ') + ' files.';
+                }
+                if (maxBytes > 0 && file.size > maxBytes) {
+                    return 'This file is too large. The maximum allowed size is ' + maxLabel + '.';
+                }
+                return '';
+            }
 
             function updateGlobalResubmissionProgress() {
                 const cards = Array.from(modal.querySelectorAll('[data-global-resubmission-card]'));
                 const selected = cards.filter(function (card) {
                     const input = card.querySelector('[data-global-resubmission-input]');
-                    return input && input.files && input.files.length > 0;
+                    return input && input.files && input.files.length > 0 && !input.closest('[data-global-resubmission-card]')?.querySelector('[data-global-resubmission-error]:not([hidden])');
                 }).length;
                 const total = cards.length;
                 const percent = total > 0 ? Math.round((selected / total) * 100) : 0;
@@ -5880,10 +5979,34 @@
                 const thumb = card?.querySelector('[data-global-resubmission-thumb]');
                 const fileName = card?.querySelector('[data-global-resubmission-file-name]');
                 const removeButton = card?.querySelector('[data-global-resubmission-remove]');
+                const error = card?.querySelector('[data-global-resubmission-error]');
+
+                function setInputError(message, showToast) {
+                    if (error) {
+                        error.textContent = message;
+                        error.hidden = !message;
+                    }
+                    if (message && showToast) showGlobalResubmissionToast(message);
+                }
 
                 function syncFilePreview() {
                     const file = input.files && input.files[0] ? input.files[0] : null;
                     if (!preview || !card || !thumb || !fileName) return;
+
+                    if (file) {
+                        const validationMessage = validateReplacementFile(input, file);
+                        if (validationMessage) {
+                            input.value = '';
+                            setInputError(validationMessage, true);
+                            card.classList.remove('has-file');
+                            preview.classList.remove('is-visible');
+                            thumb.replaceChildren();
+                            fileName.textContent = '';
+                            updateGlobalResubmissionProgress();
+                            return;
+                        }
+                    }
+                    setInputError('', false);
 
                     preview.classList.remove('is-visible');
                     thumb.replaceChildren();
@@ -5919,6 +6042,40 @@
                 });
 
                 syncFilePreview();
+            });
+
+            form?.addEventListener('submit', function (event) {
+                const inputs = Array.from(form.querySelectorAll('[data-global-resubmission-input]'));
+                const missingInput = inputs.find(function (input) { return !input.files || input.files.length === 0; });
+                if (missingInput) {
+                    event.preventDefault();
+                    const message = 'Choose all requested replacement files before submitting.';
+                    const error = missingInput.closest('[data-global-resubmission-card]')?.querySelector('[data-global-resubmission-error]');
+                    if (error) {
+                        error.textContent = message;
+                        error.hidden = false;
+                    }
+                    showGlobalResubmissionToast(message);
+                    missingInput.focus();
+                    updateGlobalResubmissionProgress();
+                    return;
+                }
+
+                const invalidInput = inputs.find(function (input) {
+                    return validateReplacementFile(input, input.files[0]) !== '';
+                });
+                if (invalidInput) {
+                    event.preventDefault();
+                    const message = validateReplacementFile(invalidInput, invalidInput.files[0]);
+                    const error = invalidInput.closest('[data-global-resubmission-card]')?.querySelector('[data-global-resubmission-error]');
+                    if (error) {
+                        error.textContent = message;
+                        error.hidden = false;
+                    }
+                    invalidInput.value = '';
+                    showGlobalResubmissionToast(message);
+                    updateGlobalResubmissionProgress();
+                }
             });
 
             updateGlobalResubmissionProgress();

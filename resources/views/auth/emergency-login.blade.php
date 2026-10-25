@@ -914,7 +914,7 @@
 <body>
     <header class="topbar">
         <a href="{{ url('/') }}" class="brand" aria-label="Clinic home">
-            <img src="{{ asset('images/clinic_logo_transparent.png') }}" alt="PUP Taguig Clinic logo">
+            <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="PUP Taguig Clinic logo">
             <div>
                 <div class="brand-title">PUP TAGUIG CLINIC</div>
                 <div class="brand-subtitle">Emergency Backup Access</div>

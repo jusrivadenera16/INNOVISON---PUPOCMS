@@ -828,7 +828,7 @@
                 <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo">
             </span>
             <span class="brand-logo">
-                <img src="{{ asset('images/clinic_logo_transparent.png') }}" alt="Clinic Logo">
+                <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="Clinic Logo">
             </span>
         </div>
 

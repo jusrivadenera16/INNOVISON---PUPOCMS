@@ -569,6 +569,7 @@
         $resolveIssuancePatientType = function ($issuance) use ($marPatientTypeNormalizer) {
             return $marPatientTypeNormalizer->normalize($issuance->user_type ?? '');
         };
+        $marExcusedLetterBreakdown = $marExcusedLetterBreakdown ?? [];
         $countIssuancesBySubcategory = function ($issuances, int $subcategoryId, string $patientType) use ($resolveIssuancePatientType) {
             return $issuances->filter(function ($issuance) use ($subcategoryId, $resolveIssuancePatientType, $patientType) {
                 return (int) $issuance->clearance_subcategory_id === $subcategoryId
@@ -592,20 +593,22 @@
             }
             return $label;
         };
-        $clearanceGroups = collect($marClearanceTypes ?? [])->values()->map(function ($clearanceType, $index) use ($marClearanceIssuances, $countIssuancesBySubcategory, $countIssuancesByParent, $alphaLabel) {
+        $clearanceGroups = collect($marClearanceTypes ?? [])->values()->map(function ($clearanceType, $index) use ($marClearanceIssuances, $marExcusedLetterBreakdown, $countIssuancesBySubcategory, $countIssuancesByParent, $alphaLabel) {
             $parentRow = [
                 'student' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'student'),
                 'faculty' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'faculty'),
                 'admin' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'admin'),
                 'dependent' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'dependent'),
+                'details' => $marExcusedLetterBreakdown['type:' . $clearanceType->id] ?? [],
             ];
-            $rows = $clearanceType->subcategories->values()->map(function ($subcategory) use ($marClearanceIssuances, $countIssuancesBySubcategory) {
+            $rows = $clearanceType->subcategories->values()->map(function ($subcategory) use ($marClearanceIssuances, $marExcusedLetterBreakdown, $countIssuancesBySubcategory) {
                 return [
                     'name' => $subcategory->name,
                     'student' => $countIssuancesBySubcategory($marClearanceIssuances, (int) $subcategory->id, 'student'),
                     'faculty' => $countIssuancesBySubcategory($marClearanceIssuances, (int) $subcategory->id, 'faculty'),
                     'admin' => $countIssuancesBySubcategory($marClearanceIssuances, (int) $subcategory->id, 'admin'),
                     'dependent' => $countIssuancesBySubcategory($marClearanceIssuances, (int) $subcategory->id, 'dependent'),
+                    'details' => $marExcusedLetterBreakdown['subcategory:' . $subcategory->id] ?? [],
                 ];
             });
 
@@ -699,6 +702,16 @@
                     <td class="text-center">{{ $parentRow['dependent'] ?: '' }}</td>
                     <td class="text-center">{{ $parentTotal ?: '' }}</td>
                 </tr>
+                @foreach($parentRow['details'] as $detailRow)
+                    <tr class="nested-row deep-nested-row">
+                        <td style="padding-left: 42px;">- {{ $detailRow['name'] }}</td>
+                        <td class="text-center">{{ $detailRow['student'] ?: '' }}</td>
+                        <td class="text-center">{{ $detailRow['faculty'] ?: '' }}</td>
+                        <td class="text-center">{{ $detailRow['admin'] ?: '' }}</td>
+                        <td class="text-center">{{ $detailRow['dependent'] ?: '' }}</td>
+                        <td class="text-center">{{ array_sum(array_intersect_key($detailRow, array_flip(['student', 'faculty', 'admin', 'dependent']))) ?: '' }}</td>
+                    </tr>
+                @endforeach
                 @forelse($clearanceGroup['rows'] as $subcategoryIndex => $subcategoryRow)
                     <tr class="nested-row deep-nested-row">
                         <td>{{ $subcategoryIndex + 1 }}. {{ $subcategoryRow['name'] }}</td>
@@ -708,6 +721,16 @@
                         <td class="text-center">{{ $subcategoryRow['dependent'] ?: '' }}</td>
                         <td class="text-center">{{ ($subcategoryRow['student'] + $subcategoryRow['faculty'] + $subcategoryRow['admin'] + $subcategoryRow['dependent']) ?: '' }}</td>
                     </tr>
+                    @foreach($subcategoryRow['details'] as $detailRow)
+                        <tr class="nested-row deep-nested-row">
+                            <td style="padding-left: 42px;">- {{ $detailRow['name'] }}</td>
+                            <td class="text-center">{{ $detailRow['student'] ?: '' }}</td>
+                            <td class="text-center">{{ $detailRow['faculty'] ?: '' }}</td>
+                            <td class="text-center">{{ $detailRow['admin'] ?: '' }}</td>
+                            <td class="text-center">{{ $detailRow['dependent'] ?: '' }}</td>
+                            <td class="text-center">{{ array_sum(array_intersect_key($detailRow, array_flip(['student', 'faculty', 'admin', 'dependent']))) ?: '' }}</td>
+                        </tr>
+                    @endforeach
                 @empty
                     <tr class="nested-row deep-nested-row"><td>&nbsp;</td><td class="text-center"></td><td class="text-center"></td><td class="text-center"></td><td class="text-center"></td><td class="text-center"></td></tr>
                 @endforelse

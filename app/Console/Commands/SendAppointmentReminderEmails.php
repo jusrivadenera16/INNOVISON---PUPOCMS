@@ -48,7 +48,9 @@ class SendAppointmentReminderEmails extends Command
                 $windowEnd->format('Y-m-d H:i:s'),
             ])
             ->orderBy('id')
-            ->get();
+            ->get()
+            ->filter(fn (Appointment $appointment): bool => $appointment->isReminderDue($reminderHours, $now))
+            ->values();
 
         $sent = 0;
         $notSent = 0;

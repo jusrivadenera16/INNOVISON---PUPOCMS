@@ -17,9 +17,16 @@ class MarClearanceTypeController extends Controller
 {
     private const DATA_SOURCE_KEYS = [
         'freshmen_applicants',
-        'health_form_category',
+        'transferee_applicants',
+        'student_health_form_category',
+        'employee_health_form_category',
         'consultation',
         'patient_intake',
+    ];
+
+    private const LEGACY_DATA_SOURCE_LABELS = [
+        'applicant_health_form_category' => 'Legacy combined applicant category mapping (inactive; reassign)',
+        'health_form_category' => 'Legacy combined student/employee category mapping (edit to split)',
     ];
 
     private const APPLICANT_FILTER_OPTIONS = [
@@ -98,9 +105,11 @@ class MarClearanceTypeController extends Controller
     public function dataSourceLabels(): array
     {
         return [
-            'freshmen_applicants' => 'Freshmen Applicants',
-            'health_form_category' => 'Health Form Categories',
-            'consultation' => 'Consultation Records',
+            'freshmen_applicants' => 'New Applicant Records (filtered)',
+            'transferee_applicants' => 'Transferee Applicant Records',
+            'student_health_form_category' => 'Student Health Form Category',
+            'employee_health_form_category' => 'Faculty / Admin Health Form Category',
+            'consultation' => 'Completed Consultation Records',
             'patient_intake' => 'Patient Intake Records',
         ];
     }
@@ -121,6 +130,7 @@ class MarClearanceTypeController extends Controller
 
         $sourceLabels = $this->subcategorySources();
         $dataSourceLabels = $this->dataSourceLabels();
+        $legacyDataSourceLabels = self::LEGACY_DATA_SOURCE_LABELS;
         $healthFormCategories = HealthFormCategory::query()
             ->where('is_active', true)
             ->orderBy('name')
@@ -131,6 +141,7 @@ class MarClearanceTypeController extends Controller
             'clearanceTypes',
             'sourceLabels',
             'dataSourceLabels',
+            'legacyDataSourceLabels',
             'healthFormCategories',
             'applicantFilterOptions'
         ));
@@ -141,7 +152,10 @@ class MarClearanceTypeController extends Controller
         $validated = $request->validate(array_merge([
             'name' => ['required', 'string', 'max:160'],
             'count_placement' => ['required', Rule::in(['parent', 'subcategories'])],
-        ], $this->dataSourceRules($request->input('count_placement') === 'parent')));
+        ], $this->dataSourceRules(
+            $request->input('count_placement') === 'parent',
+            (string) $request->input('source_key', '')
+        )));
 
         $name = trim($validated['name']);
         $existingType = MarClearanceType::query()
@@ -200,7 +214,10 @@ class MarClearanceTypeController extends Controller
             'name' => ['required', 'string', 'max:160'],
             'sort_order' => ['nullable', 'integer', 'min:1', 'max:999'],
             'count_placement' => ['required', Rule::in(['parent', 'subcategories'])],
-        ], $this->dataSourceRules($request->input('count_placement') === 'parent')));
+        ], $this->dataSourceRules(
+            $request->input('count_placement') === 'parent',
+            (string) $request->input('source_key', '')
+        )));
 
         $name = trim($validated['name']);
         $exists = MarClearanceType::query()
@@ -255,7 +272,7 @@ class MarClearanceTypeController extends Controller
     {
         $validated = $request->validate(array_merge([
             'name' => ['required', 'string', 'max:160'],
-        ], $this->dataSourceRules(true)));
+        ], $this->dataSourceRules(true, (string) $request->input('source_key', ''))));
 
         $name = trim($validated['name']);
         $exists = $marClearanceType->subcategories()
@@ -336,7 +353,7 @@ class MarClearanceTypeController extends Controller
     {
         $validated = $request->validate(array_merge([
             'name' => ['required', 'string', 'max:160'],
-        ], $this->dataSourceRules(true)));
+        ], $this->dataSourceRules(true, (string) $request->input('source_key', ''))));
 
         $name = trim($validated['name']);
         $exists = MarClearanceSubcategory::query()
@@ -414,17 +431,16 @@ class MarClearanceTypeController extends Controller
     {
         return match (trim((string) $sourceKey)) {
             'freshmen_applicants' => [MarClearanceSubcategorySource::APPLICANT_FINAL_REVIEW],
-            'health_form_category' => [
-                MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW,
-                MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW,
-            ],
+            'transferee_applicants' => [MarClearanceSubcategorySource::APPLICANT_FINAL_REVIEW],
+            'student_health_form_category' => [MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW],
+            'employee_health_form_category' => [MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW],
             'consultation' => [MarClearanceSubcategorySource::CONSULTATION],
             'patient_intake' => [MarClearanceSubcategorySource::PATIENT_INTAKE],
             default => [],
         };
     }
 
-    private function dataSourceRules(bool $required): array
+    private function dataSourceRules(bool $required, ?string $sourceKey = null): array
     {
         return array_merge([
             'source_key' => [
@@ -435,9 +451,20 @@ class MarClearanceTypeController extends Controller
             'source_category_id' => [
                 'nullable',
                 'integer',
-                'required_if:source_key,health_form_category',
+                'required_if:source_key,student_health_form_category,employee_health_form_category',
                 Rule::exists('health_form_categories', 'id')
-                    ->where(fn ($query) => $query->where('is_active', true)),
+                    ->where(function ($query) use ($sourceKey) {
+                        $query->where('is_active', true);
+                        if ($sourceKey === 'student_health_form_category') {
+                            $query->whereJsonContains('available_for', 'student');
+                        } elseif ($sourceKey === 'employee_health_form_category') {
+                            $query->where(function ($audienceQuery) {
+                                $audienceQuery
+                                    ->whereJsonContains('available_for', 'faculty')
+                                    ->orWhereJsonContains('available_for', 'admin');
+                            });
+                        }
+                    }),
             ],
         ], $this->applicantFilterRules());
     }
@@ -464,7 +491,10 @@ class MarClearanceTypeController extends Controller
 
         return [
             'source_key' => $sourceKey,
-            'source_category_id' => $sourceKey === 'health_form_category'
+            'source_category_id' => in_array($sourceKey, [
+                'student_health_form_category',
+                'employee_health_form_category',
+            ], true)
                 ? ($validated['source_category_id'] ?? null)
                 : null,
             'source_config' => $sourceKey === 'freshmen_applicants'

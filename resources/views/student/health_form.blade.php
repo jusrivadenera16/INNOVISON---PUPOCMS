@@ -415,6 +415,10 @@
             padding: 16px;
         }
 
+        .identity-name-grid.has-suffix {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
         .identity-field {
             border: 1px solid rgba(127, 29, 45, 0.12);
             background: rgba(255, 255, 255, 0.86);
@@ -2971,6 +2975,10 @@
                 grid-template-columns: 1fr;
             }
 
+            .identity-name-grid.has-suffix {
+                grid-template-columns: 1fr;
+            }
+
             .requirement-extra {
                 grid-template-columns: 1fr;
             }
@@ -3277,7 +3285,7 @@
             </div>
             <div class="stepper-spacer"></div>
 
-            <form action="{{ route('store.health.form') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('store.health.form') }}" method="POST" enctype="multipart/form-data" novalidate>
                 @csrf
                 <input type="hidden" name="reference_mode_selected" value="{{ $selectedReferenceMode }}">
                 <input type="hidden" name="form_mode" value="applicant">
@@ -3297,7 +3305,7 @@
                     </div>
 
                     <div class="identity-overview">
-                        <div class="identity-name-grid">
+                        <div class="identity-name-grid{{ $displaySuffixName !== '' ? ' has-suffix' : '' }}">
                             <div class="identity-field">
                                 <small>First Name</small>
                                 <strong>{{ $displayFirstName !== '' ? $displayFirstName : 'N/A' }}</strong>
@@ -3310,6 +3318,12 @@
                                 <small>Last Name</small>
                                 <strong>{{ $displayLastName !== '' ? $displayLastName : 'N/A' }}</strong>
                             </div>
+                            @if($displaySuffixName !== '')
+                                <div class="identity-field">
+                                    <small>Suffix</small>
+                                    <strong>{{ $displaySuffixName }}</strong>
+                                </div>
+                            @endif
                         </div>
                         <div
                             class="reference-panel {{ $displayReferenceNumber === '' ? 'is-missing' : '' }}"
@@ -4591,6 +4605,8 @@
             const ageInput = document.getElementById('age');
             const illnessRadios = document.querySelectorAll('input[name="has_illness"]');
             const medicalHistoryDetails = document.getElementById('medicalHistoryDetails');
+            const medicalHistoryCheckboxes = Array.from(document.querySelectorAll('input[name="medical_history[]"]'));
+            const otherIllnessInput = document.getElementById('other_illness');
             const disabilityRadios = document.querySelectorAll('input[name="has_disability"]');
             const disabilityTypeInput = document.getElementById('disability_type');
             const disabilityTypeWrap = document.getElementById('disabilityTypeWrap');
@@ -5033,6 +5049,9 @@
                 const panel = stepPanels[step - 1];
                 if (!panel) return true;
                 clearValidationBubble();
+                if (step === 3) {
+                    syncMedicalHistoryValidity();
+                }
                 if (step === 6) {
                     syncSignatureValidity();
                 }
@@ -5057,6 +5076,7 @@
 
             function validateWholeForm() {
                 syncHomeAddressValue();
+                syncMedicalHistoryValidity();
                 syncSignatureValidity();
                 const fields = Array.from(form?.querySelectorAll('input, select, textarea') || [])
                     .filter((field) => !field.disabled);
@@ -5240,6 +5260,25 @@
                         }
                     }
                 });
+                syncMedicalHistoryValidity();
+            }
+
+            function syncMedicalHistoryValidity() {
+                const hasIllness = document.querySelector('input[name="has_illness"]:checked')?.value === 'Yes';
+                const hasSelectedCondition = medicalHistoryCheckboxes.some((checkbox) => checkbox.checked);
+                const hasOtherIllnessNotes = Boolean(otherIllnessInput?.value.trim());
+                const message = hasIllness && !hasSelectedCondition && !hasOtherIllnessNotes
+                    ? 'Select at least one known condition or enter Other Illness / Medical Notes.'
+                    : '';
+                const validationAnchor = medicalHistoryCheckboxes[0];
+                if (!validationAnchor) return;
+
+                validationAnchor.setCustomValidity(message);
+                if (message) {
+                    validationAnchor.dataset.validationMessage = message;
+                } else {
+                    delete validationAnchor.dataset.validationMessage;
+                }
             }
 
             function toggleAllergyDetails() {
@@ -5920,6 +5959,10 @@
             illnessRadios.forEach((radio) => {
                 radio.addEventListener('change', toggleIllnessDetails);
             });
+            medicalHistoryCheckboxes.forEach((checkbox) => {
+                checkbox.addEventListener('change', syncMedicalHistoryValidity);
+            });
+            otherIllnessInput?.addEventListener('input', syncMedicalHistoryValidity);
             disabilityRadios.forEach((radio) => {
                 radio.addEventListener('change', togglePwdRequirements);
             });
