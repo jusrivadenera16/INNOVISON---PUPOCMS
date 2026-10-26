@@ -3148,15 +3148,19 @@ class AppointmentController extends Controller
             ->unique()
             ->values()
             ->all();
+        $appointmentScheduling = app(\App\Services\AppointmentSchedulingService::class);
 
         $request->validate([
-            'date' => 'required|date',
-            'time' => 'required',
+            'date' => ['required', 'date_format:Y-m-d'],
+            'time' => ['required', 'date_format:H:i', Rule::in($appointmentScheduling->bookableTimeSlots())],
             'service' => ['required', Rule::in($configuredServices)],
             'remarks' => 'required|string',
         ], [
             'date.required' => 'Please select a preferred appointment date.',
+            'date.date_format' => 'Please select a valid appointment date.',
             'time.required' => 'Please select an available appointment time.',
+            'time.date_format' => 'Please select an available appointment time.',
+            'time.in' => 'Please select one of the available appointment times.',
             'service.required' => 'Please select a clinic service.',
             'remarks.required' => 'Please enter a reason or describe your symptoms.',
         ]);
@@ -3188,43 +3192,52 @@ class AppointmentController extends Controller
             );
         }
 
-        // Prevent overlapping appointments
-        $exists = Appointment::where('date', $request->date)
-                             ->where('time', $request->time)
-                             ->where('status', '!=', 'Cancelled')
-                             ->exists();
-
-        if ($exists) {
-            return redirect()->back()->withInput()->with('error', 'That time slot is already taken.');
-        }
-
-        // Max 10 appointments per day
-        $dailyCount = Appointment::where('date', $request->date)
-                                 ->where('status', '!=', 'Cancelled')
-                                 ->count();
-        if ($dailyCount >= 10) {
-            return redirect()->back()->withInput()->with('error', 'Fully booked for this date.');
-        }
-
-        // Create appointment for student side
         $studentContext = $this->resolveStudentContext($user);
         $appointmentIdentifier = $this->resolveAppointmentIdentifier($user, $studentContext);
+        $bookingError = null;
+        $appointment = DB::transaction(function () use (
+            $appointmentScheduling,
+            $request,
+            $user,
+            $studentContext,
+            $appointmentIdentifier,
+            $workflow,
+            &$bookingError
+        ) {
+            $appointmentScheduling->lockSchedule();
 
-        $appointment = new Appointment();
-        $appointment->apt_id = Appointment::generateAppointmentNumber(now(), 'online');
-        $appointment->user_id = $user->id;
-        $appointment->student_id = $studentContext['student_id'] ?: ($user->student_id ?: $appointmentIdentifier);
-        $appointment->student_number = $appointmentIdentifier;
-        $appointment->name = $user->name;
-        $appointment->email = $user->email;
-        $appointment->date = $request->date;
-        $appointment->time = $request->time;
-        $appointment->service = $request->service;
-        $appointment->status = $workflow->settings()->auto_approve ? 'Approved' : 'Pending';
-        $appointment->remarks = $request->remarks; 
-        $appointment->type = 'online';
-        $appointment->user_type = Appointment::normalizeUserType($user->user_role);
-        $appointment->save(); // Dito lang dapat magtatapos ang command.
+            if ($appointmentScheduling->hasReservedSlot($request->date, $request->time)) {
+                $bookingError = 'That time slot is already taken. Please choose another time.';
+                return null;
+            }
+
+            if ($appointmentScheduling->dailyAppointmentCount($request->date) >= 10) {
+                $bookingError = 'Fully booked for this date. Please choose another date.';
+                return null;
+            }
+
+            $appointment = new Appointment();
+            $appointment->apt_id = Appointment::generateAppointmentNumber(now(), 'online');
+            $appointment->user_id = $user->id;
+            $appointment->student_id = $studentContext['student_id'] ?: ($user->student_id ?: $appointmentIdentifier);
+            $appointment->student_number = $appointmentIdentifier;
+            $appointment->name = $user->name;
+            $appointment->email = $user->email;
+            $appointment->date = $request->date;
+            $appointment->time = $request->time;
+            $appointment->service = $request->service;
+            $appointment->status = $workflow->settings()->auto_approve ? 'Approved' : 'Pending';
+            $appointment->remarks = $request->remarks;
+            $appointment->type = 'online';
+            $appointment->user_type = Appointment::normalizeUserType($user->user_role);
+            $appointment->save();
+
+            return $appointment;
+        });
+
+        if ($bookingError !== null) {
+            return redirect()->back()->withInput()->with('error', $bookingError);
+        }
 
         app(\App\Services\AdminAppointmentAlertMailer::class)->sendNewAppointmentAlert($appointment);
         app(StudentNotificationMailer::class)->sendAppointmentNotice($user, $appointment, 'booked');
@@ -3284,6 +3297,7 @@ class AppointmentController extends Controller
             ]);
         }
 
+        $appointmentScheduling = app(\App\Services\AppointmentSchedulingService::class);
         $takenTimes = Appointment::whereDate('date', $selectedDate->toDateString())
             ->where('status', '!=', 'Cancelled')
             ->pluck('time')
@@ -3293,9 +3307,7 @@ class AppointmentController extends Controller
             ->values()
             ->all();
 
-        $dailyBookedCount = Appointment::whereDate('date', $selectedDate->toDateString())
-            ->where('status', '!=', 'Cancelled')
-            ->count();
+        $dailyBookedCount = $appointmentScheduling->dailyAppointmentCount($selectedDate->toDateString());
 
         if ($dailyBookedCount >= 10) {
             return response()->json([
@@ -3314,34 +3326,27 @@ class AppointmentController extends Controller
         $closureBlockedCount = 0;
         $workflow = app(ClinicWorkflowService::class);
 
-        for ($hour = 8; $hour <= 19; $hour++) {
-            foreach ([0, 30] as $minute) {
-                if ($hour === 19 && $minute > 0) {
-                    continue;
-                }
+        foreach ($appointmentScheduling->bookableTimeSlots() as $slotValue) {
+            $slotTime = Carbon::createFromFormat('H:i', $slotValue);
+            $slotDateTime = Carbon::parse($selectedDate->toDateString() . ' ' . $slotValue);
+            $isTaken = isset($takenLookup[$slotValue]);
+            $isPastTime = $slotDateTime->lt($now);
+            $isClosureBlocked = $workflow->activeClosure($slotDateTime) !== null;
+            $isAvailable = !$isTaken && !$isPastTime && !$isClosureBlocked;
 
-                $slotTime = Carbon::createFromTime($hour, $minute, 0);
-                $slotValue = $slotTime->format('H:i');
-                $slotDateTime = Carbon::parse($selectedDate->toDateString() . ' ' . $slotValue);
-                $isTaken = isset($takenLookup[$slotValue]);
-                $isPastTime = $slotDateTime->lt($now);
-                $isClosureBlocked = $workflow->activeClosure($slotDateTime) !== null;
-                $isAvailable = !$isTaken && !$isPastTime && !$isClosureBlocked;
-
-                if ($isClosureBlocked) {
-                    $closureBlockedCount++;
-                }
-
-                if ($isAvailable) {
-                    $dailyCount++;
-                }
-
-                $slots[] = [
-                    'value' => $slotValue,
-                    'label' => $slotTime->format('g:i A'),
-                    'available' => $isAvailable,
-                ];
+            if ($isClosureBlocked) {
+                $closureBlockedCount++;
             }
+
+            if ($isAvailable) {
+                $dailyCount++;
+            }
+
+            $slots[] = [
+                'value' => $slotValue,
+                'label' => $slotTime->format('g:i A'),
+                'available' => $isAvailable,
+            ];
         }
 
         return response()->json([

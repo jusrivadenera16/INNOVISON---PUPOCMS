@@ -6979,8 +6979,25 @@ public function updateClearance(Request $request, $id)
     // --- 1. APPOINTMENT ACTIONS ---
     public function updateStatus($id, $status)
     {
-        $appointment = Appointment::find($id);
-        if ($appointment) {
+        $appointmentScheduling = app(\App\Services\AppointmentSchedulingService::class);
+        $previousStatus = '';
+        $statusError = null;
+        $appointment = DB::transaction(function () use ($id, $status, $appointmentScheduling, &$previousStatus, &$statusError) {
+            $appointmentScheduling->lockSchedule();
+            $appointment = Appointment::query()->lockForUpdate()->find($id);
+            if (!$appointment) {
+                return null;
+            }
+
+            if ($status !== 'Cancelled' && $appointmentScheduling->hasReservedSlot(
+                (string) $appointment->date,
+                substr((string) $appointment->time, 0, 5),
+                (int) $appointment->id
+            )) {
+                $statusError = 'That time slot is already assigned to another appointment. The status was not changed.';
+                return null;
+            }
+
             $previousStatus = (string) $appointment->status;
             $appointment->status = $status;
             if ($status === 'Approved') {
@@ -6999,22 +7016,30 @@ public function updateClearance(Request $request, $id)
                 $appointment->appointment_reminder_email_sent_at = null;
             }
             $appointment->save();
-            $actionMessage = trim((string) request()->query('message', ''));
 
-            if ($appointment->user && $previousStatus !== $status) {
-                $emailEvent = match (strtolower(trim((string) $status))) {
-                    'approved' => 'approved',
-                    'cancelled', 'rejected' => 'rejected',
-                    'rescheduled' => 'rescheduled',
-                    default => null,
-                };
+            return $appointment;
+        });
 
-                if ($emailEvent !== null) {
-                    app(StudentNotificationMailer::class)->sendAppointmentNotice($appointment->user, $appointment, $emailEvent);
-                }
+        if (!$appointment) {
+            return redirect()->back()->with('error', $statusError ?: 'Appointment not found.');
+        }
+
+        $actionMessage = trim((string) request()->query('message', ''));
+
+        if ($appointment->user && $previousStatus !== $status) {
+            $emailEvent = match (strtolower(trim((string) $status))) {
+                'approved' => 'approved',
+                'cancelled', 'rejected' => 'rejected',
+                'rescheduled' => 'rescheduled',
+                default => null,
+            };
+
+            if ($emailEvent !== null) {
+                app(StudentNotificationMailer::class)->sendAppointmentNotice($appointment->user, $appointment, $emailEvent);
             }
+        }
 
-            \App\Models\ActivityLog::create([
+        \App\Models\ActivityLog::create([
             'user_id'     => auth()->id(), 
             'user_name'   => auth()->user()->name,
             'action'      => 'Status Updated',
@@ -7023,33 +7048,88 @@ public function updateClearance(Request $request, $id)
             'user_agent'  => request()->userAgent(),
         ]);
 
-            return redirect()->back()->with('success', "Appointment marked as $status.");
-        }
-        return redirect()->back()->with('error', "Appointment not found.");
+        return redirect()->back()->with('success', "Appointment marked as $status.");
     }
 
     public function reschedule($id, Request $request)
     {
+        $appointmentScheduling = app(\App\Services\AppointmentSchedulingService::class);
         $request->validate([
-            'date' => ['required', 'date'],
-            'time' => ['required'],
+            'date' => ['required', 'date_format:Y-m-d'],
+            'time' => ['required', 'date_format:H:i', Rule::in($appointmentScheduling->bookableTimeSlots())],
             'reschedule_reason' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $appointment = Appointment::find($id);
-        if ($appointment) {
+        $selectedDate = Carbon::createFromFormat('Y-m-d', $request->date)->startOfDay();
+        if ($selectedDate->lt(Carbon::today())) {
+            return redirect()->back()->withInput()->with('error', 'Past dates are not available.');
+        }
+
+        if ($selectedDate->isWeekend()) {
+            return redirect()->back()->withInput()->with('error', 'Appointments are available from Monday to Friday only.');
+        }
+
+        $selectedDateTime = Carbon::createFromFormat('Y-m-d H:i', $request->date . ' ' . $request->time);
+        if ($selectedDateTime->lt(Carbon::now())) {
+            return redirect()->back()->withInput()->with('error', 'Please choose a future appointment time.');
+        }
+
+        $scheduledClosure = app(\App\Services\ClinicWorkflowService::class)->activeClosure($selectedDateTime);
+        if ($scheduledClosure) {
+            $reopening = $scheduledClosure['ends_at']
+                ? ' Reopening is expected on ' . $scheduledClosure['ends_at']->format('M d, Y g:i A') . '.'
+                : '';
+
+            return redirect()->back()->withInput()->with(
+                'error',
+                'That appointment time falls within a temporary clinic closure.' . $reopening . ' Please choose another schedule.'
+            );
+        }
+
+        $rescheduleError = null;
+        $appointment = DB::transaction(function () use ($id, $request, $appointmentScheduling, &$rescheduleError) {
+            $appointmentScheduling->lockSchedule();
+            $appointment = Appointment::query()->lockForUpdate()->find($id);
+            if (!$appointment) {
+                return null;
+            }
+
+            if ($appointmentScheduling->hasReservedSlot(
+                $request->date,
+                $request->time,
+                (int) $appointment->id
+            )) {
+                $rescheduleError = 'That time slot is already taken. Please choose another time.';
+                return null;
+            }
+
+            if ($appointmentScheduling->dailyAppointmentCount(
+                $request->date,
+                (int) $appointment->id
+            ) >= 10) {
+                $rescheduleError = 'That date is fully booked. Please choose another date.';
+                return null;
+            }
+
             $appointment->date = $request->date;
             $appointment->time = $request->time;
             $appointment->status = 'Approved';
             $appointment->appointment_reminder_email_sent_at = null;
             $appointment->save();
 
-            if ($appointment->user) {
-                app(StudentNotificationMailer::class)->sendAppointmentNotice($appointment->user, $appointment, 'rescheduled');
-            }
+            return $appointment;
+        });
 
-            // LOGS CODES
-             \App\Models\ActivityLog::create([
+        if (!$appointment) {
+            return redirect()->back()->withInput()->with('error', $rescheduleError ?: 'Appointment not found.');
+        }
+
+        if ($appointment->user) {
+            app(StudentNotificationMailer::class)->sendAppointmentNotice($appointment->user, $appointment, 'rescheduled');
+        }
+
+        // LOGS CODES
+        \App\Models\ActivityLog::create([
             'user_id'     => auth()->id(),
             'user_name'   => auth()->user()->name,
             'action'      => 'Appointment Rescheduled', 
@@ -7058,9 +7138,7 @@ public function updateClearance(Request $request, $id)
             'user_agent'  => request()->userAgent(),
         ]);
 
-            return redirect()->back()->with('success', "Appointment rescheduled successfully.");
-        }
-        return redirect()->back()->with('error', "Error rescheduling.");
+        return redirect()->back()->with('success', "Appointment rescheduled successfully.");
     }
 
     // --- 2. INVENTORY ACTIONS ---

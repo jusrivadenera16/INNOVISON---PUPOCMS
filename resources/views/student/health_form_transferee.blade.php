@@ -2933,6 +2933,10 @@
                 $documentOpenUrl = fn ($documentKey) => route('student.health_record.document', ['document' => $documentKey]);
                 $displayFirstName = trim((string) ($prefill['first_name'] ?? ''));
                 $displayMiddleName = trim((string) ($prefill['middle_name'] ?? ''));
+                $normalizedMiddleName = str_replace(['/', '.', ' '], '', strtoupper($displayMiddleName));
+                $middleNameDisplay = $displayMiddleName === '' || in_array($normalizedMiddleName, ['NA', 'NONE'], true)
+                    ? '-'
+                    : $displayMiddleName;
                 $displayLastName = trim((string) ($prefill['last_name'] ?? ''));
                 $displaySuffixName = trim((string) ($prefill['suffix_name'] ?? ''));
 
@@ -3025,7 +3029,7 @@
                             </div>
                             <div class="identity-field">
                                 <small>Middle Name</small>
-                                <strong>{{ $displayMiddleName !== '' ? $displayMiddleName : 'N/A' }}</strong>
+                                <strong>{{ $middleNameDisplay }}</strong>
                             </div>
                             <div class="identity-field">
                                 <small>Last Name</small>
@@ -3176,7 +3180,7 @@
                                 <span class="address-field-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
                                 </span>
-                                <input id="profile_middle_name" class="form-control identity-readonly" value="{{ $displayMiddleName !== '' ? $displayMiddleName : 'N/A' }}" readonly>
+                                <input id="profile_middle_name" class="form-control identity-readonly" value="{{ $middleNameDisplay }}" readonly>
                             </div>
                         </div>
                         <div class="form-field">
@@ -3488,7 +3492,6 @@
                                     </button>
                                     <div class="clinic-select-menu" role="listbox" aria-label="Province options"></div>
                                 </div>
-                                <div class="field-helper">Example: Metro Manila</div>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="home_address_city_municipality">City / Municipality <span class="required">*</span></label>
@@ -3505,7 +3508,6 @@
                                     </button>
                                     <div class="clinic-select-menu" role="listbox" aria-label="City or municipality options"></div>
                                 </div>
-                                <div class="field-helper">Example: Taguig City</div>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="home_address_barangay">Barangay <span class="required">*</span></label>
@@ -3522,7 +3524,6 @@
                                     </button>
                                     <div class="clinic-select-menu" role="listbox" aria-label="Barangay options"></div>
                                 </div>
-                                <div class="field-helper">Example: Brgy. Central</div>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="home_address_street">House No. / Street <span class="required">*</span></label>
@@ -3530,7 +3531,6 @@
                                     <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7"></path><path d="M5 9v11h14V9M9 20v-6h6v6"></path></svg></span>
                                     <input id="home_address_street" class="form-control field-maroon" name="home_address_street" value="{{ $addressStreet }}" data-home-address-part required>
                                 </div>
-                                <div class="field-helper">Example: 123 Mabini St.</div>
                             </div>
                         </div>
                         <div class="form-field student-zip-field">
