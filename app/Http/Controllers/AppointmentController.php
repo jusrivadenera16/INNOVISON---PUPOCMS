@@ -31,7 +31,9 @@ use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
 use App\Services\HealthProfileSnapshotService;
 use App\Support\EmployeeNumber;
+use App\Support\HealthFormRecoveryInput;
 use App\Support\SensitiveLogRedactor;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -39,6 +41,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
@@ -2651,11 +2654,12 @@ class AppointmentController extends Controller
         return $user->clinicAccountTypeKey() === 'faculty' ? 'Faculty' : 'Employee';
     }
 
-    private function employeeConsentPurpose(User $user): array
+    private function employeeConsentPurpose(?User $user): array
     {
-        return $user->clinicAccountTypeKey() === 'faculty'
-            ? ['purpose' => 'faculty duties', 'endorsement' => 'fitness for faculty duties']
-            : ['purpose' => 'non-teaching staff employment', 'endorsement' => 'fitness for employment duties'];
+        return match ($user?->clinicAccountTypeKey()) {
+            'faculty' => ['purpose' => 'Faculty member', 'endorsement' => 'fitness for faculty duties'],
+            default => ['purpose' => 'Administrative personnel', 'endorsement' => 'fitness for administrative duties'],
+        };
     }
 
     private function hasSubmittedEmployeeHealthProfile(?User $user): bool
@@ -5696,8 +5700,7 @@ private function ensureEmployeeHealthDeclaration(EmployeeHealthProfile $profile,
 
         $user = $user ?: $profile->user;
         $employeeCategory = trim((string) ($profile->health_form_category ?? '')) ?: 'Medical Clearance';
-        $employeePurpose = strtolower($employeeCategory);
-        $employeeEndorsement = 'fitness for ' . strtolower($employeeCategory);
+        $employeePurpose = $this->employeeConsentPurpose($user);
         $fullName = trim((string) ($profile->name ?? ''));
         if ($fullName === '') {
             $fullName = $this->formatDisplayNameParts(
@@ -5717,8 +5720,8 @@ private function ensureEmployeeHealthDeclaration(EmployeeHealthProfile $profile,
             'user' => $user,
             'studentFullName' => $fullName,
             'categorySelected' => $employeeCategory,
-            'purposeUnderline1' => $employeePurpose,
-            'purposeUnderline2' => $employeeEndorsement,
+            'purposeUnderline1' => $employeePurpose['purpose'],
+            'purposeUnderline2' => $employeePurpose['endorsement'],
             'studentSignatureSrc' => $employeeSignatureSrc,
             'signatureDate' => $signatureDate,
             'remarks' => '',
@@ -5916,6 +5919,25 @@ public function storeAdminEmployeeHealthForm(Request $request)
 }
 
 public function storeEmployeeHealthForm(Request $request, bool $adminForm = false)
+{
+    try {
+        return $this->processEmployeeHealthForm($request, $adminForm);
+    } catch (ValidationException|AuthorizationException|HttpExceptionInterface $exception) {
+        throw $exception;
+    } catch (\Throwable $exception) {
+        $user = Auth::guard($adminForm ? 'admin' : 'student')->user() ?: Auth::user();
+
+        Log::error('Employee health form save failed', array_merge([
+            'user_id' => $user?->id,
+        ], SensitiveLogRedactor::exceptionContext($exception)));
+
+        return back()
+            ->withInput(HealthFormRecoveryInput::fromRequest($request))
+            ->with('error', 'We could not save the health form. Your text entries were kept. Please reselect uploaded files and redraw your signature, then try again.');
+    }
+}
+
+private function processEmployeeHealthForm(Request $request, bool $adminForm = false)
 {
     /** @var \App\Models\User|null $user */
     $user = $adminForm
@@ -6174,16 +6196,15 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
     $employeeHealthDeclarationPath = $employeeRequirementPaths['health_declaration'];
     if (empty($employeeHealthDeclarationPath) && !empty($signaturePath)) {
         $employeeCategory = $validated['employee_health_form_category'];
-        $employeePurpose = strtolower($employeeCategory);
-        $employeeEndorsement = 'fitness for ' . strtolower($employeeCategory);
+        $employeePurpose = $this->employeeConsentPurpose($user);
         $employeeSignatureSrc = app(\App\Services\StoredImageDataUri::class)->fromStorage($signaturePath);
 
         $declarationPdf = Pdf::loadView('student.print_declaration_form', [
             'user' => $user,
             'studentFullName' => $fullName,
             'categorySelected' => $employeeCategory,
-            'purposeUnderline1' => $employeePurpose,
-            'purposeUnderline2' => $employeeEndorsement,
+            'purposeUnderline1' => $employeePurpose['purpose'],
+            'purposeUnderline2' => $employeePurpose['endorsement'],
             'studentSignatureSrc' => $employeeSignatureSrc,
             'signatureDate' => now()->format('m/d/Y'),
             'remarks' => '',
@@ -7175,28 +7196,28 @@ public function storeHealthForm(Request $request)
         $officialReference = $this->resolveClinicReferenceNumber($user, $existingHealthProfile);
     }
 
-    $user->DOB = $request->input('birthday');
-    $user->contact_no = $request->input('contact_no');
-    if ($isDedicatedStudentWorkflow) {
-        $user->year = $request->input('year');
-        $user->section = $request->input('section');
-    }
-    $resolvedGender = trim((string) $request->input('sex'));
-    if ($resolvedGender !== '') {
-        $user->gender = $resolvedGender;
-    }
-    if (\Schema::hasColumn('users', 'suffix_name')) {
-        $user->suffix_name = $this->normalizeOptionalNamePart($request->input('suffix_name'));
-    }
-    $user->reference_number = $officialReference;
-    if ($isDedicatedTransfereeForm) {
-        $user->sis_reference_number = $transfereeSisReference;
-    }
-    $user->save();
-
     $oldPaths = [];
 
     try {
+        $user->DOB = $request->input('birthday');
+        $user->contact_no = $request->input('contact_no');
+        if ($isDedicatedStudentWorkflow) {
+            $user->year = $request->input('year');
+            $user->section = $request->input('section');
+        }
+        $resolvedGender = trim((string) $request->input('sex'));
+        if ($resolvedGender !== '') {
+            $user->gender = $resolvedGender;
+        }
+        if (\Schema::hasColumn('users', 'suffix_name')) {
+            $user->suffix_name = $this->normalizeOptionalNamePart($request->input('suffix_name'));
+        }
+        $user->reference_number = $officialReference;
+        if ($isDedicatedTransfereeForm) {
+            $user->sis_reference_number = $transfereeSisReference;
+        }
+        $user->save();
+
         if ($pendingHealthFormRequest && $existingHealthProfile) {
             app(HealthProfileSnapshotService::class)->preserveCurrentBeforeNewSubmission(
                 $existingHealthProfile->fresh('user') ?: $existingHealthProfile,
@@ -7502,8 +7523,14 @@ public function storeHealthForm(Request $request)
             ->with('health_profile_submitted', true)
             ->with('show_health_print_reminder', !$isHealthFormCorrectionMode);
 
-    } catch (\Exception $e) {
-        return back()->with('error', 'We could not save your health form. Please try again or contact the clinic.');
+    } catch (\Throwable $e) {
+        Log::error('Health form save failed', array_merge([
+            'user_id' => $user?->id,
+        ], SensitiveLogRedactor::exceptionContext($e)));
+
+        return back()
+            ->withInput(HealthFormRecoveryInput::fromRequest($request))
+            ->with('error', 'We could not save the health form. Your text entries were kept. Please reselect uploaded files and redraw your signature, then try again.');
     }
 }
 

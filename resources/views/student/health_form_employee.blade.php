@@ -802,6 +802,10 @@
             display: none;
         }
 
+        .requirement-card.has-upload-preview [data-upload-dropzone] {
+            display: none;
+        }
+
         .upload-example {
             overflow: hidden;
             border: 1px solid #d8dee7;
@@ -3599,8 +3603,8 @@
                         <h2 id="employeeConsentTitle">Declaration of Medical Information and Data Subject Consent Form</h2>
 
                         @php
-                            $initialEmployeePurpose = $employeeConsentPurpose['purpose'] ?? 'non-teaching staff employment';
-                            $initialEmployeeEndorsement = $employeeConsentPurpose['endorsement'] ?? 'fitness for employment duties';
+                            $initialEmployeePurpose = $employeeConsentPurpose['purpose'] ?? 'Administrative personnel';
+                            $initialEmployeeEndorsement = $employeeConsentPurpose['endorsement'] ?? 'fitness for administrative duties';
                         @endphp
                         <div class="student-consent-purpose-wrap" style="margin: 0 0 16px;">
                             <span style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 800; color: #7f1d2d; text-transform: uppercase;">Purpose of Medical Clearance</span>
@@ -3702,7 +3706,7 @@
 
                 <div class="step-panel {{ $startStep === 5 ? '' : 'is-hidden' }}" id="stepPanel5">
                     <h2 class="section-title step-page-title" data-title-letter="E">Employee Photo</h2>
-                    <p class="step-fill-note">Upload a clear, front-facing employee photo. Other clinic documents can be submitted later through My Account.</p>
+                    <p class="step-fill-note">Upload a formal, front-facing employee photo. It does not need to be 2x2; other clinic documents can be submitted later through My Account.</p>
                     <div class="requirement-grid">
                         <div class="requirement-card">
                             <div class="requirement-card-header">
@@ -3710,12 +3714,12 @@
                                     <span class="requirement-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><circle cx="12" cy="9" r="2.5"></circle><path d="M8 17c.8-2 2.1-3 4-3s3.2 1 4 3"></path></svg></span>
                                     <span class="requirement-heading-copy">
                                         <strong id="employeePhotoTitle">Employee Photo <span class="required">*</span></strong>
-                                        <span class="requirement-description">Formal, front-facing photo on a plain white background.</span>
+                                        <span class="requirement-description">Formal, front-facing employee photo. A plain white background is not required.</span>
                                     </span>
                                 </div>
                                 <span class="requirement-badge is-required">Required</span>
                             </div>
-                            <p class="requirement-guideline">Upload a formal, front-facing photo on a plain white background.</p>
+                            <p class="requirement-guideline">Upload a clear, formal, front-facing employee photo. It does not need to be 2x2, and the background does not need to be plain white.</p>
                             <input id="employee_student_photo" type="file" name="student_photo" class="form-control requirement-file-input" accept=".jpg,.jpeg,.png,image/jpeg,image/png" aria-labelledby="employeePhotoTitle" aria-describedby="employeePhotoFileMeta" data-upload-input data-preview-kind="image" required>
                             <div class="requirement-dropzone" data-upload-dropzone data-input-id="employee_student_photo">
                                 <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
@@ -3728,12 +3732,12 @@
                                 data-guide-title="Employee Photo"
                                 data-guide-description="Sample guide and requirements for the employee photo upload."
                                 data-guide-correct-image="{{ asset('images/upload-guides/photo-formal-upload.jpg') }}"
-                                data-guide-correct-alt="Formal front-facing ID photo on a plain white background"
-                                data-guide-correct-caption="Formal, front-facing photo with even lighting and a plain white background."
+                                data-guide-correct-alt="Formal, front-facing employee portrait with a neutral background"
+                                data-guide-correct-caption="Formal, front-facing photo with clear lighting. A neat, non-distracting background is acceptable; it does not need to be white."
                                 data-guide-wrong-image="{{ asset('images/upload-guides/photo-casual-do-not-upload.jpg') }}"
                                 data-guide-wrong-alt="Casual outdoor selfie that should not be uploaded"
-                                data-guide-wrong-caption="No selfies, casual poses, scenery, filters, or distracting backgrounds."
-                                data-guide-reminder="Upload a clear, front-facing formal photo on a plain white background."
+                                data-guide-wrong-caption="Avoid selfies, casual poses, filters, and busy or distracting backgrounds. A neat, non-white background is acceptable."
+                                data-guide-reminder="Upload a clear, formal, front-facing employee photo. It does not need to be 2x2 or have a plain white background."
                                 data-guide-file-info="Allowed: JPG or PNG only, max 1MB.">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
                                 <span>View Sample Guide</span>
@@ -4055,11 +4059,43 @@
 
             const employeeAddressLookupStatus = document.getElementById('employeeAddressLookupStatus');
             const addressLocationApiBase = 'https://psgc.gitlab.io/api';
+            const addressDraftStorageKey = 'clinic-health-address:' + String(@json($user->id ?? auth()->id())) + ':' + window.location.pathname;
+            const addressStreetInput = document.getElementById('street_address');
+            function readAddressDraft() {
+                try {
+                    const draft = JSON.parse(window.sessionStorage.getItem(addressDraftStorageKey) || '{}');
+                    return draft && typeof draft === 'object' && !Array.isArray(draft) ? draft : {};
+                } catch (error) {
+                    return {};
+                }
+            }
+            const addressDraft = readAddressDraft();
+            if (typeof addressDraft.street === 'string' && addressStreetInput) addressStreetInput.value = addressDraft.street;
+            const addressZipcodeInput = document.getElementById('zipcode');
+            if (typeof addressDraft.zipcode === 'string' && addressZipcodeInput) addressZipcodeInput.value = addressDraft.zipcode;
             const addressLocationValues = {
-                province: @json($provinceFallback),
-                city: @json($cityFallback),
-                barangay: @json($barangayFallback),
+                province: addressDraft.province ?? @json($provinceFallback),
+                city: addressDraft.city ?? @json($cityFallback),
+                barangay: addressDraft.barangay ?? @json($barangayFallback),
             };
+            function saveAddressDraft() {
+                try {
+                    window.sessionStorage.setItem(addressDraftStorageKey, JSON.stringify({
+                        ...addressLocationValues,
+                        street: addressStreetInput?.value || '',
+                        zipcode: addressZipcodeInput?.value || '',
+                    }));
+                } catch (error) {
+                    // Address lookup recovery still works with server-provided values if storage is unavailable.
+                }
+            }
+            function clearAddressDraft() {
+                try {
+                    window.sessionStorage.removeItem(addressDraftStorageKey);
+                } catch (error) {
+                    // Ignore storage restrictions.
+                }
+            }
             const addressLocationWraps = {
                 province: document.querySelector('[data-address-level="province"]'),
                 city: document.querySelector('[data-address-level="city"]'),
@@ -4272,6 +4308,9 @@
                     );
                     setAddressLookupStatus('Select a province, then a city/municipality and barangay.');
                 } catch (error) {
+                    populateLocationSelect(addressLocationWraps.province, [], addressLocationValues.province);
+                    populateLocationSelect(addressLocationWraps.city, [], addressLocationValues.city);
+                    populateLocationSelect(addressLocationWraps.barangay, [], addressLocationValues.barangay);
                     setAddressLookupStatus('Address options are unavailable. Existing values were preserved; refresh and try again.', true);
                     setClinicSelectDisabled(addressLocationWraps.province, false);
                     setClinicSelectDisabled(addressLocationWraps.city, false);
@@ -4614,6 +4653,9 @@
                         <div class="upload-preview-body">
                             <span class="upload-preview-name">${safeName}</span>
                             <span class="upload-preview-meta">${formatFileSize(file.size)}</span>
+                            <div class="upload-preview-actions">
+                                <button type="button" class="upload-preview-btn" data-upload-replace>Replace</button>
+                            </div>
                         </div>
                     `;
                 } else {
@@ -4624,11 +4666,17 @@
                         <div class="upload-preview-body">
                             <span class="upload-preview-name">${safeName}</span>
                             <span class="upload-preview-meta">${fileMeta}</span>
+                            <div class="upload-preview-actions">
+                                <button type="button" class="upload-preview-btn" data-upload-replace>Replace</button>
+                            </div>
                         </div>
                     `;
                 }
                 previewScope.classList.add('has-upload-preview');
                 targetPreview.classList.add('is-visible');
+                targetPreview.querySelector('[data-upload-replace]')?.addEventListener('click', () => {
+                    if (!input.disabled) input.click();
+                });
             }
 
             uploadInputs.forEach((input) => {
@@ -4854,10 +4902,13 @@
                 return select?.options[select.selectedIndex]?.dataset.locationCode || '';
             }
 
+            addressStreetInput?.addEventListener('input', saveAddressDraft);
+            addressZipcodeInput?.addEventListener('input', saveAddressDraft);
             addressLocationWraps.province?.querySelector('select')?.addEventListener('change', async (event) => {
                 addressLocationValues.province = event.target.value;
                 addressLocationValues.city = '';
                 addressLocationValues.barangay = '';
+                saveAddressDraft();
                 try {
                     setAddressLookupStatus('Loading cities and municipalities...');
                     await loadCities(selectedLocationCode('province'));
@@ -4872,6 +4923,7 @@
             addressLocationWraps.city?.querySelector('select')?.addEventListener('change', async (event) => {
                 addressLocationValues.city = event.target.value;
                 addressLocationValues.barangay = '';
+                saveAddressDraft();
                 try {
                     setAddressLookupStatus('Loading barangay options...');
                     await loadBarangays(selectedLocationCode('city'));
@@ -4880,6 +4932,10 @@
                     setAddressLookupStatus('Barangay options are unavailable. Please refresh and try again.', true);
                     setClinicSelectDisabled(addressLocationWraps.barangay, false);
                 }
+            });
+            addressLocationWraps.barangay?.querySelector('select')?.addEventListener('change', (event) => {
+                addressLocationValues.barangay = event.target.value;
+                saveAddressDraft();
             });
 
             form.addEventListener('submit', (event) => {
@@ -4913,12 +4969,12 @@
                     return;
                 }
 
+                clearAddressDraft();
                 setSubmitSaving();
             });
 
             const initialMessage = errorModal?.dataset.initialMessage || '';
             if (initialMessage) showError(initialMessage);
-            updateEmployeeConsentDynamicText();
             clinicSelects.forEach(initializeClinicSelect);
             loadEmployeeAddressLocations();
             syncPastMedicalOthers();
