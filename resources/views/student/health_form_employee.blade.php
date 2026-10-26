@@ -3414,7 +3414,6 @@
                                         </span>
                                         <input id="street_address" type="text" name="street_address" class="form-control" value="{{ old('street_address', $streetFallback) }}" required>
                                     </div>
-                                    <small class="field-hint">Example: 123 Mabini St.</small>
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="barangay">Barangay <span class="required">*</span></label>
@@ -3436,7 +3435,6 @@
                                         </button>
                                         <div class="clinic-select-menu" role="listbox" aria-label="Barangay options"></div>
                                     </div>
-                                    <small class="field-hint">Example: Brgy. Central</small>
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="city_municipality">City / Municipality <span class="required">*</span></label>
@@ -3460,7 +3458,6 @@
                                         </button>
                                         <div class="clinic-select-menu" role="listbox" aria-label="City or municipality options"></div>
                                     </div>
-                                    <small class="field-hint">Example: Taguig City</small>
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="province">Province <span class="required">*</span></label>
@@ -3482,7 +3479,6 @@
                                         </button>
                                         <div class="clinic-select-menu" role="listbox" aria-label="Province options"></div>
                                     </div>
-                                    <small class="field-hint">Example: Metro Manila</small>
                                 </div>
                             </div>
                             <small class="field-hint address-lookup-status" id="employeeAddressLookupStatus" aria-live="polite"></small>

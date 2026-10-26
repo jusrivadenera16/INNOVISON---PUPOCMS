@@ -416,7 +416,7 @@
         }
 
         .identity-name-grid.has-suffix {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.1fr) minmax(0, 1.35fr) minmax(72px, 0.5fr);
         }
 
         .identity-field {
@@ -443,6 +443,7 @@
             font-size: 1rem;
             font-weight: 800;
             word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         .reference-panel {
@@ -2442,6 +2443,32 @@
             box-shadow: none;
         }
 
+        .student-form-category .address-field-control.identity-display-control {
+            height: auto;
+            min-height: 42px;
+            overflow: visible;
+        }
+
+        .student-form-category .identity-display-control .address-field-icon {
+            width: 40px;
+            min-width: 40px;
+            margin-right: 8px;
+        }
+
+        .student-form-category .identity-display-value {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            min-width: 0;
+            padding: 9px 10px 9px 0;
+            color: #4b5563;
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1.3;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+
         .student-form-category .clinic-select-wrap .clinic-select-display {
             display: flex;
             align-items: center;
@@ -2522,7 +2549,7 @@
         }
 
         .student-form-category .personal-identity-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.1fr) minmax(0, 1.35fr) minmax(72px, 0.5fr);
             margin-bottom: 12px;
         }
 
@@ -2910,7 +2937,8 @@
 
         <div class="section-body">
             @php
-                $selectedPwd = old('has_disability', $prefill['has_disability'] ?? 'No');
+                $isHealthFormCorrectionMode = (bool) ($prefill['health_form_correction_mode'] ?? false);
+                $selectedPwd = old('has_disability', $isHealthFormCorrectionMode ? ($prefill['has_disability'] ?? '') : '');
                 $personalErrorFields = ['school_year', 'year', 'section', 'course_code', 'course_college', 'home_address', 'zipcode', 'birthday', 'age', 'sex', 'civil_status', 'blood_type', 'contact_no', 'guardian_name', 'landline', 'cellphone'];
                 $medicalErrorFields = ['has_illness', 'medical_history', 'other_illness', 'has_disability', 'disability_type', 'food_allergies', 'no_allergies', 'medicine_allergies', 'other_med_allergies', 'is_smoker', 'is_drinker'];
                 $covidErrorFields = ['covid_vaccinated', 'vaccine_history'];
@@ -2923,8 +2951,12 @@
                     : (collect($personalErrorFields)->contains(fn ($field) => $errors->has($field)) ? 2 : 1))));
                 $selectedMedicalHistory = old('medical_history', $prefill['medical_history'] ?? []);
                 $selectedMedicineAllergies = old('medicine_allergies', $prefill['medicine_allergies'] ?? []);
-                $selectedHasIllness = old('has_illness', $prefill['has_illness'] ?? 'No');
-                $isHealthFormCorrectionMode = (bool) ($prefill['health_form_correction_mode'] ?? false);
+                $selectedHasIllness = old('has_illness', $isHealthFormCorrectionMode ? ($prefill['has_illness'] ?? '') : '');
+                $selectedNoAllergies = old('no_allergies', $isHealthFormCorrectionMode ? ($prefill['no_allergies'] ?? false) : false);
+                $selectedSocialAnswers = [
+                    'is_smoker' => old('is_smoker', $isHealthFormCorrectionMode ? ($prefill['is_smoker'] ?? '') : ''),
+                    'is_drinker' => old('is_drinker', $isHealthFormCorrectionMode ? ($prefill['is_drinker'] ?? '') : ''),
+                ];
                 $healthFormCorrectionNotes = trim((string) ($prefill['health_form_correction_notes'] ?? ''));
                 $requestedCorrectionDocuments = collect($prefill['resubmission_required_documents'] ?? [])->filter()->values()->all();
                 $existingCorrectionDocuments = $prefill['existing_documents'] ?? [];
@@ -2935,6 +2967,10 @@
                 $displayMiddleName = trim((string) ($prefill['middle_name'] ?? ''));
                 $displayLastName = trim((string) ($prefill['last_name'] ?? ''));
                 $displaySuffixName = trim((string) ($prefill['suffix_name'] ?? ''));
+                $normalizedMiddleName = str_replace(['/', '.', ' '], '', strtoupper($displayMiddleName));
+                $middleNameDisplay = $displayMiddleName === '' || in_array($normalizedMiddleName, ['NA', 'NONE'], true)
+                    ? '-'
+                    : $displayMiddleName;
 
                 $displayReferenceNumber = trim((string) ($prefill['reference_number'] ?? ''));
                 $referenceMode = 'student_number';
@@ -3027,7 +3063,7 @@
                             </div>
                             <div class="identity-field">
                                 <small>Middle Name</small>
-                                <strong>{{ $displayMiddleName !== '' ? $displayMiddleName : 'N/A' }}</strong>
+                                <strong>{{ $middleNameDisplay }}</strong>
                             </div>
                             <div class="identity-field">
                                 <small>Last Name</small>
@@ -3164,39 +3200,39 @@
                         </div>
                     <div class="personal-identity-grid">
                         <div class="form-field">
-                            <label class="form-label" for="profile_first_name">First Name</label>
-                            <div class="address-field-control">
+                            <label class="form-label" for="profile_first_name" id="profile_first_name_label">First Name</label>
+                            <div class="address-field-control identity-display-control">
                                 <span class="address-field-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
                                 </span>
-                                <input id="profile_first_name" class="form-control identity-readonly" value="{{ $displayFirstName !== '' ? $displayFirstName : 'N/A' }}" readonly>
+                                <output id="profile_first_name" class="identity-display-value" aria-labelledby="profile_first_name_label">{{ $displayFirstName !== '' ? $displayFirstName : 'N/A' }}</output>
                             </div>
                         </div>
                         <div class="form-field">
-                            <label class="form-label" for="profile_middle_name">Middle Name</label>
-                            <div class="address-field-control">
+                            <label class="form-label" for="profile_middle_name" id="profile_middle_name_label">Middle Name</label>
+                            <div class="address-field-control identity-display-control">
                                 <span class="address-field-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
                                 </span>
-                                <input id="profile_middle_name" class="form-control identity-readonly" value="{{ $displayMiddleName !== '' ? $displayMiddleName : 'N/A' }}" readonly>
+                                <output id="profile_middle_name" class="identity-display-value" aria-labelledby="profile_middle_name_label">{{ $middleNameDisplay }}</output>
                             </div>
                         </div>
                         <div class="form-field">
-                            <label class="form-label" for="profile_last_name">Last Name</label>
-                            <div class="address-field-control">
+                            <label class="form-label" for="profile_last_name" id="profile_last_name_label">Last Name</label>
+                            <div class="address-field-control identity-display-control">
                                 <span class="address-field-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
                                 </span>
-                                <input id="profile_last_name" class="form-control identity-readonly" value="{{ $displayLastName !== '' ? $displayLastName : 'N/A' }}" readonly>
+                                <output id="profile_last_name" class="identity-display-value" aria-labelledby="profile_last_name_label">{{ $displayLastName !== '' ? $displayLastName : 'N/A' }}</output>
                             </div>
                         </div>
                         <div class="form-field">
-                            <label class="form-label" for="profile_suffix_name">Suffix Name</label>
-                            <div class="address-field-control">
+                            <label class="form-label" for="profile_suffix_name" id="profile_suffix_name_label">Suffix Name</label>
+                            <div class="address-field-control identity-display-control">
                                 <span class="address-field-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
                                 </span>
-                                <input id="profile_suffix_name" class="form-control identity-readonly" value="{{ $displaySuffixName }}" readonly>
+                                <output id="profile_suffix_name" class="identity-display-value" aria-labelledby="profile_suffix_name_label">{{ $displaySuffixName }}</output>
                             </div>
                             <input type="hidden" name="suffix_name" value="{{ $displaySuffixName }}">
                         </div>
@@ -3490,7 +3526,6 @@
                                     </button>
                                     <div class="clinic-select-menu" role="listbox" aria-label="Province options"></div>
                                 </div>
-                                <div class="field-helper">Example: Metro Manila</div>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="home_address_city_municipality">City / Municipality <span class="required">*</span></label>
@@ -3507,7 +3542,6 @@
                                     </button>
                                     <div class="clinic-select-menu" role="listbox" aria-label="City or municipality options"></div>
                                 </div>
-                                <div class="field-helper">Example: Taguig City</div>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="home_address_barangay">Barangay <span class="required">*</span></label>
@@ -3524,7 +3558,6 @@
                                     </button>
                                     <div class="clinic-select-menu" role="listbox" aria-label="Barangay options"></div>
                                 </div>
-                                <div class="field-helper">Example: Brgy. Central</div>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="home_address_street">House No. / Street <span class="required">*</span></label>
@@ -3532,7 +3565,6 @@
                                     <span class="address-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7"></path><path d="M5 9v11h14V9M9 20v-6h6v6"></path></svg></span>
                                     <input id="home_address_street" class="form-control field-maroon" name="home_address_street" value="{{ $addressStreet }}" data-home-address-part required>
                                 </div>
-                                <div class="field-helper">Example: 123 Mabini St.</div>
                             </div>
                         </div>
                         <div class="form-field student-zip-field">
@@ -3725,7 +3757,7 @@
                         <div class="form-field">
                             <label class="form-label">Do you have a disability? <span class="required">*</span></label>
                             <div class="pwd-toggle" id="pwdToggle">
-                                <input class="pwd-radio" type="radio" name="has_disability" id="pwd_no" value="No" required {{ $selectedPwd !== 'Yes' ? 'checked' : '' }}>
+                                <input class="pwd-radio" type="radio" name="has_disability" id="pwd_no" value="No" required {{ $selectedPwd === 'No' ? 'checked' : '' }}>
                                 <label class="pwd-option" for="pwd_no">No</label>
                                 <input class="pwd-radio" type="radio" name="has_disability" id="pwd_yes" value="Yes" {{ $selectedPwd === 'Yes' ? 'checked' : '' }}>
                                 <label class="pwd-option" for="pwd_yes">Yes</label>
@@ -3753,7 +3785,7 @@
 
                     <h2 class="section-title mt-4">Allergies</h2>
                     <label class="choice-card mb-3">
-                        <input id="no_allergies" type="checkbox" name="no_allergies" value="1" {{ old('no_allergies', $prefill['no_allergies'] ?? false) ? 'checked' : '' }}>
+                        <input id="no_allergies" type="checkbox" name="no_allergies" value="1" {{ $selectedNoAllergies ? 'checked' : '' }}>
                         <span>No Known Allergies</span>
                     </label>
                     <div id="allergyDetails" class="conditional-section">
@@ -3782,7 +3814,7 @@
                                 <label class="form-label">{{ $label }} <span class="required">*</span></label>
                                 <div class="pwd-toggle">
                                     @foreach(['No', 'Yes'] as $option)
-                                        <input class="pwd-radio" type="radio" name="{{ $field }}" id="{{ $field }}_{{ strtolower($option) }}" value="{{ $option }}" required {{ old($field, $prefill[$field] ?? 'No') === $option ? 'checked' : '' }}>
+                                        <input class="pwd-radio" type="radio" name="{{ $field }}" id="{{ $field }}_{{ strtolower($option) }}" value="{{ $option }}" required {{ $selectedSocialAnswers[$field] === $option ? 'checked' : '' }}>
                                         <label class="pwd-option" for="{{ $field }}_{{ strtolower($option) }}">{{ $option }}</label>
                                     @endforeach
                                 </div>
