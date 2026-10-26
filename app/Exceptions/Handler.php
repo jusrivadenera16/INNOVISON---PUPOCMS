@@ -40,5 +40,22 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+
+        $this->renderable(function (Throwable $e, $request) {
+            if (!$e instanceof \PDOException || !$request->is('student/booking', 'student/appointments/store')) {
+                return null;
+            }
+
+            $bookingFields = ['date', 'time', 'service', 'remarks'];
+            $input = $request->isMethod('POST')
+                ? $request->only($bookingFields)
+                : $request->session()->getOldInput();
+            $bookingInput = array_intersect_key($input, array_flip($bookingFields));
+            $bookingInput = array_filter($bookingInput, fn ($value) => is_scalar($value));
+
+            return response()->view('errors.database-unavailable', [
+                'bookingInput' => $bookingInput,
+            ], 503);
+        });
     }
 }
