@@ -4539,11 +4539,42 @@
             const addressLocationApiBase = 'https://psgc.gitlab.io/api';
             const postalCodeDataUrl = 'https://raw.githubusercontent.com/maikkoko/postal-ph/master/data/postal_codes/_all.json';
             const postalCityDataUrl = 'https://raw.githubusercontent.com/maikkoko/postal-ph/master/data/cities/cities_with_id.json';
+            const addressDraftStorageKey = 'clinic-health-address:' + String(@json(auth()->id())) + ':' + window.location.pathname;
+            const addressStreetInput = document.getElementById('home_address_street');
+            function readAddressDraft() {
+                try {
+                    const draft = JSON.parse(window.sessionStorage.getItem(addressDraftStorageKey) || '{}');
+                    return draft && typeof draft === 'object' && !Array.isArray(draft) ? draft : {};
+                } catch (error) {
+                    return {};
+                }
+            }
+            const addressDraft = readAddressDraft();
+            if (typeof addressDraft.street === 'string' && addressStreetInput) addressStreetInput.value = addressDraft.street;
+            if (typeof addressDraft.zipcode === 'string' && zipcodeInput) zipcodeInput.value = addressDraft.zipcode;
             const addressLocationValues = {
-                province: @json($prefill['home_address_province'] ?? ''),
-                city: @json($prefill['home_address_city_municipality'] ?? ''),
-                barangay: @json($prefill['home_address_barangay'] ?? ''),
+                province: addressDraft.province ?? @json($prefill['home_address_province'] ?? ''),
+                city: addressDraft.city ?? @json($prefill['home_address_city_municipality'] ?? ''),
+                barangay: addressDraft.barangay ?? @json($prefill['home_address_barangay'] ?? ''),
             };
+            function saveAddressDraft() {
+                try {
+                    window.sessionStorage.setItem(addressDraftStorageKey, JSON.stringify({
+                        ...addressLocationValues,
+                        street: addressStreetInput?.value || '',
+                        zipcode: zipcodeInput?.value || '',
+                    }));
+                } catch (error) {
+                    // Address lookup recovery still works with server-provided values if storage is unavailable.
+                }
+            }
+            function clearAddressDraft() {
+                try {
+                    window.sessionStorage.removeItem(addressDraftStorageKey);
+                } catch (error) {
+                    // Ignore storage restrictions.
+                }
+            }
             let studentPostalCodeIndex = new Map();
             const addressLocationWraps = {
                 province: document.querySelector('[data-address-level="province"]'),
@@ -4617,6 +4648,8 @@
                 input.addEventListener('input', syncHomeAddressValue);
                 input.addEventListener('change', syncHomeAddressValue);
             });
+            addressStreetInput?.addEventListener('input', saveAddressDraft);
+            zipcodeInput?.addEventListener('input', saveAddressDraft);
             syncHomeAddressValue();
 
             function hasSignatureValue() {
@@ -5835,6 +5868,9 @@
                     syncHomeAddressValue();
                     setStudentAddressStatus('Select a province, then a city/municipality and barangay.');
                 } catch (error) {
+                    populateLocationSelect(addressLocationWraps.province, [], addressLocationValues.province);
+                    populateLocationSelect(addressLocationWraps.city, [], addressLocationValues.city);
+                    populateLocationSelect(addressLocationWraps.barangay, [], addressLocationValues.barangay);
                     syncHomeAddressValue();
                     setStudentAddressStatus('Address options are unavailable. Existing values were preserved; refresh and try again.', true);
                     setAddressSelectDisabled(addressLocationWraps.province, false);
@@ -5853,6 +5889,7 @@
                 addressLocationValues.city = '';
                 addressLocationValues.barangay = '';
                 if (zipcodeInput) zipcodeInput.value = '';
+                saveAddressDraft();
                 try {
                     setStudentAddressStatus('Loading cities and municipalities...');
                     await loadStudentCities(selectedLocationCode('province'));
@@ -5868,6 +5905,7 @@
                 addressLocationValues.city = event.target.value;
                 addressLocationValues.barangay = '';
                 if (zipcodeInput) zipcodeInput.value = '';
+                saveAddressDraft();
                 try {
                     setStudentAddressStatus('Loading barangays...');
                     await loadStudentBarangays(selectedLocationCode('city'));
@@ -5883,6 +5921,7 @@
                 addressLocationValues.barangay = event.target.value;
                 syncStudentZipcodeFromAddress();
                 syncHomeAddressValue();
+                saveAddressDraft();
             });
 
             courseCodeSelect?.addEventListener('change', syncCourseCollegeValue);
@@ -6328,6 +6367,7 @@
                 form.action = healthFormStoreUrl;
                 form.method = 'POST';
                 form.enctype = 'multipart/form-data';
+                clearAddressDraft();
                 form.submit();
             });
 
