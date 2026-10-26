@@ -7207,12 +7207,22 @@
             issueQuantityNote.style.color = isTooHigh ? '#b91c1c' : '';
         }
         if (issueSubmitBtn) {
-            issueSubmitBtn.disabled = !issueConversionReady || issueFormSubmitting || isTooHigh || requested <= 0;
+            issueSubmitBtn.disabled = !issueConversionReady || issueFormSubmitting || requested <= 0;
         }
     }
 
     if (issueQuantityInput) {
         issueQuantityInput.addEventListener('input', updateIssuePreview);
+        issueQuantityInput.addEventListener('invalid', function(event) {
+            if (!issueQuantityInput.validity.rangeOverflow && !issueQuantityInput.validity.customError) return;
+
+            event.preventDefault();
+            window.showAdminToast(
+                'error',
+                `You can issue at most ${formatInventoryNumber(issueCurrentQuantity)} ${issueCurrentUnit}. Reduce the quantity and try again.`,
+                'Quantity exceeds available stock'
+            );
+        });
     }
 
     if (issueForm) {

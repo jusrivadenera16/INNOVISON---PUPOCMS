@@ -663,3 +663,9 @@ Route::get('/dev-login/{id}', function ($id) {
 
     return 'User not found!';
 });
+
+if (app()->environment('local')) {
+    Route::get('/_evidence/err-01', function () {
+        throw new \RuntimeException('ERR-01 controlled exception; this detail must remain server-side.');
+    });
+}

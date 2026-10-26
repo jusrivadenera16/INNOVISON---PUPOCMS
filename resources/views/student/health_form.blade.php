@@ -3207,9 +3207,11 @@
                 }
                 $manualStudentModeSelected = $selectedReferenceMode === 'student_number';
                 $referenceRequiresValidation = (bool) ($prefill['reference_requires_validation'] ?? true);
-                $referenceVerificationUnavailable = $referenceMode === 'verification_unavailable';
                 $puptasVerificationStatus = (int) ($prefill['puptas_verification_http_status'] ?? 0);
                 $puptasVerificationMessage = trim((string) ($prefill['puptas_verification_message'] ?? ''));
+                $puptasVerificationOutcome = strtolower(trim((string) ($prefill['puptas_verification_status'] ?? '')));
+                $referenceVerificationUnavailable = $referenceMode === 'verification_unavailable'
+                    || $puptasVerificationOutcome === 'unavailable';
                 $applicantDocumentsRequired = $referenceMode === 'admission' || $manualStudentModeSelected;
                 $applicantDocumentDateMin = $applicantDocumentsRequired ? now()->subMonthsNoOverflow(6)->toDateString() : null;
                 $applicantDocumentDateMax = $applicantDocumentsRequired ? now()->toDateString() : null;
@@ -3221,22 +3223,22 @@
                     $stepOneDescription = 'Enter your Student ID if you are already enrolled or visiting for OJT clinic requirements, then complete the same health form and upload the required clinic documents.';
                     $referenceLabel = 'Student ID / Student Number';
                 }
-                $referenceDisplayFallback = $referenceMode === 'admission'
-                    ? 'No Reference Received'
-                    : ($referenceMode === 'student_number'
-                        ? 'No Student Number Yet'
-                        : ($referenceVerificationUnavailable ? 'Verification Temporarily Unavailable' : 'No Clinic Reference Yet'));
+                $referenceDisplayFallback = $referenceVerificationUnavailable
+                    ? 'Verification Temporarily Unavailable'
+                    : ($referenceMode === 'admission'
+                        ? 'No Reference Received'
+                        : ($referenceMode === 'student_number' ? 'No Student Number Yet' : 'No Clinic Reference Yet'));
                 if ($manualStudentModeSelected && $displayReferenceNumber === '') {
                     $referenceDisplayFallback = 'Enter Student ID';
                 }
-                $referenceStatusDefault = $referenceRequiresValidation
-                    ? 'Your Admission Reference Number will automatically appear once your account has been tagged for medical processing in PUPTAS.'
-                    : ($referenceVerificationUnavailable
-                        ? ($puptasVerificationMessage !== ''
-                            ? $puptasVerificationMessage . ' No clinic reference was generated.'
-                            : ($puptasVerificationStatus === 429
-                                ? 'PUPTAS verification is temporarily rate limited. No clinic reference was generated. Please try again later.'
-                                : 'PUPTAS verification is temporarily unavailable. No clinic reference was generated. Please try again later.'))
+                $referenceStatusDefault = $referenceVerificationUnavailable
+                    ? ($puptasVerificationMessage !== ''
+                        ? $puptasVerificationMessage . ' No clinic reference was generated.'
+                        : ($puptasVerificationStatus === 429
+                            ? 'PUPTAS verification is temporarily rate limited. No clinic reference was generated. Please try again later.'
+                            : 'PUPTAS verification is temporarily unavailable. No clinic reference was generated. Please try again later.'))
+                    : ($referenceRequiresValidation
+                        ? 'Your Admission Reference Number will automatically appear once your account has been tagged for medical processing in PUPTAS.'
                         : ($referenceMode === 'student_number'
                             ? 'Your official student number from GUISIS will be used as your clinic reference.'
                             : 'This clinic reference is generated and managed inside the clinic system for local staff, admin, faculty, and guest records.'));
@@ -3376,7 +3378,7 @@
                                     </div>
                                 </div>
                             @endif
-                            <p class="reference-verify-status {{ $displayReferenceNumber === '' ? '' : 'is-success' }}" id="referenceVerifyStatus" aria-live="polite">
+                            <p class="reference-verify-status {{ $referenceVerificationUnavailable ? 'is-error' : ($displayReferenceNumber === '' ? '' : 'is-success') }}" id="referenceVerifyStatus" aria-live="polite">
                                 {{ $displayReferenceNumber === '' ? $referenceStatusDefault : ($referenceRequiresValidation ? 'Reference already verified from the Admission System.' : ($referenceMode === 'student_number' ? 'Student number is ready for use inside the clinic system.' : 'Clinic reference is ready for use inside the clinic system.')) }}
                             </p>
                             @error('reference_number')
@@ -4703,6 +4705,7 @@
             const referenceRequiresValidation = referencePanel?.dataset.referenceRequiresValidation === 'true';
             const manualStudentNumberAllowed = referencePanel?.dataset.manualStudentModeAllowed === 'true';
             const referenceVerificationUnavailable = @json($referenceVerificationUnavailable);
+            const referenceUnavailableStatusMessage = @json($referenceStatusDefault);
             const initialReferenceMode = @json($selectedReferenceMode);
 
             function selectedReferenceMode() {
@@ -4726,6 +4729,15 @@
                 }
 
                 if (!isReferenceLocked()) {
+                    if (referenceVerificationUnavailable && !isStudentMode) {
+                        if (referenceDisplayValue) {
+                            referenceDisplayValue.textContent = 'Verification Temporarily Unavailable';
+                        }
+                        referencePanel?.classList.remove('is-missing');
+                        setReferenceStatus(referenceUnavailableStatusMessage, 'is-error');
+                        return;
+                    }
+
                     if (referenceDisplayValue) {
                         referenceDisplayValue.textContent = isStudentMode ? 'Enter Student ID' : 'No Reference Received';
                     }

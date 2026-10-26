@@ -2349,7 +2349,7 @@ class AppointmentController extends Controller
             }
 
             return $data;
-        } catch (\Throwable $exception) {
+        } catch (\Illuminate\Database\QueryException $exception) {
             Log::warning('GUISIS My Account synchronization failed', [
                 'user_id' => $user->id,
                 ...SensitiveLogRedactor::exceptionContext($exception),
@@ -3195,45 +3195,56 @@ class AppointmentController extends Controller
         $studentContext = $this->resolveStudentContext($user);
         $appointmentIdentifier = $this->resolveAppointmentIdentifier($user, $studentContext);
         $bookingError = null;
-        $appointment = DB::transaction(function () use (
-            $appointmentScheduling,
-            $request,
-            $user,
-            $studentContext,
-            $appointmentIdentifier,
-            $workflow,
-            &$bookingError
-        ) {
-            $appointmentScheduling->lockSchedule();
+        try {
+            $appointment = DB::transaction(function () use (
+                $appointmentScheduling,
+                $request,
+                $user,
+                $studentContext,
+                $appointmentIdentifier,
+                $workflow,
+                &$bookingError
+            ) {
+                $appointmentScheduling->lockSchedule();
 
-            if ($appointmentScheduling->hasReservedSlot($request->date, $request->time)) {
-                $bookingError = 'That time slot is already taken. Please choose another time.';
-                return null;
-            }
+                if ($appointmentScheduling->hasReservedSlot($request->date, $request->time)) {
+                    $bookingError = 'That time slot is already taken. Please choose another time.';
+                    return null;
+                }
 
-            if ($appointmentScheduling->dailyAppointmentCount($request->date) >= 10) {
-                $bookingError = 'Fully booked for this date. Please choose another date.';
-                return null;
-            }
+                if ($appointmentScheduling->dailyAppointmentCount($request->date) >= 10) {
+                    $bookingError = 'Fully booked for this date. Please choose another date.';
+                    return null;
+                }
 
-            $appointment = new Appointment();
-            $appointment->apt_id = Appointment::generateAppointmentNumber(now(), 'online');
-            $appointment->user_id = $user->id;
-            $appointment->student_id = $studentContext['student_id'] ?: ($user->student_id ?: $appointmentIdentifier);
-            $appointment->student_number = $appointmentIdentifier;
-            $appointment->name = $user->name;
-            $appointment->email = $user->email;
-            $appointment->date = $request->date;
-            $appointment->time = $request->time;
-            $appointment->service = $request->service;
-            $appointment->status = $workflow->settings()->auto_approve ? 'Approved' : 'Pending';
-            $appointment->remarks = $request->remarks;
-            $appointment->type = 'online';
-            $appointment->user_type = Appointment::normalizeUserType($user->user_role);
-            $appointment->save();
+                $appointment = new Appointment();
+                $appointment->apt_id = Appointment::generateAppointmentNumber(now(), 'online');
+                $appointment->user_id = $user->id;
+                $appointment->student_id = $studentContext['student_id'] ?: ($user->student_id ?: $appointmentIdentifier);
+                $appointment->student_number = $appointmentIdentifier;
+                $appointment->name = $user->name;
+                $appointment->email = $user->email;
+                $appointment->date = $request->date;
+                $appointment->time = $request->time;
+                $appointment->service = $request->service;
+                $appointment->status = $workflow->settings()->auto_approve ? 'Approved' : 'Pending';
+                $appointment->remarks = $request->remarks;
+                $appointment->type = 'online';
+                $appointment->user_type = Appointment::normalizeUserType($user->user_role);
+                $appointment->save();
 
-            return $appointment;
-        });
+                return $appointment;
+            });
+        } catch (\Illuminate\Database\QueryException $exception) {
+            Log::error('Appointment booking failed', array_merge([
+                'user_id' => $user->id,
+            ], SensitiveLogRedactor::exceptionContext($exception)));
+
+            return redirect()->back()->withInput()->with(
+                'error',
+                'We could not submit your appointment right now. Your details were kept. Please try again.'
+            );
+        }
 
         if ($bookingError !== null) {
             return redirect()->back()->withInput()->with('error', $bookingError);
