@@ -175,6 +175,15 @@
         opacity: 0.62;
     }
 
+    .booking-disabled-fields.is-submitting {
+        opacity: 0.62;
+        cursor: progress;
+    }
+
+    .booking-disabled-fields.is-submitting * {
+        cursor: progress !important;
+    }
+
     .booking-form-restricted-shell {
         position: relative;
     }
@@ -2380,6 +2389,12 @@
             @php($bookingRemarksValue = $bookingFormLocked ? ($bookingFormAppointment?->remarks ?? '') : old('remarks', ''))
             <form id="bookingForm" method="POST" action="/student/appointments/store" autocomplete="off" novalidate>
                 @csrf 
+                @if (session('booking_retry_notice'))
+                    <div class="booking-closure-notice" role="status">
+                        <strong>Check appointment status</strong>
+                        <p>{{ session('booking_retry_notice') }}</p>
+                    </div>
+                @endif
                 <div class="booking-form-restricted-shell {{ $bookingRestricted ? 'is-restricted' : '' }}">
                 @if($bookingFormLocked)
                     <div class="booking-closure-notice" role="status">
@@ -3357,6 +3372,13 @@
                     submitButton.disabled = true;
                     submitButton.setAttribute('aria-busy', 'true');
                     submitButton.setAttribute('aria-label', 'Submitting appointment');
+                }
+
+                const bookingFields = bookingForm.querySelector('.booking-disabled-fields');
+                if (bookingFields) {
+                    bookingFields.classList.add('is-submitting');
+                    bookingFields.inert = true;
+                    bookingFields.setAttribute('aria-busy', 'true');
                 }
             });
         }
