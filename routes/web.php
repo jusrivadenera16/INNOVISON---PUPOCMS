@@ -222,6 +222,11 @@ Route::middleware(['auth:student', 'student.idle', 'account.active', 'idp.sessio
 
         Route::get('/student/account', [AppointmentController::class, 'account']);
         Route::get('/student/history', [AppointmentController::class, 'history']);
+        Route::get('/student/appointments/store', function () {
+            return redirect()
+                ->route('student.booking')
+                ->with('booking_retry_notice', 'This submission link cannot retry an appointment. Check your appointment list before submitting the booking form again.');
+        })->name('student.appointments.store.get');
         Route::post('/student/appointments/store', [AppointmentController::class, 'store']);
         Route::get('/student/appointments/availability', [AppointmentController::class, 'availability'])->name('student.appointments.availability');
         Route::post('/student/appointments/{id}/cancel', [AppointmentController::class, 'cancel']);
