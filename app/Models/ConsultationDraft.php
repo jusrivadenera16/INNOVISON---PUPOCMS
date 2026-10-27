@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Facades\Schema;
 use App\Services\HealthDataEncrypter;
 use App\Models\Concerns\ExcludesInactiveUserRecords;
 
@@ -27,11 +29,23 @@ class ConsultationDraft extends Model
 
     public function getPayloadAttribute($value): ?array
     {
-        $encryptedPayload = $this->attributes['payload_encrypted'] ?? null;
+        $encryptedPayload = $this->hasEncryptedPayloadColumn()
+            ? ($this->attributes['payload_encrypted'] ?? null)
+            : null;
         if (is_string($encryptedPayload) && $encryptedPayload !== '') {
             $payload = app(HealthDataEncrypter::class)->decrypt($encryptedPayload, true);
 
             return is_array($payload) ? $payload : null;
+        }
+
+        if (!$this->hasEncryptedPayloadColumn() && is_string($value) && trim($value) !== '') {
+            try {
+                $payload = app(HealthDataEncrypter::class)->decrypt($value, true);
+
+                return is_array($payload) ? $payload : null;
+            } catch (DecryptException) {
+                // A migration-incomplete database may still contain legacy JSON here.
+            }
         }
 
         if (is_array($value)) {
@@ -50,8 +64,22 @@ class ConsultationDraft extends Model
     public function setPayloadAttribute($value): void
     {
         $payload = is_array($value) ? $value : [];
-        $this->attributes['payload_encrypted'] = app(HealthDataEncrypter::class)->encrypt($payload, true);
-        $this->attributes['payload'] = json_encode([], JSON_THROW_ON_ERROR);
+        $ciphertext = app(HealthDataEncrypter::class)->encrypt($payload, true);
+
+        if ($this->hasEncryptedPayloadColumn()) {
+            $this->attributes['payload_encrypted'] = $ciphertext;
+            $this->attributes['payload'] = json_encode([], JSON_THROW_ON_ERROR);
+
+            return;
+        }
+
+        $this->attributes['payload'] = $ciphertext;
+    }
+
+    private function hasEncryptedPayloadColumn(): bool
+    {
+        return Schema::hasTable($this->getTable())
+            && Schema::hasColumn($this->getTable(), 'payload_encrypted');
     }
 
     public function patient(): BelongsTo

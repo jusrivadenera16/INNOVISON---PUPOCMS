@@ -18,10 +18,16 @@ class EncryptConsultationDrafts extends Command
 
     public function handle(HealthDataEncrypter $encrypter): int
     {
-        if (!Schema::hasTable('consultation_drafts') || !Schema::hasColumn('consultation_drafts', 'payload_encrypted')) {
+        if (!Schema::hasTable('consultation_drafts') || !Schema::hasColumn('consultation_drafts', 'payload')) {
             $this->error('Run the consultation-draft encrypted-payload migration before this command.');
 
             return self::FAILURE;
+        }
+
+        if (!Schema::hasColumn('consultation_drafts', 'payload_encrypted')) {
+            $this->info('Single-column encrypted payload storage is active. No data was changed.');
+
+            return self::SUCCESS;
         }
 
         $apply = (bool) $this->option('apply');

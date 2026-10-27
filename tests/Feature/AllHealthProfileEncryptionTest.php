@@ -74,6 +74,7 @@ class AllHealthProfileEncryptionTest extends TestCase
 
     protected function tearDown(): void
     {
+        Schema::dropIfExists('health_profile_single_column_test');
         Schema::dropIfExists('dependents_profiles');
         Schema::dropIfExists('health_profile_emp');
         Schema::dropIfExists('health_profiles');
@@ -181,5 +182,53 @@ class AllHealthProfileEncryptionTest extends TestCase
         $this->expectException(\Illuminate\Contracts\Encryption\DecryptException::class);
 
         app(\App\Services\HealthDataEncrypter::class)->decrypt($payload);
+    }
+
+    public function test_fields_round_trip_when_ciphertext_uses_the_original_columns(): void
+    {
+        Schema::create('health_profile_single_column_test', function (Blueprint $table): void {
+            $table->id();
+            $table->text('home_address')->nullable();
+            $table->text('medical_history')->nullable();
+            $table->text('age')->nullable();
+            $table->text('no_allergies')->nullable();
+            $table->text('xray_date')->nullable();
+            $table->timestamps();
+        });
+
+        Config::set('health_data_encryption.fields.health_profile_single_column_test', [
+            'home_address' => 'home_address_encrypted',
+            'medical_history' => 'medical_history_encrypted',
+            'age' => 'age_encrypted',
+            'no_allergies' => 'no_allergies_encrypted',
+            'xray_date' => 'xray_date_encrypted',
+        ]);
+
+        $profile = new HealthProfile();
+        $profile->setTable('health_profile_single_column_test');
+        $profile->home_address = '123 Private Street';
+        $profile->medical_history = ['Asthma'];
+        $profile->age = 42;
+        $profile->no_allergies = true;
+        $profile->xray_date = '2024-02-03';
+        $profile->save();
+
+        $raw = DB::table('health_profile_single_column_test')->where('id', $profile->id)->first();
+        foreach (['home_address', 'medical_history', 'age', 'no_allergies', 'xray_date'] as $column) {
+            $this->assertIsString($raw->{$column});
+            $this->assertStringNotContainsString('Private Street', $raw->{$column});
+            $this->assertStringNotContainsString('Asthma', $raw->{$column});
+        }
+
+        $fresh = new HealthProfile();
+        $fresh->setTable('health_profile_single_column_test');
+        $fresh->setRawAttributes((array) $raw, true);
+
+        $this->assertSame('123 Private Street', $fresh->home_address);
+        $this->assertSame(['Asthma'], $fresh->medical_history);
+        $this->assertSame(42, $fresh->age);
+        $this->assertTrue($fresh->no_allergies);
+        $this->assertSame('2024-02-03', $fresh->xray_date?->format('Y-m-d'));
+        $this->assertSame(['Asthma'], $fresh->toArray()['medical_history']);
     }
 }
