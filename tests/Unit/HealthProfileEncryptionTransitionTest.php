@@ -3,11 +3,46 @@
 namespace Tests\Unit;
 
 use App\Models\HealthProfile;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class HealthProfileEncryptionTransitionTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Config::set('database.default', 'sqlite');
+        Config::set('database.connections.sqlite.database', ':memory:');
+        DB::purge('sqlite');
+        DB::reconnect('sqlite');
+
+        Schema::create('health_profiles', function (Blueprint $table): void {
+            $table->id();
+            foreach ([
+                'medical_history',
+                'other_illness',
+                'food_allergies',
+                'medicine_allergies',
+                'other_med_allergies',
+                'vaccine_history',
+            ] as $column) {
+                $table->text($column)->nullable();
+                $table->text($column . '_encrypted')->nullable();
+            }
+        });
+    }
+
+    protected function tearDown(): void
+    {
+        Schema::dropIfExists('health_profiles');
+
+        parent::tearDown();
+    }
+
     public function test_enabled_transition_writes_and_reads_encrypted_mirrors(): void
     {
         Config::set('health_data_encryption.enabled', true);

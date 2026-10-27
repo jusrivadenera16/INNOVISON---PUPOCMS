@@ -26,7 +26,7 @@ class ConsultationDraftPrivacyTest extends TestCase
 
         Schema::create('consultation_drafts', function (Blueprint $table): void {
             $table->id();
-            $table->json('payload');
+            $table->longText('payload');
             $table->timestamps();
         });
     }
@@ -38,7 +38,7 @@ class ConsultationDraftPrivacyTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_model_encrypts_new_payloads_and_keeps_plaintext_column_empty(): void
+    public function test_model_encrypts_new_payloads_in_the_original_column_without_a_mirror(): void
     {
         $draft = new ConsultationDraft();
         $draft->payload = ['remarks' => 'Sensitive clinical note'];
@@ -46,11 +46,23 @@ class ConsultationDraftPrivacyTest extends TestCase
         $attributes = $draft->getAttributes();
 
         $this->assertSame(['remarks' => 'Sensitive clinical note'], $draft->payload);
-        $this->assertSame([], json_decode($attributes['payload'], true));
-        $this->assertNotSame('Sensitive clinical note', $attributes['payload_encrypted']);
-        $this->assertSame(['remarks' => 'Sensitive clinical note'], app(HealthDataEncrypter::class)->decrypt($attributes['payload_encrypted'], true));
+        $this->assertNotSame('Sensitive clinical note', $attributes['payload']);
+        $this->assertSame(['remarks' => 'Sensitive clinical note'], app(HealthDataEncrypter::class)->decrypt($attributes['payload'], true));
+        $this->assertArrayNotHasKey('payload_encrypted', $attributes);
         $this->assertArrayNotHasKey('payload', $draft->toArray());
         $this->assertArrayNotHasKey('payload_encrypted', $draft->toArray());
+    }
+
+    public function test_encrypt_command_is_a_noop_after_single_column_storage_is_active(): void
+    {
+        $draft = new ConsultationDraft();
+        $draft->payload = ['remarks' => 'Already encrypted in payload'];
+        $draft->save();
+        $before = DB::table('consultation_drafts')->where('id', $draft->id)->value('payload');
+
+        $this->assertSame(0, Artisan::call('consultation-drafts:encrypt', ['--apply' => true]));
+        $this->assertSame($before, DB::table('consultation_drafts')->where('id', $draft->id)->value('payload'));
+        $this->assertSame(['remarks' => 'Already encrypted in payload'], $draft->fresh()->payload);
     }
 
     public function test_migration_adds_and_removes_encrypted_payload_column(): void
