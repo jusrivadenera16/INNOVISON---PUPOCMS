@@ -3315,7 +3315,7 @@
                     @endif
                     @if($canUpdateMedicalAssessment)
                         <button type="button" data-medical-assessment-trigger>
-                            Update Medical Assessment
+                            Update Medical Information
                             <span aria-hidden="true">+</span>
                         </button>
                     @endif

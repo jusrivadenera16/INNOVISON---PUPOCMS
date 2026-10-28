@@ -12014,7 +12014,7 @@
                                 </div>
                                 <div class="applicant-condition-field">
                                     <label for="applicantBloodPressure">Blood Pressure <span style="color:#dc2626;">*</span></label>
-                                    <input type="text" id="applicantBloodPressure" name="blood_pressure" class="applicant-condition-input vital-input" placeholder="e.g., 120/80" inputmode="numeric" required>
+                                    <input type="text" id="applicantBloodPressure" name="blood_pressure" class="applicant-condition-input vital-input" placeholder="e.g., 120/80" inputmode="text" autocomplete="off" required>
                                     <span class="vital-status is-muted" id="bpStatus">Pending</span>
                                     <small style="color:#dc2626; display:none;" id="bpError">Blood pressure must be in format: ###/## (e.g., 120/80). Normal range: 90-120 systolic, 60-80 diastolic.</small>
                                 </div>
@@ -15561,6 +15561,29 @@
             return { text: 'Normal', tone: 'normal' };
         }
 
+        function formatBloodPressureInput(input) {
+            if (!input || input.dataset.bpFormatting === 'true') return;
+
+            const raw = String(input.value ?? '');
+            let nextValue = raw;
+            if (!raw.includes('/')) {
+                const digits = raw.replace(/\D/g, '').slice(0, 6);
+                nextValue = digits.length > 3
+                    ? digits.slice(0, 3) + '/' + digits.slice(3)
+                    : digits;
+            } else {
+                const parts = raw.split('/');
+                const systolic = (parts.shift() || '').replace(/\D/g, '').slice(0, 3);
+                const diastolic = parts.join('').replace(/\D/g, '').slice(0, 3);
+                nextValue = systolic + '/' + diastolic;
+            }
+            if (nextValue !== raw) {
+                input.dataset.bpFormatting = 'true';
+                input.value = nextValue;
+                input.dataset.bpFormatting = 'false';
+            }
+        }
+
         function classifyNumberRange(value, normalMin, normalMax, invalidMin, invalidMax, lowText = 'Low', highText = 'High') {
             const number = Number(value);
             if (!Number.isFinite(number)) return null;
@@ -17803,6 +17826,12 @@
         // Add event listeners for vital signs validation
         const vitalInputs = document.querySelectorAll('.vital-input');
         vitalInputs.forEach(function (input) {
+            if (input.id === 'applicantBloodPressure') {
+                input.addEventListener('input', function () {
+                    formatBloodPressureInput(input);
+                    validateVitals();
+                });
+            }
             input.addEventListener('input', validateVitals);
             input.addEventListener('blur', validateVitals);
         });

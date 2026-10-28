@@ -245,7 +245,7 @@
     @once
         @push('styles')
             <style>
-                #medicalAssessmentModal {
+                #medicalInformationModal {
                     position: fixed;
                     inset: 0;
                     z-index: 2147482500;
@@ -257,8 +257,8 @@
                     background: rgba(2, 8, 18, .82);
                     overscroll-behavior: contain;
                 }
-                #medicalAssessmentModal.is-open { display: flex; }
-                #medicalAssessmentModal .medical-information-card {
+                #medicalInformationModal.is-open { display: flex; }
+                #medicalInformationModal .medical-information-card {
                     display: flex;
                     flex-direction: column;
                     width: min(1080px, calc(100vw - 96px));
@@ -271,7 +271,7 @@
                     color: #f3f7fc;
                     box-shadow: 0 24px 70px rgba(0, 0, 0, .58);
                 }
-                #medicalAssessmentModal .medical-information-header {
+                #medicalInformationModal .medical-information-header {
                     display: flex;
                     min-height: 78px;
                     flex: 0 0 auto;
@@ -283,8 +283,8 @@
                     background: linear-gradient(105deg, #741521 0%, #951622 58%, #a91825 100%);
                     color: #fff;
                 }
-                #medicalAssessmentModal .medical-information-heading { display: flex; min-width: 0; align-items: center; gap: 13px; }
-                #medicalAssessmentModal .medical-information-heading-icon {
+                #medicalInformationModal .medical-information-heading { display: flex; min-width: 0; align-items: center; gap: 13px; }
+                #medicalInformationModal .medical-information-heading-icon {
                     display: grid;
                     width: 46px;
                     height: 46px;
@@ -296,10 +296,10 @@
                     color: #fff;
                     box-shadow: inset 0 1px 0 rgba(255,255,255,.15);
                 }
-                #medicalAssessmentModal .medical-information-heading-icon svg { width: 24px; height: 24px; }
-                #medicalAssessmentModal .medical-information-heading h2 { margin: 0; color: #fff; font-size: 19px; font-weight: 850; line-height: 1.2; }
-                #medicalAssessmentModal .medical-information-heading p { margin: 3px 0 0; color: rgba(255,255,255,.92); font-size: 12px; line-height: 1.35; }
-                #medicalAssessmentModal .medical-information-close {
+                #medicalInformationModal .medical-information-heading-icon svg { width: 24px; height: 24px; }
+                #medicalInformationModal .medical-information-heading h2 { margin: 0; color: #fff; font-size: 19px; font-weight: 850; line-height: 1.2; }
+                #medicalInformationModal .medical-information-heading p { margin: 3px 0 0; color: rgba(255,255,255,.92); font-size: 12px; line-height: 1.35; }
+                #medicalInformationModal .medical-information-close {
                     display: grid;
                     width: 36px;
                     height: 36px;
@@ -312,16 +312,16 @@
                     cursor: pointer;
                     transition: background .15s ease, color .15s ease, border-color .15s ease;
                 }
-                #medicalAssessmentModal .medical-information-close:hover,
-                #medicalAssessmentModal .medical-information-close:focus-visible { border-color: #facc15; background: #facc15; color: #70131b; outline: none; }
-                #medicalAssessmentModal .medical-information-close svg { width: 18px; height: 18px; }
-                #medicalAssessmentModal .medical-information-body {
+                #medicalInformationModal .medical-information-close:hover,
+                #medicalInformationModal .medical-information-close:focus-visible { border-color: #facc15; background: #facc15; color: #70131b; outline: none; }
+                #medicalInformationModal .medical-information-close svg { width: 18px; height: 18px; }
+                #medicalInformationModal .medical-information-body {
                     display: grid;
                     min-height: 0;
                     flex: 1 1 auto;
                     grid-template-columns: 234px minmax(0, 1fr);
                 }
-                #medicalAssessmentModal .medical-information-sidebar {
+                #medicalInformationModal .medical-information-sidebar {
                     display: flex;
                     min-height: 0;
                     flex-direction: column;
@@ -331,8 +331,8 @@
                     border-right: 1px solid #1a2c41;
                     background: #091625;
                 }
-                #medicalAssessmentModal .medical-information-nav { display: grid; min-height: 0; gap: 5px; overflow-y: auto; padding: 0 1px 0 0; }
-                #medicalAssessmentModal .medical-information-nav button {
+                #medicalInformationModal .medical-information-nav { display: grid; min-height: 0; gap: 5px; overflow-y: auto; padding: 0 1px 0 0; }
+                #medicalInformationModal .medical-information-nav button {
                     display: flex;
                     min-height: 39px;
                     align-items: center;
@@ -349,13 +349,13 @@
                     cursor: pointer;
                     transition: border-color .15s ease, background .15s ease, color .15s ease;
                 }
-                #medicalAssessmentModal .medical-information-nav button svg { width: 19px; height: 19px; flex: 0 0 19px; stroke-width: 2.2; }
-                #medicalAssessmentModal .medical-information-nav button:hover,
-                #medicalAssessmentModal .medical-information-nav button:focus-visible { border-color: #52677e; background: #14243a; outline: none; }
-                #medicalAssessmentModal .medical-information-nav button.is-active { border-color: #8c1220; border-left: 3px solid #ed1b2f; background: linear-gradient(100deg, #64111e, #391220); color: #fff; }
-                #medicalAssessmentModal .medical-information-nav button.is-active svg { color: #fff; }
-                #medicalAssessmentModal .medical-information-nav .medical-information-nav-label { min-width: 0; overflow-wrap: anywhere; line-height: 1.2; }
-                #medicalAssessmentModal .medical-information-main {
+                #medicalInformationModal .medical-information-nav button svg { width: 19px; height: 19px; flex: 0 0 19px; stroke-width: 2.2; }
+                #medicalInformationModal .medical-information-nav button:hover,
+                #medicalInformationModal .medical-information-nav button:focus-visible { border-color: #52677e; background: #14243a; outline: none; }
+                #medicalInformationModal .medical-information-nav button.is-active { border-color: #8c1220; border-left: 3px solid #ed1b2f; background: linear-gradient(100deg, #64111e, #391220); color: #fff; }
+                #medicalInformationModal .medical-information-nav button.is-active svg { color: #fff; }
+                #medicalInformationModal .medical-information-nav .medical-information-nav-label { min-width: 0; overflow-wrap: anywhere; line-height: 1.2; }
+                #medicalInformationModal .medical-information-main {
                     display: flex;
                     min-width: 0;
                     min-height: 0;
@@ -364,61 +364,61 @@
                     padding: 12px 14px 10px;
                     background: #081321;
                 }
-                #medicalAssessmentModal .medical-information-content-head { display: flex; flex: 0 0 auto; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 0 0 7px; }
-                #medicalAssessmentModal .medical-information-content-copy { min-width: 0; }
-                #medicalAssessmentModal .medical-information-content-head h3 { margin: 0; color: #f3f7fc; font-size: 16px; font-weight: 850; line-height: 1.2; }
-                #medicalAssessmentModal .medical-information-content-head p { margin: 3px 0 0; color: #9aadc2; font-size: 12px; line-height: 1.3; }
-                #medicalAssessmentModal .medical-information-edit-toggle { display: inline-flex; min-height: 32px; flex: 0 0 auto; align-items: center; gap: 7px; padding: 6px 10px; border: 1px solid #71839a; border-radius: 6px; background: transparent; color: #f1f5f9; font: inherit; font-size: 11px; font-weight: 750; cursor: pointer; }
-                #medicalAssessmentModal .medical-information-edit-toggle svg { width: 15px; height: 15px; }
-                #medicalAssessmentModal .medical-information-edit-toggle:hover,
-                #medicalAssessmentModal .medical-information-edit-toggle:focus-visible { border-color: #facc15; color: #facc15; outline: none; }
-                #medicalAssessmentModal .medical-information-edit-control { display: none; width: 100%; min-width: 0; padding: 6px 8px; border: 1px solid #334b64; border-radius: 5px; background: #091625; color: #f3f7fc; font: inherit; font-size: 11px; line-height: 1.35; }
-                #medicalAssessmentModal textarea.medical-information-edit-control { min-height: 68px; resize: vertical; white-space: pre; }
-                #medicalAssessmentModal select.medical-information-edit-control { min-height: 30px; }
-                #medicalAssessmentModal .medical-information-edit-control:focus { border-color: #d1a72b; outline: 2px solid rgba(250,204,21,.13); }
-                #medicalAssessmentModal.is-editing .medical-information-read-value { display: none; }
-                #medicalAssessmentModal.is-editing .medical-information-edit-control { display: block; }
-                #medicalAssessmentModal .medical-information-field-error { display: block; margin-top: 4px; color: #fca5a5; font-size: 10px; font-weight: 700; }
-                #medicalAssessmentModal .medical-information-errors { margin-bottom: 8px; padding: 8px 10px; border: 1px solid #a33a47; border-radius: 6px; background: #321922; color: #fecaca; font-size: 11px; }
-                #medicalAssessmentModal .medical-information-errors ul { margin: 0; padding-left: 17px; }
-                #medicalAssessmentModal .medical-information-update-form { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column; overflow: hidden; }
-                #medicalAssessmentModal .medical-information-scroll { min-height: 0; flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; padding: 0 0 2px; }
-                #medicalAssessmentModal .medical-information-category-grid { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 9px; }
-                #medicalAssessmentModal .medical-information-category-card {
+                #medicalInformationModal .medical-information-content-head { display: flex; flex: 0 0 auto; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 0 0 7px; }
+                #medicalInformationModal .medical-information-content-copy { min-width: 0; }
+                #medicalInformationModal .medical-information-content-head h3 { margin: 0; color: #f3f7fc; font-size: 16px; font-weight: 850; line-height: 1.2; }
+                #medicalInformationModal .medical-information-content-head p { margin: 3px 0 0; color: #9aadc2; font-size: 12px; line-height: 1.3; }
+                #medicalInformationModal .medical-information-edit-toggle { display: inline-flex; min-height: 32px; flex: 0 0 auto; align-items: center; gap: 7px; padding: 6px 10px; border: 1px solid #71839a; border-radius: 6px; background: transparent; color: #f1f5f9; font: inherit; font-size: 11px; font-weight: 750; cursor: pointer; }
+                #medicalInformationModal .medical-information-edit-toggle svg { width: 15px; height: 15px; }
+                #medicalInformationModal .medical-information-edit-toggle:hover,
+                #medicalInformationModal .medical-information-edit-toggle:focus-visible { border-color: #facc15; color: #facc15; outline: none; }
+                #medicalInformationModal .medical-information-edit-control { display: none; width: 100%; min-width: 0; padding: 6px 8px; border: 1px solid #334b64; border-radius: 5px; background: #091625; color: #f3f7fc; font: inherit; font-size: 11px; line-height: 1.35; }
+                #medicalInformationModal textarea.medical-information-edit-control { min-height: 68px; resize: vertical; white-space: pre; }
+                #medicalInformationModal select.medical-information-edit-control { min-height: 30px; }
+                #medicalInformationModal .medical-information-edit-control:focus { border-color: #d1a72b; outline: 2px solid rgba(250,204,21,.13); }
+                #medicalInformationModal.is-editing .medical-information-read-value { display: none; }
+                #medicalInformationModal.is-editing .medical-information-edit-control { display: block; }
+                #medicalInformationModal .medical-information-field-error { display: block; margin-top: 4px; color: #fca5a5; font-size: 10px; font-weight: 700; }
+                #medicalInformationModal .medical-information-errors { margin-bottom: 8px; padding: 8px 10px; border: 1px solid #a33a47; border-radius: 6px; background: #321922; color: #fecaca; font-size: 11px; }
+                #medicalInformationModal .medical-information-errors ul { margin: 0; padding-left: 17px; }
+                #medicalInformationModal .medical-information-update-form { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column; overflow: hidden; }
+                #medicalInformationModal .medical-information-scroll { min-height: 0; flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; padding: 0 0 2px; }
+                #medicalInformationModal .medical-information-category-grid { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 9px; }
+                #medicalInformationModal .medical-information-category-card {
                     min-width: 0;
                     overflow: hidden;
                     border: 1px solid #1c3349;
                     border-radius: 8px;
                     background: linear-gradient(145deg, #0e1d2d, #0b1928);
                 }
-                #medicalAssessmentModal .medical-information-category-detail { display: grid; min-width: 0; gap: 9px; }
-                #medicalAssessmentModal .medical-information-documents-layout { display: grid; min-width: 0; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); align-items: start; gap: 10px; }
-                #medicalAssessmentModal .medical-document-file-list,
-                #medicalAssessmentModal .medical-document-information { display: grid; min-width: 0; align-content: start; gap: 9px; }
-                #medicalAssessmentModal .medical-document-file,
-                #medicalAssessmentModal .medical-document-info-card { min-width: 0; overflow: hidden; border: 1px solid #1c3349; border-radius: 8px; background: linear-gradient(145deg, #0e1d2d, #0b1928); }
-                #medicalAssessmentModal .medical-document-file-head,
-                #medicalAssessmentModal .medical-document-info-head { display: flex; min-height: 38px; align-items: center; gap: 8px; padding: 7px 10px; border-bottom: 1px solid #1c3349; background: #14283b; color: #f4f7fb; font-size: 12px; font-weight: 800; }
-                #medicalAssessmentModal .medical-document-file-head svg { width: 18px; height: 18px; flex: 0 0 18px; }
-                #medicalAssessmentModal .medical-document-preview { display: grid; min-height: 130px; place-items: center; overflow: hidden; margin: 9px; border: 1px solid #263c53; border-radius: 6px; background: #081321; color: #9aadc2; }
-                #medicalAssessmentModal .medical-document-preview img { display: block; width: 100%; max-height: 190px; object-fit: contain; }
-                #medicalAssessmentModal .medical-document-preview iframe { display: block; width: 100%; height: 190px; border: 0; background: #fff; }
-                #medicalAssessmentModal .medical-document-preview a { padding: 12px; color: #facc15; font-size: 11px; font-weight: 750; text-align: center; }
-                #medicalAssessmentModal .medical-document-file-name { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; padding: 0 10px 10px; color: #b5c4d5; font-size: 10px; }
-                #medicalAssessmentModal .medical-document-file-name span { min-width: 0; overflow-wrap: anywhere; }
-                #medicalAssessmentModal .medical-document-file-name a { flex: 0 0 auto; color: #facc15; font-weight: 750; }
-                #medicalAssessmentModal .medical-document-info-card .medical-information-rows { grid-template-columns: minmax(0, 1fr); }
-                #medicalAssessmentModal .medical-document-info-card .medical-information-row { grid-template-columns: minmax(100px, .8fr) minmax(0, 1.2fr); }
-                #medicalAssessmentModal .medical-document-info-empty { padding: 12px; color: #9aadc2; font-size: 11px; line-height: 1.45; }
-                #medicalAssessmentModal .medical-information-section-head { display: flex; min-height: 40px; align-items: center; gap: 9px; padding: 7px 11px; border-bottom: 1px solid #1c3349; background: #14283b; }
-                #medicalAssessmentModal .medical-information-section-head h4 { min-width: 0; flex: 1 1 auto; margin: 0; color: #f4f7fb; font-size: 13px; font-weight: 800; line-height: 1.25; }
-                #medicalAssessmentModal .medical-information-category-card[hidden],
-                #medicalAssessmentModal [data-medical-panel][hidden] { display: none !important; }
-                #medicalAssessmentModal .medical-information-category-head { display: flex; min-height: 40px; align-items: center; gap: 9px; padding: 6px 11px; background: #14283b; }
-                #medicalAssessmentModal .medical-information-category-icon { display: grid; width: 26px; height: 26px; flex: 0 0 26px; place-items: center; color: #f5f8fc; }
-                #medicalAssessmentModal .medical-information-category-icon svg { width: 22px; height: 22px; stroke-width: 2.4; }
-                #medicalAssessmentModal .medical-information-category-head h4 { min-width: 0; flex: 1 1 auto; margin: 0; color: #f4f7fb; font-size: 13px; font-weight: 800; line-height: 1.25; }
-                #medicalAssessmentModal .medical-information-view-details {
+                #medicalInformationModal .medical-information-category-detail { display: grid; min-width: 0; gap: 9px; }
+                #medicalInformationModal .medical-information-documents-layout { display: grid; min-width: 0; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); align-items: start; gap: 10px; }
+                #medicalInformationModal .medical-document-file-list,
+                #medicalInformationModal .medical-document-information { display: grid; min-width: 0; align-content: start; gap: 9px; }
+                #medicalInformationModal .medical-document-file,
+                #medicalInformationModal .medical-document-info-card { min-width: 0; overflow: hidden; border: 1px solid #1c3349; border-radius: 8px; background: linear-gradient(145deg, #0e1d2d, #0b1928); }
+                #medicalInformationModal .medical-document-file-head,
+                #medicalInformationModal .medical-document-info-head { display: flex; min-height: 38px; align-items: center; gap: 8px; padding: 7px 10px; border-bottom: 1px solid #1c3349; background: #14283b; color: #f4f7fb; font-size: 12px; font-weight: 800; }
+                #medicalInformationModal .medical-document-file-head svg { width: 18px; height: 18px; flex: 0 0 18px; }
+                #medicalInformationModal .medical-document-preview { display: grid; min-height: 130px; place-items: center; overflow: hidden; margin: 9px; border: 1px solid #263c53; border-radius: 6px; background: #081321; color: #9aadc2; }
+                #medicalInformationModal .medical-document-preview img { display: block; width: 100%; max-height: 190px; object-fit: contain; }
+                #medicalInformationModal .medical-document-preview iframe { display: block; width: 100%; height: 190px; border: 0; background: #fff; }
+                #medicalInformationModal .medical-document-preview a { padding: 12px; color: #facc15; font-size: 11px; font-weight: 750; text-align: center; }
+                #medicalInformationModal .medical-document-file-name { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; padding: 0 10px 10px; color: #b5c4d5; font-size: 10px; }
+                #medicalInformationModal .medical-document-file-name span { min-width: 0; overflow-wrap: anywhere; }
+                #medicalInformationModal .medical-document-file-name a { flex: 0 0 auto; color: #facc15; font-weight: 750; }
+                #medicalInformationModal .medical-document-info-card .medical-information-rows { grid-template-columns: minmax(0, 1fr); }
+                #medicalInformationModal .medical-document-info-card .medical-information-row { display: grid; grid-template-columns: minmax(100px, .8fr) minmax(0, 1.2fr); }
+                #medicalInformationModal .medical-document-info-empty { padding: 12px; color: #9aadc2; font-size: 11px; line-height: 1.45; }
+                #medicalInformationModal .medical-information-section-head { display: flex; min-height: 40px; align-items: center; gap: 9px; padding: 7px 11px; border-bottom: 1px solid #1c3349; background: #14283b; }
+                #medicalInformationModal .medical-information-section-head h4 { min-width: 0; flex: 1 1 auto; margin: 0; color: #f4f7fb; font-size: 13px; font-weight: 800; line-height: 1.25; }
+                #medicalInformationModal .medical-information-category-card[hidden],
+                #medicalInformationModal [data-medical-panel][hidden] { display: none !important; }
+                #medicalInformationModal .medical-information-category-head { display: flex; min-height: 40px; align-items: center; gap: 9px; padding: 6px 11px; background: #14283b; }
+                #medicalInformationModal .medical-information-category-icon { display: grid; width: 26px; height: 26px; flex: 0 0 26px; place-items: center; color: #f5f8fc; }
+                #medicalInformationModal .medical-information-category-icon svg { width: 22px; height: 22px; stroke-width: 2.4; }
+                #medicalInformationModal .medical-information-category-head h4 { min-width: 0; flex: 1 1 auto; margin: 0; color: #f4f7fb; font-size: 13px; font-weight: 800; line-height: 1.25; }
+                #medicalInformationModal .medical-information-view-details {
                     display: inline-flex;
                     min-height: 25px;
                     flex: 0 0 auto;
@@ -434,27 +434,27 @@
                     font-weight: 650;
                     cursor: pointer;
                 }
-                #medicalAssessmentModal .medical-information-view-details:hover,
-                #medicalAssessmentModal .medical-information-view-details:focus-visible { border-color: #e8b923; color: #facc15; outline: none; }
-                #medicalAssessmentModal .medical-information-view-details svg { width: 13px; height: 13px; }
-                #medicalAssessmentModal .medical-information-rows { display: grid; min-width: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 22px; margin: 0; padding: 3px 11px 7px; }
-                #medicalAssessmentModal .medical-information-row-column { display: grid; min-width: 0; align-content: start; }
-                #medicalAssessmentModal .medical-information-row { display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding: 7px 0; border-bottom: 1px solid #1b2e42; }
-                #medicalAssessmentModal .medical-information-row:last-child { border-bottom: 0; }
-                #medicalAssessmentModal .medical-information-row dt { min-width: 0; color: #9eb3ca; font-size: 11px; line-height: 1.3; overflow-wrap: anywhere; }
-                #medicalAssessmentModal .medical-information-row dd { min-width: 0; margin: 0; color: #e7eef6; font-size: 11px; line-height: 1.3; overflow-wrap: anywhere; white-space: pre-wrap; }
-                #medicalAssessmentModal .medical-information-history-panel { padding: 11px 12px; border: 1px solid #1c3349; border-radius: 8px; background: #0d1b2b; }
-                #medicalAssessmentModal .medical-information-history-list { display: grid; gap: 8px; }
-                #medicalAssessmentModal .medical-information-history-entry { padding: 10px 11px; border: 1px solid #1d344a; border-radius: 7px; background: #102033; }
-                #medicalAssessmentModal .medical-information-entry-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 5px 12px; }
-                #medicalAssessmentModal .medical-information-entry-head strong { color: #f7fafc; font-size: 13px; }
-                #medicalAssessmentModal .medical-information-entry-head time,
-                #medicalAssessmentModal .medical-information-history-entry small { color: #9aadc2; font-size: 10px; }
-                #medicalAssessmentModal .medical-information-history-entry p { display: grid; gap: 2px; margin: 8px 0 0; color: #e2eaf3; font-size: 12px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
-                #medicalAssessmentModal .medical-information-history-entry p span { color: #a6b9ce; font-size: 10px; font-weight: 850; text-transform: uppercase; }
-                #medicalAssessmentModal .medical-information-history-entry small { display: block; margin-top: 8px; }
-                #medicalAssessmentModal .medical-information-empty { padding: 15px; border: 1px solid #1d344a; border-radius: 7px; background: #102033; color: #b8c7d8; font-size: 13px; }
-                #medicalAssessmentModal .medical-information-footer {
+                #medicalInformationModal .medical-information-view-details:hover,
+                #medicalInformationModal .medical-information-view-details:focus-visible { border-color: #e8b923; color: #facc15; outline: none; }
+                #medicalInformationModal .medical-information-view-details svg { width: 13px; height: 13px; }
+                #medicalInformationModal .medical-information-rows { display: grid; min-width: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 22px; margin: 0; padding: 3px 11px 7px; }
+                #medicalInformationModal .medical-information-row-column { display: grid; min-width: 0; align-content: start; margin: 0; }
+                #medicalInformationModal .medical-information-row { display: flex; min-width: 0; align-items: baseline; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px solid #1b2e42; }
+                #medicalInformationModal .medical-information-row:last-child { border-bottom: 0; }
+                #medicalInformationModal .medical-information-row dt { flex: 1 1 55%; min-width: 0; margin: 0; padding: 0; color: #9eb3ca; font-size: 11px; line-height: 1.3; overflow-wrap: anywhere; }
+                #medicalInformationModal .medical-information-row dd { flex: 0 1 45%; min-width: 0; margin: 0; padding: 0; color: #e7eef6; font-size: 11px; line-height: 1.3; text-align: right; overflow-wrap: anywhere; white-space: pre-wrap; }
+                #medicalInformationModal .medical-information-history-panel { padding: 11px 12px; border: 1px solid #1c3349; border-radius: 8px; background: #0d1b2b; }
+                #medicalInformationModal .medical-information-history-list { display: grid; gap: 8px; }
+                #medicalInformationModal .medical-information-history-entry { padding: 10px 11px; border: 1px solid #1d344a; border-radius: 7px; background: #102033; }
+                #medicalInformationModal .medical-information-entry-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 5px 12px; }
+                #medicalInformationModal .medical-information-entry-head strong { color: #f7fafc; font-size: 13px; }
+                #medicalInformationModal .medical-information-entry-head time,
+                #medicalInformationModal .medical-information-history-entry small { color: #9aadc2; font-size: 10px; }
+                #medicalInformationModal .medical-information-history-entry p { display: grid; gap: 2px; margin: 8px 0 0; color: #e2eaf3; font-size: 12px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+                #medicalInformationModal .medical-information-history-entry p span { color: #a6b9ce; font-size: 10px; font-weight: 850; text-transform: uppercase; }
+                #medicalInformationModal .medical-information-history-entry small { display: block; margin-top: 8px; }
+                #medicalInformationModal .medical-information-empty { padding: 15px; border: 1px solid #1d344a; border-radius: 7px; background: #102033; color: #b8c7d8; font-size: 13px; }
+                #medicalInformationModal .medical-information-footer {
                     display: flex;
                     min-height: 46px;
                     flex: 0 0 auto;
@@ -465,7 +465,7 @@
                     border-top: 1px solid #1b2e42;
                     background: #091625;
                 }
-                #medicalAssessmentModal .medical-information-footer button {
+                #medicalInformationModal .medical-information-footer button {
                     display: inline-flex;
                     min-height: 38px;
                     align-items: center;
@@ -482,105 +482,105 @@
                     cursor: pointer;
                     transition: background .15s ease, border-color .15s ease;
                 }
-                #medicalAssessmentModal .medical-information-footer button svg { width: 17px; height: 17px; }
-                #medicalAssessmentModal .medical-information-footer button:hover,
-                #medicalAssessmentModal .medical-information-footer button:focus-visible { border-color: #facc15; color: #facc15; outline: none; }
-                #medicalAssessmentModal .medical-information-footer button.medical-information-update { border-color: #b81626; background: #c7192a; color: #fff; }
-                #medicalAssessmentModal .medical-information-footer button.medical-information-update:hover,
-                #medicalAssessmentModal .medical-information-footer button.medical-information-update:focus-visible { border-color: #facc15; background: #9e1421; color: #fff; }
-                #medicalAssessmentModal .medical-information-card [hidden] { display: none !important; }
-                html[data-theme="light"] #medicalAssessmentModal { background: rgba(15, 23, 42, .58); }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-card {
+                #medicalInformationModal .medical-information-footer button svg { width: 17px; height: 17px; }
+                #medicalInformationModal .medical-information-footer button:hover,
+                #medicalInformationModal .medical-information-footer button:focus-visible { border-color: #facc15; color: #facc15; outline: none; }
+                #medicalInformationModal .medical-information-footer button.medical-information-update { border-color: #b81626; background: #c7192a; color: #fff; }
+                #medicalInformationModal .medical-information-footer button.medical-information-update:hover,
+                #medicalInformationModal .medical-information-footer button.medical-information-update:focus-visible { border-color: #facc15; background: #9e1421; color: #fff; }
+                #medicalInformationModal .medical-information-card [hidden] { display: none !important; }
+                html[data-theme="light"] #medicalInformationModal { background: rgba(15, 23, 42, .58); }
+                html[data-theme="light"] #medicalInformationModal .medical-information-card {
                     border-color: #d5dee8;
                     background: #fff;
                     color: #172033;
                     box-shadow: 0 24px 60px rgba(15, 23, 42, .28);
                 }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-sidebar,
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-footer { border-color: #e0e6ed; background: #f7f9fc; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-nav button { border-color: #dce3eb; background: #fff; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-nav button { color: #243247; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-nav button:hover,
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-nav button:focus-visible { border-color: #b9c7d6; background: #edf2f7; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-nav button.is-active { border-color: #8c1220; border-left-color: #ed1b2f; background: linear-gradient(100deg, #64111e, #391220); color: #fff; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-main { background: #fff; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-content-head h3,
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-category-head h4,
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-section-head h4 { color: #1f2937; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-content-head p { color: #64748b; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-edit-toggle { border-color: #b8c4d1; color: #334155; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-edit-control { border-color: #cbd5e1; background: #fff; color: #172033; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-errors { border-color: #f1a6ad; background: #fff1f2; color: #9f1239; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-category-card,
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-history-panel { border-color: #dbe3ec; background: #fff; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-document-file,
-                html[data-theme="light"] #medicalAssessmentModal .medical-document-info-card { border-color: #dbe3ec; background: #fff; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-document-file-head,
-                html[data-theme="light"] #medicalAssessmentModal .medical-document-info-head { border-color: #e5eaf0; background: #f1f5f9; color: #1f2937; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-document-preview { border-color: #dbe3ec; background: #f8fafc; color: #64748b; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-document-file-name,
-                html[data-theme="light"] #medicalAssessmentModal .medical-document-info-empty { color: #64748b; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-document-file-name a,
-                html[data-theme="light"] #medicalAssessmentModal .medical-document-preview a { color: #8c1220; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-category-detail { border-color: #dbe3ec; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-category-head,
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-section-head { border-color: #e5eaf0; background: #f1f5f9; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-category-icon { color: #26364a; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-view-details { border-color: #d7e0e9; background: #eef2f6; color: #334155; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-view-details:hover,
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-view-details:focus-visible { border-color: #d6ad27; color: #7f1d1d; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-row { border-color: #e5eaf0; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-row dt { color: #617187; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-row dd { color: #1f2937; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-history-entry,
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-empty { border-color: #dfe6ee; background: #f8fafc; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-entry-head strong { color: #253247; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-entry-head time,
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-history-entry small,
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-history-entry p span { color: #64748b; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-history-entry p { color: #334155; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-empty { color: #526176; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-footer button:not(.medical-information-update) { border-color: #cbd5e1; color: #334155; }
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-footer button:not(.medical-information-update):hover,
-                html[data-theme="light"] #medicalAssessmentModal .medical-information-footer button:not(.medical-information-update):focus-visible { border-color: #8c1220; color: #8c1220; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-sidebar,
+                html[data-theme="light"] #medicalInformationModal .medical-information-footer { border-color: #e0e6ed; background: #f7f9fc; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-nav button { border-color: #dce3eb; background: #fff; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-nav button { color: #243247; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-nav button:hover,
+                html[data-theme="light"] #medicalInformationModal .medical-information-nav button:focus-visible { border-color: #b9c7d6; background: #edf2f7; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-nav button.is-active { border-color: #8c1220; border-left-color: #ed1b2f; background: linear-gradient(100deg, #64111e, #391220); color: #fff; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-main { background: #fff; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-content-head h3,
+                html[data-theme="light"] #medicalInformationModal .medical-information-category-head h4,
+                html[data-theme="light"] #medicalInformationModal .medical-information-section-head h4 { color: #1f2937; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-content-head p { color: #64748b; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-edit-toggle { border-color: #b8c4d1; color: #334155; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-edit-control { border-color: #cbd5e1; background: #fff; color: #172033; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-errors { border-color: #f1a6ad; background: #fff1f2; color: #9f1239; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-category-card,
+                html[data-theme="light"] #medicalInformationModal .medical-information-history-panel { border-color: #dbe3ec; background: #fff; }
+                html[data-theme="light"] #medicalInformationModal .medical-document-file,
+                html[data-theme="light"] #medicalInformationModal .medical-document-info-card { border-color: #dbe3ec; background: #fff; }
+                html[data-theme="light"] #medicalInformationModal .medical-document-file-head,
+                html[data-theme="light"] #medicalInformationModal .medical-document-info-head { border-color: #e5eaf0; background: #f1f5f9; color: #1f2937; }
+                html[data-theme="light"] #medicalInformationModal .medical-document-preview { border-color: #dbe3ec; background: #f8fafc; color: #64748b; }
+                html[data-theme="light"] #medicalInformationModal .medical-document-file-name,
+                html[data-theme="light"] #medicalInformationModal .medical-document-info-empty { color: #64748b; }
+                html[data-theme="light"] #medicalInformationModal .medical-document-file-name a,
+                html[data-theme="light"] #medicalInformationModal .medical-document-preview a { color: #8c1220; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-category-detail { border-color: #dbe3ec; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-category-head,
+                html[data-theme="light"] #medicalInformationModal .medical-information-section-head { border-color: #e5eaf0; background: #f1f5f9; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-category-icon { color: #26364a; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-view-details { border-color: #d7e0e9; background: #eef2f6; color: #334155; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-view-details:hover,
+                html[data-theme="light"] #medicalInformationModal .medical-information-view-details:focus-visible { border-color: #d6ad27; color: #7f1d1d; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-row { border-color: #e5eaf0; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-row dt { color: #617187; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-row dd { color: #1f2937; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-history-entry,
+                html[data-theme="light"] #medicalInformationModal .medical-information-empty { border-color: #dfe6ee; background: #f8fafc; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-entry-head strong { color: #253247; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-entry-head time,
+                html[data-theme="light"] #medicalInformationModal .medical-information-history-entry small,
+                html[data-theme="light"] #medicalInformationModal .medical-information-history-entry p span { color: #64748b; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-history-entry p { color: #334155; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-empty { color: #526176; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-footer button:not(.medical-information-update) { border-color: #cbd5e1; color: #334155; }
+                html[data-theme="light"] #medicalInformationModal .medical-information-footer button:not(.medical-information-update):hover,
+                html[data-theme="light"] #medicalInformationModal .medical-information-footer button:not(.medical-information-update):focus-visible { border-color: #8c1220; color: #8c1220; }
                 @media (min-width: 721px) and (max-width: 860px) {
-                    #medicalAssessmentModal .medical-information-category-grid { grid-template-columns: minmax(0, 1fr); }
+                    #medicalInformationModal .medical-information-category-grid { grid-template-columns: minmax(0, 1fr); }
                 }
                 @media (max-width: 720px) {
-                    #medicalAssessmentModal { padding: 6px; }
-                    #medicalAssessmentModal .medical-information-card { width: calc(100vw - 12px); height: calc(100dvh - 12px); min-height: 0; }
-                    #medicalAssessmentModal .medical-information-header { min-height: 68px; padding: 10px 10px; }
-                    #medicalAssessmentModal .medical-information-heading { gap: 9px; }
-                    #medicalAssessmentModal .medical-information-heading-icon { width: 40px; height: 40px; flex-basis: 40px; }
-                    #medicalAssessmentModal .medical-information-heading h2 { font-size: 16px; }
-                    #medicalAssessmentModal .medical-information-heading p { max-width: 55vw; font-size: 10px; }
-                    #medicalAssessmentModal .medical-information-close { width: 32px; height: 32px; flex-basis: 32px; }
-                    #medicalAssessmentModal .medical-information-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
-                    #medicalAssessmentModal .medical-information-sidebar { gap: 7px; padding: 7px 8px 6px; border-right: 0; border-bottom: 1px solid #1a2c41; }
-                    #medicalAssessmentModal .medical-information-nav { display: flex; gap: 5px; overflow-x: auto; overflow-y: hidden; padding-bottom: 2px; }
-                    #medicalAssessmentModal .medical-information-nav button { min-height: 32px; flex: 0 0 auto; padding: 5px 8px; font-size: 10px; }
-                    #medicalAssessmentModal .medical-information-nav .medical-information-nav-label { white-space: nowrap; }
-                    #medicalAssessmentModal .medical-information-nav button svg { width: 15px; height: 15px; flex-basis: 15px; }
-                    #medicalAssessmentModal .medical-information-main { padding: 9px 9px 7px; }
-                    #medicalAssessmentModal .medical-information-category-grid { grid-template-columns: minmax(0, 1fr); gap: 7px; }
-                    #medicalAssessmentModal .medical-information-rows { grid-template-columns: minmax(0, 1fr); }
-                    #medicalAssessmentModal .medical-information-documents-layout { grid-template-columns: minmax(0, 1fr); }
-                    #medicalAssessmentModal .medical-information-category-head h4 { font-size: 12px; }
-                    #medicalAssessmentModal .medical-information-footer { justify-content: space-between; padding: 6px 8px; }
-                    #medicalAssessmentModal .medical-information-footer button { min-height: 35px; padding: 7px 9px; font-size: 11px; }
+                    #medicalInformationModal { padding: 6px; }
+                    #medicalInformationModal .medical-information-card { width: calc(100vw - 12px); height: calc(100dvh - 12px); min-height: 0; }
+                    #medicalInformationModal .medical-information-header { min-height: 68px; padding: 10px 10px; }
+                    #medicalInformationModal .medical-information-heading { gap: 9px; }
+                    #medicalInformationModal .medical-information-heading-icon { width: 40px; height: 40px; flex-basis: 40px; }
+                    #medicalInformationModal .medical-information-heading h2 { font-size: 16px; }
+                    #medicalInformationModal .medical-information-heading p { max-width: 55vw; font-size: 10px; }
+                    #medicalInformationModal .medical-information-close { width: 32px; height: 32px; flex-basis: 32px; }
+                    #medicalInformationModal .medical-information-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+                    #medicalInformationModal .medical-information-sidebar { gap: 7px; padding: 7px 8px 6px; border-right: 0; border-bottom: 1px solid #1a2c41; }
+                    #medicalInformationModal .medical-information-nav { display: flex; gap: 5px; overflow-x: auto; overflow-y: hidden; padding-bottom: 2px; }
+                    #medicalInformationModal .medical-information-nav button { min-height: 32px; flex: 0 0 auto; padding: 5px 8px; font-size: 10px; }
+                    #medicalInformationModal .medical-information-nav .medical-information-nav-label { white-space: nowrap; }
+                    #medicalInformationModal .medical-information-nav button svg { width: 15px; height: 15px; flex-basis: 15px; }
+                    #medicalInformationModal .medical-information-main { padding: 9px 9px 7px; }
+                    #medicalInformationModal .medical-information-category-grid { grid-template-columns: minmax(0, 1fr); gap: 7px; }
+                    #medicalInformationModal .medical-information-rows { grid-template-columns: minmax(0, 1fr); }
+                    #medicalInformationModal .medical-information-documents-layout { grid-template-columns: minmax(0, 1fr); }
+                    #medicalInformationModal .medical-information-category-head h4 { font-size: 12px; }
+                    #medicalInformationModal .medical-information-footer { justify-content: space-between; padding: 6px 8px; }
+                    #medicalInformationModal .medical-information-footer button { min-height: 35px; padding: 7px 9px; font-size: 11px; }
                 }
                 @media (max-width: 420px) {
-                    #medicalAssessmentModal .medical-information-footer { display: grid; grid-template-columns: minmax(0, 1fr); }
-                    #medicalAssessmentModal .medical-information-footer button { width: 100%; }
+                    #medicalInformationModal .medical-information-footer { display: grid; grid-template-columns: minmax(0, 1fr); }
+                    #medicalInformationModal .medical-information-footer button { width: 100%; }
                 }
                 @media (prefers-reduced-motion: reduce) {
-                    #medicalAssessmentModal *, #medicalAssessmentModal *::before, #medicalAssessmentModal *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+                    #medicalInformationModal *, #medicalInformationModal *::before, #medicalInformationModal *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
                 }
             </style>
         @endpush
     @endonce
 
-    <div class="correction-modal" id="medicalAssessmentModal" aria-hidden="true" data-auto-open="{{ $medicalInformationErrorMessages->isNotEmpty() ? 'true' : 'false' }}">
+    <div class="medical-information-overlay" id="medicalInformationModal" aria-hidden="true" data-auto-open="{{ $medicalInformationErrorMessages->isNotEmpty() ? 'true' : 'false' }}">
         <div class="correction-card medical-information-card" role="dialog" aria-modal="true" aria-labelledby="medicalInformationTitle">
             <header class="medical-information-header">
                 <div class="medical-information-heading">
@@ -850,7 +850,7 @@
         @push('scripts')
             <script>
                 document.addEventListener('DOMContentLoaded', function () {
-                    const modal = document.getElementById('medicalAssessmentModal');
+                    const modal = document.getElementById('medicalInformationModal');
                     if (!modal) return;
 
                     const categoryGrid = modal.querySelector('[data-medical-category-grid]');
