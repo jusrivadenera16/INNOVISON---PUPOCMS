@@ -35,6 +35,7 @@ use App\Support\HealthFormRecoveryInput;
 use App\Support\SensitiveLogRedactor;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -7450,6 +7451,9 @@ public function storeHealthForm(Request $request)
             ['user_id' => $user->id],
             $healthProfileData
         );
+        $studentHealthInformationChanges = $existingHealthProfile
+            ? $this->studentHealthInformationChangeMetadata($existingHealthProfile, $healthProfile)
+            : [];
 
         if (!$pendingHealthFormRequest) {
             foreach ($oldPaths as $oldPath) {
@@ -7504,10 +7508,20 @@ public function storeHealthForm(Request $request)
         \App\Models\ActivityLog::create([
             'user_id'     => $user->id,
             'user_name'   => $user->name,
+            'user_role'   => strtolower((string) $user->user_role),
             'action'      => $isHealthFormCorrectionMode ? 'Health Profile Correction Submitted' : 'Health Profile Completed',
+            'module'      => 'Health Records',
+            'event_type'  => $studentHealthInformationChanges !== [] ? 'student_medical_information_updated' : null,
             'description' => $isHealthFormCorrectionMode
                 ? 'Student submitted requested Health Form corrections.'
                 : 'Student completed the Health Profile requirements.',
+            'subject_type' => $studentHealthInformationChanges !== [] ? HealthProfile::class : null,
+            'subject_id' => $studentHealthInformationChanges !== [] ? (string) $healthProfile->id : null,
+            'metadata' => $studentHealthInformationChanges !== [] ? $studentHealthInformationChanges : null,
+            'route_name' => optional($request->route())->getName(),
+            'http_method' => 'POST',
+            'request_path' => '/' . ltrim((string) $request->path(), '/'),
+            'status_code' => 200,
             'ip_address'  => $request->ip(),
             'user_agent'  => $request->userAgent(),
         ]);
@@ -7548,6 +7562,124 @@ public function storeHealthForm(Request $request)
             ->withInput(HealthFormRecoveryInput::fromRequest($request))
             ->with('error', 'We could not save the health form. Your text entries were kept. Please reselect uploaded files and redraw your signature, then try again.');
     }
+}
+
+private function studentHealthInformationChangeMetadata(HealthProfile $before, HealthProfile $after): array
+{
+    $labels = [
+        'birthday' => 'Date of birth',
+        'age' => 'Age',
+        'sex' => 'Sex',
+        'civil_status' => 'Civil status',
+        'blood_type' => 'Blood type',
+        'course_college' => 'Program',
+        'home_address' => 'Home address',
+        'zipcode' => 'ZIP code',
+        'guardian_name' => 'Guardian name',
+        'landline' => 'Landline',
+        'cellphone' => 'Contact number',
+        'has_illness' => 'Known illness',
+        'medical_history' => 'Medical conditions',
+        'other_illness' => 'Other illness',
+        'has_disability' => 'Disability',
+        'disability_type' => 'Disability type',
+        'no_allergies' => 'Known allergies',
+        'food_allergies' => 'Food allergies',
+        'medicine_allergies' => 'Medicine allergies',
+        'other_med_allergies' => 'Other medicine allergies',
+        'is_smoker' => 'Smoking',
+        'is_drinker' => 'Alcohol use',
+        'covid_vaccinated' => 'COVID-19 vaccination',
+        'vaccine_history' => 'Vaccine history',
+        'covid_positive' => 'COVID-19 positive',
+        'covid_positive_date' => 'COVID-19 positive date',
+        'height' => 'Height',
+        'weight' => 'Weight',
+        'blood_pressure' => 'Blood pressure',
+        'pulse_rate' => 'Pulse rate',
+        'respiratory_rate' => 'Respiratory rate',
+        'temperature' => 'Temperature',
+        'assessment_date' => 'Assessment date',
+        'med_assessment_remarks' => 'Assessment remarks',
+        'medical_certificate_issued_by' => 'Certificate doctor',
+        'med_cert_date' => 'Certificate date',
+        'med_cert_findings' => 'Certificate findings',
+        'med_cert_findings_details' => 'Certificate findings details',
+        'xray_date' => 'Chest X-ray date',
+        'xray_findings' => 'Chest X-ray findings',
+        'xray_findings_details' => 'Chest X-ray findings details',
+        'student_photo' => '2x2 photo',
+        'health_declaration' => 'Health declaration',
+        'medical_certificate' => 'Medical certificate file',
+        'chest_xray_result' => 'Chest X-ray file',
+        'pwd_id_proof' => 'PWD ID proof',
+    ];
+    $normalize = static function (mixed $value) use (&$normalize): mixed {
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+        if (is_string($value)) {
+            $value = trim($value);
+            return $value === '' ? null : $value;
+        }
+        if (!is_array($value)) {
+            return $value;
+        }
+        if (!array_is_list($value)) {
+            ksort($value);
+        }
+        foreach ($value as $key => $item) {
+            $value[$key] = $normalize($item);
+        }
+
+        return $value;
+    };
+    $previousValues = [];
+    $updatedValues = [];
+    $updatedFields = [];
+
+    foreach ($labels as $field => $label) {
+        $previous = $before->getAttribute($field);
+        $updated = $after->getAttribute($field);
+        $documentField = in_array($field, ['student_photo', 'health_declaration', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'], true);
+        if ($field === 'no_allergies') {
+            $previous = $previous === null ? null : ($previous ? 'No' : 'Yes');
+            $updated = $updated === null ? null : ($updated ? 'No' : 'Yes');
+        }
+        $numericField = in_array($field, ['age', 'height', 'weight', 'pulse_rate', 'respiratory_rate', 'temperature'], true);
+        $equivalent = $numericField && is_numeric($previous) && is_numeric($updated)
+            ? (float) $previous === (float) $updated
+            : json_encode($normalize($previous)) === json_encode($normalize($updated));
+        if ($equivalent) {
+            continue;
+        }
+
+        if ($documentField) {
+            $previousUploaded = filled($previous);
+            $updatedUploaded = filled($updated);
+            $previous = $previousUploaded ? 'Uploaded' : 'Not uploaded';
+            $updated = $updatedUploaded
+                ? ($previousUploaded ? 'Replaced' : 'Uploaded')
+                : 'Removed';
+        }
+
+        $updatedFields[] = $field;
+        $previousValues[$field] = $previous;
+        $updatedValues[$field] = $updated;
+    }
+
+    if ($updatedFields === []) {
+        return [];
+    }
+
+    return [
+        'profile_type' => 'student',
+        'source' => 'student_health_form',
+        'updated_fields' => $updatedFields,
+        'updated_field_labels' => array_map(fn (string $field): string => $labels[$field], $updatedFields),
+        'updated_values_encrypted' => Crypt::encryptString(json_encode($updatedValues, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) ?: '{}'),
+        'previous_values_encrypted' => Crypt::encryptString(json_encode($previousValues, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) ?: '{}'),
+    ];
 }
 
 public function printHealthForm()

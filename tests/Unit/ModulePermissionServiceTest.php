@@ -41,6 +41,26 @@ class ModulePermissionServiceTest extends TestCase
         $this->assertTrue($service->can($user, 'reports.export_reports'));
     }
 
+    public function test_medical_information_edit_requires_assignment_for_admin_and_student_assistant(): void
+    {
+        $service = new ModulePermissionService();
+
+        foreach ([User::ROLE_ADMIN, 'student_assistant'] as $role) {
+            $user = new User();
+            $user->user_role = $role;
+            $user->module_permissions = ['health_records.view'];
+
+            $this->assertFalse($service->can($user, 'health_records.update_assessment'));
+
+            $user->module_permissions = ['health_records.view', 'health_records.update_assessment'];
+            $this->assertTrue($service->can($user, 'health_records.update_assessment'));
+        }
+
+        $superadmin = new User();
+        $superadmin->user_role = User::ROLE_SUPERADMIN;
+        $this->assertTrue($service->can($superadmin, 'health_records.update_assessment'));
+    }
+
     public function test_final_walkin_approval_is_reserved_for_super_admin(): void
     {
         $service = new ModulePermissionService();
