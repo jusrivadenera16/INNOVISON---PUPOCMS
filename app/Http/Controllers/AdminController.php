@@ -31,6 +31,7 @@ use App\Services\InventoryDataNormalizer;
 use App\Services\PuptasWebhookService;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Response; 
@@ -2989,7 +2990,41 @@ class AdminController extends Controller
 
     private function healthProfileMedicalAssessmentSnapshot(HealthProfile $profile): array
     {
+        $splitAddress = collect([
+            $profile->street,
+            $profile->barangay,
+            $profile->municipality,
+            $profile->province,
+        ])->map(fn ($part) => trim((string) $part))
+            ->filter()
+            ->implode(', ');
+        $address = $splitAddress !== '' ? $splitAddress : $profile->home_address;
+        $storedCourse = $profile->course_college ?: $profile->user?->course;
+        $courseCode = $profile->course_code ?: $this->medicalAssessmentCourseCode($storedCourse);
+
         $fields = [
+            'Personal Information' => [
+                'Full name' => $profile->user?->name,
+                'Student number' => $profile->student_number ?: $profile->user?->student_number,
+                'Email address' => $profile->user?->email,
+                'Date of birth' => $profile->birthday ?: $profile->user?->DOB,
+                'Sex' => $profile->sex ?: $profile->user?->gender,
+                'Contact number' => $profile->user?->contact_no,
+            ],
+            'Address' => [
+                'Address' => $address,
+                'ZIP code' => $profile->zipcode,
+            ],
+            'Emergency Contact' => [
+                'Emergency contact person' => $profile->guardian_name,
+                'Emergency contact number' => $profile->cellphone,
+                'Landline' => $profile->landline,
+            ],
+            'Academic Information' => [
+                'Course Code' => $courseCode ?: $storedCourse,
+                'Year' => $profile->user?->year,
+                'Section' => $profile->user?->section,
+            ],
             'Medical History' => [
                 'Known illness' => $profile->has_illness,
                 'Medical conditions' => $profile->medical_history,
@@ -2999,7 +3034,7 @@ class AdminController extends Controller
                 'Disability type' => $profile->disability_type,
             ],
             'Allergies' => [
-                'No known allergies' => $profile->no_allergies,
+                'Known allergies' => $profile->no_allergies === null ? null : ($profile->no_allergies ? 'No' : 'Yes'),
                 'Food allergies' => $profile->food_allergies,
                 'Medicine allergies' => $profile->medicine_allergies,
                 'Other medicine allergies' => $profile->other_med_allergies,
@@ -3028,12 +3063,9 @@ class AdminController extends Controller
             'Medical Certificate & Imaging' => [
                 '2x2 student photo' => filled($profile->student_photo) ? 'Uploaded' : 'Not uploaded',
                 'Health declaration' => filled($profile->health_declaration) ? 'Uploaded' : 'Not uploaded',
-                'PWD ID proof' => filled($profile->pwd_id_proof) ? 'Uploaded' : 'Not uploaded',
                 'Medical certificate' => filled($profile->medical_certificate) ? 'Uploaded' : 'Not uploaded',
-                'Certificate doctor' => $profile->doctor_name,
-                'Certificate issued by' => $profile->medical_certificate_issued_by,
-                'Certificate date' => $profile->med_cert_date,
-                'Certificate issued date' => $profile->medical_certificate_issued_at,
+                'Certificate doctor' => $profile->doctor_name ?: $profile->medical_certificate_issued_by,
+                'Certificate date' => $profile->med_cert_date ?: $profile->medical_certificate_issued_at,
                 'Certificate findings' => $profile->med_cert_findings,
                 'Certificate findings details' => $profile->med_cert_findings_details,
                 'Chest X-ray report' => filled($profile->chest_xray_result) ? 'Uploaded' : 'Not uploaded',
@@ -3049,6 +3081,10 @@ class AdminController extends Controller
             ],
         ];
 
+        if (strtolower(trim((string) $profile->has_disability)) === 'yes') {
+            $fields['Medical Certificate & Imaging']['PWD ID proof'] = filled($profile->pwd_id_proof) ? 'Uploaded' : 'Not uploaded';
+        }
+
         return collect($fields)
             ->map(fn (array $items) => collect($items)
                 ->map(fn ($value) => $this->medicalAssessmentSnapshotValue($value))
@@ -3056,9 +3092,71 @@ class AdminController extends Controller
             ->all();
     }
 
+    private function medicalAssessmentCourseCatalog(): array
+    {
+        return [
+            'BSBA-HRM' => 'Bachelor of Science in Business Administration major in Human Resource Management',
+            'BSBA-MM' => 'Bachelor of Science in Business Administration major in Marketing Management',
+            'BSECE' => 'Bachelor of Science in Electronics Engineering',
+            'BSIT' => 'Bachelor of Science in Information Technology',
+            'BSME' => 'Bachelor of Science in Mechanical Engineering',
+            'BSOA' => 'Bachelor of Science in Office Administration',
+            'BSPSY' => 'Bachelor of Science in Psychology',
+            'BSED-ENGLISH' => 'Bachelor of Secondary Education major in English',
+            'BSED-MATH' => 'Bachelor of Secondary Education major in Mathematics',
+            'DIT' => 'Diploma in Information Technology',
+            'DOMT' => 'Diploma in Office Management Technology',
+        ];
+    }
+
+    private function medicalAssessmentCourseCode(?string $course): ?string
+    {
+        $course = strtolower(trim((string) $course));
+        if ($course === '') {
+            return null;
+        }
+
+        foreach ($this->medicalAssessmentCourseCatalog() as $code => $name) {
+            if ($course === strtolower($code)
+                || $course === strtolower($name)
+                || $course === strtolower($code . ' - ' . $name)) {
+                return $code;
+            }
+        }
+
+        return null;
+    }
+
     private function employeeMedicalAssessmentSnapshot(EmployeeHealthProfile $profile): array
     {
+        $splitAddress = collect([
+            $profile->street,
+            $profile->barangay,
+            $profile->municipality,
+            $profile->province,
+        ])->map(fn ($part) => trim((string) $part))
+            ->filter()
+            ->implode(', ');
+
         $fields = [
+            'Personal Information' => [
+                'Full name' => $profile->name ?: $profile->user?->name,
+                'Email address' => $profile->user?->email,
+                'Date of birth' => $profile->birthday ?: $profile->user?->DOB,
+                'Sex' => $profile->sex ?: $profile->user?->gender,
+                'Contact number' => $profile->contact_no ?: $profile->user?->contact_no,
+            ],
+            'Address' => [
+                'Address' => $splitAddress !== '' ? $splitAddress : $profile->home_address,
+            ],
+            'Emergency Contact' => [
+                'Emergency contact person' => $profile->emergency_contact_person,
+                'Emergency contact number' => $profile->emergency_contact_no,
+            ],
+            'Employment Information' => [
+                'Employee number' => $profile->employee_number ?: $profile->user?->employee_number,
+                'Office' => $profile->office ?: $profile->course_college,
+            ],
             'Medical & Family History' => [
                 'Past medical history' => $profile->past_medical_history,
                 'Other past medical history' => $profile->past_medical_history_others,
@@ -3121,15 +3219,240 @@ class AdminController extends Controller
                 'Medical certificate' => filled($profile->medical_certificate) ? 'Uploaded' : 'Not uploaded',
                 'Chest X-ray document' => filled($profile->chest_xray_document) ? 'Uploaded' : 'Not uploaded',
                 'Health declaration' => filled($profile->health_declaration) ? 'Uploaded' : 'Not uploaded',
-                'PWD ID proof' => filled($profile->pwd_id_proof) ? 'Uploaded' : 'Not uploaded',
             ],
         ];
+
+        if ($profile->has_disability) {
+            $fields['Medical Documents']['PWD ID proof'] = filled($profile->pwd_id_proof) ? 'Uploaded' : 'Not uploaded';
+        }
 
         return collect($fields)
             ->map(fn (array $items) => collect($items)
                 ->map(fn ($value) => $this->medicalAssessmentSnapshotValue($value))
                 ->all())
             ->all();
+    }
+
+    private function medicalInformationFieldLabels(array $fields): array
+    {
+        $labels = [
+            'birthday' => 'Date of birth',
+            'age' => 'Age',
+            'sex' => 'Sex',
+            'course_college' => 'Program',
+            'course_code' => 'Course Code',
+            'student_number' => 'Student number',
+            'office' => 'Office',
+            'civil_status' => 'Civil status',
+            'home_address' => 'Home address',
+            'street' => 'House No. / Street',
+            'barangay' => 'Barangay',
+            'municipality' => 'City / Municipality',
+            'province' => 'Province',
+            'zipcode' => 'ZIP code',
+            'guardian_name' => 'Emergency contact person',
+            'emergency_contact_person' => 'Emergency contact person',
+            'emergency_contact_no' => 'Emergency contact number',
+            'landline' => 'Landline',
+            'cellphone' => 'Emergency contact number',
+            'contact_no' => 'Contact number',
+            'user_contact_no' => 'Contact number',
+            'user_year' => 'Year',
+            'user_section' => 'Section',
+            'has_illness' => 'Known illness',
+            'medical_history' => 'Medical conditions',
+            'other_illness' => 'Other illness',
+            'blood_type' => 'Blood type',
+            'has_disability' => 'Disability',
+            'disability_type' => 'Disability type',
+            'no_allergies' => 'Known allergies',
+            'known_allergies' => 'Known allergies',
+            'food_allergies' => 'Food allergies',
+            'medicine_allergies' => 'Medicine allergies',
+            'other_med_allergies' => 'Other medicine allergies',
+            'is_smoker' => 'Smoking',
+            'is_drinker' => 'Alcohol use',
+            'covid_vaccinated' => 'COVID-19 vaccination',
+            'vaccine_history' => 'Vaccine history',
+            'covid_positive' => 'COVID-19 positive',
+            'covid_positive_date' => 'COVID-19 positive date',
+            'xray_date' => 'Chest X-ray date',
+            'xray_findings' => 'Chest X-ray findings',
+            'xray_findings_details' => 'Chest X-ray findings details',
+            'past_medical_history' => 'Past medical history',
+            'past_medical_history_others' => 'Other past medical history',
+            'family_history' => 'Family history',
+            'family_history_others' => 'Other family history',
+            'previous_hospitalization' => 'Previous hospitalization',
+            'previous_hospitalization_details' => 'Hospitalization details',
+            'operation_surgery' => 'Operation / surgery',
+            'operation_surgery_details' => 'Operation / surgery details',
+            'current_medications' => 'Current medications',
+            'allergies' => 'Allergies',
+            'height' => 'Height',
+            'weight' => 'Weight',
+            'blood_pressure' => 'Blood pressure',
+            'bp' => 'Blood pressure',
+            'pulse_rate' => 'Pulse rate',
+            'hr' => 'Heart rate',
+            'respiratory_rate' => 'Respiratory rate',
+            'rr' => 'Respiratory rate',
+            'temperature' => 'Temperature',
+            'assessment_date' => 'Assessment date',
+            'med_assessment_remarks' => 'Assessment remarks',
+            'medical_condition_remarks' => 'Medical condition remarks',
+            'doctor_name' => 'Certificate doctor',
+            'medical_certificate_issued_by' => 'Certificate doctor',
+            'med_cert_date' => 'Certificate date',
+            'medical_certificate_issued_at' => 'Certificate date',
+            'med_cert_findings' => 'Certificate findings',
+            'med_cert_findings_details' => 'Certificate findings details',
+            'chest_xray_result_text' => 'Chest X-ray result',
+            'chest_xray_result' => 'Chest X-ray result',
+            'chest_xray_date' => 'Chest X-ray date',
+            'xray_findings' => 'Chest X-ray findings',
+            'xray_findings_details' => 'Chest X-ray findings details',
+            'referral_details' => 'Referral details',
+            'encode_remarks' => 'Encoded findings',
+        ];
+
+        return collect($fields)
+            ->map(fn ($field) => $labels[$field] ?? Str::headline((string) $field))
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function medicalInformationHistoryValue(string $field, mixed $value): string
+    {
+        if (in_array($field, [
+            'birthday', 'covid_positive_date', 'assessment_date', 'med_cert_date',
+            'medical_certificate_issued_at', 'chest_xray_date', 'genito_urinary_date_lmp', 'follow_up_on',
+        ], true) && filled($value)) {
+            try {
+                return Carbon::parse($value)->format('M j, Y');
+            } catch (\Throwable) {
+                // Fall through to the standard history formatter for unexpected date values.
+            }
+        }
+
+        $displayValue = $this->medicalAssessmentSnapshotValue($value);
+        $unit = match ($field) {
+            'height' => 'ft',
+            'weight' => 'lbs',
+            'temperature' => '°C',
+            default => null,
+        };
+        if ($unit && $displayValue !== 'Not recorded' && !str_ends_with(strtolower($displayValue), strtolower($unit))) {
+            return $displayValue . ' ' . $unit;
+        }
+
+        return $displayValue;
+    }
+
+    private function medicalInformationChangeHistory(string $profileClass, int $profileId)
+    {
+        $historyEntries = ActivityLog::query()
+            ->with('user')
+            ->where('subject_type', $profileClass)
+            ->where('subject_id', (string) $profileId)
+            ->whereIn('event_type', [
+                'student_medical_information_updated',
+                'applicant_medical_information_updated',
+                'faculty_medical_information_updated',
+                'admin_medical_information_updated',
+            ])
+            ->latest('created_at')
+            ->latest('id')
+            ->get()
+            ->map(function (ActivityLog $log): array {
+                $metadata = is_array($log->metadata) ? $log->metadata : [];
+                $fieldKeys = is_array($metadata['updated_fields'] ?? null) ? $metadata['updated_fields'] : [];
+                $labels = $metadata['updated_field_labels'] ?? $this->medicalInformationFieldLabels($fieldKeys);
+                $values = [];
+                if (is_string($metadata['updated_values_encrypted'] ?? null)) {
+                    try {
+                        $decoded = json_decode(Crypt::decryptString($metadata['updated_values_encrypted']), true);
+                        $values = is_array($decoded) ? $decoded : [];
+                    } catch (\Throwable) {
+                        $values = [];
+                    }
+                }
+                $previousValues = [];
+                if (is_string($metadata['previous_values_encrypted'] ?? null)) {
+                    try {
+                        $decoded = json_decode(Crypt::decryptString($metadata['previous_values_encrypted']), true);
+                        $previousValues = is_array($decoded) ? $decoded : [];
+                    } catch (\Throwable) {
+                        $previousValues = [];
+                    }
+                }
+                $account = $log->user_name ?: $log->user?->name ?: $log->user?->email ?: 'Clinic staff';
+                $role = trim((string) $log->user_role);
+                if ($role !== '') {
+                    $account .= ' (' . Str::headline($role) . ')';
+                }
+                $labels = is_array($labels) ? array_values($labels) : [];
+                $fields = collect($fieldKeys)->values()->map(function ($field, int $index) use ($labels, $values, $previousValues, $log, $account): array {
+                    $field = (string) $field;
+
+                    return [
+                        'key' => $field,
+                        'label' => (string) ($labels[$index] ?? Str::headline($field)),
+                        'value' => $values[$field] ?? null,
+                        'has_value' => array_key_exists($field, $values),
+                        'previous_value' => $previousValues[$field] ?? null,
+                        'has_previous_value' => array_key_exists($field, $previousValues),
+                        'created_at' => $log->created_at,
+                        'account' => $account,
+                    ];
+                })
+                    ->filter(fn (array $field): bool => $field['has_value'])
+                    ->map(fn (array $field): array => [
+                        'label' => $field['label'],
+                        'value' => $this->medicalInformationHistoryValue($field['key'], $field['value']),
+                        'previous_value' => $field['has_previous_value']
+                            ? $this->medicalInformationHistoryValue($field['key'], $field['previous_value'])
+                            : 'Value not captured for this earlier update',
+                        'has_previous_value' => $field['has_previous_value'],
+                        'created_at' => $field['created_at'],
+                        'account' => $field['account'],
+                    ])
+                    ->values()
+                    ->all();
+
+                return [
+                    'type' => 'information',
+                    'title' => 'Health information updated',
+                    'created_at' => $log->created_at,
+                    'account' => $account,
+                    'fields' => $fields,
+                ];
+            })
+            ->filter(fn (array $entry): bool => $entry['fields'] !== [])
+            ->values();
+
+        return $historyEntries
+            ->groupBy(fn (array $entry) => $entry['created_at']?->format('Y-m-d') ?? 'unknown')
+            ->map(function ($dayEntries): array {
+                $latestEntry = $dayEntries->sortByDesc(
+                    fn (array $entry) => $entry['created_at']?->getTimestamp() ?? 0
+                )->first();
+
+                return [
+                    'type' => 'information',
+                    'title' => 'Health information updated',
+                    'date_label' => $latestEntry['created_at']?->format('M d, Y') ?? 'Date unavailable',
+                    'created_at' => $latestEntry['created_at'],
+                    'fields' => $dayEntries->flatMap(fn (array $entry) => $entry['fields'])->values()->all(),
+                    'events' => $dayEntries->map(fn (array $entry) => [
+                        'created_at' => $entry['created_at'],
+                        'account' => $entry['account'],
+                    ])->values()->all(),
+                ];
+            })
+            ->sortByDesc(fn (array $entry) => $entry['created_at']?->getTimestamp() ?? 0)
+            ->values();
     }
 
     private function isStudentHealthProfile(HealthProfile $profile): bool
@@ -3800,6 +4123,9 @@ class AdminController extends Controller
                 ->latest('id')
                 ->get()
             : collect();
+        $medicalInformationChangeHistory = $canHaveMedicalAssessment
+            ? $this->medicalInformationChangeHistory(HealthProfile::class, (int) $profile->id)
+            : collect();
         $medicalAssessmentSnapshot = $canHaveMedicalAssessment
             ? $this->healthProfileMedicalAssessmentSnapshot($profile)
             : [];
@@ -3808,6 +4134,8 @@ class AdminController extends Controller
                 'has_illness', 'medical_history', 'other_illness', 'blood_type', 'has_disability', 'disability_type',
                 'no_allergies', 'food_allergies', 'medicine_allergies', 'other_med_allergies',
                 'is_smoker', 'is_drinker', 'covid_vaccinated', 'vaccine_history', 'covid_positive', 'covid_positive_date',
+                'student_number', 'sex', 'course_college', 'course_code', 'cellphone', 'guardian_name', 'landline',
+                'home_address', 'street', 'barangay', 'municipality', 'province', 'zipcode',
                 'height', 'weight', 'blood_pressure', 'pulse_rate', 'respiratory_rate', 'temperature', 'assessment_date',
                 'med_assessment_remarks', 'medical_condition_remarks', 'doctor_name', 'medical_certificate_issued_by',
                 'med_cert_date', 'medical_certificate_issued_at', 'med_cert_findings', 'med_cert_findings_details',
@@ -3815,6 +4143,44 @@ class AdminController extends Controller
                 'referral_details', 'encode_remarks',
             ])
             : [];
+        if ($canHaveMedicalAssessment) {
+            $medicalAssessmentEditableValues['known_allergies'] = $profile->no_allergies === null
+                ? null
+                : ($profile->no_allergies ? 'No' : 'Yes');
+            $medicalAssessmentEditableValues['student_number'] = $profile->student_number ?: $profile->user?->student_number;
+            $medicalAssessmentEditableValues['sex'] = $profile->sex ?: $profile->user?->gender;
+            $medicalAssessmentEditableValues['course_college'] = $profile->course_college ?: $profile->user?->course;
+            $medicalAssessmentEditableValues['course_code'] = $profile->course_code ?: $this->medicalAssessmentCourseCode($profile->course_college ?: $profile->user?->course);
+            $medicalAssessmentEditableValues['cellphone'] = $profile->cellphone;
+            $medicalAssessmentEditableValues['user_contact_no'] = $profile->user?->contact_no;
+            $medicalAssessmentEditableValues['user_year'] = $profile->user?->year;
+            $medicalAssessmentEditableValues['user_section'] = $profile->user?->section;
+
+            $addressParts = collect([
+                'street' => trim((string) $profile->street),
+                'barangay' => trim((string) $profile->barangay),
+                'municipality' => trim((string) $profile->municipality),
+                'province' => trim((string) $profile->province),
+            ]);
+            if ($addressParts->filter()->isEmpty() && filled($profile->home_address)) {
+                $legacyParts = array_values(array_filter(array_map('trim', explode(',', (string) $profile->home_address)), fn ($part) => $part !== ''));
+                if (count($legacyParts) >= 4) {
+                    $addressParts = collect([
+                        'street' => $legacyParts[0],
+                        'barangay' => $legacyParts[1],
+                        'municipality' => $legacyParts[2],
+                        'province' => implode(', ', array_slice($legacyParts, 3)),
+                    ]);
+                } else {
+                    $addressParts['street'] = (string) $profile->home_address;
+                }
+            }
+            foreach ($addressParts as $field => $value) {
+                $medicalAssessmentEditableValues[$field] = $value;
+            }
+            $medicalAssessmentEditableValues['doctor_name'] = $profile->doctor_name ?: $profile->medical_certificate_issued_by;
+            $medicalAssessmentEditableValues['med_cert_date'] = $profile->med_cert_date ?: $profile->medical_certificate_issued_at;
+        }
         $healthFormCategories = HealthFormCategory::query()
             ->where('is_active', true)
             ->availableFor($healthFormAudience)
@@ -3884,6 +4250,7 @@ class AdminController extends Controller
             'currentHealthFormSubmission',
             'activeNewHealthFormRequest',
             'medicalAssessmentHistory',
+            'medicalInformationChangeHistory',
             'medicalAssessmentSnapshot',
             'medicalAssessmentEditableValues',
             'canHaveMedicalAssessment',
@@ -3923,12 +4290,7 @@ class AdminController extends Controller
         $employeeProfile->loadMissing(['user', 'approvedBy']);
         abort_unless($employeeProfile->user, 404);
 
-        $employeeAccountType = $employeeProfile->user->clinicAccountTypeKey();
-        $medicalAssessmentProfileType = match ($employeeAccountType) {
-            'faculty' => 'Faculty',
-            'non_teaching_staff' => 'Admin',
-            default => null,
-        };
+        $medicalAssessmentProfileType = $this->employeeMedicalInformationProfileType($employeeProfile->user);
         $canUpdateMedicalAssessment = $medicalAssessmentProfileType !== null
             && (optional(auth()->user())->canAccessPermission('health_records.update_assessment') ?? false);
         $medicalAssessmentHistory = $canUpdateMedicalAssessment
@@ -3938,11 +4300,17 @@ class AdminController extends Controller
                 ->latest('id')
                 ->get()
             : collect();
+        $medicalInformationChangeHistory = $canUpdateMedicalAssessment
+            ? $this->medicalInformationChangeHistory(EmployeeHealthProfile::class, (int) $employeeProfile->id)
+            : collect();
         $medicalAssessmentSnapshot = $canUpdateMedicalAssessment
             ? $this->employeeMedicalAssessmentSnapshot($employeeProfile)
             : [];
         $medicalAssessmentEditableValues = $canUpdateMedicalAssessment
             ? $employeeProfile->only([
+                'birthday', 'sex', 'office', 'contact_no',
+                'home_address', 'street', 'barangay', 'municipality', 'province',
+                'emergency_contact_person', 'emergency_contact_no',
                 'past_medical_history', 'past_medical_history_others', 'family_history', 'family_history_others',
                 'has_disability', 'disability_type', 'previous_hospitalization', 'previous_hospitalization_details',
                 'operation_surgery', 'operation_surgery_details', 'current_medications', 'allergies',
@@ -3954,6 +4322,12 @@ class AdminController extends Controller
                 'working_impression', 'fit_status', 'for_work_up', 'referred_to', 'referred_to_others', 'follow_up_on',
             ])
             : [];
+        if ($canUpdateMedicalAssessment) {
+            $medicalAssessmentEditableValues['birthday'] = $employeeProfile->birthday ?: $employeeProfile->user?->DOB;
+            $medicalAssessmentEditableValues['sex'] = $employeeProfile->sex ?: $employeeProfile->user?->gender;
+            $medicalAssessmentEditableValues['office'] = $employeeProfile->office ?: $employeeProfile->course_college;
+            $medicalAssessmentEditableValues['contact_no'] = $employeeProfile->contact_no ?: $employeeProfile->user?->contact_no;
+        }
 
         $activeNewHealthFormRequest = $this->activeEmployeeNewHealthFormRequest($employeeProfile);
 
@@ -3990,13 +4364,18 @@ class AdminController extends Controller
         $employeeProfileForDisplay = $displaySubmission
             ? $this->employeeProfileFromSubmission($employeeProfile, $displaySubmission)
             : $employeeProfile;
+        if ($canUpdateMedicalAssessment) {
+            foreach ($this->employeeMedicalAddressEditValues($employeeProfile, $employeeProfileForDisplay) as $field => $value) {
+                $medicalAssessmentEditableValues[$field] = $value;
+            }
+        }
 
         $healthFiles = $this->healthFiles();
         $buildEmployeeDocuments = function (
             EmployeeHealthProfile $profile,
             ?HealthFormSubmission $submission = null
         ) use ($healthFiles): \Illuminate\Support\Collection {
-            return collect($this->myHealthProfileDocumentDefinitions($profile))
+            return collect($this->myHealthProfileDocumentDefinitions($profile, true))
                 ->map(function (array $definition, string $key) use ($profile, $submission, $healthFiles): array {
                 $path = $healthFiles->normalizePath($profile->{$definition['field']} ?? null);
                 $fileName = basename($path);
@@ -4110,8 +4489,104 @@ class AdminController extends Controller
             'medicalAssessmentProfileType',
             'medicalAssessmentHistory',
             'medicalAssessmentSnapshot',
-            'medicalAssessmentEditableValues'
+            'medicalAssessmentEditableValues',
+            'medicalInformationChangeHistory'
         ));
+    }
+
+    private function employeeMedicalAddressParts(EmployeeHealthProfile $profile): array
+    {
+        $parts = [
+            'street' => trim((string) $profile->street),
+            'barangay' => trim((string) $profile->barangay),
+            'municipality' => trim((string) $profile->municipality),
+            'province' => trim((string) $profile->province),
+        ];
+        $legacyAddress = trim((string) $profile->home_address);
+        if ($legacyAddress === '') {
+            return $parts;
+        }
+
+        $legacyParts = array_values(array_filter(
+            array_map('trim', preg_split('/\s*,\s*/', $legacyAddress) ?: []),
+            static fn ($part) => $part !== ''
+        ));
+        $locationParts = [];
+
+        if ($parts['street'] !== '') {
+            $streetKey = strtolower((string) preg_replace('/[^a-z0-9]+/i', '', $parts['street']));
+            $matchedStreetParts = 0;
+            for ($length = 1; $length <= max(0, count($legacyParts) - 3); $length++) {
+                $legacyStreetKey = strtolower((string) preg_replace(
+                    '/[^a-z0-9]+/i',
+                    '',
+                    implode(', ', array_slice($legacyParts, 0, $length))
+                ));
+                if ($legacyStreetKey === $streetKey) {
+                    $matchedStreetParts = $length;
+                    break;
+                }
+            }
+
+            if ($matchedStreetParts > 0) {
+                $locationParts = array_slice($legacyParts, $matchedStreetParts);
+            } elseif (count($legacyParts) >= 4) {
+                $locationParts = array_slice($legacyParts, 1);
+            } elseif (count($legacyParts) === 3) {
+                $locationParts = $legacyParts;
+            }
+        } elseif (count($legacyParts) >= 4) {
+            $parts['street'] = array_shift($legacyParts);
+            $locationParts = $legacyParts;
+        } else {
+            $parts['street'] = $legacyAddress;
+        }
+
+        if (count($locationParts) >= 3) {
+            $parts['barangay'] = $parts['barangay'] !== '' ? $parts['barangay'] : $locationParts[0];
+            $parts['municipality'] = $parts['municipality'] !== '' ? $parts['municipality'] : $locationParts[1];
+            $parts['province'] = $parts['province'] !== '' ? $parts['province'] : implode(', ', array_slice($locationParts, 2));
+        }
+
+        return $parts;
+    }
+
+    private function employeeMedicalAddressEditValues(
+        EmployeeHealthProfile $profile,
+        ?EmployeeHealthProfile $displayProfile = null
+    ): array {
+        $addressParts = $this->employeeMedicalAddressParts($profile);
+        if (!$displayProfile || $displayProfile === $profile) {
+            return $addressParts;
+        }
+
+        foreach ($this->employeeMedicalAddressParts($displayProfile) as $field => $value) {
+            if (filled($value)) {
+                $addressParts[$field] = $value;
+            }
+        }
+
+        return $addressParts;
+    }
+
+    private function employeeMedicalInformationProfileType(?User $employee): ?string
+    {
+        if (!$employee) {
+            return null;
+        }
+
+        $accountType = $employee->clinicAccountTypeKey();
+
+        if ($accountType === 'faculty') {
+            return 'Faculty';
+        }
+
+        if ($accountType === 'non_teaching_staff'
+            || ($accountType === null && User::normalizeRole((string) $employee->user_role) === User::ROLE_ADMIN)) {
+            return 'Admin';
+        }
+
+        return null;
     }
 
     private function activeStudentNewHealthFormRequest(HealthProfile $profile): ?HealthFormSubmission
@@ -4788,7 +5263,20 @@ class AdminController extends Controller
         abort_unless(in_array($profile->user?->clinicAccountTypeKey(), ['student', 'applicant'], true), 404);
         abort_unless(!in_array($profile->pullout_status, [HealthProfile::PULLOUT_PENDING, HealthProfile::PULLOUT_COMPLETED], true), 404);
 
-        $updates = $this->validatedMedicalInformationUpdates($request, false);
+        $updates = $this->validatedMedicalInformationUpdates($request, false, $profile);
+        $addressFields = ['street', 'barangay', 'municipality', 'province'];
+        if (array_intersect($addressFields, array_keys($updates)) !== []) {
+            $homeAddress = collect($addressFields)
+                ->map(fn (string $field) => trim((string) ($updates[$field] ?? '')))
+                ->filter()
+                ->implode(', ');
+            if (mb_strlen($homeAddress) > 255) {
+                throw ValidationException::withMessages([
+                    'medical_information.street' => 'The complete address must be 255 characters or fewer.',
+                ]);
+            }
+            $updates['home_address'] = $homeAddress !== '' ? $homeAddress : null;
+        }
 
         return $this->saveMedicalInformationUpdates(
             $request,
@@ -4804,23 +5292,36 @@ class AdminController extends Controller
     public function updateEmployeeMedicalInformation(Request $request, EmployeeHealthProfile $employeeProfile)
     {
         $employeeProfile->loadMissing('user');
-        $accountType = $employeeProfile->user?->clinicAccountTypeKey();
-        abort_unless(in_array($accountType, ['faculty', 'non_teaching_staff'], true), 404);
+        $profileType = $this->employeeMedicalInformationProfileType($employeeProfile->user);
+        abort_unless($profileType !== null, 404);
 
         $updates = $this->validatedMedicalInformationUpdates($request, true);
+        $addressFields = ['street', 'barangay', 'municipality', 'province'];
+        if (array_intersect($addressFields, array_keys($updates)) !== []) {
+            $homeAddress = collect($addressFields)
+                ->map(fn (string $field) => trim((string) ($updates[$field] ?? '')))
+                ->filter()
+                ->implode(', ');
+            if (mb_strlen($homeAddress) > 255) {
+                throw ValidationException::withMessages([
+                    'medical_information.street' => 'The complete address must be 255 characters or fewer.',
+                ]);
+            }
+            $updates['home_address'] = $homeAddress !== '' ? $homeAddress : null;
+        }
 
         return $this->saveMedicalInformationUpdates(
             $request,
             EmployeeHealthProfile::class,
             $employeeProfile->id,
             $updates,
-            $accountType === 'faculty' ? 'faculty' : 'admin',
+            strtolower($profileType),
             'admin.employee_health_profile.show',
             ['employeeProfile' => $employeeProfile->id]
         );
     }
 
-    private function validatedMedicalInformationUpdates(Request $request, bool $employee): array
+    private function validatedMedicalInformationUpdates(Request $request, bool $employee, ?HealthProfile $studentProfile = null): array
     {
         $yesNo = ['nullable', 'string', Rule::in(['Yes', 'No'])];
         $booleanChoice = ['nullable', 'string', Rule::in(['Yes', 'No'])];
@@ -4830,6 +5331,16 @@ class AdminController extends Controller
         $numeric = ['nullable', 'numeric', 'min:0', 'max:100000'];
 
         $fields = $employee ? [
+            'birthday' => $date,
+            'sex' => ['nullable', 'string', 'max:30'],
+            'office' => ['nullable', 'string', 'max:255'],
+            'contact_no' => ['nullable', 'string', 'max:50'],
+            'street' => ['nullable', 'string', 'max:255'],
+            'barangay' => ['nullable', 'string', 'max:120'],
+            'municipality' => ['nullable', 'string', 'max:120'],
+            'province' => ['nullable', 'string', 'max:120'],
+            'emergency_contact_person' => ['nullable', 'string', 'max:255'],
+            'emergency_contact_no' => ['nullable', 'string', 'max:50'],
             'past_medical_history' => $json,
             'past_medical_history_others' => $text,
             'family_history' => $json,
@@ -4875,13 +5386,38 @@ class AdminController extends Controller
             'referred_to_others' => $text,
             'follow_up_on' => $date,
         ] : [
+            'student_number' => ['nullable', 'string', 'max:100'],
+            'sex' => ['nullable', 'string', 'max:30'],
+            'course_college' => ['nullable', 'string', 'max:255'],
+            'course_code' => [
+                'nullable',
+                'string',
+                'max:30',
+                Rule::in(array_values(array_unique([
+                    ...array_keys($this->medicalAssessmentCourseCatalog()),
+                    ...array_filter([$studentProfile?->course_code]),
+                ]))),
+            ],
+            'user_year' => ['nullable', 'string', 'max:30'],
+            'user_section' => ['nullable', 'string', 'max:100'],
+            'user_contact_no' => ['nullable', 'string', 'max:50'],
+            'guardian_name' => ['nullable', 'string', 'max:255'],
+            'cellphone' => ['nullable', 'string', 'max:50'],
+            'landline' => ['nullable', 'string', 'max:50'],
+            'street' => ['nullable', 'string', 'max:255'],
+            'barangay' => ['nullable', 'string', 'max:120'],
+            'municipality' => ['nullable', 'string', 'max:120'],
+            'province' => ['nullable', 'string', 'max:120'],
+            'zipcode' => ['nullable', 'regex:/^\d{4}$/'],
             'has_illness' => $yesNo,
             'medical_history' => $json,
             'other_illness' => $text,
-            'blood_type' => ['nullable', 'string', 'max:50'],
+            'blood_type' => ['nullable', 'string', Rule::in(['Unknown', 'Not Known', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])],
             'has_disability' => $yesNo,
-            'disability_type' => ['nullable', 'string', 'max:255'],
+            'disability_type' => ['required_if:medical_information.has_disability,Yes', 'nullable', 'string', Rule::in(['Physical', 'Visual', 'Hearing', 'Speech and Language', 'Intellectual', 'Psychosocial', 'Learning', 'Multiple Disabilities', 'Others'])],
+            'other_disability_type' => ['nullable', 'string', 'max:255'],
             'no_allergies' => $booleanChoice,
+            'known_allergies' => $yesNo,
             'food_allergies' => $text,
             'medicine_allergies' => $json,
             'other_med_allergies' => $text,
@@ -4891,13 +5427,13 @@ class AdminController extends Controller
             'vaccine_history' => $json,
             'covid_positive' => $yesNo,
             'covid_positive_date' => $date,
-            'height' => ['nullable', 'string', 'max:30'],
-            'weight' => $numeric,
-            'blood_pressure' => ['nullable', 'string', 'max:50'],
-            'pulse_rate' => $numeric,
-            'respiratory_rate' => $numeric,
-            'temperature' => $numeric,
-            'assessment_date' => $date,
+            'height' => ['nullable', 'numeric', 'min:1', 'max:8', 'regex:/^\d{1,2}(?:\.\d{1,2})?$/'],
+            'weight' => ['nullable', 'numeric', 'min:1', 'max:1000'],
+            'blood_pressure' => ['nullable', 'string', 'regex:/^\d{2,3}\/\d{2,3}$/'],
+            'pulse_rate' => ['nullable', 'integer', 'min:20', 'max:250'],
+            'respiratory_rate' => ['nullable', 'integer', 'min:5', 'max:80'],
+            'temperature' => ['nullable', 'numeric', 'min:30', 'max:45'],
+            'assessment_date' => ['nullable', 'date', 'before_or_equal:today'],
             'med_assessment_remarks' => $text,
             'medical_condition_remarks' => $text,
             'doctor_name' => ['nullable', 'string', 'max:255'],
@@ -4917,6 +5453,12 @@ class AdminController extends Controller
         $rules = ['medical_information' => ['required', 'array']];
         foreach ($fields as $key => $fieldRules) {
             $rules['medical_information.' . $key] = $fieldRules;
+        }
+        if (!$employee && $studentProfile) {
+            $rules['medical_information.student_number'][] = Rule::unique('users', 'student_number')
+                ->ignore($studentProfile->user_id);
+            $rules['medical_information.student_number'][] = Rule::unique('health_profiles', 'student_number')
+                ->ignore($studentProfile->id);
         }
 
         $validated = $request->validate($rules);
@@ -4954,7 +5496,125 @@ class AdminController extends Controller
             $updates[$key] = is_string($value) && trim($value) === '' ? null : $value;
         }
 
+        if (!$employee && array_key_exists('course_code', $updates)
+            && (string) $updates['course_code'] !== (string) $studentProfile?->course_code) {
+            $updates['course_college'] = $this->medicalAssessmentCourseCatalog()[$updates['course_code'] ?? ''] ?? null;
+        }
+
+        if (!$employee) {
+            if (isset($updates['vaccine_history']) && is_array($updates['vaccine_history'])) {
+                $this->validateMedicalInformationVaccineHistory($updates['vaccine_history']);
+            }
+
+            if (($submitted['disability_type'] ?? null) === 'Others') {
+                $otherDisabilityType = trim((string) ($submitted['other_disability_type'] ?? ''));
+                if ($otherDisabilityType === '') {
+                    throw ValidationException::withMessages([
+                        'medical_information.other_disability_type' => 'Enter the disability type.',
+                    ]);
+                }
+                $updates['disability_type'] = $otherDisabilityType;
+            } elseif (array_key_exists('disability_type', $updates)) {
+                $updates['disability_type'] = $updates['disability_type'] ?: null;
+            }
+            unset($updates['other_disability_type']);
+
+            if (($submitted['has_disability'] ?? null) === 'No') {
+                $updates['disability_type'] = null;
+            }
+
+            if (($submitted['covid_vaccinated'] ?? null) === 'No') {
+                $updates['vaccine_history'] = [];
+            }
+
+            if ($submitted->has('known_allergies')) {
+                $knownAllergies = $submitted['known_allergies'];
+                $updates['no_allergies'] = $knownAllergies === null || $knownAllergies === ''
+                    ? null
+                    : $knownAllergies === 'No';
+                unset($updates['known_allergies']);
+            }
+            if (array_key_exists('doctor_name', $updates)) {
+                $updates['medical_certificate_issued_by'] = $updates['doctor_name'];
+            }
+            if (array_key_exists('med_cert_date', $updates)) {
+                $updates['medical_certificate_issued_at'] = $updates['med_cert_date'];
+            }
+        }
+
         return $updates;
+    }
+
+    private function validateMedicalInformationVaccineHistory(array $history): void
+    {
+        $doseLabels = [
+            'first_dose' => '1st Dose',
+            'second_dose' => '2nd Dose',
+            'booster_1' => 'Booster 1',
+            'booster_2' => 'Booster 2',
+        ];
+        $errors = [];
+        $dates = [];
+
+        foreach ($doseLabels as $key => $label) {
+            $dose = $history[$key] ?? [];
+            if (!is_array($dose)) {
+                $errors["medical_information.vaccine_history.{$key}"] = "Enter valid {$label} details.";
+                continue;
+            }
+
+            $brand = trim((string) ($dose['brand'] ?? ''));
+            $date = trim((string) ($dose['date'] ?? ''));
+            if (($brand === '') !== ($date === '')) {
+                $errors["medical_information.vaccine_history.{$key}.date"] = "Enter both the brand and date for {$label}, or leave both blank.";
+                continue;
+            }
+            if ($brand === '') {
+                continue;
+            }
+            if (mb_strlen($brand) > 100) {
+                $errors["medical_information.vaccine_history.{$key}.brand"] = "The {$label} brand must be 100 characters or fewer.";
+            }
+
+            try {
+                $parsedDate = Carbon::parse($date)->startOfDay();
+                if ($parsedDate->lt(Carbon::parse('2021-03-01')) || $parsedDate->gt(today())) {
+                    $errors["medical_information.vaccine_history.{$key}.date"] = "Enter a valid {$label} date from March 1, 2021 through today.";
+                    continue;
+                }
+            } catch (\Throwable) {
+                $errors["medical_information.vaccine_history.{$key}.date"] = "Enter a valid {$label} date.";
+                continue;
+            }
+
+            if (isset($dates[$date])) {
+                $errors["medical_information.vaccine_history.{$key}.date"] = "{$label} cannot use the same date as {$dates[$date]}.";
+            }
+            $dates[$date] = $label;
+        }
+
+        $orderedDoseKeys = array_keys($doseLabels);
+        for ($index = 1; $index < count($orderedDoseKeys); $index++) {
+            $previousKey = $orderedDoseKeys[$index - 1];
+            $currentKey = $orderedDoseKeys[$index];
+            $previousDate = trim((string) ($history[$previousKey]['date'] ?? ''));
+            $currentDate = trim((string) ($history[$currentKey]['date'] ?? ''));
+            if ($previousDate === '' || $currentDate === '' || isset($errors["medical_information.vaccine_history.{$currentKey}.date"])) {
+                continue;
+            }
+
+            try {
+                if (Carbon::parse($currentDate)->startOfDay()->lt(Carbon::parse($previousDate)->addWeeks(2)->startOfDay())) {
+                    $errors["medical_information.vaccine_history.{$currentKey}.date"] = $doseLabels[$currentKey] . ' must be at least 2 weeks after ' . $doseLabels[$previousKey] . '.';
+                }
+            } catch (\Throwable) {
+                // The date-specific validation above reports malformed dates.
+            }
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
     }
 
     private function saveMedicalInformationUpdates(
@@ -4969,20 +5629,115 @@ class AdminController extends Controller
         $actor = Auth::guard('admin')->user();
         $updatedFields = DB::transaction(function () use ($request, $profileClass, $profileId, $updates, $profileType, $actor): array {
             $profile = $profileClass::query()->lockForUpdate()->findOrFail($profileId);
-            $profile->fill($updates);
-            $changedFields = array_keys($profile->getDirty());
+            $isStudentProfile = $profileClass === HealthProfile::class;
+            $courseCodeSelected = $isStudentProfile && array_key_exists('course_code', $updates);
+            $user = $isStudentProfile
+                ? User::query()->lockForUpdate()->find($profile->user_id)
+                : null;
+            if ($isStudentProfile) {
+                abort_unless($user, 404);
+            }
+
+            $profileUpdates = collect($updates)
+                ->except(['user_contact_no', 'user_year', 'user_section'])
+                ->all();
+            $changedProfileUpdates = collect($profileUpdates)
+                ->reject(fn ($value, string $field): bool => $this->medicalInformationValuesAreEquivalent(
+                    $field,
+                    $profile->getAttribute($field),
+                    $value
+                ))
+                ->all();
+
+            $userFieldMap = $isStudentProfile ? [
+                'student_number' => ['column' => 'student_number', 'audit' => 'student_number'],
+                'course_college' => ['column' => 'course', 'audit' => 'course_college'],
+                'sex' => ['column' => 'gender', 'audit' => 'sex'],
+                'user_contact_no' => ['column' => 'contact_no', 'audit' => 'user_contact_no'],
+                'user_year' => ['column' => 'year', 'audit' => 'user_year'],
+                'user_section' => ['column' => 'section', 'audit' => 'user_section'],
+            ] : [];
+            $changedUserUpdates = [];
+            $userPreviousValues = [];
+            $userAuditFields = [];
+            foreach ($userFieldMap as $inputField => $mapping) {
+                if (!array_key_exists($inputField, $updates)) {
+                    continue;
+                }
+
+                $currentValue = $user->getAttribute($mapping['column']);
+                $nextValue = $updates[$inputField];
+                if ($this->medicalInformationValuesAreEquivalent($mapping['audit'], $currentValue, $nextValue)) {
+                    continue;
+                }
+
+                $changedUserUpdates[$mapping['column']] = $nextValue;
+                if ($courseCodeSelected && $inputField === 'course_college') {
+                    continue;
+                }
+                $userPreviousValues[$mapping['audit']] = $currentValue;
+                $userAuditFields[] = $mapping['audit'];
+            }
+
+            $profileAuditFields = array_values(array_diff(array_keys($changedProfileUpdates), ['home_address']));
+            if ($courseCodeSelected) {
+                $profileAuditFields = array_values(array_diff($profileAuditFields, ['course_college']));
+            }
+            $changedFields = array_values(array_unique([...$profileAuditFields, ...$userAuditFields]));
 
             if ($changedFields === []) {
+                if (array_key_exists('home_address', $changedProfileUpdates)) {
+                    $profile->fill(['home_address' => $changedProfileUpdates['home_address']]);
+                    $profile->save();
+                }
                 return [];
             }
 
-            $profile->save();
+            $previousValues = [];
+            foreach ($changedFields as $field) {
+                $value = array_key_exists($field, $changedProfileUpdates)
+                    ? $profile->getAttribute($field)
+                    : ($userPreviousValues[$field] ?? null);
+                if ($field === 'no_allergies') {
+                    $value = $value === null ? null : ($value ? 'No' : 'Yes');
+                } elseif ($value instanceof \DateTimeInterface) {
+                    $value = $value->format('Y-m-d');
+                }
+                $previousValues[$field] = $value;
+            }
+
+            if ($changedProfileUpdates !== []) {
+                $profile->fill($changedProfileUpdates);
+                $profile->save();
+            }
+            if ($changedUserUpdates !== []) {
+                $user->forceFill($changedUserUpdates);
+                $user->save();
+            }
             $typeLabel = match ($profileType) {
                 'faculty' => 'Faculty',
                 'admin' => 'Admin',
                 'applicant' => 'Applicant',
                 default => 'Student',
             };
+            $updatedFieldLabels = $this->medicalInformationFieldLabels($changedFields);
+            $updatedValues = [];
+            foreach ($changedFields as $field) {
+                $mapping = $userFieldMap[$field] ?? null;
+                $value = $mapping
+                    ? $user->getAttribute($mapping['column'])
+                    : $profile->getAttribute($field);
+                if ($field === 'no_allergies') {
+                    $value = $value === null ? null : ($value ? 'No' : 'Yes');
+                } elseif ($value instanceof \DateTimeInterface) {
+                    $value = $value->format('Y-m-d');
+                }
+                $updatedValues[$field] = $value;
+            }
+            $serializedUpdatedValues = json_encode(
+                $updatedValues,
+                JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE
+            );
 
             ActivityLog::create([
                 'user_id' => $actor?->id,
@@ -4991,7 +5746,9 @@ class AdminController extends Controller
                 'action' => $typeLabel . ' Medical Information Updated',
                 'module' => 'Health Records',
                 'event_type' => strtolower($profileType) . '_medical_information_updated',
-                'description' => 'Medical information was updated for ' . strtolower($typeLabel) . ' health profile #' . $profileId . '.',
+                'description' => 'Medical information was updated for ' . strtolower($typeLabel)
+                    . ' health profile #' . $profileId . '. Updated fields: '
+                    . implode(', ', $updatedFieldLabels) . '.',
                 'route_name' => optional($request->route())->getName(),
                 'http_method' => 'PUT',
                 'request_path' => '/' . ltrim((string) $request->path(), '/'),
@@ -5001,6 +5758,11 @@ class AdminController extends Controller
                 'metadata' => [
                     'profile_type' => $profileType,
                     'updated_fields' => $changedFields,
+                    'updated_field_labels' => $updatedFieldLabels,
+                    'updated_values_encrypted' => Crypt::encryptString($serializedUpdatedValues ?: '{}'),
+                    'previous_values_encrypted' => in_array(strtolower($profileType), ['student', 'applicant'], true)
+                        ? Crypt::encryptString(json_encode($previousValues, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) ?: '{}')
+                        : null,
                     'clearance_status_unchanged' => true,
                     'uploaded_documents_unchanged' => true,
                 ],
@@ -5015,6 +5777,115 @@ class AdminController extends Controller
             'success',
             $updatedFields === [] ? 'No medical information changes to save.' : 'Medical information updated successfully.'
         );
+    }
+
+    private function medicalInformationValuesAreEquivalent(string $field, mixed $current, mixed $next): bool
+    {
+        $jsonFields = [
+            'medical_history', 'medicine_allergies', 'vaccine_history', 'referral_details',
+            'past_medical_history', 'family_history', 'head_findings', 'eyes_findings',
+            'ears_findings', 'throat_findings', 'chest_lungs_findings', 'skin_findings', 'referred_to',
+        ];
+        if (in_array($field, $jsonFields, true)) {
+            $normalizeJson = function (mixed $value) use (&$normalizeJson): mixed {
+                if (is_string($value)) {
+                    $decoded = json_decode($value, true);
+                    $value = json_last_error() === JSON_ERROR_NONE ? $decoded : trim($value);
+                }
+
+                if ($value === null || $value === '') {
+                    return [];
+                }
+
+                if (!is_array($value)) {
+                    return $value;
+                }
+
+                if (!array_is_list($value)) {
+                    ksort($value);
+                }
+
+                foreach ($value as $key => $item) {
+                    $value[$key] = $normalizeJson($item);
+                }
+
+                return $value;
+            };
+
+            return json_encode($normalizeJson($current)) === json_encode($normalizeJson($next));
+        }
+
+        $dateFields = [
+            'birthday', 'covid_positive_date', 'assessment_date', 'med_cert_date',
+            'medical_certificate_issued_at', 'chest_xray_date', 'genito_urinary_date_lmp', 'follow_up_on',
+        ];
+        if (in_array($field, $dateFields, true)) {
+            $normalizeDate = static function (mixed $value): ?string {
+                if ($value === null || trim((string) $value) === '') {
+                    return null;
+                }
+
+                try {
+                    return Carbon::parse($value)->format('Y-m-d');
+                } catch (\Throwable) {
+                    return trim((string) $value);
+                }
+            };
+
+            return $normalizeDate($current) === $normalizeDate($next);
+        }
+
+        $booleanFields = [
+            'no_allergies', 'has_disability', 'previous_hospitalization', 'operation_surgery',
+            'cigarette_smoking', 'alcohol_drinking', 'traveled_abroad',
+        ];
+        if (in_array($field, $booleanFields, true)) {
+            $normalizeBoolean = static function (mixed $value): ?bool {
+                if ($value === null || $value === '') {
+                    return null;
+                }
+
+                if (is_bool($value)) {
+                    return $value;
+                }
+
+                return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+                    ?? (bool) $value;
+            };
+
+            return $normalizeBoolean($current) === $normalizeBoolean($next);
+        }
+
+        $numericFields = ['weight', 'bmi', 'hr', 'rr', 'temperature', 'pulse_rate', 'respiratory_rate'];
+        if (in_array($field, $numericFields, true)) {
+            $normalizeNumber = static function (mixed $value): ?string {
+                if ($value === null || trim((string) $value) === '') {
+                    return null;
+                }
+
+                if (!is_numeric($value)) {
+                    return trim((string) $value);
+                }
+
+                $normalized = rtrim(rtrim(number_format((float) $value, 10, '.', ''), '0'), '.');
+
+                return $normalized === '' || $normalized === '-0' ? '0' : $normalized;
+            };
+
+            return $normalizeNumber($current) === $normalizeNumber($next);
+        }
+
+        $normalizeValue = static function (mixed $value): ?string {
+            if ($value instanceof \DateTimeInterface) {
+                return $value->format('Y-m-d H:i:s');
+            }
+
+            $value = trim((string) ($value ?? ''));
+
+            return $value === '' ? null : $value;
+        };
+
+        return $normalizeValue($current) === $normalizeValue($next);
     }
 
     public function requestHealthProfilePullout(Request $request, $id)
@@ -6570,15 +7441,21 @@ public function updateClearance(Request $request, $id)
         return view('admin.settings-personal', compact('admin', 'settings', 'cmsProfile', 'reportIdentity'));
     }
 
-    private function myHealthProfileDocumentDefinitions(?EmployeeHealthProfile $employeeProfile = null): array
+    private function myHealthProfileDocumentDefinitions(
+        ?EmployeeHealthProfile $employeeProfile = null,
+        bool $includeStudentPhoto = false
+    ): array
     {
         $definitions = [
             'health_form' => ['field' => 'staff_health_form_pdf_path', 'type' => 'Health Form'],
             'health_declaration' => ['field' => 'health_declaration', 'type' => 'Health Declaration'],
-            'medical_certificate' => ['field' => 'medical_certificate', 'type' => 'Medical Certificate'],
-            'chest_xray_document' => ['field' => 'chest_xray_document', 'type' => 'Chest Xray'],
         ];
 
+        if ($includeStudentPhoto) {
+            $definitions['student_photo'] = ['field' => 'student_photo', 'type' => '2x2 Photo'];
+        }
+        $definitions['medical_certificate'] = ['field' => 'medical_certificate', 'type' => 'Medical Certificate'];
+        $definitions['chest_xray_document'] = ['field' => 'chest_xray_document', 'type' => 'Chest Xray'];
         if ($employeeProfile && (bool) $employeeProfile->has_disability) {
             $definitions['pwd_id_proof'] = ['field' => 'pwd_id_proof', 'type' => 'PWD'];
         }
