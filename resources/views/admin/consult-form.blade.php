@@ -968,6 +968,82 @@
         font-size: 12px;
         line-height: 1.5;
     }
+    .medical-condition-group {
+        margin-bottom: 12px;
+        padding: 13px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #f8fafc;
+    }
+    .medical-condition-group h3 {
+        margin: 0 0 10px;
+        color: #70131b;
+        font-size: 13px;
+        font-weight: 850;
+    }
+    .medical-condition-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+    }
+    .medical-condition-chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 5px 9px;
+        border: 1px solid rgba(127, 29, 45, .16);
+        border-radius: 999px;
+        background: #ffffff;
+        color: #334155;
+        font-size: 11px;
+        font-weight: 750;
+    }
+    .medical-condition-detail {
+        display: grid;
+        gap: 4px;
+        padding: 9px 0;
+        border-top: 1px solid #e2e8f0;
+    }
+    .medical-condition-detail:first-of-type {
+        padding-top: 0;
+        border-top: 0;
+    }
+    .medical-condition-detail span {
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+    .medical-condition-detail strong {
+        color: #111827;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+    }
+    .medical-condition-detail .medical-review-note {
+        white-space: pre-line;
+    }
+    .medical-condition-empty,
+    .medical-condition-status {
+        margin: 0;
+        padding: 9px 10px;
+        border-radius: 8px;
+        color: #64748b;
+        font-size: 11px;
+        line-height: 1.45;
+    }
+    .medical-condition-empty {
+        border: 1px dashed #cbd5e1;
+        background: #ffffff;
+    }
+    .medical-condition-status.is-clear {
+        border: 1px solid #bbf7d0;
+        background: #f0fdf4;
+        color: #166534;
+        font-weight: 750;
+    }
     .inventory-panel-search {
         display: flex;
         align-items: center;
@@ -1161,6 +1237,38 @@
     html[data-theme="dark"] .utility-panel-title {
         color: #ffffff;
     }
+    html[data-theme="dark"] .medical-condition-group {
+        border-color: #374151;
+        background: #172033;
+    }
+    html[data-theme="dark"] .medical-condition-group h3 {
+        color: #facc15;
+    }
+    html[data-theme="dark"] .medical-condition-chip {
+        border-color: #465267;
+        background: #202a3a;
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .medical-condition-detail {
+        border-top-color: #374151;
+    }
+    html[data-theme="dark"] .medical-condition-detail span,
+    html[data-theme="dark"] .medical-condition-empty,
+    html[data-theme="dark"] .medical-condition-status {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .medical-condition-detail strong {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .medical-condition-empty {
+        border-color: #465267;
+        background: #111827;
+    }
+    html[data-theme="dark"] .medical-condition-status.is-clear {
+        border-color: #166534;
+        background: rgba(22, 101, 52, .2);
+        color: #bbf7d0;
+    }
     html[data-theme="dark"] #close-utility-panel {
         border-color: #facc15;
         background: linear-gradient(90deg, #facc15 0 50%, rgba(255, 255, 255, .12) 50% 100%);
@@ -1264,13 +1372,14 @@
     .consultation-main .patient-header {
         position: relative;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: center;
-        min-height: 175px;
-        padding: 24px 28px;
+        grid-template-columns: minmax(0, 1fr);
+        align-items: stretch;
+        gap: 0;
+        min-height: 0;
+        padding: 14px 18px 16px;
         overflow: hidden;
         border-left: 0;
-        border-top: 5px solid var(--clinic-form-maroon);
+        border-top: 0;
         background:
             radial-gradient(circle at top left, rgba(250, 204, 21, .16), transparent 34%),
             linear-gradient(180deg, #fff 0%, #fffaf2 100%);
@@ -1279,34 +1388,47 @@
     .consultation-main .patient-header::after {
         content: "";
         position: absolute;
+        z-index: 2;
+        top: 0;
         right: 0;
-        bottom: 0;
         left: 0;
-        height: 3px;
-        background: linear-gradient(90deg, transparent, #facc15, transparent);
-        opacity: .72;
+        height: 6px;
+        background: linear-gradient(90deg, #8f2230 0%, #d30c3c 54%, #8f2230 100%);
     }
     .patient-identity {
         position: relative;
         z-index: 1;
-        display: flex;
+        display: grid;
+        grid-template-columns: 112px minmax(0, 1fr);
         align-items: center;
-        gap: 18px;
+        gap: 20px;
         min-width: 0;
-        text-align: left;
+        padding: 8px 2px 14px;
+        border-bottom: 1px solid rgba(148, 163, 184, .2);
     }
     .patient-identity-copy {
+        min-width: 0;
+    }
+    .patient-identity-topline {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        min-width: 0;
+        margin-bottom: 11px;
+    }
+    .patient-identity-primary {
         min-width: 0;
     }
     .patient-avatar {
         display: grid;
         place-items: center;
-        width: 92px;
-        height: 92px;
-        flex: 0 0 92px;
+        width: 112px;
+        height: 112px;
+        flex: 0 0 112px;
         overflow: hidden;
         border: 3px solid #ffffff;
-        border-radius: 9px;
+        border-radius: 12px;
         background: linear-gradient(135deg, #70131b, #9f1d35);
         color: #facc15;
         box-shadow:
@@ -1322,49 +1444,186 @@
     }
     .consultation-main .patient-name {
         max-width: 100%;
-        margin: 0 0 9px;
-        color: #70131b;
-        font-size: clamp(1.35rem, 2.1vw, 1.75rem);
+        margin: 0 0 8px;
+        color: #111827;
+        font-size: clamp(1.3rem, 1.8vw, 1.65rem);
         font-weight: 900;
         line-height: 1.12;
         overflow-wrap: anywhere;
     }
     .consultation-main .patient-badges {
         justify-content: flex-start;
-        margin-bottom: 8px;
+        gap: 7px;
+        margin-bottom: 0;
     }
     .consultation-main .patient-badge {
-        border: 1px solid rgba(127, 29, 45, .12);
-        border-radius: 10px;
-        background: #fff;
-        color: #4b5563;
-        font-size: .68rem;
+        padding: 5px 9px;
+        border: 1px solid rgba(127, 29, 45, .08);
+        border-radius: 999px;
+        background: #f3f4f6;
+        color: #475569;
+        font-size: .66rem;
         font-weight: 800;
+    }
+    .patient-appointment-source {
+        flex: 0 0 auto;
+        padding-top: 4px;
+    }
+    .consultation-main .consultation-source-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 38px;
+        margin: 0;
+        padding: 7px 12px;
+        border-radius: 11px;
+        font-size: .74rem;
+        font-weight: 850;
+        white-space: nowrap;
+    }
+    .consultation-source-badge svg {
+        width: 21px;
+        height: 21px;
+        flex: 0 0 21px;
     }
     .patient-meta {
         display: grid;
-        gap: 4px;
+        grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+        gap: 0;
         color: #4b5563;
-        font-size: .75rem;
+        font-size: .86rem;
         font-weight: 650;
-        line-height: 1.35;
+        line-height: 1.4;
     }
     .patient-meta-row {
         display: flex;
-        align-items: baseline;
-        gap: 7px;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        padding: 2px 12px 2px 4px;
+    }
+    .patient-meta-row + .patient-meta-row {
+        padding-right: 4px;
+        padding-left: 12px;
+        border-left: 1px solid rgba(148, 163, 184, .34);
+    }
+    .patient-meta-icon {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        border-radius: 50%;
+        background: rgba(127, 29, 45, .07);
+        color: #8f1027;
+    }
+    .patient-meta-icon svg {
+        width: 21px;
+        height: 21px;
+    }
+    .patient-meta-copy {
+        display: grid;
+        gap: 2px;
         min-width: 0;
     }
     .patient-meta-label {
-        flex: 0 0 auto;
-        color: #8f2230;
-        font-size: .64rem;
-        font-weight: 900;
-        text-transform: uppercase;
+        color: #64748b;
+        font-size: .78rem;
+        font-weight: 600;
     }
     .patient-meta-value {
         min-width: 0;
+        color: #111827;
+        font-size: .9rem;
+        font-weight: 800;
         overflow-wrap: anywhere;
+    }
+    .patient-consultation-summary {
+        margin-top: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(127, 29, 45, .1);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, .72);
+    }
+    .patient-consultation-heading {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        min-height: 48px;
+        padding: 6px 14px;
+        background: linear-gradient(90deg, rgba(127, 29, 45, .055), rgba(127, 29, 45, .025));
+    }
+    .patient-consultation-heading-icon {
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        flex: 0 0 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8f1027, #70131b);
+        color: #fff;
+    }
+    .patient-consultation-heading-icon svg {
+        width: 21px;
+        height: 21px;
+    }
+    .patient-consultation-heading h3 {
+        margin: 0 !important;
+        color: #8f1027 !important;
+        font-size: 1.05rem !important;
+        font-weight: 850 !important;
+        line-height: 1.2 !important;
+    }
+    .patient-consultation-details {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        padding: 10px 8px 12px;
+    }
+    .patient-consultation-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        padding: 0 12px;
+    }
+    .patient-consultation-item + .patient-consultation-item {
+        border-left: 1px solid rgba(148, 163, 184, .34);
+    }
+    .patient-consultation-item-icon {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+        border-radius: 50%;
+        background: rgba(127, 29, 45, .06);
+        color: #8f1027;
+    }
+    .patient-consultation-item-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+    .patient-consultation-item-copy {
+        display: grid;
+        gap: 3px;
+        min-width: 0;
+    }
+    .patient-consultation-item-copy > span {
+        color: #64748b;
+        font-size: .78rem;
+        font-weight: 650;
+    }
+    .patient-consultation-item-copy strong {
+        color: #111827;
+        font-size: .98rem;
+        font-weight: 850;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+    }
+    .patient-consultation-item-copy strong.consultation-appointment-number {
+        color: #073b4c;
+        font-size: .84rem;
     }
     .consultation-main .consultation-date {
         display: flex;
@@ -1381,9 +1640,6 @@
         font-weight: 800;
         box-shadow: 0 8px 18px rgba(112, 19, 27, .06);
         text-align: center;
-    }
-    .consultation-source-badge {
-        margin: 6px 0 8px;
     }
     .consultation-main .consultation-date .consultation-appointment-number {
         display: block;
@@ -1539,6 +1795,9 @@
         padding: 0 !important;
         opacity: 0;
         pointer-events: none;
+    }
+    .document-service-hidden {
+        display: none !important;
     }
     .clinic-select-display {
         position: relative;
@@ -1927,10 +2186,42 @@
         box-shadow: 0 12px 28px rgba(0, 0, 0, .24);
     }
     html[data-theme="dark"] .consultation-main .patient-header {
-        border-top-color: #9f1d35;
         background:
             radial-gradient(circle at top left, rgba(250, 204, 21, .08), transparent 34%),
             linear-gradient(180deg, #202c3d 0%, #1b2637 100%);
+    }
+    html[data-theme="dark"] .patient-identity {
+        border-bottom-color: #3b475b;
+    }
+    html[data-theme="dark"] .patient-meta-row + .patient-meta-row,
+    html[data-theme="dark"] .patient-consultation-item + .patient-consultation-item {
+        border-color: #3b475b;
+    }
+    html[data-theme="dark"] .patient-meta-icon,
+    html[data-theme="dark"] .patient-consultation-item-icon {
+        background: rgba(250, 204, 21, .1);
+        color: #facc15;
+    }
+    html[data-theme="dark"] .patient-meta-label,
+    html[data-theme="dark"] .patient-consultation-item-copy > span {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .patient-meta-value,
+    html[data-theme="dark"] .patient-consultation-item-copy strong {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .patient-consultation-summary {
+        border-color: #3b475b;
+        background: #172033;
+    }
+    html[data-theme="dark"] .patient-consultation-heading {
+        background: linear-gradient(90deg, rgba(143, 34, 48, .3), rgba(143, 34, 48, .12));
+    }
+    html[data-theme="dark"] .patient-consultation-heading h3 {
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .patient-consultation-item-copy strong.consultation-appointment-number {
+        color: #d9f2ff;
     }
     html[data-theme="dark"] .consultation-main .patient-name,
     html[data-theme="dark"] .consultation-main .consultation-date,
@@ -1956,7 +2247,7 @@
         color: #e2e8f0;
     }
     html[data-theme="dark"] .patient-meta-label {
-        color: #facc15;
+        color: #cbd5e1;
     }
     html[data-theme="dark"] .consultation-main .consultation-date {
         border-color: #465267;
@@ -3195,18 +3486,175 @@
     }
     @media (max-width: 820px) {
         .consultation-main .patient-header {
-            grid-template-columns: 1fr;
-            gap: 16px;
-            padding: 22px 18px;
+            padding: 13px 15px 14px;
         }
         .patient-identity {
-            justify-content: center;
+            grid-template-columns: 94px minmax(0, 1fr);
+            gap: 14px;
+            padding-bottom: 12px;
         }
-        .patient-header-actions {
-            justify-content: center;
+        .patient-avatar {
+            width: 94px;
+            height: 94px;
+            flex-basis: 94px;
         }
-        .consultation-main .consultation-date {
-            justify-self: center;
+        .patient-identity-topline {
+            gap: 12px;
+        }
+        .patient-meta-icon {
+            width: 36px;
+            height: 36px;
+            flex-basis: 36px;
+        }
+        .patient-meta-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+        .patient-consultation-details {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            row-gap: 15px;
+        }
+        .patient-consultation-item:nth-child(2) {
+            border-left: 1px solid rgba(148, 163, 184, .34);
+        }
+        .patient-consultation-item:nth-child(3) {
+            grid-column: 1 / -1;
+            padding-top: 10px;
+            border-top: 1px solid rgba(148, 163, 184, .24);
+            border-left: 0;
+        }
+        html[data-theme="dark"] .patient-consultation-item:nth-child(2) {
+            border-left-color: #3b475b;
+        }
+        html[data-theme="dark"] .patient-consultation-item:nth-child(3) {
+            border-top-color: #3b475b;
+        }
+    }
+    @media (max-width: 600px) {
+        .consultation-main .patient-header {
+            padding: 15px 14px 16px;
+        }
+        .patient-identity {
+            grid-template-columns: 78px minmax(0, 1fr);
+            gap: 12px;
+        }
+        .patient-avatar {
+            width: 78px;
+            height: 78px;
+            flex-basis: 78px;
+            border-radius: 11px;
+        }
+        .patient-identity-topline {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .consultation-main .patient-name {
+            font-size: 1.4rem;
+        }
+        .consultation-main .patient-badges {
+            gap: 6px;
+        }
+        .consultation-main .patient-badge {
+            padding: 5px 8px;
+            font-size: .62rem;
+        }
+        .consultation-main .consultation-source-badge {
+            min-height: 38px;
+            padding: 7px 11px;
+            font-size: .72rem;
+        }
+        .consultation-source-badge svg {
+            width: 22px;
+            height: 22px;
+            flex-basis: 22px;
+        }
+        .patient-meta {
+            grid-template-columns: minmax(0, 1fr);
+        }
+        .patient-meta-row,
+        .patient-meta-row + .patient-meta-row {
+            gap: 10px;
+            padding: 9px 0;
+            border-left: 0;
+        }
+        .patient-meta-row + .patient-meta-row {
+            border-top: 1px solid rgba(148, 163, 184, .24);
+        }
+        html[data-theme="dark"] .patient-meta-row + .patient-meta-row {
+            border-top-color: #3b475b;
+        }
+        .patient-meta-icon {
+            width: 38px;
+            height: 38px;
+            flex-basis: 38px;
+        }
+        .patient-meta-icon svg {
+            width: 21px;
+            height: 21px;
+        }
+        .patient-meta-label {
+            font-size: .77rem;
+        }
+        .patient-meta-value {
+            font-size: .86rem;
+        }
+        .patient-consultation-summary {
+            margin-top: 14px;
+        }
+        .patient-consultation-heading {
+            gap: 11px;
+            min-height: 54px;
+            padding: 7px 13px;
+        }
+        .patient-consultation-heading-icon {
+            width: 38px;
+            height: 38px;
+            flex-basis: 38px;
+        }
+        .patient-consultation-heading h3 {
+            font-size: 1.05rem !important;
+        }
+        .patient-consultation-details {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0;
+            padding: 4px 14px 8px;
+        }
+        .patient-consultation-item,
+        .patient-consultation-item:nth-child(2),
+        .patient-consultation-item:nth-child(3) {
+            grid-column: auto;
+            gap: 12px;
+            padding: 10px 0;
+            border: 0;
+            border-top: 1px solid rgba(148, 163, 184, .24);
+        }
+        .patient-consultation-item:first-child {
+            border-top: 0;
+        }
+        html[data-theme="dark"] .patient-consultation-item,
+        html[data-theme="dark"] .patient-consultation-item:nth-child(2),
+        html[data-theme="dark"] .patient-consultation-item:nth-child(3) {
+            border-top-color: #3b475b;
+        }
+        .patient-consultation-item-icon {
+            width: 36px;
+            height: 36px;
+            flex-basis: 36px;
+        }
+        .patient-consultation-item-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+        .patient-consultation-item-copy > span {
+            font-size: .74rem;
+        }
+        .patient-consultation-item-copy strong {
+            font-size: .92rem;
+        }
+        .patient-consultation-item-copy strong.consultation-appointment-number {
+            font-size: .87rem;
         }
     }
 
@@ -4362,10 +4810,6 @@
     $studentDisplayRole = \App\Models\Appointment::normalizeUserType($student->user_role ?? $student->user_type ?? 'Student');
     $isAssistedIntake = ($user_source ?? '') === 'assisted';
     $studentDocuments = $studentDocuments ?? [];
-    $studentDocumentVersions = $studentDocumentVersions ?? [];
-    $studentDocumentVersionCount = collect($studentDocumentVersions)->sum(fn (array $version) => count($version['documents'] ?? []));
-    $studentDocumentCount = $studentDocumentVersionCount > 0 ? $studentDocumentVersionCount : count($studentDocuments);
-    $hasVersionedDocuments = $studentDocumentVersionCount > 0;
     $studentPhotoDocument = collect($studentDocuments)->firstWhere('key', 'student_photo');
     $studentCourse = trim((string) ($student->course ?: optional($student->healthProfile)->course_college));
     $dependentProfile = $student->relationLoaded('dependentProfile') ? $student->dependentProfile : $student->dependentProfile()->first();
@@ -4376,13 +4820,206 @@
         (string) $studentDisplayRole,
     ]))));
     $isDependentPatient = (bool) $dependentProfile || str_contains($patientRoleMarkers, 'dependent') || str_contains($patientRoleMarkers, 'guest');
+    $employeeHealthProfileCandidate = $student->employeeHealthProfile ?? $student->healthProfileStaff;
     $isEmployeePatient = !$isDependentPatient && (
         str_contains($patientRoleMarkers, 'faculty')
         || str_contains($patientRoleMarkers, 'admin')
         || str_contains($patientRoleMarkers, 'employee')
         || str_contains($patientRoleMarkers, 'staff')
         || str_contains($patientRoleMarkers, 'designee')
+        || (bool) ($student->is_admin ?? false)
+        || $employeeHealthProfileCandidate !== null
     );
+    $employeeHealthProfile = $isEmployeePatient ? $employeeHealthProfileCandidate : null;
+    $patientSex = trim((string) (
+        ($isDependentPatient ? ($dependentProfile?->sex ?? '') : '')
+        ?: ($isEmployeePatient ? ($employeeHealthProfile?->sex ?? '') : '')
+        ?: optional($student->healthProfile)->sex
+        ?: ($student->gender ?? '')
+    ));
+    $patientContactNumber = trim((string) (
+        ($isDependentPatient ? ($dependentProfile?->contact_no ?? '') : '')
+        ?: ($isEmployeePatient ? ($employeeHealthProfile?->contact_no ?? '') : '')
+        ?: ($student->contact_no ?? '')
+    ));
+    $emergencyContactName = trim((string) (
+        $isDependentPatient
+            ? ($dependentProfile?->emergency_contact_name ?? '')
+            : ($isEmployeePatient
+                ? ($employeeHealthProfile?->emergency_contact_person ?? '')
+                : (optional($student->healthProfile)->guardian_name ?? ''))
+    ));
+    $emergencyContactNumber = trim((string) (
+        $isDependentPatient
+            ? ($dependentProfile?->emergency_contact_no ?? '')
+            : ($isEmployeePatient
+                ? ($employeeHealthProfile?->emergency_contact_no ?? '')
+                : (optional($student->healthProfile)->cellphone ?? ''))
+    ));
+    $normalizeHealthEntries = static function ($value): array {
+        $entries = is_array($value) ? $value : (is_string($value) ? [$value] : []);
+
+        return collect($entries)
+            ->flatten()
+            ->map(static fn ($entry) => trim((string) $entry))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    };
+    $patientHealthProfile = $student->healthProfile;
+    $patientMedicalHistory = $isEmployeePatient
+        ? $normalizeHealthEntries($employeeHealthProfile?->past_medical_history ?? [])
+        : $normalizeHealthEntries(optional($patientHealthProfile)->medical_history ?? []);
+    $patientOtherMedicalHistory = $isEmployeePatient
+        ? trim((string) ($employeeHealthProfile?->past_medical_history_others ?? ''))
+        : trim((string) (optional($patientHealthProfile)->other_illness ?? ''));
+    $employeeHealthAnswer = static function ($value): string {
+        return $value === null || $value === '' ? '' : ((bool) $value ? 'Yes' : 'No');
+    };
+    $patientEmployeeHistoryDetails = [];
+    $patientEmployeeFamilyHistory = $isEmployeePatient
+        ? $normalizeHealthEntries($employeeHealthProfile?->family_history ?? [])
+        : [];
+    $patientEmployeeFamilyHistoryOther = $isEmployeePatient
+        ? trim((string) ($employeeHealthProfile?->family_history_others ?? ''))
+        : '';
+    $patientEmployeeLifestyleDetails = [];
+    if ($isEmployeePatient) {
+        foreach ([
+            ['Previous hospitalization', $employeeHealthAnswer($employeeHealthProfile?->previous_hospitalization)],
+            ['Hospitalization details', trim((string) ($employeeHealthProfile?->previous_hospitalization_details ?? ''))],
+            ['Operation / surgery', $employeeHealthAnswer($employeeHealthProfile?->operation_surgery)],
+            ['Operation / surgery details', trim((string) ($employeeHealthProfile?->operation_surgery_details ?? ''))],
+        ] as [$label, $value]) {
+            if ($value !== '') {
+                $patientEmployeeHistoryDetails[] = ['label' => $label, 'value' => $value];
+            }
+        }
+
+        foreach ([
+            ['Cigarette smoking', $employeeHealthAnswer($employeeHealthProfile?->cigarette_smoking)],
+            ['Alcohol drinking', $employeeHealthAnswer($employeeHealthProfile?->alcohol_drinking)],
+            ['Traveled abroad', $employeeHealthAnswer($employeeHealthProfile?->traveled_abroad)],
+        ] as [$label, $value]) {
+            if ($value !== '') {
+                $patientEmployeeLifestyleDetails[] = ['label' => $label, 'value' => $value];
+            }
+        }
+    }
+    $patientDisabilityDetails = '';
+    if ($isEmployeePatient) {
+        $employeeDisabilityAnswer = $employeeHealthAnswer($employeeHealthProfile?->has_disability);
+        if ($employeeDisabilityAnswer !== '') {
+            $patientDisabilityDetails = $employeeDisabilityAnswer === 'Yes'
+                ? (trim((string) ($employeeHealthProfile?->disability_type ?? '')) ?: 'Yes')
+                : 'No';
+        }
+    } elseif (optional($patientHealthProfile)->has_disability === 'Yes') {
+        $patientDisabilityDetails = trim((string) (optional($patientHealthProfile)->disability_type ?? '')) ?: 'Disability reported';
+    }
+    $patientHasReportedIllness = !$isEmployeePatient && optional($patientHealthProfile)->has_illness === 'Yes';
+    $patientFoodAllergies = $isEmployeePatient ? [] : $normalizeHealthEntries(optional($patientHealthProfile)->food_allergies ?? '');
+    $patientMedicineAllergies = $isEmployeePatient ? [] : $normalizeHealthEntries(optional($patientHealthProfile)->medicine_allergies ?? []);
+    $patientOtherAllergies = $isEmployeePatient ? [] : $normalizeHealthEntries(optional($patientHealthProfile)->other_med_allergies ?? '');
+    $patientEmployeeAllergies = $isEmployeePatient
+        ? trim((string) ($employeeHealthProfile?->allergies ?? ''))
+        : '';
+    $patientCurrentMedications = $isEmployeePatient
+        ? trim((string) ($employeeHealthProfile?->current_medications ?? ''))
+        : '';
+    $patientWalkInReviewNotes = [];
+    $addPatientWalkInReviewNote = static function (string $label, $value) use (&$patientWalkInReviewNotes): void {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return;
+        }
+
+        foreach ($patientWalkInReviewNotes as $reviewNote) {
+            if ($reviewNote['value'] === $value) {
+                return;
+            }
+        }
+
+        $patientWalkInReviewNotes[] = [
+            'label' => $label,
+            'value' => $value,
+        ];
+    };
+    if ($isEmployeePatient) {
+        $employeeWorkingImpression = trim((string) ($employeeHealthProfile?->working_impression ?? ''));
+        if (strcasecmp($employeeWorkingImpression, 'Fit to proceed') !== 0) {
+            $addPatientWalkInReviewNote('Working impression', $employeeWorkingImpression);
+        }
+    } else {
+        $patientAssessmentRemarks = collect([
+            optional($patientHealthProfile)->med_assessment_remarks,
+            optional($patientHealthProfile)->assessment_remarks,
+        ])->map(static fn ($remark) => trim((string) $remark))
+            ->filter()
+            ->unique()
+            ->implode("\n");
+        $addPatientWalkInReviewNote('Remarks', $patientAssessmentRemarks);
+        $medicalConditionRemark = trim((string) (optional($patientHealthProfile)->medical_condition_remarks ?? ''));
+        if ($medicalConditionRemark !== '' && strcasecmp($medicalConditionRemark, $patientOtherMedicalHistory) !== 0) {
+            $addPatientWalkInReviewNote('Medical condition remarks', $medicalConditionRemark);
+        }
+    }
+
+    $walkInPendingReason = trim((string) (
+        $isEmployeePatient
+            ? ($employeeHealthProfile?->pending_reason ?? '')
+            : (optional($patientHealthProfile)->pending_reason ?? '')
+    ));
+    if ($walkInPendingReason !== '') {
+        $pendingReasonLines = preg_split('/\R/', $walkInPendingReason) ?: [];
+        $pendingReviewLines = count($pendingReasonLines) > 1 ? array_slice($pendingReasonLines, 1) : [];
+        $pendingReviewLines = array_values(array_filter($pendingReviewLines, static function ($line) {
+            return trim((string) $line) !== ''
+                && stripos(trim((string) $line), 'Medical condition:') !== 0;
+        }));
+
+        if (!$pendingReviewLines && count($pendingReasonLines) === 1) {
+            $pendingReasonText = trim((string) $pendingReasonLines[0]);
+            $isWorkflowReason = preg_match('/Incomplete Requirements|Document Resubmission|For Physician Evaluation|For Further Evaluation|Health Form Correction|With Medical Condition/i', $pendingReasonText);
+            $isPendingProfile = trim((string) (
+                $isEmployeePatient
+                    ? ($employeeHealthProfile?->clearance_status ?? '')
+                    : (optional($patientHealthProfile)->clearance_status ?? '')
+            )) === 'Pending/Conditional';
+            if ($isPendingProfile && !$isWorkflowReason) {
+                $pendingReviewLines[] = $pendingReasonText;
+            }
+        }
+
+        $addPatientWalkInReviewNote('Pending review remarks', implode("\n", $pendingReviewLines));
+    }
+    $hasSavedAllergyDetails = $patientEmployeeAllergies !== ''
+        || count($patientFoodAllergies)
+        || count($patientMedicineAllergies)
+        || count($patientOtherAllergies);
+    $patientNoKnownAllergies = !$hasSavedAllergyDetails
+        && !$isEmployeePatient
+        && optional($patientHealthProfile)->no_allergies === true;
+    $patientMedicalInfoCount = count($patientMedicalHistory)
+        + ($patientOtherMedicalHistory !== '' ? 1 : 0)
+        + ($patientDisabilityDetails !== '' ? 1 : 0)
+        + count($patientEmployeeHistoryDetails)
+        + count($patientEmployeeFamilyHistory)
+        + ($patientEmployeeFamilyHistoryOther !== '' ? 1 : 0)
+        + count($patientEmployeeLifestyleDetails)
+        + ($patientHasReportedIllness ? 1 : 0)
+        + count($patientFoodAllergies)
+        + count($patientMedicineAllergies)
+        + count($patientOtherAllergies)
+        + ($patientEmployeeAllergies !== '' ? 1 : 0)
+        + ($patientCurrentMedications !== '' ? 1 : 0)
+        + count($patientWalkInReviewNotes)
+        + ($patientNoKnownAllergies ? 1 : 0);
+    $patientAcademicLevel = collect([$student->year ?? '', $student->section ?? ''])
+        ->map(fn ($value) => trim((string) $value))
+        ->filter()
+        ->implode(' / ');
     $patientIdLabel = $isDependentPatient ? 'Patient ID Number' : ($isEmployeePatient ? 'Employee Number' : 'Student Number');
     $patientIdNumber = $isDependentPatient
         ? ($dependentProfile?->id_number ?: ($student->student_number ?: $student->student_id ?: 'N/A'))
@@ -4396,6 +5033,22 @@
     $draftValue = static function (string $key, $default = '') use ($consultationDraftData) {
         return old($key, array_key_exists($key, $consultationDraftData) ? $consultationDraftData[$key] : $default);
     };
+    $currentConsultService = trim((string) $draftValue('service', optional($latestAppointment)->service));
+    $hasConfiguredClinicDocumentService = collect($otherServiceOptions ?? [])->contains(function ($serviceOption) {
+        return trim((string) $serviceOption->serviceLabel()) === 'Clinic Document Services';
+    });
+    $consultationDisplayDob = trim((string) $draftValue('dob', $consultationDob ?? ''));
+    $consultationAge = null;
+    if ($consultationDisplayDob !== '') {
+        try {
+            $consultationBirthDate = \Carbon\Carbon::parse($consultationDisplayDob);
+            if ($consultationBirthDate->lessThanOrEqualTo(today())) {
+                $consultationAge = $consultationBirthDate->age;
+            }
+        } catch (\Throwable $exception) {
+            $consultationAge = null;
+        }
+    }
     $legacyConsultationDraftStorageKey = 'consultation-draft:' . $patientIdNumberForSubmit . ':' . ($user_source ?? 'walkin') . ':' . ($appointmentNumber ?: ($consultationStartedAt ?? 'new'));
     $consultationDraftStorageKey = 'consultation-draft:' . hash_hmac('sha256', $legacyConsultationDraftStorageKey, (string) config('app.key'));
     $studentInitials = collect(preg_split('/\s+/', trim((string) $student->name)) ?: [])
@@ -4403,6 +5056,12 @@
         ->take(2)
         ->map(fn ($namePart) => \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($namePart, 0, 1)))
         ->implode('');
+    $consultationHeaderDate = (($user_source ?? '') === 'online' && $latestAppointment)
+        ? \Carbon\Carbon::parse($latestAppointment->date)
+        : now();
+    $consultationHeaderTime = (($user_source ?? '') === 'online' && $latestAppointment)
+        ? \Carbon\Carbon::parse($latestAppointment->time)
+        : now();
 @endphp
 
 <div class="consultation-workspace">
@@ -4417,43 +5076,86 @@
                     @endif
                 </div>
                 <div class="patient-identity-copy">
-                    <h2 class="patient-name">{{ $student->name }}</h2>
-                    <div class="patient-badges">
-                        <span class="patient-badge">{{ $studentDisplayRole }}</span>
-                        <span class="patient-badge">{{ $patientIdLabel }} {{ $patientIdNumber }}</span>
+                    <div class="patient-identity-topline">
+                        <div class="patient-identity-primary">
+                            <h2 class="patient-name">{{ $student->name }}</h2>
+                            <div class="patient-badges">
+                                <span class="patient-badge">{{ $studentDisplayRole }}</span>
+                                <span class="patient-badge">{{ $patientIdLabel }} {{ $patientIdNumber }}</span>
+                            </div>
+                        </div>
+                        <div class="patient-appointment-source">
+                            @if(($user_source ?? '') === 'online' && $latestAppointment)
+                                <span class="badge-source source-online consultation-source-badge">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1.5" stroke="currentColor" stroke-width="1.8"/><path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                                    Online Appointment
+                                </span>
+                            @elseif($isAssistedIntake)
+                                <span class="badge-source source-walkin consultation-source-badge">Assisted Intake</span>
+                            @else
+                                <span class="badge-source source-walkin consultation-source-badge">Walk-in Patient</span>
+                            @endif
+                        </div>
                     </div>
                     <div class="patient-meta">
                         <div class="patient-meta-row">
-                            <span class="patient-meta-label">Email</span>
-                            <span class="patient-meta-value">{{ $student->email ?: 'Not provided' }}</span>
+                            <span class="patient-meta-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                            <div class="patient-meta-copy">
+                                <span class="patient-meta-label">Email Address</span>
+                                <span class="patient-meta-value">{{ $student->email ?: 'Not provided' }}</span>
+                            </div>
                         </div>
                         <div class="patient-meta-row">
-                            <span class="patient-meta-label">Course</span>
-                            <span class="patient-meta-value">{{ $studentCourse ?: 'Not provided' }}</span>
+                            <span class="patient-meta-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="m2 9 10-5 10 5-10 5L2 9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M6 11v5c3.3 2.7 8.7 2.7 12 0v-5M22 9v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                            <div class="patient-meta-copy">
+                                <span class="patient-meta-label">Course</span>
+                                <span class="patient-meta-value">{{ $studentCourse ?: 'Not provided' }}</span>
+                            </div>
                         </div>
                     </div>
-                    @if(($user_source ?? '') === 'online' && $latestAppointment)
-                        <div class="form-help">
-                            Scheduled {{ \Carbon\Carbon::parse($latestAppointment->date)->format('M d, Y') }}
-                            at {{ \Carbon\Carbon::parse($latestAppointment->time)->format('g:i A') }}
+                </div>
+            </div>
+            <section class="patient-consultation-summary" aria-label="Today's consultation details">
+                <div class="patient-consultation-heading">
+                    <span class="patient-consultation-heading-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M16 3v4M8 3v4M3 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    </span>
+                    <h3>Today's Consultation</h3>
+                </div>
+                <div class="patient-consultation-details">
+                    <div class="patient-consultation-item">
+                        <span class="patient-consultation-item-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                        </span>
+                        <div class="patient-consultation-item-copy">
+                            <span>Appointment Date</span>
+                            <strong>{{ $consultationHeaderDate->format('F d, Y') }}</strong>
                         </div>
-                    @endif
+                    </div>
+                    <div class="patient-consultation-item">
+                        <span class="patient-consultation-item-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                        <div class="patient-consultation-item-copy">
+                            <span>Scheduled Time</span>
+                            <strong>{{ $consultationHeaderTime->format('g:i A') }}</strong>
+                        </div>
+                    </div>
+                    <div class="patient-consultation-item">
+                        <span class="patient-consultation-item-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10l-7-7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13 3v7h7M8 14h8M8 17h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                        </span>
+                        <div class="patient-consultation-item-copy">
+                            <span>Appointment ID</span>
+                            <strong class="consultation-appointment-number">{{ $appointmentNumber ?: 'N/A' }}</strong>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="patient-header-actions">
-                <div class="consultation-date">
-                    <span>Today's Consultation</span>
-                    @if(($user_source ?? '') === 'online' && $latestAppointment)
-                        <span class="badge-source source-online consultation-source-badge">Online Appointment</span>
-                    @elseif($isAssistedIntake)
-                        <span class="badge-source source-walkin consultation-source-badge">Assisted Intake</span>
-                    @else
-                        <span class="badge-source source-walkin consultation-source-badge">Walk-in Patient</span>
-                    @endif
-                    <span class="consultation-appointment-number">{{ $appointmentNumber ?: 'N/A' }}</span>
-                    {{ now()->format('F d, Y') }}
-                </div>
-            </div>
+            </section>
         </header>
 
         @if(session('error') || $errors->any())
@@ -4490,16 +5192,43 @@
                 <div class="form-group physical-dob-group">
                     <label for="consultDob">Date of Birth</label>
                     @php
-                        $lockedConsultationDob = $draftValue('dob', $consultationDob ?? '');
+                        $lockedConsultationDob = $consultationDisplayDob;
                     @endphp
                     <input type="hidden" name="dob" value="{{ $lockedConsultationDob }}">
                     <input type="date" id="consultDob" class="form-control" value="{{ $lockedConsultationDob }}" disabled aria-readonly="true">
-                    <div class="form-help">Prefilled from saved student information when available.</div>
                 </div>
-                <div class="physical-vitals-heading">
+                <div class="form-grid-2 patient-personal-details-grid" aria-label="Additional personal information">
+                    <div class="form-group">
+                        <label for="consultAgeDisplay">Age (years)</label>
+                        <input type="text" id="consultAgeDisplay" class="form-control" value="{{ $consultationAge !== null ? $consultationAge : 'Not provided' }}" readonly aria-readonly="true">
+                    </div>
+                    <div class="form-group">
+                        <label for="consultSexDisplay">Sex / Gender</label>
+                        <input type="text" id="consultSexDisplay" class="form-control" value="{{ $patientSex ?: 'Not provided' }}" readonly aria-readonly="true">
+                    </div>
+                    <div class="form-group">
+                        <label for="consultContactDisplay">Contact Number</label>
+                        <input type="text" id="consultContactDisplay" class="form-control" value="{{ $patientContactNumber ?: 'Not provided' }}" readonly aria-readonly="true">
+                    </div>
+                    @if(!$isEmployeePatient && !$isDependentPatient)
+                        <div class="form-group">
+                            <label for="consultAcademicLevelDisplay">Year Level / Section</label>
+                            <input type="text" id="consultAcademicLevelDisplay" class="form-control" value="{{ $patientAcademicLevel ?: 'Not provided' }}" readonly aria-readonly="true">
+                        </div>
+                    @endif
+                    <div class="form-group" data-document-service-hide>
+                        <label for="consultEmergencyContactNameDisplay">Emergency Contact Person</label>
+                        <input type="text" id="consultEmergencyContactNameDisplay" class="form-control" value="{{ $emergencyContactName ?: 'Not on file' }}" readonly aria-readonly="true">
+                    </div>
+                    <div class="form-group" data-document-service-hide>
+                        <label for="consultEmergencyContactNumberDisplay">Emergency Contact Number</label>
+                        <input type="text" id="consultEmergencyContactNumberDisplay" class="form-control" value="{{ $emergencyContactNumber ?: 'Not on file' }}" readonly aria-readonly="true">
+                    </div>
+                </div>
+                <div class="physical-vitals-heading" data-document-service-hide>
                     <h3>Measurements and Vitals</h3>
                 </div>
-                <div class="form-grid-2">
+                <div class="form-grid-2" data-document-service-hide>
                     <div class="form-group">
                         <label for="consultHeight">Height (ft)</label>
                         <input type="number" id="consultHeight" step="0.01" name="height" class="form-control @error('height') is-invalid @enderror" placeholder="5.6" value="{{ $draftValue('height', $consultationHeight ?? '') }}" data-vital="height" data-vital-min="1" data-vital-max="10" data-vital-name="Height">
@@ -4555,7 +5284,7 @@
                         @enderror
                     </div>
                 </div>
-                <div class="form-group physical-covid-group">
+                <div class="form-group physical-covid-group" data-document-service-hide>
                     <label>Covid Positive?</label>
                     <div class="choice-grid">
                         <label>
@@ -4609,13 +5338,16 @@
                             });
                         @endphp
                         <select id="consultService" class="form-control" data-clinic-select @if(($user_source ?? '') === 'online') disabled @else name="service" @endif required>
-                            <option value="" disabled {{ !$draftValue('service', optional($latestAppointment)->service) ? 'selected' : '' }}>Select clinic service</option>
-                            <option value="General Consultation" {{ $draftValue('service', optional($latestAppointment)->service) === 'General Consultation' ? 'selected' : '' }}>General Consultation</option>
+                            <option value="" disabled {{ !$currentConsultService ? 'selected' : '' }}>Select clinic service</option>
+                            <option value="General Consultation" {{ $currentConsultService === 'General Consultation' ? 'selected' : '' }}>General Consultation</option>
+                            @if($currentConsultService === 'Clinic Document Services' && !$hasConfiguredClinicDocumentService)
+                                <option value="Clinic Document Services" selected>Clinic Document Services</option>
+                            @endif
                             @if(!$hasConfiguredBpMonitoring)
-                                <option value="BP Monitoring" {{ $draftValue('service', optional($latestAppointment)->service) === 'BP Monitoring' ? 'selected' : '' }}>BP Monitoring</option>
+                                <option value="BP Monitoring" {{ $currentConsultService === 'BP Monitoring' ? 'selected' : '' }}>BP Monitoring</option>
                             @endif
                             @foreach(($otherServiceOptions ?? []) as $serviceOption)
-                                <option value="{{ $serviceOption->serviceLabel() }}" {{ $draftValue('service', optional($latestAppointment)->service) === $serviceOption->serviceLabel() ? 'selected' : '' }}>{{ $serviceOption->serviceLabel() }}</option>
+                                <option value="{{ $serviceOption->serviceLabel() }}" {{ $currentConsultService === $serviceOption->serviceLabel() ? 'selected' : '' }}>{{ $serviceOption->serviceLabel() }}</option>
                             @endforeach
                         </select>
                         @if(($user_source ?? '') === 'online')
@@ -4624,10 +5356,10 @@
                     </div>
                 </div>
                 <div class="visit-subsection">
-                    <div class="visit-subsection-heading">
+                    <div class="visit-subsection-heading" data-document-service-hide>
                         <h4>2. Medical Classification</h4>
                     </div>
-                    <div class="form-group visit-field">
+                    <div class="form-group visit-field" data-document-service-hide>
                         <label for="consultCondition">
                             Medical Condition
                             <span class="visit-field-badge">MAR Classification</span>
@@ -4683,7 +5415,7 @@
                 </div>
             </section>
 
-            <section class="consult-card medicine-dispensing-card">
+            <section class="consult-card medicine-dispensing-card" data-document-service-hide>
                 <div class="medicine-header">
                     <div class="consult-section-heading">
                         <span class="consult-section-icon" aria-hidden="true">
@@ -4783,7 +5515,7 @@
                         <p>Document the patient's findings and assessments.</p>
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group" data-document-service-hide>
                     <label for="consultReferral">Referral</label>
                     <select name="referral_type" id="consultReferral" class="form-control" data-clinic-select>
                         <option value="none" {{ $draftValue('referral_type', 'none') === 'none' ? 'selected' : '' }}>No Referral</option>
@@ -4793,7 +5525,7 @@
                     </select>
                     <div class="form-help">Use this when the patient needs care beyond the school clinic.</div>
                 </div>
-                <div class="form-group referral-details-group {{ $draftValue('referral_type', 'none') === 'others' ? 'is-visible' : '' }}" id="referralDetailsGroup">
+                <div class="form-group referral-details-group {{ $draftValue('referral_type', 'none') === 'others' ? 'is-visible' : '' }}" id="referralDetailsGroup" data-document-service-hide>
                     <label for="consultReferralDetails">Referral Details</label>
                     <input type="text" name="referral_details" id="consultReferralDetails" class="form-control" value="{{ $draftValue('referral_details') }}" maxlength="500" placeholder="Specify the referral destination or reason">
                     @error('referral_details')
@@ -4873,10 +5605,10 @@
 @endif
 
 <nav class="consultation-utility-rail" id="consultationUtilityRail" aria-label="Consultation tools">
-    <button type="button" class="utility-rail-button" data-utility-target="documents" title="Uploaded Documents">
-        <x-outline-icon name="document-text" />
-        <span>Documents</span>
-        <span class="utility-rail-count">{{ $studentDocumentCount }}</span>
+    <button type="button" class="utility-rail-button" data-utility-target="medical_conditions" title="Medical Conditions">
+        <x-outline-icon name="heart-pulse" />
+        <span>Medical Conditions</span>
+        <span class="utility-rail-count">{{ $patientMedicalInfoCount }}</span>
     </button>
     <button type="button" class="utility-rail-button" data-utility-target="inventory" title="Live Stock Tally">
         <x-outline-icon name="cube" />
@@ -4894,108 +5626,151 @@
 
 <aside id="right-utility-panel" aria-hidden="true" aria-label="Consultation utility panel">
     <header class="utility-panel-header">
-        <x-outline-icon name="document-text" id="utilityPanelIcon" />
-        <h2 class="utility-panel-title" id="utilityPanelTitle">Uploaded Documents</h2>
+        <x-outline-icon name="heart-pulse" id="utilityPanelIcon" />
+        <h2 class="utility-panel-title" id="utilityPanelTitle">Medical Conditions</h2>
         <button type="button" id="close-utility-panel" aria-label="Close utility panel">&times;</button>
     </header>
     <button type="button" id="expand-utility-panel" aria-label="Expand recent records panel" title="Expand recent records">&lt;</button>
 
-    <section class="utility-panel-pane" data-utility-pane="documents">
-        <p class="utility-pane-note">Submitted clinic files and the generated Health Information Form.</p>
-        @if($hasVersionedDocuments || (!$studentDocumentCount && count($studentDocumentVersions)))
-            <div class="document-version-list">
-                @foreach($studentDocumentVersions as $documentVersion)
-                    <section class="document-version-group">
-                        <button
-                            type="button"
-                            class="document-version-header document-version-toggle"
-                            data-document-version-toggle
-                            aria-expanded="false"
-                            aria-controls="document-version-content-{{ $loop->index }}"
-                        >
-                            <div>
-                                <span class="document-version-kicker">Version {{ $documentVersion['version'] }}</span>
-                                <strong>{{ $documentVersion['label'] }}</strong>
-                                <small>
-                                    {{ $documentVersion['status'] }}
-                                    @if($documentVersion['submitted_at'])
-                                        · {{ $documentVersion['submitted_at']->format('M d, Y h:i A') }}
-                                    @endif
-                                </small>
-                            </div>
-                            @if($documentVersion['is_current'])
-                                <span class="document-version-current">Current</span>
-                            @endif
-                            <span class="document-version-toggle-icon" aria-hidden="true"></span>
-                        </button>
+    <section class="utility-panel-pane" data-utility-pane="medical_conditions">
+        <p class="utility-pane-note">Saved health details. Confirm them with the patient.</p>
 
-                        <div
-                            class="document-version-content"
-                            id="document-version-content-{{ $loop->index }}"
-                            hidden
-                        >
-                            @if(count($documentVersion['documents']))
-                                <div class="document-list">
-                                    @foreach($documentVersion['documents'] as $document)
-                                        <article class="document-card">
-                                            <a class="document-preview" href="{{ $document['url'] }}" target="_blank" rel="noopener">
-                                                @if($document['type'] === 'image')
-                                                    <img src="{{ $document['url'] }}" alt="{{ $document['label'] }} preview">
-                                                @else
-                                                    <x-outline-icon name="document-text" />
-                                                @endif
-                                            </a>
-                                            <div class="document-card-body">
-                                                <span class="document-card-title">{{ $document['label'] }}</span>
-                                                <a class="document-open" href="{{ $document['url'] }}" target="_blank" rel="noopener">
-                                                    <x-outline-icon name="eye" />
-                                                    Open document
-                                                </a>
-                                            </div>
-                                        </article>
-                                    @endforeach
-                                </div>
-                            @else
-                                <div class="documents-empty">No saved documents are available for this version yet.</div>
-                            @endif
+        <section class="medical-condition-group">
+            <h3>{{ $isEmployeePatient ? 'Past Medical History' : 'Medical History' }}</h3>
+            @if(count($patientMedicalHistory) || $patientOtherMedicalHistory !== '' || $patientDisabilityDetails !== '' || $patientHasReportedIllness)
+                @if(count($patientMedicalHistory))
+                    <div class="medical-condition-chips">
+                        @foreach($patientMedicalHistory as $historyItem)
+                            <span class="medical-condition-chip">{{ $historyItem }}</span>
+                        @endforeach
+                    </div>
+                @endif
+                @if($patientOtherMedicalHistory !== '')
+                    <div class="medical-condition-detail">
+                        <span>{{ $isEmployeePatient ? 'Other childhood illness' : 'Other details' }}</span>
+                        <strong>{{ $patientOtherMedicalHistory }}</strong>
+                    </div>
+                @endif
+                @if($patientDisabilityDetails !== '')
+                    <div class="medical-condition-detail">
+                        <span>Disability</span>
+                        <strong>{{ $patientDisabilityDetails }}</strong>
+                    </div>
+                @endif
+                @if($patientHasReportedIllness && !count($patientMedicalHistory) && $patientOtherMedicalHistory === '')
+                    <p class="medical-condition-status">Medical condition reported; no further details are saved.</p>
+                @endif
+            @else
+                <p class="medical-condition-empty">No medical history is listed in the saved profile.</p>
+            @endif
+        </section>
+
+        @if($isEmployeePatient)
+            <section class="medical-condition-group">
+                <h3>Hospitalization &amp; Surgery</h3>
+                @forelse($patientEmployeeHistoryDetails as $healthDetail)
+                    <div class="medical-condition-detail">
+                        <span>{{ $healthDetail['label'] }}</span>
+                        <strong>{{ $healthDetail['value'] }}</strong>
+                    </div>
+                @empty
+                    <p class="medical-condition-empty">No hospitalization or surgery details are saved.</p>
+                @endforelse
+            </section>
+
+            <section class="medical-condition-group">
+                <h3>Family History</h3>
+                @if(count($patientEmployeeFamilyHistory) || $patientEmployeeFamilyHistoryOther !== '')
+                    @if(count($patientEmployeeFamilyHistory))
+                        <div class="medical-condition-chips">
+                            @foreach($patientEmployeeFamilyHistory as $familyHistoryItem)
+                                <span class="medical-condition-chip">{{ $familyHistoryItem }}</span>
+                            @endforeach
                         </div>
-                    </section>
-                @endforeach
-            </div>
-        @elseif(count($studentDocuments))
-            <div class="document-list">
-                @foreach($studentDocuments as $document)
-                    <article class="document-card">
-                        @if(filled($document['url'] ?? null))
-                            <a class="document-preview" href="{{ $document['url'] }}" target="_blank" rel="noopener">
-                                @if($document['type'] === 'image')
-                                    <img src="{{ $document['url'] }}" alt="{{ $document['label'] }} preview">
-                                @else
-                                    <x-outline-icon name="document-text" />
-                                @endif
-                            </a>
-                        @else
-                            <div class="document-preview is-missing" aria-hidden="true">
-                                <x-outline-icon name="document-text" />
-                            </div>
-                        @endif
-                        <div class="document-card-body">
-                            <span class="document-card-title">{{ $document['label'] }}</span>
-                            @if(filled($document['url'] ?? null))
-                                <a class="document-open" href="{{ $document['url'] }}" target="_blank" rel="noopener">
-                                    <x-outline-icon name="eye" />
-                                    Open document
-                                </a>
-                            @else
-                                <span class="document-open is-disabled">Not uploaded</span>
-                            @endif
+                    @endif
+                    @if($patientEmployeeFamilyHistoryOther !== '')
+                        <div class="medical-condition-detail">
+                            <span>Other family history</span>
+                            <strong>{{ $patientEmployeeFamilyHistoryOther }}</strong>
                         </div>
-                    </article>
-                @endforeach
-            </div>
-        @else
-            <div class="documents-empty">No uploaded clinic documents are available for this student.</div>
+                    @endif
+                @else
+                    <p class="medical-condition-empty">No family history details are saved.</p>
+                @endif
+            </section>
+
+            <section class="medical-condition-group">
+                <h3>Lifestyle &amp; Travel</h3>
+                @forelse($patientEmployeeLifestyleDetails as $healthDetail)
+                    <div class="medical-condition-detail">
+                        <span>{{ $healthDetail['label'] }}</span>
+                        <strong>{{ $healthDetail['value'] }}</strong>
+                    </div>
+                @empty
+                    <p class="medical-condition-empty">No lifestyle or travel answers are saved.</p>
+                @endforelse
+            </section>
         @endif
+
+        <section class="medical-condition-group">
+            <h3>Allergies</h3>
+            @if($patientNoKnownAllergies)
+                <p class="medical-condition-status is-clear">No known allergies reported.</p>
+            @elseif($hasSavedAllergyDetails)
+                @if($patientEmployeeAllergies !== '')
+                    <div class="medical-condition-detail">
+                        <span>Reported allergies</span>
+                        <strong>{{ $patientEmployeeAllergies }}</strong>
+                    </div>
+                @endif
+                @if(count($patientFoodAllergies))
+                    <div class="medical-condition-detail">
+                        <span>Food</span>
+                        <strong>{{ implode(', ', $patientFoodAllergies) }}</strong>
+                    </div>
+                @endif
+                @if(count($patientMedicineAllergies))
+                    <div class="medical-condition-detail">
+                        <span>Medicine</span>
+                        <strong>{{ implode(', ', $patientMedicineAllergies) }}</strong>
+                    </div>
+                @endif
+                @if(count($patientOtherAllergies))
+                    <div class="medical-condition-detail">
+                        <span>Other</span>
+                        <strong>{{ implode(', ', $patientOtherAllergies) }}</strong>
+                    </div>
+                @endif
+            @else
+                <p class="medical-condition-empty">
+                    {{ optional($patientHealthProfile)->no_allergies === false ? 'Allergies reported, but no details are saved.' : 'No allergy details are saved.' }}
+                </p>
+            @endif
+        </section>
+
+        @if($patientCurrentMedications !== '')
+            <section class="medical-condition-group">
+                <h3>Current Medications</h3>
+                <div class="medical-condition-detail">
+                    <span>Saved medications</span>
+                    <strong>{{ $patientCurrentMedications }}</strong>
+                </div>
+            </section>
+        @endif
+
+        <section class="medical-condition-group">
+            <h3>Remarks</h3>
+            @forelse($patientWalkInReviewNotes as $reviewNote)
+                <div class="medical-condition-detail">
+                    @if($reviewNote['label'] !== 'Remarks')
+                        <span>{{ $reviewNote['label'] }}</span>
+                    @endif
+                    <strong class="medical-review-note">{{ $reviewNote['value'] }}</strong>
+                </div>
+            @empty
+                <p class="medical-condition-empty">No remarks are saved for this patient.</p>
+            @endforelse
+        </section>
     </section>
 
     <section class="utility-panel-pane" data-utility-pane="inventory">
@@ -5157,8 +5932,8 @@
         const utilityRail = document.getElementById('consultationUtilityRail');
         const utilityButtons = Array.from(document.querySelectorAll('[data-utility-target]'));
         const utilityPanes = Array.from(document.querySelectorAll('[data-utility-pane]'));
-        const documentVersionToggles = Array.from(document.querySelectorAll('[data-document-version-toggle]'));
         const utilityTitle = document.getElementById('utilityPanelTitle');
+        const utilityPanelIcon = document.getElementById('utilityPanelIcon');
         const expandUtilityPanel = document.getElementById('expand-utility-panel');
         const closeUtilityPanel = document.getElementById('close-utility-panel');
         const headerQuickActions = document.getElementById('headerQuickActions');
@@ -5169,6 +5944,8 @@
         const inventorySearchToggle = document.getElementById('inventoryPanelSearchToggle');
         const inventorySearchEmpty = document.getElementById('inventorySearchEmpty');
         const consultationForm = document.getElementById('consultationForm');
+        const consultationServiceSelect = document.getElementById('consultService');
+        const documentServiceHideFields = Array.from(document.querySelectorAll('[data-document-service-hide]'));
         const finalizeButton = document.getElementById('finalizeConsultationButton');
         const certificateSelect = document.getElementById('consultCertificate');
         const certificateDetailsGroup = document.getElementById('certificateDetailsGroup');
@@ -5198,27 +5975,6 @@
         let activeUtility = '';
         let lastMarSubcategoryTrigger = null;
         let draftSaveTimer = null;
-
-        documentVersionToggles.forEach(function (toggle) {
-            const content = document.getElementById(toggle.getAttribute('aria-controls'));
-            if (!content) return;
-
-            toggle.addEventListener('click', function () {
-                const isOpening = toggle.getAttribute('aria-expanded') !== 'true';
-
-                documentVersionToggles.forEach(function (otherToggle) {
-                    if (otherToggle === toggle) return;
-                    const otherContent = document.getElementById(otherToggle.getAttribute('aria-controls'));
-                    otherToggle.setAttribute('aria-expanded', 'false');
-                    otherToggle.classList.remove('is-open');
-                    if (otherContent) otherContent.hidden = true;
-                });
-
-                toggle.setAttribute('aria-expanded', isOpening ? 'true' : 'false');
-                toggle.classList.toggle('is-open', isOpening);
-                content.hidden = !isOpening;
-            });
-        });
 
         function syncPopulatedFieldState(field) {
             if (!field) return;
@@ -5507,6 +6263,15 @@
             syncAddSubcategoryButton();
         }
 
+        const syncDocumentServiceFields = function () {
+            const isDocumentService = String(consultationServiceSelect?.value || '').trim().toLowerCase() === 'clinic document services';
+            documentServiceHideFields.forEach(function (field) {
+                field.classList.toggle('document-service-hidden', isDocumentService);
+            });
+        };
+
+        consultationServiceSelect?.addEventListener('change', syncDocumentServiceFields);
+
         const syncReferralDetails = function () {
             const showDetails = referralSelect?.value === 'others';
             referralDetailsGroup?.classList.toggle('is-visible', showDetails);
@@ -5640,7 +6405,7 @@
         };
 
         const utilityLabels = {
-            documents: 'Uploaded Documents',
+            medical_conditions: 'Medical Conditions',
             inventory: 'Live Medicine Stock',
             recent_records: 'Recent Records'
         };
@@ -5690,6 +6455,13 @@
 
             activeUtility = target;
             utilityTitle.textContent = utilityLabels[target] || 'Consultation Tools';
+            const selectedUtilityButton = utilityButtons.find(function (button) {
+                return button.dataset.utilityTarget === target;
+            });
+            const selectedUtilityIcon = selectedUtilityButton?.querySelector('svg');
+            if (utilityPanelIcon && selectedUtilityIcon) {
+                utilityPanelIcon.innerHTML = selectedUtilityIcon.innerHTML;
+            }
             const isExpandablePanel = target === 'recent_records';
             expandUtilityPanel?.classList.toggle('is-visible', isExpandablePanel);
             if (!isExpandablePanel) {
@@ -6203,6 +6975,7 @@
 
         medicineEntries.forEach(updateMedicineEntry);
         updateMedicineSelections();
+        syncDocumentServiceFields();
         syncReferralDetails();
         syncCovidPositiveDate();
         syncAllPopulatedFields();

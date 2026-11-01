@@ -837,7 +837,8 @@
     }
     #restockModal .modal-box,
     #issueModal .modal-box,
-    #historyModal .modal-box {
+    #historyModal .modal-box,
+    #viewItemModal .modal-box {
         width: min(100%, 860px);
         max-width: 100%;
         height: min(760px, calc(100dvh - clamp(18px, 3vw, 40px)));
@@ -923,6 +924,265 @@
     }
     .modal-box .inventory-modal-body::-webkit-scrollbar-thumb {
         background: transparent;
+    }
+    #viewItemModal .inventory-modal-body {
+        padding: 8px 10px 14px;
+        background: #ffffff;
+    }
+    .view-item-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        border-bottom: 1px solid #e2e8f0;
+        background: #f3f4f6;
+    }
+    .view-item-tab {
+        min-width: 0;
+        min-height: 38px;
+        padding: 8px 12px;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        background: transparent;
+        color: #475569;
+        font-size: 11px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+    .view-item-tab[aria-selected="true"] {
+        border-bottom-color: #b3132b;
+        background: #fffafa;
+        color: #991b1b;
+    }
+    .view-item-tab:focus-visible {
+        outline: 2px solid #b3132b;
+        outline-offset: -2px;
+    }
+    .view-item-panel {
+        padding: 10px 4px 4px;
+    }
+    .view-item-panel[hidden] {
+        display: none !important;
+    }
+    .view-item-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin: 0 6px 9px;
+    }
+    .view-item-name {
+        margin: 0;
+        color: #111827;
+        font-size: 16px;
+        line-height: 1.3;
+        overflow-wrap: anywhere;
+    }
+    .view-item-stock-number {
+        display: block;
+        margin-top: 2px;
+        color: #64748b;
+        font-size: 9px;
+        line-height: 1.3;
+    }
+    .view-item-category {
+        flex: 0 0 auto;
+        padding: 4px 9px;
+        border-radius: 999px;
+        background: #fce7eb;
+        color: #9f1239;
+        font-size: 9px;
+        font-weight: 800;
+    }
+    .view-item-stock-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+    }
+    .view-item-stock-stat {
+        min-width: 0;
+        padding: 8px 9px;
+        border: 1px solid #e8edf4;
+        border-radius: 6px;
+        background: #ffffff;
+    }
+    .view-item-stock-stat:nth-child(1) { background: #fffafa; }
+    .view-item-stock-stat:nth-child(2) { background: #f8faff; }
+    .view-item-stock-stat:nth-child(3) { background: #fff8fa; }
+    .view-item-stock-stat:nth-child(4) { background: #fffaf5; }
+    .view-item-stock-stat-label {
+        display: block;
+        margin-bottom: 3px;
+        color: #475569;
+        font-size: 8px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .view-item-stock-stat-value {
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
+        min-width: 0;
+        color: #111827;
+        line-height: 1.2;
+    }
+    .view-item-stock-stat-value strong {
+        font-size: 16px;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+    .view-item-stock-stat-value small {
+        color: #475569;
+        font-size: 9px;
+    }
+    .view-item-information {
+        margin-top: 9px;
+        overflow: hidden;
+        border: 1px solid #edf0f4;
+        border-radius: 6px;
+    }
+    .view-item-information-title {
+        padding: 6px 9px;
+        background: #f1f3f6;
+        color: #111827;
+        font-size: 9px;
+        font-weight: 800;
+    }
+    .view-item-information-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 0 8px;
+    }
+    .view-item-information-column {
+        min-width: 0;
+        padding-right: 8px;
+    }
+    .view-item-information-column + .view-item-information-column {
+        padding: 0 0 0 10px;
+        border-left: 1px solid #e2e8f0;
+    }
+    .view-item-information-row {
+        display: grid;
+        grid-template-columns: minmax(82px, 1fr) minmax(0, 1.2fr);
+        gap: 8px;
+        align-items: start;
+        min-height: 24px;
+        padding: 5px 3px;
+        border-bottom: 1px solid #e8edf4;
+        font-size: 9px;
+        line-height: 1.35;
+    }
+    .view-item-information-row:last-child { border-bottom: 0; }
+    .view-item-information-label { color: #475569; }
+    .view-item-information-value {
+        min-width: 0;
+        color: #111827;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+    .view-item-movements {
+        gap: 8px;
+    }
+    .view-item-movement {
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #64748b;
+        border-radius: 7px;
+        background: #ffffff;
+    }
+    .view-item-movement[data-movement-type="restock"] { border-left-color: #16a34a; }
+    .view-item-movement[data-movement-type="dispensed"],
+    .view-item-movement[data-movement-type="dispense"],
+    .view-item-movement[data-movement-type="used"],
+    .view-item-movement[data-movement-type="consumed"] { border-left-color: #dc2626; }
+    .view-item-movement-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    .view-item-movement-type {
+        color: #70131b;
+        font-weight: 800;
+    }
+    .view-item-movement-quantity {
+        margin-top: 6px;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 800;
+    }
+    .view-item-movement-note,
+    .view-item-movement-meta,
+    .view-item-empty {
+        margin-top: 5px;
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+    }
+    html[data-theme="dark"] #viewItemModal .modal-box {
+        background: rgba(17, 24, 39, 0.98) !important;
+        border-left: 1px solid rgba(143, 34, 48, 0.36) !important;
+        border-right: 1px solid rgba(143, 34, 48, 0.36) !important;
+        border-top: 4px solid #facc15 !important;
+        border-bottom: 4px solid #facc15 !important;
+    }
+    html[data-theme="dark"] #viewItemModal .inventory-modal-body {
+        background: rgba(17, 24, 39, 0.98);
+    }
+    html[data-theme="dark"] #viewItemModal .view-item-tabs,
+    html[data-theme="dark"] #viewItemModal .view-item-information-title {
+        background: rgba(30, 41, 59, 0.92);
+    }
+    html[data-theme="dark"] #viewItemModal .view-item-tab {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] #viewItemModal .view-item-tab[aria-selected="true"] {
+        background: rgba(127, 29, 29, 0.28);
+        color: #fecdd3;
+    }
+    html[data-theme="dark"] #viewItemModal .view-item-stock-stat,
+    html[data-theme="dark"] #viewItemModal .view-item-movement {
+        background: rgba(15, 23, 42, 0.86);
+        border-color: rgba(148, 163, 184, 0.24);
+    }
+    html[data-theme="dark"] #viewItemModal .view-item-name,
+    html[data-theme="dark"] #viewItemModal .view-item-information-value,
+    html[data-theme="dark"] #viewItemModal .view-item-stock-stat-value,
+    html[data-theme="dark"] #viewItemModal .view-item-movement-quantity {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] #viewItemModal .view-item-information-row,
+    html[data-theme="dark"] #viewItemModal .view-item-information-column + .view-item-information-column {
+        border-color: rgba(148, 163, 184, 0.22);
+    }
+    html[data-theme="dark"] #viewItemModal .view-item-information-label,
+    html[data-theme="dark"] #viewItemModal .view-item-stock-stat-label,
+    html[data-theme="dark"] #viewItemModal .view-item-stock-stat-value small,
+    html[data-theme="dark"] #viewItemModal .view-item-stock-number {
+        color: #94a3b8;
+    }
+    html[data-theme="dark"] #viewItemModal .view-item-movement-type {
+        color: #fca5a5;
+    }
+    @media (max-width: 640px) {
+        .view-item-stock-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .view-item-information-grid {
+            grid-template-columns: minmax(0, 1fr);
+        }
+        .view-item-information-column {
+            padding-right: 0;
+        }
+        .view-item-information-column + .view-item-information-column {
+            padding: 0;
+            border-left: 0;
+        }
+        .view-item-information-row {
+            grid-template-columns: minmax(110px, 1fr) minmax(0, 1.2fr);
+        }
     }
     .inventory-modal-preview,
     .inventory-modal-summary-row {
@@ -5936,6 +6196,402 @@
             padding-inline: 8px;
         }
     }
+
+    body.admin-inventory-page #viewItemModal .modal-box,
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .modal-box {
+        border: 1px solid rgba(112, 19, 27, .14) !important;
+        border-top: 2px solid rgba(212, 170, 32, .72) !important;
+        border-bottom: 0 !important;
+    }
+
+    body.admin-inventory-page #viewItemModal .inventory-modal-head {
+        gap: 10px;
+        padding: 10px 18px;
+    }
+
+    body.admin-inventory-page #viewItemModal .inventory-modal-head-main {
+        display: grid;
+        grid-template-columns: 36px minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        column-gap: 10px;
+        row-gap: 2px;
+        align-items: center;
+    }
+
+    body.admin-inventory-page #viewItemModal .inventory-modal-title-row {
+        display: contents;
+    }
+
+    body.admin-inventory-page #viewItemModal .inventory-modal-title-icon {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        grid-column: 1;
+        grid-row: 1 / span 2;
+        align-self: center;
+    }
+
+    body.admin-inventory-page #viewItemModal .inventory-modal-title {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: end;
+        font-size: 18px;
+        line-height: 1.25;
+    }
+
+    body.admin-inventory-page #viewItemModal .inventory-modal-copy {
+        grid-column: 2;
+        grid-row: 2;
+        align-self: start;
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.35;
+    }
+
+    body.admin-inventory-page #viewItemModal .inventory-modal-body {
+        padding: 10px 14px 16px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-tab {
+        min-height: 42px;
+        font-size: 13px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-panel {
+        padding: 12px 6px 6px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-name {
+        font-size: 20px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-stock-number {
+        font-size: 11px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-category {
+        font-size: 11px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-stock-stat {
+        padding: 9px 10px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-stock-stat-label {
+        font-size: 10px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-stock-stat-value strong {
+        font-size: 18px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-stock-stat-value small {
+        font-size: 11px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-information-title {
+        padding: 8px 11px;
+        font-size: 12px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-information-row {
+        min-height: 32px;
+        padding: 7px 4px;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-heading {
+        margin-bottom: 10px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-shell {
+        margin-top: 0;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-title-group {
+        min-width: 0;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-title-group h4 {
+        margin: 0;
+        color: #111827;
+        font-size: 14px;
+        line-height: 1.3;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-title-group p {
+        margin: 2px 0 0;
+        color: #64748b;
+        font-size: 11px;
+        line-height: 1.35;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-filters {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex: 0 0 auto;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-filters > select,
+    body.admin-inventory-page #viewItemModal .view-item-history-date {
+        height: 34px;
+        border: 1px solid #dbe2ea;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #334155;
+        font-size: 11px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-filters > select {
+        width: 136px;
+        padding: 0 9px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-date {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        min-width: 36px;
+        color: #475569;
+        cursor: pointer;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-date svg {
+        width: 16px;
+        height: 16px;
+        pointer-events: none;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-date input {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        scrollbar-width: thin;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-table {
+        width: 100%;
+        min-width: 760px;
+        border-collapse: collapse;
+        table-layout: fixed;
+        color: #334155;
+        font-size: 10px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-table th,
+    body.admin-inventory-page #viewItemModal .view-item-history-table td {
+        padding: 7px 8px;
+        border-bottom: 1px solid #e8edf4;
+        text-align: left;
+        vertical-align: middle;
+        overflow-wrap: anywhere;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-table th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: 10px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-table th:nth-child(1) { width: 13%; }
+    body.admin-inventory-page #viewItemModal .view-item-history-table th:nth-child(2) { width: 11%; }
+    body.admin-inventory-page #viewItemModal .view-item-history-table th:nth-child(3) { width: 12%; }
+    body.admin-inventory-page #viewItemModal .view-item-history-table th:nth-child(4) { width: 17%; }
+    body.admin-inventory-page #viewItemModal .view-item-history-table th:nth-child(5) { width: 27%; }
+    body.admin-inventory-page #viewItemModal .view-item-history-table th:nth-child(6) { width: 20%; }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-table td:first-child span,
+    body.admin-inventory-page #viewItemModal .view-item-history-table td:first-child small {
+        display: block;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-table td:first-child small {
+        margin-top: 1px;
+        color: #64748b;
+        font-size: 9px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-action {
+        display: inline-flex;
+        align-items: center;
+        max-width: 100%;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        color: #475569;
+        font-size: 9px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-action.is-initial { background: #dbeafe; color: #1d4ed8; }
+    body.admin-inventory-page #viewItemModal .view-item-history-action.is-stock_in { background: #dcfce7; color: #15803d; }
+    body.admin-inventory-page #viewItemModal .view-item-history-action.is-issued { background: #fee2e2; color: #b91c1c; }
+    body.admin-inventory-page #viewItemModal .view-item-history-action.is-adjusted { background: #fef3c7; color: #b45309; }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-quantity {
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-quantity.is-positive { color: #15803d; }
+    body.admin-inventory-page #viewItemModal .view-item-history-quantity.is-negative { color: #b91c1c; }
+    body.admin-inventory-page #viewItemModal .view-item-history-stock { white-space: nowrap; }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-empty-row td {
+        height: 82px;
+        color: #64748b;
+        text-align: center;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 10px;
+        color: #64748b;
+        font-size: 10px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-pagination {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-pagination button,
+    body.admin-inventory-page #viewItemModal .view-item-history-pagination > span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border: 1px solid #dbe2ea;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #475569;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-pagination > span {
+        border-color: #991b1b;
+        background: #991b1b;
+        color: #ffffff;
+        font-weight: 800;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-pagination button {
+        cursor: pointer;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-pagination button:disabled {
+        color: #94a3b8;
+        cursor: not-allowed;
+    }
+
+    body.admin-inventory-page #viewItemModal .view-item-history-pagination button svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    body.admin-inventory-page #viewItemModal #viewItemHistoryPrevious svg {
+        transform: rotate(180deg);
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-shell,
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-filters > select,
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-date,
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-pagination button {
+        border-color: rgba(148, 163, 184, .28);
+        background: #111827;
+        color: #e2e8f0;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-title-group h4,
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-table,
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-pagination > span {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-title-group p,
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-footer {
+        color: #94a3b8;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-toolbar,
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-table th,
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-table td {
+        border-color: rgba(148, 163, 184, .22);
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-table th {
+        background: rgba(30, 41, 59, .92);
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-table td:first-child small {
+        color: #94a3b8;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-quantity.is-positive {
+        color: #86efac;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-quantity.is-negative {
+        color: #fca5a5;
+    }
+
+    @media (max-width: 560px) {
+        body.admin-inventory-page #viewItemModal .inventory-modal-head {
+            padding: 10px 12px;
+        }
+
+        body.admin-inventory-page #viewItemModal .inventory-modal-body {
+            padding: 8px 9px 12px;
+        }
+
+        body.admin-inventory-page #viewItemModal .view-item-information-row {
+            grid-template-columns: minmax(100px, 1fr) minmax(0, 1.2fr);
+            gap: 8px;
+        }
+
+        body.admin-inventory-page #viewItemModal .view-item-history-toolbar {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        body.admin-inventory-page #viewItemModal .view-item-history-filters {
+            width: 100%;
+        }
+
+        body.admin-inventory-page #viewItemModal .view-item-history-filters > select {
+            flex: 1 1 auto;
+        }
+    }
 </style>
 @endpush
 
@@ -6219,69 +6875,58 @@
                             @endif
                         </td>
                         <td>
-                            @if($canChangeInventory)
-                                @php
-                                    $editItemPayload = [
-                                        'id' => $item->id,
-                                        'name' => $item->name,
-                                        'category' => $item->category,
-                                        'quantity' => $item->quantity,
-                                        'starting_stock' => $item->starting_stock,
-                                        'unit' => $item->unit,
-                                        'stock_number' => $item->stock_number,
-                                        'minimum_stock' => $item->minimum_stock,
-                                        'medicine_type_id' => $item->medicine_type_id,
-                                        'dispensing_unit' => $item->dispensing_unit,
-                                        'units_per_stock_unit' => $item->units_per_stock_unit,
-                                        'medicine_type' => $item->medicine_type,
-                                        'date_added' => optional($item->date_added)->format('Y-m-d'),
-                                        'expiration_date' => optional($item->expiration_date)->format('Y-m-d'),
-                                        'movements' => $item->movements->take(10)->map(function ($movement) {
-                                            return [
-                                                'type' => $movement->type,
-                                                'quantity' => $movement->quantity,
-                                                'stock_before' => $movement->stock_before,
-                                                'stock_after' => $movement->stock_after,
-                                                'unit' => $movement->unit,
-                                                'notes' => $movement->notes,
-                                                'user_name' => optional($movement->user)->name,
-                                                'created_at' => optional($movement->created_at)->format('M d, Y g:i A'),
-                                            ];
-                                        })->values(),
-                                    ];
-                                @endphp
-                                    @if($canAddInventoryStock || $canManageInventoryItems)
-                                    <div class="inventory-actions">
-                                    <div class="inventory-actions-dropdown">
-                                        <button type="button" class="btn-icon btn-edit inventory-actions-toggle" onclick="toggleInventoryActionMenu(event)">
-                                            <x-outline-icon name="bars-3" />
-                                            <span>Actions</span>
+                            @php
+                                $editItemPayload = [
+                                    'id' => $item->id,
+                                    'name' => $item->name,
+                                    'category' => $item->category,
+                                    'quantity' => $item->quantity,
+                                    'starting_stock' => $item->starting_stock,
+                                    'consumed' => $item->consumed,
+                                    'unit' => $item->unit,
+                                    'minimum_stock_unit' => $effectiveMinUnit,
+                                    'stock_number' => $item->stock_number,
+                                    'minimum_stock' => $item->minimum_stock,
+                                    'medicine_type_id' => $item->medicine_type_id,
+                                    'medicine_type' => $item->medicine_type ?: optional($item->medicineType)->name,
+                                    'illness_category' => optional($item->illnessCategory)->name,
+                                    'dispensing_unit' => $item->dispensing_unit,
+                                    'units_per_stock_unit' => $item->units_per_stock_unit,
+                                    'batch_number' => $item->batch_number,
+                                    'supplier_source' => $item->supplier_source,
+                                    'description' => $item->description,
+                                    'date_added' => optional($item->date_added)->format('Y-m-d'),
+                                    'expiration_date' => optional($item->expiration_date)->format('Y-m-d'),
+                                ];
+                            @endphp
+                            <div class="inventory-actions">
+                                <div class="inventory-actions-dropdown">
+                                    <button type="button" class="btn-icon btn-edit inventory-actions-toggle" onclick="toggleInventoryActionMenu(event)">
+                                        <x-outline-icon name="bars-3" />
+                                        <span>Actions</span>
+                                    </button>
+                                    <div class="inventory-actions-menu" role="menu">
+                                        <button type="button" class="inventory-actions-menu-item" onclick='closeInventoryActionMenus(); openViewItemModal(@json($editItemPayload));'>
+                                            <span>View</span>
                                         </button>
-                                        <div class="inventory-actions-menu" role="menu">
-                                            @if($canAddInventoryStock)
-                                            <button type="button" class="inventory-actions-menu-item" onclick='closeInventoryActionMenus(); openRestockModal(@json($editItemPayload));'>
-                                                <span>Restock</span>
-                                            </button>
-                                            @endif
-                                            @if($canManageInventoryItems)
-                                            <button type="button" class="inventory-actions-menu-item" onclick='closeInventoryActionMenus(); openIssueModal(@json($editItemPayload));'>
-                                                <span>Issue Stock</span>
-                                            </button>
-                                            @endif
-                                            @if($canManageInventoryItems)
-                                            <button type="button" class="inventory-actions-menu-item" onclick='closeInventoryActionMenus(); editItem(@json($editItemPayload));'>
-                                                <span>Edit</span>
-                                            </button>
-                                            @endif
-                                        </div>
+                                        @if($canAddInventoryStock)
+                                        <button type="button" class="inventory-actions-menu-item" onclick='closeInventoryActionMenus(); openRestockModal(@json($editItemPayload));'>
+                                            <span>Restock</span>
+                                        </button>
+                                        @endif
+                                        @if($canManageInventoryItems)
+                                        <button type="button" class="inventory-actions-menu-item" onclick='closeInventoryActionMenus(); openIssueModal(@json($editItemPayload));'>
+                                            <span>Issue Stock</span>
+                                        </button>
+                                        @endif
+                                        @if($canManageInventoryItems)
+                                        <button type="button" class="inventory-actions-menu-item" onclick='closeInventoryActionMenus(); editItem(@json($editItemPayload));'>
+                                            <span>Edit</span>
+                                        </button>
+                                        @endif
                                     </div>
-                                    </div>
-                                    @else
-                                        <span style="font-size: 12px; color: #64748b; font-weight: 700;">View Only</span>
-                                    @endif
-                            @else
-                                <span style="font-size: 12px; color: #64748b; font-weight: 700;">View Only</span>
-                            @endif
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 @empty
@@ -6989,6 +7634,133 @@
             </div>
         </div>
 
+        <div id="viewItemModal" class="modal-overlay" data-movements-url="{{ route('admin.inventory.item-movements', ['item' => '__ITEM_ID__']) }}" role="dialog" aria-modal="true" aria-labelledby="viewItemModalTitle">
+            <div class="modal-box">
+                <div class="inventory-modal-head">
+                    <div class="inventory-modal-head-main">
+                        <div class="inventory-modal-title-row">
+                            <span class="inventory-modal-title-icon" aria-hidden="true">
+                                <x-outline-icon name="cube" />
+                            </span>
+                            <h3 class="inventory-modal-title" id="viewItemModalTitle">Item Details</h3>
+                        </div>
+                        <p class="inventory-modal-copy">Inventory record and current stock details.</p>
+                    </div>
+                    <button type="button" class="inventory-btn-cancel inventory-modal-close" onclick="closeViewItemModal()" aria-label="Close item details">
+                        <x-outline-icon name="x-mark" />
+                    </button>
+                </div>
+                <div class="inventory-modal-body">
+                    <div class="view-item-tabs" role="tablist" aria-label="Inventory item views">
+                        <button type="button" class="view-item-tab" id="viewItemDetailsTab" role="tab" aria-selected="true" aria-controls="viewItemDetailsPanel" data-view-item-tab="details">Item Details</button>
+                        <button type="button" class="view-item-tab" id="viewItemHistoryTab" role="tab" aria-selected="false" aria-controls="viewItemHistoryPanel" data-view-item-tab="history" tabindex="-1">Stock History</button>
+                    </div>
+                    <section class="view-item-panel" id="viewItemDetailsPanel" role="tabpanel" aria-labelledby="viewItemDetailsTab">
+                        <div class="view-item-heading">
+                            <div>
+                                <h4 class="view-item-name" id="viewItemName">Item name</h4>
+                                <span class="view-item-stock-number" id="viewItemStockNumber"></span>
+                            </div>
+                            <span class="view-item-category" id="viewItemCategory">Category</span>
+                        </div>
+                        <div class="view-item-stock-stats" aria-label="Stock summary">
+                            <div class="view-item-stock-stat">
+                                <span class="view-item-stock-stat-label">Current Stock</span>
+                                <span class="view-item-stock-stat-value"><strong id="viewItemQuantity">-</strong><small id="viewItemQuantityUnit"></small></span>
+                            </div>
+                            <div class="view-item-stock-stat">
+                                <span class="view-item-stock-stat-label">Starting Stock</span>
+                                <span class="view-item-stock-stat-value"><strong id="viewItemStartingStock">-</strong><small id="viewItemStartingStockUnit"></small></span>
+                            </div>
+                            <div class="view-item-stock-stat">
+                                <span class="view-item-stock-stat-label">Consumed</span>
+                                <span class="view-item-stock-stat-value"><strong id="viewItemConsumed">-</strong><small id="viewItemConsumedUnit"></small></span>
+                            </div>
+                            <div class="view-item-stock-stat">
+                                <span class="view-item-stock-stat-label">Minimum Stock</span>
+                                <span class="view-item-stock-stat-value"><strong id="viewItemMinimumStock">-</strong><small id="viewItemMinimumStockUnit"></small></span>
+                            </div>
+                        </div>
+                        <div class="view-item-information">
+                            <div class="view-item-information-title">Item Information</div>
+                            <div class="view-item-information-grid">
+                                <div class="view-item-information-column">
+                                    <div class="view-item-information-row"><span class="view-item-information-label">Category</span><span class="view-item-information-value" id="viewItemCategoryDetail"></span></div>
+                                    <div class="view-item-information-row"><span class="view-item-information-label">Medicine Type</span><span class="view-item-information-value" id="viewItemMedicineType"></span></div>
+                                    <div class="view-item-information-row"><span class="view-item-information-label">Unit</span><span class="view-item-information-value" id="viewItemUnit"></span></div>
+                                    <div class="view-item-information-row"><span class="view-item-information-label">Available to Dispense</span><span class="view-item-information-value" id="viewItemAvailableDispense"></span></div>
+                                </div>
+                                <div class="view-item-information-column">
+                                    <div class="view-item-information-row"><span class="view-item-information-label">Illness Category</span><span class="view-item-information-value" id="viewItemIllnessCategory"></span></div>
+                                    <div class="view-item-information-row"><span class="view-item-information-label">Dispensing</span><span class="view-item-information-value" id="viewItemDispensing"></span></div>
+                                    <div class="view-item-information-row"><span class="view-item-information-label">Batch Number</span><span class="view-item-information-value" id="viewItemBatchNumber"></span></div>
+                                    <div class="view-item-information-row"><span class="view-item-information-label">Expiration Date</span><span class="view-item-information-value" id="viewItemExpiration"></span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="view-item-panel" id="viewItemHistoryPanel" role="tabpanel" aria-labelledby="viewItemHistoryTab" hidden>
+                        <div class="view-item-heading view-item-history-heading">
+                            <div>
+                                <h4 class="view-item-name" id="viewItemHistoryName">Item name</h4>
+                                <span class="view-item-stock-number" id="viewItemHistoryStockNumber"></span>
+                            </div>
+                            <span class="view-item-category" id="viewItemHistoryCategory">Category</span>
+                        </div>
+                        <div class="view-item-information view-item-history-shell">
+                            <div class="view-item-history-toolbar">
+                                <div class="view-item-history-title-group">
+                                    <h4>Stock History</h4>
+                                    <p>List of stock movements and inventory changes for this item.</p>
+                                </div>
+                                <div class="view-item-history-filters">
+                                    <select id="viewItemHistoryFilter" aria-label="Filter transactions">
+                                        <option value="all">All Transactions</option>
+                                        <option value="initial">Initial Stock</option>
+                                        <option value="stock_in">Stock In</option>
+                                        <option value="issued">Issued</option>
+                                        <option value="adjusted">Adjusted</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    <label class="view-item-history-date" aria-label="Filter by date">
+                                        <x-outline-icon name="calendar-days" />
+                                        <input id="viewItemHistoryDate" type="date" aria-label="Filter by date">
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="view-item-history-table-wrap">
+                                <table class="view-item-history-table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Date &amp; Time</th>
+                                            <th scope="col">Action</th>
+                                            <th scope="col">Quantity</th>
+                                            <th scope="col">Stock Change</th>
+                                            <th scope="col">Remarks</th>
+                                            <th scope="col">Recorded By</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="viewItemHistoryRows"></tbody>
+                                </table>
+                            </div>
+                            <div class="view-item-history-footer">
+                                <span id="viewItemHistoryCount" aria-live="polite">Showing 0 of 0 records</span>
+                                <nav class="view-item-history-pagination" aria-label="Stock history pages">
+                                    <button type="button" id="viewItemHistoryPrevious" aria-label="Previous page" disabled>
+                                        <x-outline-icon name="chevron-right" />
+                                    </button>
+                                    <span id="viewItemHistoryPage" aria-current="page">0</span>
+                                    <button type="button" id="viewItemHistoryNext" aria-label="Next page" disabled>
+                                        <x-outline-icon name="chevron-right" />
+                                    </button>
+                                </nav>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+
         <div id="historyModal" class="modal-overlay">
             <div class="modal-box">
                 <div class="inventory-modal-head">
@@ -7048,6 +7820,23 @@
     const inventoryImportAnalyzeBtn = document.getElementById('inventoryImportAnalyzeBtn');
     const restockModal = document.getElementById('restockModal');
     const historyModal = document.getElementById('historyModal');
+    const viewItemModal = document.getElementById('viewItemModal');
+    const viewItemTabButtons = Array.from(document.querySelectorAll('[data-view-item-tab]'));
+    const viewItemHistoryRows = document.getElementById('viewItemHistoryRows');
+    const viewItemHistoryFilter = document.getElementById('viewItemHistoryFilter');
+    const viewItemHistoryDate = document.getElementById('viewItemHistoryDate');
+    const viewItemHistoryCount = document.getElementById('viewItemHistoryCount');
+    const viewItemHistoryPageLabel = document.getElementById('viewItemHistoryPage');
+    const viewItemHistoryPrevious = document.getElementById('viewItemHistoryPrevious');
+    const viewItemHistoryNext = document.getElementById('viewItemHistoryNext');
+    let viewItemHistoryMovements = [];
+    let viewItemHistoryPage = 1;
+    const viewItemHistoryPageSize = 7;
+    let viewItemHistoryActiveItemId = '';
+    let viewItemHistoryLoadedItemId = '';
+    let viewItemHistoryLoading = false;
+    let viewItemHistoryError = '';
+    let viewItemHistoryRequestId = 0;
     const itemForm = document.getElementById('itemForm');
     const restockForm = document.getElementById('restockForm');
     const medicineFields = document.getElementById('medicineFields');
@@ -8089,6 +8878,273 @@
         adjustment: { badgeClass: 'badge-adjustment', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>' },
     };
 
+    function inventoryMovementCategory(type) {
+        const normalized = String(type || '').trim().toLowerCase();
+        if (['created', 'initial', 'initial stock'].includes(normalized)) return 'initial';
+        if (['restock', 'restocked', 'stock in'].includes(normalized)) return 'stock_in';
+        if (['issued', 'dispensed', 'dispense', 'consumed', 'used'].includes(normalized)) return 'issued';
+        if (['adjusted', 'adjustment', 'edited'].includes(normalized)) return 'adjusted';
+        return 'other';
+    }
+
+    function inventoryMovementLabel(type) {
+        const category = inventoryMovementCategory(type);
+        if (category === 'initial') return 'Initial Stock';
+        if (category === 'stock_in') return 'Stock In';
+        if (category === 'issued') return 'Issued';
+        if (category === 'adjusted') return 'Adjusted';
+        return String(type || 'Movement').replace(/[_-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+    }
+
+    function formatInventoryHistoryNumber(value) {
+        return Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    }
+
+    function renderViewItemHistory() {
+        if (!viewItemHistoryRows) return;
+
+        const selectedCategory = viewItemHistoryFilter?.value || 'all';
+        const selectedDate = viewItemHistoryDate?.value || '';
+        const filteredMovements = viewItemHistoryMovements.filter((movement) => {
+            if (selectedCategory !== 'all' && inventoryMovementCategory(movement.type) !== selectedCategory) {
+                return false;
+            }
+            if (!selectedDate) return true;
+
+            const date = new Date(movement.created_at_iso || '');
+            if (Number.isNaN(date.getTime())) return false;
+            const localDate = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+            return localDate === selectedDate;
+        });
+        const pageCount = Math.max(1, Math.ceil(filteredMovements.length / viewItemHistoryPageSize));
+        viewItemHistoryPage = Math.min(viewItemHistoryPage, pageCount);
+        const startIndex = (viewItemHistoryPage - 1) * viewItemHistoryPageSize;
+        const visibleMovements = filteredMovements.slice(startIndex, startIndex + viewItemHistoryPageSize);
+
+        viewItemHistoryRows.replaceChildren();
+        if (visibleMovements.length === 0) {
+            const row = document.createElement('tr');
+            row.className = 'view-item-history-empty-row';
+            const cell = document.createElement('td');
+            cell.colSpan = 6;
+            cell.textContent = viewItemHistoryLoading
+                ? 'Loading stock history...'
+                : viewItemHistoryError || 'No stock history matches these filters.';
+            row.appendChild(cell);
+            viewItemHistoryRows.appendChild(row);
+        } else {
+            visibleMovements.forEach((movement) => {
+                const category = inventoryMovementCategory(movement.type);
+                const actionLabel = inventoryMovementLabel(movement.type);
+                const quantity = Number(movement.quantity || 0);
+                const unit = movement.unit || 'pcs';
+                const row = document.createElement('tr');
+                const dateCell = document.createElement('td');
+                const dateLabel = document.createElement('span');
+                const timeLabel = document.createElement('small');
+                dateLabel.textContent = movement.created_date || movement.created_at || 'Not recorded';
+                timeLabel.textContent = movement.created_time || '';
+                dateCell.append(dateLabel, timeLabel);
+
+                const actionCell = document.createElement('td');
+                const actionBadge = document.createElement('span');
+                actionBadge.className = `view-item-history-action is-${category}`;
+                actionBadge.textContent = actionLabel;
+                actionCell.appendChild(actionBadge);
+
+                const quantityCell = document.createElement('td');
+                quantityCell.className = `view-item-history-quantity ${quantity >= 0 ? 'is-positive' : 'is-negative'}`;
+                quantityCell.textContent = `${quantity > 0 ? '+' : ''}${formatInventoryHistoryNumber(quantity)} ${unit}`;
+
+                const stockCell = document.createElement('td');
+                stockCell.className = 'view-item-history-stock';
+                stockCell.textContent = `${formatInventoryHistoryNumber(movement.stock_before)} → ${formatInventoryHistoryNumber(movement.stock_after)}`;
+
+                const remarksCell = document.createElement('td');
+                remarksCell.textContent = [movement.notes, movement.reason]
+                    .map((value) => String(value || '').trim())
+                    .filter((value, index, values) => value && values.indexOf(value) === index)
+                    .join(' · ') || '-';
+
+                const recordedByCell = document.createElement('td');
+                recordedByCell.textContent = String(movement.user_name || '').trim() || 'System';
+                row.append(dateCell, actionCell, quantityCell, stockCell, remarksCell, recordedByCell);
+                viewItemHistoryRows.appendChild(row);
+            });
+        }
+
+        const firstRecord = filteredMovements.length ? startIndex + 1 : 0;
+        const lastRecord = Math.min(startIndex + visibleMovements.length, filteredMovements.length);
+        if (viewItemHistoryCount) {
+            viewItemHistoryCount.textContent = `Showing ${firstRecord} to ${lastRecord} of ${filteredMovements.length} records`;
+        }
+        if (viewItemHistoryPageLabel) {
+            viewItemHistoryPageLabel.textContent = filteredMovements.length ? String(viewItemHistoryPage) : '0';
+            viewItemHistoryPageLabel.setAttribute('aria-label', filteredMovements.length ? `Page ${viewItemHistoryPage} of ${pageCount}` : 'No pages');
+        }
+        if (viewItemHistoryPrevious) viewItemHistoryPrevious.disabled = viewItemHistoryPage <= 1 || filteredMovements.length === 0;
+        if (viewItemHistoryNext) viewItemHistoryNext.disabled = viewItemHistoryPage >= pageCount || filteredMovements.length === 0;
+    }
+
+    viewItemHistoryFilter?.addEventListener('change', function() {
+        viewItemHistoryPage = 1;
+        renderViewItemHistory();
+    });
+    viewItemHistoryDate?.addEventListener('change', function() {
+        viewItemHistoryPage = 1;
+        renderViewItemHistory();
+    });
+    viewItemHistoryPrevious?.addEventListener('click', function() {
+        viewItemHistoryPage = Math.max(1, viewItemHistoryPage - 1);
+        renderViewItemHistory();
+    });
+    viewItemHistoryNext?.addEventListener('click', function() {
+        viewItemHistoryPage += 1;
+        renderViewItemHistory();
+    });
+
+    async function loadViewItemHistory(itemId) {
+        const normalizedItemId = String(itemId || '');
+        if (!normalizedItemId || viewItemHistoryLoadedItemId === normalizedItemId || viewItemHistoryLoading) return;
+
+        const requestId = ++viewItemHistoryRequestId;
+        viewItemHistoryLoading = true;
+        viewItemHistoryError = '';
+        renderViewItemHistory();
+
+        try {
+            const endpoint = viewItemModal.dataset.movementsUrl.replace('__ITEM_ID__', encodeURIComponent(normalizedItemId));
+            const response = await fetch(endpoint, {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+            if (!response.ok) throw new Error('Request failed');
+
+            const payload = await response.json();
+            if (requestId !== viewItemHistoryRequestId || normalizedItemId !== viewItemHistoryActiveItemId) return;
+
+            viewItemHistoryMovements = Array.isArray(payload.movements) ? payload.movements : [];
+            viewItemHistoryLoadedItemId = normalizedItemId;
+            viewItemHistoryPage = 1;
+        } catch (error) {
+            if (requestId !== viewItemHistoryRequestId || normalizedItemId !== viewItemHistoryActiveItemId) return;
+            viewItemHistoryError = 'Stock history could not be loaded. Select this tab to retry.';
+        } finally {
+            if (requestId === viewItemHistoryRequestId) {
+                viewItemHistoryLoading = false;
+                renderViewItemHistory();
+            }
+        }
+    }
+
+    function openViewItemModal(item) {
+        closeInventoryActionMenus();
+        if (!viewItemModal) return;
+
+        const quantity = Number(item.quantity) || 0;
+        const unit = item.unit || 'pcs';
+        const startingStock = Number(item.starting_stock) || quantity;
+        const consumed = Number(item.consumed) || 0;
+        const minimumStock = Number(item.minimum_stock) || 10;
+        const unitsPerStockUnit = Number(item.units_per_stock_unit) || 1;
+        const dispensingUnit = String(item.dispensing_unit || '').trim();
+        const hasDispensingConversion = dispensingUnit !== '' && unitsPerStockUnit > 1;
+        const number = function(value) {
+            return Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 6 });
+        };
+        const displayValue = function(value) {
+            const text = String(value ?? '').trim();
+            return text || 'Not specified';
+        };
+        const formatDate = function(value) {
+            if (!value) return 'Not specified';
+            const date = new Date(`${value}T00:00:00`);
+            return Number.isNaN(date.getTime())
+                ? displayValue(value)
+                : new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+        };
+        const setValue = function(id, value) {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
+        };
+
+        setValue('viewItemName', displayValue(item.name));
+        setValue('viewItemCategory', displayValue(item.category));
+        setValue('viewItemQuantity', number(quantity));
+        setValue('viewItemQuantityUnit', unit);
+        setValue('viewItemStartingStock', number(startingStock));
+        setValue('viewItemStartingStockUnit', unit);
+        setValue('viewItemConsumed', number(consumed));
+        setValue('viewItemConsumedUnit', unit);
+        setValue('viewItemMinimumStock', number(minimumStock));
+        setValue('viewItemMinimumStockUnit', item.minimum_stock_unit || unit);
+        setValue('viewItemStockNumber', `Stock Number: ${displayValue(item.stock_number)}`);
+        setValue('viewItemHistoryName', displayValue(item.name));
+        setValue('viewItemHistoryStockNumber', `Stock Number: ${displayValue(item.stock_number)}`);
+        setValue('viewItemHistoryCategory', displayValue(item.category));
+        setValue('viewItemCategoryDetail', displayValue(item.category));
+        setValue('viewItemMedicineType', displayValue(item.medicine_type));
+        setValue('viewItemIllnessCategory', displayValue(item.illness_category));
+        setValue('viewItemUnit', unit);
+        setValue('viewItemDispensing', hasDispensingConversion
+            ? `${dispensingUnit} (${number(unitsPerStockUnit)} per ${unit})`
+            : 'Not applicable');
+        setValue('viewItemAvailableDispense', hasDispensingConversion
+            ? `${number(quantity * unitsPerStockUnit)} ${dispensingUnit}`
+            : 'Not applicable');
+        setValue('viewItemBatchNumber', displayValue(item.batch_number));
+        setValue('viewItemExpiration', formatDate(item.expiration_date));
+
+        viewItemHistoryActiveItemId = String(item.id || '');
+        viewItemHistoryLoadedItemId = '';
+        viewItemHistoryLoading = false;
+        viewItemHistoryError = '';
+        viewItemHistoryRequestId += 1;
+        viewItemHistoryMovements = [];
+        viewItemHistoryPage = 1;
+        if (viewItemHistoryFilter) viewItemHistoryFilter.value = 'all';
+        if (viewItemHistoryDate) viewItemHistoryDate.value = '';
+        renderViewItemHistory();
+
+        const body = viewItemModal.querySelector('.inventory-modal-body');
+        if (body) body.scrollTop = 0;
+        setViewItemTab('details');
+        viewItemModal.style.display = 'flex';
+    }
+
+    function setViewItemTab(tabName) {
+        const activeTab = tabName === 'history' ? 'history' : 'details';
+        viewItemTabButtons.forEach(function(button) {
+            const selected = button.dataset.viewItemTab === activeTab;
+            button.setAttribute('aria-selected', selected ? 'true' : 'false');
+            button.tabIndex = selected ? 0 : -1;
+        });
+
+        const detailsPanel = document.getElementById('viewItemDetailsPanel');
+        const historyPanel = document.getElementById('viewItemHistoryPanel');
+        if (detailsPanel) detailsPanel.hidden = activeTab !== 'details';
+        if (historyPanel) historyPanel.hidden = activeTab !== 'history';
+        if (activeTab === 'history') loadViewItemHistory(viewItemHistoryActiveItemId);
+    }
+
+    viewItemTabButtons.forEach(function(button, index) {
+        button.addEventListener('click', function() {
+            setViewItemTab(button.dataset.viewItemTab);
+        });
+        button.addEventListener('keydown', function(event) {
+            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+            event.preventDefault();
+            const step = event.key === 'ArrowRight' ? 1 : -1;
+            const nextButton = viewItemTabButtons[(index + step + viewItemTabButtons.length) % viewItemTabButtons.length];
+            nextButton.focus();
+            nextButton.click();
+        });
+    });
+
+    function closeViewItemModal() {
+        if (viewItemModal) viewItemModal.style.display = 'none';
+    }
+
     function openHistoryModal(item) {
         closeInventoryActionMenus();
         if (!historyModal || !historyList || !historyMovementCount || !historyNetChange) return;
@@ -8181,6 +9237,7 @@
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
             closeInventoryActionMenus();
+            closeViewItemModal();
         }
     });
 

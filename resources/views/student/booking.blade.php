@@ -2398,8 +2398,8 @@
                 <div class="booking-form-restricted-shell {{ $bookingRestricted ? 'is-restricted' : '' }}">
                 @if($bookingFormLocked)
                     <div class="booking-closure-notice" role="status">
-                        <strong>Appointment details locked</strong>
-                        <p>{{ $bookingFormAppointment->status === 'Pending' ? 'Your submitted request is pending clinic review.' : 'Your submitted appointment has been approved.' }} The saved details cannot be edited here.</p>
+                        <strong>Active appointment</strong>
+                        <p>You already have a {{ strtolower($bookingFormAppointment->status) }} appointment. You can book again after this appointment is completed or cancelled.</p>
                     </div>
                 @endif
                 <fieldset class="booking-disabled-fields" {{ !empty($clinicClosure) || $bookingRestricted || $bookingFormLocked ? 'disabled' : '' }}>
@@ -2499,6 +2499,7 @@
                         <select name="service" class="form-control service-select" id="serviceTypeSelect" required>
                             <option value="" disabled @selected($bookingServiceValue === '')>Select a Service...</option>
                             <option value="General Consultation" @selected($bookingServiceValue === 'General Consultation')>General Consultation</option>
+                            <option value="Clinic Document Services" @selected($bookingServiceValue === 'Clinic Document Services')>Clinic Document Services</option>
                             @if(!$hasBloodPressureMonitoringService)
                                 <option value="BP Monitoring" @selected($bookingServiceValue === 'BP Monitoring')>BP Monitoring</option>
                             @endif
@@ -2514,6 +2515,7 @@
                         </button>
                         <div class="service-select-menu" id="serviceTypeMenu" role="listbox" aria-label="Service Type options">
                             <button type="button" class="service-select-option" data-service-value="General Consultation">General Consultation</button>
+                            <button type="button" class="service-select-option" data-service-value="Clinic Document Services">Clinic Document Services</button>
                             @if(!$hasBloodPressureMonitoringService)
                                 <button type="button" class="service-select-option" data-service-value="BP Monitoring">BP Monitoring</button>
                             @endif
@@ -2545,10 +2547,10 @@
                     </span>
                 </div>
 
-                <button type="submit" class="btn-submit" aria-label="{{ !empty($clinicClosure) ? 'Booking Temporarily Closed' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment') }}">
+                <button type="submit" class="btn-submit" {{ $bookingFormLocked ? 'disabled' : '' }} aria-label="{{ $bookingFormLocked ? 'Active appointment exists' : (!empty($clinicClosure) ? 'Booking Temporarily Closed' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment')) }}">
                     <span class="btn-submit-idle">
                         <x-outline-icon name="calendar-days" />
-                        <span>{{ !empty($clinicClosure) ? 'Booking Temporarily Closed' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment') }}</span>
+                        <span>{{ $bookingFormLocked ? 'Active Appointment Exists' : (!empty($clinicClosure) ? 'Booking Temporarily Closed' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment')) }}</span>
                         <x-outline-icon name="arrow-long-right" />
                     </span>
                     <span class="btn-submit-heartbeat" aria-hidden="true">

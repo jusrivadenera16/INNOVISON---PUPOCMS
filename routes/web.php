@@ -359,6 +359,9 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::post('/admin/appointments/{id}/reschedule', [AdminController::class, 'reschedule'])->middleware('module.permission:appointments.reschedule')->name('admin.appointments.reschedule');
 
         Route::get('/admin/inventory', [AdminController::class, 'inventory'])->middleware('module.permission:inventory.view')->name('admin.inventory');
+        Route::get('/admin/inventory/items/{item}/movements', [AdminController::class, 'inventoryItemMovements'])
+            ->middleware('module.permission:inventory.view')
+            ->name('admin.inventory.item-movements');
 
         Route::get('/admin/walkin', [WalkInController::class, 'index'])->middleware('module.permission:walkin.view')->name('walkin.index');
         Route::get('/admin/walkin/get-student', [WalkInController::class, 'getStudent'])->middleware('module.permission:walkin.scan_id|walkin.register_patient|walkin.encode_assessment|walkin.review_submission|walkin.reference_lookup|walkin.employee_lookup|walkin.edit_information')->name('walkin.getStudent');

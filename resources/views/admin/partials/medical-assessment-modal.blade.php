@@ -184,8 +184,23 @@
             ],
             'Medical History' => [
                 'Known illness' => ['key' => 'has_illness', 'type' => 'yes-no'],
-                'Medical conditions' => ['key' => 'medical_history', 'type' => 'json-text', 'depends_on' => ['key' => 'has_illness', 'type' => 'yes-no', 'value' => 'Yes']],
-                'Other illness' => ['key' => 'other_illness', 'type' => 'textarea', 'depends_on' => ['key' => 'has_illness', 'type' => 'yes-no', 'value' => 'Yes']],
+                'Medical conditions' => ['key' => 'medical_history', 'type' => 'multi-select', 'options' => [
+                    'Asthma' => 'Asthma',
+                    'Loss of Consciousness' => 'Loss of Consciousness',
+                    'Eye Disease / Defect' => 'Eye Disease / Defect',
+                    'Accident Injuries' => 'Accident Injuries',
+                    'Diabetes' => 'Diabetes',
+                    'Heart Disease' => 'Heart Disease',
+                    'Kidney Disease' => 'Kidney Disease',
+                    'Tuberculosis / Primary Complex' => 'Tuberculosis / Primary Complex',
+                    'Convulsion / Epilepsy' => 'Convulsion / Epilepsy',
+                    'Migraine' => 'Migraine',
+                    'Hyperventilation' => 'Hyperventilation',
+                    'High Blood Pressure' => 'High Blood Pressure',
+                    'Hemophilia' => 'Hemophilia',
+                    'Others' => 'Others',
+                ], 'depends_on' => ['key' => 'has_illness', 'type' => 'yes-no', 'value' => 'Yes']],
+                'Other illness' => ['key' => 'other_illness', 'type' => 'textarea', 'depends_on' => ['key' => 'has_illness', 'type' => 'yes-no', 'value' => 'Yes'], 'depends_on_contains' => ['key' => 'medical_history', 'value' => 'Others', 'text_key' => 'other_illness']],
                 'Blood type' => ['key' => 'blood_type', 'type' => 'select', 'options' => [
                     'Unknown' => 'Unknown',
                     'A+' => 'A+', 'A-' => 'A-',
@@ -210,7 +225,13 @@
             'Allergies' => [
                 'Known allergies' => ['key' => 'known_allergies', 'type' => 'yes-no'],
                 'Food allergies' => ['key' => 'food_allergies', 'type' => 'textarea', 'depends_on' => ['key' => 'known_allergies', 'type' => 'yes-no', 'value' => 'Yes']],
-                'Medicine allergies' => ['key' => 'medicine_allergies', 'type' => 'json-text', 'depends_on' => ['key' => 'known_allergies', 'type' => 'yes-no', 'value' => 'Yes']],
+                'Medicine allergies' => ['key' => 'medicine_allergies', 'type' => 'multi-select', 'options' => [
+                    'Aspirin' => 'Aspirin',
+                    'Ibuprofen' => 'Ibuprofen',
+                    'Amoxicillin' => 'Amoxicillin',
+                    'Mefenamic Acid' => 'Mefenamic Acid',
+                    'Penicillin' => 'Penicillin',
+                ], 'depends_on' => ['key' => 'known_allergies', 'type' => 'yes-no', 'value' => 'Yes']],
                 'Other medicine allergies' => ['key' => 'other_med_allergies', 'type' => 'textarea', 'depends_on' => ['key' => 'known_allergies', 'type' => 'yes-no', 'value' => 'Yes']],
             ],
             'Lifestyle & Immunization' => [
@@ -318,7 +339,7 @@
 
                 return implode("\n", $lines);
             }
-            if (str_starts_with($type, 'choice-')) {
+            if ($type === 'multi-select' || str_starts_with($type, 'choice-')) {
                 return is_array($value)
                     ? (json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '')
                     : trim((string) ($value ?? ''));
@@ -649,6 +670,8 @@
                 #medicalInformationModal .medical-information-choice-group { display: none; min-width: 0; }
                 #medicalInformationModal.is-editing .medical-information-choice-group { display: block; }
                 #medicalInformationModal .medical-information-choice-options { display: flex; flex-wrap: wrap; gap: 8px 12px; }
+                #medicalInformationModal.is-editing .medical-information-row-multi-choice { grid-template-columns: minmax(105px, .65fr) minmax(0, 1.35fr); }
+                #medicalInformationModal .medical-information-multi-choice-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 14px; }
                 #medicalInformationModal .medical-information-choice-options label { display: inline-flex; min-width: 0; align-items: flex-start; gap: 6px; color: var(--medical-edit-text); font-size: 12px; line-height: 1.35; cursor: pointer; }
                 #medicalInformationModal .medical-information-choice-options input { width: 15px; height: 15px; flex: 0 0 15px; margin: 0; accent-color: #8b0000; }
                 #medicalInformationModal .medical-information-unit-edit { display: none; min-width: 0; align-items: center; gap: 7px; }
@@ -1190,6 +1213,30 @@
                                                             }
                                                             $medicalChoiceIsJson = $medicalEditField && in_array($medicalEditField['type'], ['choice-checkboxes', 'choice-radios-json'], true);
                                                             $medicalChoiceInputType = $medicalEditField && str_contains($medicalEditField['type'], 'radios') ? 'radio' : 'checkbox';
+                                                            $medicalMultiSelectSelectedValues = [];
+                                                            $medicalMultiSelectOptions = $medicalEditField['options'] ?? [];
+                                                            if (($medicalEditField['type'] ?? null) === 'multi-select') {
+                                                                $medicalMultiSelectSelectedValues = $normalizeMedicalChoiceValues(old('medical_information.' . $medicalEditKey, $medicalEditRawValue));
+                                                                if ($medicalEditKey === 'medical_history') {
+                                                                    $medicalStoredOtherText = old('medical_information.other_illness', data_get($medicalAssessmentEditableValues ?? [], 'other_illness'));
+                                                                } else {
+                                                                    $medicalStoredOtherText = null;
+                                                                    $medicalMultiSelectSelectedValues = array_values(array_filter(
+                                                                        $medicalMultiSelectSelectedValues,
+                                                                        fn ($value) => strcasecmp($value, 'Others') !== 0
+                                                                    ));
+                                                                }
+                                                                if (filled($medicalStoredOtherText)
+                                                                    && !session()->hasOldInput('medical_information.' . $medicalEditKey)
+                                                                    && !collect($medicalMultiSelectSelectedValues)->contains(fn ($value) => strcasecmp($value, 'Others') === 0)) {
+                                                                    $medicalMultiSelectSelectedValues[] = 'Others';
+                                                                }
+                                                                foreach ($medicalMultiSelectSelectedValues as $medicalSelectedValue) {
+                                                                    if (!collect($medicalMultiSelectOptions)->keys()->contains(fn ($option) => strcasecmp((string) $option, $medicalSelectedValue) === 0)) {
+                                                                        $medicalMultiSelectOptions = [$medicalSelectedValue => $medicalSelectedValue] + $medicalMultiSelectOptions;
+                                                                    }
+                                                                }
+                                                            }
                                                             $medicalVaccineHistoryValue = $medicalEditKey === 'vaccine_history'
                                                                 ? old('medical_information.vaccine_history', $medicalEditRawValue ?? [])
                                                                 : [];
@@ -1222,8 +1269,26 @@
                                                                 : null;
                                                             $medicalDependsOnValueMatches = $medicalDependsOn
                                                                 && strtolower(trim((string) $medicalDependsOnValue)) === strtolower(trim((string) $medicalDependsOn['value']));
+                                                            $medicalDependsOnContains = $medicalEditField['depends_on_contains'] ?? null;
+                                                            $medicalDependsOnContainsMatches = true;
+                                                            if ($medicalDependsOnContains) {
+                                                                $medicalDependsOnContainsValues = $normalizeMedicalChoiceValues(old(
+                                                                    'medical_information.' . $medicalDependsOnContains['key'],
+                                                                    data_get($medicalAssessmentEditableValues ?? [], $medicalDependsOnContains['key'])
+                                                                ));
+                                                                $medicalDependsOnOtherTextKey = $medicalDependsOnContains['text_key'] ?? 'other_illness';
+                                                                $medicalStoredOtherText = old('medical_information.' . $medicalDependsOnOtherTextKey, data_get($medicalAssessmentEditableValues ?? [], $medicalDependsOnOtherTextKey));
+                                                                if (filled($medicalStoredOtherText)
+                                                                    && !session()->hasOldInput('medical_information.' . $medicalDependsOnContains['key'])
+                                                                    && !collect($medicalDependsOnContainsValues)->contains(fn ($value) => strcasecmp($value, 'Others') === 0)) {
+                                                                    $medicalDependsOnContainsValues[] = 'Others';
+                                                                }
+                                                                $medicalDependsOnContainsMatches = collect($medicalDependsOnContainsValues)->contains(
+                                                                    fn ($value) => strcasecmp($value, (string) $medicalDependsOnContains['value']) === 0
+                                                                );
+                                                            }
                                                         @endphp
-                                                        <div class="medical-information-row @if(!$medicalEditField) medical-information-row-readonly @endif @if(($medicalEditField['type'] ?? null) === 'address') medical-information-row-address @endif @if($medicalSection['name'] === 'Address' && $medicalLabel === 'ZIP code') medical-information-row-address-zip @endif @if($medicalEditKey === 'vaccine_history') medical-information-row-vaccine-history @endif" @if($medicalDependsOn) data-medical-depends-on-key="{{ $medicalDependsOn['key'] }}" data-medical-depends-on-value="{{ $medicalDependsOn['value'] }}" @if(!$medicalDependsOnValueMatches) hidden @endif @endif>
+                                                        <div class="medical-information-row @if(!$medicalEditField) medical-information-row-readonly @endif @if(($medicalEditField['type'] ?? null) === 'address') medical-information-row-address @endif @if(($medicalEditField['type'] ?? null) === 'multi-select') medical-information-row-multi-choice @endif @if($medicalSection['name'] === 'Address' && $medicalLabel === 'ZIP code') medical-information-row-address-zip @endif @if($medicalEditKey === 'vaccine_history') medical-information-row-vaccine-history @endif" @if($medicalDependsOn) data-medical-depends-on-key="{{ $medicalDependsOn['key'] }}" data-medical-depends-on-value="{{ $medicalDependsOn['value'] }}" @endif @if($medicalDependsOnContains) data-medical-depends-on-contains-key="{{ $medicalDependsOnContains['key'] }}" data-medical-depends-on-contains-value="{{ $medicalDependsOnContains['value'] }}" @endif @if(($medicalDependsOn && !$medicalDependsOnValueMatches) || ($medicalDependsOnContains && !$medicalDependsOnContainsMatches)) hidden @endif>
                                                             <dt>{{ $medicalLabel }}</dt>
                                                             <dd>
                                                                 <span class="medical-information-read-value">{{ $medicalValue }}</span>
@@ -1251,7 +1316,7 @@
                                                                                 <input type="hidden" data-medical-edit-control data-medical-fit-status-value name="medical_information[{{ $medicalEditKey }}]" value="{{ $medicalFitStatusStoredValue }}" disabled>
                                                                             </div>
                                                                         @else
-                                                                        <select class="medical-information-edit-control" data-medical-edit-control name="medical_information[{{ $medicalEditKey }}]" aria-label="Edit {{ $medicalLabel }}" disabled>
+                                                                        <select class="medical-information-edit-control" data-medical-edit-control @if($medicalEditKey === 'disability_type') data-medical-native-select @endif name="medical_information[{{ $medicalEditKey }}]" aria-label="Edit {{ $medicalLabel }}" disabled>
                                                                             <option value="" disabled {{ (string) $medicalOldValue === '' ? 'selected' : '' }}>Select an option</option>
                                                                             @foreach($medicalSelectOptions as $medicalOptionValue => $medicalOptionLabel)
                                                                                 <option value="{{ $medicalOptionValue }}" {{ (string) $medicalOldValue === (string) $medicalOptionValue ? 'selected' : '' }}>{{ $medicalOptionLabel }}</option>
@@ -1314,6 +1379,16 @@
                                                                                 @endif
                                                                             @endforeach
                                                                         </div>
+                                                                    @elseif($medicalEditField['type'] === 'multi-select')
+                                                                        <div class="medical-information-choice-group" data-medical-choice-group data-medical-choice-format="json" data-medical-multi-choice-source data-medical-conditional-source="{{ $medicalEditKey }}">
+                                                                            <input type="hidden" data-medical-edit-control data-medical-choice-value name="medical_information[{{ $medicalEditKey }}]" value="{{ json_encode($medicalMultiSelectSelectedValues, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]' }}" disabled>
+                                                                            <div class="medical-information-choice-options medical-information-multi-choice-options">
+                                                                                @foreach($medicalMultiSelectOptions as $medicalOptionValue => $medicalOptionLabel)
+                                                                                    <label><input type="checkbox" data-medical-edit-control data-medical-choice-option value="{{ $medicalOptionValue }}" @checked(collect($medicalMultiSelectSelectedValues)->contains(fn ($value) => strcasecmp($value, (string) $medicalOptionValue) === 0)) disabled><span>{{ $medicalOptionLabel }}</span></label>
+                                                                                @endforeach
+                                                                            </div>
+                                                                            @error('medical_information.' . $medicalEditKey)<small class="medical-information-field-error">{{ $message }}</small>@enderror
+                                                                        </div>
                                                                     @elseif(str_starts_with($medicalEditField['type'], 'choice-'))
                                                                         <div class="medical-information-choice-group" data-medical-choice-group data-medical-choice-format="{{ $medicalChoiceIsJson ? 'json' : 'scalar' }}">
                                                                             <input type="hidden" data-medical-edit-control data-medical-choice-value name="medical_information[{{ $medicalEditKey }}]" value="{{ $medicalChoiceIsJson ? (json_encode($medicalChoiceSelectedValues, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]') : ($medicalChoiceSelectedValues[0] ?? '') }}" disabled>
@@ -1367,7 +1442,7 @@
                                         ->values();
                                 @endphp
                                 @forelse($medicalAssessmentHistoryItems as $historyEntry)
-                                    @if($historyEntry['type'] === 'information' && !$medicalAssessmentIsEmployee)
+                                    @if($historyEntry['type'] === 'information')
                                         <div class="medical-information-history-day">
                                             <div class="medical-information-history-day-head">
                                                 <strong>Health information updated</strong>
@@ -1665,7 +1740,14 @@
                             const parentName = `medical_information[${row.dataset.medicalDependsOnKey}]`;
                             const parent = editControls.find((control) => control.name === parentName)
                                 || modal.querySelector(`[data-medical-conditional-source="${CSS.escape(row.dataset.medicalDependsOnKey)}"]`);
-                            const visible = parent?.value === row.dataset.medicalDependsOnValue;
+                            let visible = parent?.value === row.dataset.medicalDependsOnValue;
+                            if (visible && row.dataset.medicalDependsOnContainsKey) {
+                                const source = modal.querySelector(`[data-medical-conditional-source="${CSS.escape(row.dataset.medicalDependsOnContainsKey)}"]`);
+                                const selectedValues = source?.matches('select')
+                                    ? Array.from(source.selectedOptions, (option) => option.value)
+                                    : Array.from(source?.querySelectorAll('[data-medical-choice-option]:checked') || [], (option) => option.value);
+                                visible = selectedValues.some((value) => value.toLowerCase() === row.dataset.medicalDependsOnContainsValue.toLowerCase());
+                            }
                             row.hidden = !visible;
                             row.querySelectorAll('[data-medical-edit-control]').forEach((control) => {
                                 control.disabled = !isEditing || !visible;
@@ -1726,7 +1808,7 @@
                         (selected || (focusLast ? enabled.at(-1) : enabled[0]))?.focus({ preventScroll: true });
                     };
 
-                    editControls.filter((control) => control.tagName === 'SELECT' && !control.hasAttribute('data-medical-address-location')).forEach((source, index) => {
+                    editControls.filter((control) => control.tagName === 'SELECT' && !control.hasAttribute('data-medical-address-location') && !control.hasAttribute('data-medical-native-select')).forEach((source, index) => {
                         const wrapper = document.createElement('div');
                         const trigger = document.createElement('button');
                         const label = document.createElement('span');
@@ -1821,6 +1903,9 @@
 
                     document.addEventListener('pointerdown', (event) => {
                         if (openSelect && !openSelect.trigger.contains(event.target) && !openSelect.menu.contains(event.target)) closeMedicalSelect();
+                    });
+                    modal.addEventListener('change', (event) => {
+                        if (event.target.matches('[data-medical-choice-option]')) syncConditionalMedicalFields();
                     });
                     modal.addEventListener('scroll', (event) => {
                         if (openSelect && !openSelect.menu.contains(event.target)) closeMedicalSelect();

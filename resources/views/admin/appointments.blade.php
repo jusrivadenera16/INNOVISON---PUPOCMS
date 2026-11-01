@@ -877,6 +877,67 @@
         font-size: .95rem;
         font-weight: 700;
     }
+    .appointment-consultation-panel {
+        padding: 20px 24px;
+    }
+    .appointment-consultation-panel h4 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 14px;
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 800;
+    }
+    .appointment-consultation-panel h4 svg {
+        width: 18px;
+        height: 18px;
+        color: #9f1239;
+    }
+    .appointment-consultation-group + .appointment-consultation-group {
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid #e2e8f0;
+    }
+    .appointment-consultation-group h5 {
+        margin: 0 0 8px;
+        color: #475569;
+        font-size: .78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+    .appointment-consultation-rows {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 20px;
+    }
+    .appointment-consultation-row {
+        display: grid;
+        grid-template-columns: minmax(110px, .8fr) minmax(0, 1.2fr);
+        gap: 12px;
+        padding: 8px 0;
+        border-bottom: 1px solid #edf0f5;
+        font-size: .9rem;
+    }
+    .appointment-consultation-row span {
+        color: #64748b;
+        font-weight: 600;
+    }
+    .appointment-consultation-row strong {
+        color: #111827;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+    .appointment-consultation-panel[hidden],
+    .appointment-clinical-findings[hidden],
+    .appointment-consultation-group[hidden] {
+        display: none !important;
+    }
+    @media (max-width: 720px) {
+        .appointment-consultation-rows {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
     .appointment-timeline-panel {
         padding: 22px 26px 28px;
     }
@@ -3451,6 +3512,8 @@
     html[data-theme="dark"] #infoModal .appointment-notes-title,
     html[data-theme="dark"] #infoModal .appointment-clinical-findings > span,
     html[data-theme="dark"] #infoModal .appointment-clinical-findings p,
+    html[data-theme="dark"] #infoModal .appointment-consultation-panel h4,
+    html[data-theme="dark"] #infoModal .appointment-consultation-row strong,
     html[data-theme="dark"] #infoModal .appointment-timeline-panel h4,
     html[data-theme="dark"] #infoModal .timeline-step strong,
     html[data-theme="dark"] #infoModal .appointment-detail-footer strong {
@@ -3461,6 +3524,8 @@
     html[data-theme="dark"] #infoModal .appointment-student-info p span,
     html[data-theme="dark"] #infoModal .appointment-info-list span,
     html[data-theme="dark"] #infoModal .appointment-notes-panel p,
+    html[data-theme="dark"] #infoModal .appointment-consultation-group h5,
+    html[data-theme="dark"] #infoModal .appointment-consultation-row span,
     html[data-theme="dark"] #infoModal .timeline-step small {
         color: #cbd5e1 !important;
     }
@@ -3476,7 +3541,9 @@
     }
 
     html[data-theme="dark"] #infoModal .appointment-info-list > div,
-    html[data-theme="dark"] #infoModal .appointment-clinical-findings {
+    html[data-theme="dark"] #infoModal .appointment-clinical-findings,
+    html[data-theme="dark"] #infoModal .appointment-consultation-group + .appointment-consultation-group,
+    html[data-theme="dark"] #infoModal .appointment-consultation-row {
         border-color: rgba(250, 204, 21, .14) !important;
     }
 
@@ -4410,8 +4477,7 @@
         background: #ffffff;
     }
     #infoModal .appointment-detail-actions[hidden] { display: none !important; }
-    #infoModal .appointment-detail-actions .dialog-btn[hidden],
-    #appointmentDetailTimelinePanel[hidden] { display: none !important; }
+    #infoModal .appointment-detail-actions .dialog-btn[hidden] { display: none !important; }
     #infoModal .appointment-detail-actions .dialog-btn {
         position: relative;
         overflow: hidden;
@@ -5782,6 +5848,8 @@
                         data-view-photo-url="{{ $appointmentPhotoUrl }}"
                         data-view-created="{{ optional($appt->created_at)->format('M d, Y g:i A') }}"
                         data-view-updated="{{ optional($appt->updated_at)->format('M d, Y g:i A') }}"
+                        data-view-approved-at="{{ optional($appt->approved_at_display)->format('M d, Y g:i A') }}"
+                        data-view-consultation="{{ $appt->consultation_details_payload ? json_encode($appt->consultation_details_payload, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP) : '' }}"
                         title="{{ $appt->status === 'Completed' ? 'Click to view' : '' }}"
                         class="{{ implode(' ', array_filter([
                             $highlightAppointmentId !== '' && $highlightAppointmentId === (string) $appt->id ? 'appointment-highlight-row' : '',
@@ -6015,6 +6083,9 @@
                                     data-type="{{ $queueMeta['type'] }}"
                                     data-created="{{ optional($queueAppointment->created_at)->format('M d, Y g:i A') }}"
                                     data-updated="{{ optional($queueAppointment->updated_at)->format('M d, Y g:i A') }}"
+                                    data-submitted-at="{{ optional($queueAppointment->created_at)->format('M d, Y g:i A') }}"
+                                    data-approved-at="{{ optional($queueAppointment->approved_at_display)->format('M d, Y g:i A') }}"
+                                    data-consultation="{{ $queueAppointment->consultation_details_payload ? json_encode($queueAppointment->consultation_details_payload, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP) : '' }}"
                                     onclick="openAppointmentFromQueue(this)"
                                 >
                                     <span>View Info</span>
@@ -6119,12 +6190,12 @@
                                 <strong id="mStatusInline">N/A</strong>
                             </div>
                             <div>
-                                <span><x-outline-icon name="document-text" /> Created</span>
+                                <span><x-outline-icon name="document-text" /> Submitted At</span>
                                 <strong id="mCreated">N/A</strong>
                             </div>
                             <div>
-                                <span><x-outline-icon name="clock" /> Last Updated</span>
-                                <strong id="mUpdated">N/A</strong>
+                                <span><x-outline-icon name="check" /> Approved At</span>
+                                <strong id="mApprovedAt">N/A</strong>
                             </div>
                         </div>
                     </section>
@@ -6138,51 +6209,26 @@
                         </button>
                     </div>
                     <p id="mNotes">N/A</p>
-                    <div class="appointment-clinical-findings">
+                    <div class="appointment-clinical-findings" id="appointmentClinicalFindings" hidden>
                         <span><x-outline-icon name="clipboard-document-list" /> Clinical Findings</span>
                         <p id="mClinicalFindings">N/A</p>
                     </div>
                 </section>
 
-                <section class="appointment-timeline-panel" id="appointmentDetailTimelinePanel">
-                    <h4><x-outline-icon name="clock" /> Appointment Timeline</h4>
-                    <div class="appointment-timeline" id="mTimeline">
-                        <div class="timeline-step" data-timeline-step="submitted">
-                            <span class="timeline-dot"><x-outline-icon name="check" /></span>
-                            <strong>Submitted</strong>
-                            <small id="mTimelineSubmitted">N/A</small>
-                        </div>
-                        <div class="timeline-line" data-timeline-line="submitted"></div>
-                        <div class="timeline-step" data-timeline-step="pending">
-                            <span class="timeline-dot"></span>
-                            <strong>Pending Review</strong>
-                            <small id="mTimelinePending">N/A</small>
-                        </div>
-                        <div class="timeline-line" data-timeline-line="pending"></div>
-                        <div class="timeline-step" data-timeline-step="approved">
-                            <span class="timeline-dot"></span>
-                            <strong id="mTimelineApprovedLabel">Approved</strong>
-                            <small id="mTimelineApproved">N/A</small>
-                        </div>
-                        <div class="timeline-line" data-timeline-line="approved"></div>
-                        <div class="timeline-step" data-timeline-step="scheduled">
-                            <span class="timeline-dot"></span>
-                            <strong>Scheduled</strong>
-                            <small id="mTimelineScheduled">N/A</small>
-                        </div>
-                        <div class="timeline-line" data-timeline-line="scheduled"></div>
-                        <div class="timeline-step" data-timeline-step="completed">
-                            <span class="timeline-dot"><x-outline-icon name="check" /></span>
-                            <strong>Completed</strong>
-                            <small id="mTimelineCompleted">N/A</small>
-                        </div>
+                <section class="appointment-detail-card appointment-consultation-panel" id="appointmentConsultationPanel" hidden>
+                    <h4><x-outline-icon name="clipboard-document-list" /> Consultation Details</h4>
+                    <div class="appointment-consultation-group" id="consultationDetailsGroup" hidden>
+                        <div class="appointment-consultation-rows" id="mConsultationDetails"></div>
+                    </div>
+                    <div class="appointment-consultation-group" id="consultationVitalsGroup" hidden>
+                        <h5>Vitals</h5>
+                        <div class="appointment-consultation-rows" id="mConsultationVitals"></div>
+                    </div>
+                    <div class="appointment-consultation-group" id="consultationMedicinesGroup" hidden>
+                        <h5>Dispensed Medicines</h5>
+                        <div class="appointment-consultation-rows" id="mConsultationMedicines"></div>
                     </div>
                 </section>
-
-                <div class="appointment-detail-footer">
-                    <span><x-outline-icon name="calendar-days" /> Date Created: <strong id="mFooterCreated">N/A</strong></span>
-                    <span><x-outline-icon name="document-text" /> Last Updated: <strong id="mFooterUpdated">N/A</strong></span>
-                </div>
             </div>
             <div class="appointment-detail-actions" id="appointmentDetailActions" hidden>
                 <button type="button" class="dialog-btn dialog-btn-secondary" onclick="closeInfoModal()"><span>Cancel</span></button>
@@ -6205,7 +6251,7 @@
                 </a>
                 @endif
                 @if($canOpenConsultation)
-                <a id="mConsultAction" href="#" class="dialog-btn dialog-btn-approve appointment-detail-consult" hidden>
+                <a id="mConsultAction" href="#" class="dialog-btn dialog-btn-approve appointment-detail-consult" data-loader-scope="screen" hidden>
                     <x-outline-icon name="clipboard-document-list" />
                     <span>Start Consultation</span>
                 </a>
@@ -6418,11 +6464,11 @@
             program: '',
             photoUrl: '',
             type: '',
-            created: '',
-            updated: '',
+            submittedAt: '',
+            approvedAt: '',
+            consultation: null,
             showReviewActions: false,
             showConsultAction: false,
-            showTimeline: true,
             consultUrl: '',
             consultLocked: false
         };
@@ -6430,6 +6476,13 @@
         if (triggerOrName && typeof triggerOrName === 'object' && triggerOrName.dataset) {
             const row = triggerOrName.closest?.('[data-appointment-row]') || null;
             const rowData = row?.dataset || {};
+            let consultation = null;
+            try {
+                const rawConsultation = triggerOrName.dataset.consultation || rowData.viewConsultation || '';
+                consultation = rawConsultation ? JSON.parse(rawConsultation) : null;
+            } catch (error) {
+                consultation = null;
+            }
             payload = {
                 name: triggerOrName.dataset.name || rowData.viewName || '',
                 service: triggerOrName.dataset.service || rowData.viewService || '',
@@ -6447,11 +6500,11 @@
                 program: triggerOrName.dataset.program || rowData.viewProgram || '',
                 photoUrl: triggerOrName.dataset.photoUrl || rowData.viewPhotoUrl || '',
                 type: triggerOrName.dataset.type || rowData.viewType || '',
-                created: triggerOrName.dataset.created || rowData.viewCreated || '',
-                updated: triggerOrName.dataset.updated || rowData.viewUpdated || '',
+                submittedAt: triggerOrName.dataset.submittedAt || triggerOrName.dataset.created || rowData.viewCreated || '',
+                approvedAt: triggerOrName.dataset.approvedAt || rowData.viewApprovedAt || '',
+                consultation,
                 showReviewActions: triggerOrName.dataset.showReviewActions === '1',
                 showConsultAction: triggerOrName.dataset.showConsultAction === '1',
-                showTimeline: triggerOrName.dataset.showTimeline !== '0',
                 consultUrl: triggerOrName.dataset.consultUrl || '',
                 consultLocked: triggerOrName.dataset.consultLocked === '1'
             };
@@ -6461,7 +6514,6 @@
             const text = safeText(value);
             return text === '-' ? 'N/A' : text;
         };
-        const scheduleText = formatSchedule(payload.date, payload.time);
         const dateText = safeOrNA(payload.date ? formatDateLong(payload.date) : '');
         const timeText = safeOrNA(payload.time ? formatTime(payload.time) : '');
         const appointmentId = safeOrNA(payload.aptId);
@@ -6497,10 +6549,8 @@
         document.getElementById('mContact').innerText = safeOrNA(payload.contact);
         document.getElementById('mStudentId').innerText = (payload.idNumberLabel || 'ID Number') + ': ' + safeOrNA(payload.studentNumber);
         document.getElementById('mProgram').innerText = 'Program: ' + safeOrNA(payload.program);
-        document.getElementById('mCreated').innerText = safeOrNA(payload.created);
-        document.getElementById('mUpdated').innerText = safeOrNA(payload.updated);
-        document.getElementById('mFooterCreated').innerText = safeOrNA(payload.created);
-        document.getElementById('mFooterUpdated').innerText = safeOrNA(payload.updated);
+        document.getElementById('mCreated').innerText = safeOrNA(payload.submittedAt);
+        document.getElementById('mApprovedAt').innerText = safeOrNA(payload.approvedAt);
         const statusEl = document.getElementById('mStatus');
         const normalizedStatus = safeText(payload.status);
         const statusText = normalizedStatus === '-' ? 'N/A' : normalizedStatus;
@@ -6509,126 +6559,57 @@
         statusEl.className = 'modal-status-badge ' + normalizedStatus.toLowerCase().replace(/\s+/g, '-');
         statusEl.classList.add('appointment-detail-status');
 
-        const timelineDate = (value) => safeOrNA(value).replace(' ', '\n');
-        const scheduledTimelineDate = scheduleText === '-' ? 'N/A' : scheduleText.replace(' at ', '\n');
-        document.getElementById('mTimelineSubmitted').innerText = timelineDate(payload.created);
-        document.getElementById('mTimelinePending').innerText = timelineDate(payload.updated || payload.created);
-        document.getElementById('mTimelineApproved').innerText = timelineDate(payload.updated);
-        document.getElementById('mTimelineScheduled').innerText = scheduledTimelineDate;
-        document.getElementById('mTimelineCompleted').innerText = timelineDate(payload.updated);
-        document.getElementById('mTimelineApprovedLabel').innerText = 'Approved';
+        const isCompleted = statusText.toLowerCase() === 'completed';
+        const clinicalFindingsPanel = document.getElementById('appointmentClinicalFindings');
+        const clinicalFindings = safeText(payload.clinicalFindings);
+        clinicalFindingsPanel.hidden = !isCompleted || clinicalFindings === '-' || clinicalFindings === '';
 
-        const timeline = document.getElementById('mTimeline');
-        const timelineSteps = ['submitted', 'pending', 'approved', 'scheduled', 'completed'];
-        const timelineIconMarkup = {
-            check: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>',
-            x: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>'
+        const consultationPanel = document.getElementById('appointmentConsultationPanel');
+        const consultation = isCompleted ? payload.consultation : null;
+        const renderRows = (containerId, entries) => {
+            const container = document.getElementById(containerId);
+            container.replaceChildren();
+            (Array.isArray(entries) ? entries : []).forEach((entry) => {
+                const labelText = safeText(entry?.label);
+                const valueText = safeText(entry?.value);
+                if (labelText === '-' || valueText === '-') return;
+
+                const row = document.createElement('div');
+                row.className = 'appointment-consultation-row';
+                const label = document.createElement('span');
+                label.textContent = labelText;
+                const value = document.createElement('strong');
+                value.textContent = valueText;
+                row.append(label, value);
+                container.appendChild(row);
+            });
         };
-        const setTimelineIcon = (step, icon) => {
-            const dot = timeline?.querySelector(`[data-timeline-step="${step}"] .timeline-dot`);
-            if (!dot) return;
-            dot.innerHTML = icon ? timelineIconMarkup[icon] : '';
-        };
-        const normalizedTimelineStatus = statusText.toLowerCase();
-        const isRejectedTimeline = ['rejected', 'cancelled', 'canceled', 'declined'].includes(normalizedTimelineStatus);
-        const isExpiredTimeline = normalizedTimelineStatus === 'expired';
-        const isMissedTimeline = normalizedTimelineStatus === 'missed';
-        const currentStep = isRejectedTimeline
-            ? 'approved'
-            : ((isExpiredTimeline || isMissedTimeline)
-                ? 'completed'
-                : (normalizedTimelineStatus === 'completed'
-                ? 'completed'
-                : (normalizedTimelineStatus === 'scheduled'
-                    ? 'scheduled'
-                    : (normalizedTimelineStatus === 'approved'
-                        ? 'approved'
-                        : 'pending'))));
-        const currentIndex = timelineSteps.indexOf(currentStep);
 
-        timelineSteps.forEach((step, index) => {
-            const stepEl = timeline?.querySelector(`[data-timeline-step="${step}"]`);
-            const lineEl = timeline?.querySelector(`[data-timeline-line="${step}"]`);
-            if (!stepEl) return;
+        const details = consultation?.details || [];
+        const vitals = consultation?.showVitals ? (consultation?.vitals || []) : [];
+        const medicines = Array.isArray(consultation?.medicines)
+            ? consultation.medicines.map((medicine) => ({ label: 'Medicine', value: medicine }))
+            : [];
+        renderRows('mConsultationDetails', details);
+        renderRows('mConsultationVitals', vitals);
+        renderRows('mConsultationMedicines', medicines);
 
-            stepEl.style.display = '';
-            stepEl.classList.remove('is-done', 'is-current', 'is-muted', 'is-rejected');
-            setTimelineIcon(step, (step === 'submitted' || step === 'completed') ? 'check' : '');
-
-            if (lineEl) {
-                lineEl.style.display = '';
-                lineEl.classList.remove('is-done');
-            }
-
-            if (isRejectedTimeline) {
-                if (step === 'approved') {
-                    stepEl.classList.add('is-rejected');
-                    setTimelineIcon(step, 'x');
-                    document.getElementById('mTimelineApprovedLabel').innerText = 'Rejected';
-                    document.getElementById('mTimelineApproved').innerText = timelineDate(payload.updated);
-                } else if (index < currentIndex) {
-                    stepEl.classList.add('is-done');
-                } else if (index > currentIndex) {
-                    stepEl.style.display = 'none';
-                }
-
-                if (lineEl) {
-                    if (index < currentIndex) {
-                        lineEl.classList.add('is-done');
-                    } else {
-                        lineEl.style.display = 'none';
-                    }
-                }
-
-                return;
-            }
-
-            if (isExpiredTimeline || isMissedTimeline) {
-                if (index < currentIndex) {
-                    stepEl.classList.add('is-done');
-                } else if (step === 'completed') {
-                    stepEl.classList.add('is-rejected');
-                    setTimelineIcon(step, 'x');
-                    stepEl.querySelector('strong').innerText = isExpiredTimeline ? 'Expired' : 'Missed';
-                    document.getElementById('mTimelineCompleted').innerText = timelineDate(payload.updated);
-                } else {
-                    stepEl.classList.add('is-muted');
-                }
-
-                if (lineEl && index < currentIndex) {
-                    lineEl.classList.add('is-done');
-                }
-
-                return;
-            }
-
-            if (step === 'completed') {
-                stepEl.querySelector('strong').innerText = 'Completed';
-            }
-
-            if (normalizedTimelineStatus === 'completed') {
-                stepEl.classList.add('is-done');
-            } else if (index < currentIndex) {
-                stepEl.classList.add('is-done');
-            } else if (index === currentIndex) {
-                stepEl.classList.add('is-current');
-            } else {
-                stepEl.classList.add('is-muted');
-            }
-
-            if (lineEl && index < currentIndex) {
-                lineEl.classList.add('is-done');
-            }
-        });
+        const hasDetails = Array.isArray(details) && details.length > 0;
+        const hasVitals = Array.isArray(vitals) && vitals.length > 0;
+        const hasMedicines = medicines.length > 0;
+        document.getElementById('consultationDetailsGroup').hidden = !hasDetails;
+        document.getElementById('consultationVitalsGroup').hidden = !hasVitals;
+        document.getElementById('consultationMedicinesGroup').hidden = !hasMedicines;
+        consultationPanel.hidden = !consultation || !(hasDetails || hasVitals || hasMedicines);
 
         const detailActions = document.getElementById('appointmentDetailActions');
-        const timelinePanel = document.getElementById('appointmentDetailTimelinePanel');
         const approveAction = document.getElementById('mApproveAction');
         const rejectAction = document.getElementById('mRejectAction');
         const rescheduleAction = document.getElementById('mRescheduleAction');
         const consultAction = document.getElementById('mConsultAction');
-        const shouldShowReviewActions = payload.showReviewActions || normalizedTimelineStatus === 'pending';
-        const shouldShowConsultAction = payload.showConsultAction && ['approved', 'scheduled'].includes(normalizedTimelineStatus);
+        const normalizedStatusKey = statusText.toLowerCase();
+        const shouldShowReviewActions = payload.showReviewActions || normalizedStatusKey === 'pending';
+        const shouldShowConsultAction = payload.showConsultAction && ['approved', 'scheduled'].includes(normalizedStatusKey);
         const actionPayload = {
             id: payload.id,
             aptId: payload.aptId,
@@ -6643,8 +6624,8 @@
             idNumberLabel: payload.idNumberLabel || 'ID Number',
             program: payload.program,
             type: payload.type,
-            created: payload.created,
-            updated: payload.updated
+            created: payload.submittedAt,
+            updated: payload.approvedAt
         };
 
         [approveAction, rejectAction, rescheduleAction].filter(Boolean).forEach((action) => {
@@ -6675,9 +6656,6 @@
         }
         if (detailActions) {
             detailActions.hidden = !(shouldShowReviewActions || shouldShowConsultAction);
-        }
-        if (timelinePanel) {
-            timelinePanel.hidden = !payload.showTimeline;
         }
 
         document.getElementById('infoModal').style.display = 'flex';

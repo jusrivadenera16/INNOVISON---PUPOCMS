@@ -4,12 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use App\Models\Concerns\ExcludesInactiveUserRecords;
 
 class Appointment extends Model
 {
     use HasFactory, ExcludesInactiveUserRecords;
+
+    public const ACTIVE_BOOKING_STATUSES = ['Pending', 'Approved', 'Scheduled', 'Rescheduled'];
 
     /**
      * Mass assignable fields
@@ -31,12 +34,15 @@ class Appointment extends Model
         'notes',        // Stored DB field for notes
         'approval_message',
         'approval_reminders',
+        'consultation_id',
+        'approved_at',
         'appointment_reminder_email_sent_at',
         'remarks',      // Backward-compatible virtual alias to notes
     ];
 
     protected $casts = [
         'approval_reminders' => 'array',
+        'approved_at' => 'datetime',
         'appointment_reminder_email_sent_at' => 'datetime',
     ];
 
@@ -124,6 +130,11 @@ class Appointment extends Model
     public function feedback()
     {
         return $this->hasOne(AppointmentFeedback::class);
+    }
+
+    public function consultation(): BelongsTo
+    {
+        return $this->belongsTo(Consultation::class);
     }
 
     public function isReminderDue(int $reminderHours, ?Carbon $at = null): bool

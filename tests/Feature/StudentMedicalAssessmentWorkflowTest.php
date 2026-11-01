@@ -386,6 +386,64 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
         );
     }
 
+    public function test_student_medical_multi_selects_save_other_details_separately_and_clear_when_none_are_known(): void
+    {
+        $student = $this->makeStudent();
+        $staff = $this->makeStaff();
+        $profile = $this->makeProfileFor($student, 'Issued');
+        $this->actingAs($staff, 'admin');
+
+        $response = app(AdminController::class)->updateStudentMedicalInformation(
+            Request::create('/health-profile/' . $profile->id . '/medical-information', 'PUT', [
+                'medical_information' => [
+                    'has_illness' => 'Yes',
+                    'medical_history' => '["Asthma","Others"]',
+                    'other_illness' => 'Chronic migraine',
+                    'known_allergies' => 'Yes',
+                    'medicine_allergies' => '["Aspirin","Penicillin"]',
+                    'other_med_allergies' => 'Sulfa drugs',
+                ],
+            ]),
+            $profile->id
+        );
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame(['Asthma'], $profile->fresh()->medical_history);
+        $this->assertSame('Chronic migraine', $profile->fresh()->other_illness);
+        $this->assertSame(['Aspirin', 'Penicillin'], $profile->fresh()->medicine_allergies);
+        $this->assertSame('Sulfa drugs', $profile->fresh()->other_med_allergies);
+
+        try {
+            app(AdminController::class)->updateStudentMedicalInformation(
+                Request::create('/health-profile/' . $profile->id . '/medical-information', 'PUT', [
+                    'medical_information' => [
+                        'has_illness' => 'Yes',
+                        'medical_history' => '["Others"]',
+                        'other_illness' => '',
+                    ],
+                ]),
+                $profile->id
+            );
+            $this->fail('An other illness selection must include its details.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('medical_information.other_illness', $exception->errors());
+        }
+
+        $response = app(AdminController::class)->updateStudentMedicalInformation(
+            Request::create('/health-profile/' . $profile->id . '/medical-information', 'PUT', [
+                'medical_information' => ['has_illness' => 'No', 'known_allergies' => 'No'],
+            ]),
+            $profile->id
+        );
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame([], $profile->fresh()->medical_history);
+        $this->assertNull($profile->fresh()->other_illness);
+        $this->assertSame([], $profile->fresh()->medicine_allergies);
+        $this->assertNull($profile->fresh()->other_med_allergies);
+        $this->assertNull($profile->fresh()->food_allergies);
+    }
+
     public function test_student_personal_information_saves_split_health_form_address_and_user_fields_with_exact_history(): void
     {
         $student = $this->makeStudent();
@@ -729,11 +787,16 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
         $this->assertSame('faculty_medical_information_updated', $log->event_type);
         $this->assertSame(['contact_no'], $log->metadata['updated_fields']);
         $this->assertSame(['Contact number'], $log->metadata['updated_field_labels']);
+        $this->assertSame(
+            ['contact_no' => '09111111111'],
+            json_decode(Crypt::decryptString($log->metadata['previous_values_encrypted']), true)
+        );
 
         $historyMethod = new \ReflectionMethod(AdminController::class, 'medicalInformationChangeHistory');
         $historyMethod->setAccessible(true);
         $history = $historyMethod->invoke(app(AdminController::class), EmployeeHealthProfile::class, (int) $profile->id);
         $this->assertSame(['Contact number'], array_column($history->first()['fields'], 'label'));
+        $this->assertSame('09111111111', $history->first()['fields'][0]['previous_value']);
         $this->assertSame('09222222222', $history->first()['fields'][0]['value']);
     }
 
@@ -1249,8 +1312,8 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
                 'date_label' => 'Oct 28, 2026',
                 'created_at' => now(),
                 'fields' => [
-                    ['label' => 'Height', 'value' => '5.6'],
-                    ['label' => 'Weight', 'value' => '64'],
+                    ['label' => 'Height', 'previous_value' => '5.5 ft', 'value' => '5.6 ft'],
+                    ['label' => 'Weight', 'previous_value' => '63 lbs', 'value' => '64 lbs'],
                 ],
                 'events' => [[
                     'created_at' => now(),
@@ -1279,10 +1342,12 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
         $this->assertStringContainsString('value="Metro Manila" selected', $html);
         $this->assertStringContainsString('value="Manila" selected', $html);
         $this->assertStringContainsString('value="Barangay One" selected', $html);
-        $this->assertStringContainsString('Update to', $html);
+        $this->assertStringContainsString('Previous value', $html);
+        $this->assertStringContainsString('Updated value', $html);
+        $this->assertStringContainsString('5.5 ft', $html);
         $this->assertStringContainsString('Height', $html);
-        $this->assertStringContainsString('5.6', $html);
-        $this->assertStringContainsString('Updated by Clinic Staff (Admin)', $html);
+        $this->assertStringContainsString('5.6 ft', $html);
+        $this->assertStringContainsString('Clinic Staff (Admin)', $html);
     }
 
     public function test_employee_medical_address_edit_values_merge_legacy_locations_with_existing_street(): void
@@ -1493,12 +1558,18 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
                     'Section' => '1',
                 ],
                 'Medical History' => [
-                    'Known illness' => 'Not recorded',
-                    'Medical conditions' => 'Not recorded',
-                    'Other illness' => 'Not recorded',
+                    'Known illness' => 'Yes',
+                    'Medical conditions' => 'Asthma',
+                    'Other illness' => 'Chronic migraine',
                     'Blood type' => 'Not recorded',
                     'Disability' => 'Not recorded',
                     'Disability type' => 'Not recorded',
+                ],
+                'Allergies' => [
+                    'Known allergies' => 'Yes',
+                    'Food allergies' => 'Not recorded',
+                    'Medicine allergies' => 'Aspirin',
+                    'Other medicine allergies' => 'Sulfa drugs',
                 ],
                 'Medical Certificate & Imaging' => [
                     'Medical certificate' => 'Uploaded',
@@ -1513,6 +1584,13 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
                 ],
             ],
             'medicalAssessmentEditableValues' => [
+                'has_illness' => 'Yes',
+                'medical_history' => ['Asthma'],
+                'other_illness' => 'Chronic migraine',
+                'known_allergies' => 'Yes',
+                'no_allergies' => false,
+                'medicine_allergies' => ['Aspirin'],
+                'other_med_allergies' => 'Sulfa drugs',
                 'sex' => 'Female',
                 'course_code' => 'BSIT',
                 'user_year' => '2',
@@ -1555,6 +1633,19 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
         $this->assertStringContainsString('No information provided', $html);
         $this->assertStringContainsString('>Select an answer</option>', $html);
         $this->assertStringContainsString('>Select an option</option>', $html);
+        $this->assertSame(1, preg_match_all('/<input type="checkbox"[^>]*value="Others"[^>]*checked[^>]*>/', $html));
+        $this->assertSame(2, substr_count($html, 'data-medical-multi-choice-source'));
+        $this->assertStringContainsString('data-medical-choice-value name="medical_information[medical_history]"', $html);
+        $this->assertStringContainsString('data-medical-choice-value name="medical_information[medicine_allergies]"', $html);
+        $this->assertStringContainsString('name="medical_information[other_med_allergies]"', $html);
+        $this->assertStringContainsString('data-medical-native-select', $html);
+        $this->assertStringContainsString('name="medical_information[disability_type]"', $html);
+        $this->assertStringContainsString('data-medical-depends-on-contains-key="medical_history"', $html);
+        $this->assertStringNotContainsString('data-medical-depends-on-contains-key="medicine_allergies"', $html);
+        $this->assertSame(1, substr_count($html, 'type="checkbox" data-medical-edit-control data-medical-choice-option value="Others"'));
+        foreach (['Aspirin', 'Ibuprofen', 'Amoxicillin', 'Mefenamic Acid', 'Penicillin'] as $medicine) {
+            $this->assertStringContainsString('>' . $medicine . '</span>', $html);
+        }
         $this->assertMatchesRegularExpression('/<option value="" disabled[^>]*>Select an option<\/option>/', $html);
         $this->assertMatchesRegularExpression('/<option value="" disabled[^>]*>Select an answer<\/option>/', $html);
         $this->assertStringNotContainsString('Not recorded', $html);

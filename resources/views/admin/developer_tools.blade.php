@@ -1050,7 +1050,7 @@
     }
 
     .dev-reset-dialog {
-        width: min(660px, 100%);
+        width: min(580px, 100%);
         overflow: hidden;
         border-radius: 18px;
         border: 1px solid rgba(255,255,255,.18);
@@ -1128,77 +1128,75 @@
 
     .dev-reset-form {
         display: grid;
-        gap: 18px;
-        padding: 18px 20px 0;
-    }
-
-    .dev-reset-security {
-        display: flex;
-        align-items: center;
         gap: 14px;
-        padding: 14px;
-        border-radius: 10px;
-        border: 1px solid #f3ccd3;
-        background: linear-gradient(135deg, #fff8f9, #ffffff);
+        padding: 12px 16px 0;
     }
 
-    .dev-reset-security-icon,
-    .dev-reset-step-number {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
+    .dev-reset-flow-card {
+        display: grid;
+        gap: 12px;
+        padding: 13px;
+        border: 1px solid #e2e8f0;
+        border-radius: 9px;
+        background: #fbfcfe;
     }
 
-    .dev-reset-security-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 999px;
-        background: #ffe7eb;
-        color: #8f1827;
+    .dev-reset-step {
+        display: block;
     }
 
-    .dev-reset-security-icon svg,
-    .dev-reset-step-icon {
-        width: 20px;
-        height: 20px;
-    }
-
-    .dev-reset-security strong,
     .dev-reset-step-title {
         display: block;
         color: #111827;
         font-size: 15px;
-        font-weight: 950;
+        font-weight: 900;
     }
 
-    .dev-reset-security span,
-    .dev-reset-step-copy {
-        color: #64748b;
-        font-size: 13px;
-        font-weight: 700;
+    .dev-reset-step-heading {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
     }
 
-    .dev-reset-step {
-        display: grid;
-        grid-template-columns: 28px minmax(0, 1fr);
-        gap: 12px;
-    }
-
-    .dev-reset-step-number {
-        width: 24px;
-        height: 24px;
-        margin-top: 2px;
+    .dev-reset-step-heading-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
         border-radius: 999px;
-        background: #8f1827;
-        color: #ffffff;
-        font-size: 13px;
-        font-weight: 950;
+        background: #ffe7eb;
+        color: #9d1427;
+    }
+
+    .dev-reset-step-heading-icon svg {
+        width: 19px;
+        height: 19px;
+    }
+
+    .dev-reset-step-heading-copy {
+        min-width: 0;
+    }
+
+    .dev-reset-step-heading-icon.is-lock {
+        background: #ffe7eb;
+        color: #8f1827;
     }
 
     .dev-reset-step-body {
         display: grid;
-        gap: 8px;
+        gap: 10px;
+    }
+
+    .dev-reset-step-copy {
+        display: block;
+        margin-top: 2px;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1.45;
     }
 
     .dev-reset-step[hidden] {
@@ -1212,23 +1210,386 @@
         gap: 10px;
     }
 
-    .dev-otp-controls input {
-        width: min(220px, 100%);
+    .dev-reset-email-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        padding: 10px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #ffffff;
+    }
+
+    .dev-reset-method-options {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+        padding: 4px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #f1f5f9;
+    }
+
+    .dev-reset-method-options button {
+        min-height: 36px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background: transparent;
+        color: #475569;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .dev-reset-method-options button[aria-pressed="true"] {
+        border-color: #cbd5e1;
+        background: #ffffff;
+        color: #881225;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, .08);
+    }
+
+    .dev-reset-method-options button:disabled {
+        cursor: not-allowed;
+        opacity: .55;
+    }
+
+    .dev-reset-authenticator-card[hidden],
+    .dev-reset-email-card[hidden] {
+        display: none !important;
+    }
+
+    .dev-reset-email-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        flex: 0 0 36px;
+        border-radius: 999px;
+        background: #eef2f7;
+        color: #172033;
+    }
+
+    .dev-reset-email-icon svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .dev-reset-email-copy {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    .dev-reset-email-copy strong {
+        color: #172033;
+        font-size: 10px;
+        font-weight: 850;
+    }
+
+    .dev-reset-email-copy span {
+        overflow-wrap: anywhere;
+        color: #172033;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .dev-reset-email-copy small {
+        color: #64748b;
+        font-size: 9px;
+        line-height: 1.3;
+    }
+
+    .dev-reset-email-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        flex: 0 0 auto;
+        margin-left: auto;
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: #eaf8ef;
+        color: #15803d;
+        font-size: 9px;
+        font-weight: 850;
+        white-space: nowrap;
+    }
+
+    .dev-reset-email-status svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .dev-reset-notice {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        padding: 8px 10px;
+        border: 1px solid #fecdd3;
+        border-radius: 7px;
+        background: #fff1f2;
+        color: #881225;
+        font-size: 10px;
+        font-weight: 650;
+        line-height: 1.4;
+    }
+
+    .dev-reset-notice svg {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 14px;
+    }
+
+    .dev-reset-code-input {
+        width: min(100%, 240px);
         min-height: 44px;
         padding: 0 12px;
         border: 1px solid #cbd5e1;
-        border-radius: 8px;
+        border-radius: 7px;
         background: #ffffff;
         color: #111827;
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 800;
-        letter-spacing: 2px;
+        letter-spacing: 5px;
+        text-align: center;
     }
 
-    .dev-otp-controls input:focus {
+    .dev-reset-code-input:focus {
         border-color: #b91c1c;
         box-shadow: 0 0 0 3px rgba(185, 28, 28, .12);
         outline: none;
+    }
+
+    .dev-reset-otp-meta {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(100px, .7fr) auto;
+        align-items: center;
+        gap: 12px;
+        padding: 9px 11px;
+        border: 1px solid #fecdd3;
+        border-radius: 8px;
+        background: #fff4f5;
+    }
+
+    .dev-reset-otp-meta-group {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-width: 0;
+    }
+
+    .dev-reset-otp-meta-group + .dev-reset-otp-meta-group {
+        padding-left: 12px;
+        border-left: 1px solid #f4cbd1;
+    }
+
+    .dev-reset-otp-meta-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        border-radius: 999px;
+        background: #fff;
+        color: #9d1427;
+    }
+
+    .dev-reset-otp-meta-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .dev-reset-otp-meta-copy {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+        color: #64748b;
+        font-size: 10px;
+        line-height: 1.35;
+    }
+
+    .dev-reset-otp-meta-copy strong {
+        overflow-wrap: anywhere;
+        color: #172033;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .dev-reset-otp-entry-content {
+        display: grid;
+        gap: 12px;
+    }
+
+    .dev-reset-otp-digit-grid {
+        margin: 2px auto 0;
+    }
+
+    .dev-reset-otp-digit {
+        padding: 0;
+    }
+
+    .dev-reset-email-change {
+        min-height: 34px;
+        padding: 0 10px;
+        border: 1px solid #e8bac2;
+        border-radius: 7px;
+        background: #fff;
+        color: #8f1827;
+        font-size: 10px;
+        font-weight: 800;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+    .dev-reset-email-change:hover,
+    .dev-reset-email-change:focus-visible {
+        border-color: #9d1427;
+        outline: none;
+    }
+
+    .dev-reset-email-change:disabled {
+        opacity: .75;
+        cursor: not-allowed;
+    }
+
+    .dev-reset-otp-digit-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 52px));
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .dev-reset-otp-digit {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        border: 1px solid #d5dce6;
+        border-radius: 8px;
+        background: #fff;
+        color: #172033;
+        font-size: 20px;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .dev-reset-otp-digit:focus {
+        border-color: #b91c1c;
+        box-shadow: 0 0 0 3px rgba(185, 28, 28, .10);
+        outline: none;
+    }
+
+    .dev-reset-otp-timer,
+    .dev-reset-otp-resend {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        color: #64748b;
+        font-size: 10px;
+        line-height: 1.4;
+    }
+
+    .dev-reset-otp-timer svg,
+    .dev-reset-otp-resend svg {
+        width: 13px;
+        height: 13px;
+        flex: 0 0 auto;
+    }
+
+    .dev-reset-otp-timer strong {
+        color: #9d1427;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .dev-reset-otp-resend {
+        flex-wrap: wrap;
+    }
+
+    .dev-reset-otp-resend button {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 0;
+        border: 0;
+        background: transparent;
+        color: #9d1427;
+        font-size: 10px;
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+    .dev-reset-otp-resend button:disabled {
+        color: #94a3b8;
+        cursor: not-allowed;
+    }
+
+    .dev-reset-otp-verified {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        background: #f0fdf4;
+        color: #166534;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .dev-reset-otp-verified[hidden] {
+        display: none !important;
+    }
+
+    .dev-reset-password-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin: 0;
+        padding: 10px 12px;
+        border: 1px solid #fecdd3;
+        border-radius: 8px;
+        background: #fff1f2;
+        color: #881225;
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    .dev-reset-password-note svg {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 16px;
+    }
+
+    .dev-reset-password-layout {
+        display: grid;
+        grid-template-columns: 66px minmax(0, 1fr);
+        align-items: start;
+        gap: 12px;
+    }
+
+    .dev-reset-password-lock {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 66px;
+        aspect-ratio: 1;
+        border-radius: 999px;
+        background: #ffe7eb;
+        color: #8f1827;
+    }
+
+    .dev-reset-password-lock svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    .dev-reset-password-fields {
+        display: grid;
+        gap: 10px;
+        width: min(100%, 560px);
     }
 
     .dev-reset-password-wrap {
@@ -1295,13 +1656,17 @@
 
     .dev-reset-footer {
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
         align-items: center;
         gap: 12px;
-        margin: 2px -20px 0;
-        padding: 14px 20px;
+        margin: 0 -16px 0;
+        padding: 12px 16px;
         border-top: 1px solid #e5e7eb;
         background: #ffffff;
+    }
+
+    .dev-reset-footer [hidden] {
+        display: none !important;
     }
 
     .dev-reset-cancel,
@@ -1314,9 +1679,18 @@
     }
 
     .dev-reset-cancel {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
         border: 1px solid #cbd5e1;
         background: #ffffff;
         color: #374151;
+    }
+
+    .dev-reset-cancel svg {
+        width: 16px;
+        height: 16px;
     }
 
     .dev-reset-submit {
@@ -1353,6 +1727,43 @@
 
         .dev-reset-head {
             padding: 18px;
+        }
+
+        .dev-reset-email-card {
+            gap: 8px;
+            padding: 9px;
+        }
+
+        .dev-reset-email-status {
+            padding: 5px 7px;
+        }
+
+        .dev-reset-otp-meta {
+            grid-template-columns: minmax(0, 1fr) auto;
+        }
+
+        .dev-reset-otp-meta-group:nth-child(2) {
+            display: none;
+        }
+
+        .dev-reset-otp-digit-grid {
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            width: min(100%, 330px);
+            gap: 6px;
+        }
+
+        .dev-reset-password-layout {
+            grid-template-columns: 48px minmax(0, 1fr);
+            gap: 10px;
+        }
+
+        .dev-reset-password-lock {
+            width: 48px;
+        }
+
+        .dev-reset-password-lock svg {
+            width: 23px;
+            height: 23px;
         }
 
         .dev-reset-footer {
@@ -2259,89 +2670,205 @@
             $resetOtpUser = \Illuminate\Support\Facades\Auth::guard('admin')->user() ?? auth()->user();
             $resetOtpIsVerified = is_array($resetOtpVerification)
                 && (int) ($resetOtpVerification['user_id'] ?? 0) === (int) ($resetOtpUser?->getAuthIdentifier() ?? 0)
+                && hash_equals(strtolower(trim($resetEmergencyEmail)), strtolower(trim((string) ($resetOtpVerification['email'] ?? ''))))
+                && in_array(($resetOtpVerification['method'] ?? ''), ['email', 'totp'], true)
                 && (int) ($resetOtpVerification['expires_at'] ?? 0) >= now()->timestamp;
+            $resetOtpResetLocked = (int) ($resetOtpLockedUntil ?? 0) > now()->timestamp;
         @endphp
-        <form method="POST" action="{{ route('admin.emergency-credentials.update') }}" class="dev-reset-form" id="emergencyPasswordResetForm" autocomplete="off" data-otp-verified="{{ $resetOtpIsVerified ? '1' : '0' }}">
+        <form method="POST" action="{{ route('admin.emergency-credentials.update') }}" class="dev-reset-form" id="emergencyPasswordResetForm" autocomplete="off" data-otp-verified="{{ $resetOtpIsVerified ? '1' : '0' }}" data-otp-method="{{ $resetOtpVerification['method'] ?? 'email' }}" data-reset-locked-until="{{ $resetOtpResetLocked ? $resetOtpLockedUntil : '' }}" data-has-authenticator="{{ $resetHasAuthenticator ? '1' : '0' }}" data-open-on-load="{{ $errors->has('new_emergency_password') ? '1' : '0' }}">
             @csrf
             @method('PUT')
             <input type="hidden" name="emergency_action" value="reset">
             <input type="hidden" name="emergency_email" value="{{ $resetEmergencyEmail }}">
             <input type="hidden" name="emergency_role" value="{{ in_array($resetEmergencyRole, ['superadmin', 'super_admin'], true) ? 'superadmin' : 'admin' }}">
 
-            <div class="dev-reset-security">
-                <span class="dev-reset-security-icon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.75A11.959 11.959 0 0 1 12 2.714Z" />
-                    </svg>
-                </span>
-                <div>
-                    <strong>Security Verification</strong>
-                    <span>Only use this when rotating or recovering the emergency login password.</span>
-                </div>
-            </div>
-
-            <div class="dev-reset-step" id="emergencyPasswordOtpStep" {{ $resetOtpIsVerified ? 'hidden' : '' }}>
-                <span class="dev-reset-step-number">1</span>
+            <div class="dev-reset-flow-card">
+                <div class="dev-reset-step" id="emergencyPasswordOtpStep" {{ $resetOtpIsVerified ? 'hidden' : '' }}>
                 <div class="dev-reset-step-body">
-                    <div>
-                        <strong class="dev-reset-step-title">Verify Emergency Email</strong>
-                        <span class="dev-reset-step-copy">Send a one-time code to the configured emergency recovery email.</span>
+                    @if ($resetHasAuthenticator)
+                        <div class="dev-reset-method-options" role="group" aria-label="Choose a verification method">
+                            <button type="button" data-reset-method="email" aria-pressed="true">Email code</button>
+                            <button type="button" data-reset-method="totp" aria-pressed="false">Authenticator app</button>
+                        </div>
+                    @endif
+                    <div class="dev-reset-step-heading">
+                        <span class="dev-reset-step-heading-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5v10.5H3.75z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 7.5 7.5 6 7.5-6" />
+                            </svg>
+                        </span>
+                        <span class="dev-reset-step-heading-copy">
+                            <strong class="dev-reset-step-title" id="emergencyPasswordOtpMethodTitle">Verify Emergency Email</strong>
+                            <span class="dev-reset-step-copy" id="emergencyPasswordOtpMethodCopy">A 6-digit verification code will be sent to your configured emergency recovery email.</span>
+                        </span>
                     </div>
-                    <div class="dev-otp-controls">
-                        <button type="button" class="dev-reset-submit" id="sendEmergencyPasswordOtp">Send verification code</button>
+                    <div class="dev-reset-email-card" id="emergencyPasswordEmailCard">
+                        <span class="dev-reset-email-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5v10.5H3.75z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 7.5 7.5 6 7.5-6" />
+                            </svg>
+                        </span>
+                        <span class="dev-reset-email-copy">
+                            <strong>Emergency Recovery Email</strong>
+                            <span>{{ $resetEmergencyEmail !== '' ? $resetEmergencyEmail : 'No recovery email configured' }}</span>
+                            <small>Registered email address on file</small>
+                        </span>
+                        <span class="dev-reset-email-status">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.5 4L19 7" />
+                            </svg>
+                            {{ $resetEmergencyEmail !== '' ? 'Verified' : 'Not configured' }}
+                        </span>
                     </div>
+                    @if ($resetHasAuthenticator)
+                        <div class="dev-reset-email-card dev-reset-authenticator-card" id="emergencyPasswordAuthenticatorCard" hidden>
+                            <span class="dev-reset-email-icon" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                    <rect x="5" y="3" width="14" height="18" rx="2" />
+                                    <path stroke-linecap="round" d="M9 7h6M9 17h6" />
+                                </svg>
+                            </span>
+                            <span class="dev-reset-email-copy">
+                                <strong>Emergency Authenticator</strong>
+                                <span>Authenticator app enrolled</span>
+                                <small>Use the app configured for emergency login</small>
+                            </span>
+                            <span class="dev-reset-email-status">Available</span>
+                        </div>
+                    @endif
+                    <p class="dev-reset-notice">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-11.5a.75.75 0 0 0-1.5 0v4a.75.75 0 0 0 1.5 0v-4Zm0 7a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Z" clip-rule="evenodd" />
+                        </svg>
+                        <span id="emergencyPasswordOtpNoticeText">{{ $resetOtpResetLocked ? 'You recently reset the emergency password. You can request a new verification code after the current OTP expires.' : 'Please check your inbox (and spam folder) for the verification code.' }}</span>
+                    </p>
                     <div class="dev-inline-status" id="emergencyPasswordOtpStatus" aria-live="polite"></div>
                 </div>
-            </div>
-
-            <div class="dev-reset-step" id="emergencyPasswordOtpEntry" hidden>
-                <span class="dev-reset-step-number">2</span>
-                <div class="dev-reset-step-body">
-                    <div>
-                        <strong class="dev-reset-step-title">Enter Verification Code</strong>
-                        <span class="dev-reset-step-copy">Enter the 6-digit code sent to <span id="emergencyPasswordOtpRecipient">the configured recovery email</span>.</span>
-                    </div>
-                    <div class="dev-otp-controls">
-                        <input type="text" id="emergencyPasswordOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" aria-label="6-digit verification code">
-                        <button type="button" class="dev-reset-submit" id="verifyEmergencyPasswordOtp">Verify code</button>
-                    </div>
-                    <div class="dev-inline-status" id="emergencyPasswordOtpVerifyStatus" aria-live="polite"></div>
                 </div>
-            </div>
 
-            <div class="dev-reset-step" id="emergencyPasswordFields" hidden>
-                <span class="dev-reset-step-number">3</span>
-                <div class="dev-reset-step-body">
-                    <div>
-                        <strong class="dev-reset-step-title">Create New Emergency Password</strong>
-                        <span class="dev-reset-step-copy">Use at least 8 characters with at least one letter and one number.</span>
+                <div class="dev-reset-step" id="emergencyPasswordOtpEntry" hidden>
+                    <div class="dev-reset-step-body">
+                        <div class="dev-reset-step-heading">
+                            <span class="dev-reset-step-heading-icon" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5v10.5H3.75z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 7.5 7.5 6 7.5-6" />
+                                </svg>
+                            </span>
+                            <span class="dev-reset-step-heading-copy">
+                                        <strong class="dev-reset-step-title" id="emergencyPasswordOtpEntryTitle">Enter Verification Code</strong>
+                                        <span class="dev-reset-step-copy" id="emergencyPasswordOtpEntryCopy">Enter the 6-digit code sent to your emergency recovery email.</span>
+                            </span>
+                        </div>
+                        <div class="dev-reset-otp-entry-content">
+                            <div class="dev-reset-otp-meta">
+                                <div class="dev-reset-otp-meta-group">
+                                    <span class="dev-reset-otp-meta-icon" aria-hidden="true">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5v10.5H3.75z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 7.5 7.5 6 7.5-6" />
+                                        </svg>
+                                    </span>
+                                <span class="dev-reset-otp-meta-copy" id="emergencyPasswordOtpSourceCopy">
+                                        Verification code sent to
+                                        <strong id="emergencyPasswordOtpRecipient">the configured recovery email</strong>
+                                    </span>
+                                </div>
+                                <div class="dev-reset-otp-meta-group" id="emergencyPasswordOtpSentMeta">
+                                    <span class="dev-reset-otp-meta-icon" aria-hidden="true">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m22 2-7 20-4-9-9-4Z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M22 2 11 13" />
+                                        </svg>
+                                    </span>
+                                    <span class="dev-reset-otp-meta-copy">Code sent<strong id="emergencyPasswordOtpSentAt">Just now</strong></span>
+                                </div>
+                                <button type="button" class="dev-reset-email-change" disabled title="Emergency password reset only uses the configured recovery email.">Use different email</button>
+                            </div>
+                            <div class="dev-reset-otp-verified" id="emergencyPasswordOtpVerifiedNotice" hidden>
+                                <span aria-hidden="true">&#10003;</span> Verification complete. Continue to set a new password.
+                            </div>
+                            <div class="dev-reset-otp-digit-grid" id="emergencyPasswordOtpDigits" role="group" aria-label="6-digit verification code">
+                                @for ($digit = 1; $digit <= 6; $digit++)
+                                    <input type="text" class="dev-reset-otp-digit" data-otp-digit inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="{{ $digit === 1 ? 'one-time-code' : 'off' }}" aria-label="Digit {{ $digit }} of 6">
+                                @endfor
+                            </div>
+                            <input type="hidden" id="emergencyPasswordOtp" value="">
+                            <div class="dev-reset-otp-timer" id="emergencyPasswordOtpTimer" aria-live="polite">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2" /></svg>
+                                <span id="emergencyPasswordOtpTimerLabel">Code will expire in</span> <strong id="emergencyPasswordOtpCountdown">05:00</strong>
+                            </div>
+                            <div class="dev-reset-otp-resend" id="emergencyPasswordOtpResend">
+                                Didn't receive the code? Check your spam folder or
+                                <button type="button" id="resendEmergencyPasswordOtp" disabled>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7v5h-5M4 17v-5h5m11-1a8 8 0 0 0-14.93-3M4 13a8 8 0 0 0 14.93 3" /></svg>
+                                    <span id="emergencyPasswordOtpResendLabel">Resend in 00:45</span>
+                                </button>
+                            </div>
+                            <div class="dev-inline-status" id="emergencyPasswordOtpVerifyStatus" aria-live="polite"></div>
+                        </div>
                     </div>
-                    <div class="dev-reset-password-wrap">
-                        <span class="dev-reset-input-icon" aria-hidden="true">
-                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" /></svg>
+                </div>
+
+                <div class="dev-reset-step" id="emergencyPasswordFields" hidden>
+                    <div class="dev-reset-step-body dev-reset-password-layout">
+                        <span class="dev-reset-password-lock" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" /></svg>
                         </span>
-                        <input type="password" id="modalNewEmergencyPassword" name="new_emergency_password" required placeholder="Create emergency password" autocomplete="new-password">
-                        <button type="button" class="dev-reset-eye" data-toggle-password="modalNewEmergencyPassword" aria-label="Show new emergency password">
-                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
-                        </button>
+                        <div class="dev-reset-password-fields">
+                            <div>
+                                <strong class="dev-reset-step-title">Set New Emergency Password</strong>
+                                <span class="dev-reset-step-copy">Enter and confirm your new fallback password.</span>
+                            </div>
+                            <div class="dev-reset-password-wrap">
+                                <span class="dev-reset-input-icon" aria-hidden="true">
+                                    <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" /></svg>
+                                </span>
+                                <input type="password" id="modalNewEmergencyPassword" name="new_emergency_password" required placeholder="New Password" autocomplete="new-password">
+                                <button type="button" class="dev-reset-eye" data-toggle-password="modalNewEmergencyPassword" aria-label="Show new emergency password">
+                                    <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                                </button>
+                            </div>
+                            <div class="dev-reset-password-wrap">
+                                <span class="dev-reset-input-icon" aria-hidden="true">
+                                    <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" /></svg>
+                                </span>
+                                <input type="password" id="modalNewEmergencyPasswordConfirm" name="new_emergency_password_confirmation" required placeholder="Confirm Password" autocomplete="new-password">
+                                <button type="button" class="dev-reset-eye" data-toggle-password="modalNewEmergencyPasswordConfirm" aria-label="Show confirmed emergency password">
+                                    <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                                </button>
+                            </div>
+                            <p class="dev-reset-password-note">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-11.5a.75.75 0 0 0-1.5 0v4a.75.75 0 0 0 1.5 0v-4Zm0 7a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Z" clip-rule="evenodd" /></svg>
+                                Password must be at least 8 characters and include a mix of letters, numbers, and symbols.
+                            </p>
+                            @error('new_emergency_password')
+                                <div class="dev-form-error">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
-                    <div class="dev-reset-password-wrap">
-                        <span class="dev-reset-input-icon" aria-hidden="true">
-                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" /></svg>
-                        </span>
-                        <input type="password" id="modalNewEmergencyPasswordConfirm" name="new_emergency_password_confirmation" required placeholder="Confirm emergency password" autocomplete="new-password">
-                        <button type="button" class="dev-reset-eye" data-toggle-password="modalNewEmergencyPasswordConfirm" aria-label="Show confirmed emergency password">
-                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
-                        </button>
-                    </div>
-                    @error('new_emergency_password')
-                        <div class="dev-form-error">{{ $message }}</div>
-                    @enderror
                 </div>
             </div>
             <div class="dev-reset-footer">
                 <button type="button" class="dev-reset-cancel" id="cancelEmergencyPasswordReset">Cancel</button>
-                <button type="submit" class="dev-reset-submit" id="saveEmergencyPasswordReset" {{ $resetOtpIsVerified ? '' : 'disabled' }}>Save Password</button>
+                <button type="button" class="dev-reset-cancel" id="backEmergencyPasswordReset" hidden>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
+                    <span>Back</span>
+                </button>
+                <button type="button" class="dev-reset-submit" id="sendEmergencyPasswordOtp" {{ $resetEmergencyEmail !== '' && !$resetOtpIsVerified && !$resetOtpResetLocked ? '' : 'disabled' }} {{ $resetOtpIsVerified ? 'hidden' : '' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m22 2-7 20-4-9-9-4Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M22 2 11 13" /></svg>
+                    <span id="sendEmergencyPasswordOtpLabel">Send Verification Code</span>
+                </button>
+                <button type="button" class="dev-reset-submit" id="verifyEmergencyPasswordOtp" disabled hidden>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3 4.5 6v5.25c0 4.5 3.2 7.8 7.5 9.75 4.3-1.95 7.5-5.25 7.5-9.75V6L12 3Z" /><path stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4" /></svg>
+                    <span>Verify Code</span>
+                </button>
+                <button type="submit" class="dev-reset-submit" id="saveEmergencyPasswordReset" {{ $resetOtpIsVerified ? '' : 'disabled hidden' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.5 4L19 7" /></svg>
+                    <span>Save New Password</span>
+                </button>
             </div>
         </form>
     </section>
@@ -2415,15 +2942,37 @@
         const emergencyPasswordResetModal = document.getElementById('resetEmergencyPasswordModal');
         const closeEmergencyPasswordResetButton = document.getElementById('closeEmergencyPasswordReset');
         const cancelEmergencyPasswordResetButton = document.getElementById('cancelEmergencyPasswordReset');
+        const backEmergencyPasswordResetButton = document.getElementById('backEmergencyPasswordReset');
         const emergencyPasswordResetForm = document.getElementById('emergencyPasswordResetForm');
         const emergencyPasswordOtpStep = document.getElementById('emergencyPasswordOtpStep');
+        const resetOtpMethodButtons = Array.from(document.querySelectorAll('[data-reset-method]'));
+        const emergencyPasswordOtpMethodTitle = document.getElementById('emergencyPasswordOtpMethodTitle');
+        const emergencyPasswordOtpMethodCopy = document.getElementById('emergencyPasswordOtpMethodCopy');
+        const emergencyPasswordEmailCard = document.getElementById('emergencyPasswordEmailCard');
+        const emergencyPasswordAuthenticatorCard = document.getElementById('emergencyPasswordAuthenticatorCard');
+        const emergencyPasswordOtpNoticeText = document.getElementById('emergencyPasswordOtpNoticeText');
         const sendEmergencyPasswordOtpButton = document.getElementById('sendEmergencyPasswordOtp');
+        const sendEmergencyPasswordOtpLabel = document.getElementById('sendEmergencyPasswordOtpLabel');
         const verifyEmergencyPasswordOtpButton = document.getElementById('verifyEmergencyPasswordOtp');
         const emergencyPasswordOtp = document.getElementById('emergencyPasswordOtp');
         const emergencyPasswordOtpEntry = document.getElementById('emergencyPasswordOtpEntry');
         const emergencyPasswordOtpRecipient = document.getElementById('emergencyPasswordOtpRecipient');
+        const emergencyPasswordOtpSentAt = document.getElementById('emergencyPasswordOtpSentAt');
+        const emergencyPasswordOtpSentMeta = document.getElementById('emergencyPasswordOtpSentMeta');
+        const emergencyPasswordOtpSourceCopy = document.getElementById('emergencyPasswordOtpSourceCopy');
+        const emergencyPasswordOtpEntryTitle = document.getElementById('emergencyPasswordOtpEntryTitle');
+        const emergencyPasswordOtpEntryCopy = document.getElementById('emergencyPasswordOtpEntryCopy');
         const emergencyPasswordOtpStatus = document.getElementById('emergencyPasswordOtpStatus');
         const emergencyPasswordOtpVerifyStatus = document.getElementById('emergencyPasswordOtpVerifyStatus');
+        const emergencyPasswordOtpDigitInputs = Array.from(document.querySelectorAll('[data-otp-digit]'));
+        const emergencyPasswordOtpDigits = document.getElementById('emergencyPasswordOtpDigits');
+        const emergencyPasswordOtpVerifiedNotice = document.getElementById('emergencyPasswordOtpVerifiedNotice');
+        const emergencyPasswordOtpTimer = document.getElementById('emergencyPasswordOtpTimer');
+        const emergencyPasswordOtpResendRow = document.getElementById('emergencyPasswordOtpResend');
+        const emergencyPasswordOtpCountdown = document.getElementById('emergencyPasswordOtpCountdown');
+        const emergencyPasswordOtpTimerLabel = document.getElementById('emergencyPasswordOtpTimerLabel');
+        const resendEmergencyPasswordOtpButton = document.getElementById('resendEmergencyPasswordOtp');
+        const resendEmergencyPasswordOtpLabel = document.getElementById('emergencyPasswordOtpResendLabel');
         const emergencyPasswordFields = document.getElementById('emergencyPasswordFields');
         const saveEmergencyPasswordResetButton = document.getElementById('saveEmergencyPasswordReset');
         const maintenanceToggle = document.getElementById('devMaintenanceModeToggle');
@@ -2450,6 +2999,9 @@
         emergencyResetButton?.addEventListener('click', () => {
             window.setTimeout(() => setEmergencyPasswordResetModalOpen(true), 80);
         });
+        if (emergencyPasswordResetForm?.dataset.openOnLoad === '1') {
+            setEmergencyPasswordResetModalOpen(true);
+        }
         closeEmergencyPasswordResetButton?.addEventListener('click', () => setEmergencyPasswordResetModalOpen(false));
         cancelEmergencyPasswordResetButton?.addEventListener('click', () => setEmergencyPasswordResetModalOpen(false));
         emergencyPasswordResetModal?.addEventListener('click', function (event) {
@@ -2467,49 +3019,300 @@
         };
 
         const csrfToken = emergencyPasswordResetForm?.querySelector('input[name="_token"]')?.value || '';
+        const resetEmailIsConfigured = Boolean(emergencyPasswordResetForm?.querySelector('input[name="emergency_email"]')?.value);
+        const resetHasAuthenticator = emergencyPasswordResetForm?.dataset.hasAuthenticator === '1';
+        let resetLockedUntil = Number(emergencyPasswordResetForm?.dataset.resetLockedUntil || 0) * 1000;
+        let selectedResetOtpMethod = emergencyPasswordResetForm?.dataset.otpMethod === 'totp' && resetHasAuthenticator ? 'totp' : 'email';
+        let otpExpiresAt = 0;
+        let otpResendAt = 0;
+        let otpTimerInterval = null;
+        let resetLockInterval = null;
+        let otpExpiredMessageShown = false;
+        let otpResendInProgress = false;
+
+        const formatOtpTime = (seconds) => `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+        const getOtpCode = () => emergencyPasswordOtpDigitInputs.map((input) => input.value).join('').slice(0, 6);
+        const resetIsLocked = () => resetLockedUntil > Date.now();
+        const updateResetMethodUI = () => {
+            const usingAuthenticator = selectedResetOtpMethod === 'totp';
+            resetOtpMethodButtons.forEach((button) => button.setAttribute('aria-pressed', button.dataset.resetMethod === selectedResetOtpMethod ? 'true' : 'false'));
+            if (emergencyPasswordEmailCard) emergencyPasswordEmailCard.hidden = usingAuthenticator;
+            if (emergencyPasswordAuthenticatorCard) emergencyPasswordAuthenticatorCard.hidden = !usingAuthenticator;
+            if (emergencyPasswordOtpMethodTitle) emergencyPasswordOtpMethodTitle.textContent = usingAuthenticator ? 'Verify with Authenticator App' : 'Verify Emergency Email';
+            if (emergencyPasswordOtpMethodCopy) emergencyPasswordOtpMethodCopy.textContent = usingAuthenticator
+                ? 'Enter the 6-digit code from the authenticator app enrolled for emergency login.'
+                : 'A 6-digit verification code will be sent to your configured emergency recovery email.';
+            if (emergencyPasswordOtpEntryTitle) emergencyPasswordOtpEntryTitle.textContent = usingAuthenticator ? 'Enter Authenticator Code' : 'Enter Verification Code';
+            if (emergencyPasswordOtpEntryCopy) emergencyPasswordOtpEntryCopy.textContent = usingAuthenticator
+                ? 'Enter the current 6-digit code from your emergency authenticator app.'
+                : 'Enter the 6-digit code sent to your emergency recovery email.';
+            if (emergencyPasswordOtpSourceCopy) {
+                const prefix = emergencyPasswordOtpSourceCopy.firstChild;
+                if (prefix) prefix.textContent = usingAuthenticator ? 'Code from ' : 'Verification code sent to ';
+            }
+            if (emergencyPasswordOtpRecipient) emergencyPasswordOtpRecipient.textContent = usingAuthenticator ? 'your authenticator app' : 'the configured recovery email';
+            if (emergencyPasswordOtpSentMeta) emergencyPasswordOtpSentMeta.hidden = usingAuthenticator;
+            if (emergencyPasswordOtpTimer) emergencyPasswordOtpTimer.hidden = usingAuthenticator || emergencyPasswordResetForm?.dataset.otpVerified === '1' || emergencyPasswordOtpEntry?.hidden !== false;
+            if (emergencyPasswordOtpResendRow) emergencyPasswordOtpResendRow.hidden = usingAuthenticator || emergencyPasswordResetForm?.dataset.otpVerified === '1' || emergencyPasswordOtpEntry?.hidden !== false;
+            if (emergencyPasswordOtpTimerLabel) emergencyPasswordOtpTimerLabel.textContent = usingAuthenticator ? 'Code changes in' : 'Code will expire in';
+            if (sendEmergencyPasswordOtpLabel) sendEmergencyPasswordOtpLabel.textContent = usingAuthenticator ? 'Continue with Authenticator' : 'Send Verification Code';
+            if (emergencyPasswordOtpNoticeText && !resetIsLocked()) {
+                emergencyPasswordOtpNoticeText.textContent = usingAuthenticator
+                    ? 'Open the authenticator app configured for emergency login and enter its current code.'
+                    : 'Please check your inbox (and spam folder) for the verification code.';
+            }
+            if (sendEmergencyPasswordOtpButton && !sendEmergencyPasswordOtpButton.hidden) {
+                sendEmergencyPasswordOtpButton.disabled = resetIsLocked() || (usingAuthenticator ? !resetHasAuthenticator : !resetEmailIsConfigured || Date.now() < otpResendAt);
+            }
+        };
+        const syncOtpDigitInputs = () => {
+            const code = getOtpCode();
+            if (emergencyPasswordOtp) emergencyPasswordOtp.value = code;
+            if (verifyEmergencyPasswordOtpButton && emergencyPasswordResetForm?.dataset.otpVerified !== '1') {
+                verifyEmergencyPasswordOtpButton.disabled = code.length !== 6 || (selectedResetOtpMethod === 'email' && Date.now() >= otpExpiresAt);
+            }
+        };
+        const clearOtpDigitInputs = () => {
+            emergencyPasswordOtpDigitInputs.forEach((input) => { input.value = ''; });
+            syncOtpDigitInputs();
+        };
+        const updateOtpCountdown = () => {
+            if (selectedResetOtpMethod !== 'email') return;
+            const now = Date.now();
+            const expiresIn = Math.max(0, Math.ceil((otpExpiresAt - now) / 1000));
+            const resendIn = Math.max(0, Math.ceil((otpResendAt - now) / 1000));
+            if (emergencyPasswordOtpCountdown) emergencyPasswordOtpCountdown.textContent = formatOtpTime(expiresIn);
+            if (resendEmergencyPasswordOtpLabel) {
+                resendEmergencyPasswordOtpLabel.textContent = resendIn > 0 ? `Resend in ${formatOtpTime(resendIn)}` : 'Resend code';
+            }
+            if (resendEmergencyPasswordOtpButton) resendEmergencyPasswordOtpButton.disabled = resendIn > 0 || otpResendInProgress;
+            if (sendEmergencyPasswordOtpButton && !sendEmergencyPasswordOtpButton.hidden) {
+                sendEmergencyPasswordOtpButton.disabled = resetIsLocked() || !resetEmailIsConfigured || resendIn > 0;
+            }
+            if (expiresIn === 0 && otpExpiresAt > 0 && !otpExpiredMessageShown) {
+                otpExpiredMessageShown = true;
+                setOtpStatus(emergencyPasswordOtpVerifyStatus, 'Code expired. Request a new code to continue.', true);
+            }
+            syncOtpDigitInputs();
+            if (expiresIn === 0 && resendIn === 0 && otpTimerInterval) {
+                window.clearInterval(otpTimerInterval);
+                otpTimerInterval = null;
+            }
+        };
+        const startOtpCountdown = () => {
+            selectedResetOtpMethod = 'email';
+            otpExpiresAt = Date.now() + 5 * 60 * 1000;
+            otpResendAt = Date.now() + 45 * 1000;
+            otpExpiredMessageShown = false;
+            if (emergencyPasswordOtpCountdown) emergencyPasswordOtpCountdown.textContent = '05:00';
+            if (resendEmergencyPasswordOtpLabel) resendEmergencyPasswordOtpLabel.textContent = 'Resend in 00:45';
+            if (otpTimerInterval) window.clearInterval(otpTimerInterval);
+            otpTimerInterval = window.setInterval(updateOtpCountdown, 1000);
+            updateOtpCountdown();
+        };
+        const setEmergencyResetStep = (activeStep) => {
+            const verified = emergencyPasswordResetForm?.dataset.otpVerified === '1';
+            if (emergencyPasswordOtpStep) emergencyPasswordOtpStep.hidden = activeStep !== 1;
+            if (emergencyPasswordOtpEntry) emergencyPasswordOtpEntry.hidden = activeStep !== 2;
+            if (emergencyPasswordFields) emergencyPasswordFields.hidden = activeStep !== 3;
+            if (cancelEmergencyPasswordResetButton) cancelEmergencyPasswordResetButton.hidden = activeStep !== 1;
+            if (backEmergencyPasswordResetButton) backEmergencyPasswordResetButton.hidden = activeStep === 1;
+            if (sendEmergencyPasswordOtpButton) {
+                sendEmergencyPasswordOtpButton.hidden = activeStep !== 1;
+                sendEmergencyPasswordOtpButton.disabled = resetIsLocked() || (selectedResetOtpMethod === 'totp' ? !resetHasAuthenticator : !resetEmailIsConfigured || Date.now() < otpResendAt);
+            }
+            if (verifyEmergencyPasswordOtpButton) {
+                verifyEmergencyPasswordOtpButton.hidden = activeStep !== 2;
+                const verifyLabel = verifyEmergencyPasswordOtpButton.querySelector('span');
+                if (verifyLabel) verifyLabel.textContent = verified ? 'Continue' : 'Verify Code';
+                verifyEmergencyPasswordOtpButton.disabled = verified ? false : getOtpCode().length !== 6 || (selectedResetOtpMethod === 'email' && Date.now() >= otpExpiresAt);
+            }
+            if (saveEmergencyPasswordResetButton) {
+                saveEmergencyPasswordResetButton.hidden = activeStep !== 3;
+                saveEmergencyPasswordResetButton.disabled = !verified;
+            }
+            if (emergencyPasswordOtpDigits) emergencyPasswordOtpDigits.hidden = verified;
+            if (emergencyPasswordOtpTimer) emergencyPasswordOtpTimer.hidden = verified;
+            if (emergencyPasswordOtpResendRow) emergencyPasswordOtpResendRow.hidden = verified;
+            if (emergencyPasswordOtpVerifiedNotice) emergencyPasswordOtpVerifiedNotice.hidden = !verified;
+            updateResetMethodUI();
+        };
         const restoreVerifiedOtpState = () => {
             const verified = emergencyPasswordResetForm?.dataset.otpVerified === '1';
-            if (emergencyPasswordFields) emergencyPasswordFields.hidden = !verified;
-            if (saveEmergencyPasswordResetButton) saveEmergencyPasswordResetButton.disabled = !verified;
-            if (emergencyPasswordOtpEntry) emergencyPasswordOtpEntry.hidden = verified;
-            if (emergencyPasswordOtpStep) emergencyPasswordOtpStep.hidden = verified;
-            if (verified) setOtpStatus(emergencyPasswordOtpVerifyStatus, 'Email verification complete. Set the new password.', false);
+            if (verified && emergencyPasswordResetForm?.dataset.otpMethod === 'totp' && resetHasAuthenticator) selectedResetOtpMethod = 'totp';
+            setEmergencyResetStep(verified ? 3 : 1);
+            if (verified) setOtpStatus(emergencyPasswordOtpVerifyStatus, 'Verification complete. Set the new password.');
         };
         restoreVerifiedOtpState();
 
-        sendEmergencyPasswordOtpButton?.addEventListener('click', async () => {
-            sendEmergencyPasswordOtpButton.disabled = true;
-            setOtpStatus(emergencyPasswordOtpStatus, 'Sending verification code...');
+        const refreshResetLockMessage = () => {
+            if (!resetIsLocked()) {
+                if (emergencyPasswordOtpNoticeText) {
+                    emergencyPasswordOtpNoticeText.textContent = selectedResetOtpMethod === 'totp'
+                        ? 'Open the authenticator app configured for emergency login and enter its current code.'
+                        : 'Please check your inbox (and spam folder) for the verification code.';
+                }
+                if (sendEmergencyPasswordOtpButton && !sendEmergencyPasswordOtpButton.hidden) {
+                    sendEmergencyPasswordOtpButton.disabled = selectedResetOtpMethod === 'totp' ? !resetHasAuthenticator : !resetEmailIsConfigured || Date.now() < otpResendAt;
+                }
+                return false;
+            }
+
+            const waitSeconds = Math.ceil((resetLockedUntil - Date.now()) / 1000);
+            if (emergencyPasswordOtpNoticeText) {
+                emergencyPasswordOtpNoticeText.textContent = `The emergency password was just reset. You can start another reset in ${formatOtpTime(waitSeconds)}.`;
+            }
+            if (sendEmergencyPasswordOtpButton) sendEmergencyPasswordOtpButton.disabled = true;
+            return true;
+        };
+        const startResetLockCountdown = () => {
+            if (resetLockInterval) return;
+            resetLockInterval = window.setInterval(() => {
+                if (!refreshResetLockMessage()) {
+                    window.clearInterval(resetLockInterval);
+                    resetLockInterval = null;
+                }
+            }, 1000);
+        };
+        if (refreshResetLockMessage()) startResetLockCountdown();
+        resetOtpMethodButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                if (emergencyPasswordResetForm?.dataset.otpVerified === '1' || resetIsLocked()) return;
+                selectedResetOtpMethod = button.dataset.resetMethod === 'totp' ? 'totp' : 'email';
+                clearOtpDigitInputs();
+                setOtpStatus(emergencyPasswordOtpStatus, '');
+                setOtpStatus(emergencyPasswordOtpVerifyStatus, '');
+                updateResetMethodUI();
+            });
+        });
+
+        const sendEmergencyOtp = async (isResend = false) => {
+            const actionButton = isResend ? resendEmergencyPasswordOtpButton : sendEmergencyPasswordOtpButton;
+            if (!actionButton) return;
+            actionButton.disabled = true;
+            if (isResend) {
+                otpResendInProgress = true;
+                setOtpStatus(emergencyPasswordOtpVerifyStatus, 'Sending a new verification code...');
+            } else {
+                setOtpStatus(emergencyPasswordOtpStatus, 'Sending verification code...');
+            }
             try {
                 const response = await fetch('{{ route('admin.emergency-credentials.otp.send') }}', {
                     method: 'POST',
                     headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
                 });
                 const payload = await response.json().catch(() => ({}));
-                if (!response.ok || !payload.success) throw new Error(payload.message || 'Unable to send the verification code.');
+                if (!response.ok || !payload.success) {
+                    const error = new Error(payload.message || 'Unable to send the verification code.');
+                    error.status = response.status;
+                    error.retryAfter = Number(payload.retry_after || 0);
+                    throw error;
+                }
                 if (emergencyPasswordOtpRecipient) emergencyPasswordOtpRecipient.textContent = payload.recipient || 'the configured recovery email';
-                if (emergencyPasswordOtpEntry) emergencyPasswordOtpEntry.hidden = false;
-                if (emergencyPasswordOtpStep) emergencyPasswordOtpStep.hidden = false;
-                if (emergencyPasswordFields) emergencyPasswordFields.hidden = true;
-                if (saveEmergencyPasswordResetButton) saveEmergencyPasswordResetButton.disabled = true;
+                if (emergencyPasswordOtpSentAt) {
+                    const sentTime = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date());
+                    emergencyPasswordOtpSentAt.textContent = `Today, ${sentTime}`;
+                }
                 if (emergencyPasswordResetForm) emergencyPasswordResetForm.dataset.otpVerified = '0';
-                if (emergencyPasswordOtp) emergencyPasswordOtp.value = '';
+                clearOtpDigitInputs();
                 setOtpStatus(emergencyPasswordOtpStatus, payload.message || 'Verification code sent.');
-                setOtpStatus(emergencyPasswordOtpVerifyStatus, '');
-                emergencyPasswordOtp?.focus();
+                setOtpStatus(emergencyPasswordOtpVerifyStatus, isResend ? 'A new code has been sent.' : '');
+                startOtpCountdown();
+                setEmergencyResetStep(2);
+                if (!isResend) emergencyPasswordOtpDigitInputs[0]?.focus();
             } catch (error) {
-                setOtpStatus(emergencyPasswordOtpStatus, error.message || 'Unable to send the verification code.', true);
+                if (error.status === 429) {
+                    if (error.retryAfter > 45) {
+                        resetLockedUntil = Date.now() + error.retryAfter * 1000;
+                        refreshResetLockMessage();
+                        startResetLockCountdown();
+                    } else {
+                        otpResendAt = Date.now() + Math.max(1, error.retryAfter || 45) * 1000;
+                    }
+                    if (!otpTimerInterval) otpTimerInterval = window.setInterval(updateOtpCountdown, 1000);
+                    updateOtpCountdown();
+                }
+                if (isResend) {
+                    setOtpStatus(emergencyPasswordOtpVerifyStatus, error.message || 'Unable to resend the verification code.', true);
+                } else {
+                    setOtpStatus(emergencyPasswordOtpStatus, error.message || 'Unable to send the verification code.', true);
+                }
             } finally {
-                sendEmergencyPasswordOtpButton.disabled = false;
+                if (isResend) {
+                    otpResendInProgress = false;
+                    updateOtpCountdown();
+                } else if (sendEmergencyPasswordOtpButton && !sendEmergencyPasswordOtpButton.hidden) {
+                    sendEmergencyPasswordOtpButton.disabled = resetIsLocked() || (selectedResetOtpMethod === 'totp' ? !resetHasAuthenticator : !resetEmailIsConfigured || Date.now() < otpResendAt);
+                }
             }
-        });
+        };
 
-        emergencyPasswordOtp?.addEventListener('input', () => {
-            emergencyPasswordOtp.value = emergencyPasswordOtp.value.replace(/\D/g, '').slice(0, 6);
+        sendEmergencyPasswordOtpButton?.addEventListener('click', () => {
+            if (selectedResetOtpMethod === 'totp') {
+                if (resetIsLocked()) {
+                    refreshResetLockMessage();
+                    return;
+                }
+                otpExpiresAt = 0;
+                clearOtpDigitInputs();
+                setOtpStatus(emergencyPasswordOtpStatus, '');
+                setOtpStatus(emergencyPasswordOtpVerifyStatus, '');
+                setEmergencyResetStep(2);
+                emergencyPasswordOtpDigitInputs[0]?.focus();
+                return;
+            }
+            sendEmergencyOtp();
+        });
+        resendEmergencyPasswordOtpButton?.addEventListener('click', () => sendEmergencyOtp(true));
+        emergencyPasswordOtpDigitInputs.forEach((input, index) => {
+            input.addEventListener('input', () => {
+                const digits = input.value.replace(/\D/g, '');
+                if (digits.length > 1) {
+                    emergencyPasswordOtpDigitInputs.forEach((digitInput) => { digitInput.value = ''; });
+                    digits.slice(0, emergencyPasswordOtpDigitInputs.length - index).split('').forEach((digit, offset) => {
+                        if (emergencyPasswordOtpDigitInputs[index + offset]) emergencyPasswordOtpDigitInputs[index + offset].value = digit;
+                    });
+                } else {
+                    input.value = digits.slice(0, 1);
+                }
+                syncOtpDigitInputs();
+                if (input.value && emergencyPasswordOtpDigitInputs[index + 1]) emergencyPasswordOtpDigitInputs[index + 1].focus();
+                if (emergencyPasswordOtpVerifyStatus?.classList.contains('is-invalid')) setOtpStatus(emergencyPasswordOtpVerifyStatus, '');
+            });
+            input.addEventListener('keydown', (event) => {
+                if (event.key === 'Backspace' && !input.value && emergencyPasswordOtpDigitInputs[index - 1]) {
+                    emergencyPasswordOtpDigitInputs[index - 1].focus();
+                } else if (event.key === 'ArrowLeft' && emergencyPasswordOtpDigitInputs[index - 1]) {
+                    emergencyPasswordOtpDigitInputs[index - 1].focus();
+                } else if (event.key === 'ArrowRight' && emergencyPasswordOtpDigitInputs[index + 1]) {
+                    emergencyPasswordOtpDigitInputs[index + 1].focus();
+                }
+            });
+            input.addEventListener('paste', (event) => {
+                event.preventDefault();
+                const digits = (event.clipboardData?.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+                digits.split('').forEach((digit, offset) => {
+                    if (emergencyPasswordOtpDigitInputs[offset]) emergencyPasswordOtpDigitInputs[offset].value = digit;
+                });
+                syncOtpDigitInputs();
+                emergencyPasswordOtpDigitInputs[Math.min(digits.length, 5)]?.focus();
+            });
+        });
+        backEmergencyPasswordResetButton?.addEventListener('click', () => {
+            const activeStep = emergencyPasswordFields?.hidden === false ? 3 : 2;
+            const previousStep = activeStep === 3 ? 2 : 1;
+            setEmergencyResetStep(previousStep);
+            if (previousStep === 2 && emergencyPasswordResetForm?.dataset.otpVerified !== '1') emergencyPasswordOtpDigitInputs[0]?.focus();
+            if (previousStep === 1) sendEmergencyPasswordOtpButton?.focus();
         });
 
         verifyEmergencyPasswordOtpButton?.addEventListener('click', async () => {
-            const code = (emergencyPasswordOtp?.value || '').trim();
+            if (emergencyPasswordResetForm?.dataset.otpVerified === '1') {
+                setEmergencyResetStep(3);
+                document.getElementById('modalNewEmergencyPassword')?.focus();
+                return;
+            }
+            const code = getOtpCode();
             if (!/^\d{6}$/.test(code)) {
                 setOtpStatus(emergencyPasswordOtpVerifyStatus, 'Enter the 6-digit verification code.', true);
                 return;
@@ -2520,21 +3323,30 @@
                 const response = await fetch('{{ route('admin.emergency-credentials.otp.verify') }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                    body: JSON.stringify({ code }),
+                body: JSON.stringify({ code, method: selectedResetOtpMethod }),
                 });
                 const payload = await response.json().catch(() => ({}));
-                if (!response.ok || !payload.success) throw new Error(payload.message || 'The code is invalid or expired.');
+                if (!response.ok || !payload.success) {
+                    const error = new Error(payload.message || 'The code is invalid or expired.');
+                    error.status = response.status;
+                    error.retryAfter = Number(payload.retry_after || 0);
+                    throw error;
+                }
                 if (emergencyPasswordResetForm) emergencyPasswordResetForm.dataset.otpVerified = '1';
-                if (emergencyPasswordOtpEntry) emergencyPasswordOtpEntry.hidden = true;
-                if (emergencyPasswordOtpStep) emergencyPasswordOtpStep.hidden = true;
-                if (emergencyPasswordFields) emergencyPasswordFields.hidden = false;
-                if (saveEmergencyPasswordResetButton) saveEmergencyPasswordResetButton.disabled = false;
-                setOtpStatus(emergencyPasswordOtpVerifyStatus, 'Email verification complete. Set the new password.');
+                setOtpStatus(emergencyPasswordOtpVerifyStatus, 'Verification complete. Set the new password.');
+                setEmergencyResetStep(3);
                 document.getElementById('modalNewEmergencyPassword')?.focus();
             } catch (error) {
+                if (error.status === 429 && error.retryAfter > 0) {
+                    resetLockedUntil = Date.now() + error.retryAfter * 1000;
+                    clearOtpDigitInputs();
+                    setEmergencyResetStep(1);
+                    refreshResetLockMessage();
+                    startResetLockCountdown();
+                }
                 setOtpStatus(emergencyPasswordOtpVerifyStatus, error.message || 'The code is invalid or expired.', true);
             } finally {
-                verifyEmergencyPasswordOtpButton.disabled = false;
+                if (emergencyPasswordResetForm?.dataset.otpVerified !== '1') syncOtpDigitInputs();
             }
         });
 
