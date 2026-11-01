@@ -21,6 +21,8 @@ class EmergencyTwoFactorService
     private const EMAIL_OTP_CACHE_PREFIX = 'emergency-email-otp:';
     private const EMAIL_OTP_RESEND_CACHE_PREFIX = 'emergency-email-otp-resend:';
     private const PASSWORD_RESET_OTP_CACHE_PREFIX = 'emergency-password-reset-otp:';
+    private const PASSWORD_RESET_OTP_EXPIRY_CACHE_PREFIX = 'emergency-password-reset-otp-expiry:';
+    private const PASSWORD_RESET_LOCK_CACHE_PREFIX = 'emergency-password-reset-lock:';
     private const PASSWORD_RESET_OTP_RESEND_CACHE_PREFIX = 'emergency-password-reset-otp-resend:';
     private const PASSWORD_RESET_OTP_ATTEMPTS_CACHE_PREFIX = 'emergency-password-reset-otp-attempts:';
     private const BACKUP_CODES_SETTING_PREFIX = 'emergency_login_backup_codes:';
@@ -144,6 +146,42 @@ class EmergencyTwoFactorService
         );
     }
 
+    public function verifyAuthenticatorForPasswordReset(string $email, string $code): ?int
+    {
+        $code = trim($code);
+        $secret = $this->authenticatorSecret($email);
+        if ($secret === '' || !preg_match('/^\d{6}$/', $code)) {
+            return null;
+        }
+
+        try {
+            $totp = new Google2FA();
+            $currentCounter = $totp->getTimestamp();
+            $window = $totp->getWindow();
+            $matchedCounter = null;
+
+            for ($counter = $currentCounter - $window; $counter <= $currentCounter + $window; $counter++) {
+                if (hash_equals($totp->oathTotp($secret, $counter), $code)) {
+                    $matchedCounter = $counter;
+                    break;
+                }
+            }
+        } catch (\Throwable) {
+            return null;
+        }
+
+        if ($matchedCounter === null) {
+            return null;
+        }
+
+        $usedCodeKey = self::USED_TOTP_CACHE_PREFIX . hash('sha256', $secret . '|' . $code);
+        if (!Cache::add($usedCodeKey, true, now()->addMinutes(2))) {
+            return null;
+        }
+
+        return ($matchedCounter + $window + 1) * $totp->getKeyRegeneration();
+    }
+
     public function sendEmailOtp(string $email): array
     {
         $email = strtolower(trim($email));
@@ -223,11 +261,37 @@ class EmergencyTwoFactorService
             return ['sent' => false, 'reason' => 'delivery_failed', 'recipient' => $this->maskedRecipient($recipient)];
         }
 
-        Cache::put(self::PASSWORD_RESET_OTP_CACHE_PREFIX . $emailHash, Hash::make($code), now()->addMinutes(5));
-        Cache::put(self::PASSWORD_RESET_OTP_ATTEMPTS_CACHE_PREFIX . $emailHash, 0, now()->addMinutes(5));
+        $expiresAt = now()->addMinutes(5);
+        Cache::put(self::PASSWORD_RESET_OTP_CACHE_PREFIX . $emailHash, Hash::make($code), $expiresAt);
+        Cache::put(self::PASSWORD_RESET_OTP_EXPIRY_CACHE_PREFIX . $emailHash, $expiresAt->timestamp, $expiresAt);
+        Cache::put(self::PASSWORD_RESET_OTP_ATTEMPTS_CACHE_PREFIX . $emailHash, 0, $expiresAt);
         Cache::put($resendKey, true, now()->addSeconds(45));
 
         return ['sent' => true, 'reason' => null, 'recipient' => $this->maskedRecipient($recipient)];
+    }
+
+    public function emergencyPasswordResetOtpExpiresAt(string $email): ?int
+    {
+        $emailHash = hash('sha256', strtolower(trim($email)));
+        $expiresAt = Cache::get(self::PASSWORD_RESET_OTP_EXPIRY_CACHE_PREFIX . $emailHash);
+
+        return is_numeric($expiresAt) ? (int) $expiresAt : null;
+    }
+
+    public function lockEmergencyPasswordResetUntil(string $email, int $expiresAt): void
+    {
+        if ($expiresAt > now()->timestamp) {
+            $emailHash = hash('sha256', strtolower(trim($email)));
+            Cache::put(self::PASSWORD_RESET_LOCK_CACHE_PREFIX . $emailHash, $expiresAt, now()->setTimestamp($expiresAt));
+        }
+    }
+
+    public function emergencyPasswordResetLockedUntil(string $email): ?int
+    {
+        $emailHash = hash('sha256', strtolower(trim($email)));
+        $lockedUntil = Cache::get(self::PASSWORD_RESET_LOCK_CACHE_PREFIX . $emailHash);
+
+        return is_numeric($lockedUntil) && (int) $lockedUntil > now()->timestamp ? (int) $lockedUntil : null;
     }
 
     public function verifyEmergencyPasswordResetOtp(string $email, string $code): bool

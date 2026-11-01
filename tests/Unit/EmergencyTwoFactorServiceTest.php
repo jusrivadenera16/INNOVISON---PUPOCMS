@@ -5,7 +5,10 @@ namespace Tests\Unit;
 use App\Mail\EmergencyLoginOtpMail;
 use App\Mail\EmergencyPasswordResetOtpMail;
 use App\Services\EmergencyTwoFactorService;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
@@ -142,5 +145,64 @@ class EmergencyTwoFactorServiceTest extends TestCase
         }
 
         $this->assertFalse($service->verifyEmergencyPasswordResetOtp($email, $mail->code));
+    }
+
+    public function test_authenticator_code_can_verify_a_password_reset_once_and_returns_its_expiry(): void
+    {
+        $originalDefault = config('database.default');
+        config([
+            'database.default' => 'sqlite',
+            'database.connections.sqlite' => [
+                'driver' => 'sqlite',
+                'database' => ':memory:',
+                'prefix' => '',
+                'foreign_key_constraints' => true,
+            ],
+        ]);
+        DB::purge('sqlite');
+
+        try {
+            Schema::connection('sqlite')->create('system_settings', function (Blueprint $table) {
+                $table->id();
+                $table->string('key')->unique();
+                $table->text('value')->nullable();
+                $table->boolean('encrypted')->default(false);
+                $table->timestamps();
+            });
+
+            $service = app(EmergencyTwoFactorService::class);
+            $email = 'totp-reset-' . Str::uuid() . '@example.test';
+            $secret = $service->generateSecret();
+            $service->saveAuthenticator($email, $secret);
+            $code = (new Google2FA())->getCurrentOtp($secret);
+
+            $expiresAt = $service->verifyAuthenticatorForPasswordReset($email, $code);
+
+            $this->assertNotNull($expiresAt);
+            $this->assertGreaterThan(now()->timestamp, $expiresAt);
+            $this->assertLessThanOrEqual(now()->addSeconds(60)->timestamp, $expiresAt);
+            $this->assertNull($service->verifyAuthenticatorForPasswordReset($email, $code));
+        } finally {
+            DB::disconnect('sqlite');
+            config(['database.default' => $originalDefault]);
+            DB::purge($originalDefault);
+        }
+    }
+
+    public function test_password_reset_lock_expires_with_the_authorizing_otp(): void
+    {
+        $service = app(EmergencyTwoFactorService::class);
+        $email = 'reset-lock-' . Str::uuid() . '@example.test';
+        $expiresAt = now()->addMinutes(5)->timestamp;
+
+        $service->lockEmergencyPasswordResetUntil($email, $expiresAt);
+        $this->assertSame($expiresAt, $service->emergencyPasswordResetLockedUntil($email));
+
+        $this->travelTo(now()->setTimestamp($expiresAt));
+        try {
+            $this->assertNull($service->emergencyPasswordResetLockedUntil($email));
+        } finally {
+            $this->travelBack();
+        }
     }
 }

@@ -3551,6 +3551,11 @@ PROMPT;
                 'comments'             => $request->remarks,
             ]);
 
+            if ($completedAppointment) {
+                $completedAppointment->consultation_id = $consultation->id;
+                $completedAppointment->save();
+            }
+
             $certificateType = trim((string) ($request->input('certificate_type') ?: 'none'));
             if ($certificateType !== 'none') {
                 try {

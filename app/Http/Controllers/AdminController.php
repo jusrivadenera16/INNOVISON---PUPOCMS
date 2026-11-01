@@ -513,13 +513,35 @@ class AdminController extends Controller
         foreach ($values as $key => $value) {
             $line = $key . '=' . $this->formatEnvironmentValue((string) $value);
             if (preg_match('/^' . preg_quote($key, '/') . '=.*$/m', $content)) {
-                $content = preg_replace('/^' . preg_quote($key, '/') . '=.*$/m', $line, $content);
+                $content = preg_replace_callback(
+                    '/^' . preg_quote($key, '/') . '=.*$/m',
+                    static fn () => $line,
+                    $content
+                );
             } else {
                 $content = rtrim($content) . PHP_EOL . $line . PHP_EOL;
             }
         }
 
-        file_put_contents($path, $content);
+        $writtenBytes = file_put_contents($path, $content, LOCK_EX);
+        abort_unless($writtenBytes !== false && $writtenBytes === strlen($content), 503, 'Emergency credentials could not be saved to .env.');
+
+        foreach ($values as $key => $value) {
+            $value = (string) $value;
+            putenv($key . '=' . $value);
+            $_ENV[$key] = $value;
+            $_SERVER[$key] = $value;
+        }
+
+        if (array_key_exists('EMERGENCY_ACCESS_ENABLED', $values)) {
+            config([
+                'services.emergency.enabled' => filter_var($values['EMERGENCY_ACCESS_ENABLED'], FILTER_VALIDATE_BOOL),
+                'services.emergency.email' => $values['EMERGENCY_ADMIN_EMAIL'] ?? config('services.emergency.email'),
+                'services.emergency.role' => $values['EMERGENCY_ADMIN_ROLE'] ?? config('services.emergency.role'),
+                'services.emergency.password' => $values['EMERGENCY_ADMIN_PASSWORD'] ?? config('services.emergency.password'),
+                'services.emergency.password_hash' => $values['EMERGENCY_ADMIN_PASSWORD_HASH'] ?? config('services.emergency.password_hash'),
+            ]);
+        }
     }
 
     private function clearConfigurationCacheAfterEnvironmentWrite(): void
@@ -1384,12 +1406,16 @@ class AdminController extends Controller
         return back()->with('success', 'Announcement deleted.');
     }
 
-    public function developerTools()
+    public function developerTools(EmergencyTwoFactorService $twoFactor)
     {
         $user = $this->currentAdminUser();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
 
-        return view('admin.developer_tools');
+        $configuredEmail = strtolower(trim((string) config('services.emergency.email', '')));
+        $resetOtpLockedUntil = $twoFactor->emergencyPasswordResetLockedUntil($configuredEmail) ?? 0;
+        $resetHasAuthenticator = $twoFactor->hasAuthenticator($configuredEmail);
+
+        return view('admin.developer_tools', compact('resetOtpLockedUntil', 'resetHasAuthenticator'));
     }
 
     public function updateClinicLogo(Request $request)
@@ -5506,6 +5532,64 @@ class AdminController extends Controller
                 $this->validateMedicalInformationVaccineHistory($updates['vaccine_history']);
             }
 
+            if (($submitted['has_illness'] ?? null) === 'No') {
+                $updates['medical_history'] = [];
+                $updates['other_illness'] = null;
+            } elseif (array_key_exists('medical_history', $updates)) {
+                $medicalHistory = $updates['medical_history'];
+                if (!array_is_list($medicalHistory) || collect($medicalHistory)->contains(fn ($condition) => !is_string($condition))) {
+                    throw ValidationException::withMessages([
+                        'medical_information.medical_history' => 'Select one or more valid medical conditions.',
+                    ]);
+                }
+
+                $hasOtherIllness = collect($medicalHistory)->contains(fn ($condition) => strcasecmp($condition, 'Others') === 0);
+                $otherIllness = $submitted->has('other_illness')
+                    ? trim((string) ($updates['other_illness'] ?? ''))
+                    : trim((string) ($studentProfile?->other_illness ?? ''));
+                if ($hasOtherIllness && $otherIllness === '') {
+                    throw ValidationException::withMessages([
+                        'medical_information.other_illness' => 'Enter the other illness or medical condition.',
+                    ]);
+                }
+
+                $updates['medical_history'] = array_values(array_filter(
+                    $medicalHistory,
+                    fn ($condition) => strcasecmp($condition, 'Others') !== 0
+                ));
+                $updates['other_illness'] = $hasOtherIllness ? $otherIllness : null;
+            } elseif ($submitted->has('other_illness')) {
+                $currentMedicalHistory = is_array($studentProfile?->medical_history) ? $studentProfile->medical_history : [];
+                $hasOtherIllness = collect($currentMedicalHistory)->contains(
+                    fn ($condition) => is_string($condition) && strcasecmp($condition, 'Others') === 0
+                );
+                if (!$hasOtherIllness) {
+                    $updates['other_illness'] = null;
+                } elseif (trim((string) ($updates['other_illness'] ?? '')) === '') {
+                    throw ValidationException::withMessages([
+                        'medical_information.other_illness' => 'Enter the other illness or medical condition.',
+                    ]);
+                }
+            }
+
+            if (($submitted['known_allergies'] ?? null) === 'No') {
+                $updates['food_allergies'] = null;
+                $updates['medicine_allergies'] = [];
+                $updates['other_med_allergies'] = null;
+            } elseif (array_key_exists('medicine_allergies', $updates)) {
+                $medicineAllergies = $updates['medicine_allergies'];
+                if (!array_is_list($medicineAllergies) || collect($medicineAllergies)->contains(fn ($medicine) => !is_string($medicine))) {
+                    throw ValidationException::withMessages([
+                        'medical_information.medicine_allergies' => 'Select one or more valid medicine allergies.',
+                    ]);
+                }
+
+                $updates['medicine_allergies'] = array_values(array_filter(
+                    $medicineAllergies,
+                    fn ($medicine) => strcasecmp($medicine, 'Others') !== 0
+                ));
+            }
+
             if (($submitted['disability_type'] ?? null) === 'Others') {
                 $otherDisabilityType = trim((string) ($submitted['other_disability_type'] ?? ''));
                 if ($otherDisabilityType === '') {
@@ -5760,9 +5844,9 @@ class AdminController extends Controller
                     'updated_fields' => $changedFields,
                     'updated_field_labels' => $updatedFieldLabels,
                     'updated_values_encrypted' => Crypt::encryptString($serializedUpdatedValues ?: '{}'),
-                    'previous_values_encrypted' => in_array(strtolower($profileType), ['student', 'applicant'], true)
-                        ? Crypt::encryptString(json_encode($previousValues, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) ?: '{}')
-                        : null,
+                    'previous_values_encrypted' => Crypt::encryptString(
+                        json_encode($previousValues, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) ?: '{}'
+                    ),
                     'clearance_status_unchanged' => true,
                     'uploaded_documents_unchanged' => true,
                 ],
@@ -7308,6 +7392,9 @@ public function updateClearance(Request $request, $id)
             'user.healthProfile',
             'user.healthProfileStaff',
             'user.dependentProfile',
+            'consultation.medicalCondition',
+            'consultation.medicines.item',
+            'consultation.medicineItem',
         ])
             ->orderByRaw("CASE LOWER(status)
                 WHEN 'pending' THEN 0
@@ -7324,17 +7411,159 @@ public function updateClearance(Request $request, $id)
             ->orderBy('time')
             ->latest()
             ->get();
-        $consultationComments = Consultation::query()
-            ->whereIn('user_id', $appointments->pluck('user_id')->filter()->unique())
-            ->whereIn('consultation_date', $appointments->pluck('date')->filter()->unique())
-            ->latest('consultation_date')
-            ->latest('time_in')
-            ->get()
-            ->groupBy(fn ($consultation) => $consultation->user_id . '|' . optional($consultation->consultation_date)->format('Y-m-d'));
+        $completedAppointments = $appointments->filter(
+            fn ($appointment) => strtolower(trim((string) $appointment->status)) === 'completed'
+        );
+        $approvalAuditTimes = ActivityLog::query()
+            ->where(function ($query) {
+                $query->where(function ($statusQuery) {
+                    $statusQuery->where('action', 'Status Updated')
+                        ->where('description', 'like', 'Updated Appointment #% status to Approved%');
+                })->orWhere(function ($rescheduleQuery) {
+                    $rescheduleQuery->where('action', 'Appointment Rescheduled')
+                        ->where('description', 'like', 'Rescheduled Appointment #% to % Status set to Approved.%');
+                });
+            })
+            ->get(['description', 'created_at'])
+            ->map(function ($log) {
+                if (!preg_match('/Appointment #(\d+)/i', (string) $log->description, $matches)) {
+                    return null;
+                }
 
-        $appointments->each(function ($appointment) use ($consultationComments) {
-            $key = $appointment->user_id . '|' . Carbon::parse($appointment->date)->format('Y-m-d');
-            $appointment->clinical_findings_comment = trim((string) optional($consultationComments->get($key)?->first())->comments);
+                return [
+                    'appointment_id' => (int) $matches[1],
+                    'created_at' => $log->created_at,
+                ];
+            })
+            ->filter()
+            ->groupBy('appointment_id')
+            ->map(fn ($logs) => $logs->sortBy('created_at')->first()['created_at']);
+        $consultationsByMatchKey = collect();
+
+        if ($completedAppointments->isNotEmpty()) {
+            $consultationsByMatchKey = Consultation::query()
+                ->with(['medicalCondition', 'medicines.item', 'medicineItem'])
+                ->whereIn('user_id', $completedAppointments->pluck('user_id')->filter()->unique())
+                ->whereIn('consultation_date', $completedAppointments->pluck('date')->filter()->unique())
+                ->latest('consultation_date')
+                ->latest('time_in')
+                ->get()
+                ->groupBy(function ($consultation) {
+                    $service = strtolower(trim(preg_replace('/\s+/', ' ', (string) $consultation->service)));
+                    return $consultation->user_id . '|'
+                        . optional($consultation->consultation_date)->format('Y-m-d') . '|'
+                        . $service;
+                });
+        }
+
+        $appointments->each(function ($appointment) use ($consultationsByMatchKey, $approvalAuditTimes) {
+            $appointment->approved_at_display = $appointment->approved_at
+                ?: $approvalAuditTimes->get((int) $appointment->id);
+            $isCompleted = strtolower(trim((string) $appointment->status)) === 'completed';
+            $consultation = $isCompleted ? $appointment->consultation : null;
+
+            if ($isCompleted && !$consultation && $appointment->user_id && $appointment->date) {
+                $service = strtolower(trim(preg_replace('/\s+/', ' ', (string) $appointment->service)));
+                $key = $appointment->user_id . '|'
+                    . Carbon::parse($appointment->date)->format('Y-m-d') . '|'
+                    . $service;
+                $candidates = $consultationsByMatchKey->get($key, collect());
+                $source = strtolower(trim((string) $appointment->type));
+                $expectedSource = in_array($source, ['online', 'walkin', 'walk-in'], true)
+                    ? ($source === 'online' ? 'online' : 'walkin')
+                    : null;
+                $consultation = $expectedSource
+                    ? $candidates->first(fn ($candidate) => strtolower(trim((string) $candidate->consultation_source)) === $expectedSource)
+                    : $candidates->first();
+            }
+
+            $appointment->clinical_findings_comment = $isCompleted
+                ? trim((string) ($consultation?->comments ?? ''))
+                : '';
+            $appointment->consultation_details_payload = null;
+
+            if (!$consultation || !$isCompleted) {
+                return;
+            }
+
+            $details = [];
+            $addDetail = static function (string $label, $value) use (&$details): void {
+                if (is_scalar($value) && trim((string) $value) !== '') {
+                    $details[] = ['label' => $label, 'value' => trim((string) $value)];
+                }
+            };
+
+            $addDetail('Reason for visit', $consultation->reason_for_visit);
+            $addDetail('Medical condition', $consultation->medicalCondition?->name);
+
+            if (strtolower(trim((string) $consultation->covid_status)) !== '') {
+                $covidStatus = trim((string) $consultation->covid_status);
+                $positiveDate = optional($consultation->covid_positive_date)->format('M d, Y');
+                $addDetail('COVID-19 status', $covidStatus . ($positiveDate ? ' (' . $positiveDate . ')' : ''));
+            }
+
+            $certificateType = trim((string) $consultation->certificate_type);
+            if ($certificateType !== '' && strtolower($certificateType) !== 'none') {
+                $addDetail('Certificate type', ucwords(str_replace('_', ' ', $certificateType)));
+                $addDetail('Certificate details', $consultation->certificate_details);
+            }
+
+            $referralType = trim((string) $consultation->referral_type);
+            if ($referralType !== '' && strtolower($referralType) !== 'none') {
+                $addDetail('Referral', ucwords(str_replace('_', ' ', $referralType)));
+                $addDetail('Referral details', $consultation->referral_details);
+            }
+
+            $service = strtolower(trim(preg_replace('/\s+/', ' ', (string) $appointment->service)));
+            $showVitals = in_array($service, [
+                'general consultation',
+                'bp monitoring',
+                'blood pressure monitoring',
+            ], true) || str_starts_with($service, 'consultation c/o ');
+            $vitals = [];
+
+            if ($showVitals) {
+                foreach ([
+                    ['Height', 'height', 'ft'],
+                    ['Weight', 'weight', 'lbs'],
+                    ['Temperature', 'temperature', '°C'],
+                    ['Blood pressure', 'blood_pressure', 'mmHg'],
+                    ['Pulse rate', 'pulse_rate', 'bpm'],
+                    ['Respiratory rate', 'respiratory_rate', '/min'],
+                ] as [$label, $field, $unit]) {
+                    $value = $consultation->{$field};
+                    if ($value !== null && trim((string) $value) !== '') {
+                        $vitals[] = ['label' => $label, 'value' => trim((string) $value) . ' ' . $unit];
+                    }
+                }
+            }
+
+            $medicines = $consultation->medicines
+                ->map(function ($line) {
+                    $name = trim((string) ($line->medicine ?: $line->item?->name));
+                    if ($name === '') {
+                        return '';
+                    }
+                    $quantity = rtrim(rtrim(number_format((float) $line->quantity, 4, '.', ''), '0'), '.');
+                    $unit = trim((string) ($line->item?->dispensing_unit ?: $line->item?->unit ?: ''));
+                    return $name . ' - ' . $quantity . ($unit !== '' ? ' ' . $unit : '');
+                })
+                ->filter(fn ($line) => trim($line) !== '')
+                ->values();
+
+            if ($medicines->isEmpty() && trim((string) $consultation->medicine) !== ''
+                && strtolower(trim((string) $consultation->medicine)) !== 'none') {
+                $quantity = rtrim(rtrim(number_format((float) $consultation->medicine_quantity, 4, '.', ''), '0'), '.');
+                $unit = trim((string) ($consultation->medicineItem?->dispensing_unit ?: $consultation->medicineItem?->unit ?: ''));
+                $medicines->push(trim((string) $consultation->medicine) . ' - ' . $quantity . ($unit !== '' ? ' ' . $unit : ''));
+            }
+
+            $appointment->consultation_details_payload = [
+                'details' => $details,
+                'showVitals' => $showVitals,
+                'vitals' => $vitals,
+                'medicines' => $medicines->all(),
+            ];
         });
 
         return view('admin.appointments', compact('appointments'));
@@ -7343,7 +7572,7 @@ public function updateClearance(Request $request, $id)
     public function inventory()
     {
         $items = Item::query()
-            ->with(['medicineType', 'movements.user'])
+            ->with(['medicineType', 'illnessCategory'])
             ->orderBy('name')
             ->get();
         $medicineTypes = MedicineType::query()
@@ -7384,6 +7613,32 @@ public function updateClearance(Request $request, $id)
         $reportMonth = now()->format('Y-m');
 
         return view('admin.inventory', compact('items', 'medicineTypes', 'reportMonth'));
+    }
+
+    public function inventoryItemMovements(Item $item)
+    {
+        $movements = $item->movements()
+            ->with('user:id,name')
+            ->get()
+            ->map(function (InventoryMovement $movement): array {
+                return [
+                    'type' => $movement->type,
+                    'quantity' => $movement->quantity,
+                    'stock_before' => $movement->stock_before,
+                    'stock_after' => $movement->stock_after,
+                    'unit' => $movement->unit,
+                    'notes' => $movement->notes,
+                    'reason' => $movement->reason,
+                    'user_name' => $movement->user?->name,
+                    'created_at' => $movement->created_at?->format('M d, Y g:i A'),
+                    'created_date' => $movement->created_at?->format('M d, Y'),
+                    'created_time' => $movement->created_at?->format('g:i A'),
+                    'created_at_iso' => $movement->created_at?->toIso8601String(),
+                ];
+            })
+            ->values();
+
+        return response()->json(['movements' => $movements]);
     }
 
     public function reports()
@@ -7878,6 +8133,8 @@ public function updateClearance(Request $request, $id)
             $previousStatus = (string) $appointment->status;
             $appointment->status = $status;
             if ($status === 'Approved') {
+                $appointment->approved_at = $appointment->approved_at ?: now();
+
                 if (Schema::hasColumn('appointments', 'approval_message')) {
                     $appointment->approval_message = trim((string) request()->query('message', '')) ?: null;
                 }
@@ -7991,6 +8248,7 @@ public function updateClearance(Request $request, $id)
             $appointment->date = $request->date;
             $appointment->time = $request->time;
             $appointment->status = 'Approved';
+            $appointment->approved_at = $appointment->approved_at ?: now();
             $appointment->appointment_reminder_email_sent_at = null;
             $appointment->save();
 
@@ -9803,8 +10061,20 @@ public function inventorySummary()
         $user = $this->currentAdminUser();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user) && $this->isSuperadminAccount($user), 403);
 
-        $request->session()->forget('emergency_password_reset_otp_verified');
         $email = strtolower(trim((string) config('services.emergency.email', '')));
+        $lockedUntil = $twoFactor->emergencyPasswordResetLockedUntil($email);
+        if ($lockedUntil !== null) {
+            $message = 'You can request another verification code after the current OTP expires.';
+            $this->logDeveloperSecurityAction($user, 'Emergency Password Reset OTP Blocked', $message, 429);
+
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+                'retry_after' => $lockedUntil - now()->timestamp,
+            ], 429);
+        }
+
+        $request->session()->forget('emergency_password_reset_otp_verified');
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return response()->json(['success' => false, 'message' => 'The emergency recovery email is not configured.'], 422);
         }
@@ -9834,10 +10104,33 @@ public function inventorySummary()
         $user = $this->currentAdminUser();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user) && $this->isSuperadminAccount($user), 403);
 
-        $validated = $request->validate(['code' => ['required', 'digits:6']]);
         $email = strtolower(trim((string) config('services.emergency.email', '')));
-        $valid = filter_var($email, FILTER_VALIDATE_EMAIL)
-            && $twoFactor->verifyEmergencyPasswordResetOtp($email, (string) $validated['code']);
+        $lockedUntil = $twoFactor->emergencyPasswordResetLockedUntil($email);
+        if ($lockedUntil !== null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The emergency password was recently reset. Wait until the current OTP expires before starting another reset.',
+                'retry_after' => $lockedUntil - now()->timestamp,
+            ], 429);
+        }
+
+        $validated = $request->validate([
+            'code' => ['required', 'digits:6'],
+            'method' => ['required', Rule::in(['email', 'totp'])],
+        ]);
+        $method = (string) $validated['method'];
+        $otpExpiresAt = null;
+        $valid = false;
+        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            if ($method === 'email') {
+                $otpExpiresAt = $twoFactor->emergencyPasswordResetOtpExpiresAt($email);
+                $valid = $otpExpiresAt !== null
+                    && $twoFactor->verifyEmergencyPasswordResetOtp($email, (string) $validated['code']);
+            } else {
+                $otpExpiresAt = $twoFactor->verifyAuthenticatorForPasswordReset($email, (string) $validated['code']);
+                $valid = $otpExpiresAt !== null;
+            }
+        }
 
         if (!$valid) {
             $this->logDeveloperSecurityAction($user, 'Emergency Password Reset OTP Rejected', 'An invalid or expired emergency password reset code was submitted.', 422);
@@ -9851,14 +10144,18 @@ public function inventorySummary()
         $request->session()->put('emergency_password_reset_otp_verified', [
             'user_id' => $user->getKey(),
             'email' => $email,
-            'expires_at' => now()->addMinutes(10)->timestamp,
+            'method' => $method,
+            'otp_expires_at' => $otpExpiresAt,
+            'expires_at' => $method === 'email' ? $otpExpiresAt : now()->addMinutes(5)->timestamp,
         ]);
-        $this->logDeveloperSecurityAction($user, 'Emergency Password Reset OTP Verified', 'Emergency recovery email verification succeeded.');
+        $this->logDeveloperSecurityAction($user, 'Emergency Password Reset OTP Verified', $method === 'totp'
+            ? 'Emergency authenticator verification succeeded.'
+            : 'Emergency recovery email verification succeeded.');
 
-        return response()->json(['success' => true, 'message' => 'Email verification complete.']);
+        return response()->json(['success' => true, 'method' => $method, 'message' => 'Verification complete.']);
     }
 
-    public function updateEmergencyCredentials(Request $request)
+    public function updateEmergencyCredentials(Request $request, EmergencyTwoFactorService $twoFactor)
     {
         $user = $this->currentAdminUser();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user) && $this->isSuperadminAccount($user), 403);
@@ -9871,11 +10168,11 @@ public function inventorySummary()
             'emergency_action' => ['nullable', Rule::in(['reset'])],
             'emergency_role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_SUPERADMIN, 'super_admin'])],
             'emergency_email' => ['required', 'email', 'max:255'],
-            'new_emergency_password' => [$action === 'reset' || ! $isConfigured ? 'required' : 'nullable', 'confirmed', 'min:8', 'max:255', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'],
+            'new_emergency_password' => [$action === 'reset' || ! $isConfigured ? 'required' : 'nullable', 'confirmed', 'min:8', 'max:255', 'regex:/^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9\s]).+$/'],
         ];
 
         $validated = $request->validate($rules, [
-            'new_emergency_password.regex' => 'Emergency password must contain at least one letter and one number.',
+            'new_emergency_password.regex' => 'Emergency password must contain at least one letter, one number, and one symbol.',
         ]);
 
         $role = User::normalizeRole((string) $validated['emergency_role']);
@@ -9883,17 +10180,24 @@ public function inventorySummary()
             $role = User::ROLE_ADMIN;
         }
 
-        $newPassword = trim((string) ($validated['new_emergency_password'] ?? ''));
+        $newPassword = (string) ($validated['new_emergency_password'] ?? '');
         $otpVerification = $request->session()->get('emergency_password_reset_otp_verified', []);
         $configuredEmail = strtolower(trim((string) config('services.emergency.email', '')));
+        $lockedUntil = $twoFactor->emergencyPasswordResetLockedUntil($configuredEmail);
+        if ($action === 'reset' && $lockedUntil !== null) {
+            return back()->withErrors([
+                'new_emergency_password' => 'The emergency password was recently reset. Wait until the current OTP expires before starting another reset.',
+            ]);
+        }
         $otpVerified = is_array($otpVerification)
             && (int) ($otpVerification['user_id'] ?? 0) === (int) $user->getKey()
             && hash_equals($configuredEmail, (string) ($otpVerification['email'] ?? ''))
             && hash_equals($configuredEmail, strtolower(trim((string) $validated['emergency_email'])))
+            && in_array(($otpVerification['method'] ?? ''), ['email', 'totp'], true)
             && (int) ($otpVerification['expires_at'] ?? 0) >= now()->timestamp;
 
         if ($action === 'reset' && !$otpVerified) {
-            $this->logDeveloperSecurityAction($user, 'Emergency Credentials Update Failed', 'Emergency password reset was attempted without a valid email OTP verification.', 422);
+            $this->logDeveloperSecurityAction($user, 'Emergency Credentials Update Failed', 'Emergency password reset was attempted without a valid OTP verification.', 422);
 
             return back()->withErrors([
                 'new_emergency_password' => 'Verify the emergency recovery email with a one-time code before saving a new password.',
@@ -9921,6 +10225,8 @@ public function inventorySummary()
         $this->writeEnvironmentValues($environmentValues);
         $this->clearConfigurationCacheAfterEnvironmentWrite();
         if ($action === 'reset') {
+            $lockedUntil = (int) ($otpVerification['otp_expires_at'] ?? 0);
+            $twoFactor->lockEmergencyPasswordResetUntil($configuredEmail, $lockedUntil);
             $request->session()->forget('emergency_password_reset_otp_verified');
         }
 

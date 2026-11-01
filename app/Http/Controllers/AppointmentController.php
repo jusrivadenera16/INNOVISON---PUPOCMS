@@ -3050,6 +3050,24 @@ class AppointmentController extends Controller
     // -------------------------------
     // 2. BOOKING FORM
     // -------------------------------
+    private function activeAppointmentsForUser(User $user, array $studentContext = [], string $studentNumber = '')
+    {
+        $studentId = trim((string) ($studentContext['student_id'] ?? ''));
+        $studentNumber = trim($studentNumber);
+
+        return Appointment::query()
+            ->whereIn('status', Appointment::ACTIVE_BOOKING_STATUSES)
+            ->where(function ($query) use ($user, $studentId, $studentNumber) {
+                $query->where('user_id', $user->id);
+                if ($studentId !== '') {
+                    $query->orWhere('student_id', $studentId);
+                }
+                if ($studentNumber !== '') {
+                    $query->orWhere('student_number', $studentNumber);
+                }
+            });
+    }
+
     public function create()
     {
         Appointment::expireOverduePending();
@@ -3060,20 +3078,18 @@ class AppointmentController extends Controller
             return view('student.booking-public');
         }
 
-        $appointments = Appointment::where('user_id', $user->id)
-                                   ->whereIn('status', ['Pending', 'Approved'])
-                                   ->orderBy('date', 'asc')
-                                   ->get();
+        $studentContext = $this->resolveStudentContext($user);
+        $studentContext['student_number'] = $this->resolveAppointmentIdentifier($user, $studentContext);
+        $appointments = $this->activeAppointmentsForUser($user, $studentContext, $studentContext['student_number'])
+            ->orderBy('date', 'asc')
+            ->get();
         $confirmationAppointmentId = trim((string) data_get(session('appointment_confirmation'), 'apt_id', ''));
         $confirmedAppointment = $confirmationAppointmentId !== ''
             ? $appointments->firstWhere('apt_id', $confirmationAppointmentId)
             : null;
-        $pendingAppointment = $appointments->firstWhere('status', 'Pending');
-        $bookingFormAppointment = $confirmedAppointment ?? $pendingAppointment;
+        $bookingFormAppointment = $confirmedAppointment ?? $appointments->first();
         $bookingFormLocked = $bookingFormAppointment !== null;
 
-        $studentContext = $this->resolveStudentContext($user);
-        $studentContext['student_number'] = $this->resolveAppointmentIdentifier($user, $studentContext);
         $bookingAccess = $this->resolveAppointmentBookingAccess($user);
 
         $workflow = app(ClinicWorkflowService::class);
@@ -3125,6 +3141,19 @@ class AppointmentController extends Controller
             );
         }
 
+        Appointment::expireOverduePending();
+        $studentContext = $this->resolveStudentContext($user);
+        $appointmentIdentifier = $this->resolveAppointmentIdentifier($user, $studentContext);
+        $activeAppointment = $this->activeAppointmentsForUser($user, $studentContext, $appointmentIdentifier)
+            ->orderBy('created_at')
+            ->first();
+        if ($activeAppointment) {
+            return redirect()->back()->withInput()->with(
+                'error',
+                'You already have an active appointment (' . $activeAppointment->status . '). Please wait until it is completed or cancelled before booking another.'
+            );
+        }
+
         $workflow = app(ClinicWorkflowService::class);
         $closure = $workflow->activeClosure();
         if ($closure) {
@@ -3143,6 +3172,7 @@ class AppointmentController extends Controller
             ->get();
         $configuredServices = $activeConfiguredOptions
             ->map(fn (ClinicServiceOption $option) => $option->serviceLabel())
+            ->prepend('Clinic Document Services')
             ->prepend('General Consultation')
             ->push('BP Monitoring')
             ->toBase()
@@ -3193,8 +3223,6 @@ class AppointmentController extends Controller
             );
         }
 
-        $studentContext = $this->resolveStudentContext($user);
-        $appointmentIdentifier = $this->resolveAppointmentIdentifier($user, $studentContext);
         $bookingError = null;
         try {
             $appointment = DB::transaction(function () use (
@@ -3207,6 +3235,11 @@ class AppointmentController extends Controller
                 &$bookingError
             ) {
                 $appointmentScheduling->lockSchedule();
+
+                if ($this->activeAppointmentsForUser($user, $studentContext, $appointmentIdentifier)->exists()) {
+                    $bookingError = 'You already have an active appointment. Please wait until it is completed or cancelled before booking another.';
+                    return null;
+                }
 
                 if ($appointmentScheduling->hasReservedSlot($request->date, $request->time)) {
                     $bookingError = 'That time slot is already taken. Please choose another time.';
@@ -3228,7 +3261,9 @@ class AppointmentController extends Controller
                 $appointment->date = $request->date;
                 $appointment->time = $request->time;
                 $appointment->service = $request->service;
-                $appointment->status = $workflow->settings()->auto_approve ? 'Approved' : 'Pending';
+                $autoApproved = $workflow->settings()->auto_approve;
+                $appointment->status = $autoApproved ? 'Approved' : 'Pending';
+                $appointment->approved_at = $autoApproved ? now() : null;
                 $appointment->remarks = $request->remarks;
                 $appointment->type = 'online';
                 $appointment->user_type = Appointment::normalizeUserType($user->user_role);
