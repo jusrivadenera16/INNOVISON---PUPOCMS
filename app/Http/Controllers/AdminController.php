@@ -26,6 +26,7 @@ use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
 use App\Services\EmployeeHealthFormHistoryService;
 use App\Services\HealthProfileSnapshotService;
+use App\Services\HealthRecordHistoryService;
 use App\Services\InventoryImportAnalyzer;
 use App\Services\InventoryDataNormalizer;
 use App\Services\PuptasWebhookService;
@@ -4342,6 +4343,8 @@ class AdminController extends Controller
             })
             ->values();
 
+        $healthRecordHistory = app(HealthRecordHistoryService::class)->forStudentProfile($profile);
+
         return view('admin.show_health', compact(
             'profile',
             'calculatedAge',
@@ -4349,6 +4352,7 @@ class AdminController extends Controller
             'healthFormCategories',
             'healthFormSubmissions',
             'healthProfileHistory',
+            'healthRecordHistory',
             'currentHealthFormSubmission',
             'activeNewHealthFormRequest',
             'activeFileCorrectionRequest',
@@ -4574,6 +4578,7 @@ class AdminController extends Controller
             ]);
         }
 
+        $healthRecordHistory = app(HealthRecordHistoryService::class)->forEmployeeProfile($employeeProfile);
         $employeeProfile = $employeeProfileForDisplay;
 
         return view('admin.show_employee_health', compact(
@@ -4581,6 +4586,7 @@ class AdminController extends Controller
             'employeeDocuments',
             'employeeVersionHistory',
             'employeeHealthProfileHistory',
+            'healthRecordHistory',
             'displaySubmission',
             'employeeHealthFormCategories',
             'employeeHealthFormAudience',
@@ -4831,6 +4837,81 @@ class AdminController extends Controller
 
         return redirect()->route('admin.show_health', $profile->id)
             ->with('success', 'New Health Form request sent to the student.');
+    }
+
+    public function cancelNewHealthFormRequest(Request $request, $id, $submissionId)
+    {
+        $profile = HealthProfile::with('user')->findOrFail($id);
+        abort_unless($this->isStudentHealthProfile($profile), 404);
+        $actor = Auth::guard('admin')->user();
+        abort_unless($actor, 403);
+
+        $cancelled = DB::transaction(function () use ($profile, $submissionId, $actor, $request): bool {
+            User::query()->whereKey($profile->user_id)->lockForUpdate()->firstOrFail();
+
+            $submission = HealthFormSubmission::query()
+                ->where('user_id', $profile->user_id)
+                ->where('health_profile_id', $profile->id)
+                ->lockForUpdate()
+                ->find($submissionId);
+
+            if (!$submission || $submission->status !== HealthFormSubmission::STATUS_REQUESTED) {
+                return false;
+            }
+
+            $activeRequest = $this->activeStudentNewHealthFormRequest($profile);
+            if (!$activeRequest || (int) $activeRequest->id !== (int) $submission->id) {
+                return false;
+            }
+
+            $correctionRequest = HealthProfileCorrectionRequest::query()
+                ->where('user_id', $profile->user_id)
+                ->where('health_profile_id', $profile->id)
+                ->where('health_form_submission_id', $submission->id)
+                ->where('type', HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM)
+                ->lockForUpdate()
+                ->first();
+
+            if ($correctionRequest && $correctionRequest->status !== HealthProfileCorrectionRequest::STATUS_PENDING) {
+                return false;
+            }
+
+            $submission->forceFill(['status' => HealthFormSubmission::STATUS_CANCELLED])->save();
+            if ($correctionRequest) {
+                $correctionRequest->forceFill([
+                    'status' => HealthProfileCorrectionRequest::STATUS_CANCELLED,
+                    'reviewed_at' => now(),
+                ])->save();
+            }
+
+            ActivityLog::create([
+                'user_id' => $actor->id,
+                'user_name' => $actor->name ?? $actor->email ?? 'Unknown User',
+                'user_role' => strtolower((string) ($actor->user_role ?? '')),
+                'action' => 'Health Form Request Cancelled',
+                'module' => 'Health Records',
+                'event_type' => 'admin_health_form_request_cancelled',
+                'description' => 'Clinic cancelled an unsubmitted Health Form request for health profile #' . $profile->id . '.',
+                'route_name' => optional($request->route())->getName(),
+                'http_method' => $request->method(),
+                'request_path' => '/' . ltrim($request->path(), '/'),
+                'status_code' => 200,
+                'subject_type' => HealthFormSubmission::class,
+                'subject_id' => (string) $submissionId,
+                'ip_address' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 255),
+            ]);
+
+            return true;
+        });
+
+        if (!$cancelled) {
+            return redirect()->route('admin.show_health', $profile->id)
+                ->with('error', 'This Health Form request can no longer be cancelled because it was already submitted or closed.');
+        }
+
+        return redirect()->route('admin.show_health', $profile->id)
+            ->with('success', 'Health Form request cancelled. The approved health record was not changed.');
     }
 
     public function requestNewEmployeeHealthForm(Request $request, EmployeeHealthProfile $employeeProfile)
@@ -5354,6 +5435,7 @@ class AdminController extends Controller
                     'reference_number' => SensitiveLogRedactor::identifier((string) $profile->reference_number),
                     'student_id' => SensitiveLogRedactor::identifier((string) $profile->student_id),
                     'previous_status' => $previousStatus,
+                    'reason_encrypted' => Crypt::encryptString($profile->pending_reason),
                     'previous_verified_at' => optional($previousVerifiedAt)->toDateTimeString(),
                     'previous_approved_by_user_id' => $previousApprovedBy,
                     'previous_puptas_sync_status' => $previousPuptasStatus,
@@ -6442,6 +6524,12 @@ class AdminController extends Controller
                 'user_id' => $profile->user_id,
                 'reference_number' => SensitiveLogRedactor::identifier((string) $profile->reference_number),
                 'pullout_status' => $profile->pullout_status,
+                'reason_encrypted' => filled($eventType === 'health_profile_pullout_restored' ? $profile->pullout_restore_reason : $profile->pullout_reason)
+                    ? Crypt::encryptString((string) ($eventType === 'health_profile_pullout_restored' ? $profile->pullout_restore_reason : $profile->pullout_reason))
+                    : null,
+                'remarks_encrypted' => $eventType === 'health_profile_pulled_out' && filled($profile->pullout_request_remarks)
+                    ? Crypt::encryptString((string) $profile->pullout_request_remarks)
+                    : null,
             ], $metadata),
             'ip_address' => $request->ip(),
             'user_agent' => substr((string) $request->userAgent(), 0, 255),
@@ -8690,7 +8778,9 @@ public function storeItem(Request $request)
     if ($request->category !== 'Medicine') {
         $data['medicine_type_id'] = null;
         $data['medicine_type'] = null;
-        $data['expiration_date'] = null;
+        if ($request->category !== 'Supplies') {
+            $data['expiration_date'] = null;
+        }
         $data['dispensing_unit'] = null;
         $data['units_per_stock_unit'] = null;
     }
@@ -8798,7 +8888,9 @@ public function updateItem($id, Request $request)
         if ($request->category !== 'Medicine') {
             $data['medicine_type_id'] = null;
             $data['medicine_type'] = null;
-            $data['expiration_date'] = null;
+            if ($request->category !== 'Supplies') {
+                $data['expiration_date'] = null;
+            }
             $data['dispensing_unit'] = null;
             $data['units_per_stock_unit'] = null;
         }
@@ -9327,7 +9419,7 @@ private function sanitizeInventoryImportRow(array $row, bool $persistMedicineTyp
         'dispensing_unit' => null,
         'units_per_stock_unit' => null,
         'date_added' => $normalizedDate ?: now()->toDateString(),
-        'expiration_date' => $category === 'Medicine' ? $normalizedExpiryDate : null,
+        'expiration_date' => in_array($category, ['Medicine', 'Supplies'], true) ? $normalizedExpiryDate : null,
         'description' => 'Imported from reviewed inventory upload.',
     ];
 }

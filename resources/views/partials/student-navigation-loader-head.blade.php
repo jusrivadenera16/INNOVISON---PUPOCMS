@@ -18,11 +18,11 @@
 
             document.documentElement.style.setProperty(
                 '--student-pending-loader-title',
-                JSON.stringify(String(handoff.title || 'Opening Student Portal').trim())
+                JSON.stringify(String(handoff.title || 'Opening Portal').trim())
             );
             document.documentElement.style.setProperty(
                 '--student-pending-loader-detail',
-                JSON.stringify(String(handoff.detail || 'Loading your student portal information.').trim())
+                JSON.stringify(String(handoff.detail || 'Loading your portal information.').trim())
             );
             document.documentElement.setAttribute('data-student-navigation-pending', 'true');
         } catch (error) {
@@ -151,13 +151,13 @@
     }
 
     html[data-student-navigation-pending="true"] .student-loader-message [data-student-loader-title]::before {
-        content: var(--student-pending-loader-title, "Opening Student Portal");
+        content: var(--student-pending-loader-title, "Opening Portal");
         font-size: clamp(18px, 2.5vw, 23px);
     }
 
     html[data-student-navigation-pending="true"] [data-student-loader-detail]::before {
         display: block;
-        content: var(--student-pending-loader-detail, "Loading your student portal information.");
+        content: var(--student-pending-loader-detail, "Loading your portal information.");
         font-size: 13px;
     }
 

@@ -6526,7 +6526,7 @@
 
     <div id="rescheduleModal" class="modal-overlay">
         <div class="modal-box appointment-action-dialog">
-            <form id="rescheduleForm" method="POST" action="">
+            <form id="rescheduleForm" method="POST" action="" data-loader-message="Rescheduling Appointment" data-loader-detail="Saving the new appointment date, time, and rescheduling reason.">
                 @csrf
                 <div class="modal-header appointment-detail-header">
                     <div class="modal-header-main appointment-detail-header-main">
@@ -6851,10 +6851,16 @@
         const statusText = normalizedStatus === '-' ? 'N/A' : normalizedStatus;
         const statusKey = statusText.toLowerCase();
         const remarksBlock = document.getElementById('appointmentRemarksBlock');
-        remarksBlock.hidden = statusKey === 'pending';
-        document.getElementById('mRemarksLabel').innerText = statusKey === 'rejected'
-            ? 'Reason for Rejection'
-            : (statusKey === 'cancelled' || statusKey === 'canceled' ? 'Cancellation Details' : 'Remarks');
+        const outcomeRemarksLabels = {
+            rejected: 'Reason for Rejection',
+            cancelled: 'Cancellation Details',
+            canceled: 'Cancellation Details',
+            missed: 'Missed Appointment Reason',
+            rescheduled: 'Rescheduling Reason'
+        };
+        const outcomeRemarksLabel = outcomeRemarksLabels[statusKey];
+        remarksBlock.hidden = statusKey !== 'completed' && !outcomeRemarksLabel;
+        document.getElementById('mRemarksLabel').innerText = outcomeRemarksLabel || 'Remarks';
 
         const statusAtLabels = {
             approved: 'Approved At',
@@ -7179,6 +7185,14 @@
 
         const confirmBtn = document.getElementById('statusActionConfirm');
         confirmBtn.href = actionUrl;
+        confirmBtn.dataset.loaderMessage = isApprove
+            ? 'Approving Appointment'
+            : (isMissed ? 'Updating Missed Status' : 'Rejecting Appointment');
+        confirmBtn.dataset.loaderDetail = isApprove
+            ? 'Saving the approval and updating the appointment status.'
+            : (isMissed
+                ? 'Saving the attendance status and reason for this appointment.'
+                : 'Saving the rejection reason and updating the appointment status.');
         confirmBtn.onclick = function (event) {
             const selectedReason = reasonSelect?.value || '';
             const otherDetails = (decisionMessage?.value || '').trim();

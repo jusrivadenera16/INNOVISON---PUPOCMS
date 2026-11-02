@@ -3004,8 +3004,7 @@
                                 </li>
                             @endif
                             <li class="desktop-logout-item">
-                                <a href="#" class="desktop-account-logout"
-                                onclick="event.preventDefault(); document.getElementById('logout-form').requestSubmit();">
+                                <a href="#" class="desktop-account-logout" data-student-logout-trigger>
                                     <span class="nav-dropdown-link-content">
                                         <x-outline-icon name="arrow-left-on-rectangle" class="nav-dropdown-link-icon" />
                                         <span>Logout</span>
@@ -3015,8 +3014,7 @@
                         </ul>
                     </li>
                     <li class="standalone-logout-item">
-                        <a href="#" class="logout-btn student-logout-btn"
-                        onclick="event.preventDefault(); document.getElementById('logout-form').requestSubmit();">
+                        <a href="#" class="logout-btn student-logout-btn" data-student-logout-trigger>
                             <x-outline-icon name="arrow-left-on-rectangle" />
                             <span>Logout</span>
                         </a>
@@ -3113,6 +3111,7 @@
     </main>
 
     @auth('student')
+        @include('partials.student-logout-confirm')
         <div class="post-login-loader hidden" id="studentLogoutLoader" role="status" aria-live="polite" aria-label="Signing you out" aria-hidden="true">
             <div class="post-login-loader-bg-icons" aria-hidden="true">
                 <span class="post-login-loader-bg-icon is-one">
@@ -3866,7 +3865,7 @@
                             const style = window.getComputedStyle(element);
                             const looksFloating = style.position === 'fixed' || style.position === 'sticky';
 
-                            return looksFloating && label.includes('access') && !isStudentAccessibilityLauncher(element);
+                            return looksFloating && label.includes('accessibility') && !isStudentAccessibilityLauncher(element);
                         });
 
                     return fallbackCandidates[0] || null;

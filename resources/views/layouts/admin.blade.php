@@ -3217,17 +3217,39 @@
             border-radius: 0;
         }
 
+        .admin-content-loader,
         .admin-action-loader:not(.is-brand-logout) {
-            --loader-skeleton-surface: rgba(255, 255, 255, 0.045);
-            --loader-skeleton-edge: rgba(255, 255, 255, 0.09);
-            --loader-skeleton-fill: rgba(255, 255, 255, 0.12);
-            --loader-skeleton-soft: rgba(255, 255, 255, 0.07);
-            --loader-skeleton-glow: rgba(255, 255, 255, 0.065);
+            --loader-wave-back: rgba(136, 19, 55, .16);
+            --loader-wave-middle: rgba(159, 18, 57, .13);
+            --loader-wave-front: rgba(190, 18, 60, .12);
             overflow: hidden;
             background: #111827;
             color: #ffffff;
             backdrop-filter: none;
             -webkit-backdrop-filter: none;
+        }
+
+        .admin-loader-overlay > .admin-loader-waves {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            display: block;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .admin-loader-waves path:nth-child(1) { fill: var(--loader-wave-back); }
+        .admin-loader-waves path:nth-child(2) { fill: var(--loader-wave-middle); }
+        .admin-loader-waves path:nth-child(3) { fill: var(--loader-wave-front); }
+
+        .admin-action-loader.is-brand-logout > .admin-loader-waves {
+            display: none;
+        }
+
+        .admin-content-loader > .loading {
+            position: relative;
+            z-index: 1;
         }
 
         .admin-loader-skeleton {
@@ -3830,14 +3852,8 @@
             display: block;
         }
 
-        html[data-admin-navigation-pending="true"] .admin-action-loader [data-admin-loader-message-text],
         html[data-admin-navigation-pending="true"] .admin-action-loader [data-admin-loader-detail] {
             font-size: 0;
-        }
-
-        html[data-admin-navigation-pending="true"] .admin-action-loader [data-admin-loader-message-text]::before {
-            content: var(--admin-pending-loader-title, "Opening page");
-            font-size: clamp(17px, 2vw, 23px);
         }
 
         html[data-admin-navigation-pending="true"] .admin-action-loader [data-admin-loader-detail]::before {
@@ -5683,13 +5699,12 @@
             color: #5a1421;
         }
 
+        html[data-theme="light"] .admin-content-loader,
         html[data-theme="light"] .admin-action-loader:not(.is-brand-logout) {
-            --loader-skeleton-surface: rgba(255, 255, 255, 0.82);
-            --loader-skeleton-edge: rgba(112, 19, 27, 0.12);
-            --loader-skeleton-fill: #e5e7eb;
-            --loader-skeleton-soft: rgba(128, 0, 0, 0.055);
-            --loader-skeleton-glow: rgba(128, 0, 0, 0.04);
-            background: #f7f8fb;
+            --loader-wave-back: #fdf0f6;
+            --loader-wave-middle: rgba(251, 207, 232, .4);
+            --loader-wave-front: rgba(249, 168, 212, .2);
+            background: radial-gradient(ellipse at 85% 15%, #fdf7fb 0%, #ffffff 65%);
             backdrop-filter: none;
             -webkit-backdrop-filter: none;
         }
@@ -7098,13 +7113,13 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         'student_assistant' => 'Student Assistant',
     ];
     $displayRole = $adminTypeLabel ?: ($roleLabelMap[$currentRole] ?? ucfirst($currentRole ?: 'user'));
-    $medicineAlertsQuery = \App\Models\Item::query()
-        ->where('category', 'Medicine')
+    $inventoryExpiryAlertsQuery = \App\Models\Item::query()
+        ->whereIn('category', ['Medicine', 'Supplies'])
         ->whereNotNull('expiration_date')
         ->whereDate('expiration_date', '<=', now()->addDays(30)->toDateString())
         ->orderBy('expiration_date');
-    $medicineAlertCount = (clone $medicineAlertsQuery)->count();
-    $medicineAlerts = $medicineAlertsQuery
+    $medicineAlertCount = (clone $inventoryExpiryAlertsQuery)->count();
+    $inventoryExpiryAlerts = $inventoryExpiryAlertsQuery
         ->limit(8)
         ->get();
     $adminNotificationReadMap = is_array(optional(auth()->user())->notification_read_map ?? null)
@@ -7268,19 +7283,19 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         ]);
     }
 
-    foreach ($medicineAlerts as $medicineAlert) {
-        $isExpired = optional($medicineAlert->expiration_date)->isPast();
-        $daysLeft = $medicineAlert->expiration_date ? now()->diffInDays($medicineAlert->expiration_date, false) : null;
+    foreach ($inventoryExpiryAlerts as $expiryAlert) {
+        $isExpired = optional($expiryAlert->expiration_date)->isPast();
+        $daysLeft = $expiryAlert->expiration_date ? now()->diffInDays($expiryAlert->expiration_date, false) : null;
 
         $adminNotifications->push([
-            'id' => 'medicine-alert:' . $medicineAlert->id . ':' . optional($medicineAlert->updated_at)->timestamp . ':' . optional($medicineAlert->expiration_date)->timestamp,
-            'type' => 'medicine',
-            'title' => $isExpired ? 'Expired medicine alert' : 'Medicine expiry alert',
-            'link' => $inventoryUrl . '?highlight_item=' . $medicineAlert->id,
+            'id' => 'medicine-alert:' . $expiryAlert->id . ':' . optional($expiryAlert->updated_at)->timestamp . ':' . optional($expiryAlert->expiration_date)->timestamp,
+            'type' => 'inventory_expiry',
+            'title' => $isExpired ? 'Expired inventory alert' : 'Inventory expiry alert',
+            'link' => $inventoryUrl . '?highlight_item=' . $expiryAlert->id,
             'hover_hint' => implode(' | ', array_filter([
-                'Medicine: ' . trim((string) $medicineAlert->name),
-                'Stock: ' . $medicineAlert->quantity . ' units',
-                'Expiry: ' . (optional($medicineAlert->expiration_date)->format('M d, Y') ?? 'N/A'),
+                trim((string) $expiryAlert->category) . ': ' . trim((string) $expiryAlert->name),
+                'Stock: ' . $expiryAlert->quantity . ' units',
+                'Expiry: ' . (optional($expiryAlert->expiration_date)->format('M d, Y') ?? 'N/A'),
                 $isExpired ? 'Status: Expired' : ($daysLeft !== null ? 'Status: ' . $daysLeft . ' day(s) left' : 'Status: Near expiry'),
             ])),
             'state_class' => $isExpired ? 'is-expired' : 'is-near-expiry',
@@ -7622,6 +7637,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
     <main class="main" id="adminMainContent" aria-busy="false">
         <div class="admin-loader-overlay admin-content-loader" role="status" aria-live="polite" aria-label="Loading page" aria-hidden="true">
+            @include('partials.admin-loader-waves')
             <div class="loading" aria-hidden="true">
                 <svg width="64" height="48" viewBox="0 0 64 48" focusable="false">
                     <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" class="loader-trace"></polyline>
@@ -7704,108 +7720,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 @include('admin.partials.consultation-evaluation-prompt')
 
 <div class="admin-loader-overlay admin-action-loader" id="adminActionLoader" role="status" aria-live="assertive" aria-label="Processing action" aria-hidden="true">
-    <div class="admin-loader-skeleton" data-skeleton-kind="generic" aria-hidden="true">
-        <div class="loader-skeleton-topbar">
-            <span class="loader-skeleton-shape loader-skeleton-logo"></span>
-            <span class="loader-skeleton-brand">
-                <span class="loader-skeleton-shape loader-skeleton-line is-wide"></span>
-                <span class="loader-skeleton-shape loader-skeleton-line is-short"></span>
-            </span>
-            <span class="loader-skeleton-top-actions">
-                <span class="loader-skeleton-shape"></span>
-                <span class="loader-skeleton-shape"></span>
-            </span>
-        </div>
-        <div class="loader-skeleton-layout">
-            <aside class="loader-skeleton-sidebar">
-                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-            </aside>
-            <main class="loader-skeleton-content">
-                <div class="loader-skeleton-main-heading">
-                    <span class="loader-skeleton-heading-copy">
-                        <span class="loader-skeleton-shape loader-skeleton-line"></span>
-                        <span class="loader-skeleton-shape loader-skeleton-line"></span>
-                    </span>
-                    <span class="loader-skeleton-shape loader-skeleton-heading-action"></span>
-                </div>
-                <div class="loader-skeleton-stats">
-                    <span class="loader-skeleton-stat"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                    <span class="loader-skeleton-stat"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                    <span class="loader-skeleton-stat"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                    <span class="loader-skeleton-stat"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                </div>
-                <div class="loader-skeleton-table">
-                    <div class="loader-skeleton-toolbar">
-                        <span class="loader-skeleton-shape loader-skeleton-search"></span>
-                        <span class="loader-skeleton-shape loader-skeleton-filter"></span>
-                    </div>
-                    <div class="loader-skeleton-table-row is-header">
-                        <span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span>
-                    </div>
-                    <div class="loader-skeleton-table-row">
-                        <span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span>
-                    </div>
-                    <div class="loader-skeleton-table-row">
-                        <span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span>
-                    </div>
-                    <div class="loader-skeleton-table-row">
-                        <span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span>
-                    </div>
-                    <div class="loader-skeleton-table-row">
-                        <span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span>
-                    </div>
-                </div>
-                <div class="loader-skeleton-report-panels">
-                    <section class="loader-skeleton-report-panel">
-                        <span class="loader-skeleton-shape loader-skeleton-report-heading"></span>
-                        <span class="loader-skeleton-shape loader-skeleton-line is-medium"></span>
-                        <div class="loader-skeleton-chart">
-                            <span class="loader-skeleton-chart-bar"></span>
-                            <span class="loader-skeleton-chart-bar"></span>
-                            <span class="loader-skeleton-chart-bar"></span>
-                            <span class="loader-skeleton-chart-bar"></span>
-                            <span class="loader-skeleton-chart-bar"></span>
-                            <span class="loader-skeleton-chart-bar"></span>
-                        </div>
-                    </section>
-                    <section class="loader-skeleton-report-panel loader-skeleton-report-summary">
-                        <span class="loader-skeleton-shape loader-skeleton-report-heading"></span>
-                        <span class="loader-skeleton-shape loader-skeleton-line is-medium"></span>
-                        <span class="loader-skeleton-shape"></span>
-                        <span class="loader-skeleton-shape"></span>
-                        <span class="loader-skeleton-shape"></span>
-                    </section>
-                </div>
-                <div class="loader-skeleton-form">
-                    <section class="loader-skeleton-form-panel">
-                        <span class="loader-skeleton-shape loader-skeleton-form-section-title"></span>
-                        <div class="loader-skeleton-form-fields">
-                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
-                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
-                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
-                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
-                        </div>
-                        <span class="loader-skeleton-shape loader-skeleton-form-section-title"></span>
-                        <div class="loader-skeleton-form-fields">
-                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
-                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
-                        </div>
-                    </section>
-                    <section class="loader-skeleton-form-panel">
-                        <span class="loader-skeleton-shape loader-skeleton-form-section-title"></span>
-                        <span class="loader-skeleton-shape loader-skeleton-line is-medium"></span>
-                        <span class="loader-skeleton-shape" style="height: 84px; border-radius: 8px;"></span>
-                        <span class="loader-skeleton-shape" style="height: 34px; width: 42%; margin-top: auto; border-radius: 8px;"></span>
-                    </section>
-                </div>
-            </main>
-        </div>
-    </div>
+    @include('partials.admin-loader-waves')
     <div class="loading" aria-hidden="true">
         <div class="admin-heart-rate" aria-hidden="true">
             <svg viewBox="0 0 150 73" focusable="false" role="presentation">
@@ -7815,7 +7730,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         </div>
         <div class="admin-loader-copy">
             <div class="admin-loader-message">
-                <span data-admin-loader-message-text>Loading</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
+                <span data-admin-loader-message-text>{{ request()->routeIs('admin.health_records') ? 'Opening Health Records' : ((request()->routeIs('admin.show_health', 'admin.show_health_plain', 'admin.employee_health_profile.*')) ? 'Opening health record' : 'Loading') }}</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
             </div>
             <div class="admin-loader-detail" data-admin-loader-detail>Preparing your request, please wait.</div>
         </div>
@@ -7901,7 +7816,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     <div class="medicine-alert-head">
         <div>
             <p class="medicine-alert-title">Notifications</p>
-            <p class="medicine-alert-subtitle">New appointments, today's schedules, and medicine alerts.</p>
+            <p class="medicine-alert-subtitle">New appointments, today's schedules, and medicine or supply expiry alerts.</p>
         </div>
         <div class="medicine-alert-actions">
             <button type="button" class="medicine-alert-mode-btn" id="medicineAlertBackBtn" aria-label="Back to new notifications">
@@ -7961,7 +7876,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         @empty
         <div class="medicine-alert-empty">
             <p class="medicine-alert-empty-title">No new notifications</p>
-            <p class="medicine-alert-empty-copy">You're all caught up for now. New appointment, health form, and medicine alerts will appear here.</p>
+            <p class="medicine-alert-empty-copy">You're all caught up for now. New appointment, health form, and inventory expiry alerts will appear here.</p>
         </div>
         @endforelse
     </div>
@@ -8494,9 +8409,12 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 return { title: 'Opening Clinic Records', detail: 'Loading clinic service and treatment records.' };
             }
 
+            if (/\/(?:employee-)?health-profile\/[^/]+\/?$/.test(path)) {
+                return { title: 'Opening Record', detail: 'Loading the selected profile and its medical information.' };
+            }
             if (/health[\s_-]*records?|health[_-]records/.test(context)) {
                 return isOpeningRecord
-                    ? { title: 'Opening health record', detail: 'Loading the selected profile and its medical information.' }
+                    ? { title: 'Opening Record', detail: 'Loading the selected profile and its medical information.' }
                     : { title: 'Opening Health Records', detail: 'Loading submitted records and review information.' };
             }
             if (/\binventory\b|\bstock\b/.test(context)) {
@@ -8510,7 +8428,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             }
             if (/\bappointments?\b/.test(context)) {
                 if (isOpeningRecord || /\/appointments\/[^/]+\//.test(path)) {
-                    return { title: 'Opening appointment details', detail: 'Loading the selected appointment, schedule, and clinic remarks.' };
+                    return { title: 'Opening appointment details', detail: 'Loading the selected appointment, schedule, and status.' };
                 }
                 return { title: 'Opening Appointments', detail: 'Loading appointment requests and clinic schedule details.' };
             }

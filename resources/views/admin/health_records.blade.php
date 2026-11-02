@@ -8477,13 +8477,17 @@
                 ];
             }
 
+            $applicantReference = collect([
+                $record->reference_number,
+                $record->student_number,
+                $user->student_number,
+                $user->reference_number,
+            ])->map(static fn ($value) => trim((string) $value))
+                ->first(static fn ($value) => $value !== '' && !\Illuminate\Support\Str::startsWith(strtoupper($value), 'CLN-'));
+
             return [
                 'label' => 'Reference Number',
-                'value' => $firstIdentifier([
-                    $record->reference_number,
-                    $record->student_number,
-                    $user->student_number,
-                ]),
+                'value' => $applicantReference ?: '-',
             ];
         };
 

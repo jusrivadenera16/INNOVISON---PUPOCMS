@@ -6753,7 +6753,7 @@
             return $quantity <= 0;
         })->count();
         $inventoryExpiredItems = $inventoryCollection->filter(function ($item) {
-            return $item->category == 'Medicine'
+            return in_array($item->category, ['Medicine', 'Supplies'], true)
                 && $item->expiration_date
                 && \Carbon\Carbon::parse($item->expiration_date)->endOfDay()->isPast();
         })->count();
@@ -6838,7 +6838,7 @@
                     <span class="inventory-action-copy">
                         <span class="inventory-action-label">Expired</span>
                         <strong>{{ $inventoryExpiredItems }}</strong>
-                        <span>Medicine records</span>
+                        <span>Medicine and supply records</span>
                     </span>
                 </div>
             @endif
@@ -6907,9 +6907,9 @@
                 @forelse($items as $item)
                     @php
                         $isHighlightedItem = $highlightItemId !== '' && $highlightItemId === (string) $item->id;
-                        $isExpiredMedicine = $item->category == 'Medicine' && $item->expiration_date && \Carbon\Carbon::parse($item->expiration_date)->endOfDay()->isPast();
+                        $isExpiredTrackedItem = in_array($item->category, ['Medicine', 'Supplies'], true) && $item->expiration_date && \Carbon\Carbon::parse($item->expiration_date)->endOfDay()->isPast();
                         $highlightClass = $isHighlightedItem
-                            ? ($isExpiredMedicine ? 'inventory-row-highlight-expired' : 'inventory-row-highlight')
+                            ? ($isExpiredTrackedItem ? 'inventory-row-highlight-expired' : 'inventory-row-highlight')
                             : '';
                     @endphp
                     @php
@@ -6991,7 +6991,7 @@
                                 <small style="display:block; color: {{ $dateColor }}; font-weight:600;">
                                     {{ $expiryLabel }}
                                 </small>
-                            @elseif($item->category === 'Medicine')
+                            @elseif(in_array($item->category, ['Medicine', 'Supplies'], true))
                                 <small style="display:block; color: #94a3b8; font-style: italic;">
                                     Not set
                                 </small>
@@ -7607,7 +7607,7 @@
                                     </div>
 
                                     <div id="medicineExpiryField" class="form-group">
-                                        <label>Expiration Month &amp; Year</label>
+                                        <label>Expiration Month &amp; Year <small id="iExpDateHint" hidden></small></label>
                                         <input type="month" name="expiration_date" id="iExpDate" class="form-control">
                                     </div>
                                 </div>
@@ -8000,6 +8000,7 @@
     const itemsPerUnitField = document.getElementById('itemsPerUnitField');
     const unitsPerStockUnitInput = document.getElementById('iUnitsPerStockUnit');
     const expDateInput = document.getElementById('iExpDate');
+    const expDateHint = document.getElementById('iExpDateHint');
     const highlightedRow = document.querySelector('.inventory-row-highlight');
     const highlightedExpiredRow = document.querySelector('.inventory-row-highlight-expired');
     const inventorySearchInput = document.getElementById('inventorySearchInput');
@@ -8573,13 +8574,18 @@
 
     function toggleMedicineFields() {
         const category = categorySelect.value;
+        const supportsExpiry = category === 'Medicine' || category === 'Supplies';
         syncCategoryDisplay();
+        medicineExpiryField.style.display = supportsExpiry ? 'block' : 'none';
+        expDateInput.required = category === 'Medicine';
+        if (expDateHint) {
+            expDateHint.textContent = category === 'Supplies' ? '(Optional)' : '';
+            expDateHint.hidden = category !== 'Supplies';
+        }
 
         if (category === 'Medicine') {
             medicineFields.style.display = 'block';
-            medicineExpiryField.style.display = 'block';
             medicineSelect.setAttribute('required', 'required');
-            expDateInput.setAttribute('required', 'required');
             toggleDispensingFields();
         } else {
             medicineFields.style.display = 'none';
@@ -8589,7 +8595,6 @@
             if (itemsPerUnitField) {
                 itemsPerUnitField.style.display = 'none';
             }
-            medicineExpiryField.style.display = 'none';
             medicineSelect.removeAttribute('required');
             expDateInput.removeAttribute('required');
             medicineSelect.value = ''; 
@@ -8601,7 +8606,9 @@
             if (unitsPerStockUnitInput) {
                 unitsPerStockUnitInput.value = '';
             }
-            expDateInput.value = '';
+            if (!supportsExpiry) {
+                expDateInput.value = '';
+            }
         }
     }
 
@@ -8683,6 +8690,9 @@
         
         syncCategoryDisplay();
         toggleMedicineFields();
+        document.getElementById('iExpDate').value = ['Medicine', 'Supplies'].includes(item.category)
+            ? String(item.expiration_date || '').slice(0, 7)
+            : '';
         if((item.category || '') === 'Medicine') {
             const hasKnownType = Array.from(medicineSelect.options).some(function(option) {
                 return String(option.value) === String(item.medicine_type_id || '');
@@ -8698,7 +8708,6 @@
                     medicineTypeCustomInput.value = item.medicine_type || '';
                 }
             }
-            document.getElementById('iExpDate').value = String(item.expiration_date || '').slice(0, 7);
         }
         syncMedicineTypeDisplay();
         toggleDispensingFields();

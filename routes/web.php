@@ -233,8 +233,6 @@ Route::middleware(['auth:student', 'student.idle', 'account.active', 'idp.sessio
             ->name('student.health_record.resubmit');
         Route::post('/student/health-record/correction-requests/{correctionRequest}/cancel', [AppointmentController::class, 'cancelStudentHealthRecordCorrectionRequest'])
             ->name('student.health_record.correction_requests.cancel');
-        Route::post('/student/health-form-requests/{submission}/cancel', [AppointmentController::class, 'cancelStudentHealthFormRequest'])
-            ->name('student.health_form.request.cancel');
         Route::post('/student/health-record/documents', [AppointmentController::class, 'uploadHealthRecordDocuments'])
             ->name('student.health_record.documents');
         Route::post('/student/health-record/health-declaration', [AppointmentController::class, 'uploadHealthDeclaration'])
@@ -320,6 +318,9 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
     Route::post('/health-profile/{id}/request-health-form', [AdminController::class, 'requestNewHealthForm'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_health_form'])
         ->name('admin.health_profile.request_health_form');
+    Route::post('/health-profile/{id}/health-form-request/{submissionId}/cancel', [AdminController::class, 'cancelNewHealthFormRequest'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_health_form'])
+        ->name('admin.health_profile.health_form_request.cancel');
     Route::post('/health-profile/{id}/revoke-clearance', [AdminController::class, 'revokeHealthProfileClearance'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.revoke_clearance'])
         ->name('admin.health_profile.revoke_clearance');

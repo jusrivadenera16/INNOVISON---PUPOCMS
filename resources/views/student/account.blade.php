@@ -7967,9 +7967,15 @@
             || (bool) preg_match('/^\d{4}-[A-Z]+-\d+/', $value);
     };
     $referenceMode = trim((string) ($accountProfileData['reference_mode'] ?? 'admission'));
+    $isTransfereeAccount = $user->clinicAccountTypeKey() === 'applicant'
+        && strtolower(trim((string) $user->applicant_type)) === 'transferee';
     $referenceHeading = $usesEmployeeHealthForm
-        ? 'Employee Reference'
-        : ($referenceMode === 'admission' ? 'Admission Reference' : 'Clinic Reference');
+        ? 'Employee Number'
+        : ($isTransfereeAccount
+            ? 'SIS Reference Number'
+            : ($user->clinicAccountTypeKey() === 'student'
+                ? 'Student Number'
+                : ($user->clinicAccountTypeKey() === 'dependent' ? 'ID Number' : 'Admission Reference')));
     $idNumberHeading = $usesEmployeeHealthForm ? 'Employee Number' : ($referenceMode === 'admission' ? 'Student Number' : 'ID Number');
     $displayCourse = trim((string) ($accountProfileData['course_college'] ?? ''));
     $displayCourseCode = trim((string) ($accountProfileData['course_code'] ?? ''));
@@ -8978,8 +8984,38 @@ document.addEventListener('DOMContentLoaded', function () {
             default => 'is-pending',
         };
         $clinicScheduleLabel = app(\App\Services\ClinicWorkflowService::class)->clinicScheduleLabel();
-        $recordReferenceNumber = trim((string) optional($healthProfileRecord)->reference_number);
-        $recordReferenceNumber = $recordReferenceNumber !== '' ? $recordReferenceNumber : trim((string) ($user->reference_number ?? '-'));
+        if ($usesEmployeeHealthForm) {
+            $recordReferenceNumber = \App\Support\EmployeeNumber::normalize(
+                $accountProfileData['employee_number']
+                ?? optional($user->employeeHealthProfile)->employee_number
+                ?? $user->employee_number
+                ?? optional($linkedAdminProfile)->employee_number
+            ) ?? '';
+        } elseif ($isTransfereeAccount) {
+            $recordReferenceNumber = trim((string) (
+                optional($healthProfileRecord)->sis_reference_number
+                ?: $user->sis_reference_number
+                ?: ''
+            ));
+        } elseif ($user->clinicAccountTypeKey() === 'student') {
+            $recordReferenceNumber = trim((string) (
+                optional($healthProfileRecord)->student_number
+                ?: $user->student_number
+                ?: ''
+            ));
+        } elseif ($user->clinicAccountTypeKey() === 'dependent') {
+            $recordReferenceNumber = trim((string) (
+                optional($user->dependentProfile)->id_number
+                ?: optional($healthProfileRecord)->id_number
+                ?: ''
+            ));
+        } else {
+            $recordReferenceNumber = collect([
+                optional($healthProfileRecord)->reference_number,
+                $user->reference_number,
+            ])->map(static fn ($value) => trim((string) $value))
+                ->first(static fn ($value) => $value !== '' && !\Illuminate\Support\Str::startsWith(strtoupper($value), 'CLN-')) ?: '';
+        }
         $hasHealthDeclaration = filled(optional($healthProfileRecord)->health_declaration);
         $healthDeclarationUploadError = $errors->has('health_declaration');
         $healthRecordMissingRequirements = collect();

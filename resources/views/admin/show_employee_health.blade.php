@@ -2011,8 +2011,7 @@
                 <button type="button" class="profile-tab" data-profile-tab-target="healthPanel" role="tab" aria-selected="false"><x-outline-icon name="information-circle" /><span>Health Profile</span></button>
                 <button type="button" class="profile-tab" data-profile-tab-target="docsPanel" role="tab" aria-selected="false"><x-outline-icon name="document-text" /><span>Uploaded Documents</span></button>
             </div>
-            @if($canRequestEmployeeHealthActions)
-                <div class="employee-profile-actions" id="employeeProfileActions">
+            <div class="employee-profile-actions" id="employeeProfileActions">
                     <button
                         type="button"
                         class="employee-profile-actions-toggle"
@@ -2045,9 +2044,12 @@
                                 <span aria-hidden="true">+</span>
                             </button>
                         @endif
+                        <button type="button" data-health-record-history-open aria-haspopup="dialog" aria-controls="healthRecordHistoryModal" role="menuitem">
+                            <span>History</span>
+                            <span aria-hidden="true"><x-outline-icon name="clock" /></span>
+                        </button>
                     </div>
                 </div>
-            @endif
         </div>
 
         <section class="profile-panel is-active" id="summaryPanel" role="tabpanel">
@@ -2718,8 +2720,10 @@
         'medicalAssessmentProfileTypeLabel' => $medicalAssessmentProfileType,
         'medicalAssessmentEditableValues' => $medicalAssessmentEditableValues,
         'employeeDocuments' => $employeeDocuments,
+        'useUnifiedRecordHistory' => true,
     ])
 @endif
+@include('admin.partials.health-record-history-modal')
 @endsection
 
 @push('scripts')

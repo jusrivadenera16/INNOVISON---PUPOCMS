@@ -1,4 +1,4 @@
-<div class="student-navigation-loader" id="studentNavigationLoader" role="status" aria-live="assertive" aria-label="Opening Student Portal" aria-hidden="true">
+<div class="student-navigation-loader" id="studentNavigationLoader" role="status" aria-live="assertive" aria-label="Opening Portal" aria-hidden="true">
     <div class="student-loader-copy">
         <div class="student-loader-heartbeat" aria-hidden="true">
             <svg viewBox="0 0 150 73" focusable="false">
@@ -7,9 +7,9 @@
             </svg>
         </div>
         <div class="student-loader-message">
-            <span data-student-loader-title>Opening Student Portal</span><span class="student-loader-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span>
+            <span data-student-loader-title>Opening Portal</span><span class="student-loader-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span>
         </div>
-        <p class="student-loader-detail" data-student-loader-detail>Loading your student portal information.</p>
+        <p class="student-loader-detail" data-student-loader-detail>Loading your portal information.</p>
     </div>
 </div>
 
@@ -24,8 +24,8 @@
         const isStudentShellPath = (path) => /^\/(student(?:\/|$)|account(?:\/|$)|health-form(?:\/|$))/.test(String(path || ''));
 
         const show = function (copy) {
-            const title = String(copy?.title || 'Opening Student Portal').trim();
-            const detail = String(copy?.detail || 'Loading your student portal information.').trim();
+            const title = String(copy?.title || 'Opening Portal').trim();
+            const detail = String(copy?.detail || 'Loading your portal information.').trim();
             if (titleNode) titleNode.textContent = title;
             if (detailNode) detailNode.textContent = detail;
             loader.classList.add('is-active');
@@ -37,7 +37,7 @@
         const clear = function () {
             loader.classList.remove('is-active');
             loader.setAttribute('aria-hidden', 'true');
-            loader.setAttribute('aria-label', 'Opening Student Portal');
+            loader.setAttribute('aria-label', 'Opening Portal');
             document.body.removeAttribute('aria-busy');
             document.documentElement.removeAttribute('data-student-navigation-pending');
             document.documentElement.style.removeProperty('--student-pending-loader-title');
@@ -91,36 +91,48 @@
                 if (/appointments\/store|booking|book appointment/.test(context)) return { title: 'Booking Appointment', detail: 'Checking the selected schedule and saving your request.' };
                 if (/notifications\/preferences/.test(path)) return { title: 'Saving Notification Preferences', detail: 'Updating how the clinic sends your notifications.' };
                 if (/notifications\/(?:mark-all-read|read-all)/.test(path)) return { title: 'Updating Notifications', detail: 'Saving your notification read status.' };
-                if (/student\/account|update-contact/.test(context)) return { title: 'Saving Profile Information', detail: 'Updating your student account details.' };
+                if (/student\/account|update-contact/.test(context)) return { title: 'Saving Profile Information', detail: 'Updating your account details.' };
                 return { title: 'Submitting Request', detail: 'Sending your information to the clinic.' };
             }
 
-            if (/student\/evaluations|evaluation-form|service evaluation|satisfaction survey/.test(context)) {
+            if (/student\/account\/?$/.test(path)) {
+                if (query.get('view') === 'health-record') {
+                    return { title: 'Opening Health Record', detail: 'Loading your health information and submitted documents.' };
+                }
+                if (query.get('view') === 'notifications') {
+                    return { title: 'Opening Notifications', detail: 'Loading messages and updates from the clinic.' };
+                }
+                return { title: 'Opening Profile', detail: 'Loading your account information.' };
+            }
+            if (/student\/evaluations|student\/evaluation-form/.test(path)) {
                 return { title: 'Opening Service Evaluation', detail: 'Loading the clinic service evaluation form.' };
             }
-            if (/health-form|health_record|health-record|dependent-profile/.test(context)) {
+            if (/health_record|health-record/.test(path)) {
+                return { title: 'Opening Health Record', detail: 'Loading your health information and submitted documents.' };
+            }
+            if (/health-form|dependent-profile/.test(path)) {
                 return { title: 'Opening Health Form', detail: 'Loading your health information and form details.' };
             }
-            if (/student\/history|appointment history/.test(context)) {
-                return { title: 'Opening Appointment History', detail: 'Loading your appointment records and updates.' };
+            if (/student\/history/.test(path)) {
+                return { title: 'Opening History', detail: 'Loading your appointment records and updates.' };
             }
-            if (/student\/booking|appointments?/.test(context)) {
+            if (/student\/booking|student\/appointments(?:\/|$)/.test(path)) {
                 return { title: 'Opening Appointments', detail: 'Loading clinic services and available appointment schedules.' };
             }
-            if (/student\/notifications|notifications/.test(context) || query.get('view') === 'notifications') {
+            if (/student\/notifications/.test(path)) {
                 return { title: 'Opening Notifications', detail: 'Loading messages and updates from the clinic.' };
             }
-            if (/student\/faq|\bfaqs?\b/.test(context)) {
+            if (/student\/faq/.test(path)) {
                 return { title: 'Opening FAQs', detail: 'Loading clinic information and answers to common questions.' };
             }
-            if (/student\/account|\bprofile\b/.test(context) || query.get('view') === 'profile') {
-                return { title: 'Opening Profile', detail: 'Loading your student account information.' };
-            }
-            if (/student\/home|\bhome\b/.test(context)) {
-                return { title: 'Opening Student Home', detail: 'Loading clinic announcements and your student dashboard.' };
+            if (/student\/home/.test(path)) {
+                if (destination.hash === '#about') {
+                    return { title: 'Opening About Us', detail: 'Loading clinic information and available services.' };
+                }
+                return { title: 'Opening Home', detail: 'Loading clinic announcements and your dashboard.' };
             }
 
-            return { title: 'Opening Student Portal', detail: 'Loading your student portal information.' };
+            return { title: 'Opening Portal', detail: 'Loading your portal information.' };
         };
 
         const persist = function (copy, destination) {

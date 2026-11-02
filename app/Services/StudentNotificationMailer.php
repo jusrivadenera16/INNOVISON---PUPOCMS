@@ -152,7 +152,6 @@ class StudentNotificationMailer
         $schedule = $this->formatAppointmentSchedule($appointment);
         $clinicUpdate = trim((string) $appointment->remarks);
         $clinicUpdate = trim((string) preg_replace('/^\[Clinic Closure\]\s*/', '', $clinicUpdate));
-        $rejectionReason = trim((string) $appointment->remarks);
 
         $notice = match ($event) {
             'approved' => [
@@ -166,12 +165,10 @@ class StudentNotificationMailer
             'rejected' => [
                 'subject' => 'Appointment update - PUP Taguig Clinic',
                 'title' => 'Your appointment was not approved',
-                'message' => "Your {$service} appointment scheduled for {$schedule} was not approved."
-                    . ($rejectionReason !== '' ? " Reason for rejection: {$rejectionReason}." : '')
-                    . ' You may book a new appointment if you still need clinic assistance.',
+                'message' => 'Your appointment request was not approved. Sign in to the Student Portal to review the update.',
                 'action_label' => 'Book an Appointment',
                 'action_url' => url('/student/booking'),
-                'status_card' => $this->appointmentStatusCard($appointment, 'rejected', $schedule, $service, $rejectionReason),
+                'status_card' => $this->appointmentStatusCard($appointment, 'rejected', $schedule, $service),
             ],
             'cancelled' => [
                 'subject' => 'Appointment cancelled - PUP Taguig Clinic',

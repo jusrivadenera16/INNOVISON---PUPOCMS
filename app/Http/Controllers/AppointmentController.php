@@ -168,26 +168,11 @@ class AppointmentController extends Controller
             $dateStr = $appt->date ? date('M d', strtotime($appt->date)) : 'N/A';
 
             if ($appt->status === 'Approved') {
-                $approvalExtras = [];
-                $approvalMessage = trim((string) ($appt->approval_message ?? ''));
-                $approvalReminders = collect((array) ($appt->approval_reminders ?? []))
-                    ->map(fn ($reminder) => trim((string) $reminder))
-                    ->filter()
-                    ->values();
-
-                if ($approvalMessage !== '') {
-                    $approvalExtras[] = 'Message: ' . $approvalMessage;
-                }
-
-                if ($approvalReminders->isNotEmpty()) {
-                    $approvalExtras[] = 'Reminder: ' . $approvalReminders->implode(', ');
-                }
-
                 $notifications[] = [
                     'id' => $this->buildNotificationId('appointment-approved', [$appt->id, $appt->status, optional($appt->updated_at)->timestamp]),
                     'type' => 'success',
                     'icon' => 'OK',
-                    'message' => "Your {$appt->service} on {$dateStr} has been approved." . ($approvalExtras ? ' ' . implode(' ', $approvalExtras) : ''),
+                    'message' => 'Your appointment has been approved.',
                     'time' => $timeAgo,
                     'link' => url('/student/history'),
                 ];
@@ -308,7 +293,6 @@ class AppointmentController extends Controller
                         $healthProfile->id,
                         $healthProfileStatus,
                         $pulloutStatus,
-                        $needsHealthFormCorrection ? $healthProfile->pending_reason : null,
                         optional($healthProfile->resubmission_requested_at)->timestamp,
                         optional($healthProfile->pullout_requested_at)->timestamp,
                         optional($healthProfile->pullout_completed_at)->timestamp,
@@ -372,19 +356,15 @@ class AppointmentController extends Controller
             ->first();
 
         if ($pendingHealthFormRequest) {
-            $requestCategory = trim((string) $pendingHealthFormRequest->category);
             $notifications[] = [
                 'id' => $this->buildNotificationId('new-health-form-request', [
                     $pendingHealthFormRequest->id,
                     optional($pendingHealthFormRequest->requested_at)->timestamp,
                     $pendingHealthFormRequest->category,
-                    $pendingHealthFormRequest->remarks,
                 ]),
                 'type' => 'info',
                 'icon' => '!',
-                'message' => 'The clinic requested a new Health Information Form'
-                    . ($requestCategory !== '' ? " for {$requestCategory}" : '')
-                    . '. You may now fill it out and submit it.',
+                'message' => 'The clinic requested a new Health Information Form. Sign in to the Student Portal to review it.',
                 'time' => $pendingHealthFormRequest->requested_at
                     ? $pendingHealthFormRequest->requested_at->diffForHumans()
                     : 'New health form request',
@@ -650,6 +630,7 @@ class AppointmentController extends Controller
 
     private function isClinicReference(?string $referenceNumber): bool
     {
+        // Legacy CLN values are recognized only to keep them out of official-ID flows.
         return str_starts_with(strtoupper(trim((string) $referenceNumber)), 'CLN');
     }
 
@@ -1553,63 +1534,6 @@ class AppointmentController extends Controller
         return 'guest';
     }
 
-    private function generateClinicReferenceNumber(User $user): string
-    {
-        $timestamp = now()->setTimezone('Asia/Taipei');
-        $baseReference = sprintf(
-            'CLN-%s-%sR',
-            $timestamp->format('mdy'),
-            $timestamp->format('Hi')
-        );
-
-        $existingReferences = collect();
-
-        if (\Schema::hasTable('health_profiles') && \Schema::hasColumn('health_profiles', 'reference_number')) {
-            $existingReferences = $existingReferences->merge(
-                HealthProfile::query()
-                    ->where('reference_number', 'like', $baseReference . '%')
-                    ->pluck('reference_number')
-            );
-        }
-
-        if (\Schema::hasTable('users') && \Schema::hasColumn('users', 'reference_number')) {
-            $existingReferences = $existingReferences->merge(
-                User::query()
-                    ->where('reference_number', 'like', $baseReference . '%')
-                    ->pluck('reference_number')
-            );
-        }
-
-        $highestSequence = $existingReferences
-            ->map(function ($reference) use ($baseReference) {
-                $reference = strtoupper(trim((string) $reference));
-                if (!preg_match('/^' . preg_quote($baseReference, '/') . '(\d+)$/', $reference, $matches)) {
-                    return 0;
-                }
-
-                return (int) $matches[1];
-            })
-            ->max() ?: 0;
-
-        return $baseReference . ($highestSequence + 1);
-    }
-
-    private function resolveClinicReferenceNumber(User $user, ?HealthProfile $healthProfile = null): string
-    {
-        $candidates = array_filter([
-            trim((string) (optional($healthProfile)->reference_number ?? '')),
-            trim((string) ($user->reference_number ?? '')),
-        ], fn ($value) => $value !== '');
-
-        foreach ($candidates as $candidate) {
-            if (!$this->looksLikeIdpIdentifier($candidate)) {
-                return strtoupper($candidate);
-            }
-        }
-
-        return $this->generateClinicReferenceNumber($user);
-    }
-
     private function buildHealthFormPrefill(User $user, ?Admin $linkedAdminProfile = null, ?HealthProfile $healthProfile = null): array
     {
         $linkedAdminProfile = $linkedAdminProfile ?: $this->resolveLinkedAdminProfile($user);
@@ -1775,7 +1699,12 @@ class AppointmentController extends Controller
                 ?: ''
             ))),
             'verification_unavailable' => '',
-            default => $this->resolveClinicReferenceNumber($user, $healthProfile),
+            'clinic' => EmployeeNumber::normalize(
+                optional($user->employeeHealthProfile)->employee_number
+                ?: $user->employee_number
+                ?: optional($linkedAdminProfile)->employee_number
+            ) ?? '',
+            default => '',
         };
 
         $configuredSchoolYear = $this->configuredCurrentSchoolYear();
@@ -1790,20 +1719,25 @@ class AppointmentController extends Controller
                     ? 'Student Number'
                     : ($referenceMode === 'sis_reference'
                         ? 'SIS Reference Number'
-                        : ($referenceMode === 'verification_unavailable' ? 'PUPTAS Verification' : 'Clinic Reference Number'))),
+                        : ($referenceMode === 'clinic'
+                            ? 'Employee Number'
+                            : ($referenceMode === 'verification_unavailable' ? 'PUPTAS Verification' : 'Official Identifier')))),
             'step_1_title' => $referenceMode === 'admission'
                 ? 'Admission Reference'
                 : ($referenceMode === 'student_number'
                     ? 'Student Number'
                     : ($referenceMode === 'sis_reference'
                         ? 'SIS Reference Number'
-                        : ($referenceMode === 'verification_unavailable' ? 'PUPTAS Verification' : 'Clinic Reference'))),
+                        : ($referenceMode === 'clinic'
+                            ? 'Employee Number'
+                            : ($referenceMode === 'verification_unavailable' ? 'PUPTAS Verification' : 'Official Identifier')))),
             'step_1_description' => match ($referenceMode) {
                 'admission' => 'Confirm your admission reference, complete your health information, then upload the required clinic documents.',
                 'student_number' => 'Review your official student number, complete your health information, then upload any available clinic documents.',
                 'sis_reference' => 'Enter or review your SIS Reference Number, then complete your health information.',
-                'verification_unavailable' => 'PUPTAS verification is temporarily unavailable. The form remains locked to prevent an incorrect clinic reference from being generated.',
-                default => 'Review your clinic reference, complete your health information, then upload the required clinic documents.',
+                'verification_unavailable' => 'PUPTAS verification is temporarily unavailable. The form remains locked until the official reference can be verified.',
+                'clinic' => 'Review the employee number linked to your account before completing your health information.',
+                default => 'Use the official identifier assigned to your account before completing your health information.',
             },
             'puptas_verification_status' => $lookupOutcome,
             'puptas_verification_http_status' => $applicantLookup['status'] ?? null,
@@ -6797,18 +6731,20 @@ public function validateHealthFormReference(Request $request)
     }
 
     if ($referenceMode !== 'admission') {
-        $clinicReference = $referenceMode === 'student_number'
-            ? $studentNumberReference
-            : $this->resolveClinicReferenceNumber($user, $existingHealthProfile);
-        $this->persistResolvedReferenceNumber($user, $clinicReference);
+        if ($referenceMode === 'student_number' && $studentNumberReference !== '') {
+            $this->persistResolvedReferenceNumber($user, $studentNumberReference);
+
+            return response()->json([
+                'success' => true,
+                'reference_number' => $studentNumberReference,
+                'message' => 'Student number is ready for this account.',
+            ]);
+        }
 
         return response()->json([
-            'success' => true,
-            'reference_number' => $clinicReference,
-            'message' => $referenceMode === 'student_number'
-                ? 'Student number is ready for this account.'
-                : 'ID number is ready for this account.',
-        ]);
+            'success' => false,
+            'message' => 'No supported official identifier is available for this account. Use the employee number, student number, Admission Reference, or SIS Reference Number assigned to you.',
+        ], 422);
     }
 
     $validated = $request->validate([
@@ -7437,7 +7373,9 @@ public function storeHealthForm(Request $request)
             ]);
         }
     } else {
-        $officialReference = $this->resolveClinicReferenceNumber($user, $existingHealthProfile);
+        throw ValidationException::withMessages([
+            'reference_number' => 'Use the employee number, student number, Admission Reference, or SIS Reference Number assigned to your account.',
+        ]);
     }
 
     $oldPaths = [];

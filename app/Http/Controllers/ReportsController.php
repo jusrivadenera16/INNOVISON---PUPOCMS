@@ -20,6 +20,7 @@ use App\Models\DependentsProfile;
 use App\Models\MarClearanceType;
 use App\Models\User;
 use App\Services\MarClearanceIssuanceService;
+use App\Services\HealthRecordHistoryService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -105,6 +106,7 @@ class ReportsController extends Controller
 
         return view('admin.reports.pulled-out-record', [
             'profile' => $healthProfile,
+            'healthRecordHistory' => app(HealthRecordHistoryService::class)->forStudentProfile($healthProfile),
         ]);
     }
 

@@ -3227,21 +3227,21 @@
                     ? 'Verification Temporarily Unavailable'
                     : ($referenceMode === 'admission'
                         ? 'No Reference Received'
-                        : ($referenceMode === 'student_number' ? 'No Student Number Yet' : 'No Clinic Reference Yet'));
+                        : ($referenceMode === 'student_number' ? 'No Student Number Yet' : 'No Official Identifier Yet'));
                 if ($manualStudentModeSelected && $displayReferenceNumber === '') {
                     $referenceDisplayFallback = 'Enter Student ID';
                 }
                 $referenceStatusDefault = $referenceVerificationUnavailable
                     ? ($puptasVerificationMessage !== ''
-                        ? $puptasVerificationMessage . ' No clinic reference was generated.'
+                        ? $puptasVerificationMessage . ' No reference number was created.'
                         : ($puptasVerificationStatus === 429
-                            ? 'PUPTAS verification is temporarily rate limited. No clinic reference was generated. Please try again later.'
-                            : 'PUPTAS verification is temporarily unavailable. No clinic reference was generated. Please try again later.'))
+                            ? 'PUPTAS verification is temporarily rate limited. No reference number was created. Please try again later.'
+                            : 'PUPTAS verification is temporarily unavailable. No reference number was created. Please try again later.'))
                     : ($referenceRequiresValidation
                         ? 'Your Admission Reference Number will automatically appear once your account has been tagged for medical processing in PUPTAS.'
                         : ($referenceMode === 'student_number'
-                            ? 'Your official student number from GUISIS will be used as your clinic reference.'
-                            : 'This clinic reference is generated and managed inside the clinic system for local staff, admin, faculty, and guest records.'));
+                            ? 'Your official student number from GUISIS will be used for your health record.'
+                            : 'Use the official employee or ID number linked to your account.'));
                 if ($manualStudentModeSelected) {
                     $referenceStatusDefault = 'Enter your Student ID, then click the check icon. Admission cross-check will be bypassed for current students and OJT students.';
                 }
@@ -3277,7 +3277,7 @@
                     <div class="step-progress-center">
                         <div class="step-progress-copy">
                             <strong id="currentStepLabel">Step {{ $startStep }} of {{ count($healthFormSteps) }}</strong>
-                            <span id="currentStepName">{{ $healthFormSteps[$startStep] ?? 'Clinic Reference' }}</span>
+                            <span id="currentStepName">{{ $healthFormSteps[$startStep] ?? 'Admission Reference' }}</span>
                         </div>
                         <div class="step-progress-track" aria-hidden="true">
                             <div class="step-progress-fill" id="stepProgressFill" style="width: {{ round(($startStep / count($healthFormSteps)) * 100) }}%;"></div>
@@ -3379,7 +3379,7 @@
                                 </div>
                             @endif
                             <p class="reference-verify-status {{ $referenceVerificationUnavailable ? 'is-error' : ($displayReferenceNumber === '' ? '' : 'is-success') }}" id="referenceVerifyStatus" aria-live="polite">
-                                {{ $displayReferenceNumber === '' ? $referenceStatusDefault : ($referenceRequiresValidation ? 'Reference already verified from the Admission System.' : ($referenceMode === 'student_number' ? 'Student number is ready for use inside the clinic system.' : 'Clinic reference is ready for use inside the clinic system.')) }}
+                                {{ $displayReferenceNumber === '' ? $referenceStatusDefault : ($referenceRequiresValidation ? 'Reference already verified from the Admission System.' : ($referenceMode === 'student_number' ? 'Student number is ready for use in your health record.' : 'Official identifier is ready for use in your health record.')) }}
                             </p>
                             @error('reference_number')
                                 <p class="reference-field-error">{{ $message }}</p>
@@ -6199,7 +6199,7 @@
                         ? 'Enter your Student ID, then click the check icon. Admission cross-check will be bypassed for current students and OJT students.'
                         : (referenceRequiresValidation
                             ? 'Enter the reference exactly as shown by Admissions, then click the check icon. If you do not have a reference, contact Admissions or clinic staff.'
-                            : 'Clinic reference is generated and managed inside the clinic system.')
+                            : 'Use the official employee or ID number linked to your account.')
                     );
                 }
             });
@@ -6250,13 +6250,13 @@
                             ? 'Student ID is required before continuing.'
                             : (referenceRequiresValidation
                                 ? 'Admission Reference is required before continuing.'
-                                : 'Clinic Reference is required before continuing.')
+                                : 'Official identifier is required before continuing.')
                         );
                         setReferenceStatus(isStudentMode
                             ? 'Enter and accept your Student ID before continuing.'
                             : (referenceRequiresValidation
                                 ? 'Verify your Admission Reference before continuing.'
-                                : 'Clinic Reference is required before continuing.'),
+                                : 'Enter your official identifier before continuing.'),
                             'is-error'
                         );
                         showValidationBubble(referenceInput);
