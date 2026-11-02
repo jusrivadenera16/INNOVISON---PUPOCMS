@@ -354,26 +354,36 @@
             </div>
             </summary>
             <div class="medical-config-submenu">
-                <a href="{{ route('admin.reports.manage-mar', ['month' => $currentMonth]) }}#medical-conditions">
+                <a href="{{ route('admin.reports.manage-mar', ['month' => $currentMonth]) }}#medical-conditions"
+                   data-loader-message="Opening Medical Conditions"
+                   data-loader-detail="Loading MAR medical condition settings.">
                     <span>Medical Conditions</span>
                     <x-outline-icon name="chevron-right" />
                 </a>
-                <a href="{{ route('mar-clearance-types.index') }}">
+                <a href="{{ route('mar-clearance-types.index') }}"
+                   data-loader-message="Opening Clearance Types"
+                   data-loader-detail="Loading clearance and certificate type settings.">
                     <span>Clearance / Certificate Types</span>
                     <x-outline-icon name="chevron-right" />
                 </a>
-                <a href="{{ route('clinic-service-options.referrals') }}">
+                <a href="{{ route('clinic-service-options.referrals') }}"
+                   data-loader-message="Opening Referral Services"
+                   data-loader-detail="Loading the clinic referral service options.">
                     <span>Referral Services</span>
                     <x-outline-icon name="chevron-right" />
                 </a>
-                <a href="{{ route('clinic-service-options.online-consultations') }}">
+                <a href="{{ route('clinic-service-options.online-consultations') }}"
+                   data-loader-message="Opening Online Consultation"
+                   data-loader-detail="Loading online consultation service options.">
                     <span>Online Consultation</span>
                     <x-outline-icon name="chevron-right" />
                 </a>
             </div>
         </details>
 
-        <a href="{{ route('clinic-service-options.other-services') }}" class="medical-config-row">
+        <a href="{{ route('clinic-service-options.other-services') }}" class="medical-config-row"
+           data-loader-message="Opening Other Services"
+           data-loader-detail="Loading additional appointment and consultation services.">
             <div class="medical-config-main">
                 <div class="medical-config-icon"><x-outline-icon name="plus-circle" /></div>
                 <div class="medical-config-copy">
@@ -384,7 +394,9 @@
             <div class="medical-config-arrow"><x-outline-icon name="chevron-right" /></div>
         </a>
 
-        <a href="{{ route('admin.reports.manage-medicine-types', ['month' => $currentMonth]) }}" class="medical-config-row">
+        <a href="{{ route('admin.reports.manage-medicine-types', ['month' => $currentMonth]) }}" class="medical-config-row"
+           data-loader-message="Opening Medicine Types"
+           data-loader-detail="Loading medicine type settings used by inventory and MAR.">
             <div class="medical-config-main">
                 <div class="medical-config-icon">
                     <x-outline-icon name="cube" />
@@ -399,7 +411,9 @@
             </div>
         </a>
 
-        <a href="{{ route('admin.reports.manage-health-form-categories') }}" class="medical-config-row">
+        <a href="{{ route('admin.reports.manage-health-form-categories') }}" class="medical-config-row"
+           data-loader-message="Opening Health Form Categories"
+           data-loader-detail="Loading health form request category settings.">
             <div class="medical-config-main">
                 <div class="medical-config-icon">
                     <x-outline-icon name="document-text" />

@@ -831,14 +831,12 @@
     .correction-body.is-hidden {
         display: none;
     }
-    .correction-status-view,
-    .correction-history-view {
+    .correction-status-view {
         display: none;
         gap: 14px;
         padding: 20px;
     }
-    .correction-status-view.is-active,
-    .correction-history-view.is-active {
+    .correction-status-view.is-active {
         display: grid;
     }
     .correction-info-list {
@@ -3261,11 +3259,6 @@
             : (!empty($profile->resubmitted_at) && (empty($profile->resubmission_requested_at) || $profile->resubmitted_at->greaterThanOrEqualTo($profile->resubmission_requested_at))
                 ? 'Submitted'
                 : 'Pending'));
-    $correctionHistoryText = collect([
-        $profile->resubmission_requested_at ? 'Requested: ' . $profile->resubmission_requested_at->format('M d, Y h:i A') : null,
-        $profile->resubmitted_at ? 'Submitted: ' . $profile->resubmitted_at->format('M d, Y h:i A') : null,
-        $profile->pending_reason ? 'Reason: ' . $profile->pending_reason : null,
-    ])->filter()->implode("\n");
 @endphp
 <div class="health-profile-wrap">
     <nav class="profile-breadcrumb" aria-label="Breadcrumb">
@@ -3419,6 +3412,10 @@
                             <span aria-hidden="true">&crarr;</span>
                         </button>
                     @endif
+                    <button type="button" data-health-record-history-open aria-haspopup="dialog" aria-controls="healthRecordHistoryModal">
+                        History
+                        <span aria-hidden="true"><x-outline-icon name="clock" /></span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -4082,7 +4079,14 @@
                     A Health Form request is already active for this record. No new request can be sent until this request is completed or closed.
                 </div>
                 <div class="correction-actions">
-                    <button type="button" class="correction-cancel" id="cancelNewHealthFormModal">Close</button>
+                    @if($profileIsLocalStudent && $activeNewHealthFormRequest->status === \App\Models\HealthFormSubmission::STATUS_REQUESTED)
+                        <form id="cancelExistingHealthFormRequest" method="POST" action="{{ route('admin.health_profile.health_form_request.cancel', [$profile->id, $activeNewHealthFormRequest->id]) }}">
+                            @csrf
+                            <button type="submit" class="correction-cancel">Cancel Request</button>
+                        </form>
+                    @else
+                        <button type="button" class="correction-cancel" id="cancelNewHealthFormModal">Close</button>
+                    @endif
                     <button type="button" class="correction-submit" id="viewExistingHealthFormRecord">View Health Form Record</button>
                 </div>
             </div>
@@ -4355,7 +4359,6 @@
                         </button>
                         <div class="correction-actions-menu" id="correctionActionsMenu">
                             <button type="button" data-correction-view-trigger="status">Status</button>
-                            <button type="button" data-correction-view-trigger="history">History</button>
                         </div>
                     </div>
                     <button type="button" class="correction-close" id="closeCorrectionModal" aria-label="Close correction modal">
@@ -4458,14 +4461,10 @@
                     <div class="correction-note">A correction request is already active for this record. This view shows the existing request; another request cannot be sent until it is closed.</div>
                 @endif
             </div>
-            <div class="correction-history-view" id="correctionHistoryView">
-                <div class="correction-note">
-                    {!! nl2br(e($correctionHistoryText !== '' ? $correctionHistoryText : 'No correction history yet.')) !!}
-                </div>
-            </div>
         </div>
     </div>
 @endif
+@include('admin.partials.health-record-history-modal')
 @endsection
 
 @push('scripts')
@@ -4517,7 +4516,6 @@
     const correctionForm = correctionModal?.querySelector('.correction-body');
     const correctionRequestView = document.getElementById('correctionRequestView');
     const correctionStatusView = document.getElementById('correctionStatusView');
-    const correctionHistoryView = document.getElementById('correctionHistoryView');
     const hasExistingFileCorrectionRequest = @json($hasExistingFileCorrectionRequest);
     const correctionModalBack = document.getElementById('correctionModalBack');
     const correctionActionsToggle = document.getElementById('correctionActionsToggle');
@@ -4884,7 +4882,6 @@
         const isDefaultView = hasExistingFileCorrectionRequest ? effectiveView === 'status' : isRequest;
         correctionRequestView?.classList.toggle('is-hidden', !isRequest);
         correctionStatusView?.classList.toggle('is-active', effectiveView === 'status');
-        correctionHistoryView?.classList.toggle('is-active', effectiveView === 'history');
         correctionModalBack?.classList.toggle('is-visible', !isDefaultView);
         setCorrectionActionsMenu(false);
     }
@@ -4996,6 +4993,13 @@
 
     function getHealthActionConfirmation(form, submitter) {
         const actionText = (submitter?.textContent || '').trim().toLowerCase();
+        if (form.id === 'cancelExistingHealthFormRequest') {
+            return {
+                title: 'Cancel Health Form Request?',
+                message: 'Cancel this unsubmitted Health Form request? The student will no longer be asked to submit it. The approved record and request history will remain stored.',
+                confirm: 'Cancel Request',
+            };
+        }
         if (form.classList.contains('pullout-form')) {
             if (actionText.includes('restore health record')) {
                 return {

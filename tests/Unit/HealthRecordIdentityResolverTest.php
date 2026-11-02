@@ -34,6 +34,20 @@ class HealthRecordIdentityResolverTest extends TestCase
         $this->assertSame('Faculty', HealthRecordIdentityResolver::userType($record));
     }
 
+    public function test_transferee_applicant_is_labelled_as_transferee(): void
+    {
+        $record = (object) [
+            'user' => (object) [
+                'user_type' => 'Applicant',
+                'idp_role' => 'applicant',
+                'applicant_type' => 'transferee',
+                'adminHubProfile' => null,
+            ],
+        ];
+
+        $this->assertSame('Transferee', HealthRecordIdentityResolver::userType($record));
+    }
+
     public function test_official_student_identity_remains_a_student(): void
     {
         $record = (object) [

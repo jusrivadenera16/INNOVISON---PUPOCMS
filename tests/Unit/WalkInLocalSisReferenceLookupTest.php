@@ -30,6 +30,7 @@ class WalkInLocalSisReferenceLookupTest extends TestCase
             $table->string('sis_reference_number')->nullable();
             $table->string('student_number')->nullable();
             $table->string('employee_number')->nullable();
+            $table->string('applicant_type')->nullable();
             $table->string('barcode')->nullable();
             $table->string('student_id')->nullable();
             $table->string('name')->nullable();
@@ -65,6 +66,27 @@ class WalkInLocalSisReferenceLookupTest extends TestCase
             $table->foreignId('user_id')->nullable();
             $table->timestamps();
         });
+
+        Schema::connection('sqlite')->create('activity_logs', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->string('user_name');
+            $table->string('user_role')->nullable();
+            $table->string('action');
+            $table->string('module')->nullable();
+            $table->string('event_type')->nullable();
+            $table->text('description');
+            $table->string('route_name')->nullable();
+            $table->string('http_method')->nullable();
+            $table->string('request_path')->nullable();
+            $table->unsignedSmallInteger('status_code')->nullable();
+            $table->string('subject_type')->nullable();
+            $table->string('subject_id')->nullable();
+            $table->text('metadata')->nullable();
+            $table->string('ip_address')->nullable();
+            $table->text('user_agent')->nullable();
+            $table->timestamps();
+        });
     }
 
     protected function tearDown(): void
@@ -93,6 +115,7 @@ class WalkInLocalSisReferenceLookupTest extends TestCase
         DB::table('users')->insert([
             'id' => 3,
             'sis_reference_number' => '2026-2222-3333',
+            'applicant_type' => 'transferee',
             'name' => 'Local Test Applicant',
         ]);
 
@@ -111,6 +134,66 @@ class WalkInLocalSisReferenceLookupTest extends TestCase
         $this->assertSame('Local Test Applicant', $payload['student_name']);
         $this->assertNull($payload['applicant_photo_url']);
         Http::assertNothingSent();
+    }
+
+    public function test_it_falls_back_to_users_sis_reference_when_puptas_does_not_find_a_transferee(): void
+    {
+        $puptas = \Mockery::mock(PuptasWebhookService::class);
+        $puptas->shouldReceive('fetchApplicantByReferenceNumberDetailed')
+            ->once()
+            ->with('2026-2121-1212')
+            ->andReturn([
+                'success' => false,
+                'outcome' => 'not_found',
+                'status' => 404,
+                'message' => 'No eligible PUPTAS applicant was found for that reference number.',
+                'data' => null,
+            ]);
+
+        DB::table('users')->insert([
+            'id' => 5,
+            'sis_reference_number' => '202621211212',
+            'applicant_type' => 'transferee',
+            'name' => 'Local Transferee',
+        ]);
+
+        $request = Request::create(
+            '/admin/walkin/get-student?student_id=2026-2121-1212&preview_only=true',
+            'GET'
+        );
+        $payload = app(WalkInController::class)->getStudent($request, $puptas)->getData(true);
+
+        $this->assertSame('preview', $payload['status']);
+        $this->assertSame('local_sis_reference', $payload['lookup_source']);
+        $this->assertSame('transferee', $payload['applicant_type']);
+        $this->assertSame('Local Transferee', $payload['student_name']);
+    }
+
+    public function test_it_reports_not_found_only_after_puptas_and_local_sis_are_checked(): void
+    {
+        $puptas = \Mockery::mock(PuptasWebhookService::class);
+        $puptas->shouldReceive('fetchApplicantByReferenceNumberDetailed')
+            ->once()
+            ->with('2026-9999-0000')
+            ->andReturn([
+                'success' => false,
+                'outcome' => 'not_found',
+                'status' => 404,
+                'message' => 'No eligible PUPTAS applicant was found for that reference number.',
+                'data' => null,
+            ]);
+
+        $request = Request::create(
+            '/admin/walkin/get-student?student_id=2026-9999-0000&preview_only=true',
+            'GET'
+        );
+        $payload = app(WalkInController::class)->getStudent($request, $puptas)->getData(true);
+
+        $this->assertSame('not_found', $payload['status']);
+        $this->assertSame(
+            'No applicant or transferee record was found in PUPTAS or local SIS records.',
+            $payload['message']
+        );
     }
 
     public function test_reference_lookup_returns_a_protected_photo_url_for_applicants_with_a_photo(): void

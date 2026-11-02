@@ -355,12 +355,6 @@
                             <x-outline-icon name="document-text" />
                             Fill Up New Health Form
                         </a>
-                        @if($pendingHealthFormRequest && (int) $pendingHealthFormRequest->id === (int) $latestHealthSubmission->id)
-                            <form method="POST" action="{{ route('student.health_form.request.cancel', $pendingHealthFormRequest->id) }}" class="health-doc-cancel-form" onsubmit="return confirm('Cancel this Health Form request? Your current approved record will remain unchanged.');">
-                                @csrf
-                                <button type="submit" class="health-doc-action is-cancel"><x-outline-icon name="x-mark" /> Cancel Request</button>
-                            </form>
-                        @endif
                     @elseif($requiresHealthFormCorrection)
                         <a href="{{ $healthFormRoute }}" class="health-doc-action is-edit">
                             <x-outline-icon name="pencil-square" />

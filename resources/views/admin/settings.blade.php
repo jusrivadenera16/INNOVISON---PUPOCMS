@@ -2390,7 +2390,7 @@
                                     <div class="field">
                                         <label for="clinicClosureReason">Reason</label>
                                         <select id="clinicClosureReason" name="clinic_closure_reason">
-                                            @foreach(['Staff Meeting', 'Official Clinic Activity', 'Emergency', 'Early Closure', 'Other'] as $reason)
+                                            @foreach(['Regular Holiday', 'Staff Meeting', 'Official Clinic Activity', 'Emergency', 'Early Closure', 'Other'] as $reason)
                                                 <option value="{{ $reason }}" {{ old('clinic_closure_reason', $settings->clinic_closure_reason) === $reason ? 'selected' : '' }}>{{ $reason }}</option>
                                             @endforeach
                                         </select>

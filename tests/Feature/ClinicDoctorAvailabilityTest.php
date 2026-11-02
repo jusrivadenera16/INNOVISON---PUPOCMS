@@ -70,6 +70,12 @@ class ClinicDoctorAvailabilityTest extends TestCase
             $table->string('status')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('health_profiles', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->string('pullout_status')->nullable();
+        });
     }
 
     protected function tearDown(): void
@@ -78,30 +84,78 @@ class ClinicDoctorAvailabilityTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_doctor_is_available_by_default(): void
+    public function test_doctor_is_unavailable_by_default_without_an_assigned_doctor(): void
     {
-        $this->assertTrue(app(ClinicWorkflowService::class)->doctorIsAvailable());
+        $this->assertFalse(app(ClinicWorkflowService::class)->doctorIsAvailable());
     }
 
-    public function test_doctor_availability_persists_until_it_is_changed_again(): void
+    public function test_doctor_availability_is_limited_to_the_day_it_was_set(): void
     {
-        SystemSetting::putValue('clinic_doctor_available', '0');
+        Carbon::setTestNow(Carbon::parse('2026-11-02 10:00:00', config('app.timezone')));
+        $this->createAccountWithPosition('admin', 'Doctor');
+        $workflow = app(ClinicWorkflowService::class);
 
-        $this->assertFalse(app(ClinicWorkflowService::class)->doctorIsAvailable());
+        $workflow->setDoctorAvailability(true);
+        $this->assertTrue($workflow->doctorIsAvailable());
 
-        SystemSetting::putValue('clinic_doctor_available', '1');
-
-        $this->assertTrue(app(ClinicWorkflowService::class)->doctorIsAvailable());
+        Carbon::setTestNow(Carbon::parse('2026-11-03 10:00:00', config('app.timezone')));
+        $this->assertFalse($workflow->doctorIsAvailable());
     }
 
     public function test_doctor_account_login_marks_clinic_availability_as_available(): void
     {
-        SystemSetting::putValue('clinic_doctor_available', '0');
+        Carbon::setTestNow(Carbon::parse('2026-11-02 10:00:00', config('app.timezone')));
         $doctor = $this->createAccountWithPosition('admin', 'Doctor');
 
         event(new Login('admin', $doctor, false));
 
         $this->assertTrue(app(ClinicWorkflowService::class)->doctorIsAvailable());
+    }
+
+    public function test_doctor_login_does_not_turn_availability_on_during_a_clinic_closure(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-11-02 10:00:00', config('app.timezone')));
+        $doctor = $this->createAccountWithPosition('admin', 'Doctor');
+        DB::table('settings')->insert([
+            'open_time' => '08:00',
+            'close_time' => '17:00',
+            'operating_days' => json_encode([1, 2, 3, 4, 5]),
+            'clinic_closure_enabled' => true,
+            'clinic_closure_starts_at' => '2026-11-02 09:00:00',
+            'clinic_closure_ends_at' => '2026-11-02 12:00:00',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        SystemSetting::putValue('clinic_doctor_available', '1');
+        SystemSetting::putValue('clinic_doctor_availability_date', '2026-11-02');
+
+        event(new Login('admin', $doctor, false));
+
+        $this->assertFalse(app(ClinicWorkflowService::class)->doctorIsAvailable());
+        $this->assertSame('0', SystemSetting::getValue('clinic_doctor_available'));
+    }
+
+    public function test_availability_stays_off_after_a_scheduled_closure_ends(): void
+    {
+        $doctor = $this->createAccountWithPosition('admin', 'Doctor');
+        DB::table('settings')->insert([
+            'open_time' => '08:00',
+            'close_time' => '17:00',
+            'operating_days' => json_encode([1, 2, 3, 4, 5]),
+            'clinic_closure_enabled' => true,
+            'clinic_closure_starts_at' => '2026-11-02 09:00:00',
+            'clinic_closure_ends_at' => '2026-11-02 12:00:00',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $workflow = app(ClinicWorkflowService::class);
+        $workflow->setDoctorAvailability(true, Carbon::parse('2026-11-02 08:30:00', config('app.timezone')));
+
+        Carbon::setTestNow(Carbon::parse('2026-11-02 13:00:00', config('app.timezone')));
+
+        $this->assertFalse($workflow->doctorIsAvailable());
+        $this->assertSame('0', SystemSetting::getValue('clinic_doctor_available'));
     }
 
     public function test_non_doctor_and_student_assistant_logins_do_not_change_availability(): void
@@ -117,8 +171,9 @@ class ClinicDoctorAvailabilityTest extends TestCase
 
     public function test_logging_out_does_not_turn_doctor_availability_off(): void
     {
-        SystemSetting::putValue('clinic_doctor_available', '1');
+        Carbon::setTestNow(Carbon::parse('2026-11-02 10:00:00', config('app.timezone')));
         $doctor = $this->createAccountWithPosition('admin', 'Doctor');
+        app(ClinicWorkflowService::class)->setDoctorAvailability(true);
 
         event(new Logout('admin', $doctor));
 
@@ -127,7 +182,8 @@ class ClinicDoctorAvailabilityTest extends TestCase
 
     public function test_landing_availability_endpoint_returns_the_current_public_status(): void
     {
-        SystemSetting::putValue('clinic_doctor_available', '0');
+        Carbon::setTestNow(Carbon::parse('2026-11-02 10:00:00', config('app.timezone')));
+        $this->createAccountWithPosition('admin', 'Doctor');
 
         $this->getJson(route('landing.doctor-availability'))
             ->assertOk()
@@ -138,7 +194,9 @@ class ClinicDoctorAvailabilityTest extends TestCase
     public function test_landing_availability_endpoint_reports_an_active_clinic_closure(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-11-02 10:00:00', config('app.timezone')));
+        $this->createAccountWithPosition('admin', 'Doctor');
         SystemSetting::putValue('clinic_doctor_available', '1');
+        SystemSetting::putValue('clinic_doctor_availability_date', '2026-11-02');
         DB::table('settings')->insert([
             'open_time' => '08:00',
             'close_time' => '17:00',
@@ -153,15 +211,19 @@ class ClinicDoctorAvailabilityTest extends TestCase
         $this->getJson(route('landing.doctor-availability'))
             ->assertOk()
             ->assertJson([
-                'available' => true,
+                'available' => false,
                 'clinic_closed' => true,
             ]);
+
+        $this->assertSame('0', SystemSetting::getValue('clinic_doctor_available'));
     }
 
     public function test_landing_availability_endpoint_reports_closed_outside_operating_days(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-11-03 10:00:00', config('app.timezone')));
+        $this->createAccountWithPosition('admin', 'Doctor');
         SystemSetting::putValue('clinic_doctor_available', '1');
+        SystemSetting::putValue('clinic_doctor_availability_date', '2026-11-03');
         DB::table('settings')->insert([
             'open_time' => '08:00',
             'close_time' => '17:00',
@@ -174,9 +236,27 @@ class ClinicDoctorAvailabilityTest extends TestCase
         $this->getJson(route('landing.doctor-availability'))
             ->assertOk()
             ->assertJson([
-                'available' => true,
+                'available' => false,
                 'clinic_closed' => true,
             ]);
+    }
+
+    public function test_only_the_assigned_doctor_and_superadmins_can_manage_availability(): void
+    {
+        $workflow = app(ClinicWorkflowService::class);
+        $doctor = $this->createAccountWithPosition('admin', 'Doctor');
+        $regularAdmin = $this->createAccountWithPosition('admin', 'Nurse');
+        $superadmin = $this->createAccountWithPosition('superadmin', 'Administrator');
+        $assistant = $this->createAccountWithPosition('admin', 'Doctor', 'Assistant');
+
+        $this->assertTrue($workflow->canManageDoctorAvailability($doctor));
+        $this->assertTrue($workflow->canManageDoctorAvailability($superadmin));
+        $this->assertFalse($workflow->canManageDoctorAvailability($regularAdmin));
+        $this->assertFalse($workflow->canManageDoctorAvailability($assistant));
+
+        $this->actingAs($regularAdmin, 'admin')
+            ->post(route('admin.doctor-availability.update'), ['available' => '1'])
+            ->assertForbidden();
     }
 
     private function createAccountWithPosition(string $role, string $position, string $userType = 'Regular'): User

@@ -340,6 +340,45 @@ class WalkInController extends Controller
         return $this->findUserByDependentIdNumber($identifier);
     }
 
+    private function findUserByLocalSisReference(string $referenceNumber): ?User
+    {
+        $referenceNumber = trim($referenceNumber);
+        if ($referenceNumber === '') {
+            return null;
+        }
+
+        // SIS references are sometimes saved without the display hyphens.
+        $normalizedReference = strtoupper((string) preg_replace('/[^A-Z0-9]/i', '', $referenceNumber));
+
+        if (\Schema::hasColumn('users', 'sis_reference_number')) {
+            $user = User::with(['healthProfile', 'dependentProfile'])
+                ->visibleForAdminHubRecords()
+                ->whereRaw("REPLACE(REPLACE(UPPER(TRIM(sis_reference_number)), '-', ''), ' ', '') = ?", [$normalizedReference])
+                ->first();
+
+            if ($user) {
+                return $user;
+            }
+        }
+
+        if (\Schema::hasTable('health_profiles')
+            && \Schema::hasColumn('health_profiles', 'sis_reference_number')) {
+            $profile = HealthProfile::query()
+                ->with('user')
+                ->whereRaw("REPLACE(REPLACE(UPPER(TRIM(sis_reference_number)), '-', ''), ' ', '') = ?", [$normalizedReference])
+                ->latest()
+                ->first();
+
+            if ($profile?->user) {
+                $profile->user->setRelation('healthProfile', $profile);
+
+                return $profile->user->loadMissing('dependentProfile');
+            }
+        }
+
+        return null;
+    }
+
     private function findUserByEmployeeIdNumber(string $identifier): ?User
     {
         $identifier = trim($identifier);
@@ -2568,10 +2607,10 @@ class WalkInController extends Controller
         $intakeTarget = strtolower(trim((string) $request->query('intake_target', 'consultation')));
         $lookupScope = strtolower(trim((string) $request->query('lookup_scope', 'default')));
         $isEmployeeLookupScope = in_array($lookupScope, ['employee_local', 'clinic_local'], true);
-        if ($lookup !== '' && !$isEmployeeLookupScope && Str::startsWith(strtoupper($lookup), 'CLN-')) {
+        if ($lookup !== '' && Str::startsWith(strtoupper($lookup), 'CLN')) {
             return response()->json([
                 'status' => 'not_found',
-                'message' => 'This is an Employee Reference, not an Applicant Reference. Please use the Employee lookup.',
+                'message' => 'Use the official employee/student number or applicant reference assigned to the account.',
             ], 422);
         }
 
@@ -2636,11 +2675,20 @@ class WalkInController extends Controller
                     $lookupMessage = 'This patient account is inactive and is unavailable in clinic records.';
                 }
             } elseif (!$student) {
-                $localProfile = $this->findHealthProfileByReference($lookup);
-                if ($localProfile) {
-                    $student = $this->ensureLocalUserFromHealthProfile($localProfile, $lookup);
-                    $lookupStatus = 'local_health_profile';
-                    $lookupMessage = 'Local health profile found. PUPTAS sync will still depend on a valid Admission reference.';
+                // Transferees may not exist in PUPTAS. Search the clinic's
+                // local SIS reference fields before treating the lookup as missing.
+                $student = $this->findUserByLocalSisReference($lookup);
+
+                if ($student) {
+                    $lookupStatus = 'local_sis_reference';
+                    $lookupMessage = 'Local SIS reference found in clinic records.';
+                } else {
+                    $localProfile = $this->findHealthProfileByReference($lookup);
+                    if ($localProfile) {
+                        $student = $this->ensureLocalUserFromHealthProfile($localProfile, $lookup);
+                        $lookupStatus = 'local_health_profile';
+                        $lookupMessage = 'Local health profile found. PUPTAS sync will still depend on a valid Admission reference.';
+                    }
                 }
             } elseif ($lookupStatus && (int) $lookupStatus !== 200) {
                 $localProfile = $this->findHealthProfileByReference($lookup);
@@ -2648,6 +2696,12 @@ class WalkInController extends Controller
                     $lookupStatus = 'local_health_profile';
                     $lookupMessage = 'Local health profile found. PUPTAS sync will still depend on a valid Admission reference.';
                 }
+            }
+
+            if (!$student && !is_array($applicant)) {
+                $lookupMessage = ($lookupResult['outcome'] ?? null) === 'not_found'
+                    ? 'No applicant or transferee record was found in PUPTAS or local SIS records.'
+                    : 'No matching local SIS record was found, and PUPTAS verification is unavailable. Please try again later.';
             }
 
             // Log the reference lookup attempt
@@ -2665,14 +2719,14 @@ class WalkInController extends Controller
                     'local_email' => $student->email,
                     'source' => 'puptas',
                 ]);
-            } elseif ($student && $lookupStatus === 'local_health_profile') {
+            } elseif ($student && in_array($lookupStatus, ['local_sis_reference', 'local_health_profile'], true)) {
                 $this->logReferenceLookup($request, $lookup, true, $student->name, null, [
                     'local_user_id' => $student->id,
                     'local_email' => $student->email,
-                    'source' => 'local_health_profile',
+                    'source' => $lookupStatus,
                     'puptas_lookup_status' => $lookupResult['status'] ?? null,
                 ]);
-            } elseif (!is_array($applicant) && $lookupResult['success'] === false) {
+            } elseif (!$student && !is_array($applicant) && $lookupResult['success'] === false) {
                 // Failed lookup with error
                 $this->logReferenceLookup($request, $lookup, false, null, $lookupMessage);
             }
@@ -2806,6 +2860,13 @@ class WalkInController extends Controller
                     'civil_status' => $resolvedCivilStatus,
                     'contact_number' => $resolvedContactNumber,
                     'clinic_status' => $resolvedClinicStatus,
+                    'applicant_status' => $resolvedClinicStatus,
+                    'applicant_type' => strtolower(trim((string) (
+                        $student->applicant_type
+                        ?: data_get($applicant ?? [], 'applicant_type')
+                        ?: data_get($applicant ?? [], 'application.applicant_type')
+                        ?: data_get($applicant ?? [], 'user.applicant_type')
+                    ))),
                     'clearance_status' => $rawClearanceStatus,
                     'approved_at' => $resolvedApprovedAt,
                     'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
@@ -2868,6 +2929,13 @@ class WalkInController extends Controller
                 'civil_status' => $resolvedCivilStatus,
                 'contact_number' => $resolvedContactNumber,
                 'clinic_status' => $resolvedClinicStatus,
+                'applicant_status' => $resolvedClinicStatus,
+                'applicant_type' => strtolower(trim((string) (
+                    $student->applicant_type
+                    ?: data_get($applicant ?? [], 'applicant_type')
+                    ?: data_get($applicant ?? [], 'application.applicant_type')
+                    ?: data_get($applicant ?? [], 'user.applicant_type')
+                ))),
                 'clearance_status' => $rawClearanceStatus,
                 'approved_at' => $resolvedApprovedAt,
                 'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),

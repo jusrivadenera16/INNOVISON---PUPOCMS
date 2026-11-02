@@ -83,6 +83,27 @@
                 document.documentElement.setAttribute('data-theme', 'dark');
             }
         })();
+        (function() {
+            try {
+                var pendingNavigation = sessionStorage.getItem('admin_navigation_loader_handoff');
+                if (!pendingNavigation) return;
+
+                var navigationState = JSON.parse(pendingNavigation);
+                var startedAt = Number(navigationState && navigationState.startedAt);
+                if (!startedAt || Date.now() - startedAt > 90000) {
+                    sessionStorage.removeItem('admin_navigation_loader_handoff');
+                    return;
+                }
+
+                var pendingTitle = String(navigationState.title || 'Opening page').trim();
+                var pendingDetail = String(navigationState.detail || 'Loading the requested page.').trim();
+                document.documentElement.style.setProperty('--admin-pending-loader-title', JSON.stringify(pendingTitle));
+                document.documentElement.style.setProperty('--admin-pending-loader-detail', JSON.stringify(pendingDetail));
+                document.documentElement.setAttribute('data-admin-navigation-pending', 'true');
+            } catch (error) {
+                document.documentElement.removeAttribute('data-admin-navigation-pending');
+            }
+        })();
     </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2170,8 +2191,24 @@
             color: #f8fafc;
         }
 
+        html[data-theme="dark"] .doctor-availability-icon {
+            color: #facc15;
+        }
+
         html[data-theme="dark"] .doctor-availability-icon::after {
-            background: rgba(248, 250, 252, .18);
+            background: rgba(250, 204, 21, .32);
+        }
+
+        html[data-theme="dark"] .doctor-availability-toggle,
+        html[data-theme="dark"] .doctor-availability-toggle[aria-pressed="false"] {
+            border-color: rgba(250, 204, 21, .42);
+            background: #111827;
+        }
+
+        html[data-theme="dark"] .doctor-availability-toggle-pulse path,
+        html[data-theme="dark"] .doctor-availability-toggle.is-animating-to-out .doctor-availability-toggle-pulse path,
+        html[data-theme="dark"] .doctor-availability-toggle.is-animating-to-available .doctor-availability-toggle-pulse path {
+            stroke: #facc15;
         }
 
         html[data-theme="light"] .doctor-availability-title {
@@ -3180,17 +3217,39 @@
             border-radius: 0;
         }
 
+        .admin-content-loader,
         .admin-action-loader:not(.is-brand-logout) {
-            --loader-skeleton-surface: rgba(255, 255, 255, 0.045);
-            --loader-skeleton-edge: rgba(255, 255, 255, 0.09);
-            --loader-skeleton-fill: rgba(255, 255, 255, 0.12);
-            --loader-skeleton-soft: rgba(255, 255, 255, 0.07);
-            --loader-skeleton-glow: rgba(255, 255, 255, 0.065);
+            --loader-wave-back: rgba(136, 19, 55, .16);
+            --loader-wave-middle: rgba(159, 18, 57, .13);
+            --loader-wave-front: rgba(190, 18, 60, .12);
             overflow: hidden;
             background: #111827;
             color: #ffffff;
             backdrop-filter: none;
             -webkit-backdrop-filter: none;
+        }
+
+        .admin-loader-overlay > .admin-loader-waves {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            display: block;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .admin-loader-waves path:nth-child(1) { fill: var(--loader-wave-back); }
+        .admin-loader-waves path:nth-child(2) { fill: var(--loader-wave-middle); }
+        .admin-loader-waves path:nth-child(3) { fill: var(--loader-wave-front); }
+
+        .admin-action-loader.is-brand-logout > .admin-loader-waves {
+            display: none;
+        }
+
+        .admin-content-loader > .loading {
+            position: relative;
+            z-index: 1;
         }
 
         .admin-loader-skeleton {
@@ -3783,6 +3842,24 @@
         .admin-action-loader.is-active {
             display: inline-flex;
             animation: adminContentLoaderIn 0.18s ease-out both;
+        }
+
+        html[data-admin-navigation-pending="true"] .admin-action-loader {
+            display: inline-flex;
+        }
+
+        html[data-admin-navigation-pending="true"] .admin-action-loader .admin-loader-copy {
+            display: block;
+        }
+
+        html[data-admin-navigation-pending="true"] .admin-action-loader [data-admin-loader-detail] {
+            font-size: 0;
+        }
+
+        html[data-admin-navigation-pending="true"] .admin-action-loader [data-admin-loader-detail]::before {
+            display: block;
+            content: var(--admin-pending-loader-detail, "Loading the requested page.");
+            font-size: 13px;
         }
 
         .admin-action-loader .loading {
@@ -5622,13 +5699,12 @@
             color: #5a1421;
         }
 
+        html[data-theme="light"] .admin-content-loader,
         html[data-theme="light"] .admin-action-loader:not(.is-brand-logout) {
-            --loader-skeleton-surface: rgba(255, 255, 255, 0.82);
-            --loader-skeleton-edge: rgba(112, 19, 27, 0.12);
-            --loader-skeleton-fill: #e5e7eb;
-            --loader-skeleton-soft: rgba(128, 0, 0, 0.055);
-            --loader-skeleton-glow: rgba(128, 0, 0, 0.04);
-            background: #f7f8fb;
+            --loader-wave-back: #fdf0f6;
+            --loader-wave-middle: rgba(251, 207, 232, .4);
+            --loader-wave-front: rgba(249, 168, 212, .2);
+            background: radial-gradient(ellipse at 85% 15%, #fdf7fb 0%, #ffffff 65%);
             backdrop-filter: none;
             -webkit-backdrop-filter: none;
         }
@@ -6703,8 +6779,15 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     $currentRole = \App\Models\User::normalizeRole(optional($authUser)->user_role ?? '');
     $isStudentAssistant = $authUser?->isStudentAssistant() ?? false;
     $isAdminLike = $currentRole === \App\Models\User::ROLE_SUPERADMIN;
-    $canToggleDoctorAvailability = !$isStudentAssistant && in_array($currentRole, [\App\Models\User::ROLE_SUPERADMIN, \App\Models\User::ROLE_ADMIN], true);
-    $doctorAvailable = \App\Models\SystemSetting::booleanValue('clinic_doctor_available', true);
+    $doctorAvailabilityWorkflow = app(\App\Services\ClinicWorkflowService::class);
+    $assignedDoctorProfile = $doctorAvailabilityWorkflow->activeDoctorProfile();
+    $currentUserIsAssignedDoctor = $doctorAvailabilityWorkflow->userIsAssignedDoctor($authUser);
+    $showDoctorAvailability = $assignedDoctorProfile !== null
+        && !$isStudentAssistant
+        && ($currentRole === \App\Models\User::ROLE_SUPERADMIN || $currentUserIsAssignedDoctor);
+    $canToggleDoctorAvailability = $showDoctorAvailability;
+    $doctorAvailable = $doctorAvailabilityWorkflow->doctorIsAvailable()
+        && !$doctorAvailabilityWorkflow->clinicIsClosed();
     $canAccessModule = fn (string $permission): bool => $authUser?->canAccessPermission($permission) ?? false;
     $canAccessAnyModule = fn (array $permissions): bool => $authUser?->canAccessAnyPermission($permissions) ?? false;
     $linkedAdminProfile = null;
@@ -7030,13 +7113,13 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         'student_assistant' => 'Student Assistant',
     ];
     $displayRole = $adminTypeLabel ?: ($roleLabelMap[$currentRole] ?? ucfirst($currentRole ?: 'user'));
-    $medicineAlertsQuery = \App\Models\Item::query()
-        ->where('category', 'Medicine')
+    $inventoryExpiryAlertsQuery = \App\Models\Item::query()
+        ->whereIn('category', ['Medicine', 'Supplies'])
         ->whereNotNull('expiration_date')
         ->whereDate('expiration_date', '<=', now()->addDays(30)->toDateString())
         ->orderBy('expiration_date');
-    $medicineAlertCount = (clone $medicineAlertsQuery)->count();
-    $medicineAlerts = $medicineAlertsQuery
+    $medicineAlertCount = (clone $inventoryExpiryAlertsQuery)->count();
+    $inventoryExpiryAlerts = $inventoryExpiryAlertsQuery
         ->limit(8)
         ->get();
     $adminNotificationReadMap = is_array(optional(auth()->user())->notification_read_map ?? null)
@@ -7200,19 +7283,19 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         ]);
     }
 
-    foreach ($medicineAlerts as $medicineAlert) {
-        $isExpired = optional($medicineAlert->expiration_date)->isPast();
-        $daysLeft = $medicineAlert->expiration_date ? now()->diffInDays($medicineAlert->expiration_date, false) : null;
+    foreach ($inventoryExpiryAlerts as $expiryAlert) {
+        $isExpired = optional($expiryAlert->expiration_date)->isPast();
+        $daysLeft = $expiryAlert->expiration_date ? now()->diffInDays($expiryAlert->expiration_date, false) : null;
 
         $adminNotifications->push([
-            'id' => 'medicine-alert:' . $medicineAlert->id . ':' . optional($medicineAlert->updated_at)->timestamp . ':' . optional($medicineAlert->expiration_date)->timestamp,
-            'type' => 'medicine',
-            'title' => $isExpired ? 'Expired medicine alert' : 'Medicine expiry alert',
-            'link' => $inventoryUrl . '?highlight_item=' . $medicineAlert->id,
+            'id' => 'medicine-alert:' . $expiryAlert->id . ':' . optional($expiryAlert->updated_at)->timestamp . ':' . optional($expiryAlert->expiration_date)->timestamp,
+            'type' => 'inventory_expiry',
+            'title' => $isExpired ? 'Expired inventory alert' : 'Inventory expiry alert',
+            'link' => $inventoryUrl . '?highlight_item=' . $expiryAlert->id,
             'hover_hint' => implode(' | ', array_filter([
-                'Medicine: ' . trim((string) $medicineAlert->name),
-                'Stock: ' . $medicineAlert->quantity . ' units',
-                'Expiry: ' . (optional($medicineAlert->expiration_date)->format('M d, Y') ?? 'N/A'),
+                trim((string) $expiryAlert->category) . ': ' . trim((string) $expiryAlert->name),
+                'Stock: ' . $expiryAlert->quantity . ' units',
+                'Expiry: ' . (optional($expiryAlert->expiration_date)->format('M d, Y') ?? 'N/A'),
                 $isExpired ? 'Status: Expired' : ($daysLeft !== null ? 'Status: ' . $daysLeft . ' day(s) left' : 'Status: Near expiry'),
             ])),
             'state_class' => $isExpired ? 'is-expired' : 'is-near-expiry',
@@ -7375,6 +7458,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
   <aside class="sidebar" id="adminSidebar">
     <div class="sidebar-scroll-region" id="adminSidebarScrollRegion">
     <div class="sidebar-logo">
+      @if($showDoctorAvailability)
       <div class="doctor-availability-card {{ $doctorAvailable ? 'is-available' : 'is-out' }}" aria-label="Doctor is {{ $doctorAvailable ? 'available' : 'out' }}">
         <span class="doctor-availability-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
         <span class="doctor-availability-copy">
@@ -7403,6 +7487,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
           <span class="doctor-availability-readonly" aria-hidden="true"></span>
         @endif
       </div>
+      @endif
     </div>
     
     <nav class="sidebar-nav">
@@ -7552,6 +7637,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
     <main class="main" id="adminMainContent" aria-busy="false">
         <div class="admin-loader-overlay admin-content-loader" role="status" aria-live="polite" aria-label="Loading page" aria-hidden="true">
+            @include('partials.admin-loader-waves')
             <div class="loading" aria-hidden="true">
                 <svg width="64" height="48" viewBox="0 0 64 48" focusable="false">
                     <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" class="loader-trace"></polyline>
@@ -7634,108 +7720,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 @include('admin.partials.consultation-evaluation-prompt')
 
 <div class="admin-loader-overlay admin-action-loader" id="adminActionLoader" role="status" aria-live="assertive" aria-label="Processing action" aria-hidden="true">
-    <div class="admin-loader-skeleton" data-skeleton-kind="generic" aria-hidden="true">
-        <div class="loader-skeleton-topbar">
-            <span class="loader-skeleton-shape loader-skeleton-logo"></span>
-            <span class="loader-skeleton-brand">
-                <span class="loader-skeleton-shape loader-skeleton-line is-wide"></span>
-                <span class="loader-skeleton-shape loader-skeleton-line is-short"></span>
-            </span>
-            <span class="loader-skeleton-top-actions">
-                <span class="loader-skeleton-shape"></span>
-                <span class="loader-skeleton-shape"></span>
-            </span>
-        </div>
-        <div class="loader-skeleton-layout">
-            <aside class="loader-skeleton-sidebar">
-                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-            </aside>
-            <main class="loader-skeleton-content">
-                <div class="loader-skeleton-main-heading">
-                    <span class="loader-skeleton-heading-copy">
-                        <span class="loader-skeleton-shape loader-skeleton-line"></span>
-                        <span class="loader-skeleton-shape loader-skeleton-line"></span>
-                    </span>
-                    <span class="loader-skeleton-shape loader-skeleton-heading-action"></span>
-                </div>
-                <div class="loader-skeleton-stats">
-                    <span class="loader-skeleton-stat"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                    <span class="loader-skeleton-stat"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                    <span class="loader-skeleton-stat"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                    <span class="loader-skeleton-stat"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
-                </div>
-                <div class="loader-skeleton-table">
-                    <div class="loader-skeleton-toolbar">
-                        <span class="loader-skeleton-shape loader-skeleton-search"></span>
-                        <span class="loader-skeleton-shape loader-skeleton-filter"></span>
-                    </div>
-                    <div class="loader-skeleton-table-row is-header">
-                        <span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span>
-                    </div>
-                    <div class="loader-skeleton-table-row">
-                        <span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span>
-                    </div>
-                    <div class="loader-skeleton-table-row">
-                        <span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span>
-                    </div>
-                    <div class="loader-skeleton-table-row">
-                        <span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span>
-                    </div>
-                    <div class="loader-skeleton-table-row">
-                        <span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span>
-                    </div>
-                </div>
-                <div class="loader-skeleton-report-panels">
-                    <section class="loader-skeleton-report-panel">
-                        <span class="loader-skeleton-shape loader-skeleton-report-heading"></span>
-                        <span class="loader-skeleton-shape loader-skeleton-line is-medium"></span>
-                        <div class="loader-skeleton-chart">
-                            <span class="loader-skeleton-chart-bar"></span>
-                            <span class="loader-skeleton-chart-bar"></span>
-                            <span class="loader-skeleton-chart-bar"></span>
-                            <span class="loader-skeleton-chart-bar"></span>
-                            <span class="loader-skeleton-chart-bar"></span>
-                            <span class="loader-skeleton-chart-bar"></span>
-                        </div>
-                    </section>
-                    <section class="loader-skeleton-report-panel loader-skeleton-report-summary">
-                        <span class="loader-skeleton-shape loader-skeleton-report-heading"></span>
-                        <span class="loader-skeleton-shape loader-skeleton-line is-medium"></span>
-                        <span class="loader-skeleton-shape"></span>
-                        <span class="loader-skeleton-shape"></span>
-                        <span class="loader-skeleton-shape"></span>
-                    </section>
-                </div>
-                <div class="loader-skeleton-form">
-                    <section class="loader-skeleton-form-panel">
-                        <span class="loader-skeleton-shape loader-skeleton-form-section-title"></span>
-                        <div class="loader-skeleton-form-fields">
-                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
-                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
-                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
-                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
-                        </div>
-                        <span class="loader-skeleton-shape loader-skeleton-form-section-title"></span>
-                        <div class="loader-skeleton-form-fields">
-                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
-                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
-                        </div>
-                    </section>
-                    <section class="loader-skeleton-form-panel">
-                        <span class="loader-skeleton-shape loader-skeleton-form-section-title"></span>
-                        <span class="loader-skeleton-shape loader-skeleton-line is-medium"></span>
-                        <span class="loader-skeleton-shape" style="height: 84px; border-radius: 8px;"></span>
-                        <span class="loader-skeleton-shape" style="height: 34px; width: 42%; margin-top: auto; border-radius: 8px;"></span>
-                    </section>
-                </div>
-            </main>
-        </div>
-    </div>
+    @include('partials.admin-loader-waves')
     <div class="loading" aria-hidden="true">
         <div class="admin-heart-rate" aria-hidden="true">
             <svg viewBox="0 0 150 73" focusable="false" role="presentation">
@@ -7745,7 +7730,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         </div>
         <div class="admin-loader-copy">
             <div class="admin-loader-message">
-                <span data-admin-loader-message-text>Loading</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
+                <span data-admin-loader-message-text>{{ request()->routeIs('admin.health_records') ? 'Opening Health Records' : ((request()->routeIs('admin.show_health', 'admin.show_health_plain', 'admin.employee_health_profile.*')) ? 'Opening health record' : 'Loading') }}</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
             </div>
             <div class="admin-loader-detail" data-admin-loader-detail>Preparing your request, please wait.</div>
         </div>
@@ -7831,7 +7816,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     <div class="medicine-alert-head">
         <div>
             <p class="medicine-alert-title">Notifications</p>
-            <p class="medicine-alert-subtitle">New appointments, today's schedules, and medicine alerts.</p>
+            <p class="medicine-alert-subtitle">New appointments, today's schedules, and medicine or supply expiry alerts.</p>
         </div>
         <div class="medicine-alert-actions">
             <button type="button" class="medicine-alert-mode-btn" id="medicineAlertBackBtn" aria-label="Back to new notifications">
@@ -7891,7 +7876,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         @empty
         <div class="medicine-alert-empty">
             <p class="medicine-alert-empty-title">No new notifications</p>
-            <p class="medicine-alert-empty-copy">You're all caught up for now. New appointment, health form, and medicine alerts will appear here.</p>
+            <p class="medicine-alert-empty-copy">You're all caught up for now. New appointment, health form, and inventory expiry alerts will appear here.</p>
         </div>
         @endforelse
     </div>
@@ -8180,6 +8165,22 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             return;
         }
 
+        const navigationHandoffKey = 'admin_navigation_loader_handoff';
+        let pendingNavigationHandoff = null;
+        try {
+            const savedHandoff = sessionStorage.getItem(navigationHandoffKey);
+            if (savedHandoff) {
+                sessionStorage.removeItem(navigationHandoffKey);
+                const parsedHandoff = JSON.parse(savedHandoff);
+                const handoffAge = Date.now() - Number(parsedHandoff?.startedAt || 0);
+                if (handoffAge >= 0 && handoffAge <= 90000) {
+                    pendingNavigationHandoff = parsedHandoff;
+                }
+            }
+        } catch (error) {
+            pendingNavigationHandoff = null;
+        }
+
         const syncContentLoaderBounds = function () {
             const rect = content.getBoundingClientRect();
             const top = Math.max(0, rect.top);
@@ -8203,6 +8204,9 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             actionLoader.setAttribute('aria-hidden', 'true');
             actionLoader.setAttribute('aria-label', 'Processing action');
             document.body.removeAttribute('aria-busy');
+            document.documentElement.removeAttribute('data-admin-navigation-pending');
+            document.documentElement.style.removeProperty('--admin-pending-loader-title');
+            document.documentElement.style.removeProperty('--admin-pending-loader-detail');
         };
 
         const showContentLoading = function () {
@@ -8236,16 +8240,29 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 source?.getAttribute?.('title'),
                 form?.getAttribute?.('aria-label'),
             ].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+            const managementView = form?.querySelector('[name="management_view"]')?.value || '';
             const actionUrl = source instanceof HTMLAnchorElement
                 ? source.href
                 : (form?.getAttribute('action') || window.location.href);
             let path = '';
+            let hash = '';
             try {
-                path = new URL(actionUrl, window.location.href).pathname.toLowerCase();
+                const destination = new URL(actionUrl, window.location.href);
+                path = destination.pathname.toLowerCase();
+                hash = destination.hash.toLowerCase();
             } catch (error) {
                 path = '';
+                hash = '';
             }
-            const context = (label + ' ' + path).toLowerCase();
+            const context = (label + ' ' + path + ' ' + hash + ' ' + managementView).toLowerCase();
+            const labelContext = label.toLowerCase();
+            const isOpeningRecord = /\b(view|open|review|profile|details|record)\b/.test(labelContext);
+            const pageCopy = function (name, detail) {
+                return {
+                    title: 'Opening ' + name,
+                    detail: detail,
+                };
+            };
 
             if (mode === 'submit') {
                 if (/finali[sz]e/.test(context)) {
@@ -8260,14 +8277,59 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 if (/\b(cancel|cancellation)\b/.test(context)) {
                     return { title: 'Cancelling appointment', detail: 'Updating the appointment and notifying the student.' };
                 }
+                if (/\b(reschedule|rescheduling)\b/.test(context)) {
+                    return { title: 'Rescheduling appointment', detail: 'Saving the new appointment date and time.' };
+                }
+                if (/\b(no[\s_-]?show)\b/.test(context)) {
+                    return { title: 'Updating no-show status', detail: 'Saving the attendance status for this appointment.' };
+                }
                 if (/\b(dispense|dispensing|issue medicine|issue medication)\b/.test(context)) {
                     return { title: 'Issuing medicine', detail: 'Recording the medicine and updating inventory.' };
+                }
+                if (/\b(restock|receive stock|stock receipt)\b/.test(context)) {
+                    return { title: 'Recording stock receipt', detail: 'Updating the on-hand quantity and stock movement history.' };
+                }
+                if (/\b(import|upload inventory)\b/.test(context) && /\binventory\b|\bstock\b/.test(context)) {
+                    return { title: 'Importing inventory', detail: 'Checking the uploaded file and preparing the stock updates.' };
                 }
                 if (/\b(book|booking appointment|schedule appointment)\b/.test(context)) {
                     return { title: 'Booking appointment', detail: 'Checking the selected schedule and saving the booking.' };
                 }
                 if (/\b(correction|correct file|request correction)\b/.test(context)) {
                     return { title: 'Submitting correction request', detail: 'Sending the file correction request for review.' };
+                }
+                if (/admin-hub|admin hub/.test(context)) {
+                    if (/delete|remove/.test(labelContext)) {
+                        return { title: 'Removing Admin Hub designee', detail: 'Updating the assigned office and Admin Hub access.' };
+                    }
+                    return { title: 'Saving Admin Hub profile', detail: 'Updating the designee profile and office assignment.' };
+                }
+                if (/account-access|account access/.test(context) || managementView === 'account-access') {
+                    if (/delete account|delete user account/.test(labelContext + ' ' + path)) {
+                        return { title: 'Deleting user account', detail: 'Removing the selected clinic account and its access.' };
+                    }
+                    if (/remove|delete/.test(labelContext)) {
+                        return { title: 'Removing clinic access', detail: 'Updating the account role and clinic permissions.' };
+                    }
+                    if (/deactiv/.test(labelContext)) {
+                        return { title: 'Updating account status', detail: 'Saving the clinic account status.' };
+                    }
+                    if (/add|create|onboard/.test(labelContext)) {
+                        return { title: 'Adding clinic access', detail: 'Creating the clinic account and saving its role and permissions.' };
+                    }
+                    return { title: 'Saving account access', detail: "Updating this account's role, permissions, and access status." };
+                }
+                if (/\/admin\/settings\/personal-information|personal information/.test(context)) {
+                    return { title: 'Saving personal information', detail: 'Updating your clinic profile details.' };
+                }
+                if (/\/admin\/settings\/clinic-information|clinic information/.test(context)) {
+                    return { title: 'Saving clinic information', detail: 'Updating the clinic details and operating settings.' };
+                }
+                if (/\/admin\/settings\/system-preferences|system preferences/.test(context)) {
+                    return { title: 'Saving system preferences', detail: 'Updating clinic-wide system settings.' };
+                }
+                if (/\/admin\/settings\/medical-configuration|medical configuration/.test(context)) {
+                    return { title: 'Saving medical configuration', detail: 'Updating clinic services and medical form settings.' };
                 }
                 if (/\b(submit|send|request)\b/.test(context)) {
                     return { title: 'Submitting form', detail: 'Sending your information securely. Please wait.' };
@@ -8278,28 +8340,144 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 return { title: 'Processing request', detail: 'Please wait while the system completes this action.' };
             }
 
+            if (/\/admin\/user-management\/account-access(?:\/|$)|\baccount access\b/.test(context)) {
+                return { title: 'Opening Account Access', detail: 'Loading clinic roles, permissions, and account access details.' };
+            }
+            if (/\/admin\/user-management\/admin-hub(?:\/|$)|\badmin hub\b/.test(context)) {
+                return { title: 'Opening Admin Hub', detail: 'Loading designee profiles, office assignments, and access details.' };
+            }
+            if (/\/admin\/user-management(?:\/|$)|\busers management\b|\buser management\b/.test(context)) {
+                return pageCopy('User Management', 'Loading clinic account and access management.');
+            }
+            if (/\/admin\/walkin\/(?:employee|staff)-document\//.test(path) || /\/admin\/walkin\/document\//.test(path)) {
+                return { title: 'Opening health document', detail: 'Loading the selected submitted health document.' };
+            }
+            if (/\/admin\/walkin\/(?:employee-|staff-)?health-form\//.test(path)) {
+                return { title: 'Opening health form', detail: 'Loading the selected patient health profile and review details.' };
+            }
+            if (/\/admin\/walkin\/form\//.test(path)) {
+                return { title: 'Opening walk-in intake', detail: 'Loading the patient details and clinic intake form.' };
+            }
+            if (/\/admin\/walkin\/consultation-drafts|\/walkin\/consultation-drafts/.test(path)) {
+                return { title: 'Opening consultation drafts', detail: 'Loading saved consultation drafts for review.' };
+            }
+            if (/\/admin\/walkin|\/walkin\//.test(path)) {
+                return pageCopy('Walk-In Workspace', 'Loading patient lookup and clinic intake tools.');
+            }
+
+            if (/\/admin\/reports\/manage-mar/.test(path) && /medical-conditions/.test(hash + ' ' + labelContext)) {
+                return { title: 'Opening Medical Conditions', detail: 'Loading MAR medical condition settings.' };
+            }
+            if (/\/admin\/mar-clearance-types(?:\/|$)|clearance\s*\/\s*certificate types/.test(context)) {
+                return { title: 'Opening Clearance Types', detail: 'Loading clearance and certificate type settings.' };
+            }
+            if (/\/admin\/reports\/manage-referral-services|referral services/.test(context)) {
+                return { title: 'Opening Referral Services', detail: 'Loading the clinic referral service options.' };
+            }
+            if (/\/admin\/reports\/manage-online-consultations|online consultation/.test(context)) {
+                return { title: 'Opening Online Consultation', detail: 'Loading online consultation service options.' };
+            }
+            if (/\/admin\/reports\/manage-other-services|other services/.test(context)) {
+                return { title: 'Opening Other Services', detail: 'Loading additional appointment and consultation services.' };
+            }
+            if (/\/admin\/reports\/manage-medicine-types|medicine types/.test(context)) {
+                return { title: 'Opening Medicine Types', detail: 'Loading medicine type settings used by inventory and MAR.' };
+            }
+            if (/\/admin\/reports\/manage-health-form-categories|health form categories/.test(context)) {
+                return { title: 'Opening Health Form Categories', detail: 'Loading health form request category settings.' };
+            }
+            if (/\/admin\/reports\/manage-triage-survey|triage survey/.test(context)) {
+                return { title: 'Opening Triage Survey', detail: 'Loading triage survey questions and settings.' };
+            }
+
+            if (/\/admin\/reports\/inventory-summary/.test(path)) {
+                return { title: 'Opening Inventory Summary', detail: 'Loading stock totals and medicine use for the selected period.' };
+            }
+            if (/\/admin\/reports\/appointment-statistics/.test(path)) {
+                return { title: 'Opening Appointment Statistics', detail: 'Loading appointment totals and trends for the selected period.' };
+            }
+            if (/\/admin\/reports\/appointment-history/.test(path)) {
+                return { title: 'Opening Appointment History', detail: 'Loading appointment outcomes and schedule history.' };
+            }
+            if (/\/admin\/reports\/evaluation-reports/.test(path)) {
+                return { title: 'Opening Service Evaluation', detail: 'Loading clinic service feedback and evaluation results.' };
+            }
+            if (/\/admin\/reports\/export-hub/.test(path)) {
+                return { title: 'Opening Export Reports', detail: 'Loading available reports and export options.' };
+            }
+            if (/\/admin\/reports\/digital-logbook/.test(path)) {
+                return { title: 'Opening Clinic Records', detail: 'Loading clinic service and treatment records.' };
+            }
+
+            if (/\/(?:employee-)?health-profile\/[^/]+\/?$/.test(path)) {
+                return { title: 'Opening Record', detail: 'Loading the selected profile and its medical information.' };
+            }
             if (/health[\s_-]*records?|health[_-]records/.test(context)) {
-                const openingRecord = /\b(view|open|review|profile)\b/.test(label.toLowerCase());
-                return openingRecord
-                    ? { title: 'Opening health record', detail: 'Retrieving the selected profile and medical information.' }
-                    : { title: 'Loading Health Records', detail: 'Retrieving medical records and review information.' };
+                return isOpeningRecord
+                    ? { title: 'Opening Record', detail: 'Loading the selected profile and its medical information.' }
+                    : { title: 'Opening Health Records', detail: 'Loading submitted records and review information.' };
             }
             if (/\binventory\b|\bstock\b/.test(context)) {
-                return { title: 'Loading Inventory', detail: 'Retrieving medicine and supply information.' };
+                if (/\/inventory\/items\/[^/]+\/movements/.test(path)) {
+                    return { title: 'Opening stock movement history', detail: 'Loading quantity changes and stock transaction details.' };
+                }
+                if (isOpeningRecord) {
+                    return { title: 'Opening inventory item', detail: 'Loading the item stock, expiry, and movement details.' };
+                }
+                return { title: 'Opening Clinic Inventory', detail: 'Loading medicine, supply, and stock information.' };
             }
             if (/\bappointments?\b/.test(context)) {
-                return { title: 'Loading Appointments', detail: 'Retrieving appointment and clinic schedule details.' };
+                if (isOpeningRecord || /\/appointments\/[^/]+\//.test(path)) {
+                    return { title: 'Opening appointment details', detail: 'Loading the selected appointment, schedule, and status.' };
+                }
+                return { title: 'Opening Appointments', detail: 'Loading appointment requests and clinic schedule details.' };
             }
             if (/\breports?\b/.test(context)) {
-                return { title: 'Loading Reports', detail: 'Preparing the requested clinic report.' };
+                if (/daily-treatment-record/.test(path)) {
+                    return pageCopy('Daily Treatment Record', 'Loading treatment entries for the selected date.');
+                }
+                if (/health-forms/.test(path)) {
+                    return pageCopy('Health Forms Report', 'Loading health form totals and review information.');
+                }
+                if (/\bmar\b|manage-mar/.test(context)) {
+                    return pageCopy('MAR', 'Loading consultation and service accomplishment data.');
+                }
+                return { title: 'Opening Reports', detail: 'Loading clinic report data and summaries.' };
             }
-            if (/\b(view|open|record|profile|details)\b/.test(label.toLowerCase())) {
-                return { title: 'Opening record', detail: 'Retrieving the selected record. Please wait.' };
+            if (/consult-form|consultation/.test(context)) {
+                if (/draft/.test(context)) {
+                    return { title: 'Opening consultation draft', detail: 'Loading the saved consultation and patient details.' };
+                }
+                return pageCopy('Consultation', 'Loading patient details and the consultation workspace.');
+            }
+            if (/\/admin\/settings\/my-health-profile|my health profile/.test(context)) {
+                return pageCopy('My Health Profile', 'Loading your saved health information and submitted documents.');
+            }
+            if (/\/admin\/settings\/personal-information|personal information/.test(context)) {
+                return pageCopy('Personal Information', 'Loading your clinic profile details.');
+            }
+            if (/\/admin\/settings\/clinic-information|clinic information/.test(context)) {
+                return pageCopy('Clinic Information', 'Loading clinic details and operating settings.');
+            }
+            if (/\/admin\/settings\/system-preferences|system preferences/.test(context)) {
+                return pageCopy('System Preferences', 'Loading clinic-wide preferences and schedules.');
+            }
+            if (/\/admin\/settings\/medical-configuration|medical configuration/.test(context)) {
+                return pageCopy('Medical Configuration', 'Loading clinic services and medical form settings.');
+            }
+            if (/\/admin\/settings\/faqs|\bfaqs\b/.test(context)) {
+                return pageCopy('FAQs', 'Loading clinic help and frequently asked questions.');
+            }
+            if (/\/admin\/settings(?:\/|$)|\bsettings\b/.test(context)) {
+                return pageCopy('Settings', 'Loading your clinic settings workspace.');
+            }
+            if (isOpeningRecord) {
+                return { title: 'Opening selected item', detail: 'Loading its details and related information.' };
             }
             const section = label.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
             return section
-                ? { title: 'Loading ' + section.slice(0, 42), detail: 'Please wait while the next page opens.' }
-                : { title: 'Loading page', detail: 'Please wait while the requested page opens.' };
+                ? { title: 'Opening ' + section.slice(0, 42), detail: 'Loading the requested workspace and its information.' }
+                : { title: 'Opening page', detail: 'Loading the requested workspace and its information.' };
         };
 
         const resolveSkeletonKind = function (source) {
@@ -8359,6 +8537,30 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             actionLoader.setAttribute('aria-label', normalizedMessage ? `${normalizedMessage}...` : 'Processing action');
         };
 
+        const persistNavigationHandoff = function (copy, skeletonKind = 'generic') {
+            try {
+                sessionStorage.setItem(navigationHandoffKey, JSON.stringify({
+                    title: copy?.title || 'Opening page',
+                    detail: copy?.detail || 'Loading the requested page.',
+                    skeletonKind: skeletonKind || 'generic',
+                    startedAt: Date.now(),
+                }));
+            } catch (error) {
+                // Keep the current-page loader working when session storage is unavailable.
+            }
+        };
+
+        if (pendingNavigationHandoff) {
+            showActionLoading(
+                pendingNavigationHandoff.title,
+                pendingNavigationHandoff.detail,
+                pendingNavigationHandoff.skeletonKind
+            );
+        }
+        document.documentElement.removeAttribute('data-admin-navigation-pending');
+        document.documentElement.style.removeProperty('--admin-pending-loader-title');
+        document.documentElement.style.removeProperty('--admin-pending-loader-detail');
+
         window.AdminLoading = {
             showContent: showContentLoading,
             showAction: showActionLoading,
@@ -8400,7 +8602,9 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
             if (loaderScope === 'screen') {
                 const copy = resolveActionCopy(link);
-                showActionLoading(copy.title, copy.detail, resolveSkeletonKind(link));
+                const skeletonKind = resolveSkeletonKind(link);
+                persistNavigationHandoff(copy, skeletonKind);
+                showActionLoading(copy.title, copy.detail, skeletonKind);
                 return;
             }
 
@@ -8414,7 +8618,9 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             }
 
             const copy = resolveActionCopy(link);
-            showActionLoading(copy.title, copy.detail, resolveSkeletonKind(link));
+            const skeletonKind = resolveSkeletonKind(link);
+            persistNavigationHandoff(copy, skeletonKind);
+            showActionLoading(copy.title, copy.detail, skeletonKind);
         });
 
         document.addEventListener('submit', function (event) {

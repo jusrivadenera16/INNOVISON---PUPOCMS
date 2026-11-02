@@ -4034,6 +4034,38 @@
         font-weight: 800;
     }
 
+    .applicant-reference-verification-badges {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .applicant-reference-status-badge,
+    .applicant-reference-type-badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 22px;
+        padding: 3px 8px;
+        border: 1px solid #e2e8f0;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .applicant-reference-status-badge {
+        border-color: #fde68a;
+        background: #fffbeb;
+        color: #92400e;
+    }
+
+    .applicant-reference-type-badge {
+        border-color: #fecdd3;
+        background: #fff1f2;
+        color: #9f1239;
+    }
+
     .applicant-reference-record-found svg {
         width: 14px;
         height: 14px;
@@ -4218,6 +4250,18 @@
         border: 1px solid rgba(52, 211, 153, .28);
         background: rgba(6, 95, 70, .34);
         color: #bbf7d0;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-status-badge {
+        border-color: rgba(250, 204, 21, .28);
+        background: rgba(120, 82, 0, .22);
+        color: #fde68a;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-type-badge {
+        border-color: rgba(251, 113, 133, .28);
+        background: rgba(136, 19, 55, .28);
+        color: #fecdd3;
     }
 
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-verification-grid {
@@ -8263,26 +8307,51 @@
         to { left: 150%; }
     }
 
+    #applicantFinalReviewConfirmOverlay {
+        padding: 18px;
+        background: rgba(15, 23, 42, .66);
+    }
+
     .clinic-confirm-card {
-        padding-top: 34px;
+        width: min(430px, 100%);
+        max-height: calc(100dvh - 36px);
+        padding: 26px;
+        border-color: rgba(112, 19, 27, .20);
+        box-shadow: 0 24px 70px rgba(15, 23, 42, .32);
+        overflow-y: auto;
+    }
+
+    .clinic-confirm-card > strong {
+        margin: 0;
+        color: #111827;
+        font-size: 19px;
+        font-weight: 800;
+        line-height: 1.4;
+    }
+
+    .clinic-confirm-card > p {
+        margin: 8px 0 22px;
+        max-width: none;
+        color: #475569;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.5;
     }
 
     .clinic-confirm-icon {
-        width: 76px;
-        height: 76px;
+        width: 64px;
+        height: 64px;
         display: grid;
         place-items: center;
-        margin: 4px auto 20px;
+        margin: 0 auto 16px;
         border-radius: 999px;
         background: #fff7d6;
         color: #70131b;
-        box-shadow: 0 12px 24px rgba(202, 138, 4, .14);
     }
 
     .clinic-confirm-icon svg {
-        width: 34px;
-        height: 34px;
-        stroke-width: 2.7;
+        width: 30px;
+        height: 30px;
     }
 
     .clinic-confirm-actions {
@@ -8296,10 +8365,10 @@
         position: relative;
         isolation: isolate;
         overflow: hidden;
-        min-height: 48px;
+        min-height: 46px;
         border-radius: 9px;
         font-size: 14px;
-        font-weight: 900;
+        font-weight: 800;
         cursor: pointer;
         transition: transform .18s ease, box-shadow .18s ease, filter .18s ease, background .18s ease, color .18s ease;
     }
@@ -8326,16 +8395,16 @@
     }
 
     .clinic-confirm-cancel {
-        border: 1px solid rgba(112, 19, 27, .22);
+        border: 1px solid rgba(112, 19, 27, .24);
         background: #ffffff;
         color: #70131b;
     }
 
     .clinic-confirm-approve {
-        border: 0;
-        background: linear-gradient(135deg, #70131B, #9a1b2c);
+        border: 1px solid #70131b;
+        background: #70131b;
         color: #ffffff;
-        box-shadow: 0 16px 34px rgba(112, 19, 27, .20);
+        box-shadow: none;
     }
 
     .clinic-confirm-cancel:hover,
@@ -8348,7 +8417,7 @@
         transform: translateY(-1px);
         outline: none;
         filter: none;
-        box-shadow: 0 0 0 3px rgba(250, 204, 21, .16), 0 14px 26px rgba(112, 19, 27, .16);
+        box-shadow: none;
     }
 
     .clinic-confirm-cancel:hover::after,
@@ -8411,16 +8480,23 @@
         box-shadow: 0 12px 24px rgba(250, 204, 21, .12);
     }
 
-    html[data-theme="dark"] .clinic-confirm-icon {
-        background: #30151d;
-        color: #facc15;
-        box-shadow: 0 12px 24px rgba(250, 204, 21, .12);
+    html[data-theme="dark"] .clinic-confirm-card {
+        border-color: rgba(250, 204, 21, .24);
+    }
+
+    html[data-theme="dark"] .clinic-confirm-card > strong {
+        color: #f8fafc;
     }
 
     html[data-theme="dark"] .clinic-confirm-cancel {
-        border-color: rgba(250, 204, 21, .2);
-        background: #151e2d;
-        color: #fde68a;
+        border-color: #475569;
+        background: #1e293b;
+        color: #e2e8f0;
+    }
+
+    html[data-theme="dark"] .clinic-confirm-approve {
+        border-color: #9f1239;
+        background: #9f1239;
     }
 
     html[data-theme="dark"] .clinic-confirm-cancel:hover,
@@ -11508,10 +11584,14 @@
                             </span>
                             <div class="applicant-reference-verification-person-copy">
                                 <strong id="applicantReferenceVerificationName">Applicant Name</strong>
-                                <span class="applicant-reference-record-found">
-                                    <x-outline-icon name="check" />
-                                    Record Found
-                                </span>
+                                <div class="applicant-reference-verification-badges">
+                                    <span class="applicant-reference-record-found">
+                                        <x-outline-icon name="check" />
+                                        Record Found
+                                    </span>
+                                    <span class="applicant-reference-status-badge" id="applicantReferenceVerificationApplicantStatus" title="Applicant health record status">Awaiting Uploads</span>
+                                    <span class="applicant-reference-type-badge" id="applicantReferenceVerificationApplicantType" title="Applicant type">Applicant</span>
+                                </div>
                             </div>
                         </div>
 
@@ -12322,7 +12402,6 @@
             </div>
             <strong id="applicantFinalReviewConfirmTitle">Confirm Decision</strong>
             <p id="applicantFinalReviewConfirmMessage">Are you sure you want to approve this decision?</p>
-            <hr>
             <div class="clinic-confirm-actions">
                 <button type="button" class="clinic-confirm-cancel" data-final-review-confirm-cancel><span>Cancel</span></button>
                 <button type="button" class="clinic-confirm-approve" id="applicantFinalReviewConfirmApprove"><span>Approve</span></button>
@@ -14177,6 +14256,8 @@
         const referenceVerificationInitials = document.getElementById('applicantReferenceVerificationInitials');
         const referenceVerificationPhoto = document.getElementById('applicantReferenceVerificationPhoto');
         const referenceVerificationName = document.getElementById('applicantReferenceVerificationName');
+        const referenceVerificationApplicantStatus = document.getElementById('applicantReferenceVerificationApplicantStatus');
+        const referenceVerificationApplicantType = document.getElementById('applicantReferenceVerificationApplicantType');
         const referenceVerificationRef = document.getElementById('applicantReferenceVerificationRef');
         const referenceVerificationCourse = document.getElementById('applicantReferenceVerificationCourse');
         const referenceVerificationEmail = document.getElementById('applicantReferenceVerificationEmail');
@@ -16553,16 +16634,7 @@
             const compact = String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
             if (isClinicLookupMode()) {
-                if (compact === '') return '';
-                if (!compact.startsWith('CLN')) return compact.slice(0, 20);
-
-                const suffix = compact.slice(3, 16);
-                if (suffix === '') return 'CLN';
-                const firstGroupLength = suffix.startsWith('20') ? 4 : 6;
-                const firstGroup = suffix.slice(0, firstGroupLength);
-                const remaining = suffix.slice(firstGroupLength);
-
-                return 'CLN-' + firstGroup + (remaining ? '-' + remaining : '');
+                return compact.slice(0, 20);
             }
 
             const admissionReference = compact.replace(/\D/g, '').slice(0, 12);
@@ -16608,6 +16680,16 @@
                 }
             }
             if (referenceVerificationName) referenceVerificationName.textContent = fullName;
+            const applicantStatus = String(data.applicant_status || data.clinic_status || data.clearance_status || 'Awaiting Uploads').trim();
+            const applicantType = String(data.applicant_type || '').trim().toLowerCase();
+            if (referenceVerificationApplicantStatus) {
+                referenceVerificationApplicantStatus.textContent = applicantStatus || 'Awaiting Uploads';
+                referenceVerificationApplicantStatus.setAttribute('aria-label', `Applicant status: ${applicantStatus || 'Awaiting Uploads'}`);
+            }
+            if (referenceVerificationApplicantType) {
+                referenceVerificationApplicantType.textContent = applicantType === 'transferee' ? 'Transferee' : 'Applicant';
+                referenceVerificationApplicantType.setAttribute('aria-label', `Applicant type: ${referenceVerificationApplicantType.textContent}`);
+            }
             if (referenceVerificationRef) referenceVerificationRef.textContent = data.reference_number || reference || 'N/A';
             if (referenceVerificationCourse) referenceVerificationCourse.textContent = data.course || data.course_name || 'N/A';
             if (referenceVerificationEmail) referenceVerificationEmail.textContent = data.email || data.email_address || 'N/A';
@@ -16667,6 +16749,11 @@
         }
 
         function doLookup(cachedLookupData = null) {
+            // Click handlers pass an Event, not a cached API response.
+            if (!['preview', 'found'].includes(cachedLookupData?.status)) {
+                cachedLookupData = null;
+            }
+
             const inputValue = (refInput ? refInput.value : '').trim();
             const ref = isClinicLookupMode() ? inputValue : formatApplicantReferenceInput(inputValue);
             if (refInput && !isClinicLookupMode()) refInput.value = ref;
@@ -16675,8 +16762,8 @@
                 return;
             }
 
-            if (!isClinicLookupMode() && inputValue.toUpperCase().startsWith('CLN')) {
-                setReferenceLookupMessage('error', 'This is an Employee Reference, not an Applicant Reference. Please use the Employee lookup.');
+            if (inputValue.toUpperCase().startsWith('CLN')) {
+                setReferenceLookupMessage('error', 'Use the official employee/student number or applicant reference assigned to the account.');
                 return;
             }
 
@@ -17870,6 +17957,7 @@
         }
 
         function showApplicantReferenceEntry(workflow) {
+            applyLookupMode('applicant');
             resetLookupState();
             setApplicantWorkflow(workflow);
             if (workflowChoices) workflowChoices.style.display = 'none';
@@ -18542,7 +18630,7 @@
             refInput.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    doLookup();
+                    if (findBtn && !findBtn.disabled) findBtn.click();
                 }
             });
         }

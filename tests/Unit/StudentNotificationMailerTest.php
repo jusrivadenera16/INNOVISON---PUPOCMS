@@ -212,7 +212,7 @@ class StudentNotificationMailerTest extends TestCase
         });
     }
 
-    public function test_rejection_email_identifies_the_rejection_reason(): void
+    public function test_rejection_email_does_not_include_free_text_remarks(): void
     {
         config()->set('services.student_notifications.enabled', true);
         Mail::fake();
@@ -226,7 +226,7 @@ class StudentNotificationMailerTest extends TestCase
             'date' => '2026-11-02',
             'time' => '08:00:00',
             'status' => 'Rejected',
-            'remarks' => 'Please choose another date.',
+            'remarks' => 'Asthma symptoms noted; please choose another date.',
         ]);
 
         $result = app(StudentNotificationMailer::class)->sendAppointmentNotice($student, $appointment, 'rejected');
@@ -234,10 +234,13 @@ class StudentNotificationMailerTest extends TestCase
         $this->assertSame('sent', $result['status']);
         Mail::assertSent(StudentPortalNotificationMail::class, function (StudentPortalNotificationMail $mail): bool {
             $details = collect($mail->statusCard['details'] ?? []);
-            $rejectionReason = $details->firstWhere('label', 'Reason for Rejection');
+            $detailText = $details->pluck('value')->implode(' ');
 
-            return str_contains($mail->messageText, 'Reason for rejection: Please choose another date.')
-                && ($rejectionReason['value'] ?? null) === 'Please choose another date.';
+            return $mail->messageText === 'Your appointment request was not approved. Sign in to the Student Portal to review the update.'
+                && !str_contains(strtolower($mail->messageText), 'asthma')
+                && !str_contains(strtolower($detailText), 'choose another date')
+                && !str_contains(strtolower($detailText), 'asthma')
+                && !collect($mail->statusCard['details'] ?? [])->contains(fn (array $detail) => ($detail['label'] ?? '') === 'Reason for Rejection');
         });
     }
 

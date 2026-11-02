@@ -3,8 +3,11 @@
 namespace App\Services;
 
 use App\Models\Setting;
+use App\Models\Admin;
 use App\Models\SystemSetting;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class ClinicWorkflowService
 {
@@ -35,9 +38,199 @@ class ClinicWorkflowService
         return $this->settings;
     }
 
-    public function doctorIsAvailable(): bool
+    public function doctorIsAvailable(?Carbon $at = null): bool
     {
-        return SystemSetting::booleanValue('clinic_doctor_available', true);
+        $at = ($at ?: now(config('app.timezone')))->copy();
+
+        if (!$this->activeDoctorProfile()) {
+            $this->setDoctorAvailability(false);
+            return false;
+        }
+
+        if ($this->activeClosure($at) !== null) {
+            $this->setDoctorAvailability(false);
+            return false;
+        }
+
+        if (!SystemSetting::booleanValue('clinic_doctor_available', false)) {
+            return false;
+        }
+
+        $availableOn = trim((string) SystemSetting::getValue('clinic_doctor_availability_date', ''));
+        if ($availableOn !== $at->toDateString()) {
+            $this->setDoctorAvailability(false);
+            return false;
+        }
+
+        $settings = $this->settings();
+        $closureEndsAt = $settings->clinic_closure_enabled && $settings->clinic_closure_ends_at
+            ? Carbon::parse($settings->clinic_closure_ends_at, config('app.timezone'))
+            : null;
+        $availableAtValue = trim((string) SystemSetting::getValue('clinic_doctor_availability_at', ''));
+        if ($closureEndsAt && $at->gte($closureEndsAt) && $availableAtValue !== '') {
+            $availableAt = Carbon::parse($availableAtValue, config('app.timezone'));
+            if ($availableAt->lte($closureEndsAt)) {
+                $this->setDoctorAvailability(false);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function setDoctorAvailability(bool $available, ?Carbon $at = null): void
+    {
+        SystemSetting::putValue('clinic_doctor_available', $available ? '1' : '0');
+        SystemSetting::putValue(
+            'clinic_doctor_availability_date',
+            $available ? ($at ?: now(config('app.timezone')))->toDateString() : ''
+        );
+        SystemSetting::putValue(
+            'clinic_doctor_availability_at',
+            $available ? ($at ?: now(config('app.timezone')))->toIso8601String() : ''
+        );
+    }
+
+    public function clinicIsClosed(?Carbon $at = null): bool
+    {
+        $at = ($at ?: now(config('app.timezone')))->copy();
+
+        return !($this->clinicHoursStatus($at)['is_open'] ?? false)
+            || $this->activeClosure($at) !== null;
+    }
+
+    public function doctorProfileForUser(?User $user): ?Admin
+    {
+        if (!$user || !$this->isEligibleClinicAdmin($user)
+            || !Schema::hasTable('admins')
+            || !Schema::hasColumn('admins', 'report_position')) {
+            return null;
+        }
+
+        $profile = null;
+        if (Schema::hasColumn('admins', 'user_id')) {
+            $profile = Admin::query()
+                ->where('user_id', $user->getKey())
+                ->whereRaw('LOWER(TRIM(report_position)) = ?', ['doctor'])
+                ->first();
+        }
+
+        if (!$profile && trim((string) $user->email) !== '') {
+            $emailColumns = array_values(array_filter(
+                ['email', 'email_address'],
+                static fn (string $column): bool => Schema::hasColumn('admins', $column)
+            ));
+
+            if ($emailColumns !== []) {
+                $profile = Admin::query()
+                    ->whereRaw('LOWER(TRIM(report_position)) = ?', ['doctor'])
+                    ->where(function ($query) use ($emailColumns, $user): void {
+                        foreach ($emailColumns as $column) {
+                            $query->orWhereRaw(
+                                'LOWER(TRIM(' . $column . ')) = ?',
+                                [strtolower(trim((string) $user->email))]
+                            );
+                        }
+                    })
+                    ->first();
+            }
+        }
+
+        return $this->isActiveDoctorProfile($profile) ? $profile : null;
+    }
+
+    public function activeDoctorProfile(): ?Admin
+    {
+        if (!Schema::hasTable('admins') || !Schema::hasColumn('admins', 'report_position')) {
+            return null;
+        }
+
+        $profiles = Admin::query()
+            ->whereRaw('LOWER(TRIM(report_position)) = ?', ['doctor'])
+            ->get();
+
+        foreach ($profiles as $profile) {
+            if (!$this->isActiveDoctorProfile($profile)) {
+                continue;
+            }
+
+            $user = null;
+            if (Schema::hasColumn('admins', 'user_id') && $profile->user_id) {
+                $user = User::query()->find($profile->user_id);
+            }
+
+            $profileEmail = trim((string) ($profile->email ?? ''));
+            if ($profileEmail === '') {
+                $profileEmail = trim((string) ($profile->email_address ?? ''));
+            }
+            if (!$user && $profileEmail !== '') {
+                $email = strtolower($profileEmail);
+                $userEmailColumns = array_values(array_filter(
+                    ['email', 'email_address'],
+                    static fn (string $column): bool => Schema::hasColumn('users', $column)
+                ));
+                foreach ($userEmailColumns as $column) {
+                    $user = User::query()
+                        ->whereRaw('LOWER(TRIM(' . $column . ')) = ?', [$email])
+                        ->first();
+                    if ($user) {
+                        break;
+                    }
+                }
+            }
+
+            if ($user && $this->doctorProfileForUser($user)?->getKey() === $profile->getKey()) {
+                return $profile;
+            }
+        }
+
+        return null;
+    }
+
+    public function userIsAssignedDoctor(?User $user): bool
+    {
+        return $this->doctorProfileForUser($user) !== null;
+    }
+
+    public function canManageDoctorAvailability(?User $user): bool
+    {
+        if (!$user || !$this->activeDoctorProfile() || $user->isStudentAssistant()) {
+            return false;
+        }
+
+        return User::normalizeRole((string) $user->user_role) === User::ROLE_SUPERADMIN
+            || $this->userIsAssignedDoctor($user);
+    }
+
+    private function isEligibleClinicAdmin(User $user): bool
+    {
+        if (!in_array(
+            User::normalizeRole((string) $user->user_role),
+            [User::ROLE_ADMIN, User::ROLE_SUPERADMIN],
+            true
+        ) || $user->isStudentAssistant()) {
+            return false;
+        }
+
+        $status = strtolower(trim((string) ($user->status ?? 'active')));
+
+        return in_array($status, ['', 'active'], true);
+    }
+
+    private function isActiveDoctorProfile(?Admin $profile): bool
+    {
+        if (!$profile) {
+            return false;
+        }
+
+        if (Admin::hasColumn('status')) {
+            $status = strtolower(trim((string) ($profile->status ?? '')));
+            if ($status !== '' && $status !== 'active') {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function notificationsAreQuiet(?Carbon $at = null): bool

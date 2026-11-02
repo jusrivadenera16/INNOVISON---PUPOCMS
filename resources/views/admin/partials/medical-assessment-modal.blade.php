@@ -1,6 +1,7 @@
 @if($canUpdateMedicalAssessment)
     @php
         $medicalAssessmentPersonType = $medicalAssessmentProfileTypeLabel ?? 'Student';
+        $useUnifiedRecordHistory = $useUnifiedRecordHistory ?? in_array(strtolower($medicalAssessmentPersonType), ['student', 'applicant'], true);
         $medicalMissingValueLabel = 'No information provided';
         $medicalDisplayValue = static function ($value) use ($medicalMissingValueLabel): string {
             $value = is_scalar($value) ? trim((string) $value) : '';
@@ -1006,9 +1007,11 @@
                                 <x-outline-icon name="{{ $medicalView['icon'] }}" /><span class="medical-information-nav-label">{{ $medicalView['name'] }}</span>
                             </button>
                         @endforeach
-                        <button type="button" role="tab" aria-selected="false" data-medical-view="assessment-history" data-medical-label="History">
-                            <x-outline-icon name="clipboard-document-list" /><span class="medical-information-nav-label">History</span>
-                        </button>
+                        @unless($useUnifiedRecordHistory)
+                            <button type="button" role="tab" aria-selected="false" data-medical-view="assessment-history" data-medical-label="History">
+                                <x-outline-icon name="clipboard-document-list" /><span class="medical-information-nav-label">History</span>
+                            </button>
+                        @endunless
                     </nav>
                 </aside>
 
@@ -1425,6 +1428,7 @@
                             </section>
                         @endforeach
 
+                        @unless($useUnifiedRecordHistory)
                         <section class="medical-information-history-panel" data-medical-panel="assessment-history" aria-label="History" hidden>
                             <div class="medical-information-history-list">
                                 @php
@@ -1515,15 +1519,18 @@
                                 @endforelse
                             </div>
                         </section>
+                        @endunless
 
                     </div>
                 </main>
             </div>
 
             <footer class="medical-information-footer">
-                <button type="button" data-medical-history-button data-medical-view="assessment-history" data-medical-label="History">
-                    <x-outline-icon name="arrow-path" /><span>View History</span>
-                </button>
+                @unless($useUnifiedRecordHistory)
+                    <button type="button" data-medical-history-button data-medical-view="assessment-history" data-medical-label="History">
+                        <x-outline-icon name="arrow-path" /><span>View History</span>
+                    </button>
+                @endunless
                 <button type="button" data-medical-edit-cancel hidden>
                     <x-outline-icon name="x-mark" /><span>Cancel</span>
                 </button>

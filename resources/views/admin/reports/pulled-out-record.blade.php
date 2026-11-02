@@ -37,6 +37,16 @@
     .pulled-record-title svg { width: 24px; height: 24px; }
     .pulled-record-title h1 { margin: 0; font-size: 23px; }
     .pulled-record-title p { margin: 4px 0 0; font-size: 13px; color: rgba(255,255,255,.84); }
+    .pulled-record-history-btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+        min-height: 38px; padding: 0 13px; border: 1px solid rgba(255,255,255,.55);
+        border-radius: 8px; background: rgba(255,255,255,.1); color: #fff;
+        font: inherit; font-size: 12px; font-weight: 800; cursor: pointer;
+    }
+    .pulled-record-history-btn svg { width: 16px; height: 16px; }
+    .pulled-record-history-btn:hover, .pulled-record-history-btn:focus-visible {
+        border-color: #facc15; background: #facc15; color: #70131b; outline: none;
+    }
     .pulled-record-back {
         display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 14px;
         border: 1px solid rgba(255,255,255,.35); border-radius: 7px; color: #fff; text-decoration: none; font-weight: 800;
@@ -468,6 +478,9 @@
                     <p>Archived record retained for audit, review, and authorized restoration.</p>
                 </div>
             </div>
+            <button type="button" class="pulled-record-history-btn" data-health-record-history-open aria-haspopup="dialog" aria-controls="healthRecordHistoryModal">
+                <x-outline-icon name="clock" /> History
+            </button>
         </header>
         <div class="pulled-record-body">
             @if(session('success'))
@@ -712,4 +725,5 @@
         syncOtherReason();
     })();
 </script>
+@include('admin.partials.health-record-history-modal')
 @endsection

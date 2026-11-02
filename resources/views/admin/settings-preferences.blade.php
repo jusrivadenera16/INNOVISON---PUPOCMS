@@ -1244,7 +1244,7 @@
                         <div class="preferences-modal-field full">
                             <label for="modal_clinic_closure_reason">Closure Reason</label>
                             <select id="modal_clinic_closure_reason" name="clinic_closure_reason">
-                                @foreach(['Staff Meeting', 'Official Clinic Activity', 'Emergency', 'Early Closure', 'Other'] as $reason)
+                                @foreach(['Regular Holiday', 'Staff Meeting', 'Official Clinic Activity', 'Emergency', 'Early Closure', 'Other'] as $reason)
                                     <option value="{{ $reason }}" {{ $settings->clinic_closure_reason === $reason ? 'selected' : '' }}>{{ $reason }}</option>
                                 @endforeach
                             </select>
