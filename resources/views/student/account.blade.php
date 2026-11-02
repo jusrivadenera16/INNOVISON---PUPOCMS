@@ -2163,31 +2163,6 @@
         background: rgba(15, 23, 42, 0.72);
     }
 
-    /* --- BARCODE WIDGET --- */
-    .barcode-status-card {
-        background: #fff;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-        border: 1px solid #e2e8f0;
-        margin-bottom: 24px;
-        position: relative;
-        overflow: hidden;
-    }
-    .barcode-status-card::before {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; width: 4px; height: 100%;
-    }
-    .barcode-status-card.linked::before { background: #10b981; }
-    .barcode-status-card.not-linked::before { background: #f59e0b; }
-
-    .barcode-icon-box { font-size: 24px; margin-bottom: 10px; }
-    .barcode-label { font-size: 11px; text-transform: uppercase; font-weight: 800; color: #64748b; letter-spacing: 0.5px; }
-    .barcode-value { font-size: 16px; font-weight: 700; color: #1e293b; display: block; margin: 4px 0; }
-    .btn-barcode-action { display: inline-block; margin-top: 10px; font-size: 12px; font-weight: 700; text-decoration: none; color: #8B0000; }
-    .btn-barcode-action:hover { text-decoration: underline; }
-
     @media (max-width: 900px) {
         .account-layout { grid-template-columns: 1fr; }
         .hero-stats { gap: 20px; flex-wrap: wrap; }

@@ -116,6 +116,7 @@ class AdminHubIdpLinkingTest extends TestCase
     {
         Schema::dropIfExists('activity_logs');
         Schema::dropIfExists('health_profiles');
+        Schema::dropIfExists('health_profile_emp');
         Schema::dropIfExists('admin_hub');
         Schema::dropIfExists('admins');
         Schema::dropIfExists('users');
@@ -328,6 +329,55 @@ class AdminHubIdpLinkingTest extends TestCase
         $ensureTarget = new ReflectionMethod($controller, 'ensureCanManageTargetUser');
         $ensureTarget->setAccessible(true);
         $ensureTarget->invoke($controller, $otherSuperAdmin);
+    }
+
+    public function test_superadmin_can_manage_own_account_access_without_system_developer_privilege(): void
+    {
+        Config::set('app.system_developer_email', 'system-developer@example.test');
+
+        $owner = User::create([
+            'student_id' => 'owner-superadmin-account',
+            'first_name' => 'Doctor',
+            'last_name' => 'Strange',
+            'name' => 'Doctor Strange',
+            'email' => 'doctor-strange@example.test',
+            'user_role' => User::ROLE_SUPERADMIN,
+            'user_type' => 'Regular',
+            'status' => 'active',
+            'password' => bcrypt('secret'),
+        ]);
+        Schema::create('health_profile_emp', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->softDeletes();
+            $table->timestamps();
+        });
+
+        $this->actingAs($owner, 'admin');
+        $controller = new AdminUserController();
+        $canManage = new ReflectionMethod($controller, 'canManageRecord');
+        $canManage->setAccessible(true);
+
+        $this->assertTrue($canManage->invoke($controller, [
+            'id' => $owner->id,
+            'source' => 'superadmin',
+            'normalized_role' => User::ROLE_SUPERADMIN,
+            'raw_role' => User::ROLE_SUPERADMIN,
+            'meta' => ['access_level' => 'superadmin'],
+        ], $owner->id));
+
+        $controller->update(
+            \Illuminate\Http\Request::create('/admin/user-management/' . $owner->id, 'PUT', [
+                'management_view' => 'account-access',
+                'user_role' => 'super_admin',
+                'status' => 'active',
+                'email' => 'doctor-strange-updated@example.test',
+            ]),
+            $owner,
+            new \App\Services\FacultySyncService()
+        );
+
+        $this->assertSame('doctor-strange-updated@example.test', $owner->fresh()->email);
     }
 
     public function test_regular_superadmin_cannot_manage_another_superadmin_in_account_access(): void

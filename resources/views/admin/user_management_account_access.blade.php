@@ -1782,7 +1782,9 @@
                             form="deleteForm"
                             class="um-settings-action um-action-warning"
                             id="removeAccessBtn"
-                            onclick="return confirm('Remove this clinic access and restore the account role provided by the IDP?')"
+                            data-um-confirm-title="Remove Clinic Access"
+                            data-um-confirm-message="Remove this clinic access and restore the account role provided by the IDP?"
+                            data-um-confirm-label="Remove Access"
                         >
                             Remove Access
                         </button>
@@ -1791,7 +1793,9 @@
                             form="deleteAccountForm"
                             class="um-settings-action um-action-danger"
                             id="deleteAccountBtn"
-                            onclick="return confirm('Permanently delete this user account? Linked admin profile records will be removed and related clinic records may be deleted by database rules. This cannot be undone.')"
+                            data-um-confirm-title="Delete User Account"
+                            data-um-confirm-message="Permanently delete this user account? Linked admin profile records will be removed and related clinic records may be deleted by database rules. This cannot be undone."
+                            data-um-confirm-label="Delete Account"
                         >
                             Delete User Account
                         </button>
@@ -1801,7 +1805,9 @@
                             class="um-settings-action um-action-danger"
                             id="deleteAdminHubBtn"
                             style="display:none;"
-                            onclick="return confirm('Delete this admin hub record from the admins table? This cannot be undone.')"
+                            data-um-confirm-title="Delete Admin Record"
+                            data-um-confirm-message="Delete this Admin Hub record from the admins table? This cannot be undone."
+                            data-um-confirm-label="Delete Record"
                         >
                             Delete Admin Record
                         </button>
@@ -1812,6 +1818,8 @@
         </div>
     </div>
 </div>
+
+@include('admin.user_management.confirmation-modal')
 
 @push('scripts')
 <script>
@@ -2705,12 +2713,15 @@
     });
 
     deactivateBtn.addEventListener('click', () => {
-        const confirmDeactivate = window.confirm('Deactivate this account? The user will lose access until reactivated.');
-        if (!confirmDeactivate) {
-            return;
-        }
-        detailStatus.value = 'inactive';
-        settingsForm.submit();
+        window.openUmActionConfirmation({
+            title: 'Deactivate Account',
+            message: 'Deactivate this account? The user will lose access until reactivated.',
+            confirmLabel: 'Deactivate Account',
+            onConfirm: () => {
+                detailStatus.value = 'inactive';
+                settingsForm.submit();
+            },
+        });
     });
 
     document.getElementById('settingsModal').addEventListener('click', function (event) {

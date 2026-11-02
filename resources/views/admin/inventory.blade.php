@@ -6392,28 +6392,38 @@
     }
 
     body.admin-inventory-page #viewItemModal .view-item-history-date {
-        position: relative;
         display: inline-flex;
+        flex: 0 0 auto;
         align-items: center;
-        justify-content: center;
-        width: 36px;
-        min-width: 36px;
+        gap: 6px;
+        min-width: 0;
+        height: 34px;
+        padding: 0 8px;
+        border: 1px solid #dbe2ea;
+        border-radius: 6px;
+        background: #ffffff;
         color: #475569;
         cursor: pointer;
     }
 
-    body.admin-inventory-page #viewItemModal .view-item-history-date svg {
-        width: 16px;
-        height: 16px;
-        pointer-events: none;
+    body.admin-inventory-page #viewItemModal .view-item-history-date span {
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 800;
+        white-space: nowrap;
     }
 
     body.admin-inventory-page #viewItemModal .view-item-history-date input {
-        position: absolute;
-        inset: 0;
-        width: 100%;
+        width: 126px;
+        min-width: 0;
         height: 100%;
-        opacity: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        font-size: 11px;
         cursor: pointer;
     }
 
@@ -6639,10 +6649,20 @@
 
         body.admin-inventory-page #viewItemModal .view-item-history-filters {
             width: 100%;
+            flex-wrap: wrap;
         }
 
         body.admin-inventory-page #viewItemModal .view-item-history-filters > select {
-            flex: 1 1 auto;
+            width: 100%;
+            flex: 1 1 100%;
+        }
+
+        body.admin-inventory-page #viewItemModal .view-item-history-date {
+            flex: 1 1 calc(50% - 4px);
+        }
+
+        body.admin-inventory-page #viewItemModal .view-item-history-date input {
+            width: 100%;
         }
     }
 
@@ -7839,9 +7859,13 @@
                                         <option value="details_updated">Details Updated</option>
                                         <option value="other">Other</option>
                                     </select>
-                                    <label class="view-item-history-date" aria-label="Filter by date">
-                                        <x-outline-icon name="calendar-days" />
-                                        <input id="viewItemHistoryDate" type="date" aria-label="Filter by date">
+                                    <label class="view-item-history-date">
+                                        <span>From</span>
+                                        <input id="viewItemHistoryFromDate" type="date" aria-label="From date">
+                                    </label>
+                                    <label class="view-item-history-date">
+                                        <span>To</span>
+                                        <input id="viewItemHistoryToDate" type="date" aria-label="To date">
                                     </label>
                                 </div>
                             </div>
@@ -7952,7 +7976,8 @@
     const viewItemTabButtons = Array.from(document.querySelectorAll('[data-view-item-tab]'));
     const viewItemHistoryRows = document.getElementById('viewItemHistoryRows');
     const viewItemHistoryFilter = document.getElementById('viewItemHistoryFilter');
-    const viewItemHistoryDate = document.getElementById('viewItemHistoryDate');
+    const viewItemHistoryFromDate = document.getElementById('viewItemHistoryFromDate');
+    const viewItemHistoryToDate = document.getElementById('viewItemHistoryToDate');
     const viewItemHistoryCount = document.getElementById('viewItemHistoryCount');
     const viewItemHistoryPageLabel = document.getElementById('viewItemHistoryPage');
     const viewItemHistoryPrevious = document.getElementById('viewItemHistoryPrevious');
@@ -9034,17 +9059,18 @@
         if (!viewItemHistoryRows) return;
 
         const selectedCategory = viewItemHistoryFilter?.value || 'all';
-        const selectedDate = viewItemHistoryDate?.value || '';
-        const filteredMovements = viewItemHistoryMovements.filter((movement) => {
+        const fromDate = viewItemHistoryFromDate?.value || '';
+        const toDate = viewItemHistoryToDate?.value || '';
+        const invalidDateRange = Boolean(fromDate && toDate && fromDate > toDate);
+        const filteredMovements = invalidDateRange ? [] : viewItemHistoryMovements.filter((movement) => {
             if (selectedCategory !== 'all' && inventoryMovementCategory(movement.type) !== selectedCategory) {
                 return false;
             }
-            if (!selectedDate) return true;
-
-            const date = new Date(movement.created_at_iso || '');
-            if (Number.isNaN(date.getTime())) return false;
-            const localDate = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
-            return localDate === selectedDate;
+            const movementDate = movement.created_date_iso || '';
+            if (!movementDate) return false;
+            if (fromDate && movementDate < fromDate) return false;
+            if (toDate && movementDate > toDate) return false;
+            return true;
         });
         const pageCount = Math.max(1, Math.ceil(filteredMovements.length / viewItemHistoryPageSize));
         viewItemHistoryPage = Math.min(viewItemHistoryPage, pageCount);
@@ -9059,7 +9085,9 @@
             cell.colSpan = 6;
             cell.textContent = viewItemHistoryLoading
                 ? 'Loading stock history...'
-                : viewItemHistoryError || 'No stock history matches these filters.';
+                : viewItemHistoryError || (invalidDateRange
+                    ? 'From date must be on or before To date.'
+                    : 'No stock history matches these filters.');
             row.appendChild(cell);
             viewItemHistoryRows.appendChild(row);
         } else {
@@ -9123,9 +9151,11 @@
         viewItemHistoryPage = 1;
         renderViewItemHistory();
     });
-    viewItemHistoryDate?.addEventListener('change', function() {
-        viewItemHistoryPage = 1;
-        renderViewItemHistory();
+    [viewItemHistoryFromDate, viewItemHistoryToDate].forEach(function(input) {
+        input?.addEventListener('change', function() {
+            viewItemHistoryPage = 1;
+            renderViewItemHistory();
+        });
     });
     viewItemHistoryPrevious?.addEventListener('click', function() {
         viewItemHistoryPage = Math.max(1, viewItemHistoryPage - 1);
@@ -9246,7 +9276,8 @@
         viewItemHistoryMovements = [];
         viewItemHistoryPage = 1;
         if (viewItemHistoryFilter) viewItemHistoryFilter.value = 'all';
-        if (viewItemHistoryDate) viewItemHistoryDate.value = '';
+        if (viewItemHistoryFromDate) viewItemHistoryFromDate.value = '';
+        if (viewItemHistoryToDate) viewItemHistoryToDate.value = '';
         renderViewItemHistory();
 
         const body = viewItemModal.querySelector('.inventory-modal-body');

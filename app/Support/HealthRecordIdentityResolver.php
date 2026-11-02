@@ -53,6 +53,9 @@ final class HealthRecordIdentityResolver
         if (in_array($recordSource, ['employee', 'staff'], true)) {
             return 'Faculty';
         }
+        if (strtolower(trim((string) ($user->applicant_type ?? ''))) === 'transferee') {
+            return 'Transferee';
+        }
         if (self::hasRole($userType . ' ' . $idpRole . ' ' . $userRole, ['applicant', 'student'])) {
             return $hasStudentNumber ? 'Student' : 'Applicant';
         }

@@ -1769,6 +1769,11 @@ class AppointmentController extends Controller
         $resolvedReferenceNumber = match ($referenceMode) {
             'admission' => $this->resolveReferenceNumber($user, $healthProfile, $applicantData),
             'student_number' => $studentNumberReference,
+            'sis_reference' => strtoupper(trim((string) (
+                optional($healthProfile)->sis_reference_number
+                ?: $user->sis_reference_number
+                ?: ''
+            ))),
             'verification_unavailable' => '',
             default => $this->resolveClinicReferenceNumber($user, $healthProfile),
         };
@@ -1783,15 +1788,20 @@ class AppointmentController extends Controller
                 ? 'Admission Reference Number'
                 : ($referenceMode === 'student_number'
                     ? 'Student Number'
-                    : ($referenceMode === 'verification_unavailable' ? 'PUPTAS Verification' : 'Clinic Reference Number')),
+                    : ($referenceMode === 'sis_reference'
+                        ? 'SIS Reference Number'
+                        : ($referenceMode === 'verification_unavailable' ? 'PUPTAS Verification' : 'Clinic Reference Number'))),
             'step_1_title' => $referenceMode === 'admission'
                 ? 'Admission Reference'
                 : ($referenceMode === 'student_number'
                     ? 'Student Number'
-                    : ($referenceMode === 'verification_unavailable' ? 'PUPTAS Verification' : 'Clinic Reference')),
+                    : ($referenceMode === 'sis_reference'
+                        ? 'SIS Reference Number'
+                        : ($referenceMode === 'verification_unavailable' ? 'PUPTAS Verification' : 'Clinic Reference'))),
             'step_1_description' => match ($referenceMode) {
                 'admission' => 'Confirm your admission reference, complete your health information, then upload the required clinic documents.',
                 'student_number' => 'Review your official student number, complete your health information, then upload any available clinic documents.',
+                'sis_reference' => 'Enter or review your SIS Reference Number, then complete your health information.',
                 'verification_unavailable' => 'PUPTAS verification is temporarily unavailable. The form remains locked to prevent an incorrect clinic reference from being generated.',
                 default => 'Review your clinic reference, complete your health information, then upload the required clinic documents.',
             },
@@ -2995,28 +3005,6 @@ class AppointmentController extends Controller
         return Admin::query()
             ->whereRaw('LOWER(email) = ?', [$email])
             ->first();
-    }
-
-    private function normalizeBarcodeValue(?string $value): string
-    {
-        return strtoupper((string) preg_replace('/[^A-Za-z0-9]/', '', $value ?? ''));
-    }
-
-    private function getBarcodeMismatchMessage(User $user, string $barcode): ?string
-    {
-        $studentId = trim((string) $user->student_id);
-        if ($studentId === '') {
-            return null;
-        }
-
-        $normalizedStudentId = $this->normalizeBarcodeValue($studentId);
-        $normalizedBarcode = $this->normalizeBarcodeValue($barcode);
-
-        if ($normalizedStudentId !== '' && $normalizedBarcode !== '' && $normalizedStudentId !== $normalizedBarcode) {
-            return 'The scanned barcode does not match your Student ID.';
-        }
-
-        return null;
     }
 
     // -------------------------------
@@ -5408,93 +5396,6 @@ public function updateContact(Request $request)
     }
 
     // -------------------------------
-    // 9. BARCODE REGISTER PAGE
-    // -------------------------------
-    public function barcodeRegister()
-    {
-        $user = Auth::user() ?? User::where('email', 'guest@pup.edu.ph')->first();
-        $studentContext = $this->resolveStudentContext($user);
-
-        return view('student.barcode-register', compact('user', 'studentContext'));
-    }
-
-    // -------------------------------
-    // SAVE BARCODE
-    // -------------------------------
-    public function storeBarcode(Request $request)
-    {
-        $user = Auth::user() ?? User::where('email', 'guest@pup.edu.ph')->first();
-
-        if (!$user) {
-            return redirect()->back()->with('error', 'User not found!');
-        }
-
-        $request->validate([
-            'barcode' => 'required|string|max:255'
-        ]);
-
-        $barcode = trim((string) $request->barcode);
-        $mismatchMessage = $this->getBarcodeMismatchMessage($user, $barcode);
-        if ($mismatchMessage) {
-            return redirect()->back()->withInput()->withErrors([
-                'barcode' => $mismatchMessage,
-            ]);
-        }
-
-        $request->merge(['barcode' => $barcode]);
-        $request->validate([
-            'barcode' => 'required|string|max:255|unique:users,barcode,' . $user->id
-        ]);
-
-        $user->barcode = $barcode;
-        $user->save();
-
-        return redirect()->back()->with('success', 'Barcode registered successfully!');
-    }
-
-    public function validateBarcodeScan(Request $request)
-    {
-        $user = Auth::user() ?? User::where('email', 'guest@pup.edu.ph')->first();
-
-        if (!$user) {
-            return response()->json([
-                'valid' => false,
-                'message' => 'User session not found. Please login again.',
-            ], 401);
-        }
-
-        $request->validate([
-            'barcode' => 'required|string|max:255',
-        ]);
-
-        $barcode = trim((string) $request->barcode);
-        $mismatchMessage = $this->getBarcodeMismatchMessage($user, $barcode);
-        if ($mismatchMessage) {
-            return response()->json([
-                'valid' => false,
-                'message' => $mismatchMessage,
-            ], 422);
-        }
-
-        $barcodeInUse = User::where('barcode', $barcode)
-            ->where('id', '!=', $user->id)
-            ->exists();
-
-        if ($barcodeInUse) {
-            return response()->json([
-                'valid' => false,
-                'message' => 'This barcode is already linked to another account.',
-            ], 422);
-        }
-
-        return response()->json([
-            'valid' => true,
-            'barcode' => $barcode,
-            'message' => 'Barcode validated. You can submit registration.',
-        ]);
-    }
-
-    // -------------------------------
     // FETCH USER USING STUDENT ID (Bridge for Walk-in)
     // -------------------------------
     public function fetchUser($student_id)
@@ -5689,12 +5590,18 @@ public function showHealthForm()
         $studentTypeForDeclaration,
         $studentDeclarationAccountType
     );
+    $transfereeDocumentDateMin = $isDedicatedTransfereeForm
+        ? Carbon::today()->subMonthsNoOverflow(6)->toDateString()
+        : null;
+    $transfereeDocumentDateMax = $isDedicatedTransfereeForm
+        ? Carbon::today()->toDateString()
+        : null;
 
     return view(
         $isDedicatedTransfereeForm
             ? 'student.health_form_transferee'
             : ($isDedicatedStudentForm ? 'student.health_form_student' : 'student.health_form'),
-        compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill', 'pendingHealthFormRequest', 'studentHealthFormCategory', 'studentDeclarationPurpose')
+        compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill', 'pendingHealthFormRequest', 'studentHealthFormCategory', 'studentDeclarationPurpose', 'transfereeDocumentDateMin', 'transfereeDocumentDateMax')
     );
 }
 
@@ -7248,9 +7155,11 @@ public function storeHealthForm(Request $request)
 
     $applicantDocumentDateMin = Carbon::today()->subMonthsNoOverflow(6)->toDateString();
     $applicantDocumentDateMax = Carbon::today()->toDateString();
-    $applicantDocumentDateRule = $applicantDocumentsRequired
-        ? ['required', 'date', 'after_or_equal:' . $applicantDocumentDateMin, 'before_or_equal:' . $applicantDocumentDateMax]
-        : ['nullable', 'date'];
+    $applicantDocumentDateRule = $isDedicatedTransfereeForm
+        ? ['nullable', 'date', 'after_or_equal:' . $applicantDocumentDateMin, 'before_or_equal:' . $applicantDocumentDateMax]
+        : ($applicantDocumentsRequired
+            ? ['required', 'date', 'after_or_equal:' . $applicantDocumentDateMin, 'before_or_equal:' . $applicantDocumentDateMax]
+            : ['nullable', 'date']);
     $studentYearRule = $isDedicatedStudentWorkflow
         ? ['required', 'string', Rule::in(['1st Year', '2nd Year', '3rd Year', '4th Year'])]
         : ['nullable', 'string', Rule::in(['1st Year', '2nd Year', '3rd Year', '4th Year'])];
@@ -7351,6 +7260,10 @@ public function storeHealthForm(Request $request)
         'birthday.before_or_equal' => 'Age must be at least 15 years old.',
         'age.min' => 'Age must be at least 15 years old.',
         'medical_history.required_without' => 'Select at least one known condition or enter Other Illness / Medical Notes.',
+        'med_cert_date.after_or_equal' => 'The certificate date must be within the last six months.',
+        'med_cert_date.before_or_equal' => 'The certificate date cannot be in the future.',
+        'xray_date.after_or_equal' => 'The X-ray examination date must be within the last six months.',
+        'xray_date.before_or_equal' => 'The X-ray examination date cannot be in the future.',
     ]);
 
     if ($isHealthFormCorrectionMode) {
@@ -7494,6 +7407,13 @@ public function storeHealthForm(Request $request)
 
         if ($this->canEnterInitialDirectLadderizedStudentNumber($user, $existingHealthProfile)) {
             $this->persistResolvedStudentNumber($user, $existingHealthProfile, $officialReference, true);
+        }
+    } elseif ($referenceMode === 'sis_reference') {
+        $officialReference = strtoupper(trim($transfereeSisReference));
+        if ($officialReference === '' || $submittedReference !== $officialReference) {
+            throw ValidationException::withMessages([
+                'reference_number' => 'Enter and verify your SIS Reference Number before submitting the Health Profile.',
+            ]);
         }
     } elseif ($referenceMode === 'admission') {
         $officialReference = strtoupper(trim((string) ($user->reference_number ?? '')));
@@ -8381,20 +8301,4 @@ public function testingSkipHealthForm()
     return redirect()->route('student.health_form.print');
 }
 
-    // -------------------------------
-    // RESET BARCODE (for testing)
-    // -------------------------------
-    public function resetBarcode()
-    {
-        $user = Auth::user() ?? User::where('email', 'guest@pup.edu.ph')->first();
-
-        if (!$user) {
-            return redirect()->back()->with('error', 'User not found.');
-        }
-
-        $user->barcode = null;
-        $user->save();
-
-        return redirect()->back()->with('success', 'Barcode reset successfully! You can scan again.');
-    }
 }

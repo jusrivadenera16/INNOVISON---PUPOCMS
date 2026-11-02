@@ -6,10 +6,12 @@
     <title>@yield('title', 'Service Evaluation')</title>
     <link rel="stylesheet" href="{{ asset('css/booking.css') }}">
     @stack('styles')
+    @include('partials.student-navigation-loader-head')
 </head>
 <body class="evaluation-page" style="margin:0; min-width:320px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
     @yield('content')
 
     @stack('scripts')
+    @include('partials.student-navigation-loader')
 </body>
 </html>

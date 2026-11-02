@@ -468,7 +468,11 @@ class AdminUserController extends Controller
             );
         }
 
-        if ($this->isProtectedUser($user) && !$this->isSystemDeveloper($user)) {
+        if (
+            $this->isProtectedUser($user)
+            && !$this->isSuperAdminAccount(Auth::user())
+            && !$this->isSystemDeveloper($user)
+        ) {
             return redirect()->back()->with('error', 'This account is protected and cannot be modified here.');
         }
 
@@ -2386,10 +2390,12 @@ class AdminUserController extends Controller
         $current = Auth::user();
         $isOwnAccount = $current && (int) $user->id === (int) $current->id;
         $canManageSuperAdminTargets = $this->isSystemDeveloperSuperAdmin($current);
+        $canManageOwnAccount = $canManageSuperAdminTargets
+            || ($isOwnAccount && $current && $this->isSuperAdminAccount($current));
 
         abort_unless(
             $isOwnAccount
-                ? $canManageSuperAdminTargets
+                ? $canManageOwnAccount
                 : !$this->isSuperAdminAccount($user) || $canManageSuperAdminTargets,
             403,
             'This account cannot be managed from Account Access.'
@@ -2408,8 +2414,14 @@ class AdminUserController extends Controller
             || in_array($recordAccessLevel, ['superadmin', 'super_admin'], true);
 
         if ($isSuperAdminRecord) {
+            $current = Auth::user();
+            $canManageOwnAccount = $isOwnAccount && (
+                $this->isSystemDeveloper($current)
+                || ($current && $this->isSuperAdminAccount($current))
+            );
+
             return $this->isSystemDeveloperSuperAdmin()
-                || ($isOwnAccount && $this->isSystemDeveloper());
+                || $canManageOwnAccount;
         }
 
         return !$isOwnAccount;

@@ -88,4 +88,109 @@
             }
         }).observe(umSettingsModal, { attributes: true, attributeFilter: ['class'] });
     }
+
+    const umActionConfirmDialog = document.getElementById('umActionConfirmDialog');
+    const umActionConfirmTitle = document.getElementById('umActionConfirmTitle');
+    const umActionConfirmCopy = document.getElementById('umActionConfirmCopy');
+    const umActionConfirmCancel = document.getElementById('umActionConfirmCancel');
+    const umActionConfirmProceed = document.getElementById('umActionConfirmProceed');
+    let umPendingConfirmation = null;
+
+    window.openUmActionConfirmation = function({ title, message, confirmLabel = 'Confirm', onConfirm }) {
+        if (!umActionConfirmDialog?.showModal || umActionConfirmDialog.open) return;
+        umActionConfirmTitle.textContent = title;
+        umActionConfirmCopy.textContent = message;
+        umActionConfirmProceed.textContent = confirmLabel;
+        umPendingConfirmation = onConfirm;
+        umActionConfirmDialog.showModal();
+        umActionConfirmCancel.focus();
+    };
+
+    const submitUmFormAfterConfirmation = (form, submitter) => {
+        form.dataset.umConfirmBypass = '1';
+        if (typeof form.requestSubmit === 'function') {
+            if (submitter?.form === form) {
+                form.requestSubmit(submitter);
+            } else {
+                form.requestSubmit();
+            }
+        } else {
+            form.submit();
+        }
+        if (form.dataset.umConfirmBypass === '1') {
+            delete form.dataset.umConfirmBypass;
+        }
+    };
+
+    const getUmFormConfirmation = (form, submitter) => {
+        if (form.id !== 'settingsForm') {
+            return {
+                title: submitter?.dataset.umConfirmTitle || 'Confirm Account Action',
+                message: submitter?.dataset.umConfirmMessage || 'Continue with this account change?',
+                confirmLabel: submitter?.dataset.umConfirmLabel || submitter?.textContent.trim() || 'Confirm',
+            };
+        }
+
+        const isCreate = form.querySelector('#settingsMethod')?.value.toUpperCase() === 'POST';
+        const managementView = form.querySelector('#detailManagementView')?.value;
+        const personName = form.querySelector('#detailFullName')?.value
+            || document.getElementById('detailName')?.value
+            || 'this user';
+        const selectedRole = form.querySelector('#detailRole')?.selectedOptions[0]?.textContent.trim();
+        const accessType = managementView === 'admin-hub' ? 'Admin Hub' : 'Clinic';
+        const roleCopy = selectedRole ? ` as ${selectedRole}` : '';
+
+        return isCreate
+            ? {
+                title: `Confirm ${accessType} Access`,
+                message: `Add ${personName} to ${accessType}${roleCopy} with the selected account and module permissions?`,
+                confirmLabel: `Add to ${accessType}`,
+            }
+            : {
+                title: 'Confirm User Update',
+                message: `Save the updated account and access settings for ${personName}?`,
+                confirmLabel: 'Save Changes',
+            };
+    };
+
+    document.addEventListener('submit', (event) => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement) || !['settingsForm', 'deleteForm', 'deleteAccountForm', 'deleteAdminHubForm'].includes(form.id)) return;
+        if (form.dataset.umConfirmBypass === '1') {
+            delete form.dataset.umConfirmBypass;
+            return;
+        }
+
+        event.preventDefault();
+        if (umActionConfirmDialog?.open) return;
+        const submitter = event.submitter;
+        const confirmation = getUmFormConfirmation(form, submitter);
+        window.openUmActionConfirmation({
+            ...confirmation,
+            onConfirm: () => submitUmFormAfterConfirmation(form, submitter),
+        });
+    }, true);
+
+    umActionConfirmProceed?.addEventListener('click', () => {
+        const confirm = umPendingConfirmation;
+        umPendingConfirmation = null;
+        umActionConfirmDialog.close();
+        confirm?.();
+    });
+
+    umActionConfirmCancel?.addEventListener('click', () => {
+        umPendingConfirmation = null;
+        umActionConfirmDialog.close();
+    });
+
+    umActionConfirmDialog?.addEventListener('cancel', () => {
+        umPendingConfirmation = null;
+    });
+
+    umActionConfirmDialog?.addEventListener('click', (event) => {
+        if (event.target === umActionConfirmDialog) {
+            umPendingConfirmation = null;
+            umActionConfirmDialog.close();
+        }
+    });
 </script>

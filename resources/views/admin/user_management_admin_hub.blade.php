@@ -1495,7 +1495,9 @@
                             form="deleteForm"
                             class="um-settings-action um-action-warning"
                             id="removeAccessBtn"
-                            onclick="return confirm('Remove Admin Hub access? Student-side access or separate clinic access will remain unchanged.')"
+                            data-um-confirm-title="Remove Admin Hub Access"
+                            data-um-confirm-message="Remove Admin Hub access? Student-side access or separate clinic access will remain unchanged."
+                            data-um-confirm-label="Remove Access"
                         >
                             Remove Access
                         </button>
@@ -1505,7 +1507,9 @@
                             class="um-settings-action um-action-danger"
                             id="deleteAdminHubBtn"
                             style="display:none;"
-                            onclick="return confirm('Delete this Admin Hub directory account? The local account, clinic access, and records will be preserved.')"
+                            data-um-confirm-title="Delete Directory Account"
+                            data-um-confirm-message="Delete this Admin Hub directory account? The local account, clinic access, and records will be preserved."
+                            data-um-confirm-label="Delete Account"
                         >
                             Delete Directory Account
                         </button>
@@ -1516,6 +1520,8 @@
         </div>
     </div>
 </div>
+
+@include('admin.user_management.confirmation-modal')
 
 @push('scripts')
 <script>
@@ -2073,12 +2079,15 @@
                 ? 'Deactivate this Admin Hub account? Access will be blocked, active tokens will be revoked, and its records will be hidden until reactivation.'
                 : 'Deactivate this account as resigned/inactive? This restores the base role, revokes access tokens, and preserves audit history.';
 
-        if (!window.confirm(confirmationMessage)) {
-            return;
-        }
-
-        detailStatus.value = nextStatus;
-        settingsForm.submit();
+        window.openUmActionConfirmation({
+            title: nextStatus === 'active' ? 'Activate Admin Hub Account' : 'Deactivate Account',
+            message: confirmationMessage,
+            confirmLabel: nextStatus === 'active' ? 'Activate Account' : 'Deactivate Account',
+            onConfirm: () => {
+                detailStatus.value = nextStatus;
+                settingsForm.submit();
+            },
+        });
     });
 
     document.getElementById('settingsModal').addEventListener('click', function (event) {

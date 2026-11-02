@@ -2517,9 +2517,7 @@
         html[data-theme="dark"] .apt-card,
         html[data-theme="dark"] .appt-card,
         html[data-theme="dark"] .widget-card,
-        html[data-theme="dark"] .barcode-status-card,
         html[data-theme="dark"] .student-info-box,
-        html[data-theme="dark"] .barcode-card,
         html[data-theme="dark"] .category-card,
         html[data-theme="dark"] .sidebar-widget,
         html[data-theme="dark"] .comment-card,
@@ -2563,12 +2561,10 @@
             color: #f0be6a !important;
         }
 
-        html[data-theme="dark"] .barcode-label,
         html[data-theme="dark"] .stat-label {
             color: #9aa6ba !important;
         }
 
-        html[data-theme="dark"] .barcode-value,
         html[data-theme="dark"] .stat-val {
             color: #f3f7ff !important;
         }
@@ -2577,8 +2573,7 @@
         html[data-theme="dark"] input,
         html[data-theme="dark"] select,
         html[data-theme="dark"] textarea,
-        html[data-theme="dark"] .form-control,
-        html[data-theme="dark"] .barcode-input {
+        html[data-theme="dark"] .form-control {
             background: #0f161f !important;
             color: #e9eef8 !important;
             border-color: #3a4556 !important;
@@ -2636,29 +2631,6 @@
 
         html[data-theme="dark"] #reader {
             border-color: #4a5568 !important;
-        }
-
-        html[data-theme="dark"] #barcodeModal > div {
-            background: #181f2a !important;
-            color: #e5ecf7 !important;
-            border: 1px solid #2f3a4a;
-        }
-
-        html[data-theme="dark"] #barcodeModal h2 {
-            color: #f5f8ff !important;
-        }
-
-        html[data-theme="dark"] #barcodeModal p {
-            color: #b5c1d3 !important;
-        }
-
-        html[data-theme="dark"] #barcodeModal > div > div:first-child {
-            background: rgba(139, 0, 0, 0.2) !important;
-        }
-
-        html[data-theme="dark"] #barcodeModal button[onclick="closeBarcodeModal()"] {
-            background: #101723 !important;
-            color: #d4deec !important;
         }
 
         .clinic-availability-banner {
@@ -2888,6 +2860,7 @@
             }
         }
     </style>
+    @include('partials.student-navigation-loader-head')
 </head>
 <body>
     @include('partials.post_login_terms_gate')
@@ -2916,7 +2889,7 @@
                 @php
                     $studentLayoutUser = Auth::guard('student')->user();
                     $isStudentAssistantPortalUser = $studentLayoutUser?->isStudentAssistant() ?? false;
-                    $isMyAccountSection = Request::is('student/account') || Request::is('student/history') || Request::is('student/barcode-register');
+                    $isMyAccountSection = Request::is('student/account') || Request::is('student/history');
                     $studentAllNotifications = collect($notifications ?? [])->values();
                     $studentUnreadNotifications = $studentAllNotifications
                         ->filter(fn ($notification) => !empty($notification['is_unread']))
@@ -6183,5 +6156,6 @@
     </script>
     @endif
     @endauth
+    @include('partials.student-navigation-loader')
 </body>
 </html>

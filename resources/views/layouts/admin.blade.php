@@ -83,6 +83,27 @@
                 document.documentElement.setAttribute('data-theme', 'dark');
             }
         })();
+        (function() {
+            try {
+                var pendingNavigation = sessionStorage.getItem('admin_navigation_loader_handoff');
+                if (!pendingNavigation) return;
+
+                var navigationState = JSON.parse(pendingNavigation);
+                var startedAt = Number(navigationState && navigationState.startedAt);
+                if (!startedAt || Date.now() - startedAt > 90000) {
+                    sessionStorage.removeItem('admin_navigation_loader_handoff');
+                    return;
+                }
+
+                var pendingTitle = String(navigationState.title || 'Opening page').trim();
+                var pendingDetail = String(navigationState.detail || 'Loading the requested page.').trim();
+                document.documentElement.style.setProperty('--admin-pending-loader-title', JSON.stringify(pendingTitle));
+                document.documentElement.style.setProperty('--admin-pending-loader-detail', JSON.stringify(pendingDetail));
+                document.documentElement.setAttribute('data-admin-navigation-pending', 'true');
+            } catch (error) {
+                document.documentElement.removeAttribute('data-admin-navigation-pending');
+            }
+        })();
     </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2170,8 +2191,24 @@
             color: #f8fafc;
         }
 
+        html[data-theme="dark"] .doctor-availability-icon {
+            color: #facc15;
+        }
+
         html[data-theme="dark"] .doctor-availability-icon::after {
-            background: rgba(248, 250, 252, .18);
+            background: rgba(250, 204, 21, .32);
+        }
+
+        html[data-theme="dark"] .doctor-availability-toggle,
+        html[data-theme="dark"] .doctor-availability-toggle[aria-pressed="false"] {
+            border-color: rgba(250, 204, 21, .42);
+            background: #111827;
+        }
+
+        html[data-theme="dark"] .doctor-availability-toggle-pulse path,
+        html[data-theme="dark"] .doctor-availability-toggle.is-animating-to-out .doctor-availability-toggle-pulse path,
+        html[data-theme="dark"] .doctor-availability-toggle.is-animating-to-available .doctor-availability-toggle-pulse path {
+            stroke: #facc15;
         }
 
         html[data-theme="light"] .doctor-availability-title {
@@ -3783,6 +3820,30 @@
         .admin-action-loader.is-active {
             display: inline-flex;
             animation: adminContentLoaderIn 0.18s ease-out both;
+        }
+
+        html[data-admin-navigation-pending="true"] .admin-action-loader {
+            display: inline-flex;
+        }
+
+        html[data-admin-navigation-pending="true"] .admin-action-loader .admin-loader-copy {
+            display: block;
+        }
+
+        html[data-admin-navigation-pending="true"] .admin-action-loader [data-admin-loader-message-text],
+        html[data-admin-navigation-pending="true"] .admin-action-loader [data-admin-loader-detail] {
+            font-size: 0;
+        }
+
+        html[data-admin-navigation-pending="true"] .admin-action-loader [data-admin-loader-message-text]::before {
+            content: var(--admin-pending-loader-title, "Opening page");
+            font-size: clamp(17px, 2vw, 23px);
+        }
+
+        html[data-admin-navigation-pending="true"] .admin-action-loader [data-admin-loader-detail]::before {
+            display: block;
+            content: var(--admin-pending-loader-detail, "Loading the requested page.");
+            font-size: 13px;
         }
 
         .admin-action-loader .loading {
@@ -6703,8 +6764,15 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     $currentRole = \App\Models\User::normalizeRole(optional($authUser)->user_role ?? '');
     $isStudentAssistant = $authUser?->isStudentAssistant() ?? false;
     $isAdminLike = $currentRole === \App\Models\User::ROLE_SUPERADMIN;
-    $canToggleDoctorAvailability = !$isStudentAssistant && in_array($currentRole, [\App\Models\User::ROLE_SUPERADMIN, \App\Models\User::ROLE_ADMIN], true);
-    $doctorAvailable = \App\Models\SystemSetting::booleanValue('clinic_doctor_available', true);
+    $doctorAvailabilityWorkflow = app(\App\Services\ClinicWorkflowService::class);
+    $assignedDoctorProfile = $doctorAvailabilityWorkflow->activeDoctorProfile();
+    $currentUserIsAssignedDoctor = $doctorAvailabilityWorkflow->userIsAssignedDoctor($authUser);
+    $showDoctorAvailability = $assignedDoctorProfile !== null
+        && !$isStudentAssistant
+        && ($currentRole === \App\Models\User::ROLE_SUPERADMIN || $currentUserIsAssignedDoctor);
+    $canToggleDoctorAvailability = $showDoctorAvailability;
+    $doctorAvailable = $doctorAvailabilityWorkflow->doctorIsAvailable()
+        && !$doctorAvailabilityWorkflow->clinicIsClosed();
     $canAccessModule = fn (string $permission): bool => $authUser?->canAccessPermission($permission) ?? false;
     $canAccessAnyModule = fn (array $permissions): bool => $authUser?->canAccessAnyPermission($permissions) ?? false;
     $linkedAdminProfile = null;
@@ -7375,6 +7443,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
   <aside class="sidebar" id="adminSidebar">
     <div class="sidebar-scroll-region" id="adminSidebarScrollRegion">
     <div class="sidebar-logo">
+      @if($showDoctorAvailability)
       <div class="doctor-availability-card {{ $doctorAvailable ? 'is-available' : 'is-out' }}" aria-label="Doctor is {{ $doctorAvailable ? 'available' : 'out' }}">
         <span class="doctor-availability-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
         <span class="doctor-availability-copy">
@@ -7403,6 +7472,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
           <span class="doctor-availability-readonly" aria-hidden="true"></span>
         @endif
       </div>
+      @endif
     </div>
     
     <nav class="sidebar-nav">
@@ -8180,6 +8250,22 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             return;
         }
 
+        const navigationHandoffKey = 'admin_navigation_loader_handoff';
+        let pendingNavigationHandoff = null;
+        try {
+            const savedHandoff = sessionStorage.getItem(navigationHandoffKey);
+            if (savedHandoff) {
+                sessionStorage.removeItem(navigationHandoffKey);
+                const parsedHandoff = JSON.parse(savedHandoff);
+                const handoffAge = Date.now() - Number(parsedHandoff?.startedAt || 0);
+                if (handoffAge >= 0 && handoffAge <= 90000) {
+                    pendingNavigationHandoff = parsedHandoff;
+                }
+            }
+        } catch (error) {
+            pendingNavigationHandoff = null;
+        }
+
         const syncContentLoaderBounds = function () {
             const rect = content.getBoundingClientRect();
             const top = Math.max(0, rect.top);
@@ -8203,6 +8289,9 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             actionLoader.setAttribute('aria-hidden', 'true');
             actionLoader.setAttribute('aria-label', 'Processing action');
             document.body.removeAttribute('aria-busy');
+            document.documentElement.removeAttribute('data-admin-navigation-pending');
+            document.documentElement.style.removeProperty('--admin-pending-loader-title');
+            document.documentElement.style.removeProperty('--admin-pending-loader-detail');
         };
 
         const showContentLoading = function () {
@@ -8236,16 +8325,29 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 source?.getAttribute?.('title'),
                 form?.getAttribute?.('aria-label'),
             ].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+            const managementView = form?.querySelector('[name="management_view"]')?.value || '';
             const actionUrl = source instanceof HTMLAnchorElement
                 ? source.href
                 : (form?.getAttribute('action') || window.location.href);
             let path = '';
+            let hash = '';
             try {
-                path = new URL(actionUrl, window.location.href).pathname.toLowerCase();
+                const destination = new URL(actionUrl, window.location.href);
+                path = destination.pathname.toLowerCase();
+                hash = destination.hash.toLowerCase();
             } catch (error) {
                 path = '';
+                hash = '';
             }
-            const context = (label + ' ' + path).toLowerCase();
+            const context = (label + ' ' + path + ' ' + hash + ' ' + managementView).toLowerCase();
+            const labelContext = label.toLowerCase();
+            const isOpeningRecord = /\b(view|open|review|profile|details|record)\b/.test(labelContext);
+            const pageCopy = function (name, detail) {
+                return {
+                    title: 'Opening ' + name,
+                    detail: detail,
+                };
+            };
 
             if (mode === 'submit') {
                 if (/finali[sz]e/.test(context)) {
@@ -8260,14 +8362,59 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 if (/\b(cancel|cancellation)\b/.test(context)) {
                     return { title: 'Cancelling appointment', detail: 'Updating the appointment and notifying the student.' };
                 }
+                if (/\b(reschedule|rescheduling)\b/.test(context)) {
+                    return { title: 'Rescheduling appointment', detail: 'Saving the new appointment date and time.' };
+                }
+                if (/\b(no[\s_-]?show)\b/.test(context)) {
+                    return { title: 'Updating no-show status', detail: 'Saving the attendance status for this appointment.' };
+                }
                 if (/\b(dispense|dispensing|issue medicine|issue medication)\b/.test(context)) {
                     return { title: 'Issuing medicine', detail: 'Recording the medicine and updating inventory.' };
+                }
+                if (/\b(restock|receive stock|stock receipt)\b/.test(context)) {
+                    return { title: 'Recording stock receipt', detail: 'Updating the on-hand quantity and stock movement history.' };
+                }
+                if (/\b(import|upload inventory)\b/.test(context) && /\binventory\b|\bstock\b/.test(context)) {
+                    return { title: 'Importing inventory', detail: 'Checking the uploaded file and preparing the stock updates.' };
                 }
                 if (/\b(book|booking appointment|schedule appointment)\b/.test(context)) {
                     return { title: 'Booking appointment', detail: 'Checking the selected schedule and saving the booking.' };
                 }
                 if (/\b(correction|correct file|request correction)\b/.test(context)) {
                     return { title: 'Submitting correction request', detail: 'Sending the file correction request for review.' };
+                }
+                if (/admin-hub|admin hub/.test(context)) {
+                    if (/delete|remove/.test(labelContext)) {
+                        return { title: 'Removing Admin Hub designee', detail: 'Updating the assigned office and Admin Hub access.' };
+                    }
+                    return { title: 'Saving Admin Hub profile', detail: 'Updating the designee profile and office assignment.' };
+                }
+                if (/account-access|account access/.test(context) || managementView === 'account-access') {
+                    if (/delete account|delete user account/.test(labelContext + ' ' + path)) {
+                        return { title: 'Deleting user account', detail: 'Removing the selected clinic account and its access.' };
+                    }
+                    if (/remove|delete/.test(labelContext)) {
+                        return { title: 'Removing clinic access', detail: 'Updating the account role and clinic permissions.' };
+                    }
+                    if (/deactiv/.test(labelContext)) {
+                        return { title: 'Updating account status', detail: 'Saving the clinic account status.' };
+                    }
+                    if (/add|create|onboard/.test(labelContext)) {
+                        return { title: 'Adding clinic access', detail: 'Creating the clinic account and saving its role and permissions.' };
+                    }
+                    return { title: 'Saving account access', detail: "Updating this account's role, permissions, and access status." };
+                }
+                if (/\/admin\/settings\/personal-information|personal information/.test(context)) {
+                    return { title: 'Saving personal information', detail: 'Updating your clinic profile details.' };
+                }
+                if (/\/admin\/settings\/clinic-information|clinic information/.test(context)) {
+                    return { title: 'Saving clinic information', detail: 'Updating the clinic details and operating settings.' };
+                }
+                if (/\/admin\/settings\/system-preferences|system preferences/.test(context)) {
+                    return { title: 'Saving system preferences', detail: 'Updating clinic-wide system settings.' };
+                }
+                if (/\/admin\/settings\/medical-configuration|medical configuration/.test(context)) {
+                    return { title: 'Saving medical configuration', detail: 'Updating clinic services and medical form settings.' };
                 }
                 if (/\b(submit|send|request)\b/.test(context)) {
                     return { title: 'Submitting form', detail: 'Sending your information securely. Please wait.' };
@@ -8278,28 +8425,141 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 return { title: 'Processing request', detail: 'Please wait while the system completes this action.' };
             }
 
+            if (/\/admin\/user-management\/account-access(?:\/|$)|\baccount access\b/.test(context)) {
+                return { title: 'Opening Account Access', detail: 'Loading clinic roles, permissions, and account access details.' };
+            }
+            if (/\/admin\/user-management\/admin-hub(?:\/|$)|\badmin hub\b/.test(context)) {
+                return { title: 'Opening Admin Hub', detail: 'Loading designee profiles, office assignments, and access details.' };
+            }
+            if (/\/admin\/user-management(?:\/|$)|\busers management\b|\buser management\b/.test(context)) {
+                return pageCopy('User Management', 'Loading clinic account and access management.');
+            }
+            if (/\/admin\/walkin\/(?:employee|staff)-document\//.test(path) || /\/admin\/walkin\/document\//.test(path)) {
+                return { title: 'Opening health document', detail: 'Loading the selected submitted health document.' };
+            }
+            if (/\/admin\/walkin\/(?:employee-|staff-)?health-form\//.test(path)) {
+                return { title: 'Opening health form', detail: 'Loading the selected patient health profile and review details.' };
+            }
+            if (/\/admin\/walkin\/form\//.test(path)) {
+                return { title: 'Opening walk-in intake', detail: 'Loading the patient details and clinic intake form.' };
+            }
+            if (/\/admin\/walkin\/consultation-drafts|\/walkin\/consultation-drafts/.test(path)) {
+                return { title: 'Opening consultation drafts', detail: 'Loading saved consultation drafts for review.' };
+            }
+            if (/\/admin\/walkin|\/walkin\//.test(path)) {
+                return pageCopy('Walk-In Workspace', 'Loading patient lookup and clinic intake tools.');
+            }
+
+            if (/\/admin\/reports\/manage-mar/.test(path) && /medical-conditions/.test(hash + ' ' + labelContext)) {
+                return { title: 'Opening Medical Conditions', detail: 'Loading MAR medical condition settings.' };
+            }
+            if (/\/admin\/mar-clearance-types(?:\/|$)|clearance\s*\/\s*certificate types/.test(context)) {
+                return { title: 'Opening Clearance Types', detail: 'Loading clearance and certificate type settings.' };
+            }
+            if (/\/admin\/reports\/manage-referral-services|referral services/.test(context)) {
+                return { title: 'Opening Referral Services', detail: 'Loading the clinic referral service options.' };
+            }
+            if (/\/admin\/reports\/manage-online-consultations|online consultation/.test(context)) {
+                return { title: 'Opening Online Consultation', detail: 'Loading online consultation service options.' };
+            }
+            if (/\/admin\/reports\/manage-other-services|other services/.test(context)) {
+                return { title: 'Opening Other Services', detail: 'Loading additional appointment and consultation services.' };
+            }
+            if (/\/admin\/reports\/manage-medicine-types|medicine types/.test(context)) {
+                return { title: 'Opening Medicine Types', detail: 'Loading medicine type settings used by inventory and MAR.' };
+            }
+            if (/\/admin\/reports\/manage-health-form-categories|health form categories/.test(context)) {
+                return { title: 'Opening Health Form Categories', detail: 'Loading health form request category settings.' };
+            }
+            if (/\/admin\/reports\/manage-triage-survey|triage survey/.test(context)) {
+                return { title: 'Opening Triage Survey', detail: 'Loading triage survey questions and settings.' };
+            }
+
+            if (/\/admin\/reports\/inventory-summary/.test(path)) {
+                return { title: 'Opening Inventory Summary', detail: 'Loading stock totals and medicine use for the selected period.' };
+            }
+            if (/\/admin\/reports\/appointment-statistics/.test(path)) {
+                return { title: 'Opening Appointment Statistics', detail: 'Loading appointment totals and trends for the selected period.' };
+            }
+            if (/\/admin\/reports\/appointment-history/.test(path)) {
+                return { title: 'Opening Appointment History', detail: 'Loading appointment outcomes and schedule history.' };
+            }
+            if (/\/admin\/reports\/evaluation-reports/.test(path)) {
+                return { title: 'Opening Service Evaluation', detail: 'Loading clinic service feedback and evaluation results.' };
+            }
+            if (/\/admin\/reports\/export-hub/.test(path)) {
+                return { title: 'Opening Export Reports', detail: 'Loading available reports and export options.' };
+            }
+            if (/\/admin\/reports\/digital-logbook/.test(path)) {
+                return { title: 'Opening Clinic Records', detail: 'Loading clinic service and treatment records.' };
+            }
+
             if (/health[\s_-]*records?|health[_-]records/.test(context)) {
-                const openingRecord = /\b(view|open|review|profile)\b/.test(label.toLowerCase());
-                return openingRecord
-                    ? { title: 'Opening health record', detail: 'Retrieving the selected profile and medical information.' }
-                    : { title: 'Loading Health Records', detail: 'Retrieving medical records and review information.' };
+                return isOpeningRecord
+                    ? { title: 'Opening health record', detail: 'Loading the selected profile and its medical information.' }
+                    : { title: 'Opening Health Records', detail: 'Loading submitted records and review information.' };
             }
             if (/\binventory\b|\bstock\b/.test(context)) {
-                return { title: 'Loading Inventory', detail: 'Retrieving medicine and supply information.' };
+                if (/\/inventory\/items\/[^/]+\/movements/.test(path)) {
+                    return { title: 'Opening stock movement history', detail: 'Loading quantity changes and stock transaction details.' };
+                }
+                if (isOpeningRecord) {
+                    return { title: 'Opening inventory item', detail: 'Loading the item stock, expiry, and movement details.' };
+                }
+                return { title: 'Opening Clinic Inventory', detail: 'Loading medicine, supply, and stock information.' };
             }
             if (/\bappointments?\b/.test(context)) {
-                return { title: 'Loading Appointments', detail: 'Retrieving appointment and clinic schedule details.' };
+                if (isOpeningRecord || /\/appointments\/[^/]+\//.test(path)) {
+                    return { title: 'Opening appointment details', detail: 'Loading the selected appointment, schedule, and clinic remarks.' };
+                }
+                return { title: 'Opening Appointments', detail: 'Loading appointment requests and clinic schedule details.' };
             }
             if (/\breports?\b/.test(context)) {
-                return { title: 'Loading Reports', detail: 'Preparing the requested clinic report.' };
+                if (/daily-treatment-record/.test(path)) {
+                    return pageCopy('Daily Treatment Record', 'Loading treatment entries for the selected date.');
+                }
+                if (/health-forms/.test(path)) {
+                    return pageCopy('Health Forms Report', 'Loading health form totals and review information.');
+                }
+                if (/\bmar\b|manage-mar/.test(context)) {
+                    return pageCopy('MAR', 'Loading consultation and service accomplishment data.');
+                }
+                return { title: 'Opening Reports', detail: 'Loading clinic report data and summaries.' };
             }
-            if (/\b(view|open|record|profile|details)\b/.test(label.toLowerCase())) {
-                return { title: 'Opening record', detail: 'Retrieving the selected record. Please wait.' };
+            if (/consult-form|consultation/.test(context)) {
+                if (/draft/.test(context)) {
+                    return { title: 'Opening consultation draft', detail: 'Loading the saved consultation and patient details.' };
+                }
+                return pageCopy('Consultation', 'Loading patient details and the consultation workspace.');
+            }
+            if (/\/admin\/settings\/my-health-profile|my health profile/.test(context)) {
+                return pageCopy('My Health Profile', 'Loading your saved health information and submitted documents.');
+            }
+            if (/\/admin\/settings\/personal-information|personal information/.test(context)) {
+                return pageCopy('Personal Information', 'Loading your clinic profile details.');
+            }
+            if (/\/admin\/settings\/clinic-information|clinic information/.test(context)) {
+                return pageCopy('Clinic Information', 'Loading clinic details and operating settings.');
+            }
+            if (/\/admin\/settings\/system-preferences|system preferences/.test(context)) {
+                return pageCopy('System Preferences', 'Loading clinic-wide preferences and schedules.');
+            }
+            if (/\/admin\/settings\/medical-configuration|medical configuration/.test(context)) {
+                return pageCopy('Medical Configuration', 'Loading clinic services and medical form settings.');
+            }
+            if (/\/admin\/settings\/faqs|\bfaqs\b/.test(context)) {
+                return pageCopy('FAQs', 'Loading clinic help and frequently asked questions.');
+            }
+            if (/\/admin\/settings(?:\/|$)|\bsettings\b/.test(context)) {
+                return pageCopy('Settings', 'Loading your clinic settings workspace.');
+            }
+            if (isOpeningRecord) {
+                return { title: 'Opening selected item', detail: 'Loading its details and related information.' };
             }
             const section = label.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
             return section
-                ? { title: 'Loading ' + section.slice(0, 42), detail: 'Please wait while the next page opens.' }
-                : { title: 'Loading page', detail: 'Please wait while the requested page opens.' };
+                ? { title: 'Opening ' + section.slice(0, 42), detail: 'Loading the requested workspace and its information.' }
+                : { title: 'Opening page', detail: 'Loading the requested workspace and its information.' };
         };
 
         const resolveSkeletonKind = function (source) {
@@ -8359,6 +8619,30 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             actionLoader.setAttribute('aria-label', normalizedMessage ? `${normalizedMessage}...` : 'Processing action');
         };
 
+        const persistNavigationHandoff = function (copy, skeletonKind = 'generic') {
+            try {
+                sessionStorage.setItem(navigationHandoffKey, JSON.stringify({
+                    title: copy?.title || 'Opening page',
+                    detail: copy?.detail || 'Loading the requested page.',
+                    skeletonKind: skeletonKind || 'generic',
+                    startedAt: Date.now(),
+                }));
+            } catch (error) {
+                // Keep the current-page loader working when session storage is unavailable.
+            }
+        };
+
+        if (pendingNavigationHandoff) {
+            showActionLoading(
+                pendingNavigationHandoff.title,
+                pendingNavigationHandoff.detail,
+                pendingNavigationHandoff.skeletonKind
+            );
+        }
+        document.documentElement.removeAttribute('data-admin-navigation-pending');
+        document.documentElement.style.removeProperty('--admin-pending-loader-title');
+        document.documentElement.style.removeProperty('--admin-pending-loader-detail');
+
         window.AdminLoading = {
             showContent: showContentLoading,
             showAction: showActionLoading,
@@ -8400,7 +8684,9 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
             if (loaderScope === 'screen') {
                 const copy = resolveActionCopy(link);
-                showActionLoading(copy.title, copy.detail, resolveSkeletonKind(link));
+                const skeletonKind = resolveSkeletonKind(link);
+                persistNavigationHandoff(copy, skeletonKind);
+                showActionLoading(copy.title, copy.detail, skeletonKind);
                 return;
             }
 
@@ -8414,7 +8700,9 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             }
 
             const copy = resolveActionCopy(link);
-            showActionLoading(copy.title, copy.detail, resolveSkeletonKind(link));
+            const skeletonKind = resolveSkeletonKind(link);
+            persistNavigationHandoff(copy, skeletonKind);
+            showActionLoading(copy.title, copy.detail, skeletonKind);
         });
 
         document.addEventListener('submit', function (event) {

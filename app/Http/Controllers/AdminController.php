@@ -7926,6 +7926,7 @@ public function updateClearance(Request $request, $id)
                     'user_name' => $movement->user?->name,
                     'created_at' => $movement->created_at?->format('M d, Y g:i A'),
                     'created_date' => $movement->created_at?->format('M d, Y'),
+                    'created_date_iso' => $movement->created_at?->format('Y-m-d'),
                     'created_time' => $movement->created_at?->format('g:i A'),
                     'created_at_iso' => $movement->created_at?->toIso8601String(),
                 ];
@@ -8418,10 +8419,19 @@ public function updateClearance(Request $request, $id)
             'available' => ['required', 'boolean'],
         ]);
 
-        $available = $request->boolean('available');
-        $wasAvailable = app(\App\Services\ClinicWorkflowService::class)->doctorIsAvailable();
+        $workflow = app(\App\Services\ClinicWorkflowService::class);
+        abort_unless($workflow->canManageDoctorAvailability($request->user()), 403);
 
-        SystemSetting::putValue('clinic_doctor_available', $available ? '1' : '0');
+        $available = $request->boolean('available');
+        if ($available && $workflow->clinicIsClosed()) {
+            $workflow->setDoctorAvailability(false);
+
+            return redirect()->back()->with('error', 'The clinic is closed. Doctor availability will remain off until the clinic reopens.');
+        }
+
+        $wasAvailable = $workflow->doctorIsAvailable();
+
+        $workflow->setDoctorAvailability($available);
 
         if ($wasAvailable !== $available) {
             ActivityLog::create([

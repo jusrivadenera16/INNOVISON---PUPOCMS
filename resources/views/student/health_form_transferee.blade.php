@@ -1036,6 +1036,12 @@
             overflow: hidden;
         }
 
+        form.is-submitting .esign-mode-panel,
+        form.is-submitting .esign-method-grid {
+            opacity: 0.58;
+            pointer-events: none;
+        }
+
         #digitalSignaturePad,
         #staffSignaturePad,
         #guardianSignaturePad {
@@ -4110,7 +4116,7 @@
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="med_cert_date">Date of Certificate</label>
-                                    <input id="med_cert_date" type="date" name="med_cert_date" class="form-control" value="{{ old('med_cert_date', $prefill['med_cert_date'] ?? '') }}" data-requirement-extra-field>
+                                    <input id="med_cert_date" type="date" name="med_cert_date" class="form-control" value="{{ old('med_cert_date', $prefill['med_cert_date'] ?? '') }}" min="{{ $transfereeDocumentDateMin }}" max="{{ $transfereeDocumentDateMax }}" data-requirement-extra-field>
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="med_cert_findings">Findings</label>
@@ -4211,7 +4217,7 @@
                             <div class="requirement-extra">
                                 <div class="form-field">
                                     <label class="form-label" for="xray_date">Date of Examination</label>
-                                    <input id="xray_date" type="date" name="xray_date" class="form-control" value="{{ old('xray_date', $prefill['xray_date'] ?? '') }}" data-requirement-extra-field>
+                                    <input id="xray_date" type="date" name="xray_date" class="form-control" value="{{ old('xray_date', $prefill['xray_date'] ?? '') }}" min="{{ $transfereeDocumentDateMin }}" max="{{ $transfereeDocumentDateMax }}" data-requirement-extra-field>
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="xray_findings">Findings</label>
@@ -6312,14 +6318,34 @@
                     stepPanels[targetStep - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 });
             });
-            form?.addEventListener('submit', (event) => {
-                syncHomeAddressValue();
+            const lockHealthForm = (submitter) => {
+                isSubmitting = true;
+                form.classList.add('is-submitting');
+                form.setAttribute('aria-busy', 'true');
+                form.inert = true;
 
-                if (event.submitter?.hasAttribute('data-testing-skip')) {
+                form.querySelectorAll('button, a.btn').forEach((control) => {
+                    control.setAttribute('aria-disabled', 'true');
+                    control.style.pointerEvents = 'none';
+                    control.style.opacity = '0.72';
+                    if (control.tagName === 'BUTTON') {
+                        control.disabled = true;
+                    }
+                });
+
+                submitter?.querySelector('[data-submit-label]')?.replaceChildren('Saving...');
+            };
+
+            form?.addEventListener('submit', (event) => {
+                if (isSubmitting) {
+                    event.preventDefault();
                     return;
                 }
 
-                if (isSubmitting) {
+                syncHomeAddressValue();
+
+                if (event.submitter?.hasAttribute('data-testing-skip')) {
+                    lockHealthForm(event.submitter);
                     return;
                 }
 
@@ -6355,14 +6381,7 @@
                 }
 
                 event.preventDefault();
-                isSubmitting = true;
-                const submitButtons = form.querySelectorAll('button[type="submit"], button[type="button"], a.btn');
-                submitButtons.forEach((btn) => {
-                    btn.setAttribute('aria-disabled', 'true');
-                    btn.style.pointerEvents = 'none';
-                    btn.style.opacity = '0.72';
-                });
-                event.submitter?.querySelector('[data-submit-label]')?.replaceChildren('Saving...');
+                lockHealthForm(event.submitter);
 
                 form.action = healthFormStoreUrl;
                 form.method = 'POST';

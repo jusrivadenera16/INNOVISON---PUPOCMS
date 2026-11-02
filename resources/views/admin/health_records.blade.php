@@ -6490,7 +6490,8 @@
         background: #dcfce7;
         color: #166534;
     }
-    .health-user-type-badge.is-applicant {
+    .health-user-type-badge.is-applicant,
+    .health-user-type-badge.is-transferee {
         border-color: #bfdbfe;
         background: #dbeafe;
         color: #1d4ed8;
@@ -6643,7 +6644,8 @@
         background: rgba(22, 101, 52, .32);
         color: #bbf7d0 !important;
     }
-    html[data-theme="dark"] .health-user-type-badge.is-applicant {
+    html[data-theme="dark"] .health-user-type-badge.is-applicant,
+    html[data-theme="dark"] .health-user-type-badge.is-transferee {
         border-color: rgba(96, 165, 250, .42);
         background: rgba(30, 64, 175, .30);
         color: #bfdbfe !important;
@@ -8462,6 +8464,16 @@
                 return [
                     'label' => 'Student Number',
                     'value' => $studentNumber !== null ? trim((string) $studentNumber) : '-',
+                ];
+            }
+
+            if ($userType === 'transferee') {
+                return [
+                    'label' => 'SIS Reference Number',
+                    'value' => $firstIdentifier([
+                        $record->sis_reference_number,
+                        $user->sis_reference_number,
+                    ]),
                 ];
             }
 

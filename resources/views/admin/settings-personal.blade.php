@@ -416,7 +416,17 @@
     html[data-theme="dark"] .personal-settings-page .personal-field label,
     html[data-theme="dark"] .personal-settings-page .personal-field input,
     html[data-theme="dark"] .personal-settings-page .personal-field select { color: #f8fafc; }
-    html[data-theme="dark"] .personal-settings-page .personal-field select option { color: #172033; }
+    html[data-theme="dark"] .personal-settings-page .report-identity .personal-field select {
+        color-scheme: dark;
+    }
+    html[data-theme="dark"] .personal-settings-page .report-identity .personal-field select option {
+        background-color: #1f2937;
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .personal-settings-page .report-identity .personal-field select option:checked {
+        background-color: #facc15;
+        color: #70131b;
+    }
     html[data-theme="dark"] .personal-settings-page .settings-section-hero p,
     html[data-theme="dark"] .personal-settings-page .personal-profile-meta,
     html[data-theme="dark"] .personal-settings-page .personal-profile-email,

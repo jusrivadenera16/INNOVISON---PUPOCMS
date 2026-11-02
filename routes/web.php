@@ -36,18 +36,19 @@ Route::get('/landing/doctor-availability', function () {
     $clinicClosed = false;
 
     try {
-        $available = $workflow->doctorIsAvailable();
-    } catch (\Throwable) {
-        $available = true;
-    }
-
-    try {
         $now = now(config('app.timezone'));
         $clinicHours = $workflow->clinicHoursStatus($now);
         $clinicClosed = !($clinicHours['is_open'] ?? false)
             || $workflow->activeClosure($now) !== null;
     } catch (\Throwable) {
         $clinicClosed = false;
+    }
+
+    try {
+        $doctorMarkedAvailable = $workflow->doctorIsAvailable();
+        $available = !$clinicClosed && $doctorMarkedAvailable;
+    } catch (\Throwable) {
+        $available = false;
     }
 
     return response()->json([
@@ -173,11 +174,6 @@ Route::get('/student/booking', [AppointmentController::class, 'create'])
 // --- PROTECTED ROUTES (Login required) ---
 Route::middleware(['auth:student', 'student.idle', 'account.active', 'idp.session', 'audit'])->group(function () {
     Route::middleware('role:student')->group(function () {
-        Route::post('/student/skip-barcode', function () {
-            session(['barcode_skipped' => true]);
-            return response()->json(['status' => 'success']);
-        });
-
         Route::post('/student/account-type', [\App\Http\Controllers\ClinicAccountTypeController::class, 'store'])
             ->middleware('throttle:10,1')
             ->name('student.account_type.store');
@@ -262,10 +258,6 @@ Route::middleware(['auth:student', 'student.idle', 'account.active', 'idp.sessio
         Route::post('/student/appointments/{id}/cancel', [AppointmentController::class, 'cancel']);
         Route::post('/student/update-contact', [AppointmentController::class, 'updateContact'])->name('student.updateContact');
 
-        Route::get('/student/barcode-register', [AppointmentController::class, 'barcodeRegister'])->name('barcode.register');
-        Route::post('/student/barcode-register', [AppointmentController::class, 'storeBarcode'])->name('barcode.store');
-        Route::post('/student/barcode-validate', [AppointmentController::class, 'validateBarcodeScan'])->name('barcode.validate');
-        Route::post('/student/reset-barcode', [AppointmentController::class, 'resetBarcode'])->name('barcode.reset');
         Route::get('/student/notifications/feed', [AppointmentController::class, 'notificationsFeed'])->name('student.notifications.feed');
         Route::get('/student/notifications/{notificationId}', [AppointmentController::class, 'openNotification'])->name('student.notifications.open');
         Route::post('/student/notifications/mark-all-read', [AppointmentController::class, 'markAllNotificationsRead'])->name('student.notifications.read_all');
@@ -276,11 +268,6 @@ Route::middleware(['auth:student', 'student.idle', 'account.active', 'idp.sessio
     });
 
     Route::get('/account', [AppointmentController::class, 'index'])->name('account');
-    Route::get('/barcode-register', [AppointmentController::class, 'barcodeRegister'])->name('barcode.legacy.register');
-    Route::post('/barcode-store', [AppointmentController::class, 'storeBarcode'])->name('barcode.legacy.store');
-    Route::post('/barcode-validate', [AppointmentController::class, 'validateBarcodeScan'])->name('barcode.legacy.validate');
-    Route::post('/barcode-reset', [AppointmentController::class, 'resetBarcode'])->name('barcode.legacy.reset');
-
     Route::get('/fetch-user/{student_id}', [AppointmentController::class, 'fetchUser']);
 });
 
