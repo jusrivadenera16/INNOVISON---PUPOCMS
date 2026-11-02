@@ -156,7 +156,7 @@
                         <th>Temp</th>
                         <th>BP</th>
                         <th>Attending Staff</th>
-                        <th>Complaints/Impression</th>
+                        <th>Reason / Impression</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -166,7 +166,7 @@
                             $cons = $record->consultation;
                             $visitDate = $cons?->consultation_date ?: $appt?->date;
                             $timeIn = $cons?->time_in ?: $appt?->time;
-                            $complaint = trim((string) ($appt?->problem ?: $cons?->reason_for_visit));
+                            $complaint = trim((string) ($appt?->reason ?: $cons?->reason_for_visit));
                             $impression = trim((string) ($cons?->comments ?? ''));
                             $referralLabels = [
                                 'hospital_without_nurse' => 'Refer to Hospital (Without Nurse)',
@@ -192,7 +192,7 @@
                                 $medicineLines = $cons?->medicines?->filter(fn ($line) => trim((string) ($line->medicine ?: optional($line->item)->name)) !== '') ?? collect();
                                 $medicineNames = $medicineLines->isNotEmpty()
                                     ? $medicineLines->map(fn ($line) => $line->medicine ?: optional($line->item)->name)->implode(', ')
-                                    : ($cons && $cons->medicine ? $cons->medicine : ($appt?->notes ?? $appt?->remarks ?? '-'));
+                                    : ($cons && $cons->medicine ? $cons->medicine : '-');
                                 $medicineQuantities = $medicineLines->isNotEmpty()
                                     ? $medicineLines->map(fn ($line) => rtrim(rtrim(number_format((float) $line->quantity, 2, '.', ''), '0'), '.'))->implode(', ')
                                     : ($cons && $cons->medicine_quantity ? $cons->medicine_quantity : '-');
@@ -205,8 +205,11 @@
                             <td>{{ $cons && $cons->blood_pressure ? $cons->blood_pressure : '-' }}</td>
                             <td>{{ $cons ? (optional($cons->attendingStaff)->name ?? $cons->attending_staff_name ?? '-') : (optional($appt?->user)->name ?? '-') }}</td>
                             <td>
-                                <strong>Complaint:</strong> {{ $complaint !== '' ? $complaint : '-' }}<br>
+                                <strong>Reason:</strong> {{ $complaint !== '' ? $complaint : '-' }}<br>
                                 <strong>Impression:</strong> {{ $impression !== '' ? $impression : '-' }}
+                                @if(trim((string) ($appt?->remarks ?? '')) !== '' && trim((string) $appt->remarks) !== $impression)
+                                    <br><strong>Remarks:</strong> {{ $appt->remarks }}
+                                @endif
                                 @if($referral !== '')
                                     <br><strong>Referral:</strong> {{ $referral }}
                                 @endif

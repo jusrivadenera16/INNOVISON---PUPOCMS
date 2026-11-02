@@ -3205,6 +3205,13 @@ PROMPT;
     // 5. FINAL STORE
     public function store(Request $request)
     {
+        if (!app(\App\Services\ClinicWorkflowService::class)->doctorIsAvailable()) {
+            return redirect()->back()->withInput()->with(
+                'error',
+                'This consultation cannot be finalized while the doctor is marked out. Please continue when the doctor is available.'
+            );
+        }
+
         // Accept the previous single-medicine payload while the form now submits arrays.
         foreach (['item_id', 'issued_quantity'] as $medicineField) {
             $value = $request->input($medicineField);
@@ -3459,7 +3466,7 @@ PROMPT;
                 $appointment->name       = $student->name;
                 $appointment->email      = $student->email; 
                 $appointment->service    = $request->service;
-                $appointment->remarks    = $request->input('reason_for_visit') ?: $request->remarks;
+                $appointment->reason     = $request->input('reason_for_visit');
                 $appointment->status     = 'Completed';
                 $appointment->date       = now()->format('Y-m-d');
                 $appointment->time       = now()->format('H:i:s'); 

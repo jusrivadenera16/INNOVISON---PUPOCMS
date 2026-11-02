@@ -237,4 +237,47 @@ class IntegrationTokenGenerationTest extends TestCase
             $activities->pluck('title')->all()
         );
     }
+
+    public function test_activity_query_hides_entries_older_than_eight_days_without_deleting_them(): void
+    {
+        $client = IntegrationClient::create([
+            'system_key' => 'ims',
+            'system_name' => 'IMS',
+            'is_active' => true,
+        ]);
+        $client->createToken('recent-token');
+        $oldToken = $client->createToken('old-token')->accessToken;
+        $oldTimestamp = now()->subDays(9);
+        DB::table('personal_access_tokens')->where('id', $oldToken->id)->update([
+            'created_at' => $oldTimestamp,
+        ]);
+
+        foreach ([now(), $oldTimestamp] as $createdAt) {
+            DB::table('integration_request_logs')->insert([
+                'integration_client_id' => $client->id,
+                'system_key' => 'ims',
+                'system_name' => 'IMS',
+                'http_method' => 'GET',
+                'endpoint' => '/api/external/admin-profile',
+                'status_code' => 200,
+                'created_at' => $createdAt,
+            ]);
+            DB::table('api_error_logs')->insert([
+                'system_name' => 'IMS',
+                'endpoint' => '/profiles',
+                'error_message' => 'Remote service unavailable.',
+                'http_status' => '503',
+                'created_at' => $createdAt,
+            ]);
+        }
+
+        $method = new \ReflectionMethod(\App\Http\Controllers\AdminController::class, 'integrationActivityQuery');
+        $method->setAccessible(true);
+        $activities = $method->invoke(new \App\Http\Controllers\AdminController())->get();
+
+        $this->assertCount(3, $activities);
+        $this->assertSame(2, DB::table('personal_access_tokens')->count());
+        $this->assertSame(2, DB::table('integration_request_logs')->count());
+        $this->assertSame(2, DB::table('api_error_logs')->count());
+    }
 }

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AppointmentController;
 use App\Models\EmployeeHealthProfile;
+use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
 use App\Models\HealthProfileCorrectionRequest;
 use App\Models\User;
@@ -59,6 +60,201 @@ class HealthProfileDocumentCorrectionTest extends TestCase
         $this->assertTrue((bool) $profile->documents_valid);
         $this->assertNotNull($profile->resubmission_requested_at);
         $this->assertEquals(302, $response->getStatusCode());
+    }
+
+    public function test_student_can_cancel_an_unsubmitted_new_health_form_request_without_changing_the_approved_record(): void
+    {
+        $user = User::factory()->create([
+            'user_role' => User::ROLE_STUDENT,
+            'user_type' => 'student',
+        ]);
+        $profile = HealthProfile::query()->create([
+            'user_id' => $user->id,
+            'clearance_status' => 'Issued',
+            'verified_at' => now()->subDay(),
+            'documents_valid' => true,
+        ]);
+        $submission = HealthFormSubmission::query()->create([
+            'user_id' => $user->id,
+            'health_profile_id' => $profile->id,
+            'status' => HealthFormSubmission::STATUS_REQUESTED,
+            'category' => 'General',
+            'requested_at' => now(),
+        ]);
+        $correction = HealthProfileCorrectionRequest::query()->create([
+            'user_id' => $user->id,
+            'health_profile_id' => $profile->id,
+            'health_form_submission_id' => $submission->id,
+            'type' => HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM,
+            'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
+            'requested_at' => now(),
+        ]);
+        Auth::guard('student')->setUser($user);
+
+        $response = app(AppointmentController::class)->cancelStudentHealthFormRequest($submission->id);
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame(HealthFormSubmission::STATUS_CANCELLED, $submission->fresh()->status);
+        $this->assertSame(HealthProfileCorrectionRequest::STATUS_CANCELLED, $correction->fresh()->status);
+        $this->assertSame('Issued', $profile->fresh()->clearance_status);
+        $this->assertNotNull($profile->fresh()->verified_at);
+    }
+
+    public function test_student_cannot_cancel_a_health_form_request_after_submitting_the_form(): void
+    {
+        $user = User::factory()->create([
+            'user_role' => User::ROLE_STUDENT,
+            'user_type' => 'student',
+        ]);
+        $profile = HealthProfile::query()->create([
+            'user_id' => $user->id,
+            'clearance_status' => 'Issued',
+            'verified_at' => now()->subDay(),
+        ]);
+        $requestSubmission = HealthFormSubmission::query()->create([
+            'user_id' => $user->id,
+            'health_profile_id' => $profile->id,
+            'status' => HealthFormSubmission::STATUS_REQUESTED,
+            'requested_at' => now()->subHour(),
+        ]);
+        $submittedForm = HealthFormSubmission::query()->create([
+            'user_id' => $user->id,
+            'health_profile_id' => $profile->id,
+            'status' => HealthFormSubmission::STATUS_SUBMITTED,
+            'submitted_at' => now(),
+        ]);
+        $correction = HealthProfileCorrectionRequest::query()->create([
+            'user_id' => $user->id,
+            'health_profile_id' => $profile->id,
+            'health_form_submission_id' => $submittedForm->id,
+            'type' => HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM,
+            'status' => HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+            'requested_at' => now()->subHour(),
+            'submitted_at' => now(),
+        ]);
+        Auth::guard('student')->setUser($user);
+
+        $response = app(AppointmentController::class)->cancelStudentHealthFormRequest($requestSubmission->id);
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame(HealthFormSubmission::STATUS_REQUESTED, $requestSubmission->fresh()->status);
+        $this->assertSame(HealthProfileCorrectionRequest::STATUS_SUBMITTED, $correction->fresh()->status);
+    }
+
+    public function test_student_can_cancel_a_pending_file_request_and_restore_its_previous_approved_file(): void
+    {
+        $user = User::factory()->create([
+            'user_role' => User::ROLE_STUDENT,
+            'user_type' => 'student',
+            'is_health_profile_completed' => 1,
+        ]);
+        $profile = HealthProfile::query()->create([
+            'user_id' => $user->id,
+            'clearance_status' => 'Issued',
+            'verified_at' => now()->subDay(),
+            'documents_valid' => true,
+            'medical_certificate' => 'health_profiles/medical_certificates/original.pdf',
+        ]);
+        $adminRequest = Request::create('/health-profile/' . $profile->id . '/request-resubmission', 'POST', [
+            'pending_reason' => 'The uploaded medical certificate is outdated.',
+            'resubmission_required_documents' => ['medical_certificate'],
+            'clear_uploaded_documents' => true,
+        ]);
+
+        app(AdminController::class)->requestHealthProfileResubmission($adminRequest, $profile->id);
+        $correction = HealthProfileCorrectionRequest::query()
+            ->where('health_profile_id', $profile->id)
+            ->where('type', HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION)
+            ->latest('id')
+            ->firstOrFail();
+        $this->assertNull($profile->fresh()->medical_certificate);
+        Auth::guard('student')->setUser($user);
+
+        $response = app(AppointmentController::class)->cancelStudentHealthRecordCorrectionRequest($correction->id);
+
+        $profile->refresh();
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame(HealthProfileCorrectionRequest::STATUS_CANCELLED, $correction->fresh()->status);
+        $this->assertSame('Issued', $profile->clearance_status);
+        $this->assertNotNull($profile->verified_at);
+        $this->assertTrue((bool) $profile->documents_valid);
+        $this->assertSame('health_profiles/medical_certificates/original.pdf', $profile->medical_certificate);
+        $this->assertNull($profile->resubmission_requested_at);
+        $this->assertSame(1, (int) $user->fresh()->is_health_profile_completed);
+    }
+
+    public function test_student_can_cancel_an_older_approved_file_request_when_its_original_file_was_kept(): void
+    {
+        $user = User::factory()->create([
+            'user_role' => User::ROLE_STUDENT,
+            'user_type' => 'student',
+        ]);
+        $requestedAt = now()->subMinute();
+        $profile = HealthProfile::query()->create([
+            'user_id' => $user->id,
+            'clearance_status' => 'Issued',
+            'verified_at' => now()->subDay(),
+            'documents_valid' => true,
+            'medical_certificate' => 'health_profiles/medical_certificates/kept.pdf',
+            'pending_reason' => 'The uploaded medical certificate is outdated.',
+            'resubmission_required_documents' => ['medical_certificate'],
+            'resubmission_requested_at' => $requestedAt,
+        ]);
+        $correction = HealthProfileCorrectionRequest::query()->create([
+            'user_id' => $user->id,
+            'health_profile_id' => $profile->id,
+            'type' => HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION,
+            'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
+            'admin_note' => 'The uploaded medical certificate is outdated.',
+            'requested_at' => $requestedAt,
+            'metadata' => [
+                'was_already_issued' => true,
+                'cleared_document_references' => false,
+            ],
+        ]);
+        Auth::guard('student')->setUser($user);
+
+        $response = app(AppointmentController::class)->cancelStudentHealthRecordCorrectionRequest($correction->id);
+
+        $profile->refresh();
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame(HealthProfileCorrectionRequest::STATUS_CANCELLED, $correction->fresh()->status);
+        $this->assertSame('Issued', $profile->clearance_status);
+        $this->assertSame('health_profiles/medical_certificates/kept.pdf', $profile->medical_certificate);
+        $this->assertNull($profile->resubmission_requested_at);
+        $this->assertNull($profile->pending_reason);
+    }
+
+    public function test_a_second_document_request_is_blocked_while_an_existing_request_is_open(): void
+    {
+        $user = User::factory()->create([
+            'user_role' => User::ROLE_STUDENT,
+            'user_type' => 'student',
+        ]);
+        $profile = HealthProfile::query()->create([
+            'user_id' => $user->id,
+            'clearance_status' => 'Issued',
+            'verified_at' => now()->subDay(),
+            'documents_valid' => true,
+        ]);
+        $existingRequest = HealthProfileCorrectionRequest::query()->create([
+            'user_id' => $user->id,
+            'health_profile_id' => $profile->id,
+            'type' => HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION,
+            'status' => HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+            'requested_at' => now(),
+        ]);
+        $request = Request::create('/health-profile/' . $profile->id . '/request-resubmission', 'POST', [
+            'pending_reason' => 'Please replace the medical certificate.',
+            'resubmission_required_documents' => ['medical_certificate'],
+        ]);
+
+        $response = app(AdminController::class)->requestHealthProfileResubmission($request, $profile->id);
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame(1, HealthProfileCorrectionRequest::query()->where('health_profile_id', $profile->id)->count());
+        $this->assertSame(HealthProfileCorrectionRequest::STATUS_SUBMITTED, $existingRequest->fresh()->status);
+        $this->assertNull($profile->fresh()->resubmission_requested_at);
     }
 
     public function test_it_marks_a_pending_health_profile_withdrawn_and_cancels_open_correction_requests(): void

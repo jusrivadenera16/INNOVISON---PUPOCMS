@@ -5379,7 +5379,15 @@
     }
 
     body.admin-inventory-page #itemModal .modal-box {
-        width: min(100%, 1080px) !important;
+        width: min(100%, 1020px) !important;
+    }
+
+    body.admin-inventory-page #itemModal #itemForm .modal-actions-row .btn-add {
+        min-width: 140px !important;
+        min-height: 48px !important;
+        height: 48px !important;
+        padding: 0 24px !important;
+        font-size: 13px !important;
     }
 
     body.admin-inventory-page #itemModal input.form-control,
@@ -5426,24 +5434,37 @@
 
     body.admin-inventory-page #inventoryImportModal .inventory-modal-head-main,
     body.admin-inventory-page #inventoryImportReviewModal .inventory-modal-head-main,
-    body.admin-inventory-page #itemModal .inventory-modal-head-main {
+    body.admin-inventory-page #itemModal .inventory-modal-head-main,
+    body.admin-inventory-page #restockModal .inventory-modal-head-main,
+    body.admin-inventory-page #issueModal .inventory-modal-head-main,
+    body.admin-inventory-page #viewItemModal .inventory-modal-head-main,
+    body.admin-inventory-page #historyModal .inventory-modal-head-main {
         display: grid;
         grid-template-columns: 42px minmax(0, 1fr);
-        grid-template-rows: auto auto;
+        grid-template-rows: max-content max-content;
         column-gap: 12px;
         row-gap: 3px;
         align-items: center;
+        align-content: center;
     }
 
     body.admin-inventory-page #inventoryImportModal .inventory-modal-title-row,
     body.admin-inventory-page #inventoryImportReviewModal .inventory-modal-title-row,
-    body.admin-inventory-page #itemModal .inventory-modal-title-row {
+    body.admin-inventory-page #itemModal .inventory-modal-title-row,
+    body.admin-inventory-page #restockModal .inventory-modal-title-row,
+    body.admin-inventory-page #issueModal .inventory-modal-title-row,
+    body.admin-inventory-page #viewItemModal .inventory-modal-title-row,
+    body.admin-inventory-page #historyModal .inventory-modal-title-row {
         display: contents;
     }
 
     body.admin-inventory-page #inventoryImportModal .inventory-modal-title-icon,
     body.admin-inventory-page #inventoryImportReviewModal .inventory-modal-title-icon,
-    body.admin-inventory-page #itemModal .inventory-modal-title-icon {
+    body.admin-inventory-page #itemModal .inventory-modal-title-icon,
+    body.admin-inventory-page #restockModal .inventory-modal-title-icon,
+    body.admin-inventory-page #issueModal .inventory-modal-title-icon,
+    body.admin-inventory-page #viewItemModal .inventory-modal-title-icon,
+    body.admin-inventory-page #historyModal .inventory-modal-title-icon {
         grid-column: 1;
         grid-row: 1 / span 2;
         align-self: center;
@@ -5451,15 +5472,25 @@
 
     body.admin-inventory-page #inventoryImportModal .inventory-modal-title,
     body.admin-inventory-page #inventoryImportReviewModal .inventory-modal-title,
-    body.admin-inventory-page #itemModal .inventory-modal-title {
+    body.admin-inventory-page #itemModal .inventory-modal-title,
+    body.admin-inventory-page #restockModal .inventory-modal-title,
+    body.admin-inventory-page #issueModal .inventory-modal-title,
+    body.admin-inventory-page #viewItemModal .inventory-modal-title,
+    body.admin-inventory-page #historyModal .inventory-modal-title {
         grid-column: 2;
         grid-row: 1;
         align-self: end;
+        margin: 0 !important;
+        line-height: 1.25;
     }
 
     body.admin-inventory-page #inventoryImportModal .inventory-modal-copy,
     body.admin-inventory-page #inventoryImportReviewModal .inventory-modal-copy,
-    body.admin-inventory-page #itemModal .inventory-modal-copy {
+    body.admin-inventory-page #itemModal .inventory-modal-copy,
+    body.admin-inventory-page #restockModal .inventory-modal-copy,
+    body.admin-inventory-page #issueModal .inventory-modal-copy,
+    body.admin-inventory-page #viewItemModal .inventory-modal-copy,
+    body.admin-inventory-page #historyModal .inventory-modal-copy {
         grid-column: 2;
         grid-row: 2;
         align-self: start;
@@ -6205,17 +6236,18 @@
     }
 
     body.admin-inventory-page #viewItemModal .inventory-modal-head {
-        gap: 10px;
-        padding: 10px 18px;
+        gap: 16px;
+        padding: 24px;
     }
 
     body.admin-inventory-page #viewItemModal .inventory-modal-head-main {
         display: grid;
-        grid-template-columns: 36px minmax(0, 1fr);
-        grid-template-rows: auto auto;
-        column-gap: 10px;
+        grid-template-columns: 48px minmax(0, 1fr);
+        grid-template-rows: max-content max-content;
+        column-gap: 14px;
         row-gap: 2px;
         align-items: center;
+        align-content: center;
     }
 
     body.admin-inventory-page #viewItemModal .inventory-modal-title-row {
@@ -6223,9 +6255,9 @@
     }
 
     body.admin-inventory-page #viewItemModal .inventory-modal-title-icon {
-        width: 36px;
-        height: 36px;
-        min-width: 36px;
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
         grid-column: 1;
         grid-row: 1 / span 2;
         align-self: center;
@@ -6244,8 +6276,8 @@
         grid-row: 2;
         align-self: start;
         margin: 0;
-        font-size: 12px;
-        line-height: 1.35;
+        font-size: 13.5px;
+        line-height: 1.4;
     }
 
     body.admin-inventory-page #viewItemModal .inventory-modal-body {
@@ -6452,12 +6484,14 @@
     body.admin-inventory-page #viewItemModal .view-item-history-action.is-stock_in { background: #dcfce7; color: #15803d; }
     body.admin-inventory-page #viewItemModal .view-item-history-action.is-issued { background: #fee2e2; color: #b91c1c; }
     body.admin-inventory-page #viewItemModal .view-item-history-action.is-adjusted { background: #fef3c7; color: #b45309; }
+    body.admin-inventory-page #viewItemModal .view-item-history-action.is-details_updated { background: #e0e7ff; color: #4338ca; }
 
     body.admin-inventory-page #viewItemModal .view-item-history-quantity {
         font-weight: 800;
         white-space: nowrap;
     }
 
+    body.admin-inventory-page #viewItemModal .view-item-history-quantity.is-neutral { color: #64748b; font-weight: 600; }
     body.admin-inventory-page #viewItemModal .view-item-history-quantity.is-positive { color: #15803d; }
     body.admin-inventory-page #viewItemModal .view-item-history-quantity.is-negative { color: #b91c1c; }
     body.admin-inventory-page #viewItemModal .view-item-history-stock { white-space: nowrap; }
@@ -6561,13 +6595,32 @@
         color: #86efac;
     }
 
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-quantity.is-neutral {
+        color: #cbd5e1;
+    }
+
     html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-quantity.is-negative {
         color: #fca5a5;
     }
 
     @media (max-width: 560px) {
         body.admin-inventory-page #viewItemModal .inventory-modal-head {
-            padding: 10px 12px;
+            padding: 18px 12px;
+        }
+
+        body.admin-inventory-page #viewItemModal .inventory-modal-head-main {
+            grid-template-columns: 44px minmax(0, 1fr);
+            column-gap: 10px;
+        }
+
+        body.admin-inventory-page #viewItemModal .inventory-modal-title-icon {
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+        }
+
+        body.admin-inventory-page #viewItemModal .inventory-modal-copy {
+            font-size: 12px;
         }
 
         body.admin-inventory-page #viewItemModal .inventory-modal-body {
@@ -6592,6 +6645,66 @@
             flex: 1 1 auto;
         }
     }
+
+    .inventory-post-confirm-dialog {
+        position: fixed;
+        inset: 0;
+        width: min(440px, calc(100% - 32px));
+        max-width: none;
+        max-height: calc(100% - 32px);
+        margin: auto;
+        padding: 0;
+        border: 1px solid rgba(112, 19, 27, .22);
+        border-radius: 16px;
+        background: #ffffff;
+        color: #111827;
+        overflow: auto;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, .34);
+    }
+    .inventory-post-confirm-dialog::backdrop { background: rgba(15, 23, 42, .68); backdrop-filter: blur(5px); }
+    .inventory-post-confirm-card { padding: 26px; text-align: center; }
+    .inventory-post-confirm-icon {
+        width: 54px;
+        height: 54px;
+        display: grid;
+        place-items: center;
+        margin: 0 auto 14px;
+        border-radius: 50%;
+        background: #fff7d6;
+        color: #70131b;
+    }
+    .inventory-post-confirm-icon svg { width: 27px; height: 27px; }
+    .inventory-post-confirm-title { margin: 0; color: #111827; font-size: 19px; font-weight: 800; }
+    .inventory-post-confirm-copy { margin: 8px 0 22px; color: #475569; font-size: 14px; line-height: 1.5; }
+    .inventory-post-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .inventory-post-confirm-actions button {
+        min-height: 44px;
+        border: 1px solid rgba(112, 19, 27, .24);
+        border-radius: 9px;
+        background: #ffffff;
+        color: #70131b;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: background .16s ease, color .16s ease, border-color .16s ease, transform .16s ease;
+    }
+    .inventory-post-confirm-actions button:last-child { border-color: #70131b; background: #70131b; color: #ffffff; }
+    .inventory-post-confirm-actions button:hover,
+    .inventory-post-confirm-actions button:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        outline: none;
+        transform: translateY(-1px);
+    }
+    html[data-theme="dark"] .inventory-post-confirm-dialog { border-color: rgba(250, 204, 21, .24); background: #111827; color: #f8fafc; }
+    html[data-theme="dark"] .inventory-post-confirm-title { color: #f8fafc; }
+    html[data-theme="dark"] .inventory-post-confirm-copy { color: #cbd5e1; }
+    html[data-theme="dark"] .inventory-post-confirm-actions button:first-child { border-color: #475569; background: #1e293b; color: #e2e8f0; }
+    html[data-theme="dark"] .inventory-post-confirm-actions button:last-child { border-color: #9f1239; background: #9f1239; color: #ffffff; }
+    html[data-theme="dark"] .inventory-post-confirm-actions button:hover,
+    html[data-theme="dark"] .inventory-post-confirm-actions button:focus-visible { border-color: #facc15; background: #facc15; color: #70131b; }
 </style>
 @endpush
 
@@ -6622,7 +6735,7 @@
         $inventoryExpiredItems = $inventoryCollection->filter(function ($item) {
             return $item->category == 'Medicine'
                 && $item->expiration_date
-                && \Carbon\Carbon::parse($item->expiration_date)->isPast();
+                && \Carbon\Carbon::parse($item->expiration_date)->endOfDay()->isPast();
         })->count();
         $inventoryLatestUpdatedAt = $inventoryCollection
             ->map(fn ($item) => $item->updated_at ?? $item->date_added ?? $item->created_at ?? null)
@@ -6774,7 +6887,7 @@
                 @forelse($items as $item)
                     @php
                         $isHighlightedItem = $highlightItemId !== '' && $highlightItemId === (string) $item->id;
-                        $isExpiredMedicine = $item->category == 'Medicine' && $item->expiration_date && \Carbon\Carbon::parse($item->expiration_date)->isPast();
+                        $isExpiredMedicine = $item->category == 'Medicine' && $item->expiration_date && \Carbon\Carbon::parse($item->expiration_date)->endOfDay()->isPast();
                         $highlightClass = $isHighlightedItem
                             ? ($isExpiredMedicine ? 'inventory-row-highlight-expired' : 'inventory-row-highlight')
                             : '';
@@ -6849,11 +6962,14 @@
                             @if($item->expiration_date && $item->expiration_date !== '0000-00-00')
                                 @php
                                     $expDate = \Carbon\Carbon::parse($item->expiration_date);
-                                    $isPast = $expDate->isPast();
+                                    $isPast = $expDate->copy()->endOfDay()->isPast();
                                     $dateColor = $isPast ? '#b91c1c' : '#c2410c';
+                                    $expiryLabel = $expDate->day === $expDate->daysInMonth
+                                        ? $expDate->format('M Y')
+                                        : $expDate->format('M d, Y');
                                 @endphp
                                 <small style="display:block; color: {{ $dateColor }}; font-weight:600;">
-                                    {{ $expDate->format('M d, Y') }}
+                                    {{ $expiryLabel }}
                                 </small>
                             @elseif($item->category === 'Medicine')
                                 <small style="display:block; color: #94a3b8; font-style: italic;">
@@ -7471,8 +7587,8 @@
                                     </div>
 
                                     <div id="medicineExpiryField" class="form-group">
-                                        <label>Expiration Date</label>
-                                        <input type="text" name="expiration_date" id="iExpDate" class="form-control" placeholder="YYYY-MM-DD, MM/YYYY, or YYYY (e.g., 2025-12-31, 12/2025, 2025)">
+                                        <label>Expiration Month &amp; Year</label>
+                                        <input type="month" name="expiration_date" id="iExpDate" class="form-control">
                                     </div>
                                 </div>
                             </div>
@@ -7720,6 +7836,7 @@
                                         <option value="stock_in">Stock In</option>
                                         <option value="issued">Issued</option>
                                         <option value="adjusted">Adjusted</option>
+                                        <option value="details_updated">Details Updated</option>
                                         <option value="other">Other</option>
                                     </select>
                                     <label class="view-item-history-date" aria-label="Filter by date">
@@ -7809,6 +7926,17 @@
             </div>
         </div>
     @endif
+    <dialog class="inventory-post-confirm-dialog" id="inventoryPostConfirmDialog" aria-labelledby="inventoryPostConfirmTitle" aria-describedby="inventoryPostConfirmCopy">
+        <div class="inventory-post-confirm-card">
+            <span class="inventory-post-confirm-icon" aria-hidden="true"><x-outline-icon name="exclamation-triangle" /></span>
+            <h3 class="inventory-post-confirm-title" id="inventoryPostConfirmTitle">Confirm Inventory Action</h3>
+            <p class="inventory-post-confirm-copy" id="inventoryPostConfirmCopy">Continue with this inventory action?</p>
+            <div class="inventory-post-confirm-actions">
+                <button type="button" id="inventoryPostConfirmCancel">Cancel</button>
+                <button type="button" id="inventoryPostConfirmProceed">Confirm</button>
+            </div>
+        </div>
+    </dialog>
 @endsection
 
 @push('scripts')
@@ -8545,7 +8673,7 @@
                     medicineTypeCustomInput.value = item.medicine_type || '';
                 }
             }
-            document.getElementById('iExpDate').value = item.expiration_date || '';
+            document.getElementById('iExpDate').value = String(item.expiration_date || '').slice(0, 7);
         }
         syncMedicineTypeDisplay();
         toggleDispensingFields();
@@ -8883,7 +9011,8 @@
         if (['created', 'initial', 'initial stock'].includes(normalized)) return 'initial';
         if (['restock', 'restocked', 'stock in'].includes(normalized)) return 'stock_in';
         if (['issued', 'dispensed', 'dispense', 'consumed', 'used'].includes(normalized)) return 'issued';
-        if (['adjusted', 'adjustment', 'edited'].includes(normalized)) return 'adjusted';
+        if (['edited', 'details updated', 'details_updated'].includes(normalized)) return 'details_updated';
+        if (['adjusted', 'adjustment'].includes(normalized)) return 'adjusted';
         return 'other';
     }
 
@@ -8893,6 +9022,7 @@
         if (category === 'stock_in') return 'Stock In';
         if (category === 'issued') return 'Issued';
         if (category === 'adjusted') return 'Adjusted';
+        if (category === 'details_updated') return 'Details Updated';
         return String(type || 'Movement').replace(/[_-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
     }
 
@@ -8953,8 +9083,11 @@
                 actionCell.appendChild(actionBadge);
 
                 const quantityCell = document.createElement('td');
-                quantityCell.className = `view-item-history-quantity ${quantity >= 0 ? 'is-positive' : 'is-negative'}`;
-                quantityCell.textContent = `${quantity > 0 ? '+' : ''}${formatInventoryHistoryNumber(quantity)} ${unit}`;
+                const isDetailsUpdate = category === 'details_updated';
+                quantityCell.className = `view-item-history-quantity ${isDetailsUpdate ? 'is-neutral' : quantity >= 0 ? 'is-positive' : 'is-negative'}`;
+                quantityCell.textContent = isDetailsUpdate
+                    ? '-'
+                    : `${quantity > 0 ? '+' : ''}${formatInventoryHistoryNumber(quantity)} ${unit}`;
 
                 const stockCell = document.createElement('td');
                 stockCell.className = 'view-item-history-stock';
@@ -9063,6 +9196,16 @@
                 ? displayValue(value)
                 : new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
         };
+        const formatExpirationDate = function(value) {
+            if (!value) return 'Not specified';
+            const date = new Date(`${value}T00:00:00`);
+            if (Number.isNaN(date.getTime())) return displayValue(value);
+            const isMonthEnd = date.getDate() === new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+            return new Intl.DateTimeFormat(undefined, isMonthEnd
+                ? { month: 'short', year: 'numeric' }
+                : { month: 'short', day: 'numeric', year: 'numeric' }
+            ).format(date);
+        };
         const setValue = function(id, value) {
             const element = document.getElementById(id);
             if (element) element.textContent = value;
@@ -9093,7 +9236,7 @@
             ? `${number(quantity * unitsPerStockUnit)} ${dispensingUnit}`
             : 'Not applicable');
         setValue('viewItemBatchNumber', displayValue(item.batch_number));
-        setValue('viewItemExpiration', formatDate(item.expiration_date));
+        setValue('viewItemExpiration', formatExpirationDate(item.expiration_date));
 
         viewItemHistoryActiveItemId = String(item.id || '');
         viewItemHistoryLoadedItemId = '';
@@ -9837,6 +9980,132 @@
         dispensingUnitWatcher.addEventListener('change', () => { syncDispensingUnitDisplay(); syncMinStockUnitLabel(); });
     }
     if (unitsPerStockUnitWatcher) unitsPerStockUnitWatcher.addEventListener('input', syncMinStockUnitLabel);
+
+    const inventoryPostConfirmDialog = document.getElementById('inventoryPostConfirmDialog');
+    const inventoryPostConfirmTitle = document.getElementById('inventoryPostConfirmTitle');
+    const inventoryPostConfirmCopy = document.getElementById('inventoryPostConfirmCopy');
+    const inventoryPostConfirmCancel = document.getElementById('inventoryPostConfirmCancel');
+    const inventoryPostConfirmProceed = document.getElementById('inventoryPostConfirmProceed');
+    let pendingInventoryPost = null;
+    let confirmedInventoryForm = null;
+    let confirmedInventorySubmitter = null;
+
+    function inventoryPostDetails(form, submitter) {
+        const action = submitter?.hasAttribute('formaction') ? submitter.formAction : form.action;
+        const path = new URL(action || window.location.href, window.location.href).pathname.replace(/\/$/, '');
+
+        if (path.endsWith('/inventory/import/analyze')) {
+            return {
+                title: 'Analyze Inventory Upload?',
+                message: 'Upload this file for analysis? This creates a review preview and does not change inventory stock yet.',
+                confirm: 'Analyze Upload',
+            };
+        }
+        if (path.endsWith('/inventory/import/commit')) {
+            const selectedCount = form.querySelectorAll('.inventory-import-row-select:checked').length;
+            if (selectedCount === 0) return null;
+            return {
+                title: 'Import Inventory Items?',
+                message: `Import ${selectedCount} selected row${selectedCount === 1 ? '' : 's'} into inventory? Existing matched items may be updated.`,
+                confirm: 'Import Items',
+            };
+        }
+        if (path.endsWith('/inventory/import/clear')) {
+            return {
+                title: 'Clear Import Preview?',
+                message: 'Discard this temporary import preview? No inventory stock will be changed.',
+                confirm: 'Clear Preview',
+            };
+        }
+        if (/\/inventory\/\d+\/restock$/.test(path)) {
+            const quantity = document.getElementById('restockQuantity')?.value || 'the entered quantity';
+            const item = document.getElementById('restockItemName')?.textContent?.split('. Current stock:')[0] || 'this item';
+            return {
+                title: 'Confirm Restock?',
+                message: `Add ${quantity} to ${item}? This will increase its recorded stock.`,
+                confirm: 'Save Restock',
+            };
+        }
+        if (/\/inventory\/\d+\/issue$/.test(path)) {
+            const quantity = document.getElementById('issueQuantity')?.value || 'the entered quantity';
+            const item = document.getElementById('issueItemReadonly')?.value || 'this item';
+            return {
+                title: 'Confirm Stock Issue?',
+                message: `Record ${quantity} ${document.getElementById('issueUnitLabel')?.textContent || ''} issued from ${item}? This will reduce its recorded stock.`,
+                confirm: 'Record Issue',
+            };
+        }
+        if (form.id === 'itemForm') {
+            const submitLabel = (submitter?.textContent || '').trim();
+            const isUpdate = Boolean(form.querySelector('input[name="_method"][value="PUT"]'));
+            const itemName = document.getElementById('iName')?.value?.trim();
+            return {
+                title: isUpdate ? 'Update Inventory Item?' : 'Save Inventory Item?',
+                message: `${isUpdate ? 'Save changes to' : 'Add'} ${itemName || 'this item'} in inventory?`,
+                confirm: submitLabel || (isUpdate ? 'Update Item' : 'Save Item'),
+            };
+        }
+
+        return {
+            title: 'Confirm Inventory Action',
+            message: 'Continue with this inventory action?',
+            confirm: (submitter?.textContent || 'Confirm').trim(),
+        };
+    }
+
+    document.addEventListener('submit', function(event) {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement) || form.method.toUpperCase() !== 'POST') return;
+
+        const submitter = event.submitter || null;
+        if (confirmedInventoryForm === form && confirmedInventorySubmitter === submitter) {
+            confirmedInventoryForm = null;
+            confirmedInventorySubmitter = null;
+            return;
+        }
+
+        const action = submitter?.hasAttribute('formaction') ? submitter.formAction : form.action;
+        const path = new URL(action || window.location.href, window.location.href).pathname;
+        if (!path.includes('/admin/inventory/') && !['itemForm', 'restockForm', 'issueForm', 'inventoryImportAnalyzeForm', 'inventoryImportCommitForm'].includes(form.id)) return;
+
+        const confirmation = inventoryPostDetails(form, submitter);
+        if (!confirmation || !inventoryPostConfirmDialog?.showModal) return;
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        pendingInventoryPost = { form, submitter };
+        if (inventoryPostConfirmTitle) inventoryPostConfirmTitle.textContent = confirmation.title;
+        if (inventoryPostConfirmCopy) inventoryPostConfirmCopy.textContent = confirmation.message;
+        if (inventoryPostConfirmProceed) inventoryPostConfirmProceed.textContent = confirmation.confirm;
+        if (!inventoryPostConfirmDialog.open) inventoryPostConfirmDialog.showModal();
+        inventoryPostConfirmProceed?.focus({ preventScroll: true });
+    }, true);
+
+    function closeInventoryPostConfirm() {
+        if (inventoryPostConfirmDialog?.open) inventoryPostConfirmDialog.close();
+        pendingInventoryPost = null;
+    }
+
+    inventoryPostConfirmCancel?.addEventListener('click', closeInventoryPostConfirm);
+    inventoryPostConfirmDialog?.addEventListener('cancel', function() {
+        pendingInventoryPost = null;
+    });
+    inventoryPostConfirmProceed?.addEventListener('click', function() {
+        if (!pendingInventoryPost) return;
+        const { form, submitter } = pendingInventoryPost;
+        pendingInventoryPost = null;
+        confirmedInventoryForm = form;
+        confirmedInventorySubmitter = submitter;
+        if (inventoryPostConfirmDialog?.open) inventoryPostConfirmDialog.close();
+        if (submitter) form.requestSubmit(submitter);
+        else form.requestSubmit();
+        window.setTimeout(function() {
+            if (confirmedInventoryForm === form) {
+                confirmedInventoryForm = null;
+                confirmedInventorySubmitter = null;
+            }
+        }, 0);
+    });
 </script>
 @endpush
 

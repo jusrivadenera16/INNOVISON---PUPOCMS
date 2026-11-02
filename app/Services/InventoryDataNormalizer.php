@@ -130,6 +130,60 @@ class InventoryDataNormalizer
         }
     }
 
+    public function normalizeExpirationDate(string $value): ?string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('/^(\d{4})-(\d{2})$/', $value, $matches)) {
+            $year = (int) $matches[1];
+            $month = (int) $matches[2];
+            if ($year >= 1900 && $year <= 2100 && $month >= 1 && $month <= 12) {
+                return Carbon::create($year, $month, 1)->endOfMonth()->toDateString();
+            }
+
+            return null;
+        }
+
+        if (preg_match('/^(\d{1,2})\/(\d{4})$/', $value, $matches)) {
+            $month = (int) $matches[1];
+            $year = (int) $matches[2];
+            if ($year >= 1900 && $year <= 2100 && $month >= 1 && $month <= 12) {
+                return Carbon::create($year, $month, 1)->endOfMonth()->toDateString();
+            }
+
+            return null;
+        }
+
+        if (preg_match('/^(\d{4})$/', $value, $matches)) {
+            $year = (int) $matches[1];
+            return $year >= 1900 && $year <= 2100
+                ? Carbon::create($year, 12, 31)->toDateString()
+                : null;
+        }
+
+        if (preg_match('/^([A-Za-z]+)\s+(\d{4})$/', $value, $matches)) {
+            $year = (int) $matches[2];
+            if ($year < 1900 || $year > 2100) {
+                return null;
+            }
+
+            foreach (['!F Y', '!M Y'] as $format) {
+                try {
+                    return Carbon::createFromFormat($format, $value)->endOfMonth()->toDateString();
+                } catch (\Throwable) {
+                    // Try the other month-name format.
+                }
+            }
+
+            return null;
+        }
+
+        return $this->normalizeDate($value);
+    }
+
     public function normalizeUnit(string $value): string
     {
         if ($value === '') {

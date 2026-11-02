@@ -66,6 +66,30 @@
         background: linear-gradient(180deg, #fffdf5, #ffffff);
     }
 
+    .public-doctor-out-notice {
+        margin: 0 0 20px;
+        padding: 13px 16px;
+        border: 1px solid rgba(180, 35, 50, 0.22);
+        border-left: 4px solid #9f2634;
+        border-radius: 12px;
+        background: #fff3f4;
+        color: #591a24;
+        font-size: 13px;
+        line-height: 1.55;
+    }
+
+    .public-doctor-out-notice strong {
+        display: block;
+        margin-bottom: 3px;
+        font-weight: 850;
+    }
+
+    html[data-theme="dark"] .public-doctor-out-notice {
+        border-color: rgba(248, 113, 113, 0.28);
+        background: rgba(127, 29, 29, 0.28);
+        color: #fee2e2;
+    }
+
     .public-appt-icon {
         display: inline-flex;
         align-items: center;
@@ -222,6 +246,13 @@
             <p class="public-appt-kicker">Clinic Appointments</p>
             <h1 class="public-appt-title">Book clinic services through One Portal</h1>
         </header>
+
+        @if(empty($doctorAvailable))
+            <div class="public-doctor-out-notice" role="status">
+                <strong>The doctor is currently out</strong>
+                Appointment booking and consultations are temporarily unavailable. Please check again when the doctor is marked available.
+            </div>
+        @endif
 
         <section class="public-appt-grid" aria-label="Public appointment access">
             <article class="public-appt-card">

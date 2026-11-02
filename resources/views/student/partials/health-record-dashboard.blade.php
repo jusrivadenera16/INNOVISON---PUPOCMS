@@ -1,6 +1,6 @@
 @php
     $healthSubmissionItems = collect($healthFormSubmissions ?? [])->values();
-    $latestHealthSubmission = $healthSubmissionItems->first();
+    $latestHealthSubmission = $healthSubmissionItems->first(fn ($submission) => strtolower(trim((string) $submission->status)) !== \App\Models\HealthFormSubmission::STATUS_CANCELLED);
     $oldestHealthSubmission = $healthSubmissionItems->sortBy('id')->first();
     $historyHealthSubmissionItems = $healthSubmissionItems->isNotEmpty()
         ? $healthSubmissionItems
@@ -41,6 +41,7 @@
         return match ($statusKey) {
             'requested' => ['Requested', 'is-requested'],
             'approved' => ['Approved', 'is-approved'],
+            'cancelled' => ['Cancelled', 'is-cancelled'],
             'needs_correction' => ['Needs Correction', 'is-correction'],
             default => ['Under Review', 'is-review'],
         };
@@ -354,6 +355,12 @@
                             <x-outline-icon name="document-text" />
                             Fill Up New Health Form
                         </a>
+                        @if($pendingHealthFormRequest && (int) $pendingHealthFormRequest->id === (int) $latestHealthSubmission->id)
+                            <form method="POST" action="{{ route('student.health_form.request.cancel', $pendingHealthFormRequest->id) }}" class="health-doc-cancel-form" onsubmit="return confirm('Cancel this Health Form request? Your current approved record will remain unchanged.');">
+                                @csrf
+                                <button type="submit" class="health-doc-action is-cancel"><x-outline-icon name="x-mark" /> Cancel Request</button>
+                            </form>
+                        @endif
                     @elseif($requiresHealthFormCorrection)
                         <a href="{{ $healthFormRoute }}" class="health-doc-action is-edit">
                             <x-outline-icon name="pencil-square" />
@@ -374,6 +381,16 @@
                             ><x-outline-icon name="document-text" /> Upload Files</button>
                         @elseif($requiresMissingESign)
                             <button type="button" class="health-doc-action is-primary health-doc-upload-button" onclick="openMissingESignModal()"><x-outline-icon name="pencil-square" /> Attach E-sign</button>
+                        @endif
+                        @if($activeHealthCorrectionRequest?->type === \App\Models\HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION
+                            && $activeHealthCorrectionRequest?->status === \App\Models\HealthProfileCorrectionRequest::STATUS_PENDING
+                            && (is_array(data_get($activeHealthCorrectionRequest?->metadata, 'previous_profile_state'))
+                                || (((bool) data_get($activeHealthCorrectionRequest?->metadata, 'was_already_issued') || $isIssuedStatus)
+                                    && !(bool) data_get($activeHealthCorrectionRequest?->metadata, 'cleared_document_references'))))
+                            <form method="POST" action="{{ route('student.health_record.correction_requests.cancel', $activeHealthCorrectionRequest->id) }}" class="health-doc-cancel-form" onsubmit="return confirm('Cancel this document resubmission request? Your existing approved files and clearance will be restored.');">
+                                @csrf
+                                <button type="submit" class="health-doc-action is-cancel"><x-outline-icon name="x-mark" /> Cancel Request</button>
+                            </form>
                         @endif
                     </div>
                 @endif

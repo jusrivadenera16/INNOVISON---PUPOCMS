@@ -7,6 +7,7 @@ use App\Http\Controllers\AppointmentController;
 use App\Models\ActivityLog;
 use App\Models\EmployeeHealthProfile;
 use App\Models\HealthFormSubmission;
+use App\Models\HealthProfileCorrectionRequest;
 use App\Models\HealthProfile;
 use App\Models\MarClearanceSubcategorySource;
 use App\Models\StudentMedicalAssessment;
@@ -61,6 +62,8 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
             $table->string('section')->nullable();
             $table->string('contact_no')->nullable();
             $table->string('reference_number')->nullable();
+            $table->string('sis_reference_number')->nullable();
+            $table->date('DOB')->nullable();
             $table->string('status')->default('active');
             $table->boolean('is_health_profile_completed')->default(false);
             $table->rememberToken();
@@ -86,6 +89,8 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
             $table->string('student_id')->nullable();
             $table->string('student_number')->nullable();
             $table->string('reference_number')->nullable();
+            $table->string('school_year')->nullable();
+            $table->string('health_form_category')->nullable();
             $table->string('clearance_status')->nullable();
             $table->string('physical_assessment_status')->nullable();
             $table->boolean('documents_valid')->default(false);
@@ -217,9 +222,17 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('health_profile_id')->nullable();
+            $table->string('category')->nullable();
+            $table->string('school_year')->nullable();
             $table->string('status')->nullable();
+            $table->string('pdf_path')->nullable();
+            $table->json('profile_snapshot')->nullable();
+            $table->timestamp('snapshot_captured_at')->nullable();
+            $table->unsignedBigInteger('requested_by_user_id')->nullable();
+            $table->timestamp('requested_at')->nullable();
             $table->timestamp('submitted_at')->nullable();
             $table->timestamp('approved_at')->nullable();
+            $table->text('remarks')->nullable();
             $table->timestamps();
         });
 
@@ -227,8 +240,17 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('health_profile_id')->nullable();
+            $table->unsignedBigInteger('health_form_submission_id')->nullable();
+            $table->string('profile_kind')->nullable();
+            $table->string('type')->nullable();
             $table->string('status')->nullable();
+            $table->json('required_documents')->nullable();
+            $table->text('admin_note')->nullable();
+            $table->unsignedBigInteger('requested_by_user_id')->nullable();
+            $table->timestamp('requested_at')->nullable();
+            $table->timestamp('submitted_at')->nullable();
             $table->timestamp('reviewed_at')->nullable();
+            $table->json('metadata')->nullable();
             $table->timestamps();
         });
 
@@ -923,6 +945,100 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
         $this->assertSame('Fully Cleared', $profile->fresh()->clearance_status);
         $this->assertSame('Not Yet Conducted', $profile->fresh()->physical_assessment_status);
         $this->assertTrue((bool) $profile->fresh()->documents_valid);
+        $this->assertTrue((bool) $student->fresh()->is_health_profile_completed);
+    }
+
+    public function test_clearance_approval_promotes_only_the_submitted_new_health_form_version(): void
+    {
+        $student = $this->makeStudent([
+            'student_type' => 'regular',
+            'contact_no' => '09111111111',
+            'DOB' => '2005-01-10',
+        ]);
+        $superadmin = $this->makeStaff();
+        $superadmin->user_role = User::ROLE_SUPERADMIN;
+        $superadmin->save();
+        $profile = $this->makeProfileFor($student, 'For Verification');
+        $profile->forceFill([
+            'home_address' => 'Old approved address',
+            'school_year' => '2025-2026',
+            'health_form_category' => 'Initial Submission',
+            'medical_condition_remarks' => 'Clinic assessment',
+        ])->save();
+        $previousVersion = HealthFormSubmission::create([
+            'user_id' => $student->id,
+            'health_profile_id' => $profile->id,
+            'category' => 'Initial Submission',
+            'status' => HealthFormSubmission::STATUS_APPROVED,
+            'submitted_at' => now()->subYear(),
+            'approved_at' => now()->subYear(),
+            'profile_snapshot' => [
+                'profile' => ['home_address' => 'Old approved address'],
+                'user' => ['contact_no' => '09111111111'],
+            ],
+        ]);
+        $newVersion = HealthFormSubmission::create([
+            'user_id' => $student->id,
+            'health_profile_id' => $profile->id,
+            'category' => 'Academic Year 2026-2027',
+            'school_year' => '2026-2027',
+            'status' => HealthFormSubmission::STATUS_SUBMITTED,
+            'submitted_at' => now(),
+            'profile_snapshot' => [
+                'profile' => [
+                    'home_address' => 'New submitted address',
+                    'school_year' => '2026-2027',
+                    'health_form_category' => 'Academic Year 2026-2027',
+                ],
+                'user' => [
+                    'contact_no' => '09222222222',
+                    'DOB' => '2005-02-12',
+                ],
+            ],
+        ]);
+        $newFormRequest = HealthProfileCorrectionRequest::create([
+            'user_id' => $student->id,
+            'health_profile_id' => $profile->id,
+            'health_form_submission_id' => $newVersion->id,
+            'profile_kind' => 'student',
+            'type' => HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM,
+            'status' => HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+            'requested_at' => now()->subDay(),
+            'submitted_at' => now(),
+        ]);
+        $this->actingAs($superadmin, 'admin');
+
+        $issuanceService = \Mockery::mock(MarClearanceIssuanceService::class);
+        $issuanceService->shouldReceive('syncApprovedHealthProfile')
+            ->once()
+            ->with(\Mockery::type(HealthProfile::class), true);
+        $this->app->instance(MarClearanceIssuanceService::class, $issuanceService);
+
+        $mailer = \Mockery::mock(StudentNotificationMailer::class);
+        $mailer->shouldReceive('sendHealthRecordNotice')
+            ->once()
+            ->with(\Mockery::type(User::class), 'approved', \Mockery::type('array'));
+        $this->app->instance(StudentNotificationMailer::class, $mailer);
+
+        $response = app(AdminController::class)->updateClearance(
+            Request::create('/health-profile/' . $profile->id . '/update', 'PUT', [
+                'clearance_status' => 'Fully Cleared',
+                'physical_assessment_status' => 'Not Yet Conducted',
+                'documents_valid' => 'on',
+                'medical_condition_remarks' => 'Clinic assessment',
+            ]),
+            $profile->id
+        );
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('New submitted address', $profile->fresh()->home_address);
+        $this->assertSame('2026-2027', $profile->fresh()->school_year);
+        $this->assertSame('Clinic assessment', $profile->fresh()->medical_condition_remarks);
+        $this->assertSame('09222222222', $student->fresh()->contact_no);
+        $this->assertSame('2005-02-12', $student->fresh()->DOB);
+        $this->assertSame(HealthFormSubmission::STATUS_APPROVED, $newVersion->fresh()->status);
+        $this->assertSame(HealthFormSubmission::STATUS_APPROVED, $previousVersion->fresh()->status);
+        $this->assertSame(HealthProfileCorrectionRequest::STATUS_APPROVED, $newFormRequest->fresh()->status);
         $this->assertTrue((bool) $student->fresh()->is_health_profile_completed);
     }
 

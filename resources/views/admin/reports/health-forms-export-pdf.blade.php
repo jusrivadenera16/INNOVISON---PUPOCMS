@@ -6,13 +6,22 @@
     $hasGovernmentLogo = file_exists($governmentLogo);
     $hasFooterImage = file_exists($footerImage);
     $periodLabel = $dateFrom->format('M d, Y') . ' - ' . $dateTo->format('M d, Y');
-    $resolveReportIdentity = static function ($staff, string $fallbackName = 'CLINIC STAFF', string $fallbackPosition = 'Nurse / Clinic Staff'): array {
+    $resolveReportIdentity = static function ($staff, string $fallbackName = 'CLINIC STAFF', string $fallbackPosition = ''): array {
         $profile = data_get($staff, 'adminProfile') ?: $staff;
-        $name = trim((string) (data_get($profile, 'report_name') ?: data_get($staff, 'report_name') ?: data_get($staff, 'name')));
+        $loggedInUser = auth('admin')->user() ?: auth()->user();
+        $loggedInName = trim((string) data_get($loggedInUser, 'name'));
+        $name = $loggedInName !== ''
+            ? $loggedInName
+            : trim((string) (data_get($profile, 'report_name') ?: data_get($staff, 'report_name') ?: data_get($staff, 'name')));
+        $name = $name !== '' ? $name : $fallbackName;
         $position = trim((string) (data_get($profile, 'report_position') ?: data_get($staff, 'report_position')));
+        $credentials = trim((string) (data_get($profile, 'report_credentials') ?: data_get($staff, 'report_credentials')));
+        if ($credentials !== '' && stripos($name, $credentials) === false) {
+            $name = trim($name . ', ' . $credentials, ', ');
+        }
 
         return [
-            'name' => $name !== '' ? $name : $fallbackName,
+            'name' => $name,
             'position' => $position !== '' ? $position : $fallbackPosition,
         ];
     };

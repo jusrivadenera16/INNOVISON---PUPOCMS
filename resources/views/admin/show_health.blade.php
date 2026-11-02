@@ -3008,6 +3008,86 @@
         background: #facc15 !important;
         color: #70131B !important;
     }
+
+    .pullout-confirm-overlay {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        margin: 0;
+        padding: 18px;
+        border: 0;
+        box-sizing: border-box;
+        background: rgba(15, 23, 42, .68);
+        backdrop-filter: blur(5px);
+        overflow: auto;
+    }
+
+    .pullout-confirm-overlay[open],
+    .pullout-confirm-overlay.is-open { display: flex; }
+    .pullout-confirm-overlay::backdrop { background: transparent; }
+
+    .pullout-confirm-card {
+        width: min(430px, 100%);
+        border: 1px solid rgba(112, 19, 27, .22);
+        border-radius: 16px;
+        background: #ffffff;
+        padding: 26px;
+        text-align: center;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, .34);
+    }
+
+    .pullout-confirm-icon {
+        width: 64px;
+        height: 64px;
+        display: grid;
+        place-items: center;
+        margin: 0 auto 16px;
+        border-radius: 50%;
+        background: #fff7d6;
+        color: #70131b;
+    }
+
+    .pullout-confirm-icon svg { width: 30px; height: 30px; }
+    .pullout-confirm-card h3 { margin: 0; color: #111827; font-size: 19px; font-weight: 900; }
+    .pullout-confirm-card p { margin: 8px 0 22px; color: #475569; font-size: 14px; line-height: 1.5; }
+    .pullout-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .pullout-confirm-actions button {
+        min-height: 46px;
+        border: 1px solid rgba(112, 19, 27, .24);
+        border-radius: 9px;
+        background: #ffffff;
+        color: #70131b;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: background .16s ease, color .16s ease, border-color .16s ease, transform .16s ease;
+    }
+
+    .pullout-confirm-actions button:last-child { border-color: #70131b; background: #70131b; color: #ffffff; }
+    .pullout-confirm-actions button:hover,
+    .pullout-confirm-actions button:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        outline: none;
+        transform: translateY(-1px);
+    }
+
+    html[data-theme="dark"] .pullout-confirm-card { border-color: rgba(250, 204, 21, .24); background: #111827; }
+    html[data-theme="dark"] .pullout-confirm-card h3 { color: #f8fafc; }
+    html[data-theme="dark"] .pullout-confirm-card p { color: #cbd5e1; }
+    html[data-theme="dark"] .pullout-confirm-actions button:first-child { border-color: #475569; background: #1e293b; color: #e2e8f0; }
+    html[data-theme="dark"] .pullout-confirm-actions button:last-child { border-color: #9f1239; background: #9f1239; color: #ffffff; }
+    html[data-theme="dark"] .pullout-confirm-actions button:hover,
+    html[data-theme="dark"] .pullout-confirm-actions button:focus-visible { border-color: #facc15; background: #facc15; color: #70131b; }
 </style>
 @endpush
 
@@ -3133,15 +3213,22 @@
         'not_applicable' => 'profile-status-default',
         default => 'profile-status-pending',
     };
+    $hasApprovedStudentHealthForm = $profileIsLocalStudent
+        && in_array(optional($currentHealthFormSubmission)->status, [
+            \App\Models\HealthFormSubmission::STATUS_APPROVED,
+            'Approved',
+        ], true);
+    $hasApprovedHealthRecord = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
+        || $hasApprovedStudentHealthForm;
     $canResyncPuptas = !$profileIsLocalOnly && !$isPulloutPending && !$isPulledOut
         && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && !in_array($puptasSyncRaw, ['synced', 'not_applicable'], true)
         && (optional(auth()->user())->canAccessPermission('health_records.update_assessment') ?? false);
     $canRequestFileCorrection = !$isPulloutPending && !$isPulledOut
-        && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
+        && $hasApprovedHealthRecord
         && (optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false);
     $canManageNewHealthForm = !$isPulloutPending && !$isPulledOut
-        && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
+        && $hasApprovedHealthRecord
         && (optional(auth()->user())->canAccessPermission('health_records.request_health_form') ?? false);
     $canRequestNewHealthForm = $canManageNewHealthForm && !$activeNewHealthFormRequest;
     $canViewExistingNewHealthFormRequest = $canManageNewHealthForm && (bool) $activeNewHealthFormRequest;
@@ -3161,12 +3248,19 @@
         : ($isPulledOut
             ? 'Restore Health Record'
             : 'Mark as Pulled Out');
-    $hasCorrectionRequest = !empty($profile->resubmission_required_documents) || !empty($profile->resubmission_requested_at);
-    $correctionStatusLabel = !$hasCorrectionRequest
-        ? 'None'
-        : (!empty($profile->resubmitted_at) && (empty($profile->resubmission_requested_at) || $profile->resubmitted_at->greaterThanOrEqualTo($profile->resubmission_requested_at))
-            ? 'Submitted'
-            : 'Pending');
+    $legacyCorrectionRequestIsActive = !empty($profile->resubmission_requested_at)
+        && (empty($profile->resubmitted_at) || $profile->resubmitted_at->lt($profile->resubmission_requested_at));
+    $hasCorrectionRequest = (bool) $activeFileCorrectionRequest
+        || $legacyCorrectionRequestIsActive
+        || !empty($profile->resubmission_required_documents);
+    $hasExistingFileCorrectionRequest = $canRequestFileCorrection && $hasCorrectionRequest;
+    $correctionStatusLabel = $activeFileCorrectionRequest
+        ? ucwords(str_replace('_', ' ', $activeFileCorrectionRequest->status))
+        : (!$hasCorrectionRequest
+            ? 'None'
+            : (!empty($profile->resubmitted_at) && (empty($profile->resubmission_requested_at) || $profile->resubmitted_at->greaterThanOrEqualTo($profile->resubmission_requested_at))
+                ? 'Submitted'
+                : 'Pending'));
     $correctionHistoryText = collect([
         $profile->resubmission_requested_at ? 'Requested: ' . $profile->resubmission_requested_at->format('M d, Y h:i A') : null,
         $profile->resubmitted_at ? 'Submitted: ' . $profile->resubmitted_at->format('M d, Y h:i A') : null,
@@ -3297,7 +3391,7 @@
                 <div class="profile-actions-menu" id="profileActionsMenu">
                     @if($canManageNewHealthForm)
                         <button type="button" id="openNewHealthFormModal">
-                            {{ $canViewExistingNewHealthFormRequest ? 'View Existing Request' : 'Request New Health Form' }}
+                            Request New Health Form
                             <span aria-hidden="true">@if($canViewExistingNewHealthFormRequest)&rarr;@else+@endif</span>
                         </button>
                     @endif
@@ -4164,6 +4258,20 @@
 </div>
 @endif
 
+@if($canViewPullout || $canManageNewHealthForm || $canRequestFileCorrection || $canUpdateMedicalAssessment || $canRevokeClearance)
+<dialog class="pullout-confirm-overlay" id="pulloutConfirmModal" aria-hidden="true" aria-labelledby="pulloutConfirmTitle" aria-describedby="pulloutConfirmMessage">
+    <div class="pullout-confirm-card">
+        <span class="pullout-confirm-icon" aria-hidden="true"><x-outline-icon name="exclamation-triangle" /></span>
+        <h3 id="pulloutConfirmTitle">Confirm Action</h3>
+        <p id="pulloutConfirmMessage">Are you sure you want to mark this health record as pulled out?</p>
+        <div class="pullout-confirm-actions">
+            <button type="button" id="pulloutConfirmCancel">Cancel</button>
+            <button type="button" id="pulloutConfirmProceed">Confirm</button>
+        </div>
+    </div>
+</dialog>
+@endif
+
 @if($canRevokeClearance)
     <div class="correction-modal" id="returnToPendingModal" aria-hidden="true">
         <div class="correction-card return-pending-card" role="dialog" aria-modal="true" aria-labelledby="returnPendingTitle">
@@ -4255,6 +4363,7 @@
                     </button>
                 </div>
             </div>
+            @if(!$hasExistingFileCorrectionRequest)
             <form method="POST" action="{{ route('admin.health_profile.request_resubmission', $profile->id) }}" class="correction-body" id="correctionRequestView">
                 @csrf
                 <div class="correction-note">
@@ -4313,25 +4422,41 @@
                     <button type="submit" class="correction-submit">Send Correction Request</button>
                 </div>
             </form>
+            @endif
             <div class="correction-status-view" id="correctionStatusView">
                 <div class="correction-info-list">
                     <div class="correction-info-row">
                         <span>Current Status</span>
                         <strong>{{ $correctionStatusLabel }}</strong>
                     </div>
+                    @if($activeFileCorrectionRequest)
+                        <div class="correction-info-row">
+                            <span>Request Type</span>
+                            <strong>{{ $activeFileCorrectionRequest->type === \App\Models\HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION ? 'Health Form Correction' : 'Document Resubmission' }}</strong>
+                        </div>
+                    @endif
                     <div class="correction-info-row">
                         <span>Last Request</span>
-                        <strong>{{ $profile->resubmission_requested_at ? $profile->resubmission_requested_at->format('M d, Y h:i A') : 'None' }}</strong>
+                        <strong>{{ optional($activeFileCorrectionRequest?->requested_at)->format('M d, Y h:i A') ?: ($profile->resubmission_requested_at?->format('M d, Y h:i A') ?: 'None') }}</strong>
                     </div>
                     <div class="correction-info-row">
                         <span>Submitted At</span>
-                        <strong>{{ $profile->resubmitted_at ? $profile->resubmitted_at->format('M d, Y h:i A') : 'None' }}</strong>
+                        <strong>{{ optional($activeFileCorrectionRequest?->submitted_at)->format('M d, Y h:i A') ?: ($profile->resubmitted_at?->format('M d, Y h:i A') ?: 'None') }}</strong>
                     </div>
                     <div class="correction-info-row">
                         <span>Reason</span>
-                        <strong>{{ $profile->pending_reason ?: 'None' }}</strong>
+                        <strong>{{ $activeFileCorrectionRequest?->admin_note ?: ($profile->pending_reason ?: 'None') }}</strong>
                     </div>
+                    @if($activeFileCorrectionRequest && !empty($activeFileCorrectionRequest->required_documents))
+                        <div class="correction-info-row">
+                            <span>Requested Documents</span>
+                            <strong>{{ collect($activeFileCorrectionRequest->required_documents)->map(fn ($document) => \Illuminate\Support\Str::headline($document))->implode(', ') }}</strong>
+                        </div>
+                    @endif
                 </div>
+                @if($hasExistingFileCorrectionRequest)
+                    <div class="correction-note">A correction request is already active for this record. This view shows the existing request; another request cannot be sent until it is closed.</div>
+                @endif
             </div>
             <div class="correction-history-view" id="correctionHistoryView">
                 <div class="correction-note">
@@ -4393,6 +4518,7 @@
     const correctionRequestView = document.getElementById('correctionRequestView');
     const correctionStatusView = document.getElementById('correctionStatusView');
     const correctionHistoryView = document.getElementById('correctionHistoryView');
+    const hasExistingFileCorrectionRequest = @json($hasExistingFileCorrectionRequest);
     const correctionModalBack = document.getElementById('correctionModalBack');
     const correctionActionsToggle = document.getElementById('correctionActionsToggle');
     const correctionActionsMenu = document.getElementById('correctionActionsMenu');
@@ -4406,6 +4532,17 @@
     const pulloutRequestModal = document.getElementById('pulloutRequestModal');
     const openPulloutRequestModal = document.getElementById('openPulloutRequestModal');
     const closePulloutRequestModal = document.getElementById('closePulloutRequestModal');
+    const pulloutConfirmModal = document.getElementById('pulloutConfirmModal');
+    const pulloutConfirmTitle = document.getElementById('pulloutConfirmTitle');
+    const pulloutConfirmMessage = document.getElementById('pulloutConfirmMessage');
+    const pulloutConfirmCancel = document.getElementById('pulloutConfirmCancel');
+    const pulloutConfirmProceed = document.getElementById('pulloutConfirmProceed');
+    let pendingHealthActionForm = null;
+    let pendingHealthActionSubmitter = null;
+    let confirmedHealthActionForm = null;
+    if (pulloutConfirmModal && pulloutConfirmModal.parentElement !== document.body) {
+        document.body.appendChild(pulloutConfirmModal);
+    }
     const shouldOpenPulloutModal = @json(
         $pulloutValidationErrors->has('pullout_reason')
         || $pulloutValidationErrors->has('pullout_request_remarks')
@@ -4617,6 +4754,70 @@
         pulloutRequestModal.setAttribute('aria-hidden', open ? 'false' : 'true');
     }
 
+    function setPulloutConfirmModal(open) {
+        if (!pulloutConfirmModal) return;
+        pulloutConfirmModal.setAttribute('aria-hidden', open ? 'false' : 'true');
+        if (open) {
+            if (typeof pulloutConfirmModal.showModal === 'function') {
+                if (!pulloutConfirmModal.open) pulloutConfirmModal.showModal();
+            } else {
+                pulloutConfirmModal.classList.add('is-open');
+            }
+            pulloutConfirmProceed?.focus({ preventScroll: true });
+        } else {
+            if (pulloutConfirmModal.open && typeof pulloutConfirmModal.close === 'function') {
+                pulloutConfirmModal.close();
+            }
+            pulloutConfirmModal.classList.remove('is-open');
+            pendingHealthActionSubmitter?.focus({ preventScroll: true });
+        }
+    }
+
+    pulloutConfirmCancel?.addEventListener('click', function () {
+        setPulloutConfirmModal(false);
+        pendingHealthActionForm = null;
+        pendingHealthActionSubmitter = null;
+    });
+
+    pulloutConfirmProceed?.addEventListener('click', function () {
+        if (!pendingHealthActionForm) return;
+        const form = pendingHealthActionForm;
+        const submitter = pendingHealthActionSubmitter;
+        confirmedHealthActionForm = form;
+        setPulloutConfirmModal(false);
+        pendingHealthActionForm = null;
+        pendingHealthActionSubmitter = null;
+        if (submitter) {
+            form.requestSubmit(submitter);
+        } else {
+            form.requestSubmit();
+        }
+    });
+
+    pulloutConfirmModal?.addEventListener('click', function (event) {
+        if (event.target === pulloutConfirmModal) {
+            setPulloutConfirmModal(false);
+            pendingHealthActionForm = null;
+            pendingHealthActionSubmitter = null;
+        }
+    });
+
+    pulloutConfirmModal?.addEventListener('cancel', function (event) {
+        event.preventDefault();
+        setPulloutConfirmModal(false);
+        pendingHealthActionForm = null;
+        pendingHealthActionSubmitter = null;
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && pulloutConfirmModal?.open) {
+            event.preventDefault();
+            setPulloutConfirmModal(false);
+            pendingHealthActionForm = null;
+            pendingHealthActionSubmitter = null;
+        }
+    });
+
     openPulloutRequestModal?.addEventListener('click', function () {
         setProfileActionsMenu(false);
         setPulloutRequestModal(true);
@@ -4678,11 +4879,13 @@
     }
 
     function setCorrectionView(view) {
-        const isRequest = view === 'request';
+        const effectiveView = hasExistingFileCorrectionRequest && view === 'request' ? 'status' : view;
+        const isRequest = effectiveView === 'request';
+        const isDefaultView = hasExistingFileCorrectionRequest ? effectiveView === 'status' : isRequest;
         correctionRequestView?.classList.toggle('is-hidden', !isRequest);
-        correctionStatusView?.classList.toggle('is-active', view === 'status');
-        correctionHistoryView?.classList.toggle('is-active', view === 'history');
-        correctionModalBack?.classList.toggle('is-visible', !isRequest);
+        correctionStatusView?.classList.toggle('is-active', effectiveView === 'status');
+        correctionHistoryView?.classList.toggle('is-active', effectiveView === 'history');
+        correctionModalBack?.classList.toggle('is-visible', !isDefaultView);
         setCorrectionActionsMenu(false);
     }
 
@@ -4732,7 +4935,7 @@
         correctionModal.classList.toggle('is-open', open);
         correctionModal.setAttribute('aria-hidden', open ? 'false' : 'true');
         if (open) {
-            setCorrectionView('request');
+            setCorrectionView(hasExistingFileCorrectionRequest ? 'status' : 'request');
         } else {
             setCorrectionActionsMenu(false);
         }
@@ -4789,6 +4992,84 @@
         if (event.target === correctionModal) {
             setCorrectionModal(false);
         }
+    });
+
+    function getHealthActionConfirmation(form, submitter) {
+        const actionText = (submitter?.textContent || '').trim().toLowerCase();
+        if (form.classList.contains('pullout-form')) {
+            if (actionText.includes('restore health record')) {
+                return {
+                    title: 'Confirm Restore',
+                    message: 'Restore this pulled-out health record to active clinic access? Its saved health information and documents will be retained.',
+                    confirm: 'Restore Record',
+                };
+            }
+            if (!actionText.includes('mark as pulled out')) return null;
+            return form.action.includes('/pullout/complete')
+                ? {
+                    title: 'Confirm Pullout',
+                    message: 'Complete the pullout for this health record? Its health information and documents will remain archived.',
+                    confirm: 'Mark as Pulled Out',
+                }
+                : {
+                    title: 'Confirm Pullout Request',
+                    message: 'Submit a pullout request for this health record? Its health information and documents will remain stored.',
+                    confirm: 'Send Request',
+                };
+        }
+
+        if (form.id === 'newHealthFormModal' || form.closest('#newHealthFormModal')) {
+            return {
+                title: 'Send Health Form Request?',
+                message: 'The student will be asked to submit a new Health Information Form. Continue?',
+                confirm: 'Send Request',
+            };
+        }
+        if (form.id === 'correctionRequestView') {
+            return {
+                title: 'Send File Correction Request?',
+                message: 'Send this request for the selected files or Health Form correction? Continue?',
+                confirm: 'Send Request',
+            };
+        }
+        if (form.id === 'medicalInformationUpdateForm') {
+            return {
+                title: 'Update Health Information?',
+                message: 'Save these changes to the health record?',
+                confirm: 'Update Record',
+            };
+        }
+        if (form.closest('#returnToPendingModal')) {
+            return {
+                title: 'Revoke Clearance?',
+                message: 'Revoke this clearance and return the record to Pending Approval? The submitted information and documents will stay saved.',
+                confirm: 'Revoke Clearance',
+            };
+        }
+
+        return null;
+    }
+
+    document.addEventListener('submit', function (event) {
+        if (event.defaultPrevented || !(event.target instanceof HTMLFormElement)) return;
+
+        const form = event.target;
+        if (confirmedHealthActionForm === form) {
+            confirmedHealthActionForm = null;
+            return;
+        }
+
+        const submitter = event.submitter || form.querySelector('button[type="submit"]');
+        const confirmation = getHealthActionConfirmation(form, submitter);
+        if (!confirmation) return;
+
+        event.preventDefault();
+        pendingHealthActionForm = form;
+        pendingHealthActionSubmitter = submitter;
+        if (pulloutConfirmTitle) pulloutConfirmTitle.textContent = confirmation.title;
+        if (pulloutConfirmMessage) pulloutConfirmMessage.textContent = confirmation.message;
+        if (pulloutConfirmProceed) pulloutConfirmProceed.textContent = confirmation.confirm;
+        setPulloutConfirmModal(true);
     });
 </script>
 @endpush

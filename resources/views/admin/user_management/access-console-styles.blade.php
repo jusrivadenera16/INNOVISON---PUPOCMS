@@ -353,65 +353,6 @@
     .access-onboard-role-option small { display: block; }
     .access-onboard-role-option small { margin-top: 3px; color: #838996; font-size: .71rem; }
     .access-onboard-role-option:has(input:checked) { border-color: #a2182a; background: #fff4f5; }
-    .access-onboard-module-slot { margin-top: 16px; }
-    #lookupModuleAccessSlot .um-module-access-preview { margin: 0; padding: 14px; border: 1px solid #eadfe2; border-radius: 8px; background: #fafcff; }
-    #lookupModuleAccessSlot .um-module-access-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 11px; }
-    #lookupModuleAccessSlot .um-module-access-head h5 { margin: 0; color: #811323; font-size: .92rem; font-weight: 900; }
-    #lookupModuleAccessSlot .um-module-access-head p { margin: 4px 0 0; color: #677184; font-size: .72rem; line-height: 1.4; }
-    #lookupModuleAccessSlot .um-preview-badge { display: inline-flex; min-height: 23px; flex: 0 0 auto; align-items: center; padding: 3px 7px; border: 1px solid #f3d08a; border-radius: 5px; color: #92400e; background: #fffbeb; font-size: 9px; font-weight: 900; text-transform: uppercase; }
-    #lookupModuleAccessSlot .um-module-access-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; padding: 9px 10px; border: 1px solid #e4e9ef; border-radius: 7px; background: #fff; }
-    #lookupModuleAccessSlot .um-module-selection-summary { min-width: 0; }
-    #lookupModuleAccessSlot .um-module-selection-summary strong { display: block; color: #2f3643; font-size: .76rem; font-weight: 900; }
-    #lookupModuleAccessSlot .um-module-selection-summary span { display: block; margin-top: 3px; color: #758093; font-size: .65rem; font-weight: 650; }
-    #lookupModuleAccessSlot .um-reset-module-defaults { min-height: 29px; flex: 0 0 auto; padding: 6px 8px; border: 1px solid #d7b7ba; border-radius: 6px; color: #70131b; background: #fff; font-size: .63rem; font-weight: 900; cursor: pointer; }
-    #lookupModuleAccessSlot .um-reset-module-defaults:hover,
-    #lookupModuleAccessSlot .um-reset-module-defaults:focus-visible { border-color: #8f1020; color: #70131b; background: #ffd21f; outline: none; }
-    #lookupModuleAccessSlot .um-module-access-grid { display: grid; grid-template-columns: 1fr; gap: 7px; }
-    #lookupModuleAccessSlot .um-module-item { overflow: hidden; border: 1px solid #e2e8f0; border-radius: 7px; background: #fff; transition: border-color .18s ease, background .18s ease, box-shadow .18s ease; }
-    #lookupModuleAccessSlot .um-module-item:hover { border-color: rgba(112, 19, 27, .3); }
-    #lookupModuleAccessSlot .um-module-item:has(.um-module-option input:checked) { border-color: rgba(112, 19, 27, .34); background: #fffafa; box-shadow: inset 3px 0 #8f1020; }
-    #lookupModuleAccessSlot .um-module-item.is-disabled { opacity: .62; background: #f8fafc; }
-    #lookupModuleAccessSlot .um-module-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
-    #lookupModuleAccessSlot .um-module-option { position: relative; display: grid; grid-template-columns: 29px minmax(0, 1fr) 18px; min-height: 57px; margin: 0; padding: 8px 8px 8px 10px; align-items: center; gap: 9px; border: 0; border-radius: 0; background: transparent; cursor: pointer; text-transform: none; letter-spacing: 0; }
-    #lookupModuleAccessSlot .um-module-option input,
-    #lookupModuleAccessSlot .um-action-permission input { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; }
-    #lookupModuleAccessSlot .um-module-icon { display: inline-flex; width: 29px; height: 29px; align-items: center; justify-content: center; border-radius: 7px; color: #8f1020; background: #fff0f2; }
-    #lookupModuleAccessSlot .um-module-icon svg { width: 15px !important; height: 15px !important; }
-    #lookupModuleAccessSlot .um-module-copy { min-width: 0; }
-    #lookupModuleAccessSlot .um-module-title { display: flex; min-width: 0; align-items: center; gap: 6px; }
-    #lookupModuleAccessSlot .um-module-title strong { display: block; min-width: 0; overflow: hidden; color: #27303d; font-size: .76rem; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
-    #lookupModuleAccessSlot .um-module-title > span { display: inline-flex; min-height: 16px; flex: 0 0 auto; align-items: center; padding: 2px 5px; border-radius: 4px; color: #475569; background: #f1f5f9; font-size: 8px; font-weight: 900; text-transform: uppercase; }
-    #lookupModuleAccessSlot .um-module-copy small { display: block; margin-top: 3px; color: #718096; font-size: .66rem; font-weight: 600; line-height: 1.3; }
-    #lookupModuleAccessSlot .um-module-check { display: inline-flex; width: 17px; height: 17px; align-items: center; justify-content: center; border: 1px solid #cbd5e1; border-radius: 5px; color: transparent; background: #fff; }
-    #lookupModuleAccessSlot .um-module-check svg { width: 11px !important; height: 11px !important; stroke-width: 2.5; }
-    #lookupModuleAccessSlot .um-module-option input:checked ~ .um-module-check { border-color: #8f1020; color: #fff; background: #8f1020; }
-    #lookupModuleAccessSlot .um-module-expand { display: inline-flex; width: 29px; height: 29px; margin-right: 8px; padding: 0; align-items: center; justify-content: center; border: 1px solid #e2e8f0; border-radius: 6px; color: #facc15; background: #fff; cursor: pointer; }
-    #lookupModuleAccessSlot .um-module-expand svg { width: 14px !important; height: 14px !important; transition: transform .18s ease; }
-    #lookupModuleAccessSlot .um-module-expand:hover,
-    #lookupModuleAccessSlot .um-module-expand:focus-visible { border-color: #ffd21f; color: #70131b; background: #ffd21f; outline: none; }
-    #lookupModuleAccessSlot .um-module-expand[aria-expanded="true"] svg { transform: rotate(180deg); }
-    #lookupModuleAccessSlot .um-module-actions { padding: 2px 10px 10px 46px; border-top: 1px solid #f1f5f9; background: #f8fafc; }
-    #lookupModuleAccessSlot .um-module-actions[hidden] { display: none; }
-    #lookupModuleAccessSlot .um-module-actions-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0 5px; }
-    #lookupModuleAccessSlot .um-module-actions-head strong { color: #475569; font-size: .62rem; font-weight: 900; text-transform: uppercase; }
-    #lookupModuleAccessSlot .um-module-actions-head span { color: #94a3b8; font-size: .58rem; font-weight: 700; }
-    #lookupModuleAccessSlot .um-action-permission { position: relative; display: grid; grid-template-columns: 17px minmax(0, 1fr); min-height: 42px; margin: 0; padding: 7px 8px; align-items: center; gap: 8px; border-top: 1px solid #eef2f7; color: #1e293b; cursor: pointer; text-transform: none; letter-spacing: 0; }
-    #lookupModuleAccessSlot .um-action-permission:has(input:checked) { background: #fff7f7; }
-    #lookupModuleAccessSlot .um-action-check { display: inline-flex; width: 16px; height: 16px; align-items: center; justify-content: center; border: 1px solid #cbd5e1; border-radius: 4px; color: transparent; background: #fff; }
-    #lookupModuleAccessSlot .um-action-check svg { width: 10px !important; height: 10px !important; stroke-width: 2.5; }
-    #lookupModuleAccessSlot .um-action-permission input:checked + .um-action-check { border-color: #8f1020; color: #fff; background: #8f1020; }
-    #lookupModuleAccessSlot .um-action-permission strong { display: block; color: #334155; font-size: .7rem; font-weight: 850; }
-    #lookupModuleAccessSlot .um-action-permission small { display: block; margin-top: 2px; color: #718096; font-size: .62rem; font-weight: 600; line-height: 1.3; }
-    #lookupModuleAccessSlot .um-action-permission.is-locked { grid-template-columns: 20px minmax(0, 1fr) auto; cursor: default; background: #fff8e6; }
-    #lookupModuleAccessSlot .um-action-lock { display: inline-flex; width: 19px; height: 19px; align-items: center; justify-content: center; border-radius: 50%; color: #fff; background: #70131b; }
-    #lookupModuleAccessSlot .um-action-lock svg { width: 11px !important; height: 11px !important; }
-    #lookupModuleAccessSlot .um-locked-badge { display: inline-flex; min-height: 19px; align-items: center; padding: 3px 5px; border-radius: 4px; color: #92400e; background: #fef3c7; font-size: .58rem; font-weight: 900; text-transform: uppercase; }
-    #lookupModuleAccessSlot .um-superadmin-access-summary { display: grid; grid-template-columns: 29px minmax(0, 1fr); gap: 9px; margin-top: 9px; padding: 9px; border: 1px solid #475569; border-radius: 7px; color: #f8fafc; background: #1f2937; }
-    #lookupModuleAccessSlot .um-superadmin-summary-icon { display: inline-flex; width: 29px; height: 29px; align-items: center; justify-content: center; border-radius: 7px; color: #fff; background: #70131b; }
-    #lookupModuleAccessSlot .um-superadmin-summary-icon svg { width: 15px !important; height: 15px !important; }
-    #lookupModuleAccessSlot .um-superadmin-access-summary strong { display: block; color: #ffffff; font-size: .7rem; font-weight: 900; }
-    #lookupModuleAccessSlot .um-superadmin-access-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
-    #lookupModuleAccessSlot .um-superadmin-access-list span { display: inline-flex; min-height: 18px; align-items: center; padding: 3px 5px; border: 1px solid #64748b; border-radius: 4px; color: #f8fafc; background: #111827; font-size: .58rem; font-weight: 750; }
     .access-onboard-footer { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 12px 17px; border-top: 1px solid #eee7e8; }
     .access-onboard-footer small { color: #818692; font-size: .71rem; }
     .access-onboard-footer__actions { display: flex; gap: 8px; }
@@ -921,32 +862,6 @@
     html[data-theme="dark"] #lookupModal .access-onboard-modal .um-sub { color: #edf2f8; }
     html[data-theme="dark"] #lookupModal .access-onboard-modal .um-table tr::after { color: #fda4af; }
     html[data-theme="dark"] .access-onboard-cancel { border-color: #4a5a70; color: #dce5f1; background: #172130; }
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-access-preview,
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-access-toolbar,
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-item,
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-expand,
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-check,
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-action-check { border-color: #35445a; background: #172130; }
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-access-head h5,
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-selection-summary strong,
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-title strong,
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-action-permission strong { color: #f4f7fb; }
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-access-head p,
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-selection-summary span,
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-copy small,
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-action-permission small { color: #aebacd; }
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-item:has(.um-module-option input:checked),
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-action-permission:has(input:checked) { border-color: #87404d; background: #36202a; }
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-actions { border-top-color: #2f3c4e; background: #111a26; }
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-action-permission { border-top-color: #2f3c4e; color: #e7edf6; }
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-title > span { color: #cbd5e1; background: #263347; }
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-icon { color: #fecdd3; background: #3a1d28; }
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-expand { color: #facc15; }
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-expand:hover,
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-module-expand:focus-visible { border-color: #ffd21f; color: #70131b; background: #ffd21f; }
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-superadmin-access-summary { border-color: #475569; color: #f8fafc; background: #1f2937; }
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-superadmin-access-summary strong { color: #ffffff; }
-    html[data-theme="dark"] #lookupModuleAccessSlot .um-superadmin-access-list span { border-color: #64748b; color: #f8fafc; background: #111827; }
     html[data-theme="dark"] .access-summary-modal { background: rgba(2, 6, 23, .72); }
     html[data-theme="dark"] .access-summary-modal__eyebrow { color: #fda4af; }
 

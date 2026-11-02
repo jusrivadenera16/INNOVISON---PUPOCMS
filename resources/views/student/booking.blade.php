@@ -797,6 +797,22 @@
         margin-bottom: 0;
         box-shadow: 0 12px 24px rgba(15, 23, 42, 0.05);
     }
+    .appt-item-link {
+        display: block;
+        color: inherit;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .appt-item-link:hover {
+        transform: translateY(-2px);
+        border-color: #8B0000;
+        box-shadow: 0 12px 24px rgba(139, 0, 0, 0.12);
+    }
+    .appt-item-link:focus-visible {
+        outline: 3px solid #facc15;
+        outline-offset: 3px;
+    }
     .appt-service { font-weight: 800; color: #8B0000; font-size: 14px; letter-spacing: 0.01em; }
     .appt-time { font-size: 13px; color: #555; margin-top: 6px; line-height: 1.6; }
     .appt-status { display: inline-block; margin-top: 8px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; }
@@ -1935,7 +1951,7 @@
         border-radius: 8px;
         line-height: 1.5;
     }
-    .booking-form-section textarea[name="remarks"]::placeholder {
+    .booking-form-section textarea[name="reason"]::placeholder {
         color: rgba(71, 85, 105, .48) !important;
         opacity: 1;
     }
@@ -2244,7 +2260,7 @@
         color: #facc15;
     }
     html[data-theme="dark"] .booking-restricted-message p { color: #cbd5e1; }
-    html[data-theme="dark"] .booking-form-section textarea[name="remarks"]::placeholder {
+    html[data-theme="dark"] .booking-form-section textarea[name="reason"]::placeholder {
         color: rgba(203, 213, 225, .48) !important;
     }
     html[data-theme="dark"] .booking-reminder-card {
@@ -2309,6 +2325,8 @@
 @endpush
 
 @section('content')
+@php($doctorUnavailable = empty($doctorAvailable))
+@php($bookingUnavailable = !empty($clinicClosure) || $doctorUnavailable)
 <div class="booking-page-shell">
 <div class="container booking-page-container">
     
@@ -2353,8 +2371,8 @@
                 <span class="page-header-stat-icon"><x-outline-icon name="calendar-days" /></span>
                 <span class="page-header-stat-copy">
                     <small>Available Slots</small>
-                    <strong id="headerAvailableSlots">{{ !empty($clinicClosure) ? 'Booking Closed' : 'Select a Date' }}</strong>
-                    <span id="headerAvailableSlotsNote">{{ !empty($clinicClosure) ? 'Temporarily unavailable' : 'Updates with your schedule' }}</span>
+                    <strong id="headerAvailableSlots">{{ $bookingUnavailable ? 'Booking Unavailable' : 'Select a Date' }}</strong>
+                    <span id="headerAvailableSlotsNote">{{ $bookingUnavailable ? 'Temporarily unavailable' : 'Updates with your schedule' }}</span>
                 </span>
             </div>
         </div>
@@ -2382,11 +2400,18 @@
                 </div>
             @endif
 
+            @if($doctorUnavailable)
+                <div class="booking-closure-notice doctor-unavailable-notice" role="status">
+                    <strong>The doctor is currently out</strong>
+                    <p>Appointment booking and consultations are temporarily unavailable. Please check again when the doctor is marked available.</p>
+                </div>
+            @endif
+
             @php($bookingRestricted = isset($bookingAccess) && empty($bookingAccess['allowed']))
             @php($bookingDateValue = $bookingFormLocked ? ($bookingFormAppointment?->date ? \Carbon\Carbon::parse($bookingFormAppointment->date)->toDateString() : '') : old('date', ''))
             @php($bookingTimeValue = $bookingFormLocked ? ($bookingFormAppointment?->time ? \Carbon\Carbon::parse($bookingFormAppointment->time)->format('H:i') : '') : old('time', ''))
             @php($bookingServiceValue = $bookingFormLocked ? ($bookingFormAppointment?->service ?? '') : old('service', ''))
-            @php($bookingRemarksValue = $bookingFormLocked ? ($bookingFormAppointment?->remarks ?? '') : old('remarks', ''))
+            @php($bookingReasonValue = $bookingFormLocked ? ($bookingFormAppointment?->reason ?? '') : old('reason', ''))
             <form id="bookingForm" method="POST" action="/student/appointments/store" autocomplete="off" novalidate>
                 @csrf 
                 @if (session('booking_retry_notice'))
@@ -2402,7 +2427,7 @@
                         <p>You already have a {{ strtolower($bookingFormAppointment->status) }} appointment. You can book again after this appointment is completed or cancelled.</p>
                     </div>
                 @endif
-                <fieldset class="booking-disabled-fields" {{ !empty($clinicClosure) || $bookingRestricted || $bookingFormLocked ? 'disabled' : '' }}>
+                <fieldset class="booking-disabled-fields" {{ $bookingUnavailable || $bookingRestricted || $bookingFormLocked ? 'disabled' : '' }}>
 
                 <div class="booking-subsection-title">
                     <x-outline-icon name="identification" />
@@ -2531,11 +2556,11 @@
 
                 <div class="booking-subsection-title">
                     <x-outline-icon name="document-text" />
-                    <span>Reason / Symptoms</span>
+                    <span>Reason</span>
                 </div>
 
                 <div class="input-group">
-                    <textarea name="remarks" class="form-control" placeholder="Briefly describe what you are feeling..." rows="3" required>{{ $bookingRemarksValue }}</textarea>
+                    <textarea name="reason" class="form-control" placeholder="Briefly describe what you are feeling..." rows="3" required>{{ $bookingReasonValue }}</textarea>
                     <small class="booking-field-help">Please provide as much detail as possible to help our nurse prepare for your consultation.</small>
                 </div>
 
@@ -2547,10 +2572,10 @@
                     </span>
                 </div>
 
-                <button type="submit" class="btn-submit" {{ $bookingFormLocked ? 'disabled' : '' }} aria-label="{{ $bookingFormLocked ? 'Active appointment exists' : (!empty($clinicClosure) ? 'Booking Temporarily Closed' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment')) }}">
+                <button type="submit" class="btn-submit" {{ $bookingFormLocked || $bookingUnavailable || $bookingRestricted ? 'disabled' : '' }} aria-label="{{ $bookingFormLocked ? 'Active appointment exists' : (!empty($clinicClosure) ? 'Booking Temporarily Closed' : ($doctorUnavailable ? 'Doctor Unavailable' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment'))) }}">
                     <span class="btn-submit-idle">
                         <x-outline-icon name="calendar-days" />
-                        <span>{{ $bookingFormLocked ? 'Active Appointment Exists' : (!empty($clinicClosure) ? 'Booking Temporarily Closed' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment')) }}</span>
+                        <span>{{ $bookingFormLocked ? 'Active Appointment Exists' : (!empty($clinicClosure) ? 'Booking Temporarily Closed' : ($doctorUnavailable ? 'Doctor Unavailable' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment'))) }}</span>
                         <x-outline-icon name="arrow-long-right" />
                     </span>
                     <span class="btn-submit-heartbeat" aria-hidden="true">
@@ -2592,7 +2617,7 @@
                     ?>
 
                     @forelse($visibleAppointments as $appt)
-                        <div class="appt-item">
+                        <a href="{{ url('/student/history') }}" class="appt-item appt-item-link" aria-label="View appointment history for {{ $appt->service }} on {{ \Carbon\Carbon::parse($appt->date)->format('M d, Y') }} at {{ \Carbon\Carbon::parse($appt->time)->format('g:i A') }}">
                             <div class="appt-service">{{ $appt->service }}</div>
                             <div class="appt-time">
                                 {{ \Carbon\Carbon::parse($appt->date)->format('M d, Y') }} <br> 
@@ -2612,7 +2637,7 @@
                                     </span>
                                 @endif
                             </div>
-                        </div>
+                        </a>
                     @empty
                         <div class="empty-state booking-empty-state">
                             <span class="empty-icon" aria-hidden="true"><x-outline-icon name="calendar-days" /></span>
@@ -2630,7 +2655,7 @@
                     @if($overflowAppointments->isNotEmpty())
                         <div id="moreAppointmentsList" class="appt-hidden-list">
                             @foreach($overflowAppointments as $appt)
-                                <div class="appt-item">
+                                <a href="{{ url('/student/history') }}" class="appt-item appt-item-link" aria-label="View appointment history for {{ $appt->service }} on {{ \Carbon\Carbon::parse($appt->date)->format('M d, Y') }} at {{ \Carbon\Carbon::parse($appt->time)->format('g:i A') }}">
                                     <div class="appt-service">{{ $appt->service }}</div>
                                     <div class="appt-time">
                                         {{ \Carbon\Carbon::parse($appt->date)->format('M d, Y') }} <br>
@@ -2650,7 +2675,7 @@
                                             </span>
                                         @endif
                                     </div>
-                                </div>
+                                </a>
                             @endforeach
                         </div>
 
@@ -2839,12 +2864,12 @@
         const serviceTypeSelect = document.getElementById('serviceTypeSelect');
         const serviceTypeDisplay = document.getElementById('serviceTypeDisplay');
         const serviceTypeMenu = document.getElementById('serviceTypeMenu');
-        const remarksField = bookingForm ? bookingForm.querySelector('[name="remarks"]') : null;
+        const reasonField = bookingForm ? bookingForm.querySelector('[name="reason"]') : null;
         const serviceTypeOptions = Array.from(document.querySelectorAll('.service-select-option'));
         const serviceTypeWrap = serviceTypeDisplay ? serviceTypeDisplay.closest('.service-select-wrap') : null;
         const headerAvailableSlots = document.getElementById('headerAvailableSlots');
         const headerAvailableSlotsNote = document.getElementById('headerAvailableSlotsNote');
-        const bookingClosed = @json(!empty($clinicClosure));
+        const bookingClosed = @json($bookingUnavailable);
         const bookingFormLocked = @json($bookingFormLocked);
         const availabilityUrl = @json(url('/student/appointments/availability'));
 
@@ -3341,7 +3366,7 @@
                     missingFields.push('service type');
                 }
 
-                if (!remarksField?.value.trim()) {
+                if (!reasonField?.value.trim()) {
                     missingFields.push('reason or symptoms');
                 }
 
@@ -3358,7 +3383,7 @@
                         serviceTypeDisplay?.focus();
                         setServiceTypeOpenState(true);
                     } else {
-                        remarksField?.focus();
+                        reasonField?.focus();
                     }
                     return;
                 }

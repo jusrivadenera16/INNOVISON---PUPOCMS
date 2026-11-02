@@ -7819,6 +7819,91 @@
             }
         }
 
+        .landing-doctor-status {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            width: 100%;
+            align-items: center;
+            gap: 10px;
+            margin: -6px 0 0;
+            color: rgba(255, 255, 255, .42);
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .landing-doctor-status__side {
+            display: flex;
+            min-width: 0;
+            align-items: center;
+        }
+
+        .landing-doctor-status__side--left {
+            justify-content: flex-end;
+            gap: 7px;
+        }
+
+        .landing-doctor-status__side--right {
+            justify-content: flex-start;
+        }
+
+        .landing-doctor-status__rule {
+            flex: 1 1 20px;
+            min-width: 8px;
+            height: 1px;
+            background: currentColor;
+        }
+
+        .landing-doctor-status__pulse {
+            flex: 0 0 48px;
+            width: 48px;
+            height: 24px;
+            overflow: visible;
+            color: #fb4057;
+            filter: drop-shadow(0 0 4px currentColor);
+        }
+
+        .landing-doctor-status__pulse path {
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .landing-doctor-status__label {
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .landing-doctor-status[data-status="in"] .landing-doctor-status__pulse,
+        .landing-doctor-status[data-status="in"] .landing-doctor-status__label strong {
+            color: #4ade80;
+        }
+
+        .landing-doctor-status[data-status="out"] .landing-doctor-status__pulse,
+        .landing-doctor-status[data-status="out"] .landing-doctor-status__label strong {
+            color: #fb4057;
+        }
+
+        .landing-doctor-status[data-status="closed"] .landing-doctor-status__pulse,
+        .landing-doctor-status[data-status="closed"] .landing-doctor-status__label strong {
+            color: #facc15;
+        }
+
+        @media (max-width: 640px) {
+            .landing-doctor-status {
+                gap: 5px;
+                font-size: 13px;
+            }
+
+            .landing-doctor-status__pulse {
+                flex-basis: 44px;
+                width: 44px;
+            }
+        }
+
 
     </style>
 </head>
@@ -7845,6 +7930,22 @@
         $landingWorkflow = app(\App\Services\ClinicWorkflowService::class);
         $saAdminWorkspaceAvailable = $landingWorkflow->studentAssistantWorkspaceAvailable();
         $saAdminWorkspaceHoursLabel = $landingWorkflow->studentAssistantHoursLabel();
+        try {
+            $landingDoctorAvailable = $landingWorkflow->doctorIsAvailable();
+        } catch (\Throwable) {
+            $landingDoctorAvailable = true;
+        }
+        try {
+            $landingStatusTime = now(config('app.timezone'));
+            $landingClinicHours = $landingWorkflow->clinicHoursStatus($landingStatusTime);
+            $landingClinicClosed = !($landingClinicHours['is_open'] ?? false)
+                || $landingWorkflow->activeClosure($landingStatusTime) !== null;
+        } catch (\Throwable) {
+            $landingClinicClosed = false;
+        }
+        $landingAvailabilityStatus = $landingClinicClosed ? 'closed' : ($landingDoctorAvailable ? 'in' : 'out');
+        $landingAvailabilityPrefix = $landingClinicClosed ? 'The Clinic is' : 'The Doctor is';
+        $landingAvailabilityValue = $landingClinicClosed ? 'CLOSED' : ($landingDoctorAvailable ? 'IN' : 'OUT');
 
         if ($landingAdminUser) {
             $workspaceHref = url('/admin/dashboard');
@@ -8427,6 +8528,29 @@
                                 </a>
                             @endif
 
+                            <p
+                                class="landing-doctor-status"
+                                id="landingDoctorAvailability"
+                                data-available="{{ $landingDoctorAvailable ? 'true' : 'false' }}"
+                                data-clinic-closed="{{ $landingClinicClosed ? 'true' : 'false' }}"
+                                data-status="{{ $landingAvailabilityStatus }}"
+                                role="status"
+                                aria-live="polite"
+                                aria-atomic="true"
+                                aria-label="{{ $landingAvailabilityPrefix }} {{ $landingAvailabilityValue }}"
+                            >
+                                <span class="landing-doctor-status__side landing-doctor-status__side--left" aria-hidden="true">
+                                    <span class="landing-doctor-status__rule"></span>
+                                    <svg class="landing-doctor-status__pulse" viewBox="0 0 58 24" focusable="false">
+                                        <path d="M1 12h12l4-1 6-6 7 14 5-18 7 11 4 0h10" />
+                                    </svg>
+                                </span>
+                                <span class="landing-doctor-status__label"><span>{{ $landingAvailabilityPrefix }}</span> <strong>{{ $landingAvailabilityValue }}</strong></span>
+                                <span class="landing-doctor-status__side landing-doctor-status__side--right" aria-hidden="true">
+                                    <span class="landing-doctor-status__rule"></span>
+                                </span>
+                            </p>
+
                             <div class="workspace-utility-actions gateway-utility">
                                 <button class="help-btn help-link" type="button" id="landingNeedHelpButton" aria-controls="landingHelpPanel" aria-expanded="false">
                                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -8809,6 +8933,8 @@
         const landingWeatherIconDuration = landingWeatherReducedMotion ? 0 : 420;
         const landingWeatherCloseIconDuration = landingWeatherPanelDuration;
         const landingWeatherRefreshInterval = 10 * 60 * 1000;
+        const landingDoctorAvailabilityStatus = document.getElementById('landingDoctorAvailability');
+        const landingDoctorAvailabilityEndpoint = @json(route('landing.doctor-availability'));
         let landingWeatherState = 'closed';
         let landingWeatherExpandedIcon = null;
         let landingWeatherHeroVisible = true;
@@ -8824,6 +8950,65 @@
             return new Promise(function (resolve) {
                 window.setTimeout(resolve, duration);
             });
+        }
+
+        function initializeLandingDoctorAvailability() {
+            const status = landingDoctorAvailabilityStatus;
+            if (!status || status.dataset.availabilityReady === '1') {
+                return;
+            }
+
+            status.dataset.availabilityReady = '1';
+            const labelPrefix = status.querySelector('.landing-doctor-status__label span');
+            const labelValue = status.querySelector('.landing-doctor-status__label strong');
+
+            function renderAvailability(available, clinicClosed) {
+                const isClosed = clinicClosed === true;
+                const prefix = isClosed ? 'The Clinic is' : 'The Doctor is';
+                const value = isClosed ? 'CLOSED' : (available ? 'IN' : 'OUT');
+
+                status.dataset.available = available ? 'true' : 'false';
+                status.dataset.clinicClosed = isClosed ? 'true' : 'false';
+                status.dataset.status = isClosed ? 'closed' : (available ? 'in' : 'out');
+                if (labelPrefix) {
+                    labelPrefix.textContent = prefix;
+                }
+                if (labelValue) {
+                    labelValue.textContent = value;
+                }
+                status.setAttribute('aria-label', prefix + ' ' + value);
+            }
+
+            async function refreshAvailability() {
+                if (document.visibilityState === 'hidden') {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(landingDoctorAvailabilityEndpoint, {
+                        headers: { Accept: 'application/json' },
+                        cache: 'no-store',
+                    });
+                    if (!response.ok) {
+                        return;
+                    }
+
+                    const payload = await response.json();
+                    if (typeof payload.available === 'boolean') {
+                        renderAvailability(payload.available, payload.clinic_closed === true);
+                    }
+                } catch (error) {
+                    // Keep the server-rendered status if the refresh request fails.
+                }
+            }
+
+            document.addEventListener('visibilitychange', function () {
+                if (document.visibilityState === 'visible') {
+                    refreshAvailability();
+                }
+            });
+            refreshAvailability();
+            window.setInterval(refreshAvailability, 30000);
         }
 
         function syncLandingWeatherOverlap() {
@@ -10206,6 +10391,7 @@
                 preloader.classList.remove('hidden');
             }
 
+            initializeLandingDoctorAvailability();
             initializeLandingEarpiece();
             initializeLandingChestpiece();
             initializeLandingHeroReveal();

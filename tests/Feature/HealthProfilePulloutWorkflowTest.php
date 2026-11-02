@@ -184,6 +184,28 @@ class HealthProfilePulloutWorkflowTest extends TestCase
         $this->assertSame('inactive', $owner->fresh()->status);
         $this->assertSame(3, ActivityLog::query()->where('subject_id', (string) $profile->id)->count());
 
+        $otherRestoreResponse = app(AdminController::class)->restoreHealthProfilePullout(
+            Request::create('/health-profile/' . $profile->id . '/pullout/restore', 'POST', [
+                'pullout_restore_reason_option' => 'other',
+                'pullout_restore_reason_other' => 'The account was reviewed and cleared for access.',
+            ]),
+            $profile->id
+        );
+
+        $this->assertSame(302, $otherRestoreResponse->getStatusCode());
+        $profile->refresh();
+        $this->assertSame('Other: The account was reviewed and cleared for access.', $profile->pullout_restore_reason);
+        $this->assertSame('active', $owner->fresh()->status);
+
+        app(AdminController::class)->requestHealthProfilePullout(
+            Request::create('/health-profile/' . $profile->id . '/pullout/request', 'POST', [
+                'pullout_reason' => 'Requested by the record owner',
+            ]),
+            $profile->id
+        );
+        $this->assertSame('inactive', $owner->fresh()->status);
+        $this->assertSame(5, ActivityLog::query()->where('subject_id', (string) $profile->id)->count());
+
         Auth::guard('admin')->logout();
         Auth::guard('student')->login($owner->fresh());
 

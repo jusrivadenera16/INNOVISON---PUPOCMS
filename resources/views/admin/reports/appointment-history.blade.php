@@ -623,7 +623,7 @@
                             <th>Treatment</th>
                             <th>Vitals</th>
                             <th>Attending Staff</th>
-                            <th>Complaint / Impression</th>
+                            <th>Reason / Impression</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -641,7 +641,7 @@
                                 $quantity = $medicineLines->isNotEmpty()
                                     ? $medicineLines->map(fn ($line) => rtrim(rtrim(number_format((float) $line->quantity, 2, '.', ''), '0'), '.'))->implode(', ')
                                     : $cons?->medicine_quantity;
-                                $complaint = trim((string) ($appt?->problem ?: $cons?->reason_for_visit));
+                                $complaint = trim((string) ($appt?->reason ?: $cons?->reason_for_visit));
                                 $impression = trim((string) ($cons?->comments ?? ''));
                                 $referralLabels = [
                                     'hospital_without_nurse' => 'Refer to Hospital (Without Nurse)',
@@ -687,8 +687,11 @@
                                 </td>
                                 <td>{{ $displayValue($staff, '-') }}</td>
                                 <td class="appt-notes">
-                                    <strong>Complaint:</strong> {{ $complaint !== '' ? $complaint : 'No complaint recorded' }}<br>
+                                    <strong>Reason:</strong> {{ $complaint !== '' ? $complaint : 'No reason recorded' }}<br>
                                     <strong>Impression:</strong> {{ $impression !== '' ? $impression : 'No assessment recorded' }}
+                                    @if(trim((string) ($appt?->remarks ?? '')) !== '' && trim((string) $appt->remarks) !== $impression)
+                                        <br><strong>Remarks:</strong> {{ $appt->remarks }}
+                                    @endif
                                     @if($referral !== '')
                                         <br><strong>Referral:</strong> {{ $referral }}
                                     @endif

@@ -830,6 +830,8 @@
         background: linear-gradient(135deg, #fff9e7, #fffdf8);
         border-color: rgba(245, 158, 11, 0.28);
     }
+    #infoModal #appointmentRemarksBlock[hidden] { display: none !important; }
+    #infoModal #mStatusAtRow[hidden] { display: none !important; }
     .appointment-notes-title {
         display: flex;
         align-items: center;
@@ -4628,6 +4630,7 @@
         text-transform: uppercase;
     }
     .appointment-action-field input,
+    .appointment-action-field select,
     .appointment-action-field textarea {
         width: 100%;
         border: 1px solid #d8dee8;
@@ -4641,12 +4644,17 @@
         height: 44px;
         padding: 0 12px;
     }
+    .appointment-action-field select {
+        height: 44px;
+        padding: 0 12px;
+    }
     .appointment-action-field textarea {
         min-height: 112px;
         padding: 12px;
         resize: vertical;
     }
     .appointment-action-field input:focus,
+    .appointment-action-field select:focus,
     .appointment-action-field textarea:focus {
         border-color: #8f2230;
         box-shadow: 0 0 0 3px rgba(143, 34, 48, .10);
@@ -4705,6 +4713,7 @@
     html[data-theme="dark"] .appointment-reschedule-summary strong,
     html[data-theme="dark"] .appointment-action-field label,
     html[data-theme="dark"] .appointment-action-field input,
+    html[data-theme="dark"] .appointment-action-field select,
     html[data-theme="dark"] .appointment-action-field textarea {
         color: #ffffff;
     }
@@ -4718,6 +4727,7 @@
     }
     html[data-theme="dark"] .appointment-queue-reference,
     html[data-theme="dark"] .appointment-action-field input,
+    html[data-theme="dark"] .appointment-action-field select,
     html[data-theme="dark"] .appointment-action-field textarea,
     html[data-theme="dark"] .appointment-queue-page-actions button,
     html[data-theme="dark"] .appointment-queue-page-size-trigger,
@@ -5562,6 +5572,165 @@
         color: #facc15 !important;
         stroke: #facc15 !important;
     }
+
+    .appointment-reason-dropdown {
+        position: relative;
+        width: 100%;
+    }
+    .appointment-reason-dropdown-toggle {
+        position: relative;
+        width: 100%;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        overflow: hidden;
+        padding: 0 12px;
+        border: 1px solid #ead3d7;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #70131B;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        text-align: left;
+        cursor: pointer;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .appointment-reason-dropdown-toggle::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(255, 247, 181, 0) 0%, rgba(255, 247, 181, .72) 45%, rgba(255, 247, 181, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.05s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+    .appointment-reason-dropdown-toggle > * {
+        position: relative;
+        z-index: 1;
+        color: inherit !important;
+    }
+    .appointment-reason-dropdown-toggle svg {
+        width: 17px;
+        height: 17px;
+        flex: 0 0 auto;
+    }
+    .appointment-reason-dropdown-toggle:hover,
+    .appointment-reason-dropdown-toggle:focus-visible,
+    .appointment-reason-dropdown.is-open .appointment-reason-dropdown-toggle {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        outline: none;
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .24);
+    }
+    .appointment-reason-dropdown-toggle:hover::after,
+    .appointment-reason-dropdown-toggle:focus-visible::after,
+    .appointment-reason-dropdown.is-open .appointment-reason-dropdown-toggle::after {
+        left: 125%;
+    }
+    .appointment-reason-dropdown-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        left: 0;
+        z-index: 120;
+        display: grid;
+        gap: 8px;
+        max-height: 220px;
+        overflow-y: auto;
+        padding: 10px;
+        border: 1px solid #ead3d7;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 22px 38px rgba(15, 23, 42, .20);
+    }
+    .appointment-reason-dropdown-menu[hidden] { display: none !important; }
+    .appointment-reason-dropdown-menu .appointments-status-option {
+        min-height: 38px !important;
+        border-radius: 8px !important;
+    }
+    html[data-theme="dark"] .appointment-reason-dropdown-toggle {
+        border-color: rgba(250, 204, 21, .24);
+        background: #0f172a;
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .appointment-reason-dropdown-menu {
+        border-color: rgba(250, 204, 21, .22);
+        background: #182334;
+        box-shadow: 0 22px 38px rgba(0, 0, 0, .38);
+    }
+    html[data-theme="dark"] .appointment-reason-dropdown-menu .appointments-status-option {
+        border-color: rgba(255, 255, 255, .16) !important;
+        background: #223044 !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .appointment-reason-dropdown-menu .appointments-status-option.is-selected {
+        border-color: #9f1d2d !important;
+        background: #9f1d2d !important;
+        color: #ffffff !important;
+    }
+    .appointment-reason-dropdown-menu .appointments-status-option:hover,
+    .appointment-reason-dropdown-menu .appointments-status-option:focus-visible,
+    .appointment-reason-dropdown-menu .appointments-status-option.is-selected:hover,
+    .appointment-reason-dropdown-menu .appointments-status-option.is-selected:focus-visible,
+    html[data-theme="dark"] .appointment-reason-dropdown-menu .appointments-status-option:hover,
+    html[data-theme="dark"] .appointment-reason-dropdown-menu .appointments-status-option:focus-visible,
+    html[data-theme="dark"] .appointment-reason-dropdown-menu .appointments-status-option.is-selected:hover,
+    html[data-theme="dark"] .appointment-reason-dropdown-menu .appointments-status-option.is-selected:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+    }
+
+    #infoModal #mRejectAction.btn-cancel:hover,
+    #infoModal #mRejectAction.btn-cancel:focus-visible,
+    #statusActionModal #statusActionConfirm.dialog-btn-reject:hover,
+    #statusActionModal #statusActionConfirm.dialog-btn-reject:focus-visible,
+    .appointment-action-menu-item.is-reject:hover,
+    .appointment-action-menu-item.is-reject:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 12px 22px rgba(250, 204, 21, .24) !important;
+    }
+    #infoModal #mRejectAction.btn-cancel:hover > span,
+    #infoModal #mRejectAction.btn-cancel:focus-visible > span,
+    #statusActionModal #statusActionConfirm.dialog-btn-reject:hover > span,
+    #statusActionModal #statusActionConfirm.dialog-btn-reject:focus-visible > span {
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+    }
+    .appointment-action-menu-item.is-reject:hover svg,
+    .appointment-action-menu-item.is-reject:focus-visible svg,
+    .appointment-action-menu-item.is-reject:hover svg *,
+    .appointment-action-menu-item.is-reject:focus-visible svg * {
+        color: #70131B !important;
+        stroke: #70131B !important;
+    }
+    #infoModal #mRejectAction.btn-cancel:hover svg,
+    #infoModal #mRejectAction.btn-cancel:focus-visible svg,
+    #statusActionModal #statusActionConfirm.dialog-btn-reject:hover svg,
+    #statusActionModal #statusActionConfirm.dialog-btn-reject:focus-visible svg {
+        color: #70131B !important;
+        stroke: #70131B !important;
+    }
+    #infoModal #mRejectAction.btn-cancel:hover::before,
+    #infoModal #mRejectAction.btn-cancel:focus-visible::before,
+    #statusActionModal #statusActionConfirm.dialog-btn-reject:hover::before,
+    #statusActionModal #statusActionConfirm.dialog-btn-reject:focus-visible::before {
+        transform: translateX(125%) !important;
+    }
 </style>
 @endpush
 
@@ -5748,7 +5917,7 @@
                 <span class="appointments-modern-icon"><x-outline-icon name="exclamation-triangle" /></span>
                 <div class="appointments-modern-copy">
                     <span class="appointments-modern-label">For Review</span>
-                    <strong>{{ $forReviewAppointments->count() }}</strong>
+                    <strong id="appointmentsForReviewCount" aria-live="polite">{{ $forReviewAppointments->count() }}</strong>
                     <span>Click to view</span>
                 </div>
                 <span class="appointments-modern-arrow" aria-hidden="true">&rarr;</span>
@@ -5836,7 +6005,8 @@
                         data-view-service="{{ $appt->service }}"
                         data-view-date="{{ $appt->date }}"
                         data-view-time="{{ $appt->time }}"
-                        data-view-remarks="{{ $appt->remarks ?? 'No notes provided.' }}"
+                        data-view-reason="{{ $appt->reason ?? '' }}"
+                        data-view-remarks="{{ $appt->remarks ?? '' }}"
                         data-view-clinical-findings="{{ $appt->clinical_findings_comment ?: '' }}"
                         data-view-email="{{ $appt->email }}"
                         data-view-status="{{ $appt->status }}"
@@ -5907,11 +6077,15 @@
                                     data-service="{{ $appt->service }}"
                                     data-date="{{ $appt->date }}"
                                     data-time="{{ $appt->time }}"
-                                    data-remarks="{{ $appt->remarks ?? 'No notes provided.' }}"
+                                    data-reason="{{ $appt->reason ?? '' }}"
+                                    data-remarks="{{ $appt->remarks ?? '' }}"
                                     data-clinical-findings="{{ $appt->clinical_findings_comment ?: '' }}"
                                     data-email="{{ $appt->email }}"
                                     data-status="{{ $appt->status }}"
                                     data-appointment-id="{{ $appt->id }}"
+                                    data-submitted-at="{{ optional($appt->created_at)->format('M d, Y g:i A') }}"
+                                    data-updated="{{ optional($appt->updated_at)->format('M d, Y g:i A') }}"
+                                    data-approved-at="{{ optional($appt->approved_at_display)->format('M d, Y g:i A') }}"
                                     onclick="openInfoModal(this)">
                                     <x-outline-icon name="eye" />
                                     View
@@ -5931,7 +6105,8 @@
                                             data-service="{{ $appt->service }}"
                                             data-date="{{ $appt->date }}"
                                             data-time="{{ $appt->time }}"
-                                            data-remarks="{{ $appt->remarks ?? 'No notes provided.' }}"
+                                            data-reason="{{ $appt->reason ?? '' }}"
+                                            data-remarks="{{ $appt->remarks ?? '' }}"
                                             data-clinical-findings="{{ $appt->clinical_findings_comment ?: '' }}"
                                             data-email="{{ $appt->email }}"
                                             data-status="{{ $appt->status }}"
@@ -6069,7 +6244,8 @@
                                     data-service="{{ $queueAppointment->service }}"
                                     data-date="{{ $queueAppointment->date }}"
                                     data-time="{{ $queueAppointment->time }}"
-                                    data-remarks="{{ $queueAppointment->remarks ?? 'No notes provided.' }}"
+                                    data-reason="{{ $queueAppointment->reason ?? '' }}"
+                                    data-remarks="{{ $queueAppointment->remarks ?? '' }}"
                                     data-clinical-findings="{{ $queueAppointment->clinical_findings_comment ?: '' }}"
                                     data-email="{{ $queueAppointment->email }}"
                                     data-status="{{ $queueAppointment->status }}"
@@ -6193,8 +6369,8 @@
                                 <span><x-outline-icon name="document-text" /> Submitted At</span>
                                 <strong id="mCreated">N/A</strong>
                             </div>
-                            <div>
-                                <span><x-outline-icon name="check" /> Approved At</span>
+                            <div id="mStatusAtRow" hidden>
+                                <span><x-outline-icon name="check" /> <span id="mStatusAtLabel">Status Updated At</span></span>
                                 <strong id="mApprovedAt">N/A</strong>
                             </div>
                         </div>
@@ -6203,12 +6379,21 @@
 
                 <section class="appointment-notes-panel">
                     <div class="appointment-notes-title">
-                        <span><x-outline-icon name="document-text" /> Notes</span>
-                        <button type="button" class="appointment-detail-copy" data-copy-target="mNotes" aria-label="Copy notes">
+                        <span><x-outline-icon name="document-text" /> Reason</span>
+                        <button type="button" class="appointment-detail-copy" data-copy-target="mReason" aria-label="Copy reason">
                             <x-outline-icon name="clipboard-document-list" />
                         </button>
                     </div>
-                    <p id="mNotes">N/A</p>
+                    <p id="mReason">N/A</p>
+                    <div id="appointmentRemarksBlock" hidden>
+                        <div class="appointment-notes-title">
+                            <span><x-outline-icon name="document-text" /> <span id="mRemarksLabel">Remarks</span></span>
+                            <button type="button" class="appointment-detail-copy" data-copy-target="mRemarks" aria-label="Copy remarks">
+                                <x-outline-icon name="clipboard-document-list" />
+                            </button>
+                        </div>
+                        <p id="mRemarks">N/A</p>
+                    </div>
                     <div class="appointment-clinical-findings" id="appointmentClinicalFindings" hidden>
                         <span><x-outline-icon name="clipboard-document-list" /> Clinical Findings</span>
                         <p id="mClinicalFindings">N/A</p>
@@ -6297,9 +6482,36 @@
                     </div>
                 </div>
                 <div class="appointment-action-field" id="statusReasonGroup" hidden>
-                    <label for="sApprovalMessage" id="statusReasonLabel">Rejection Reason</label>
-                    <textarea id="sApprovalMessage" placeholder="Enter the reason for rejecting this appointment."></textarea>
-                    <small id="statusReasonError" hidden>Please enter a rejection reason.</small>
+                    <div id="statusPresetReasonGroup">
+                        <label for="sApprovalReasonToggle" id="statusReasonLabel">Reason for Rejection</label>
+                        <select id="sApprovalReason" hidden>
+                            <option value="">Select a reason</option>
+                            <option value="Duplicate appointment">Duplicate appointment</option>
+                            <option value="Incomplete or invalid appointment details">Incomplete or invalid appointment details</option>
+                            <option value="Requested service is unavailable">Requested service is unavailable</option>
+                            <option value="Appointment slot is unavailable">Appointment slot is unavailable</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <div class="appointment-reason-dropdown" id="sApprovalReasonDropdown">
+                            <button type="button" class="appointment-reason-dropdown-toggle" id="sApprovalReasonToggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="sApprovalReasonMenu">
+                                <span data-selected-label>Select a reason</span>
+                                <x-outline-icon name="chevron-down" />
+                            </button>
+                            <div class="appointment-reason-dropdown-menu" id="sApprovalReasonMenu" role="listbox" aria-label="Rejection reasons" hidden>
+                                <button type="button" class="appointments-status-option is-selected" role="option" aria-selected="true" data-reason-value=""><span>Select a reason</span></button>
+                                <button type="button" class="appointments-status-option" role="option" aria-selected="false" data-reason-value="Duplicate appointment"><span>Duplicate appointment</span></button>
+                                <button type="button" class="appointments-status-option" role="option" aria-selected="false" data-reason-value="Incomplete or invalid appointment details"><span>Incomplete or invalid appointment details</span></button>
+                                <button type="button" class="appointments-status-option" role="option" aria-selected="false" data-reason-value="Requested service is unavailable"><span>Requested service is unavailable</span></button>
+                                <button type="button" class="appointments-status-option" role="option" aria-selected="false" data-reason-value="Appointment slot is unavailable"><span>Appointment slot is unavailable</span></button>
+                                <button type="button" class="appointments-status-option" role="option" aria-selected="false" data-reason-value="other"><span>Other</span></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="appointment-action-field" id="statusMessageGroup" hidden>
+                        <label for="sApprovalMessage" id="statusMessageLabel">Additional details</label>
+                        <textarea id="sApprovalMessage" placeholder="Enter the reason."></textarea>
+                    </div>
+                    <small id="statusReasonError" hidden>Please enter a reason for rejection.</small>
                 </div>
                 <div class="dialog-actions">
                     <button type="button" class="dialog-btn dialog-btn-secondary" onclick="closeStatusActionModal()"><span>Cancel</span></button>
@@ -6339,8 +6551,34 @@
                             <input type="time" name="time" id="rTime" required>
                         </div>
                         <div class="appointment-action-field is-full">
-                            <label for="rReason">Reason for Rescheduling</label>
-                            <textarea name="reschedule_reason" id="rReason" placeholder="Enter the reason for changing this schedule."></textarea>
+                            <label for="rReasonTypeToggle">Reason for Rescheduling</label>
+                            <select id="rReasonType" hidden>
+                                <option value="">Select a reason (optional)</option>
+                                <option value="Requester asked to change the schedule">Requester asked to change the schedule</option>
+                                <option value="Clinic schedule conflict">Clinic schedule conflict</option>
+                                <option value="Staff availability">Staff availability</option>
+                                <option value="Temporary clinic closure">Temporary clinic closure</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <div class="appointment-reason-dropdown" id="rReasonTypeDropdown">
+                                <button type="button" class="appointment-reason-dropdown-toggle" id="rReasonTypeToggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="rReasonTypeMenu">
+                                    <span data-selected-label>Select a reason (optional)</span>
+                                    <x-outline-icon name="chevron-down" />
+                                </button>
+                                <div class="appointment-reason-dropdown-menu" id="rReasonTypeMenu" role="listbox" aria-label="Rescheduling reasons" hidden>
+                                    <button type="button" class="appointments-status-option is-selected" role="option" aria-selected="true" data-reason-value=""><span>No reason (optional)</span></button>
+                                    <button type="button" class="appointments-status-option" role="option" aria-selected="false" data-reason-value="Requester asked to change the schedule"><span>Requester asked to change the schedule</span></button>
+                                    <button type="button" class="appointments-status-option" role="option" aria-selected="false" data-reason-value="Clinic schedule conflict"><span>Clinic schedule conflict</span></button>
+                                    <button type="button" class="appointments-status-option" role="option" aria-selected="false" data-reason-value="Staff availability"><span>Staff availability</span></button>
+                                    <button type="button" class="appointments-status-option" role="option" aria-selected="false" data-reason-value="Temporary clinic closure"><span>Temporary clinic closure</span></button>
+                                    <button type="button" class="appointments-status-option" role="option" aria-selected="false" data-reason-value="other"><span>Other</span></button>
+                                </div>
+                            </div>
+                            <input type="hidden" name="reschedule_reason" id="rReason">
+                            <div class="appointment-action-field" id="rescheduleOtherReasonGroup" hidden>
+                                <label for="rReasonOther">Please specify</label>
+                                <textarea id="rReasonOther" placeholder="Enter the reason for changing this schedule."></textarea>
+                            </div>
                         </div>
                     </div>
                     <div class="dialog-actions">
@@ -6364,6 +6602,59 @@
 
     function safeText(value) {
         return (value ?? '').toString().trim() || '-';
+    }
+
+    function initializeAppointmentReasonDropdown(selectId, dropdownId, toggleId, menuId) {
+        const select = document.getElementById(selectId);
+        const dropdown = document.getElementById(dropdownId);
+        const toggle = document.getElementById(toggleId);
+        const menu = document.getElementById(menuId);
+        const selectedLabel = toggle?.querySelector('[data-selected-label]');
+        const options = Array.from(menu?.querySelectorAll('[data-reason-value]') || []);
+        if (!select || !dropdown || !toggle || !menu || !selectedLabel) return;
+
+        const closeMenu = () => {
+            menu.hidden = true;
+            toggle.setAttribute('aria-expanded', 'false');
+            dropdown.classList.remove('is-open');
+        };
+        const refreshSelection = () => {
+            const selectedOption = Array.from(select.options).find((option) => option.value === select.value);
+            selectedLabel.textContent = selectedOption?.textContent.trim() || 'Select a reason';
+            options.forEach((optionButton) => {
+                const isSelected = optionButton.dataset.reasonValue === select.value;
+                optionButton.classList.toggle('is-selected', isSelected);
+                optionButton.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+            });
+        };
+        select.refreshReasonDropdown = refreshSelection;
+        select.closeReasonDropdown = closeMenu;
+        select.addEventListener('change', refreshSelection);
+
+        toggle.addEventListener('click', () => {
+            menu.hidden = !menu.hidden;
+            toggle.setAttribute('aria-expanded', menu.hidden ? 'false' : 'true');
+            dropdown.classList.toggle('is-open', !menu.hidden);
+        });
+        options.forEach((optionButton) => {
+            optionButton.addEventListener('click', () => {
+                select.value = optionButton.dataset.reasonValue || '';
+                refreshSelection();
+                closeMenu();
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                toggle.focus();
+            });
+        });
+        document.addEventListener('click', (event) => {
+            if (!dropdown.contains(event.target)) closeMenu();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !menu.hidden) {
+                event.preventDefault();
+                closeMenu();
+                toggle.focus();
+            }
+        });
     }
 
     function getNameInitials(value) {
@@ -6447,12 +6738,13 @@
         return { name, service, date, time };
     }
 
-    function openInfoModal(triggerOrName, service, date, time, remarks, email) {
+    function openInfoModal(triggerOrName, service, date, time, reason, email, remarks) {
         let payload = {
             name: triggerOrName,
             service,
             date,
             time,
+            reason,
             remarks,
             clinicalFindings: '',
             email,
@@ -6466,6 +6758,7 @@
             type: '',
             submittedAt: '',
             approvedAt: '',
+            updatedAt: '',
             consultation: null,
             showReviewActions: false,
             showConsultAction: false,
@@ -6488,6 +6781,7 @@
                 service: triggerOrName.dataset.service || rowData.viewService || '',
                 date: triggerOrName.dataset.date || rowData.viewDate || '',
                 time: triggerOrName.dataset.time || rowData.viewTime || '',
+                reason: triggerOrName.dataset.reason || rowData.viewReason || '',
                 remarks: triggerOrName.dataset.remarks || rowData.viewRemarks || '',
                 clinicalFindings: triggerOrName.dataset.clinicalFindings || rowData.viewClinicalFindings || '',
                 email: triggerOrName.dataset.email || rowData.viewEmail || '',
@@ -6502,6 +6796,7 @@
                 type: triggerOrName.dataset.type || rowData.viewType || '',
                 submittedAt: triggerOrName.dataset.submittedAt || triggerOrName.dataset.created || rowData.viewCreated || '',
                 approvedAt: triggerOrName.dataset.approvedAt || rowData.viewApprovedAt || '',
+                updatedAt: triggerOrName.dataset.updated || rowData.viewUpdated || '',
                 consultation,
                 showReviewActions: triggerOrName.dataset.showReviewActions === '1',
                 showConsultAction: triggerOrName.dataset.showConsultAction === '1',
@@ -6543,17 +6838,41 @@
         document.getElementById('mService').innerText = safeOrNA(payload.service);
         document.getElementById('mDate').innerText = dateText;
         document.getElementById('mTime').innerText = timeText;
-        document.getElementById('mNotes').innerText = safeOrNA(payload.remarks);
+        document.getElementById('mReason').innerText = safeOrNA(payload.reason);
+        document.getElementById('mRemarks').innerText = safeOrNA(payload.remarks);
         document.getElementById('mClinicalFindings').innerText = safeOrNA(payload.clinicalFindings);
         document.getElementById('mEmail').innerText = safeOrNA(payload.email);
         document.getElementById('mContact').innerText = safeOrNA(payload.contact);
         document.getElementById('mStudentId').innerText = (payload.idNumberLabel || 'ID Number') + ': ' + safeOrNA(payload.studentNumber);
         document.getElementById('mProgram').innerText = 'Program: ' + safeOrNA(payload.program);
         document.getElementById('mCreated').innerText = safeOrNA(payload.submittedAt);
-        document.getElementById('mApprovedAt').innerText = safeOrNA(payload.approvedAt);
         const statusEl = document.getElementById('mStatus');
         const normalizedStatus = safeText(payload.status);
         const statusText = normalizedStatus === '-' ? 'N/A' : normalizedStatus;
+        const statusKey = statusText.toLowerCase();
+        const remarksBlock = document.getElementById('appointmentRemarksBlock');
+        remarksBlock.hidden = statusKey === 'pending';
+        document.getElementById('mRemarksLabel').innerText = statusKey === 'rejected'
+            ? 'Reason for Rejection'
+            : (statusKey === 'cancelled' || statusKey === 'canceled' ? 'Cancellation Details' : 'Remarks');
+
+        const statusAtLabels = {
+            approved: 'Approved At',
+            scheduled: 'Scheduled At',
+            rejected: 'Rejected At',
+            cancelled: 'Cancelled At',
+            canceled: 'Cancelled At',
+            completed: 'Completed At',
+            rescheduled: 'Rescheduled At',
+            expired: 'Expired At',
+            missed: 'Missed At'
+        };
+        const statusAtRow = document.getElementById('mStatusAtRow');
+        const statusAtLabel = document.getElementById('mStatusAtLabel');
+        const statusAtValue = statusKey === 'approved' ? payload.approvedAt : payload.updatedAt;
+        statusAtRow.hidden = !statusKey || statusKey === 'pending' || statusKey === 'n/a';
+        statusAtLabel.innerText = statusAtLabels[statusKey] || 'Status Updated At';
+        document.getElementById('mApprovedAt').innerText = safeOrNA(statusAtValue);
         document.getElementById('mStatusText').innerText = statusText;
         document.getElementById('mStatusInline').innerText = statusText;
         statusEl.className = 'modal-status-badge ' + normalizedStatus.toLowerCase().replace(/\s+/g, '-');
@@ -6617,6 +6936,7 @@
             service: payload.service,
             date: payload.date,
             time: payload.time,
+            reason: payload.reason,
             remarks: payload.remarks,
             email: payload.email,
             contact: payload.contact,
@@ -6639,7 +6959,7 @@
             approveAction.hidden = !shouldShowReviewActions;
         }
         if (rejectAction) {
-            rejectAction.href = appointmentsBaseUrl + '/' + payload.id + '/Cancelled';
+            rejectAction.href = appointmentsBaseUrl + '/' + payload.id + '/Rejected';
             rejectAction.hidden = !shouldShowReviewActions;
         }
         if (rescheduleAction) {
@@ -6815,31 +7135,64 @@
         const summary = document.getElementById('statusActionSummary');
         const approvePrompt = document.getElementById('statusApprovePrompt');
         const reasonGroup = document.getElementById('statusReasonGroup');
-        const reasonLabel = document.getElementById('statusReasonLabel');
+        const presetReasonGroup = document.getElementById('statusPresetReasonGroup');
+        const reasonSelect = document.getElementById('sApprovalReason');
+        const reasonDropdown = document.getElementById('sApprovalReasonDropdown');
+        const messageGroup = document.getElementById('statusMessageGroup');
+        const messageLabel = document.getElementById('statusMessageLabel');
         const reasonError = document.getElementById('statusReasonError');
         const decisionMessage = document.getElementById('sApprovalMessage');
+        const isRejection = !isApprove && !isMissed;
 
         if (summary) summary.hidden = !isApprove;
         if (approvePrompt) approvePrompt.hidden = !isApprove;
         if (reasonGroup) reasonGroup.hidden = isApprove;
-        if (reasonLabel) reasonLabel.textContent = isMissed ? 'Missed Appointment Reason' : 'Rejection Reason';
         if (reasonError) reasonError.hidden = true;
+        if (reasonSelect) {
+            reasonSelect.closeReasonDropdown?.();
+            reasonSelect.value = '';
+            reasonSelect.required = isRejection;
+            reasonSelect.refreshReasonDropdown?.();
+        }
+        if (presetReasonGroup) presetReasonGroup.hidden = !isRejection;
+        if (reasonDropdown) reasonDropdown.hidden = !isRejection;
         if (decisionMessage) {
             decisionMessage.value = '';
             decisionMessage.placeholder = isMissed
                 ? 'Enter why this appointment is being marked as missed.'
-                : 'Enter the reason for rejecting this appointment.';
-            decisionMessage.required = !isApprove;
+                : 'Enter additional details.';
+            decisionMessage.required = isMissed;
         }
+        if (messageLabel) messageLabel.textContent = isMissed ? 'Missed Appointment Reason' : 'Additional Details';
+        if (messageGroup) messageGroup.hidden = !isMissed;
+
+        const syncReasonFields = () => {
+            const needsOtherDetails = isRejection && reasonSelect?.value === 'other';
+            if (messageGroup) messageGroup.hidden = !isMissed && !needsOtherDetails;
+            if (decisionMessage) decisionMessage.required = isMissed || needsOtherDetails;
+            if (reasonError) reasonError.hidden = true;
+        };
+        if (reasonSelect) reasonSelect.onchange = syncReasonFields;
+        if (decisionMessage) decisionMessage.oninput = () => {
+            if (reasonError) reasonError.hidden = true;
+        };
 
         const confirmBtn = document.getElementById('statusActionConfirm');
         confirmBtn.href = actionUrl;
         confirmBtn.onclick = function (event) {
-            const message = (document.getElementById('sApprovalMessage')?.value || '').trim();
-            if (!isApprove && !message) {
+            const selectedReason = reasonSelect?.value || '';
+            const otherDetails = (decisionMessage?.value || '').trim();
+            const message = isRejection
+                ? (selectedReason === 'other' ? (otherDetails ? 'Other: ' + otherDetails : '') : selectedReason)
+                : (isMissed ? otherDetails : '');
+            if ((isRejection && (!selectedReason || (selectedReason === 'other' && !otherDetails))) || (isMissed && !message)) {
                 event.preventDefault();
                 if (reasonError) reasonError.hidden = false;
-                decisionMessage?.focus();
+                reasonError.textContent = isRejection && !selectedReason
+                    ? 'Please select a reason for rejection.'
+                    : (isRejection ? 'Please enter the reason for rejection.' : 'Please enter a reason for marking this appointment as missed.');
+                if (isRejection && !selectedReason) reasonSelect?.focus();
+                else decisionMessage?.focus();
                 return false;
             }
 
@@ -6919,7 +7272,27 @@
         document.getElementById('rAppointmentId').innerText = appointmentId || 'N/A';
         document.getElementById('rDate').value = date;
         document.getElementById('rTime').value = (time || '').toString().slice(0, 5);
-        document.getElementById('rReason').value = '';
+        const reasonType = document.getElementById('rReasonType');
+        const otherReasonGroup = document.getElementById('rescheduleOtherReasonGroup');
+        const otherReason = document.getElementById('rReasonOther');
+        const storedReason = document.getElementById('rReason');
+        reasonType.value = '';
+        reasonType.closeReasonDropdown?.();
+        reasonType.refreshReasonDropdown?.();
+        otherReason.value = '';
+        storedReason.value = '';
+        const syncRescheduleReason = () => {
+            const isOther = reasonType.value === 'other';
+            otherReasonGroup.hidden = !isOther;
+            otherReason.required = isOther;
+            storedReason.value = isOther
+                ? (otherReason.value.trim() ? 'Other: ' + otherReason.value.trim() : '')
+                : reasonType.value;
+        };
+        reasonType.onchange = syncRescheduleReason;
+        otherReason.oninput = syncRescheduleReason;
+        form.onsubmit = syncRescheduleReason;
+        syncRescheduleReason();
         document.getElementById('rDate').setAttribute('min', new Date().toISOString().slice(0, 10));
         document.getElementById('rescheduleModal').style.display = 'flex';
     }
@@ -6946,6 +7319,20 @@
 
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
+            const openReasonDropdown = document.querySelector('.appointment-reason-dropdown.is-open');
+            if (openReasonDropdown) {
+                const reasonMenu = openReasonDropdown.querySelector('.appointment-reason-dropdown-menu');
+                const reasonToggle = openReasonDropdown.querySelector('.appointment-reason-dropdown-toggle');
+                if (reasonMenu && reasonToggle) {
+                    reasonMenu.hidden = true;
+                    reasonToggle.setAttribute('aria-expanded', 'false');
+                    openReasonDropdown.classList.remove('is-open');
+                    reasonToggle.focus();
+                    event.preventDefault();
+                    return;
+                }
+            }
+
             const rescheduleModal = document.getElementById('rescheduleModal');
             const statusModal = document.getElementById('statusActionModal');
             const infoModal = document.getElementById('infoModal');
@@ -6966,6 +7353,8 @@
     });
 
     document.addEventListener('DOMContentLoaded', function() {
+        initializeAppointmentReasonDropdown('sApprovalReason', 'sApprovalReasonDropdown', 'sApprovalReasonToggle', 'sApprovalReasonMenu');
+        initializeAppointmentReasonDropdown('rReasonType', 'rReasonTypeDropdown', 'rReasonTypeToggle', 'rReasonTypeMenu');
         document.querySelectorAll('.appointment-queue-modal').forEach(initializeAppointmentQueue);
 
         const consultAction = document.getElementById('mConsultAction');
@@ -7109,7 +7498,7 @@
         const statusWrap = document.getElementById('appointmentsStatusWrap');
         const statusDisplay = document.getElementById('appointmentsStatusDisplay');
         const statusMenu = document.getElementById('appointmentsStatusMenu');
-        const statusOptions = Array.from(document.querySelectorAll('.appointments-status-option'));
+        const statusOptions = Array.from(document.querySelectorAll('#appointmentsStatusMenu .appointments-status-option'));
         const filterReset = document.getElementById('appointmentsFilterReset');
         const filterClose = document.getElementById('appointmentsFilterClose');
         const appointmentRows = Array.from(document.querySelectorAll('[data-appointment-row]'));
@@ -7525,6 +7914,7 @@
                         service: row.dataset.viewService || '',
                         date: row.dataset.viewDate || '',
                         time: row.dataset.viewTime || '',
+                        reason: row.dataset.viewReason || '',
                         remarks: row.dataset.viewRemarks || '',
                         clinicalFindings: row.dataset.viewClinicalFindings || '',
                         email: row.dataset.viewEmail || '',
@@ -7536,6 +7926,7 @@
                         photoUrl: row.dataset.viewPhotoUrl || '',
                         created: row.dataset.viewCreated || '',
                         updated: row.dataset.viewUpdated || '',
+                        approvedAt: row.dataset.viewApprovedAt || '',
                     }
                 });
             });

@@ -3021,7 +3021,6 @@
         .missing-document-body {
             padding: 16px 16px 0;
         }
-        .missing-document-progress,
         .missing-document-row,
         .missing-document-esign-row,
         .missing-document-footer {
@@ -3029,12 +3028,6 @@
         }
         .missing-document-esign-action {
             width: 100%;
-        }
-        .missing-document-stat {
-            padding-left: 0;
-            border-left: 0;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 10px;
         }
         .missing-upload-actions {
             flex-direction: column;
@@ -3816,18 +3809,33 @@
     }
     .missing-document-modal .record-modal-close {
         display: inline-flex;
+        isolation: isolate;
         background: rgba(112, 19, 27, .45);
         border-color: rgba(255,255,255,.18);
         color: #ffffff;
         transition: background-color .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
     }
+    .missing-document-modal .record-modal-close::before {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        inset: 0;
+        background: #facc15;
+        transform: translateX(-102%);
+        transition: transform .28s ease;
+        pointer-events: none;
+    }
     .missing-document-modal .record-modal-close:hover,
     .missing-document-modal .record-modal-close:focus-visible {
-        background: #facc15;
+        background: rgba(112, 19, 27, .45);
         border-color: #facc15;
         color: #70131b;
         transform: translateY(-1px);
         outline: none;
+    }
+    .missing-document-modal .record-modal-close:hover::before,
+    .missing-document-modal .record-modal-close:focus-visible::before {
+        transform: translateX(0);
     }
     .missing-document-modal .record-modal-close:active {
         transform: translateY(0) scale(.96);
@@ -3840,59 +3848,6 @@
         padding: 22px 28px 0;
         background: #ffffff;
     }
-    .missing-document-progress {
-        display: grid;
-        grid-template-columns: minmax(250px, 1.3fr) repeat(3, minmax(130px, .65fr));
-        gap: 18px;
-        align-items: center;
-        padding: 12px 18px;
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        background: #ffffff;
-        box-shadow: 0 8px 20px rgba(15, 23, 42, .04);
-    }
-    .missing-document-progress-title {
-        margin: 0;
-        color: #111827;
-        font-size: 12px;
-        font-weight: 950;
-    }
-    .missing-document-progress-track {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 14px;
-        align-items: center;
-        margin-top: 8px;
-    }
-    .missing-document-progress-bar {
-        height: 8px;
-        border-radius: 999px;
-        background: #f1f5f9;
-        overflow: hidden;
-    }
-    .missing-document-progress-fill {
-        display: block;
-        width: 0%;
-        height: 100%;
-        border-radius: inherit;
-        background: #8B0000;
-        transition: width .2s ease;
-    }
-    .missing-document-progress-count {
-        color: #8B0000;
-        font-size: 12px;
-        font-weight: 950;
-        white-space: nowrap;
-    }
-    .missing-document-stat {
-        display: grid;
-        grid-template-columns: 38px minmax(0, 1fr);
-        gap: 10px;
-        align-items: center;
-        padding-left: 18px;
-        border-left: 1px solid #e5e7eb;
-    }
-    .missing-document-stat-icon,
     .missing-document-row-icon,
     .missing-document-secure-icon {
         display: inline-flex;
@@ -3901,38 +3856,18 @@
         color: #8B0000;
         background: #fff1f2;
     }
-    .missing-document-stat-icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 999px;
-    }
-    .missing-document-stat-icon svg,
     .missing-document-row-icon svg,
     .missing-document-secure-icon svg,
     .missing-document-drop-icon svg {
         width: 20px;
         height: 20px;
     }
-    .missing-document-stat strong {
-        display: block;
-        color: #111827;
-        font-size: 12px;
-        font-weight: 950;
-        line-height: 1.15;
-    }
-    .missing-document-stat > div > span {
-        display: block;
-        margin-top: 2px;
-        color: #64748b;
-        font-size: 11px;
-        font-weight: 750;
-    }
     .missing-document-scroll {
         min-height: 0;
         overflow-y: auto;
         display: grid;
         gap: 10px;
-        padding: 20px 0;
+        padding: 0 0 20px;
     }
     .missing-document-row {
         display: grid;
@@ -3986,12 +3921,12 @@
         height: 56px;
         border-radius: 10px;
     }
-    .missing-document-row-title {
+    #missingDocumentModal .missing-document-row-title {
         display: flex;
         align-items: center;
         gap: 8px;
         margin: 0;
-        color: #111827;
+        color: #70131b !important;
         font-size: 14px;
         font-weight: 950;
         line-height: 1.2;
@@ -4226,6 +4161,9 @@
         background: #fff7f7;
         padding: 14px 16px;
     }
+    .missing-document-secure--scroll {
+        display: none;
+    }
     .missing-document-secure-icon {
         width: 36px;
         height: 36px;
@@ -4357,6 +4295,39 @@
         background: #ffffff;
         color: #70131B;
     }
+    #missingDocumentModal .missing-upload-actions .missing-esign-secondary {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        transition: background-color .18s ease, color .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    #missingDocumentModal .missing-upload-actions .missing-esign-secondary::before {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        inset: 0;
+        background: #facc15;
+        transform: translateX(-102%);
+        transition: transform .28s ease;
+        pointer-events: none;
+    }
+    #missingDocumentModal .missing-upload-actions .missing-esign-secondary:hover,
+    #missingDocumentModal .missing-upload-actions .missing-esign-secondary:focus-visible {
+        border-color: #facc15;
+        background: #ffffff;
+        color: #70131b;
+        box-shadow: 0 6px 14px rgba(250, 204, 21, .28);
+        transform: translateY(-1px);
+        outline: none;
+    }
+    #missingDocumentModal .missing-upload-actions .missing-esign-secondary:hover::before,
+    #missingDocumentModal .missing-upload-actions .missing-esign-secondary:focus-visible::before {
+        transform: translateX(0);
+    }
+    #missingDocumentModal .missing-upload-actions .missing-esign-secondary:active {
+        background: #facc15;
+        transform: translateY(0) scale(.98);
+    }
     .missing-esign-submit {
         position: relative;
         isolation: isolate;
@@ -4370,6 +4341,49 @@
         gap: 8px;
         min-width: 230px;
         transition: background-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .missing-document-modal .missing-esign-submit:disabled {
+        cursor: wait;
+        opacity: .78;
+    }
+    .missing-document-footer .missing-esign-submit:disabled,
+    .missing-document-footer .missing-esign-submit:disabled:hover,
+    .missing-document-footer .missing-esign-submit:disabled:focus-visible {
+        border-color: #8B0000;
+        background: #8B0000;
+        color: #ffffff;
+        box-shadow: none;
+        transform: none;
+    }
+    .missing-document-footer .missing-esign-submit:disabled:hover::after,
+    .missing-document-footer .missing-esign-submit:disabled:focus-visible::after {
+        animation: none;
+    }
+    .missing-document-body.is-submitting .missing-document-scroll {
+        opacity: .62;
+    }
+    .missing-document-modal .missing-document-submit-dots {
+        display: inline-flex;
+        min-width: 1.25em;
+    }
+    .missing-document-modal .missing-document-submit-dots span {
+        animation: missingDocumentDotPulse 1s infinite ease-in-out;
+    }
+    .missing-document-modal .missing-document-submit-dots span:nth-child(2) {
+        animation-delay: .15s;
+    }
+    .missing-document-modal .missing-document-submit-dots span:nth-child(3) {
+        animation-delay: .3s;
+    }
+    @keyframes missingDocumentDotPulse {
+        0%, 60%, 100% { opacity: .25; }
+        30% { opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .missing-document-modal .missing-document-submit-dots span {
+            animation: none;
+            opacity: 1;
+        }
     }
     .missing-document-footer .missing-esign-submit::after {
         content: '';
@@ -4445,30 +4459,240 @@
             height: auto;
             max-height: calc(100vh - 24px);
         }
-        .missing-document-progress,
-        .missing-document-row,
+        .missing-document-body {
+            padding: 18px 18px 0;
+        }
+        .missing-document-scroll {
+            gap: 14px;
+            padding-bottom: 16px;
+        }
+        .missing-document-row {
+            grid-template-columns: 66px minmax(0, 1fr) !important;
+            grid-template-rows: auto auto;
+            column-gap: 12px;
+            row-gap: 12px;
+            align-items: start;
+            padding: 16px;
+        }
+        .missing-document-row > .missing-document-row-icon {
+            grid-column: 1;
+            grid-row: 1;
+            width: 66px;
+            height: 66px;
+        }
+        .missing-document-row > div:nth-child(2) {
+            grid-column: 2;
+            grid-row: 1;
+            min-width: 0;
+        }
+        #missingDocumentModal .missing-document-row-title {
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 6px;
+            color: #70131b !important;
+            font-size: 18px;
+            line-height: 1.18;
+        }
+        .missing-document-required {
+            padding: 4px 8px;
+            font-size: 9px;
+        }
+        .missing-document-description {
+            margin-top: 7px;
+            font-size: 13px;
+            line-height: 1.3;
+        }
+        .missing-document-meta {
+            box-sizing: border-box;
+            width: calc(100% + 78px);
+            margin: 12px 0 0 -78px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: #f1f3f6;
+            color: #475569;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+        .missing-document-row .field-error-message,
+        .missing-document-client-error {
+            box-sizing: border-box;
+            width: calc(100% + 78px);
+            margin-left: -78px;
+        }
+        .missing-document-row > .missing-document-upload-box {
+            grid-column: 1 / -1;
+            grid-row: 2;
+            width: 100%;
+            min-width: 0;
+            min-height: 138px;
+            border-radius: 12px;
+        }
+        .missing-document-upload-box > span:first-of-type {
+            display: flex;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+        }
+        .missing-document-drop-icon {
+            margin-bottom: 8px;
+        }
+        .missing-document-drop-icon svg {
+            width: 34px;
+            height: 34px;
+        }
+        .missing-document-upload-title {
+            font-size: 14px;
+        }
+        .missing-document-upload-or {
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        .missing-document-choose {
+            min-width: min(214px, 100%);
+            min-height: 38px;
+            padding: 8px 16px;
+            font-size: 15px;
+        }
         .missing-document-esign-row,
         .missing-document-footer {
             grid-template-columns: minmax(0, 1fr) !important;
         }
-        .missing-document-row,
         .missing-document-esign-row {
             min-width: 0;
         }
-        .missing-document-upload-box {
+        .missing-document-footer {
+            padding: 12px 0 16px;
+        }
+        .missing-document-secure--footer {
+            display: none;
+        }
+        .missing-document-secure--scroll {
+            display: grid;
             width: 100%;
-            min-width: 0;
+            max-width: none;
         }
         .missing-upload-actions {
             width: 100%;
-            flex-direction: column !important;
+            flex-direction: row !important;
             align-items: stretch;
         }
         .missing-upload-actions .missing-esign-secondary,
         .missing-upload-actions .missing-esign-submit {
-            width: 100%;
+            flex: 1 1 0;
+            width: auto;
             min-width: 0;
         }
+    }
+
+    html[data-theme="dark"] #missingDocumentModal .missing-document-modal {
+        border-color: #2f3847 !important;
+        background: #0f131a !important;
+        color: #e5eaf3 !important;
+    }
+    html[data-theme="dark"] #missingDocumentModal .missing-document-body,
+    html[data-theme="dark"] #missingDocumentModal .missing-document-footer {
+        border-color: #2f3847 !important;
+        background: #0f131a !important;
+        color: #e5eaf3 !important;
+    }
+    html[data-theme="dark"] #missingDocumentModal .missing-document-row,
+    html[data-theme="dark"] #missingDocumentModal .missing-document-esign-row {
+        border-color: #2f3847 !important;
+        background: #171d27 !important;
+    }
+    html[data-theme="dark"] #missingDocumentModal .missing-document-row-icon,
+    html[data-theme="dark"] #missingDocumentModal .missing-document-secure-icon {
+        background: #30151d !important;
+        color: #facc15 !important;
+    }
+    html[data-theme="dark"] #missingDocumentModal .missing-document-row-title {
+        color: #fde68a !important;
+    }
+    html[data-theme="dark"] #missingDocumentModal .missing-document-description,
+    html[data-theme="dark"] #missingDocumentModal .missing-document-meta,
+    html[data-theme="dark"] #missingDocumentModal .missing-document-upload-or,
+    html[data-theme="dark"] #missingDocumentModal .missing-document-preview-copy span,
+    html[data-theme="dark"] #missingDocumentModal .missing-document-secure span {
+        color: #cbd5e1 !important;
+    }
+    html[data-theme="dark"] #missingDocumentModal .missing-document-meta {
+        background: #202938 !important;
+    }
+    html[data-theme="dark"] #missingDocumentModal .missing-document-required {
+        border-color: rgba(251, 113, 133, .2) !important;
+        background: #3b111b !important;
+        color: #fecdd3 !important;
+    }
+    html[data-theme="dark"] #missingDocumentModal .missing-document-upload-box {
+        border-color: rgba(248, 113, 113, .55) !important;
+        background: #101722 !important;
+        color: #e5eaf3 !important;
+    }
+    html[data-theme="dark"] #missingDocumentModal .missing-document-upload-box.is-dragging {
+        background: #26151c !important;
+    }
+    html[data-theme="dark"] #missingDocumentModal .missing-document-upload-title,
+    html[data-theme="dark"] #missingDocumentModal .missing-document-file-name,
+    html[data-theme="dark"] #missingDocumentModal .missing-document-preview-copy strong,
+    html[data-theme="dark"] #missingDocumentModal .missing-document-secure strong {
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] #missingDocumentModal .missing-document-file-name {
+        color: #fca5a5 !important;
+    }
+    html[data-theme="dark"] #missingDocumentModal .missing-document-secure {
+        border: 1px solid rgba(248, 113, 113, .16) !important;
+        background: #24131a !important;
+    }
+    html[data-theme="dark"] #missingDocumentModal .missing-document-preview-thumb {
+        background: #30151d !important;
+        color: #fde68a !important;
+    }
+    html[data-theme="dark"] #missingDocumentModal .missing-document-preview-actions label,
+    html[data-theme="dark"] #missingDocumentModal .missing-document-preview-actions button,
+    html[data-theme="dark"] #missingDocumentModal .missing-esign-secondary {
+        border-color: #3b4658 !important;
+        background: #171d27 !important;
+        color: #fde68a !important;
+    }
+    html[data-theme="dark"] #missingDocumentModal .missing-upload-actions .missing-esign-secondary:hover,
+    html[data-theme="dark"] #missingDocumentModal .missing-upload-actions .missing-esign-secondary:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131b !important;
+    }
+    html[data-theme="dark"] #missingDocumentModal .field-error-message,
+    html[data-theme="dark"] #missingDocumentModal .missing-document-client-error {
+        color: #fca5a5 !important;
+    }
+    #missingDocumentModal .record-modal-title { font-size: 22.5px; }
+    #missingDocumentModal .record-modal-subtitle { font-size: 11.5px; }
+    #missingDocumentModal .missing-document-esign-action,
+    #missingDocumentModal .missing-esign-secondary,
+    #missingDocumentModal .missing-esign-submit { font-size: 11.5px; }
+    #missingDocumentModal .missing-document-row-title { font-size: 12.5px; }
+    #missingDocumentModal .missing-document-required { font-size: 6.5px; }
+    #missingDocumentModal .missing-document-preview-actions label,
+    #missingDocumentModal .missing-document-preview-actions button { font-size: 7.5px; }
+    #missingDocumentModal .missing-document-description,
+    #missingDocumentModal .missing-document-client-error,
+    #missingDocumentModal .missing-document-preview-copy strong { font-size: 9.5px; }
+    #missingDocumentModal .missing-document-meta,
+    #missingDocumentModal .missing-document-upload-title,
+    #missingDocumentModal .missing-document-file-name,
+    #missingDocumentModal .missing-document-upload-or,
+    #missingDocumentModal .missing-document-choose,
+    #missingDocumentModal .missing-document-preview-copy span,
+    #missingDocumentModal .missing-document-secure span { font-size: 8.5px; }
+    #missingDocumentModal .missing-document-secure strong { font-size: 10.5px; }
+    @media (max-width: 640px) {
+        #missingDocumentModal .missing-document-row-title { font-size: 16.5px; }
+        #missingDocumentModal .missing-document-required { font-size: 7.5px; }
+        #missingDocumentModal .missing-document-description { font-size: 11.5px; }
+        #missingDocumentModal .missing-document-meta { font-size: 10.5px; }
+        #missingDocumentModal .missing-document-upload-title { font-size: 12.5px; }
+        #missingDocumentModal .missing-document-upload-or { font-size: 10.5px; }
+        #missingDocumentModal .missing-document-choose { font-size: 13.5px; }
     }
     .resubmission-upload-modal .record-modal-head {
         min-height: 108px;
@@ -7013,6 +7237,7 @@
     .health-doc-status.is-approved { color: #15803d; background: transparent; }
     .health-doc-status.is-correction { color: #c2410c; background: transparent; }
     .health-doc-status.is-requested { color: #9f001e; background: transparent; }
+    .health-doc-status.is-cancelled { color: #64748b; background: transparent; }
     .health-doc-actions {
         display: flex;
         flex-wrap: wrap;
@@ -7042,6 +7267,7 @@
     .health-doc-action svg { width: 15px; height: 15px; }
     .health-doc-action.is-primary { color: #fff; background: #92001c; }
     .health-doc-action.is-edit { color: #a34b00; border-color: #f0b743; background: #fffaf0; }
+    .health-doc-cancel-form { display: inline-flex; margin: 0; }
     .health-doc-action:hover,
     .health-doc-action:focus-visible {
         transform: translateY(-1px);
@@ -7685,10 +7911,13 @@
         .health-doc-meta-item { padding-right: 2px; padding-left: 2px; }
         .health-doc-actions { display: grid; grid-template-columns: 1fr; }
         .health-doc-action { width: 100%; }
+        .health-doc-cancel-form { width: 100%; }
+        .health-doc-cancel-form .health-doc-action { width: 100%; }
         .health-doc-note,
         .health-doc-requirement,
         .health-doc-history-request { align-items: flex-start; flex-direction: column; }
         .health-doc-requirement button { width: 100%; }
+        .health-doc-requirement .health-doc-cancel-form { width: 100%; }
         .health-doc-history-row { grid-template-columns: 1fr; }
         .health-doc-history-id,
         .health-doc-history-type,
@@ -8568,9 +8797,28 @@ document.addEventListener('DOMContentLoaded', function () {
     @php
         $usesEmployeeHealthForm = $studentUsesEmployeeHealthForm ?? false;
         $healthProfileRecord = $usesEmployeeHealthForm ? $user->employeeHealthProfile : $user->healthProfile;
+        $studentHealthFormHistory = collect($healthFormSubmissions ?? []);
+        $latestApprovedStudentHealthForm = !$usesEmployeeHealthForm
+            ? $studentHealthFormHistory->first(fn ($submission) => in_array($submission->status, [\App\Models\HealthFormSubmission::STATUS_APPROVED, 'Approved'], true) && filled($submission->approved_at))
+            : null;
+        $hasCurrentApprovedStudentHealthForm = $latestApprovedStudentHealthForm
+            && $healthProfileRecord
+            && !filled($healthProfileRecord->clearance_revoked_at)
+            && !in_array($healthProfileRecord->pullout_status, [
+                \App\Models\HealthProfile::PULLOUT_PENDING,
+                \App\Models\HealthProfile::PULLOUT_COMPLETED,
+            ], true)
+            && strcasecmp(trim((string) $healthProfileRecord->clearance_status), 'Withdrawn') !== 0;
+        if ($hasCurrentApprovedStudentHealthForm) {
+            $healthProfileRecord->setAttribute('clearance_status', 'Fully Cleared');
+        }
         $activeHealthCorrectionRequest = (!$usesEmployeeHealthForm && $healthProfileRecord)
             ? \App\Models\HealthProfileCorrectionRequest::query()
                 ->where('health_profile_id', $healthProfileRecord->id)
+                ->whereIn('type', [
+                    \App\Models\HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION,
+                    \App\Models\HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION,
+                ])
                 ->active()
                 ->latest('requested_at')
                 ->latest('id')
@@ -8578,7 +8826,9 @@ document.addEventListener('DOMContentLoaded', function () {
             : null;
         $healthFormRoute = $usesEmployeeHealthForm ? route('health.form.employee') : route('health.form');
         $healthFormSubmitted = $hasSubmittedHealthProfile ?? ($healthProfileRecord !== null);
-        $status = optional($healthProfileRecord)->clearance_status ?? 'For Verification';
+        $status = $hasCurrentApprovedStudentHealthForm
+            ? 'Fully Cleared'
+            : (optional($healthProfileRecord)->clearance_status ?? 'For Verification');
         $statusNormalized = strtolower(trim((string) $status));
         $isIssuedStatus = in_array($statusNormalized, ['issued', 'fully cleared'], true);
         $isRejectedStatus = $statusNormalized === 'rejected';
@@ -8726,7 +8976,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return null;
             }
         };
-        $latestHealthFormSubmission = collect($healthFormSubmissions ?? [])->first();
+        $latestHealthFormSubmission = $latestApprovedStudentHealthForm ?: $studentHealthFormHistory->first();
         $recordSubmittedSource = optional($latestHealthFormSubmission)->submitted_at
             ?: optional($healthProfileRecord)->resubmitted_at
             ?: optional($healthProfileRecord)->created_at;
@@ -9428,46 +9678,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             'chest_xray_result' => 'Upload the chest x-ray result. Clear and readable file.',
                             'pwd_id_proof' => 'Upload your valid PWD ID proof document.',
                         ];
-                        $missingDocumentCount = $documentUploadKeysForModal->count();
                     @endphp
-                    <div class="missing-document-progress">
-                        <div>
-                            <p class="missing-document-progress-title">File Selection</p>
-                            <div class="missing-document-progress-track">
-                                <span class="missing-document-progress-bar">
-                                    <span class="missing-document-progress-fill" data-missing-document-progress-fill></span>
-                                </span>
-                                <span class="missing-document-progress-count"><span data-missing-document-uploaded-count>0</span> of {{ $missingDocumentCount }} selected</span>
-                            </div>
-                        </div>
-                        <div class="missing-document-stat">
-                            <span class="missing-document-stat-icon" aria-hidden="true">
-                                <x-outline-icon name="document-text" />
-                            </span>
-                            <div>
-                                <strong>{{ $missingDocumentCount }} Documents</strong>
-                                <span>Required</span>
-                            </div>
-                        </div>
-                        <div class="missing-document-stat">
-                            <span class="missing-document-stat-icon" aria-hidden="true">
-                                <x-outline-icon name="check" />
-                            </span>
-                            <div>
-                                <strong>Per document</strong>
-                                <span>Allowed file types</span>
-                            </div>
-                        </div>
-                        <div class="missing-document-stat">
-                            <span class="missing-document-stat-icon" aria-hidden="true">
-                                <x-outline-icon name="clipboard-document-list" />
-                            </span>
-                            <div>
-                                <strong>2 MB</strong>
-                                <span>Max size</span>
-                            </div>
-                        </div>
-                    </div>
                     <div class="missing-document-scroll">
                         @foreach($documentUploadKeysForModal as $documentKey)
                             @php
@@ -9576,9 +9787,18 @@ document.addEventListener('DOMContentLoaded', function () {
                                 @endif
                             </div>
                         @endif
+                        <div class="missing-document-secure missing-document-secure--scroll">
+                            <span class="missing-document-secure-icon" aria-hidden="true">
+                                <x-outline-icon name="check" />
+                            </span>
+                            <div>
+                                <strong>Your files are secure</strong>
+                                <span>Your documents are encrypted and will only be used for verification purposes.</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="missing-document-footer">
-                        <div class="missing-document-secure">
+                        <div class="missing-document-secure missing-document-secure--footer">
                             <span class="missing-document-secure-icon" aria-hidden="true">
                                 <x-outline-icon name="check" />
                             </span>
@@ -9591,7 +9811,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <button type="button" class="missing-esign-secondary" onclick="closeMissingDocumentModal()">Cancel</button>
                             <button type="submit" class="missing-esign-submit">
                                 <x-outline-icon name="document-text" />
-                                Submit Missing Documents
+                                Submit
                             </button>
                         </div>
                     </div>
@@ -10049,16 +10269,18 @@ function openMissingDocumentModal(button = null) {
     }
     modal.classList.add('is-open');
     modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('missing-document-modal-open');
     document.body.style.overflow = 'hidden';
 }
 
 function closeMissingDocumentModal() {
     const modal = document.getElementById('missingDocumentModal');
-    if (!modal) {
+    if (!modal || document.getElementById('missingDocumentForm')?.dataset.submitting === 'true') {
         return;
     }
     modal.classList.remove('is-open');
     modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('missing-document-modal-open');
     document.body.style.overflow = '';
 }
 
@@ -10584,20 +10806,6 @@ document.addEventListener('DOMContentLoaded', function () {
             openMissingDocumentModal(button);
         });
     });
-    const syncMissingDocumentProgress = function () {
-        const inputs = Array.from(document.querySelectorAll('[data-missing-document-input]'));
-        const uploadedCount = inputs.filter(function (input) {
-            return input.files && input.files.length > 0;
-        }).length;
-        const countNode = document.querySelector('[data-missing-document-uploaded-count]');
-        const fillNode = document.querySelector('[data-missing-document-progress-fill]');
-        if (countNode) {
-            countNode.textContent = uploadedCount;
-        }
-        if (fillNode) {
-            fillNode.style.width = inputs.length ? `${Math.round((uploadedCount / inputs.length) * 100)}%` : '0%';
-        }
-    };
     const missingDocumentFileError = function (input, file) {
         const allowedExtensions = (input.dataset.allowedExtensions || '').split(',').filter(Boolean);
         const allowedMimeTypes = (input.dataset.allowedMimeTypes || '').split(',').filter(Boolean);
@@ -10659,7 +10867,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         if (box) box.classList.toggle('is-selected', Boolean(file));
-        syncMissingDocumentProgress();
     };
 
     document.querySelectorAll('[data-missing-document-input]').forEach(function (input) {
@@ -10667,7 +10874,14 @@ document.addEventListener('DOMContentLoaded', function () {
             refreshMissingDocumentInput(input);
         });
     });
-    document.getElementById('missingDocumentForm')?.addEventListener('submit', function (event) {
+    const missingDocumentForm = document.getElementById('missingDocumentForm');
+    let missingDocumentSubmissionStarted = false;
+    missingDocumentForm?.addEventListener('submit', function (event) {
+        if (missingDocumentSubmissionStarted) {
+            event.preventDefault();
+            return;
+        }
+
         const inputs = Array.from(this.querySelectorAll('[data-missing-document-input]'));
         const selectedInputs = inputs.filter((input) => input.files && input.files.length > 0);
         let firstInvalidRow = null;
@@ -10697,7 +10911,37 @@ document.addEventListener('DOMContentLoaded', function () {
             event.preventDefault();
             showProfileEditToast(firstErrorMessage, 'File upload blocked');
             firstInvalidRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
         }
+
+        missingDocumentSubmissionStarted = true;
+        this.dataset.submitting = 'true';
+        this.classList.add('is-submitting');
+        this.setAttribute('aria-busy', 'true');
+        this.querySelectorAll('button').forEach(function (button) {
+            button.disabled = true;
+        });
+
+        const submitButton = this.querySelector('.missing-upload-actions button[type="submit"]');
+        if (submitButton) {
+            const label = document.createElement('span');
+            label.textContent = 'Submitting';
+            const dots = document.createElement('span');
+            dots.className = 'missing-document-submit-dots';
+            dots.setAttribute('aria-hidden', 'true');
+            for (let index = 0; index < 3; index += 1) {
+                const dot = document.createElement('span');
+                dot.textContent = '.';
+                dots.appendChild(dot);
+            }
+            submitButton.replaceChildren(label, dots);
+            submitButton.setAttribute('aria-label', 'Submitting documents');
+            submitButton.setAttribute('aria-busy', 'true');
+        }
+
+        missingDocumentModal?.querySelector('.record-modal-close')?.setAttribute('disabled', 'disabled');
+        missingDocumentModal?.setAttribute('aria-busy', 'true');
+        this.inert = true;
     });
     document.querySelectorAll('[data-missing-document-remove]').forEach(function (button) {
         button.addEventListener('click', function () {
@@ -10732,8 +10976,6 @@ document.addEventListener('DOMContentLoaded', function () {
             input.dispatchEvent(new Event('change', { bubbles: true }));
         });
     });
-    syncMissingDocumentProgress();
-
     document.addEventListener('keydown', function (event) {
         if (event.key !== 'Escape') {
             return;

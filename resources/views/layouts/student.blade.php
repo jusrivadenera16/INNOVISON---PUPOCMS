@@ -311,6 +311,13 @@
             z-index: 499997;
         }
 
+        @media (max-width: 768px) {
+            body.missing-document-modal-open .student-quick-actions-fab-wrap,
+            body.global-resubmission-modal-open .student-quick-actions-fab-wrap {
+                display: none !important;
+            }
+        }
+
         .student-quick-actions-toggle,
         .student-quick-action-btn,
         .student-quick-action-logo {
@@ -5321,7 +5328,7 @@
             cursor: pointer;
             overflow: hidden;
             isolation: isolate;
-            transition: border-color .22s ease, color .22s ease, background .22s ease;
+            transition: border-color .22s ease, color .22s ease, background .22s ease, transform .22s ease;
         }
         .global-resubmission-close svg {
             position: relative;
@@ -5344,11 +5351,15 @@
             border-color: #facc15;
             background: rgba(127, 29, 45, .5);
             color: #7f1d2d;
+            transform: translateY(-1px);
             outline: none;
         }
         .global-resubmission-close:hover::before,
         .global-resubmission-close:focus-visible::before {
             transform: translateX(0);
+        }
+        .global-resubmission-close:active {
+            transform: translateY(0) scale(.96);
         }
         .global-resubmission-form {
             padding: 20px 24px 24px;
@@ -5762,9 +5773,23 @@
             cursor: pointer;
         }
         .global-resubmission-cancel {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
             border: 1px solid rgba(112, 19, 27, .24);
             background: #ffffff;
             color: #70131b;
+            transition: border-color .22s ease, color .22s ease, transform .22s ease;
+        }
+        .global-resubmission-cancel::before {
+            position: absolute;
+            z-index: -1;
+            inset: 0;
+            background: #facc15;
+            content: "";
+            transform: translateX(-102%);
+            transition: transform .28s ease;
+            pointer-events: none;
         }
         .global-resubmission-submit {
             position: relative;
@@ -5782,9 +5807,17 @@
         .global-resubmission-cancel:hover,
         .global-resubmission-cancel:focus-visible {
             border-color: #facc15;
-            background: #facc15;
+            background: #ffffff;
             color: #70131b;
             outline: none;
+        }
+        .global-resubmission-cancel:hover::before,
+        .global-resubmission-cancel:focus-visible::before {
+            transform: translateX(0);
+        }
+        .global-resubmission-cancel:active {
+            background: #facc15;
+            transform: scale(.98);
         }
         .global-resubmission-submit::before {
             position: absolute;
@@ -5804,6 +5837,32 @@
         .global-resubmission-submit:disabled:hover::before,
         .global-resubmission-submit:disabled:focus-visible::before {
             transform: translateX(-102%);
+        }
+        .global-resubmission-form.is-submitting .global-resubmission-doc {
+            opacity: .62;
+        }
+        .global-resubmission-submit-dots {
+            display: inline-flex;
+            min-width: 1.25em;
+        }
+        .global-resubmission-submit-dots span {
+            animation: globalResubmissionDotPulse 1s infinite ease-in-out;
+        }
+        .global-resubmission-submit-dots span:nth-child(2) {
+            animation-delay: .15s;
+        }
+        .global-resubmission-submit-dots span:nth-child(3) {
+            animation-delay: .3s;
+        }
+        @keyframes globalResubmissionDotPulse {
+            0%, 60%, 100% { opacity: .25; }
+            30% { opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .global-resubmission-submit-dots span {
+                animation: none;
+                opacity: 1;
+            }
         }
         .global-resubmission-submit:hover::before,
         .global-resubmission-submit:focus-visible::before {
@@ -5857,12 +5916,13 @@
     <script>
         function closeGlobalResubmissionModal() {
             const modal = document.getElementById('globalResubmissionModal');
-            if (!modal) {
+            if (!modal || modal.querySelector('.global-resubmission-form')?.dataset.submitting === 'true') {
                 return;
             }
             modal.classList.add('is-closed');
             modal.setAttribute('aria-hidden', 'true');
             modal.style.setProperty('display', 'none', 'important');
+            document.body.classList.remove('global-resubmission-modal-open');
             document.body.style.overflow = '';
         }
         window.openGlobalResubmissionModal = function () {
@@ -5873,6 +5933,7 @@
             modal.classList.remove('is-closed');
             modal.setAttribute('aria-hidden', 'false');
             modal.style.setProperty('display', 'flex', 'important');
+            document.body.classList.add('global-resubmission-modal-open');
             document.body.style.overflow = 'hidden';
         };
 
@@ -5882,7 +5943,9 @@
                 return;
             }
             const form = modal.querySelector('.global-resubmission-form');
+            let submissionStarted = false;
             document.body.style.overflow = 'hidden';
+            document.body.classList.add('global-resubmission-modal-open');
             modal.querySelector('.global-resubmission-close')?.addEventListener('click', closeGlobalResubmissionModal);
 
             function showGlobalResubmissionToast(message) {
@@ -5969,8 +6032,26 @@
                     target.style.width = percent + '%';
                 });
                 modal.querySelectorAll('[data-global-resubmission-submit]').forEach(function (button) {
-                    button.disabled = selected < total;
+                    button.disabled = submissionStarted || selected < total;
                 });
+            }
+
+            function showSubmittingState(button) {
+                if (!button) return;
+                const label = document.createElement('span');
+                label.textContent = 'Submitting';
+                const dots = document.createElement('span');
+                dots.className = 'global-resubmission-submit-dots';
+                dots.setAttribute('aria-hidden', 'true');
+                for (let index = 0; index < 3; index += 1) {
+                    const dot = document.createElement('span');
+                    dot.textContent = '.';
+                    dots.appendChild(dot);
+                }
+                button.replaceChildren(label, dots);
+                button.setAttribute('aria-label', 'Submitting replacement files');
+                button.setAttribute('aria-busy', 'true');
+                button.disabled = true;
             }
 
             modal.querySelectorAll('[data-global-resubmission-input]').forEach(function (input) {
@@ -6045,6 +6126,11 @@
             });
 
             form?.addEventListener('submit', function (event) {
+                if (submissionStarted) {
+                    event.preventDefault();
+                    return;
+                }
+
                 const inputs = Array.from(form.querySelectorAll('[data-global-resubmission-input]'));
                 const missingInput = inputs.find(function (input) { return !input.files || input.files.length === 0; });
                 if (missingInput) {
@@ -6076,6 +6162,20 @@
                     showGlobalResubmissionToast(message);
                     updateGlobalResubmissionProgress();
                 }
+
+                if (event.defaultPrevented) return;
+
+                submissionStarted = true;
+                form.dataset.submitting = 'true';
+                form.classList.add('is-submitting');
+                form.setAttribute('aria-busy', 'true');
+                form.querySelectorAll('button').forEach(function (button) {
+                    button.disabled = true;
+                });
+                showSubmittingState(form.querySelector('[data-global-resubmission-submit]'));
+                modal.querySelector('.global-resubmission-close')?.setAttribute('disabled', 'disabled');
+                modal.setAttribute('aria-busy', 'true');
+                form.inert = true;
             });
 
             updateGlobalResubmissionProgress();

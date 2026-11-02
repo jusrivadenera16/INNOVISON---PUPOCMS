@@ -270,6 +270,20 @@
         font-size: 14px;
         font-weight: 600;
     }
+    .personal-field select {
+        width: 100%;
+        min-height: 28px;
+        padding: 0;
+        border: 1px solid transparent;
+        border-radius: 7px;
+        appearance: none;
+        background: transparent;
+        color: var(--personal-text);
+        font: inherit;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    #personalPositionOtherWrap { margin-top: 7px; }
     .personal-field input:disabled {
         color: var(--personal-text);
         background: transparent;
@@ -286,6 +300,13 @@
         background: transparent !important;
         box-shadow: none !important;
     }
+    .personal-settings-form:not(.is-editing) .personal-field select {
+        min-height: 28px;
+        padding: 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
     .personal-field input::placeholder { color: #475569; opacity: 1; }
     .personal-field input:focus {
         outline: none;
@@ -298,6 +319,15 @@
         border: 0 !important;
         border-bottom: 1px solid rgba(127, 0, 16, .28) !important;
         border-radius: 0 !important;
+        background: transparent !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+    .personal-settings-form.is-editing .personal-field select:not(:disabled) {
+        border: 0 !important;
+        border-bottom: 1px solid rgba(127, 0, 16, .28) !important;
+        border-radius: 0 !important;
+        appearance: auto;
         background: transparent !important;
         padding: 0 !important;
         box-shadow: none !important;
@@ -323,6 +353,11 @@
         color: #64748b;
         opacity: .58;
         cursor: default;
+    }
+    .personal-settings-form.is-editing .personal-field select:disabled {
+        border-color: transparent;
+        background: transparent;
+        padding: 0;
     }
     .personal-settings-page .settings-save-btn {
         background-color: #7f0010 !important;
@@ -379,7 +414,9 @@
     html[data-theme="dark"] .personal-settings-page .settings-section-title,
     html[data-theme="dark"] .personal-settings-page .personal-profile-copy h2,
     html[data-theme="dark"] .personal-settings-page .personal-field label,
-    html[data-theme="dark"] .personal-settings-page .personal-field input { color: #f8fafc; }
+    html[data-theme="dark"] .personal-settings-page .personal-field input,
+    html[data-theme="dark"] .personal-settings-page .personal-field select { color: #f8fafc; }
+    html[data-theme="dark"] .personal-settings-page .personal-field select option { color: #172033; }
     html[data-theme="dark"] .personal-settings-page .settings-section-hero p,
     html[data-theme="dark"] .personal-settings-page .personal-profile-meta,
     html[data-theme="dark"] .personal-settings-page .personal-profile-email,
@@ -465,6 +502,13 @@
         default => 'Clinic Staff',
     };
     $profileOffice = trim((string) ($cmsProfile['office'] ?? '')) ?: 'Clinic Office';
+    $reportPositionValue = trim((string) ($reportIdentity?->report_position ?? ''));
+    $reportPositionChoice = match (strtolower($reportPositionValue)) {
+        'doctor' => 'Doctor',
+        'nurse' => 'Nurse',
+        default => $reportPositionValue !== '' ? 'Other' : '',
+    };
+    $reportPositionOther = $reportPositionChoice === 'Other' ? $reportPositionValue : '';
 @endphp
 
 <div class="settings-section-page personal-settings-page">
@@ -588,15 +632,35 @@
 
         <section class="personal-info-section">
             <div class="personal-section-heading"><x-outline-icon name="document-text" /><span>Report Identity</span></div>
-            <div class="personal-section-description">These details appear on exported reports.</div>
             <div class="personal-fields-grid report-identity">
                 <div class="personal-field">
-                    <label for="report_name">Name shown on reports</label>
-                    <input id="report_name" name="report_name" value="{{ old('report_name', $reportIdentity?->report_name ?? '') }}" placeholder="Example: Juan Delacruz, R.N." disabled data-edit-field>
+                    <label for="report_name">Name</label>
+                    <input id="report_name" value="{{ $admin->name ?? $cmsProfile['name'] ?? '' }}" placeholder="—" readonly aria-readonly="true">
                 </div>
                 <div class="personal-field">
-                    <label for="report_position">Position shown on reports</label>
-                    <input id="report_position" name="report_position" value="{{ old('report_position', $reportIdentity?->report_position ?? '') }}" placeholder="Example: Nurse II" disabled data-edit-field>
+                    <label for="report_position">Position</label>
+                    @if($canEditReportPosition)
+                        <select id="report_position" name="clinic_position" data-edit-field>
+                            <option value="" @selected(old('clinic_position', $reportPositionChoice) === '')>Not specified</option>
+                            <option value="Doctor" @selected(old('clinic_position', $reportPositionChoice) === 'Doctor')>Doctor</option>
+                            <option value="Nurse" @selected(old('clinic_position', $reportPositionChoice) === 'Nurse')>Nurse</option>
+                            <option value="Other" @selected(old('clinic_position', $reportPositionChoice) === 'Other')>Other</option>
+                        </select>
+                        <div id="personalPositionOtherWrap" style="{{ old('clinic_position', $reportPositionChoice) === 'Other' ? '' : 'display:none;' }}">
+                            <label for="report_position_other">Other Position</label>
+                            <input id="report_position_other" name="clinic_position_other" value="{{ old('clinic_position_other', $reportPositionOther) }}" placeholder="e.g., Nurse II" maxlength="255" disabled data-edit-field>
+                        </div>
+                    @else
+                        <input id="report_position" value="{{ $reportIdentity?->report_position ?? '' }}" placeholder="—" readonly aria-readonly="true">
+                    @endif
+                </div>
+                <div class="personal-field">
+                    <label for="report_credentials">Credentials</label>
+                    @if($canEditReportCredentials)
+                        <input id="report_credentials" name="report_credentials" value="{{ old('report_credentials', $reportIdentity?->report_credentials ?? '') }}" placeholder="e.g., MD, RN, PhD" maxlength="255" disabled data-edit-field>
+                    @else
+                        <input id="report_credentials" value="{{ $reportIdentity?->report_credentials ?? '' }}" placeholder="—" readonly aria-readonly="true">
+                    @endif
                 </div>
             </div>
         </section>
@@ -613,6 +677,26 @@
 
     <div class="personal-note"><x-outline-icon name="information-circle" /> <span>Keep your personal information up to date to ensure accurate and secure communication within the clinic management system.</span></div>
 </div>
+
+@if($canEditReportPosition)
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const position = document.getElementById('report_position');
+            const otherWrap = document.getElementById('personalPositionOtherWrap');
+            const otherPosition = document.getElementById('report_position_other');
+            if (!position || !otherWrap || !otherPosition) return;
+
+            const syncOtherPosition = () => {
+                const isOther = position.value === 'Other';
+                otherWrap.style.display = isOther ? '' : 'none';
+                otherPosition.required = isOther;
+            };
+
+            position.addEventListener('change', syncOtherPosition);
+            syncOtherPosition();
+        });
+    </script>
+@endif
 
 @include('admin.partials.settings-edit-script')
 @endsection

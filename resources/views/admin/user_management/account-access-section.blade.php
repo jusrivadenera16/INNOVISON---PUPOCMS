@@ -18,7 +18,23 @@
         </select>
     </div>
     @if(($managementView ?? '') !== 'admin-hub')
-        <span id="moduleAccessPreviewAnchor" hidden></span>
+        <div class="um-field">
+            <label for="clinicPositionChoice">Position <span style="margin-left: 6px;">(Optional)</span></label>
+            <select name="clinic_position" id="clinicPositionChoice">
+                <option value="">Not specified</option>
+                <option value="Doctor">Doctor</option>
+                <option value="Nurse">Nurse</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        <div class="um-field" id="clinicPositionOtherWrap" style="display:none;">
+            <label for="clinicPositionOther">Other Position</label>
+            <input type="text" name="clinic_position_other" id="clinicPositionOther" maxlength="255" placeholder="Enter position">
+        </div>
+        <div class="um-field">
+            <label for="clinicCredentials">Credentials <span style="margin-left: 6px;">(Optional)</span></label>
+            <input type="text" name="clinic_credentials" id="clinicCredentials" maxlength="255" placeholder="e.g., MD, RN, PhD">
+        </div>
         <section class="um-module-access-preview" id="moduleAccessPreview" hidden aria-labelledby="moduleAccessTitle">
             <div class="um-module-access-head">
                 <div>

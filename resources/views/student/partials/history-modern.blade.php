@@ -127,6 +127,12 @@
                 @forelse($appointments as $appointment)
                     @php
                         $statusNormalized = strtolower(trim((string) $appointment->status));
+                        $appointmentRemarks = trim((string) ($appointment->remarks ?? ''));
+                        $hasClinicClosureUpdate = str_contains($appointmentRemarks, '[Clinic Closure]');
+                        $appointmentRemarks = trim((string) preg_replace('/\[Clinic Closure\]\s*/', '', $appointmentRemarks));
+                        $appointmentRemarkLabel = $statusNormalized === 'rejected'
+                            ? 'Reason for Rejection'
+                            : ($hasClinicClosureUpdate ? 'Clinic Update' : 'Remarks');
                         $statusClass = $statusNormalized === 'rejected'
                             ? 'status-cancelled'
                             : (in_array($statusNormalized, ['pending', 'approved', 'completed', 'missed', 'cancelled', 'expired'], true)
@@ -187,8 +193,8 @@
                                     <span><x-outline-icon name="calendar-days" /> {{ $appointmentAt->format('M d, Y') }}</span>
                                     <span><x-outline-icon name="clock" /> {{ $appointmentAt->format('g:i A') }}</span>
                                 </span>
-                                @if(trim((string) $appointment->problem) !== '')
-                                    <span class="history-entry-problem">{{ $appointment->problem }}</span>
+                                @if(trim((string) $appointment->reason) !== '')
+                                    <span class="history-entry-problem">{{ $appointment->reason }}</span>
                                 @endif
                             </span>
                             <span class="history-entry-actions">
@@ -211,16 +217,22 @@
                                     <span>Appointment Source</span>
                                     <strong>{{ ucfirst((string) ($appointment->type ?: 'Online')) }}</strong>
                                 </span>
-                                @if(trim((string) $appointment->notes) !== '')
+                                @if(trim((string) $appointment->reason) !== '')
                                     <span class="history-detail-item">
-                                        <span>Notes</span>
-                                        <strong>{{ $appointment->notes }}</strong>
+                                        <span>Reason</span>
+                                        <strong>{{ $appointment->reason }}</strong>
+                                    </span>
+                                @endif
+                                @if($appointmentRemarks !== '' && $appointmentRemarks !== $consultationRemarks)
+                                    <span class="history-detail-item">
+                                        <span>{{ $appointmentRemarkLabel }}</span>
+                                        <strong>{{ $appointmentRemarks }}</strong>
                                     </span>
                                 @endif
                                 @if($statusNormalized === 'completed')
                                     <span class="history-detail-item">
-                                        <span>Comments / Remarks</span>
-                                        <strong>{{ $consultationRemarks !== '' ? $consultationRemarks : 'No consultation remarks recorded.' }}</strong>
+                                        <span>Clinical Remarks</span>
+                                        <strong>{{ $consultationRemarks !== '' ? $consultationRemarks : 'No clinical remarks recorded.' }}</strong>
                                     </span>
                                 @endif
                                 @if(in_array($statusNormalized, ['pending', 'approved'], true))
