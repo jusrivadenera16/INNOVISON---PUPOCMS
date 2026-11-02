@@ -4202,7 +4202,7 @@
             @endif
 
             @if($isPulloutPending && $isSuperAdmin)
-                <form method="POST" action="{{ route('admin.health_profile.pullout.complete', $profile->id) }}" class="pullout-form">
+                <form method="POST" action="{{ route('admin.health_profile.pullout.complete', $profile->id) }}" class="pullout-form" data-loader-message="Marking as Pulled Out" data-loader-detail="Archiving the health record and updating clinic access.">
                     @csrf
                     <div class="correction-actions">
                         <button type="button" class="correction-cancel" data-close-pullout>Cancel</button>
@@ -4222,7 +4222,7 @@
                     </div>
                 </form>
             @elseif($canRequestPullout)
-                <form method="POST" action="{{ route('admin.health_profile.pullout.request', $profile->id) }}" class="pullout-form">
+                <form method="POST" action="{{ route('admin.health_profile.pullout.request', $profile->id) }}" class="pullout-form" data-loader-message="Marking as Pulled Out" data-loader-detail="Archiving the health record and updating clinic access.">
                     @csrf
                     @if($isPulloutRestored)
                         <div class="pullout-static-note">
