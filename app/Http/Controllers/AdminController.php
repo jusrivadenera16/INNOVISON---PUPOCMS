@@ -421,6 +421,36 @@ class AdminController extends Controller
         InventoryMovement::create($movementData);
     }
 
+    private function inventoryItemAuditValues(Item $item): array
+    {
+        $item->loadMissing(['medicineType', 'illnessCategory']);
+        $unit = trim((string) ($item->unit ?: 'pcs')) ?: 'pcs';
+        $text = static fn ($value): string => trim((string) ($value ?? ''));
+        $quantity = function ($value) use ($unit): string {
+            return $value === null ? '' : $this->formatInventoryQuantity((float) $value) . ' ' . $unit;
+        };
+
+        return [
+            'Name' => $text($item->name),
+            'Category' => $text($item->category),
+            'Stock Number' => $text($item->stock_number),
+            'Medicine Type' => $text($item->medicine_type ?: $item->medicineType?->name),
+            'Illness Category' => $text($item->illnessCategory?->name),
+            'Current Stock' => $quantity($item->quantity),
+            'Starting Stock' => $quantity($item->starting_stock),
+            'Consumed' => $quantity($item->consumed),
+            'Minimum Stock' => $quantity($item->minimum_stock),
+            'Unit' => $text($item->unit),
+            'Dispensing Unit' => $text($item->dispensing_unit),
+            'Units per Stock Unit' => $text($item->units_per_stock_unit),
+            'Batch Number' => $text($item->batch_number),
+            'Supplier / Source' => $text($item->supplier_source),
+            'Date Added' => optional($item->date_added)->format('Y-m-d') ?: '',
+            'Expiration Date' => optional($item->expiration_date)->format('Y-m-d') ?: '',
+            'Description' => $text($item->description),
+        ];
+    }
+
     private function consumedStockQuantityForItem(Item $item, float $consumedTotal): float
     {
         return $item->convertDispensingQuantityToStockQuantity($consumedTotal);
@@ -2864,17 +2894,36 @@ class AdminController extends Controller
             'Approved',
         ];
 
-        return (clone $query)->where(function ($builder) use ($approvedSubmissionStatuses) {
-            $builder->whereIn('clearance_status', ['Issued', 'Fully Cleared'])
-                ->orWhereHas('healthFormSubmissions', function ($submissionQuery) use ($approvedSubmissionStatuses) {
-                    $submissionQuery->whereIn('status', $approvedSubmissionStatuses)
-                        ->whereNotNull('approved_at');
-                });
-        });
+        return (clone $query)
+            ->whereNull('clearance_revoked_at')
+            ->where(function ($pulloutQuery) {
+                $pulloutQuery->whereNull('pullout_status')
+                    ->orWhereNotIn('pullout_status', [
+                        HealthProfile::PULLOUT_PENDING,
+                        HealthProfile::PULLOUT_COMPLETED,
+                    ]);
+            })
+            ->where(function ($statusQuery) {
+                $statusQuery->whereNull('clearance_status')
+                    ->orWhere('clearance_status', '!=', 'Withdrawn');
+            })
+            ->where(function ($builder) use ($approvedSubmissionStatuses) {
+                $builder->whereIn('clearance_status', ['Issued', 'Fully Cleared'])
+                    ->orWhereHas('healthFormSubmissions', function ($submissionQuery) use ($approvedSubmissionStatuses) {
+                        $submissionQuery->whereIn('status', $approvedSubmissionStatuses)
+                            ->whereNotNull('approved_at');
+                    });
+            });
     }
 
     private function applyHistoricalApprovedHealthFormSnapshot(HealthProfile $record): HealthProfile
     {
+        if ($record->clearance_revoked_at
+            || in_array($record->pullout_status, [HealthProfile::PULLOUT_PENDING, HealthProfile::PULLOUT_COMPLETED], true)
+            || strcasecmp(trim((string) $record->clearance_status), 'Withdrawn') === 0) {
+            return $record;
+        }
+
         if (in_array((string) $record->clearance_status, ['Issued', 'Fully Cleared'], true)) {
             return $record;
         }
@@ -2945,6 +2994,10 @@ class AdminController extends Controller
             if (array_key_exists($field, $snapshot)) {
                 $record->setAttribute($field, $snapshot[$field]);
             }
+        }
+
+        if ($record->user) {
+            app(HealthProfileSnapshotService::class)->applySubmissionUserSnapshot($record->user, $submission);
         }
 
         $record->setAttribute('clearance_status', 'Fully Cleared');
@@ -4093,7 +4146,12 @@ class AdminController extends Controller
             if (strcasecmp($summaryStatus, 'Withdrawn') === 0) {
                 continue;
             }
-            $summaryIsApproved = in_array($summaryStatus, ['Issued', 'Fully Cleared'], true);
+            $summaryHasApprovedHealthForm = (string) ($summaryRecord->record_source ?? 'health') === 'health'
+                && filled(optional($summaryRecord->latestApprovedHealthFormSubmission)->approved_at)
+                && !filled($summaryRecord->clearance_revoked_at ?? null)
+                && !in_array($summaryRecord->pullout_status ?? null, [HealthProfile::PULLOUT_PENDING, HealthProfile::PULLOUT_COMPLETED], true);
+            $summaryIsApproved = in_array($summaryStatus, ['Issued', 'Fully Cleared'], true)
+                || $summaryHasApprovedHealthForm;
             $summaryIsRevokedPending = (string) ($summaryRecord->record_source ?? 'health') === 'health'
                 && filled($summaryRecord->clearance_revoked_at ?? null)
                 && in_array($summaryStatus, ['Pending', 'For Verification'], true);
@@ -4103,7 +4161,7 @@ class AdminController extends Controller
                 || trim((string) ($summaryRecord->medical_condition_remarks ?? '')) !== ''
             );
 
-            if (!$summaryIsConditional && in_array($summaryStatus, ['Pending', 'For Verification', ''], true)) {
+            if (!$summaryIsApproved && !$summaryIsConditional && in_array($summaryStatus, ['Pending', 'For Verification', ''], true)) {
                 $stats['pending_approval']++;
             }
 
@@ -4123,7 +4181,10 @@ class AdminController extends Controller
             'pulloutRequestedBy',
             'pulloutCompletedBy',
             'pulloutRestoredBy',
+            'latestApprovedHealthFormSubmission',
         ])->findOrFail($id);
+
+        $profile = $this->applyHistoricalApprovedHealthFormSnapshot($profile);
 
         if ($profile->pullout_status === HealthProfile::PULLOUT_COMPLETED) {
             abort_unless(optional(Auth::user())->hasRole(User::ROLE_SUPERADMIN), 404);
@@ -4221,6 +4282,21 @@ class AdminController extends Controller
             ->latest('id')
             ->get();
         $activeNewHealthFormRequest = $this->activeStudentNewHealthFormRequest($profile);
+        $activeFileCorrectionRequest = HealthProfileCorrectionRequest::query()
+            ->where('user_id', $profile->user_id)
+            ->where('health_profile_id', $profile->id)
+            ->whereIn('type', [
+                HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION,
+                HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION,
+            ])
+            ->whereIn('status', [
+                HealthProfileCorrectionRequest::STATUS_PENDING,
+                HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+                HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW,
+            ])
+            ->latest('requested_at')
+            ->latest('id')
+            ->first();
 
         $versionNumbers = $healthFormSubmissions
             ->sortBy(function (HealthFormSubmission $submission) {
@@ -4236,9 +4312,9 @@ class AdminController extends Controller
             ]);
 
         $currentHealthFormSubmission = $healthFormSubmissions
-            ->first(fn (HealthFormSubmission $submission) => in_array($submission->status, [
+            ->first(fn (HealthFormSubmission $submission) => in_array($submission->status, [HealthFormSubmission::STATUS_APPROVED, 'Approved'], true))
+            ?: $healthFormSubmissions->first(fn (HealthFormSubmission $submission) => in_array($submission->status, [
                 HealthFormSubmission::STATUS_SUBMITTED,
-                HealthFormSubmission::STATUS_APPROVED,
                 HealthFormSubmission::STATUS_NEEDS_CORRECTION,
             ], true));
 
@@ -4275,6 +4351,7 @@ class AdminController extends Controller
             'healthProfileHistory',
             'currentHealthFormSubmission',
             'activeNewHealthFormRequest',
+            'activeFileCorrectionRequest',
             'medicalAssessmentHistory',
             'medicalInformationChangeHistory',
             'medicalAssessmentSnapshot',
@@ -4664,6 +4741,17 @@ class AdminController extends Controller
     {
         $profile = HealthProfile::with('user')->findOrFail($id);
         $healthFormAudience = $this->resolveAdminHealthProfileAudience($profile);
+
+        $hasApprovedHealthForm = $profile->latestApprovedHealthFormSubmission()->exists();
+        $hasApprovedHealthRecord = in_array((string) $profile->clearance_status, ['Issued', 'Fully Cleared'], true)
+            || $hasApprovedHealthForm;
+        $healthRecordIsUnavailable = $profile->clearance_revoked_at
+            || in_array($profile->pullout_status, [HealthProfile::PULLOUT_PENDING, HealthProfile::PULLOUT_COMPLETED], true)
+            || strcasecmp(trim((string) $profile->clearance_status), 'Withdrawn') === 0;
+        if (!$hasApprovedHealthRecord || $healthRecordIsUnavailable) {
+            return redirect()->route('admin.show_health', $profile->id)
+                ->with('error', 'A new Health Form can only be requested for an active approved health record.');
+        }
 
         if ($this->activeStudentNewHealthFormRequest($profile)) {
             return redirect()->route('admin.show_health', $profile->id)
@@ -6100,11 +6188,33 @@ class AdminController extends Controller
         $actor = Auth::user();
         abort_unless($actor && $actor->hasRole(User::ROLE_SUPERADMIN), 403);
 
-        $validated = $request->validate([
-            'pullout_restore_reason' => ['required', 'string', 'max:2000'],
-        ]);
+        $restoreReasonOptions = [
+            'pullout_error' => 'Record was pulled out in error',
+            'owner_request' => 'Record owner requested restoration',
+            'issue_resolved' => 'The pullout concern has been resolved',
+            'eligibility_confirmed' => 'Clinic access eligibility was confirmed',
+        ];
+        if (array_key_exists('pullout_restore_reason_option', $request->all())) {
+            $request->merge([
+                'pullout_restore_reason_other' => trim((string) $request->input('pullout_restore_reason_other', '')),
+            ]);
+            $validated = $request->validate([
+                'pullout_restore_reason_option' => ['required', 'string', Rule::in(array_merge(array_keys($restoreReasonOptions), ['other']))],
+                'pullout_restore_reason_other' => ['required_if:pullout_restore_reason_option,other', 'nullable', 'string', 'max:2000'],
+            ]);
 
-        $profile = DB::transaction(function () use ($id, $validated, $actor) {
+            $reasonOption = $validated['pullout_restore_reason_option'];
+            $restoreReason = $reasonOption === 'other'
+                ? 'Other: ' . $validated['pullout_restore_reason_other']
+                : $restoreReasonOptions[$reasonOption];
+        } else {
+            $validated = $request->validate([
+                'pullout_restore_reason' => ['required', 'string', 'max:2000'],
+            ]);
+            $restoreReason = trim((string) $validated['pullout_restore_reason']);
+        }
+
+        $profile = DB::transaction(function () use ($id, $restoreReason, $actor) {
             $profile = HealthProfile::with('user')->lockForUpdate()->findOrFail($id);
 
             if ($profile->pullout_status !== HealthProfile::PULLOUT_COMPLETED) {
@@ -6117,7 +6227,7 @@ class AdminController extends Controller
 
             $profile->forceFill([
                 'pullout_status' => HealthProfile::PULLOUT_RESTORED,
-                'pullout_restore_reason' => trim((string) $validated['pullout_restore_reason']),
+                'pullout_restore_reason' => $restoreReason,
                 'pullout_restored_by_user_id' => $actor->id,
                 'pullout_restored_at' => now(),
             ])->save();
@@ -6202,26 +6312,85 @@ class AdminController extends Controller
             ])],
         ]);
 
-        $submission->status = $validated['status'];
-        if ($submission->status === HealthFormSubmission::STATUS_APPROVED) {
-            $submission->approved_at = now();
-            if ($submission->healthProfile && $submission->user) {
-                app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot(
-                    $submission->healthProfile,
-                    $submission->user,
-                    $submission->category,
-                    $submission->remarks
-                );
-                $submission->refresh();
+        $targetStatus = $validated['status'];
+        $updatedSubmission = DB::transaction(function () use ($submission, $targetStatus) {
+            $updatedSubmission = HealthFormSubmission::query()
+                ->lockForUpdate()
+                ->findOrFail($submission->id);
+            $newHealthFormRequest = HealthProfileCorrectionRequest::query()
+                ->where('health_form_submission_id', $updatedSubmission->id)
+                ->where('type', HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM)
+                ->lockForUpdate()
+                ->first();
+
+            if ($newHealthFormRequest
+                && $updatedSubmission->status === HealthFormSubmission::STATUS_APPROVED
+                && $targetStatus === HealthFormSubmission::STATUS_APPROVED) {
+                return $updatedSubmission;
             }
-        } elseif ($submission->status !== HealthFormSubmission::STATUS_APPROVED) {
-            $submission->approved_at = null;
-        }
-        $submission->save();
+
+            if ($newHealthFormRequest && $updatedSubmission->status === HealthFormSubmission::STATUS_APPROVED
+                && $targetStatus !== HealthFormSubmission::STATUS_APPROVED) {
+                throw ValidationException::withMessages([
+                    'status' => 'An approved Health Form version cannot be moved back. Submit a new correction or Health Form request instead.',
+                ]);
+            }
+
+            if ($newHealthFormRequest && $targetStatus === HealthFormSubmission::STATUS_APPROVED) {
+                if ($updatedSubmission->status !== HealthFormSubmission::STATUS_SUBMITTED
+                    || !$updatedSubmission->submitted_at
+                    || !$updatedSubmission->profile_snapshot) {
+                    throw ValidationException::withMessages([
+                        'status' => 'This requested Health Form must be submitted with a saved snapshot before it can be approved.',
+                    ]);
+                }
+
+                $profile = HealthProfile::query()->lockForUpdate()->findOrFail($updatedSubmission->health_profile_id);
+                $user = User::query()->lockForUpdate()->findOrFail($updatedSubmission->user_id);
+                $updatedSubmission->forceFill([
+                    'status' => HealthFormSubmission::STATUS_APPROVED,
+                    'approved_at' => now(),
+                ])->save();
+
+                app(HealthProfileSnapshotService::class)->promoteApprovedSubmission(
+                    $profile,
+                    $updatedSubmission,
+                    $user,
+                    Auth::guard('admin')->id() ?: Auth::id()
+                );
+
+                $newHealthFormRequest->forceFill([
+                    'status' => HealthProfileCorrectionRequest::STATUS_APPROVED,
+                    'reviewed_at' => now(),
+                ])->save();
+
+                return $updatedSubmission->fresh();
+            }
+
+            $updatedSubmission->status = $targetStatus;
+            if ($targetStatus === HealthFormSubmission::STATUS_APPROVED) {
+                $updatedSubmission->approved_at = now();
+                if ($updatedSubmission->healthProfile && $updatedSubmission->user) {
+                    app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot(
+                        $updatedSubmission->healthProfile,
+                        $updatedSubmission->user,
+                        $updatedSubmission->category,
+                        $updatedSubmission->remarks,
+                        $updatedSubmission
+                    );
+                    $updatedSubmission->refresh();
+                }
+            } else {
+                $updatedSubmission->approved_at = null;
+            }
+            $updatedSubmission->save();
+
+            return $updatedSubmission->fresh();
+        });
 
         $this->logActivity(
             'Health Form Submission Status Updated',
-            'Updated Health Form submission #' . $submission->id . ' to ' . str_replace('_', ' ', $submission->status) . '.',
+            'Updated Health Form submission #' . $updatedSubmission->id . ' to ' . str_replace('_', ' ', $updatedSubmission->status) . '.',
             'Health Records',
             'ACTION'
         );
@@ -6498,6 +6667,7 @@ class AdminController extends Controller
                 HealthFormSubmission::STATUS_APPROVED,
                 HealthFormSubmission::STATUS_NEEDS_CORRECTION,
             ])
+            ->orderByRaw("CASE WHEN status IN (?, ?) THEN 0 ELSE 1 END", [HealthFormSubmission::STATUS_APPROVED, 'Approved'])
             ->latest('submitted_at')
             ->latest('id')
             ->first();
@@ -6606,6 +6776,29 @@ public function updateClearance(Request $request, $id)
         return back()->withInput()->with('error', $approvalError);
     }
 
+    $newHealthFormRequest = null;
+    $newHealthFormSubmission = null;
+    if ($isApproval) {
+        $newHealthFormRequest = HealthProfileCorrectionRequest::query()
+            ->where('health_profile_id', $record->id)
+            ->where('type', HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM)
+            ->whereIn('status', [
+                HealthProfileCorrectionRequest::STATUS_PENDING,
+                HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+                HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW,
+            ])
+            ->latest('requested_at')
+            ->latest('id')
+            ->first();
+        $newHealthFormSubmission = $newHealthFormRequest?->healthFormSubmission;
+
+        if ($newHealthFormSubmission
+            && $newHealthFormSubmission->status === HealthFormSubmission::STATUS_SUBMITTED
+            && (!$newHealthFormSubmission->submitted_at || !$newHealthFormSubmission->profile_snapshot)) {
+            return back()->withInput()->with('error', 'The submitted Health Form version is missing its saved snapshot and cannot be approved.');
+        }
+    }
+
     // Update Status
     $record->clearance_status = $requestedStatus;
     $record->clearance_revoked_at = null;
@@ -6627,6 +6820,51 @@ public function updateClearance(Request $request, $id)
     $record->resubmitted_at = $requestedStatus === 'Pending Resubmission' ? null : $record->resubmitted_at;
 
     if ($record->save()) {
+        if ($isApproval && $newHealthFormRequest && $newHealthFormSubmission
+            && $newHealthFormSubmission->status === HealthFormSubmission::STATUS_SUBMITTED) {
+            $promotedProfile = DB::transaction(function () use ($record, $newHealthFormRequest, $newHealthFormSubmission, $requestedStatus) {
+                $lockedProfile = HealthProfile::with('user')->lockForUpdate()->findOrFail($record->id);
+                $lockedSubmission = HealthFormSubmission::query()->lockForUpdate()->findOrFail($newHealthFormSubmission->id);
+                $lockedRequest = HealthProfileCorrectionRequest::query()->lockForUpdate()->findOrFail($newHealthFormRequest->id);
+
+                if ((int) $lockedRequest->health_form_submission_id !== (int) $lockedSubmission->id
+                    || $lockedSubmission->status !== HealthFormSubmission::STATUS_SUBMITTED
+                    || !$lockedSubmission->submitted_at
+                    || !$lockedSubmission->profile_snapshot) {
+                    return null;
+                }
+
+                $approvalAt = $lockedProfile->verified_at ?: now();
+                $lockedSubmission->forceFill([
+                    'status' => HealthFormSubmission::STATUS_APPROVED,
+                    'approved_at' => $approvalAt,
+                ])->save();
+
+                app(HealthProfileSnapshotService::class)->promoteApprovedSubmission(
+                    $lockedProfile,
+                    $lockedSubmission,
+                    $lockedProfile->user,
+                    auth()->id()
+                );
+
+                $lockedProfile->clearance_status = $requestedStatus;
+                $lockedProfile->verified_at = $approvalAt;
+                $lockedProfile->approved_by_user_id = auth()->id();
+                $lockedProfile->save();
+
+                $lockedRequest->forceFill([
+                    'status' => HealthProfileCorrectionRequest::STATUS_APPROVED,
+                    'reviewed_at' => now(),
+                ])->save();
+
+                return $lockedProfile->fresh('user');
+            });
+
+            if ($promotedProfile) {
+                $record = $promotedProfile;
+            }
+        }
+
         try {
             app(MarClearanceIssuanceService::class)->syncApprovedHealthProfile(
                 $record->fresh('user'),
@@ -6685,17 +6923,20 @@ public function updateClearance(Request $request, $id)
             }
 
             if ($isApproval) {
-                try {
-                    app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($record->fresh('user'));
-                } catch (\Throwable $exception) {
-                    \Log::error('Unable to save approved Health Form PDF snapshot.', [
-                        'health_profile_id' => $record->id,
-                        ...SensitiveLogRedactor::exceptionContext($exception),
-                    ]);
+                if (!$newHealthFormRequest) {
+                    try {
+                        app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($record->fresh('user'));
+                    } catch (\Throwable $exception) {
+                        \Log::error('Unable to save approved Health Form PDF snapshot.', [
+                            'health_profile_id' => $record->id,
+                            ...SensitiveLogRedactor::exceptionContext($exception),
+                        ]);
+                    }
                 }
 
                 HealthProfileCorrectionRequest::query()
                     ->where('health_profile_id', $record->id)
+                    ->where('type', '!=', HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM)
                     ->whereIn('status', [
                         HealthProfileCorrectionRequest::STATUS_PENDING,
                         HealthProfileCorrectionRequest::STATUS_SUBMITTED,
@@ -6707,20 +6948,22 @@ public function updateClearance(Request $request, $id)
                         'updated_at' => now(),
                     ]);
 
-                HealthFormSubmission::query()
-                    ->where(function ($query) use ($record) {
-                        $query->where('health_profile_id', $record->id)
-                            ->orWhere('user_id', $record->user_id);
-                    })
-                    ->whereIn('status', [
-                        HealthFormSubmission::STATUS_SUBMITTED,
-                        HealthFormSubmission::STATUS_NEEDS_CORRECTION,
-                    ])
-                    ->update([
-                        'status' => HealthFormSubmission::STATUS_APPROVED,
-                        'approved_at' => $record->verified_at ?: now(),
-                        'updated_at' => now(),
-                    ]);
+                if (!$newHealthFormRequest) {
+                    HealthFormSubmission::query()
+                        ->where(function ($query) use ($record) {
+                            $query->where('health_profile_id', $record->id)
+                                ->orWhere('user_id', $record->user_id);
+                        })
+                        ->whereIn('status', [
+                            HealthFormSubmission::STATUS_SUBMITTED,
+                            HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                        ])
+                        ->update([
+                            'status' => HealthFormSubmission::STATUS_APPROVED,
+                            'approved_at' => $record->verified_at ?: now(),
+                            'updated_at' => now(),
+                        ]);
+                }
 
                 if ($recordIsLocalOnly) {
                     $this->updatePuptasSyncState($record, 'not_applicable', 'PUPTAS sync is not applicable to local clinic health records.');
@@ -6872,6 +7115,32 @@ public function updateClearance(Request $request, $id)
         ]);
 
         $record = HealthProfile::with('user')->findOrFail($id);
+        $activeCorrectionRequest = HealthProfileCorrectionRequest::query()
+            ->where('user_id', $record->user_id)
+            ->where('health_profile_id', $record->id)
+            ->whereIn('type', [
+                HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION,
+                HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION,
+            ])
+            ->whereIn('status', [
+                HealthProfileCorrectionRequest::STATUS_PENDING,
+                HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+                HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW,
+            ])
+            ->latest('requested_at')
+            ->latest('id')
+            ->first();
+        $legacyCorrectionRequestIsActive = $record->resubmission_requested_at
+            && (!$record->resubmitted_at || $record->resubmitted_at->lt($record->resubmission_requested_at));
+        if ($activeCorrectionRequest || $legacyCorrectionRequestIsActive) {
+            $returnTo = (string) ($validated['return_to'] ?? '');
+            $redirect = $returnTo === 'health_records'
+                ? redirect()->route('admin.health_records', ['tab' => 'approved'])
+                : redirect()->route('admin.show_health', $record->id);
+
+            return $redirect->with('info', 'A correction request is already active for this record. Open it to review the existing request instead of sending another one.');
+        }
+
         $wasAlreadyIssued = in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true)
             || !empty($record->verified_at);
         $requestedDocuments = array_values(array_unique((array) ($validated['resubmission_required_documents'] ?? [])));
@@ -6890,6 +7159,29 @@ public function updateClearance(Request $request, $id)
             'pwd_id_proof' => 'pwd_id_proof',
         ];
 
+        $requestedAt = now();
+        $previousProfileState = [
+            'clearance_status' => $record->clearance_status,
+            'pending_reason' => $record->pending_reason,
+            'documents_valid' => $record->documents_valid,
+            'resubmission_required_documents' => $record->resubmission_required_documents,
+            'resubmission_requested_at' => $record->resubmission_requested_at?->toISOString(),
+            'resubmitted_at' => $record->resubmitted_at?->toISOString(),
+            'pending_compliance_reminder_sent_at' => $record->pending_compliance_reminder_sent_at?->toISOString(),
+            'pending_compliance_reminder_count' => $record->pending_compliance_reminder_count,
+            'is_health_profile_completed' => $record->user?->is_health_profile_completed,
+        ];
+        $clearedDocumentValues = [];
+
+        if ($request->boolean('clear_uploaded_documents')) {
+            foreach ($requestedDocuments as $documentKey) {
+                $column = $documentColumns[$documentKey] ?? null;
+                if ($column) {
+                    $clearedDocumentValues[$column] = $record->{$column};
+                }
+            }
+        }
+
         if (!$wasAlreadyIssued) {
             $record->clearance_status = 'Pending Resubmission';
         }
@@ -6902,7 +7194,7 @@ public function updateClearance(Request $request, $id)
         $record->pending_reason = $pendingReason;
         $record->documents_valid = $wasAlreadyIssued ? ($record->documents_valid ?? true) : false;
         $record->resubmission_required_documents = $requestedDocuments;
-        $record->resubmission_requested_at = now();
+        $record->resubmission_requested_at = $requestedAt;
         $record->pending_compliance_reminder_sent_at = null;
         $record->pending_compliance_reminder_count = 0;
         $record->resubmitted_at = null;
@@ -6936,6 +7228,8 @@ public function updateClearance(Request $request, $id)
                 'metadata' => [
                     'was_already_issued' => $wasAlreadyIssued,
                     'cleared_document_references' => $request->boolean('clear_uploaded_documents'),
+                    'previous_profile_state' => $previousProfileState,
+                    'cleared_document_values' => $clearedDocumentValues,
                 ],
             ]
         );
@@ -7692,8 +7986,15 @@ public function updateClearance(Request $request, $id)
         $reportIdentity = $admin && Schema::hasTable('admins')
             ? $this->findLinkedAdminProfile($admin)
             : null;
+        $canEditReportCredentials = $admin
+            && Schema::hasTable('admins')
+            && !$this->isStudentAssistantAccount($admin)
+            && in_array(User::normalizeRole((string) $admin->user_role), [User::ROLE_ADMIN, User::ROLE_SUPERADMIN], true);
+        $canEditReportPosition = $admin
+            && Schema::hasTable('admins')
+            && $this->isSuperadminAccount($admin);
 
-        return view('admin.settings-personal', compact('admin', 'settings', 'cmsProfile', 'reportIdentity'));
+        return view('admin.settings-personal', compact('admin', 'settings', 'cmsProfile', 'reportIdentity', 'canEditReportCredentials', 'canEditReportPosition'));
     }
 
     private function myHealthProfileDocumentDefinitions(
@@ -8007,6 +8308,7 @@ public function updateClearance(Request $request, $id)
             return response()->json([
                 'count' => 0,
                 'notifications' => [],
+                'pending_appointments_count' => 0,
             ], 401);
         }
 
@@ -8065,6 +8367,7 @@ public function updateClearance(Request $request, $id)
         return response()->json([
             'count' => $unread->count(),
             'notifications' => $unread,
+            'pending_appointments_count' => $recentPendingAppointments->count(),
         ]);
     }
 
@@ -8109,12 +8412,52 @@ public function updateClearance(Request $request, $id)
     // ==========================================
 
     // --- 1. APPOINTMENT ACTIONS ---
+    public function updateDoctorAvailability(Request $request)
+    {
+        $request->validate([
+            'available' => ['required', 'boolean'],
+        ]);
+
+        $available = $request->boolean('available');
+        $wasAvailable = app(\App\Services\ClinicWorkflowService::class)->doctorIsAvailable();
+
+        SystemSetting::putValue('clinic_doctor_available', $available ? '1' : '0');
+
+        if ($wasAvailable !== $available) {
+            ActivityLog::create([
+                'user_id' => auth()->id(),
+                'user_name' => auth()->user()?->name ?: 'Clinic Administrator',
+                'action' => $available ? 'Doctor Marked Available' : 'Doctor Marked Out',
+                'description' => $available
+                    ? 'Doctor availability was changed to available from the Clinic Workspace.'
+                    : 'Doctor availability was changed to out from the Clinic Workspace.',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+        }
+
+        return redirect()->back()->with(
+            'success',
+            $available
+                ? 'Doctor marked as available. Appointment booking and consultations are open.'
+                : 'Doctor marked as out. New appointment bookings and consultations are paused until marked available.'
+        );
+    }
+
     public function updateStatus($id, $status)
     {
+        if ($status === 'Approved' && !app(\App\Services\ClinicWorkflowService::class)->doctorIsAvailable()) {
+            return redirect()->back()->with('error', 'The doctor is currently marked out. This appointment cannot be approved until the doctor is marked available.');
+        }
+
         $appointmentScheduling = app(\App\Services\AppointmentSchedulingService::class);
         $previousStatus = '';
         $statusError = null;
-        $appointment = DB::transaction(function () use ($id, $status, $appointmentScheduling, &$previousStatus, &$statusError) {
+        $actionMessage = trim((string) request()->query('message', ''));
+        if ($status === 'Rejected' && $actionMessage === '') {
+            return redirect()->back()->with('error', 'Please provide a reason for rejecting this appointment.');
+        }
+        $appointment = DB::transaction(function () use ($id, $status, $appointmentScheduling, $actionMessage, &$previousStatus, &$statusError) {
             $appointmentScheduling->lockSchedule();
             $appointment = Appointment::query()->lockForUpdate()->find($id);
             if (!$appointment) {
@@ -8149,6 +8492,9 @@ public function updateClearance(Request $request, $id)
 
                 $appointment->appointment_reminder_email_sent_at = null;
             }
+            if ($status === 'Rejected' && $actionMessage !== '') {
+                $appointment->remarks = $actionMessage;
+            }
             $appointment->save();
 
             return $appointment;
@@ -8158,12 +8504,11 @@ public function updateClearance(Request $request, $id)
             return redirect()->back()->with('error', $statusError ?: 'Appointment not found.');
         }
 
-        $actionMessage = trim((string) request()->query('message', ''));
-
         if ($appointment->user && $previousStatus !== $status) {
             $emailEvent = match (strtolower(trim((string) $status))) {
                 'approved' => 'approved',
-                'cancelled', 'rejected' => 'rejected',
+                'cancelled' => 'cancelled',
+                'rejected' => 'rejected',
                 'rescheduled' => 'rescheduled',
                 default => null,
             };
@@ -8279,6 +8624,7 @@ public function updateClearance(Request $request, $id)
     // --- 2. INVENTORY ACTIONS ---
 public function storeItem(Request $request)
 {
+    $normalizer = new InventoryDataNormalizer();
     $request->validate([
         'name' => ['required', 'string', 'max:255'],
         'category' => ['required', 'string', 'max:255'],
@@ -8293,14 +8639,17 @@ public function storeItem(Request $request)
         'date_added' => ['required', 'string'],
         'medicine_type_id' => ['nullable', 'string', 'max:255'],
         'medicine_type_custom' => ['nullable', 'string', 'max:255'],
-        'expiration_date' => ['nullable', 'string'],
+        'expiration_date' => ['nullable', 'string', 'max:50', function ($attribute, $value, $fail) use ($normalizer) {
+            if (filled($value) && $normalizer->normalizeExpirationDate((string) $value) === null) {
+                $fail('Enter a valid expiration month and year.');
+            }
+        }],
     ]);
 
     // 1. Prepare data and sanitize medicine-specific fields
-    $normalizer = new InventoryDataNormalizer();
     $data = $request->all();
     $data['date_added'] = $normalizer->normalizeDate($request->input('date_added')) ?: now()->toDateString();
-    $data['expiration_date'] = $normalizer->normalizeDate($request->input('expiration_date', ''));
+    $data['expiration_date'] = $normalizer->normalizeExpirationDate((string) $request->input('expiration_date', ''));
     $data['unit'] = trim((string) $request->input('unit', 'pcs')) ?: 'pcs';
     if (Schema::hasColumn('items', 'stock_number')) {
         $data['stock_number'] = trim((string) $request->input('stock_number', '')) ?: null;
@@ -8380,6 +8729,7 @@ public function updateItem($id, Request $request)
     $item = Item::find($id);
     
     if ($item) {
+        $normalizer = new InventoryDataNormalizer();
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:255'],
@@ -8394,14 +8744,20 @@ public function updateItem($id, Request $request)
             'date_added' => ['required', 'date'],
             'medicine_type_id' => ['nullable', 'string', 'max:255'],
             'medicine_type_custom' => ['nullable', 'string', 'max:255'],
-            'expiration_date' => ['nullable', 'date'],
+            'expiration_date' => ['nullable', 'string', 'max:50', function ($attribute, $value, $fail) use ($normalizer) {
+                if (filled($value) && $normalizer->normalizeExpirationDate((string) $value) === null) {
+                    $fail('Enter a valid expiration month and year.');
+                }
+            }],
         ]);
 
-        $oldName = $item->name; // Using 'name' as per your blade file
+        $oldName = $item->name;
         $oldQuantity = (float) $item->quantity;
+        $oldAuditValues = $this->inventoryItemAuditValues($item);
         
         // 1. Prepare and sanitize data for update
         $data = $request->all();
+        $data['expiration_date'] = $normalizer->normalizeExpirationDate((string) $request->input('expiration_date', ''));
         $data['unit'] = trim((string) $request->input('unit', 'pcs')) ?: 'pcs';
         if (Schema::hasColumn('items', 'stock_number')) {
             $data['stock_number'] = trim((string) $request->input('stock_number', '')) ?: null;
@@ -8438,7 +8794,28 @@ public function updateItem($id, Request $request)
         }
 
         $item->update($data);
+        $item->unsetRelation('medicineType');
+        $item->unsetRelation('illnessCategory');
+        $newAuditValues = $this->inventoryItemAuditValues($item);
+        $changes = [];
+        foreach ($oldAuditValues as $field => $oldValue) {
+            $newValue = $newAuditValues[$field] ?? '';
+            if ($oldValue === $newValue) {
+                continue;
+            }
+
+            $changes[$field] = [
+                'from' => $oldValue !== '' ? $oldValue : 'Not specified',
+                'to' => $newValue !== '' ? $newValue : 'Not specified',
+            ];
+        }
+        $changeSummary = collect($changes)
+            ->map(fn (array $change, string $field): string => "{$field}: {$change['from']} -> {$change['to']}")
+            ->implode('; ');
         $newQuantity = (float) $item->quantity;
+        $movementNotes = $changeSummary !== ''
+            ? 'Updated fields: ' . $changeSummary
+            : 'Stock quantity adjusted through item edit.';
         if (abs($newQuantity - $oldQuantity) > 0.00001) {
             $this->recordInventoryMovement(
                 $item,
@@ -8446,23 +8823,31 @@ public function updateItem($id, Request $request)
                 $newQuantity - $oldQuantity,
                 $oldQuantity,
                 $newQuantity,
-                'Quantity adjusted through edit item.'
+                $movementNotes
             );
-        } else {
-            $this->recordInventoryMovement($item, 'edited', 0, $oldQuantity, $newQuantity, 'Item details updated.');
+        } elseif ($changes !== []) {
+            $this->recordInventoryMovement($item, 'edited', 0, $oldQuantity, $newQuantity, $changeSummary);
         }
-        $conversionInfo = $item->hasDispensingConversion()
-            ? " | Dispense as: {$item->dispensing_unit} ({$item->units_per_stock_unit} per {$item->unit})"
-            : "";
 
-        // 2. LOGS CODES
         \App\Models\ActivityLog::create([
-            'user_id'     => auth()->id(),
-            'user_name'   => auth()->user()->name,
-            'action'      => 'Inventory Edited', 
-            'description' => "Updated Item: $oldName (ID: #$id). New Qty: " . $this->formatInventoryQuantity((float) $item->quantity) . " {$item->unit}" . $conversionInfo . ($item->expiration_date ? " | New Exp: " . $item->expiration_date->format('M d, Y') : ""),
-            'ip_address'  => request()->ip(),
-            'user_agent'  => request()->userAgent(),
+            'user_id' => auth()->id(),
+            'user_name' => auth()->user()->name,
+            'user_role' => auth()->user()->user_role,
+            'action' => 'Inventory Edited',
+            'module' => 'Inventory',
+            'event_type' => 'update',
+            'description' => $changeSummary !== ''
+                ? "Updated item {$oldName} (ID #{$id}). Changed fields: {$changeSummary}."
+                : "Submitted an edit for item {$oldName} (ID #{$id}); no field values changed.",
+            'route_name' => optional($request->route())->getName(),
+            'http_method' => $request->method(),
+            'request_path' => '/' . ltrim($request->path(), '/'),
+            'status_code' => 302,
+            'subject_type' => 'inventory_item',
+            'subject_id' => (string) $item->id,
+            'metadata' => ['inventory_changes' => $changes],
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
         ]);
 
         return redirect()->back()->with('success', 'Item updated successfully.');
@@ -8916,7 +9301,7 @@ private function sanitizeInventoryImportRow(array $row, bool $persistMedicineTyp
 
     $normalizedUnit = $normalizer->normalizeUnit($row['unit'] ?? 'pcs');
     $normalizedDate = $normalizer->normalizeDate($row['date_added'] ?? '');
-    $normalizedExpiryDate = $normalizer->normalizeDate($row['expiration_date'] ?? '');
+    $normalizedExpiryDate = $normalizer->normalizeExpirationDate((string) ($row['expiration_date'] ?? ''));
 
     return [
         'name' => $text($row['name'] ?? '', 255),
@@ -9121,7 +9506,7 @@ public function deleteItem($id)
             $settings->clinic_closure_message = $request->input('clinic_closure_message') ?: null;
         }
 
-        $cancelledForClosure = DB::transaction(function () use ($settings, $request, $currentAdmin, $adminAlertAfter) {
+        $cancelledAppointmentIds = DB::transaction(function () use ($settings, $request, $currentAdmin, $adminAlertAfter) {
             $settings->save();
 
             if ($request->boolean('school_year_settings_form')) {
@@ -9130,18 +9515,34 @@ public function deleteItem($id)
             }
 
             if (!$request->boolean('preferences_form')) {
-                return 0;
+                return [];
             }
 
             $currentAdmin->admin_appointment_email_alerts = $adminAlertAfter;
             $currentAdmin->save();
 
             if (!$settings->clinic_closure_enabled) {
-                return 0;
+                return [];
             }
 
             return $this->cancelAppointmentsDuringClinicClosure($settings);
         });
+        $cancelledForClosure = count($cancelledAppointmentIds);
+        if ($cancelledAppointmentIds !== []) {
+            Appointment::query()
+                ->with('user')
+                ->whereIn('id', $cancelledAppointmentIds)
+                ->get()
+                ->each(function (Appointment $appointment): void {
+                    if ($appointment->user) {
+                        app(StudentNotificationMailer::class)->sendAppointmentNotice(
+                            $appointment->user,
+                            $appointment,
+                            'clinic_closure'
+                        );
+                    }
+                });
+        }
 
         $logParts = [];
         if ($request->filled('clinic_name') || $request->filled('clinic_location') || $request->filled('open_time') || $request->filled('close_time')) {
@@ -9231,10 +9632,10 @@ public function deleteItem($id)
         return redirect()->back()->with('success', $successMessage);
     }
 
-    private function cancelAppointmentsDuringClinicClosure(Setting $settings): int
+    private function cancelAppointmentsDuringClinicClosure(Setting $settings): array
     {
         if (!$settings->clinic_closure_starts_at || !$settings->clinic_closure_ends_at) {
-            return 0;
+            return [];
         }
 
         $timezone = config('app.timezone');
@@ -9254,7 +9655,7 @@ public function deleteItem($id)
             ->lockForUpdate()
             ->get();
 
-        $cancelled = 0;
+        $cancelled = [];
         foreach ($appointments as $appointment) {
             if (!$appointment->date || !$appointment->time) {
                 continue;
@@ -9265,13 +9666,13 @@ public function deleteItem($id)
                 continue;
             }
 
-            $existingNotes = trim((string) $appointment->notes);
+            $existingRemarks = trim((string) $appointment->remarks);
             $appointment->status = 'Cancelled';
-            $appointment->notes = $existingNotes === ''
+            $appointment->remarks = $existingRemarks === ''
                 ? $closureNote
-                : $existingNotes . PHP_EOL . PHP_EOL . $closureNote;
+                : $existingRemarks . PHP_EOL . PHP_EOL . $closureNote;
             $appointment->save();
-            $cancelled++;
+            $cancelled[] = $appointment->id;
         }
 
         return $cancelled;
@@ -9298,10 +9699,11 @@ public function deleteItem($id)
         'emergency_contact_person' => 'nullable|string|max:255',
         'emergency_contact_no' => 'nullable|string|max:255',
         'office' => 'nullable|string|max:255',
+        'clinic_position' => ['nullable', Rule::in(['Doctor', 'Nurse', 'Other'])],
+        'clinic_position_other' => ['nullable', 'string', 'max:255', 'required_if:clinic_position,Other'],
+        'report_credentials' => 'nullable|string|max:255',
         'role' => 'nullable|string|max:255',
         'status' => 'nullable|in:active,inactive',
-        'report_name' => 'nullable|string|max:255',
-        'report_position' => 'nullable|string|max:255',
         'password' => 'nullable|string|min:6|confirmed',
     ]);
     
@@ -9416,11 +9818,17 @@ public function deleteItem($id)
         }
 
         if (Admin::hasColumn('report_name')) {
-            $linkedAdminProfile->report_name = trim((string) $request->input('report_name', '')) ?: null;
+            $linkedAdminProfile->report_name = trim((string) $user->name) ?: null;
         }
-
-        if (Admin::hasColumn('report_position')) {
-            $linkedAdminProfile->report_position = trim((string) $request->input('report_position', '')) ?: null;
+        if (Admin::hasColumn('report_position') && array_key_exists('clinic_position', $request->all())) {
+            $positionChoice = trim((string) $request->input('clinic_position', ''));
+            $position = $positionChoice === 'Other'
+                ? trim((string) $request->input('clinic_position_other', ''))
+                : (in_array($positionChoice, ['Doctor', 'Nurse'], true) ? $positionChoice : '');
+            $linkedAdminProfile->report_position = $position !== '' ? $position : null;
+        }
+        if (Admin::hasColumn('report_credentials') && array_key_exists('report_credentials', $request->all())) {
+            $linkedAdminProfile->report_credentials = trim((string) $request->input('report_credentials')) ?: null;
         }
 
         $normalizedRole = User::normalizeRole((string) ($user->user_role ?? ''));
@@ -9491,11 +9899,10 @@ public function deleteItem($id)
         }
 
         if (Admin::hasColumn('report_name')) {
-            $reportIdentityProfile->report_name = trim((string) $request->input('report_name', '')) ?: null;
+            $reportIdentityProfile->report_name = trim((string) $user->name) ?: null;
         }
-
-        if (Admin::hasColumn('report_position')) {
-            $reportIdentityProfile->report_position = trim((string) $request->input('report_position', '')) ?: null;
+        if (Admin::hasColumn('report_credentials') && array_key_exists('report_credentials', $request->all())) {
+            $reportIdentityProfile->report_credentials = trim((string) $request->input('report_credentials')) ?: null;
         }
 
         $reportIdentityProfile->save();
@@ -9521,7 +9928,7 @@ public function deleteItem($id)
     $appointments = Appointment::all();
     $filename = "appointments_" . date('Y-m-d_H-i-s') . ".csv";
     $headers = ["Content-Type" => "text/csv", "Content-Disposition" => "attachment; filename={$filename}"];
-    $columns = ['ID','Name','Email','Student ID','Service','Date','Time','Status','Notes'];
+    $columns = ['ID','Name','Email','Student ID','Service','Date','Time','Status','Reason','Remarks'];
 
     // --- LOGS CODES ---
     \App\Models\ActivityLog::create([
@@ -9546,7 +9953,8 @@ public function deleteItem($id)
                 $appt->date,
                 $appt->time,
                 $appt->status,
-                $appt->notes
+                $appt->reason,
+                $appt->remarks
             ]);
         }
         fclose($file);
@@ -10514,6 +10922,7 @@ public function inventorySummary()
         return DB::query()
             ->fromSub($union, 'integration_activity')
             ->select('*')
+            ->where('created_at', '>=', now()->subDays(8))
             ->orderByDesc('created_at')
             ->orderByDesc('event_id');
     }

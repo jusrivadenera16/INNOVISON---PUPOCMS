@@ -443,7 +443,7 @@ class ReportsController extends Controller
                     'status' => $this->appointmentStatsStatus($appointment->status),
                     'service' => $this->appointmentStatsService($appointment->service ?: null),
                     'source' => $source,
-                    'reason' => trim((string) ($appointment->problem ?: $appointment->notes ?: '')),
+                    'reason' => trim((string) ($appointment->reason ?: '')),
                 ];
             });
 

@@ -580,7 +580,7 @@ PROMPT;
                 'starting_stock' => max(0, $startingStock),
                 'minimum_stock' => max(0, $this->parseNumber($this->firstValue($row, ['minimum_stock', 'minimum', 'minimum_qty', 'reorder_level', 'reorder_point']), 10)),
                 'date_added' => $normalizer->normalizeDate($this->firstString($row, ['date_added', 'date', 'received_date', 'restock_date', 'inventory_date'])),
-                'expiration_date' => $normalizer->normalizeDate($this->firstString($row, ['expiration_date', 'expiry', 'expiry_date', 'expiration', 'expiry_expiration_date'])),
+                'expiration_date' => $normalizer->normalizeExpirationDate($this->firstString($row, ['expiration_date', 'expiry', 'expiry_date', 'expiration', 'expiry_expiration_date'])),
                 'medicine_type' => $this->limitText($this->firstString($row, ['medicine_type', 'medicine_class', 'drug_class', 'medicine_category']), 255),
                 'confidence' => min(100, max(0, (int) $this->parseNumber($this->firstValue($row, ['confidence']), 100))),
                 'notes' => $this->limitText($this->firstString($row, ['notes', 'note', 'remarks']) ?: ($name === '' ? 'Item name was not detected. Type the item name before importing this row.' : ''), 500),

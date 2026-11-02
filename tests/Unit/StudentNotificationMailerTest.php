@@ -181,6 +181,66 @@ class StudentNotificationMailerTest extends TestCase
         });
     }
 
+    public function test_clinic_closure_cancellation_email_includes_the_clinic_update(): void
+    {
+        config()->set('services.student_notifications.enabled', true);
+        Mail::fake();
+
+        $student = new User([
+            'name' => 'Test Student',
+            'email' => 'student@example.test',
+        ]);
+        $appointment = new Appointment([
+            'service' => 'General Consultation',
+            'date' => '2026-11-02',
+            'time' => '08:00:00',
+            'status' => 'Cancelled',
+            'remarks' => '[Clinic Closure] Staff meeting. Clinic unavailable from Nov 02, 2026 7:00 AM until Nov 02, 2026 9:00 AM. Please book again after reopening.',
+        ]);
+
+        $result = app(StudentNotificationMailer::class)->sendAppointmentNotice($student, $appointment, 'clinic_closure');
+
+        $this->assertSame('sent', $result['status']);
+        Mail::assertSent(StudentPortalNotificationMail::class, function (StudentPortalNotificationMail $mail): bool {
+            $details = $mail->statusCard['details'] ?? [];
+            $clinicUpdate = collect($details)->firstWhere('label', 'Clinic Update');
+
+            return $mail->title === 'Your appointment was cancelled due to a clinic closure'
+                && str_contains($mail->messageText, 'Staff meeting')
+                && !str_contains((string) ($clinicUpdate['value'] ?? ''), '[Clinic Closure]')
+                && $mail->actionLabel === 'Book a New Appointment';
+        });
+    }
+
+    public function test_rejection_email_identifies_the_rejection_reason(): void
+    {
+        config()->set('services.student_notifications.enabled', true);
+        Mail::fake();
+
+        $student = new User([
+            'name' => 'Test Student',
+            'email' => 'student@example.test',
+        ]);
+        $appointment = new Appointment([
+            'service' => 'General Consultation',
+            'date' => '2026-11-02',
+            'time' => '08:00:00',
+            'status' => 'Rejected',
+            'remarks' => 'Please choose another date.',
+        ]);
+
+        $result = app(StudentNotificationMailer::class)->sendAppointmentNotice($student, $appointment, 'rejected');
+
+        $this->assertSame('sent', $result['status']);
+        Mail::assertSent(StudentPortalNotificationMail::class, function (StudentPortalNotificationMail $mail): bool {
+            $details = collect($mail->statusCard['details'] ?? []);
+            $rejectionReason = $details->firstWhere('label', 'Reason for Rejection');
+
+            return str_contains($mail->messageText, 'Reason for rejection: Please choose another date.')
+                && ($rejectionReason['value'] ?? null) === 'Please choose another date.';
+        });
+    }
+
     public function test_appointment_reminder_renders_its_dedicated_email_layout(): void
     {
         $mail = new StudentPortalNotificationMail(

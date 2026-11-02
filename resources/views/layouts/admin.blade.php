@@ -1863,6 +1863,7 @@
 
         .sidebar-logo {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             gap: 12px;
             margin-bottom: 20px;
@@ -1948,6 +1949,233 @@
                 max-width 0.34s cubic-bezier(0.22, 1, 0.36, 1),
                 opacity 0.2s ease,
                 transform 0.24s ease;
+        }
+
+        .doctor-availability-card {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 0 0 100%;
+            width: 100%;
+            min-height: 62px;
+            margin-top: 1px;
+            padding: 9px 10px;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 14px;
+            background: #ffffff;
+            color: #14231a;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+            transition: border-color .3s ease, background .3s ease, box-shadow .3s ease;
+        }
+
+        .doctor-availability-card.is-out {
+            border-color: rgba(185, 28, 28, 0.2);
+            background: #ffffff;
+            box-shadow: 0 8px 18px rgba(185, 28, 28, .07);
+        }
+
+        .doctor-availability-icon {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: 44px;
+            height: 32px;
+            flex: 0 0 44px;
+            color: #8b0000;
+        }
+
+        .doctor-availability-icon::after {
+            position: absolute;
+            top: 2px;
+            right: 0;
+            bottom: 2px;
+            width: 1px;
+            background: rgba(112, 19, 27, .16);
+            content: "";
+        }
+
+        .doctor-availability-icon svg {
+            width: 21px;
+            height: 21px;
+            stroke-width: 2;
+        }
+
+        .doctor-availability-copy {
+            display: grid;
+            gap: 4px;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .doctor-availability-title {
+            overflow: hidden;
+            color: #17221b;
+            font-size: 11.5px;
+            font-weight: 850;
+            line-height: 1.2;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .doctor-availability-form {
+            display: flex;
+            flex: 0 0 auto;
+            margin: 0;
+        }
+
+        .doctor-availability-toggle {
+            position: relative;
+            display: inline-block;
+            width: 58px;
+            height: 30px;
+            flex: 0 0 58px;
+            padding: 2px;
+            overflow: hidden;
+            border: 1px solid #b8e7d1;
+            border-radius: 999px;
+            background: linear-gradient(110deg, #effaf3, #e6f7ee);
+            cursor: pointer;
+            transition: background-color .3s ease, border-color .3s ease, box-shadow .3s ease;
+        }
+
+        .doctor-availability-toggle-thumb {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            z-index: 2;
+            display: grid;
+            place-items: center;
+            width: 32px;
+            height: 24px;
+            border-radius: 999px;
+            background: #16a34a;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, .2);
+            color: #ffffff;
+            font-size: 8px;
+            font-weight: 900;
+            line-height: 1;
+            transition: transform .42s cubic-bezier(.22, 1, .36, 1), background-color .25s ease;
+            will-change: transform;
+        }
+
+        .doctor-availability-toggle[aria-pressed="false"] {
+            border-color: #f5c5cc;
+            background: linear-gradient(110deg, #fff5f6, #fdecef);
+        }
+
+        .doctor-availability-toggle[aria-pressed="true"] .doctor-availability-toggle-thumb {
+            transform: translateX(22px);
+        }
+
+        .doctor-availability-toggle[aria-pressed="false"] .doctor-availability-toggle-thumb {
+            transform: translateX(0);
+            background: #e81123;
+        }
+
+        .doctor-availability-toggle-pulse {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .doctor-availability-toggle-pulse path {
+            fill: none;
+            stroke: #e81123;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 2.2;
+        }
+
+        .doctor-availability-toggle.is-animating-to-out .doctor-availability-toggle-pulse {
+            transform: scaleX(-1);
+            animation: doctor-availability-pulse .48s ease-out forwards;
+        }
+
+        .doctor-availability-toggle.is-animating-to-out .doctor-availability-toggle-pulse path {
+            animation: doctor-availability-trace .48s ease-out forwards;
+        }
+
+        .doctor-availability-toggle.is-animating-to-available .doctor-availability-toggle-pulse {
+            animation: doctor-availability-pulse .48s ease-out forwards;
+        }
+
+        .doctor-availability-toggle.is-animating-to-available .doctor-availability-toggle-pulse path {
+            stroke: #16a34a;
+            animation: doctor-availability-trace .48s ease-out forwards;
+        }
+
+        @keyframes doctor-availability-pulse {
+            12% { opacity: 1; }
+            82% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        @keyframes doctor-availability-trace {
+            to { stroke-dashoffset: 0; }
+        }
+
+        .doctor-availability-toggle:hover,
+        .doctor-availability-toggle:focus-visible {
+            box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.28);
+            outline: none;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .doctor-availability-card,
+            .doctor-availability-toggle,
+            .doctor-availability-toggle-thumb {
+                transition-duration: 0s !important;
+            }
+
+            .doctor-availability-toggle-pulse,
+            .doctor-availability-toggle-pulse path {
+                animation-duration: 0s !important;
+            }
+        }
+
+        .doctor-availability-readonly {
+            width: 34px;
+            height: 19px;
+            flex: 0 0 34px;
+            border: 1px solid #94a3b8;
+            border-radius: 999px;
+            background: #94a3b8;
+        }
+
+        .doctor-availability-card.is-available .doctor-availability-readonly {
+            border-color: #16a34a;
+            background: #16a34a;
+        }
+
+        html[data-theme="dark"] .doctor-availability-card {
+            border-color: rgba(74, 222, 128, 0.24);
+            background: linear-gradient(135deg, rgba(20, 83, 45, 0.48), rgba(20, 65, 42, 0.62));
+            color: #f8fafc;
+            box-shadow: 0 10px 22px rgba(0, 0, 0, .24);
+        }
+
+        html[data-theme="dark"] .doctor-availability-card.is-out {
+            border-color: rgba(248, 113, 113, 0.26);
+            background: linear-gradient(135deg, rgba(127, 29, 29, 0.34), rgba(88, 28, 35, 0.52));
+        }
+
+        html[data-theme="dark"] .doctor-availability-title {
+            color: #f8fafc;
+        }
+
+        html[data-theme="dark"] .doctor-availability-icon::after {
+            background: rgba(248, 250, 252, .18);
+        }
+
+        html[data-theme="light"] .doctor-availability-title {
+            color: #17221b;
         }
 
         .sidebar h4 {
@@ -2952,6 +3180,537 @@
             border-radius: 0;
         }
 
+        .admin-action-loader:not(.is-brand-logout) {
+            --loader-skeleton-surface: rgba(255, 255, 255, 0.045);
+            --loader-skeleton-edge: rgba(255, 255, 255, 0.09);
+            --loader-skeleton-fill: rgba(255, 255, 255, 0.12);
+            --loader-skeleton-soft: rgba(255, 255, 255, 0.07);
+            --loader-skeleton-glow: rgba(255, 255, 255, 0.065);
+            overflow: hidden;
+            background: #111827;
+            color: #ffffff;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+
+        .admin-loader-skeleton {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            display: grid;
+            grid-template-rows: 56px minmax(0, 1fr);
+            gap: clamp(14px, 2.2vw, 26px);
+            padding: clamp(14px, 2.5vw, 30px);
+            overflow: hidden;
+            opacity: 0.38;
+            pointer-events: none;
+        }
+
+        .admin-loader-skeleton::after {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            background: linear-gradient(105deg, transparent 38%, var(--loader-skeleton-glow) 50%, transparent 62%);
+            background-size: 220% 100%;
+            animation: adminSkeletonSweep 3.6s ease-in-out infinite;
+            content: "";
+            pointer-events: none;
+        }
+
+        @keyframes adminSkeletonSweep {
+            from { background-position: 100% 0; }
+            to { background-position: -120% 0; }
+        }
+
+        .loader-skeleton-topbar,
+        .loader-skeleton-main-heading,
+        .loader-skeleton-toolbar,
+        .loader-skeleton-table-row {
+            display: flex;
+            align-items: center;
+        }
+
+        .loader-skeleton-topbar {
+            gap: 12px;
+            padding: 0 2px 12px;
+            border-bottom: 1px solid var(--loader-skeleton-edge);
+        }
+
+        .loader-skeleton-shape {
+            display: block;
+            flex: 0 0 auto;
+            border: 1px solid var(--loader-skeleton-edge);
+            border-radius: 999px;
+            background: var(--loader-skeleton-fill);
+        }
+
+        .loader-skeleton-logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+        }
+
+        .loader-skeleton-brand {
+            display: grid;
+            gap: 6px;
+            width: min(32vw, 230px);
+        }
+
+        .loader-skeleton-line {
+            height: 9px;
+        }
+
+        .loader-skeleton-line.is-wide { width: 86%; }
+        .loader-skeleton-line.is-medium { width: 64%; }
+        .loader-skeleton-line.is-short { width: 38%; }
+
+        .loader-skeleton-top-actions {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .loader-skeleton-top-actions .loader-skeleton-shape {
+            width: 72px;
+            height: 26px;
+        }
+
+        .loader-skeleton-layout {
+            display: grid;
+            grid-template-columns: minmax(150px, 19%) minmax(0, 1fr);
+            gap: clamp(14px, 2vw, 24px);
+            min-height: 0;
+        }
+
+        .loader-skeleton-sidebar,
+        .loader-skeleton-content,
+        .loader-skeleton-table {
+            min-width: 0;
+            border: 1px solid var(--loader-skeleton-edge);
+            border-radius: 16px;
+            background: var(--loader-skeleton-surface);
+        }
+
+        .loader-skeleton-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 18px 14px;
+        }
+
+        .loader-skeleton-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 34px;
+            padding: 5px 7px;
+            border-radius: 8px;
+            background: var(--loader-skeleton-soft);
+        }
+
+        .loader-skeleton-nav-item .loader-skeleton-shape:first-child {
+            width: 19px;
+            height: 19px;
+            border-radius: 6px;
+        }
+
+        .loader-skeleton-nav-item .loader-skeleton-line {
+            width: min(72%, 112px);
+        }
+
+        .loader-skeleton-content {
+            display: flex;
+            flex-direction: column;
+            gap: clamp(12px, 1.6vw, 20px);
+            padding: clamp(14px, 2vw, 24px);
+        }
+
+        .loader-skeleton-main-heading {
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .loader-skeleton-heading-copy {
+            display: grid;
+            flex: 1 1 auto;
+            gap: 8px;
+        }
+
+        .loader-skeleton-heading-copy .loader-skeleton-line:first-child {
+            width: min(44%, 260px);
+            height: 15px;
+        }
+
+        .loader-skeleton-heading-copy .loader-skeleton-line:last-child {
+            width: min(62%, 390px);
+        }
+
+        .loader-skeleton-heading-action {
+            width: 114px;
+            height: 34px;
+            border-radius: 9px;
+        }
+
+        .loader-skeleton-stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .loader-skeleton-stat {
+            display: grid;
+            align-content: center;
+            gap: 9px;
+            min-height: clamp(76px, 11vh, 112px);
+            padding: 14px;
+            border: 1px solid var(--loader-skeleton-edge);
+            border-radius: 12px;
+            background: var(--loader-skeleton-surface);
+        }
+
+        .loader-skeleton-stat .loader-skeleton-line:first-child {
+            width: 58%;
+            height: 8px;
+        }
+
+        .loader-skeleton-stat .loader-skeleton-line:last-child {
+            width: 38%;
+            height: 16px;
+            border-radius: 5px;
+        }
+
+        .loader-skeleton-table {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            gap: 0;
+            min-height: 190px;
+            padding: 14px;
+        }
+
+        .loader-skeleton-toolbar {
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 14px;
+        }
+
+        .loader-skeleton-search {
+            width: min(45%, 330px);
+            height: 32px;
+            border-radius: 8px;
+        }
+
+        .loader-skeleton-filter {
+            width: 96px;
+            height: 32px;
+            border-radius: 8px;
+        }
+
+        .loader-skeleton-table-row {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr 1fr 0.8fr 0.7fr;
+            gap: 14px;
+            min-height: 42px;
+            padding: 10px 6px;
+            border-top: 1px solid var(--loader-skeleton-edge);
+        }
+
+        .loader-skeleton-table-row .loader-skeleton-line {
+            width: 78%;
+            height: 8px;
+        }
+
+        .loader-skeleton-table-row.is-header .loader-skeleton-line {
+            width: 60%;
+            background: var(--loader-skeleton-soft);
+        }
+
+        .loader-skeleton-report-panels,
+        .loader-skeleton-form {
+            display: none;
+            min-height: 0;
+            flex: 1 1 auto;
+        }
+
+        .loader-skeleton-report-panels {
+            grid-template-columns: minmax(0, 1.7fr) minmax(190px, 0.8fr);
+            gap: 12px;
+        }
+
+        .loader-skeleton-report-panel,
+        .loader-skeleton-form-panel {
+            min-width: 0;
+            padding: 16px;
+            border: 1px solid var(--loader-skeleton-edge);
+            border-radius: 13px;
+            background: var(--loader-skeleton-surface);
+        }
+
+        .loader-skeleton-report-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .loader-skeleton-report-heading {
+            width: min(52%, 220px);
+            height: 11px;
+        }
+
+        .loader-skeleton-chart {
+            display: flex;
+            align-items: end;
+            justify-content: space-around;
+            flex: 1 1 auto;
+            min-height: 150px;
+            gap: 12px;
+            padding: 16px 10px 0;
+            border-bottom: 1px solid var(--loader-skeleton-edge);
+            background: repeating-linear-gradient(to bottom, transparent 0 38px, var(--loader-skeleton-edge) 39px 40px);
+        }
+
+        .loader-skeleton-chart-bar {
+            width: min(11%, 34px);
+            min-height: 28px;
+            border: 1px solid var(--loader-skeleton-edge);
+            border-radius: 7px 7px 0 0;
+            background: var(--loader-skeleton-fill);
+        }
+
+        .loader-skeleton-chart-bar:nth-child(1) { height: 43%; }
+        .loader-skeleton-chart-bar:nth-child(2) { height: 68%; }
+        .loader-skeleton-chart-bar:nth-child(3) { height: 51%; }
+        .loader-skeleton-chart-bar:nth-child(4) { height: 82%; }
+        .loader-skeleton-chart-bar:nth-child(5) { height: 60%; }
+        .loader-skeleton-chart-bar:nth-child(6) { height: 74%; }
+
+        .loader-skeleton-report-summary {
+            display: grid;
+            align-content: start;
+            gap: 14px;
+        }
+
+        .loader-skeleton-report-summary .loader-skeleton-line {
+            width: 82%;
+        }
+
+        .loader-skeleton-report-summary .loader-skeleton-shape:not(.loader-skeleton-line) {
+            width: 100%;
+            height: 40px;
+            border-radius: 9px;
+        }
+
+        .loader-skeleton-form {
+            grid-template-columns: minmax(0, 1.5fr) minmax(180px, 0.75fr);
+            gap: 12px;
+        }
+
+        .loader-skeleton-form-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .loader-skeleton-form-section-title {
+            width: min(48%, 210px);
+            height: 11px;
+            margin-bottom: 2px;
+        }
+
+        .loader-skeleton-form-fields {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px 12px;
+        }
+
+        .loader-skeleton-form-field {
+            display: grid;
+            gap: 7px;
+        }
+
+        .loader-skeleton-form-field .loader-skeleton-line {
+            width: 54%;
+            height: 7px;
+        }
+
+        .loader-skeleton-form-field .loader-skeleton-shape:not(.loader-skeleton-line) {
+            width: 100%;
+            height: 34px;
+            border-radius: 8px;
+        }
+
+        .admin-loader-skeleton[data-skeleton-kind="reports"] .loader-skeleton-stats,
+        .admin-loader-skeleton[data-skeleton-kind="reports"] .loader-skeleton-table,
+        .admin-loader-skeleton[data-skeleton-kind="consultation"] .loader-skeleton-stats,
+        .admin-loader-skeleton[data-skeleton-kind="consultation"] .loader-skeleton-table {
+            display: none;
+        }
+
+        .admin-loader-skeleton[data-skeleton-kind="reports"] .loader-skeleton-report-panels,
+        .admin-loader-skeleton[data-skeleton-kind="consultation"] .loader-skeleton-form {
+            display: grid;
+        }
+
+        .admin-loader-skeleton[data-skeleton-kind="health-records"] .loader-skeleton-stats {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .admin-loader-skeleton[data-skeleton-kind="health-records"] .loader-skeleton-stat:last-child {
+            display: none;
+        }
+
+        .admin-loader-skeleton[data-skeleton-kind="health-records"] .loader-skeleton-table-row {
+            grid-template-columns: 1.35fr 1fr 0.85fr 0.7fr;
+        }
+
+        .admin-loader-skeleton[data-skeleton-kind="health-records"] .loader-skeleton-table-row > :nth-child(5) {
+            display: none;
+        }
+
+        .admin-loader-skeleton[data-skeleton-kind="inventory"] .loader-skeleton-table-row {
+            grid-template-columns: 1.25fr 0.8fr 0.7fr 0.85fr 0.7fr;
+        }
+
+        .admin-action-loader.is-brand-logout .admin-loader-skeleton {
+            display: none;
+        }
+
+        .admin-action-loader .loading {
+            position: relative;
+            z-index: 3;
+        }
+
+        @media (max-width: 700px) {
+            .admin-loader-skeleton {
+                grid-template-rows: 48px minmax(0, 1fr);
+                gap: 12px;
+                padding: 12px;
+            }
+
+            .loader-skeleton-layout {
+                grid-template-columns: 42px minmax(0, 1fr);
+                gap: 10px;
+            }
+
+            .loader-skeleton-sidebar {
+                align-items: center;
+                gap: 12px;
+                padding: 12px 5px;
+            }
+
+            .loader-skeleton-nav-item {
+                justify-content: center;
+                width: 30px;
+                min-height: 30px;
+                padding: 4px;
+            }
+
+            .loader-skeleton-nav-item .loader-skeleton-line {
+                display: none;
+            }
+
+            .loader-skeleton-top-actions .loader-skeleton-shape {
+                width: 38px;
+                height: 26px;
+            }
+
+            .loader-skeleton-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+            }
+
+            .loader-skeleton-stat {
+                min-height: 66px;
+                padding: 10px;
+            }
+
+            .loader-skeleton-content {
+                gap: 12px;
+                padding: 12px;
+            }
+
+            .loader-skeleton-report-panels,
+            .loader-skeleton-form {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 8px;
+            }
+
+            .loader-skeleton-report-panel,
+            .loader-skeleton-form-panel {
+                padding: 10px;
+            }
+
+            .loader-skeleton-report-panels .loader-skeleton-report-panel:last-child,
+            .loader-skeleton-form .loader-skeleton-form-panel:last-child {
+                display: none;
+            }
+
+            .loader-skeleton-chart {
+                min-height: 95px;
+            }
+
+            .loader-skeleton-table {
+                padding: 10px;
+            }
+
+            .loader-skeleton-table-row {
+                grid-template-columns: 1.2fr 1fr 0.8fr;
+                gap: 8px;
+                min-height: 36px;
+                padding: 9px 3px;
+            }
+
+            .loader-skeleton-table-row > :nth-child(n + 4) {
+                display: none;
+            }
+
+            .admin-loader-skeleton[data-skeleton-kind="health-records"] .loader-skeleton-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .admin-loader-skeleton[data-skeleton-kind="health-records"] .loader-skeleton-table-row {
+                grid-template-columns: 1.1fr 0.8fr 0.7fr;
+            }
+
+            .admin-loader-skeleton[data-skeleton-kind="inventory"] .loader-skeleton-table-row {
+                grid-template-columns: 1.1fr 0.75fr 0.65fr;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .loader-skeleton-top-actions {
+                display: none;
+            }
+
+            .loader-skeleton-heading-action {
+                width: 58px;
+            }
+
+            .loader-skeleton-content {
+                padding: 9px;
+            }
+
+            .loader-skeleton-stats {
+                gap: 6px;
+            }
+
+            .loader-skeleton-table-row {
+                grid-template-columns: 1fr 0.8fr;
+            }
+
+            .loader-skeleton-table-row > :nth-child(3) {
+                display: none;
+            }
+
+            .admin-loader-skeleton[data-skeleton-kind="health-records"] .loader-skeleton-table-row {
+                grid-template-columns: 1fr 0.8fr;
+            }
+
+            .admin-loader-skeleton[data-skeleton-kind="inventory"] .loader-skeleton-table-row {
+                grid-template-columns: 1fr 0.7fr;
+            }
+        }
+
         .admin-action-loader.is-brand-logout {
             background:
                 radial-gradient(ellipse 20% 30% at 50% 45%, rgba(250, 204, 21, 0.14) 0%, rgba(250, 204, 21, 0.045) 34%, transparent 70%),
@@ -3026,6 +3785,78 @@
             animation: adminContentLoaderIn 0.18s ease-out both;
         }
 
+        .admin-action-loader .loading {
+            min-width: min(90vw, 440px);
+            min-height: 0;
+            gap: 11px;
+            padding: 18px;
+        }
+
+        .admin-action-loader .admin-heart-rate {
+            width: min(66vw, 230px);
+            height: 60px;
+            overflow: hidden;
+        }
+
+        .admin-action-loader .loading .admin-heart-rate svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+            filter: drop-shadow(0 0 6px rgba(225, 29, 72, .14));
+        }
+
+        .admin-action-loader .admin-heart-rate polyline {
+            fill: none;
+            stroke-width: 2.6;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-miterlimit: 10;
+        }
+
+        .admin-action-loader .admin-heart-rate .loader-trace {
+            stroke: rgba(250, 204, 21, .28);
+        }
+
+        .admin-action-loader .loading .admin-heart-rate .loader-pulse {
+            stroke: #facc15;
+            stroke-dasharray: 65 435;
+            stroke-dashoffset: 500;
+            animation: adminHeartbeatSweep 2s linear infinite;
+        }
+
+        .admin-loader-copy {
+            display: none;
+            max-width: min(88vw, 440px);
+            text-align: center;
+        }
+
+        .admin-loader-detail {
+            margin-top: 6px;
+            color: rgba(255, 255, 255, .78);
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.45;
+        }
+
+        @keyframes adminHeartbeatSweep {
+            to { stroke-dashoffset: 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .admin-action-loader .admin-heart-rate .loader-pulse {
+                animation-duration: 4s;
+            }
+
+            .admin-action-loader .admin-loader-message-dot {
+                animation-duration: 2.4s;
+            }
+
+            .admin-loader-skeleton::after {
+                animation: none;
+            }
+        }
+
         .admin-loader-overlay .loading {
             display: inline-flex;
             align-items: center;
@@ -3055,8 +3886,24 @@
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.34);
         }
 
-        .admin-action-loader.has-message .admin-loader-message {
+        .admin-action-loader.has-message .admin-loader-copy {
+            display: block;
+        }
+
+        .admin-action-loader .admin-loader-message {
             display: inline-flex;
+            align-items: center;
+            min-height: 0;
+            color: #ffffff;
+            font-size: clamp(17px, 2vw, 23px);
+            font-weight: 900;
+            letter-spacing: -0.025em;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .admin-action-loader .admin-loader-message-dots {
+            display: inline-flex;
+            margin-left: 1px;
         }
 
         .admin-loader-message-dot {
@@ -4775,6 +5622,34 @@
             color: #5a1421;
         }
 
+        html[data-theme="light"] .admin-action-loader:not(.is-brand-logout) {
+            --loader-skeleton-surface: rgba(255, 255, 255, 0.82);
+            --loader-skeleton-edge: rgba(112, 19, 27, 0.12);
+            --loader-skeleton-fill: #e5e7eb;
+            --loader-skeleton-soft: rgba(128, 0, 0, 0.055);
+            --loader-skeleton-glow: rgba(128, 0, 0, 0.04);
+            background: #f7f8fb;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+
+        html[data-theme="light"] .admin-action-loader:not(.is-brand-logout) .admin-loader-message {
+            color: #721126;
+            text-shadow: none;
+        }
+
+        html[data-theme="light"] .admin-action-loader:not(.is-brand-logout) .admin-loader-detail {
+            color: #5f6368;
+        }
+
+        html[data-theme="light"] .admin-action-loader:not(.is-brand-logout) .admin-heart-rate .loader-trace {
+            stroke: rgba(225, 29, 72, .2);
+        }
+
+        html[data-theme="light"] .admin-action-loader:not(.is-brand-logout) .admin-heart-rate .loader-pulse {
+            stroke: #e11d48;
+        }
+
         html[data-theme="light"] .admin-action-loader.is-brand-logout {
             background:
                 radial-gradient(ellipse 20% 30% at 50% 45%, rgba(250, 204, 21, 0.14) 0%, rgba(250, 204, 21, 0.045) 34%, transparent 70%),
@@ -5828,9 +6703,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     $currentRole = \App\Models\User::normalizeRole(optional($authUser)->user_role ?? '');
     $isStudentAssistant = $authUser?->isStudentAssistant() ?? false;
     $isAdminLike = $currentRole === \App\Models\User::ROLE_SUPERADMIN;
-    $sidebarRoleLabel = $isStudentAssistant
-        ? 'Student Assistant'
-        : ($isAdminLike ? 'Administration' : 'Clinic Staff');
+    $canToggleDoctorAvailability = !$isStudentAssistant && in_array($currentRole, [\App\Models\User::ROLE_SUPERADMIN, \App\Models\User::ROLE_ADMIN], true);
+    $doctorAvailable = \App\Models\SystemSetting::booleanValue('clinic_doctor_available', true);
     $canAccessModule = fn (string $permission): bool => $authUser?->canAccessPermission($permission) ?? false;
     $canAccessAnyModule = fn (array $permissions): bool => $authUser?->canAccessAnyPermission($permissions) ?? false;
     $linkedAdminProfile = null;
@@ -6501,18 +7375,33 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
   <aside class="sidebar" id="adminSidebar">
     <div class="sidebar-scroll-region" id="adminSidebarScrollRegion">
     <div class="sidebar-logo">
-      <div class="sidebar-logo-badges">
-        
-      </div>
-      <div class="sidebar-logo-text">
-        <div class="sidebar-logo-title">
-          <span class="sidebar-logo-title-indicator" aria-hidden="true"></span>
-          <span>CLINIC WORKSPACE</span>
-        </div>
-        <div class="sidebar-logo-sub">
-          <span class="sidebar-logo-sub-indicator" aria-hidden="true"></span>
-          <span>{{ $sidebarRoleLabel }}</span>
-        </div>
+      <div class="doctor-availability-card {{ $doctorAvailable ? 'is-available' : 'is-out' }}" aria-label="Doctor is {{ $doctorAvailable ? 'available' : 'out' }}">
+        <span class="doctor-availability-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
+        <span class="doctor-availability-copy">
+          <span class="doctor-availability-title">The Doctor is</span>
+        </span>
+        @if($canToggleDoctorAvailability)
+          <form class="doctor-availability-form" method="POST" action="{{ route('admin.doctor-availability.update') }}">
+            @csrf
+            <input type="hidden" name="available" value="{{ $doctorAvailable ? '0' : '1' }}">
+            <button
+              type="submit"
+              class="doctor-availability-toggle"
+              role="switch"
+              aria-checked="{{ $doctorAvailable ? 'true' : 'false' }}"
+              aria-pressed="{{ $doctorAvailable ? 'true' : 'false' }}"
+              aria-label="{{ $doctorAvailable ? 'Mark doctor as out' : 'Mark doctor as available' }}"
+              title="{{ $doctorAvailable ? 'Mark doctor as out' : 'Mark doctor as available' }}"
+            >
+              <svg class="doctor-availability-toggle-pulse" viewBox="0 0 58 30" aria-hidden="true" focusable="false">
+                <path pathLength="100" d="M1 15h3l2-1 2-4 2 10 2-16 2 18 2-7 2 0" />
+              </svg>
+              <span class="doctor-availability-toggle-thumb" aria-hidden="true">{{ $doctorAvailable ? 'IN' : 'OUT' }}</span>
+            </button>
+          </form>
+        @else
+          <span class="doctor-availability-readonly" aria-hidden="true"></span>
+        @endif
       </div>
     </div>
     
@@ -6745,13 +7634,120 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 @include('admin.partials.consultation-evaluation-prompt')
 
 <div class="admin-loader-overlay admin-action-loader" id="adminActionLoader" role="status" aria-live="assertive" aria-label="Processing action" aria-hidden="true">
+    <div class="admin-loader-skeleton" data-skeleton-kind="generic" aria-hidden="true">
+        <div class="loader-skeleton-topbar">
+            <span class="loader-skeleton-shape loader-skeleton-logo"></span>
+            <span class="loader-skeleton-brand">
+                <span class="loader-skeleton-shape loader-skeleton-line is-wide"></span>
+                <span class="loader-skeleton-shape loader-skeleton-line is-short"></span>
+            </span>
+            <span class="loader-skeleton-top-actions">
+                <span class="loader-skeleton-shape"></span>
+                <span class="loader-skeleton-shape"></span>
+            </span>
+        </div>
+        <div class="loader-skeleton-layout">
+            <aside class="loader-skeleton-sidebar">
+                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
+                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
+                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
+                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
+                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
+                <span class="loader-skeleton-nav-item"><span class="loader-skeleton-shape"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
+            </aside>
+            <main class="loader-skeleton-content">
+                <div class="loader-skeleton-main-heading">
+                    <span class="loader-skeleton-heading-copy">
+                        <span class="loader-skeleton-shape loader-skeleton-line"></span>
+                        <span class="loader-skeleton-shape loader-skeleton-line"></span>
+                    </span>
+                    <span class="loader-skeleton-shape loader-skeleton-heading-action"></span>
+                </div>
+                <div class="loader-skeleton-stats">
+                    <span class="loader-skeleton-stat"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
+                    <span class="loader-skeleton-stat"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
+                    <span class="loader-skeleton-stat"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
+                    <span class="loader-skeleton-stat"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span></span>
+                </div>
+                <div class="loader-skeleton-table">
+                    <div class="loader-skeleton-toolbar">
+                        <span class="loader-skeleton-shape loader-skeleton-search"></span>
+                        <span class="loader-skeleton-shape loader-skeleton-filter"></span>
+                    </div>
+                    <div class="loader-skeleton-table-row is-header">
+                        <span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span>
+                    </div>
+                    <div class="loader-skeleton-table-row">
+                        <span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span>
+                    </div>
+                    <div class="loader-skeleton-table-row">
+                        <span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span>
+                    </div>
+                    <div class="loader-skeleton-table-row">
+                        <span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span>
+                    </div>
+                    <div class="loader-skeleton-table-row">
+                        <span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape loader-skeleton-line"></span>
+                    </div>
+                </div>
+                <div class="loader-skeleton-report-panels">
+                    <section class="loader-skeleton-report-panel">
+                        <span class="loader-skeleton-shape loader-skeleton-report-heading"></span>
+                        <span class="loader-skeleton-shape loader-skeleton-line is-medium"></span>
+                        <div class="loader-skeleton-chart">
+                            <span class="loader-skeleton-chart-bar"></span>
+                            <span class="loader-skeleton-chart-bar"></span>
+                            <span class="loader-skeleton-chart-bar"></span>
+                            <span class="loader-skeleton-chart-bar"></span>
+                            <span class="loader-skeleton-chart-bar"></span>
+                            <span class="loader-skeleton-chart-bar"></span>
+                        </div>
+                    </section>
+                    <section class="loader-skeleton-report-panel loader-skeleton-report-summary">
+                        <span class="loader-skeleton-shape loader-skeleton-report-heading"></span>
+                        <span class="loader-skeleton-shape loader-skeleton-line is-medium"></span>
+                        <span class="loader-skeleton-shape"></span>
+                        <span class="loader-skeleton-shape"></span>
+                        <span class="loader-skeleton-shape"></span>
+                    </section>
+                </div>
+                <div class="loader-skeleton-form">
+                    <section class="loader-skeleton-form-panel">
+                        <span class="loader-skeleton-shape loader-skeleton-form-section-title"></span>
+                        <div class="loader-skeleton-form-fields">
+                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
+                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
+                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
+                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
+                        </div>
+                        <span class="loader-skeleton-shape loader-skeleton-form-section-title"></span>
+                        <div class="loader-skeleton-form-fields">
+                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
+                            <span class="loader-skeleton-form-field"><span class="loader-skeleton-shape loader-skeleton-line"></span><span class="loader-skeleton-shape"></span></span>
+                        </div>
+                    </section>
+                    <section class="loader-skeleton-form-panel">
+                        <span class="loader-skeleton-shape loader-skeleton-form-section-title"></span>
+                        <span class="loader-skeleton-shape loader-skeleton-line is-medium"></span>
+                        <span class="loader-skeleton-shape" style="height: 84px; border-radius: 8px;"></span>
+                        <span class="loader-skeleton-shape" style="height: 34px; width: 42%; margin-top: auto; border-radius: 8px;"></span>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
     <div class="loading" aria-hidden="true">
-        <svg width="64" height="48" viewBox="0 0 64 48" focusable="false">
-            <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" class="loader-trace"></polyline>
-            <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" class="loader-pulse"></polyline>
-        </svg>
-        <div class="admin-loader-message">
-            <span data-admin-loader-message-text>Signing you out</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
+        <div class="admin-heart-rate" aria-hidden="true">
+            <svg viewBox="0 0 150 73" focusable="false" role="presentation">
+                <polyline points="0,45.486 38.514,45.486 44.595,33.324 50.676,45.486 57.771,45.486 62.838,55.622 71.959,9 80.067,63.729 84.122,45.486 97.297,45.486 103.379,40.419 110.473,45.486 150,45.486" class="loader-trace"></polyline>
+                <polyline points="0,45.486 38.514,45.486 44.595,33.324 50.676,45.486 57.771,45.486 62.838,55.622 71.959,9 80.067,63.729 84.122,45.486 97.297,45.486 103.379,40.419 110.473,45.486 150,45.486" class="loader-pulse" pathLength="500"></polyline>
+            </svg>
+        </div>
+        <div class="admin-loader-copy">
+            <div class="admin-loader-message">
+                <span data-admin-loader-message-text>Loading</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
+            </div>
+            <div class="admin-loader-detail" data-admin-loader-detail>Preparing your request, please wait.</div>
         </div>
     </div>
     <div class="admin-action-brand-loader" aria-hidden="true">
@@ -7222,18 +8218,140 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             contentLoader.setAttribute('aria-hidden', 'false');
         };
 
-        const showActionLoading = function (message = '') {
+        const resolveActionCopy = function (source, mode = 'navigation') {
+            const form = source instanceof HTMLFormElement ? source : source?.form;
+            const explicitMessage = source?.dataset?.loaderMessage || form?.dataset?.loaderMessage || '';
+            const explicitDetail = source?.dataset?.loaderDetail || form?.dataset?.loaderDetail || '';
+            if (explicitMessage.trim()) {
+                return {
+                    title: explicitMessage.trim(),
+                    detail: explicitDetail.trim() || 'Please wait while this request is processed.',
+                };
+            }
+
+            const label = [
+                source?.textContent,
+                source?.value,
+                source?.getAttribute?.('aria-label'),
+                source?.getAttribute?.('title'),
+                form?.getAttribute?.('aria-label'),
+            ].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+            const actionUrl = source instanceof HTMLAnchorElement
+                ? source.href
+                : (form?.getAttribute('action') || window.location.href);
+            let path = '';
+            try {
+                path = new URL(actionUrl, window.location.href).pathname.toLowerCase();
+            } catch (error) {
+                path = '';
+            }
+            const context = (label + ' ' + path).toLowerCase();
+
+            if (mode === 'submit') {
+                if (/finali[sz]e/.test(context)) {
+                    return { title: 'Finalizing consultation', detail: 'Saving the consultation and preparing its final review.' };
+                }
+                if (/\b(approve|approved|clear|clearance)\b/.test(context)) {
+                    return { title: 'Approving health record', detail: 'Updating the review status and saving the decision.' };
+                }
+                if (/\b(reject|rejected|decline)\b/.test(context)) {
+                    return { title: 'Rejecting request', detail: 'Saving the decision and its reason.' };
+                }
+                if (/\b(cancel|cancellation)\b/.test(context)) {
+                    return { title: 'Cancelling appointment', detail: 'Updating the appointment and notifying the student.' };
+                }
+                if (/\b(dispense|dispensing|issue medicine|issue medication)\b/.test(context)) {
+                    return { title: 'Issuing medicine', detail: 'Recording the medicine and updating inventory.' };
+                }
+                if (/\b(book|booking appointment|schedule appointment)\b/.test(context)) {
+                    return { title: 'Booking appointment', detail: 'Checking the selected schedule and saving the booking.' };
+                }
+                if (/\b(correction|correct file|request correction)\b/.test(context)) {
+                    return { title: 'Submitting correction request', detail: 'Sending the file correction request for review.' };
+                }
+                if (/\b(submit|send|request)\b/.test(context)) {
+                    return { title: 'Submitting form', detail: 'Sending your information securely. Please wait.' };
+                }
+                if (/\b(save|update|edit)\b/.test(context)) {
+                    return { title: 'Saving changes', detail: 'Updating the record with your changes.' };
+                }
+                return { title: 'Processing request', detail: 'Please wait while the system completes this action.' };
+            }
+
+            if (/health[\s_-]*records?|health[_-]records/.test(context)) {
+                const openingRecord = /\b(view|open|review|profile)\b/.test(label.toLowerCase());
+                return openingRecord
+                    ? { title: 'Opening health record', detail: 'Retrieving the selected profile and medical information.' }
+                    : { title: 'Loading Health Records', detail: 'Retrieving medical records and review information.' };
+            }
+            if (/\binventory\b|\bstock\b/.test(context)) {
+                return { title: 'Loading Inventory', detail: 'Retrieving medicine and supply information.' };
+            }
+            if (/\bappointments?\b/.test(context)) {
+                return { title: 'Loading Appointments', detail: 'Retrieving appointment and clinic schedule details.' };
+            }
+            if (/\breports?\b/.test(context)) {
+                return { title: 'Loading Reports', detail: 'Preparing the requested clinic report.' };
+            }
+            if (/\b(view|open|record|profile|details)\b/.test(label.toLowerCase())) {
+                return { title: 'Opening record', detail: 'Retrieving the selected record. Please wait.' };
+            }
+            const section = label.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
+            return section
+                ? { title: 'Loading ' + section.slice(0, 42), detail: 'Please wait while the next page opens.' }
+                : { title: 'Loading page', detail: 'Please wait while the requested page opens.' };
+        };
+
+        const resolveSkeletonKind = function (source) {
+            const form = source instanceof HTMLFormElement ? source : source?.form;
+            const label = [source?.textContent, source?.value, source?.getAttribute?.('aria-label')]
+                .filter(Boolean).join(' ').toLowerCase();
+            const actionUrl = source instanceof HTMLAnchorElement
+                ? source.href
+                : (form?.getAttribute('action') || window.location.href);
+            let path = '';
+            try {
+                path = new URL(actionUrl, window.location.href).pathname.toLowerCase();
+            } catch (error) {
+                path = '';
+            }
+            const context = label + ' ' + path;
+
+            if (/health[\s_-]*records?|health[_-]records/.test(context)) {
+                return 'health-records';
+            }
+            if (/\bappointments?\b/.test(context)) {
+                return 'appointments';
+            }
+            if (/\binventory\b|\bstock\b/.test(context)) {
+                return 'inventory';
+            }
+            if (/\breports?\b|\bmar\b|accomplishment/.test(context)) {
+                return 'reports';
+            }
+            if (/\bconsultation\b|\bconsult\b|\bwalk[\s-]?in\b/.test(context)) {
+                return 'consultation';
+            }
+            return 'generic';
+        };
+
+        const showActionLoading = function (message = '', detail = '', skeletonKind = 'generic') {
             content.classList.remove('is-navigation-loading');
             content.setAttribute('aria-busy', 'false');
             contentLoader.setAttribute('aria-hidden', 'true');
             actionLoader.classList.add('is-active');
             actionLoader.setAttribute('aria-hidden', 'false');
+            actionLoader.dataset.skeletonKind = skeletonKind || 'generic';
             document.body.setAttribute('aria-busy', 'true');
 
             const messageText = actionLoader.querySelector('[data-admin-loader-message-text]');
+            const detailText = actionLoader.querySelector('[data-admin-loader-detail]');
             const normalizedMessage = String(message || '').trim();
             if (messageText) {
-                messageText.textContent = normalizedMessage || 'Processing';
+                messageText.textContent = normalizedMessage || 'Processing request';
+            }
+            if (detailText) {
+                detailText.textContent = String(detail || '').trim() || 'Please wait while the system completes this action.';
             }
             const isLogoutLoader = normalizedMessage.toLowerCase() === 'signing you out';
             actionLoader.classList.toggle('is-brand-logout', isLogoutLoader);
@@ -7281,7 +8399,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             }
 
             if (loaderScope === 'screen') {
-                showActionLoading();
+                const copy = resolveActionCopy(link);
+                showActionLoading(copy.title, copy.detail, resolveSkeletonKind(link));
                 return;
             }
 
@@ -7289,7 +8408,13 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 return;
             }
 
-            showContentLoading();
+            if (loaderScope === 'content') {
+                showContentLoading();
+                return;
+            }
+
+            const copy = resolveActionCopy(link);
+            showActionLoading(copy.title, copy.detail, resolveSkeletonKind(link));
         });
 
         document.addEventListener('submit', function (event) {
@@ -7322,7 +8447,9 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
             const method = (form.getAttribute('method') || 'get').toLowerCase();
             if (loaderScope === 'screen' || (loaderScope !== 'content' && method !== 'get')) {
-                showActionLoading();
+                const source = event.submitter || form;
+                const copy = resolveActionCopy(source, 'submit');
+                showActionLoading(copy.title, copy.detail, resolveSkeletonKind(source));
                 return;
             }
 
@@ -7330,7 +8457,13 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 return;
             }
 
-            showContentLoading();
+            if (loaderScope === 'content') {
+                showContentLoading();
+                return;
+            }
+
+            const copy = resolveActionCopy(event.submitter || form);
+            showActionLoading(copy.title, copy.detail, resolveSkeletonKind(event.submitter || form));
         });
 
         window.addEventListener('resize', function () {
@@ -7680,6 +8813,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         const summary = parseJson(summaryNode, {});
         const knownIds = new Set(parseJson(initialIdsNode, []).map(String));
         const badgeNodes = Array.from(document.querySelectorAll('.quick-action-badge, .medicine-alert-badge'));
+        const appointmentsForReviewCount = document.getElementById('appointmentsForReviewCount');
 
         const activityMessage = (appointments, healthForms, unread) => {
             const parts = [];
@@ -7721,6 +8855,9 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 .then((payload) => {
                     const items = Array.isArray(payload.notifications) ? payload.notifications : [];
                     updateBadges(Number(payload.count || items.length || 0));
+                    if (appointmentsForReviewCount && Number.isFinite(Number(payload.pending_appointments_count))) {
+                        appointmentsForReviewCount.textContent = String(Number(payload.pending_appointments_count));
+                    }
 
                     let newAppointments = 0;
                     let newHealthForms = 0;
@@ -8774,6 +9911,41 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     });
 
     document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.doctor-availability-form').forEach(function (form) {
+            const toggle = form.querySelector('.doctor-availability-toggle');
+            const availableInput = form.querySelector('input[name="available"]');
+            if (!toggle || !availableInput) return;
+
+            form.addEventListener('submit', function (event) {
+                if (form.dataset.availabilitySubmitting === 'true') {
+                    event.preventDefault();
+                    return;
+                }
+
+                event.preventDefault();
+                form.dataset.availabilitySubmitting = 'true';
+
+                const nextAvailable = toggle.getAttribute('aria-pressed') !== 'true';
+                const card = form.closest('.doctor-availability-card');
+                availableInput.value = nextAvailable ? '1' : '0';
+                toggle.setAttribute('aria-checked', nextAvailable ? 'true' : 'false');
+                toggle.setAttribute('aria-pressed', nextAvailable ? 'true' : 'false');
+                toggle.setAttribute('aria-label', nextAvailable ? 'Mark doctor as out' : 'Mark doctor as available');
+                toggle.title = nextAvailable ? 'Mark doctor as out' : 'Mark doctor as available';
+                toggle.classList.add(nextAvailable ? 'is-animating-to-available' : 'is-animating-to-out');
+                const thumb = toggle.querySelector('.doctor-availability-toggle-thumb');
+                if (thumb) thumb.textContent = nextAvailable ? 'IN' : 'OUT';
+                card?.classList.toggle('is-available', nextAvailable);
+                card?.classList.toggle('is-out', !nextAvailable);
+                card?.setAttribute('aria-label', 'Doctor is ' + (nextAvailable ? 'available' : 'out'));
+
+                const motionReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                window.setTimeout(function () {
+                    HTMLFormElement.prototype.submit.call(form);
+                }, motionReduced ? 0 : 520);
+            });
+        });
+
         initAssistantUi();
         initGlobalSearch();
         initThemeToggle();

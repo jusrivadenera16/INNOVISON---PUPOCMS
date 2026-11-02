@@ -14,6 +14,7 @@ class HealthFormSubmission extends Model
     public const STATUS_SUBMITTED = 'submitted';
     public const STATUS_APPROVED = 'approved';
     public const STATUS_NEEDS_CORRECTION = 'needs_correction';
+    public const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
         'user_id',

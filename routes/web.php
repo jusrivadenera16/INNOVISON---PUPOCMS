@@ -31,6 +31,32 @@ Route::get('/landing/weather', LandingWeatherController::class)
     ->middleware('throttle:60,1')
     ->name('landing.weather');
 
+Route::get('/landing/doctor-availability', function () {
+    $workflow = app(\App\Services\ClinicWorkflowService::class);
+    $clinicClosed = false;
+
+    try {
+        $available = $workflow->doctorIsAvailable();
+    } catch (\Throwable) {
+        $available = true;
+    }
+
+    try {
+        $now = now(config('app.timezone'));
+        $clinicHours = $workflow->clinicHoursStatus($now);
+        $clinicClosed = !($clinicHours['is_open'] ?? false)
+            || $workflow->activeClosure($now) !== null;
+    } catch (\Throwable) {
+        $clinicClosed = false;
+    }
+
+    return response()->json([
+        'available' => $available,
+        'clinic_closed' => $clinicClosed,
+    ])
+        ->header('Cache-Control', 'no-store, private');
+})->middleware('throttle:60,1')->name('landing.doctor-availability');
+
 Route::get('/', function (\Illuminate\Http\Request $request) {
     if ($request->has('weather-preview')) {
         $remainingQuery = $request->except('weather-preview');
@@ -209,6 +235,10 @@ Route::middleware(['auth:student', 'student.idle', 'account.active', 'idp.sessio
             ->name('student.health_record.signature');
         Route::post('/student/health-record/resubmit', [AppointmentController::class, 'resubmitHealthRecordRequirements'])
             ->name('student.health_record.resubmit');
+        Route::post('/student/health-record/correction-requests/{correctionRequest}/cancel', [AppointmentController::class, 'cancelStudentHealthRecordCorrectionRequest'])
+            ->name('student.health_record.correction_requests.cancel');
+        Route::post('/student/health-form-requests/{submission}/cancel', [AppointmentController::class, 'cancelStudentHealthFormRequest'])
+            ->name('student.health_form.request.cancel');
         Route::post('/student/health-record/documents', [AppointmentController::class, 'uploadHealthRecordDocuments'])
             ->name('student.health_record.documents');
         Route::post('/student/health-record/health-declaration', [AppointmentController::class, 'uploadHealthDeclaration'])
@@ -354,6 +384,8 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::get('/admin/global-search', [AdminGlobalSearchController::class, 'search'])->name('admin.global-search');
 
         Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+        Route::post('/admin/doctor-availability', [AdminController::class, 'updateDoctorAvailability'])
+            ->name('admin.doctor-availability.update');
         Route::get('/admin/appointments', [AdminController::class, 'appointments'])->middleware('module.permission:appointments.view')->name('admin.appointments');
         Route::get('/admin/appointments/{id}/{status}', [AdminController::class, 'updateStatus'])->middleware('module.permission:appointments.status')->name('admin.appointments.status');
         Route::post('/admin/appointments/{id}/reschedule', [AdminController::class, 'reschedule'])->middleware('module.permission:appointments.reschedule')->name('admin.appointments.reschedule');

@@ -201,7 +201,7 @@ class AppointmentController extends Controller
                     'link' => url('/student/history'),
                 ];
             } elseif ($appt->status === 'Cancelled') {
-                $cancelledForClosure = str_contains((string) $appt->notes, '[Clinic Closure]');
+                $cancelledForClosure = str_contains((string) $appt->remarks, '[Clinic Closure]');
                 $notifications[] = [
                     'id' => $this->buildNotificationId('appointment-cancelled', [$appt->id, $appt->status, optional($appt->updated_at)->timestamp]),
                     'type' => 'danger',
@@ -3071,11 +3071,13 @@ class AppointmentController extends Controller
     public function create()
     {
         Appointment::expireOverduePending();
+        $workflow = app(ClinicWorkflowService::class);
+        $doctorAvailable = $workflow->doctorIsAvailable();
 
         /** @var \App\Models\User|null $user */
         $user = $this->promoteDesigneeAdminToStudentGuard() ?? Auth::guard('student')->user();
         if (!$user) {
-            return view('student.booking-public');
+            return view('student.booking-public', compact('doctorAvailable'));
         }
 
         $studentContext = $this->resolveStudentContext($user);
@@ -3092,7 +3094,6 @@ class AppointmentController extends Controller
 
         $bookingAccess = $this->resolveAppointmentBookingAccess($user);
 
-        $workflow = app(ClinicWorkflowService::class);
         $clinicClosure = $workflow->activeClosure();
         $clinicHours = $workflow->clinicHoursStatus();
         $otherServiceOptions = ClinicServiceOption::query()
@@ -3115,6 +3116,7 @@ class AppointmentController extends Controller
             'bookingFormLocked',
             'studentContext',
             'clinicClosure',
+            'doctorAvailable',
             'clinicHours',
             'otherServiceOptions',
             'onlineConsultationOptions',
@@ -3155,6 +3157,13 @@ class AppointmentController extends Controller
         }
 
         $workflow = app(ClinicWorkflowService::class);
+        if (!$workflow->doctorIsAvailable()) {
+            return redirect()->back()->withInput()->with(
+                'error',
+                'Appointment booking is temporarily unavailable because the doctor is currently out. Please check again later.'
+            );
+        }
+
         $closure = $workflow->activeClosure();
         if ($closure) {
             return redirect()->back()->withInput()->with(
@@ -3185,7 +3194,7 @@ class AppointmentController extends Controller
             'date' => ['required', 'date_format:Y-m-d'],
             'time' => ['required', 'date_format:H:i', Rule::in($appointmentScheduling->bookableTimeSlots())],
             'service' => ['required', Rule::in($configuredServices)],
-            'remarks' => 'required|string',
+            'reason' => 'required|string',
         ], [
             'date.required' => 'Please select a preferred appointment date.',
             'date.date_format' => 'Please select a valid appointment date.',
@@ -3193,7 +3202,7 @@ class AppointmentController extends Controller
             'time.date_format' => 'Please select an available appointment time.',
             'time.in' => 'Please select one of the available appointment times.',
             'service.required' => 'Please select a clinic service.',
-            'remarks.required' => 'Please enter a reason or describe your symptoms.',
+            'reason.required' => 'Please enter a reason or describe your symptoms.',
         ]);
 
         $selectedDate = Carbon::parse($request->date)->startOfDay();
@@ -3264,7 +3273,7 @@ class AppointmentController extends Controller
                 $autoApproved = $workflow->settings()->auto_approve;
                 $appointment->status = $autoApproved ? 'Approved' : 'Pending';
                 $appointment->approved_at = $autoApproved ? now() : null;
-                $appointment->remarks = $request->remarks;
+                $appointment->reason = $request->reason;
                 $appointment->type = 'online';
                 $appointment->user_type = Appointment::normalizeUserType($user->user_role);
                 $appointment->save();
@@ -3306,7 +3315,18 @@ class AppointmentController extends Controller
 
     public function availability(Request $request)
     {
-        $closure = app(ClinicWorkflowService::class)->activeClosure();
+        $workflow = app(ClinicWorkflowService::class);
+        if (!$workflow->doctorIsAvailable()) {
+            return response()->json([
+                'date' => (string) $request->query('date', ''),
+                'available' => false,
+                'reason' => 'doctor_unavailable',
+                'message' => 'Appointment booking is temporarily unavailable because the doctor is currently out. Please check again later.',
+                'slots' => [],
+            ], 423);
+        }
+
+        $closure = $workflow->activeClosure();
         if ($closure) {
             return response()->json([
                 'date' => (string) $request->query('date', ''),
@@ -3502,6 +3522,26 @@ public function account(Request $request)
         ->where('user_id', $user->id)
         ->latest('id')
         ->get();
+    if (trim((string) $request->query('view')) === 'health-record' && !$studentUsesEmployeeHealthForm) {
+        $latestApprovedHealthForm = $healthFormSubmissions->first(fn (HealthFormSubmission $submission) => in_array(
+            $submission->status,
+            [HealthFormSubmission::STATUS_APPROVED, 'Approved'],
+            true
+        ) && filled($submission->approved_at));
+        $healthProfile = $user->healthProfile;
+
+        if ($latestApprovedHealthForm
+            && $healthProfile
+            && !$healthProfile->clearance_revoked_at
+            && !in_array($healthProfile->pullout_status, [HealthProfile::PULLOUT_PENDING, HealthProfile::PULLOUT_COMPLETED], true)
+            && strcasecmp(trim((string) $healthProfile->clearance_status), 'Withdrawn') !== 0) {
+            app(HealthProfileSnapshotService::class)->applySubmissionSnapshot(
+                $healthProfile,
+                $latestApprovedHealthForm,
+                $user
+            );
+        }
+    }
 
     // 5. Return view user
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
@@ -3792,7 +3832,7 @@ public function account(Request $request)
             $canCreateApprovedFallback = in_array($healthProfileStatus, ['approved', 'issued', 'fully cleared'], true);
             if (($path === '' || !$this->healthFiles()->exists($path)) && $healthProfile->user && $canCreateApprovedFallback) {
                 try {
-                    $submission = app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($healthProfile->fresh('user'));
+                    $submission = app(HealthFormPdfSnapshotService::class)->ensureApprovedSnapshot($healthProfile->fresh('user'));
                     $path = ltrim((string) ($submission?->pdf_path ?? ''), '/');
                     $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
                 } catch (\Throwable $exception) {
@@ -4175,6 +4215,213 @@ public function account(Request $request)
             return back()->withInput()
                 ->with('error', 'Unable to upload replacement files right now. Please try again.');
         }
+    }
+
+    public function cancelStudentHealthFormRequest(int $submissionId)
+    {
+        $user = Auth::guard('student')->user() ?: Auth::user();
+        abort_unless($user, 403);
+
+        $cancelled = DB::transaction(function () use ($submissionId, $user): bool {
+            $submission = HealthFormSubmission::query()
+                ->where('user_id', $user->id)
+                ->lockForUpdate()
+                ->findOrFail($submissionId);
+
+            if ($submission->status !== HealthFormSubmission::STATUS_REQUESTED) {
+                return false;
+            }
+
+            $correctionRequest = HealthProfileCorrectionRequest::query()
+                ->where('user_id', $user->id)
+                ->where('health_profile_id', $submission->health_profile_id)
+                ->where('type', HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM)
+                ->whereIn('status', [
+                    HealthProfileCorrectionRequest::STATUS_PENDING,
+                    HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+                    HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW,
+                ])
+                ->latest('requested_at')
+                ->latest('id')
+                ->lockForUpdate()
+                ->first();
+
+            if (!$correctionRequest || $correctionRequest->status !== HealthProfileCorrectionRequest::STATUS_PENDING) {
+                return false;
+            }
+
+            $hasFormSubmissionAfterRequest = HealthFormSubmission::query()
+                ->where('user_id', $user->id)
+                ->where('id', '>', $submission->id)
+                ->whereIn('status', [
+                    HealthFormSubmission::STATUS_SUBMITTED,
+                    HealthFormSubmission::STATUS_APPROVED,
+                    HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                ])
+                ->exists();
+            if ($hasFormSubmissionAfterRequest) {
+                return false;
+            }
+
+            $submission->forceFill([
+                'status' => HealthFormSubmission::STATUS_CANCELLED,
+            ])->save();
+
+            $correctionRequest->forceFill([
+                'status' => HealthProfileCorrectionRequest::STATUS_CANCELLED,
+                'reviewed_at' => now(),
+            ])->save();
+
+            return true;
+        });
+
+        if (!$cancelled) {
+            return redirect('/student/account?view=health-record')
+                ->with('error', 'This Health Form request can no longer be cancelled because it has already been submitted or closed.');
+        }
+
+        \App\Models\ActivityLog::create([
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'user_role' => strtolower((string) $user->user_role),
+            'action' => 'Health Form Request Cancelled',
+            'module' => 'Health Records',
+            'event_type' => 'student_health_form_request_cancelled',
+            'description' => 'Student cancelled Health Form request #' . $submissionId . ' before submitting the form.',
+            'route_name' => optional(request()->route())->getName(),
+            'http_method' => request()->method(),
+            'request_path' => '/' . ltrim((string) request()->path(), '/'),
+            'status_code' => 200,
+            'subject_type' => HealthFormSubmission::class,
+            'subject_id' => (string) $submissionId,
+            'ip_address' => request()->ip(),
+            'user_agent' => substr((string) request()->userAgent(), 0, 255),
+        ]);
+
+        return redirect('/student/account?view=health-record')
+            ->with('success', 'Health Form request cancelled. Your approved health record was not changed.');
+    }
+
+    public function cancelStudentHealthRecordCorrectionRequest(int $correctionRequestId)
+    {
+        $user = Auth::guard('student')->user() ?: Auth::user();
+        abort_unless($user, 403);
+
+        $result = DB::transaction(function () use ($correctionRequestId, $user): string {
+            $correctionRequest = HealthProfileCorrectionRequest::query()
+                ->where('user_id', $user->id)
+                ->where('type', HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION)
+                ->where('status', HealthProfileCorrectionRequest::STATUS_PENDING)
+                ->lockForUpdate()
+                ->findOrFail($correctionRequestId);
+            $metadata = is_array($correctionRequest->metadata) ? $correctionRequest->metadata : [];
+            $previousState = $metadata['previous_profile_state'] ?? null;
+            $profile = HealthProfile::query()
+                ->where('user_id', $user->id)
+                ->lockForUpdate()
+                ->findOrFail($correctionRequest->health_profile_id);
+
+            $legacyApprovedFallback = !is_array($previousState);
+            if ($legacyApprovedFallback) {
+                $wasAlreadyIssued = (bool) ($metadata['was_already_issued']
+                    ?? (in_array($profile->clearance_status, ['Issued', 'Fully Cleared'], true) && $profile->verified_at));
+                if (!$wasAlreadyIssued || (bool) ($metadata['cleared_document_references'] ?? false)) {
+                    return 'cannot_restore';
+                }
+            }
+
+            $requestedAt = $correctionRequest->requested_at;
+            if ($profile->resubmission_requested_at && $requestedAt
+                && $profile->resubmission_requested_at->greaterThan($requestedAt->copy()->addSeconds(2))) {
+                return 'superseded';
+            }
+
+            if ($legacyApprovedFallback) {
+                $profile->resubmission_required_documents = null;
+                $profile->resubmission_requested_at = null;
+                $profile->resubmitted_at = null;
+                $profile->pending_compliance_reminder_sent_at = null;
+                $profile->pending_compliance_reminder_count = 0;
+                if ($profile->pending_reason === $correctionRequest->admin_note) {
+                    $profile->pending_reason = null;
+                }
+            } else {
+                foreach ([
+                    'clearance_status',
+                    'pending_reason',
+                    'documents_valid',
+                    'resubmission_required_documents',
+                    'resubmission_requested_at',
+                    'resubmitted_at',
+                    'pending_compliance_reminder_sent_at',
+                    'pending_compliance_reminder_count',
+                ] as $field) {
+                    if (array_key_exists($field, $previousState)) {
+                        $profile->{$field} = $previousState[$field];
+                    }
+                }
+            }
+
+            $documentColumns = [
+                'student_photo',
+                'health_declaration',
+                'medical_certificate',
+                'chest_xray_result',
+                'pwd_id_proof',
+            ];
+            foreach ((array) ($metadata['cleared_document_values'] ?? []) as $column => $value) {
+                if (in_array($column, $documentColumns, true)) {
+                    $profile->{$column} = $value;
+                }
+            }
+            $profile->save();
+
+            if (!$legacyApprovedFallback && array_key_exists('is_health_profile_completed', $previousState)) {
+                $user->is_health_profile_completed = $previousState['is_health_profile_completed'];
+                $user->save();
+            }
+
+            $metadata['cancelled_by_user_id'] = $user->id;
+            $metadata['cancelled_at'] = now()->toISOString();
+            $correctionRequest->forceFill([
+                'status' => HealthProfileCorrectionRequest::STATUS_CANCELLED,
+                'reviewed_at' => now(),
+                'metadata' => $metadata,
+            ])->save();
+
+            return 'cancelled';
+        });
+
+        if ($result !== 'cancelled') {
+            $message = match ($result) {
+                'cannot_restore' => 'This older document request cannot be cancelled online. Please contact the Medical Clinic.',
+                'superseded' => 'A newer document request is already active, so this request was not cancelled.',
+                default => 'This document request can no longer be cancelled because it has already been submitted or closed.',
+            };
+
+            return redirect('/student/account?view=health-record')->with('error', $message);
+        }
+
+        \App\Models\ActivityLog::create([
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'user_role' => strtolower((string) $user->user_role),
+            'action' => 'Document Resubmission Request Cancelled',
+            'module' => 'Health Records',
+            'event_type' => 'student_document_resubmission_cancelled',
+            'description' => 'Student cancelled document resubmission request #' . $correctionRequestId . ' before uploading replacement files.',
+            'route_name' => optional(request()->route())->getName(),
+            'http_method' => request()->method(),
+            'request_path' => '/' . ltrim((string) request()->path(), '/'),
+            'status_code' => 200,
+            'subject_type' => HealthProfileCorrectionRequest::class,
+            'subject_id' => (string) $correctionRequestId,
+            'ip_address' => request()->ip(),
+            'user_agent' => substr((string) request()->userAgent(), 0, 255),
+        ]);
+
+        return redirect('/student/account?view=health-record')
+            ->with('success', 'Document resubmission request cancelled. Your existing approved files and clearance were restored.');
     }
 
     public function uploadHealthRecordDocuments(Request $request)
@@ -5312,6 +5559,28 @@ public function showHealthForm()
             ->latest('requested_at')
             ->first()
         : null;
+    $isStagedNewHealthForm = (bool) ($pendingHealthFormRequest && $existingHealthProfile);
+
+    if ($isStagedNewHealthForm
+        && !$existingHealthProfile->clearance_revoked_at
+        && !in_array($existingHealthProfile->pullout_status, [HealthProfile::PULLOUT_PENDING, HealthProfile::PULLOUT_COMPLETED], true)) {
+        $latestApprovedSubmission = HealthFormSubmission::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', [HealthFormSubmission::STATUS_APPROVED, 'Approved'])
+            ->whereNotNull('approved_at')
+            ->latest('submitted_at')
+            ->latest('approved_at')
+            ->latest('id')
+            ->first();
+
+        if ($latestApprovedSubmission) {
+            app(HealthProfileSnapshotService::class)->applySubmissionSnapshot(
+                $existingHealthProfile,
+                $latestApprovedSubmission,
+                $user
+            );
+        }
+    }
 
     if (!$isDedicatedStudentForm
         && $pendingHealthFormRequest
@@ -5384,9 +5653,11 @@ public function showHealthForm()
         $healthFormPrefill['step_1_description'] = 'Enter your Admission Reference Number, then complete your health information and upload the required clinic documents.';
         $healthFormPrefill['reference_label'] = 'Admission Reference Number';
     }
-    $this->persistResolvedUserProfileFields($user, $healthFormPrefill);
-    if (!$isDedicatedTransfereeForm) {
-        $this->persistResolvedReferenceNumber($user, $healthFormPrefill['reference_number'] ?? '');
+    if (!$isStagedNewHealthForm) {
+        $this->persistResolvedUserProfileFields($user, $healthFormPrefill);
+        if (!$isDedicatedTransfereeForm) {
+            $this->persistResolvedReferenceNumber($user, $healthFormPrefill['reference_number'] ?? '');
+        }
     }
     $calculatedAge = $healthFormPrefill['age'] ?? null;
 
@@ -6832,6 +7103,7 @@ public function storeHealthForm(Request $request)
             ->latest('requested_at')
             ->first()
         : null;
+    $isStagedNewHealthForm = (bool) ($pendingHealthFormRequest && $existingHealthProfile);
 
     if (!$isDedicatedStudentForm
         && $pendingHealthFormRequest
@@ -7251,6 +7523,13 @@ public function storeHealthForm(Request $request)
     $oldPaths = [];
 
     try {
+        if ($isStagedNewHealthForm) {
+            app(HealthProfileSnapshotService::class)->preserveCurrentBeforeNewSubmission(
+                $existingHealthProfile->fresh('user') ?: $existingHealthProfile,
+                $pendingHealthFormRequest
+            );
+        }
+
         $user->DOB = $request->input('birthday');
         $user->contact_no = $request->input('contact_no');
         if ($isDedicatedStudentWorkflow) {
@@ -7268,13 +7547,8 @@ public function storeHealthForm(Request $request)
         if ($isDedicatedTransfereeForm) {
             $user->sis_reference_number = $transfereeSisReference;
         }
-        $user->save();
-
-        if ($pendingHealthFormRequest && $existingHealthProfile) {
-            app(HealthProfileSnapshotService::class)->preserveCurrentBeforeNewSubmission(
-                $existingHealthProfile->fresh('user') ?: $existingHealthProfile,
-                $pendingHealthFormRequest
-            );
+        if (!$isStagedNewHealthForm) {
+            $user->save();
         }
 
         $photoPath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'student_photo', 'health_profiles/photos', $oldPaths);
@@ -7482,13 +7756,24 @@ public function storeHealthForm(Request $request)
             $healthProfileData['privacy_consent_at'] = now();
         }
 
-        $healthProfile = \App\Models\HealthProfile::updateOrCreate(
-            ['user_id' => $user->id],
-            $healthProfileData
-        );
-        $studentHealthInformationChanges = $existingHealthProfile
-            ? $this->studentHealthInformationChangeMetadata($existingHealthProfile, $healthProfile)
-            : [];
+        $submittedHealthProfile = $existingHealthProfile
+            ? clone $existingHealthProfile
+            : new \App\Models\HealthProfile(['user_id' => $user->id]);
+        $submittedHealthProfile->forceFill($healthProfileData);
+        $submittedHealthProfile->setRelation('user', clone $user);
+
+        if ($isStagedNewHealthForm) {
+            $healthProfile = $existingHealthProfile;
+            $studentHealthInformationChanges = [];
+        } else {
+            $healthProfile = \App\Models\HealthProfile::updateOrCreate(
+                ['user_id' => $user->id],
+                $healthProfileData
+            );
+            $studentHealthInformationChanges = $existingHealthProfile
+                ? $this->studentHealthInformationChangeMetadata($existingHealthProfile, $healthProfile)
+                : [];
+        }
 
         if (!$pendingHealthFormRequest) {
             foreach ($oldPaths as $oldPath) {
@@ -7496,15 +7781,18 @@ public function storeHealthForm(Request $request)
             }
         }
 
-        $user->is_health_profile_completed = 0;
-        $user->save();
+        if (!$isStagedNewHealthForm) {
+            $user->is_health_profile_completed = 0;
+            $user->save();
+        }
 
         $healthFormSubmission = app(HealthFormPdfSnapshotService::class)->recordSubmittedWithoutPdf(
             $healthProfile->fresh('user'),
             $user,
             $submittedHealthFormCategory,
             trim((string) $request->input('health_form_request_remarks')),
-            $isHealthFormCorrectionMode && !$pendingHealthFormRequest
+            $isHealthFormCorrectionMode && !$pendingHealthFormRequest,
+            $isStagedNewHealthForm ? $submittedHealthProfile : null
         );
 
         if ($activeHealthFormCorrectionRequest) {
@@ -7801,7 +8089,7 @@ public function downloadHealthForm()
     $canCreateApprovedFallback = in_array($profileStatus, ['approved', 'issued', 'fully cleared'], true);
     if (($snapshotPath === '' || !$this->healthFiles()->exists($snapshotPath)) && $canCreateApprovedFallback) {
         try {
-            $submission = app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($profile->fresh('user'));
+            $submission = app(HealthFormPdfSnapshotService::class)->ensureApprovedSnapshot($profile->fresh('user'));
             $snapshotPath = ltrim((string) ($submission?->pdf_path ?? ''), '/');
             $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
         } catch (\Throwable $exception) {
@@ -8008,7 +8296,12 @@ private function latestHealthFormSubmissionForProfile(HealthProfile $profile): ?
         ->whereIn('status', [
             HealthFormSubmission::STATUS_SUBMITTED,
             HealthFormSubmission::STATUS_APPROVED,
+            'Approved',
             HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+        ])
+        ->orderByRaw("CASE WHEN status IN (?, ?) THEN 0 ELSE 1 END", [
+            HealthFormSubmission::STATUS_APPROVED,
+            'Approved',
         ])
         ->latest('submitted_at')
         ->latest('id')

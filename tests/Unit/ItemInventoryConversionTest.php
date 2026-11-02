@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\Item;
+use App\Services\InventoryDataNormalizer;
 use PHPUnit\Framework\TestCase;
 
 class ItemInventoryConversionTest extends TestCase
@@ -88,5 +89,24 @@ class ItemInventoryConversionTest extends TestCase
             ['Amoxicillin', 'Biogesic', 'Cetirizine', 'Vitamin C'],
             array_column($medicines, 'name')
         );
+    }
+
+    public function test_expiration_month_normalizes_to_the_last_day_of_the_month(): void
+    {
+        $normalizer = new InventoryDataNormalizer();
+
+        $this->assertSame('2027-04-30', $normalizer->normalizeExpirationDate('2027-04'));
+        $this->assertSame('2027-04-30', $normalizer->normalizeExpirationDate('04/2027'));
+        $this->assertSame('2027-12-31', $normalizer->normalizeExpirationDate('2027'));
+        $this->assertSame('2027-04-15', $normalizer->normalizeExpirationDate('2027-04-15'));
+    }
+
+    public function test_expiration_month_rejects_invalid_months_and_years(): void
+    {
+        $normalizer = new InventoryDataNormalizer();
+
+        $this->assertNull($normalizer->normalizeExpirationDate('2027-13'));
+        $this->assertNull($normalizer->normalizeExpirationDate('00/2027'));
+        $this->assertNull($normalizer->normalizeExpirationDate('1800'));
     }
 }

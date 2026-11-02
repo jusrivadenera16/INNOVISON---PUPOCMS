@@ -379,6 +379,9 @@ class AdminUserController extends Controller
             'employee_number' => ['nullable', 'regex:/^\d{5}$/'],
             'access_level' => ['nullable', Rule::in(['clinic_staff', 'designee'])],
             'office' => ['nullable', 'string', 'max:255'],
+            'clinic_position' => ['nullable', Rule::in(['Doctor', 'Nurse', 'Other'])],
+            'clinic_position_other' => ['nullable', 'string', 'max:255', 'required_if:clinic_position,Other'],
+            'clinic_credentials' => ['nullable', 'string', 'max:255'],
             'module_permissions' => ['nullable', 'array'],
             'module_permissions.*' => ['string', Rule::in(app(ModulePermissionService::class)->all())],
         ]);
@@ -538,6 +541,15 @@ class AdminUserController extends Controller
             if (Admin::hasColumn('office')) {
                 $linkedAdmin->office = $request->input('office');
             }
+            if (Admin::hasColumn('report_name')) {
+                $linkedAdmin->report_name = trim((string) $user->name) ?: null;
+            }
+            if (Admin::hasColumn('report_position') && array_key_exists('clinic_position', $request->all())) {
+                $linkedAdmin->report_position = $this->resolveClinicPositionInput($request);
+            }
+            if (Admin::hasColumn('report_credentials') && array_key_exists('clinic_credentials', $request->all())) {
+                $linkedAdmin->report_credentials = trim((string) $request->input('clinic_credentials')) ?: null;
+            }
             if (Admin::hasColumn('employee_number')) {
                 $linkedAdmin->employee_number = trim((string) (
                     $request->input('employee_number')
@@ -600,6 +612,9 @@ class AdminUserController extends Controller
             'admin_email' => ['nullable', 'email', 'max:255'],
             'access_level' => ['nullable', Rule::in(['clinic_staff', 'designee'])],
             'office' => ['nullable', 'string', 'max:255'],
+            'clinic_position' => ['nullable', Rule::in(['Doctor', 'Nurse', 'Other'])],
+            'clinic_position_other' => ['nullable', 'string', 'max:255', 'required_if:clinic_position,Other'],
+            'clinic_credentials' => ['nullable', 'string', 'max:255'],
             'module_permissions' => ['nullable', 'array'],
             'module_permissions.*' => ['string', Rule::in(app(ModulePermissionService::class)->all())],
             'first_name' => ['nullable', 'string', 'max:255'],
@@ -790,6 +805,15 @@ class AdminUserController extends Controller
             }
             if (Admin::hasColumn('office')) {
                 $linkedAdmin->office = $request->input('office');
+            }
+            if (Admin::hasColumn('report_name')) {
+                $linkedAdmin->report_name = trim((string) $user->name) ?: null;
+            }
+            if (Admin::hasColumn('report_position') && array_key_exists('clinic_position', $request->all())) {
+                $linkedAdmin->report_position = $this->resolveClinicPositionInput($request);
+            }
+            if (Admin::hasColumn('report_credentials') && array_key_exists('clinic_credentials', $request->all())) {
+                $linkedAdmin->report_credentials = trim((string) $request->input('clinic_credentials')) ?: null;
             }
             if (Admin::hasColumn('employee_number')) {
                 $linkedAdmin->employee_number = trim((string) (
@@ -1320,6 +1344,8 @@ class AdminUserController extends Controller
                         'admin_login_email' => (string) ($linkedAdmin?->email_address ?? $linkedAdmin?->email ?? ''),
                         'admin_profile_id' => $linkedAdmin?->admin_id,
                         'admin_profile_name' => (string) ($linkedAdmin?->name ?? ''),
+                        'report_position' => (string) ($linkedAdmin?->report_position ?? ''),
+                        'report_credentials' => (string) ($linkedAdmin?->report_credentials ?? ''),
                         'admin_hub_profile_id' => $linkedAdminHub?->id,
                         'admin_hub_profile_name' => (string) ($linkedAdminHub?->name ?? ''),
                         'admin_uuid' => $adminUuid,
@@ -1407,6 +1433,8 @@ class AdminUserController extends Controller
                         'admin_login_email' => $email,
                         'admin_profile_id' => $adminId,
                         'admin_profile_name' => $displayName,
+                        'report_position' => (string) ($admin->report_position ?? ''),
+                        'report_credentials' => (string) ($admin->report_credentials ?? ''),
                         'admin_uuid' => '',
                         'employee_number' => $employeeNumber,
                         'DOB' => (string) ($admin->birthday ?? ''),
@@ -2417,6 +2445,17 @@ class AdminUserController extends Controller
                 'access_level' => 'clinic_staff',
             ],
         };
+    }
+
+    private function resolveClinicPositionInput(Request $request): ?string
+    {
+        $position = trim((string) $request->input('clinic_position', ''));
+
+        if ($position === 'Other') {
+            return trim((string) $request->input('clinic_position_other', '')) ?: null;
+        }
+
+        return in_array($position, ['Doctor', 'Nurse'], true) ? $position : null;
     }
 
     private function defaultUserTypeForIdpRole(string $idpRole): string

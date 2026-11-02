@@ -8280,6 +8280,83 @@
         display: none;
     }
 
+    .health-record-confirm-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 2400;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(15, 23, 42, .66);
+        backdrop-filter: blur(5px);
+    }
+
+    .health-record-confirm-overlay.is-open { display: flex; }
+
+    .health-record-confirm-card {
+        width: min(430px, 100%);
+        border: 1px solid rgba(112, 19, 27, .20);
+        border-radius: 16px;
+        background: #ffffff;
+        padding: 26px;
+        text-align: center;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, .32);
+    }
+
+    .health-record-confirm-icon {
+        width: 64px;
+        height: 64px;
+        display: grid;
+        place-items: center;
+        margin: 0 auto 16px;
+        border-radius: 50%;
+        background: #fff7d6;
+        color: #70131b;
+    }
+
+    .health-record-confirm-icon svg { width: 30px; height: 30px; }
+    .health-record-confirm-title { display: block; color: #111827; font-size: 19px; font-weight: 800; }
+    .health-record-confirm-copy { margin: 8px 0 22px; color: #475569; font-size: 14px; line-height: 1.5; }
+
+    .health-record-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .health-record-confirm-actions button {
+        min-height: 46px;
+        border: 1px solid rgba(112, 19, 27, .24);
+        border-radius: 9px;
+        background: #ffffff;
+        color: #70131b;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: background .16s ease, color .16s ease, border-color .16s ease, transform .16s ease;
+    }
+
+    .health-record-confirm-actions button:last-child {
+        border-color: #70131b;
+        background: #70131b;
+        color: #ffffff;
+    }
+
+    .health-record-confirm-actions button:hover,
+    .health-record-confirm-actions button:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        outline: none;
+        transform: translateY(-1px);
+    }
+
+    html[data-theme="dark"] .health-record-confirm-card { border-color: rgba(250, 204, 21, .24); background: #111827; }
+    html[data-theme="dark"] .health-record-confirm-title { color: #f8fafc; }
+    html[data-theme="dark"] .health-record-confirm-copy { color: #cbd5e1; }
+    html[data-theme="dark"] .health-record-confirm-actions button:first-child { border-color: #475569; background: #1e293b; color: #e2e8f0; }
+    html[data-theme="dark"] .health-record-confirm-actions button:last-child { border-color: #9f1239; background: #9f1239; color: #ffffff; }
+    html[data-theme="dark"] .health-record-confirm-actions button:hover,
+    html[data-theme="dark"] .health-record-confirm-actions button:focus-visible { border-color: #facc15; background: #facc15; color: #70131b; }
+
 </style>
 @endpush
 
@@ -8405,7 +8482,15 @@
             if (strcasecmp($summaryStatus, 'Withdrawn') === 0) {
                 continue;
             }
-            $summaryIsApproved = in_array($summaryStatus, ['Issued', 'Fully Cleared'], true);
+            $summaryHasApprovedHealthForm = $summaryRecordSource === 'health'
+                && filled(optional($summaryRecord->latestApprovedHealthFormSubmission)->approved_at)
+                && !filled($summaryRecord->clearance_revoked_at ?? null)
+                && !in_array($summaryRecord->pullout_status ?? null, [
+                    \App\Models\HealthProfile::PULLOUT_PENDING,
+                    \App\Models\HealthProfile::PULLOUT_COMPLETED,
+                ], true);
+            $summaryIsApproved = in_array($summaryStatus, ['Issued', 'Fully Cleared'], true)
+                || $summaryHasApprovedHealthForm;
             $summaryIsRevokedPending = $summaryRecordSource === 'health'
                 && filled($summaryRecord->clearance_revoked_at ?? null)
                 && in_array($summaryStatus, ['Pending', 'For Verification'], true);
@@ -8415,7 +8500,7 @@
                 || trim((string) ($summaryRecord->medical_condition_remarks ?? '')) !== ''
             );
 
-            if (!$summaryIsConditional && in_array($summaryStatus, ['Pending', 'For Verification', ''], true)) {
+            if (!$summaryIsApproved && !$summaryIsConditional && in_array($summaryStatus, ['Pending', 'For Verification', ''], true)) {
                 $healthSummaryStats['pending_approval']++;
                 $pendingApprovalRecordIds[] = $summaryRecordKey;
             }
@@ -9720,6 +9805,18 @@
     </div>
 </div>
 
+<div class="health-record-confirm-overlay" id="studentHealthApprovalConfirmModal" aria-hidden="true">
+    <div class="health-record-confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="studentHealthApprovalConfirmTitle" aria-describedby="studentHealthApprovalConfirmCopy">
+        <span class="health-record-confirm-icon" aria-hidden="true"><x-outline-icon name="question-mark-circle" /></span>
+        <strong class="health-record-confirm-title" id="studentHealthApprovalConfirmTitle">Confirm Student Approval</strong>
+        <p class="health-record-confirm-copy" id="studentHealthApprovalConfirmCopy">Approve this student's health record and issue the clearance?</p>
+        <div class="health-record-confirm-actions">
+            <button type="button" id="studentHealthApprovalConfirmCancel">Cancel</button>
+            <button type="button" id="studentHealthApprovalConfirmProceed">Approve</button>
+        </div>
+    </div>
+</div>
+
 <div class="health-filter-modal" id="healthFilterModal" aria-hidden="true">
     <div class="health-filter-modal-card">
         <div class="health-filter-modal-head">
@@ -10440,6 +10537,10 @@
     const verifyRegularStudentDecisionStatus = document.getElementById('verifyRegularStudentDecisionStatus');
     const verifyRegularStudentDocumentsValid = document.getElementById('verifyRegularStudentDocumentsValid');
     const verifyRegularStudentApproveBtn = document.getElementById('verifyRegularStudentApproveBtn');
+    const studentHealthApprovalConfirmModal = document.getElementById('studentHealthApprovalConfirmModal');
+    const studentHealthApprovalConfirmCopy = document.getElementById('studentHealthApprovalConfirmCopy');
+    const studentHealthApprovalConfirmCancel = document.getElementById('studentHealthApprovalConfirmCancel');
+    const studentHealthApprovalConfirmProceed = document.getElementById('studentHealthApprovalConfirmProceed');
     const verifyDocumentResubmissionPanel = document.getElementById('verifyDocumentResubmissionPanel');
     const verifyDocumentResubmissionSubmit = document.getElementById('verifyDocumentResubmissionSubmit');
     const verifyDocumentResubmissionRemarks = document.getElementById('verifyDocumentResubmissionRemarks');
@@ -10450,6 +10551,7 @@
     let hasMultipleApplicantReviewDestinations = false;
     let hasAvailableReviewDestination = false;
     let canDecideRegularStudentRecord = false;
+    let studentHealthApprovalConfirmed = false;
 
     function setApplicantAssessmentMenuOpen(isOpen) {
         if (!verifyApplicantNextStepMenu || !verifyContinueToWalkinBtn) return;
@@ -11225,9 +11327,48 @@
             if (verifyRegularStudentDocumentsValid) {
                 verifyRegularStudentDocumentsValid.value = '1';
             }
+
+            if (!studentHealthApprovalConfirmed) {
+                event.preventDefault();
+                const studentName = String(activeHealthRecordReviewPayload.name || '').trim();
+                if (studentHealthApprovalConfirmCopy) {
+                    studentHealthApprovalConfirmCopy.textContent = studentName && studentName !== '-'
+                        ? `Approve ${studentName}'s health record and issue the clearance?`
+                        : "Approve this student's health record and issue the clearance?";
+                }
+                studentHealthApprovalConfirmModal?.classList.add('is-open');
+                studentHealthApprovalConfirmModal?.setAttribute('aria-hidden', 'false');
+                studentHealthApprovalConfirmProceed?.focus({ preventScroll: true });
+                return;
+            }
+
+            studentHealthApprovalConfirmed = false;
             if (verifyRegularStudentApproveBtn) verifyRegularStudentApproveBtn.disabled = true;
         });
     }
+
+    function closeStudentHealthApprovalConfirm() {
+        studentHealthApprovalConfirmModal?.classList.remove('is-open');
+        studentHealthApprovalConfirmModal?.setAttribute('aria-hidden', 'true');
+        verifyRegularStudentApproveBtn?.focus({ preventScroll: true });
+    }
+
+    studentHealthApprovalConfirmCancel?.addEventListener('click', closeStudentHealthApprovalConfirm);
+    studentHealthApprovalConfirmModal?.addEventListener('click', function (event) {
+        if (event.target === studentHealthApprovalConfirmModal) closeStudentHealthApprovalConfirm();
+    });
+    studentHealthApprovalConfirmProceed?.addEventListener('click', function () {
+        if (!verifyRegularStudentDecisionForm?.getAttribute('action') || !verifyRegularStudentApproveBtn) return;
+        studentHealthApprovalConfirmed = true;
+        studentHealthApprovalConfirmModal?.classList.remove('is-open');
+        studentHealthApprovalConfirmModal?.setAttribute('aria-hidden', 'true');
+        verifyRegularStudentDecisionForm.requestSubmit(verifyRegularStudentApproveBtn);
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && studentHealthApprovalConfirmModal?.classList.contains('is-open')) {
+            closeStudentHealthApprovalConfirm();
+        }
+    });
 
     // Read-only clinic status modals - wrapped in DOMContentLoaded to ensure elements exist
     document.addEventListener('DOMContentLoaded', function() {

@@ -302,7 +302,7 @@
         border: 1px solid var(--mhp-maroon);
         border-radius: 7px;
         background: var(--mhp-maroon);
-        color: #ffffff;
+        color: #ffffff !important;
         font-family: inherit;
         font-size: 11px;
         font-weight: 900;

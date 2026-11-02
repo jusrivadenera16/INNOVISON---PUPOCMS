@@ -18,16 +18,21 @@
         ? \Carbon\Carbon::parse($dateTo)
         : ($marMonthStart->isCurrentMonth() ? now() : $marMonthStart->copy()->endOfMonth());
     $marReportSubmittedAt = now();
-    $resolveReportIdentity = static function ($staff, string $fallbackName = 'CLINIC STAFF', string $fallbackPosition = 'Clinic Staff', bool $useOfficeFallback = false): array {
+    $resolveReportIdentity = static function ($staff, string $fallbackName = 'CLINIC STAFF', string $fallbackPosition = ''): array {
         $profile = data_get($staff, 'adminProfile') ?: $staff;
-        $name = trim((string) (data_get($profile, 'report_name') ?: data_get($staff, 'report_name') ?: data_get($staff, 'name')));
+        $loggedInUser = auth('admin')->user() ?: auth()->user();
+        $loggedInName = trim((string) data_get($loggedInUser, 'name'));
+        $name = $loggedInName !== ''
+            ? $loggedInName
+            : trim((string) (data_get($profile, 'report_name') ?: data_get($staff, 'report_name') ?: data_get($staff, 'name')));
+        $name = $name !== '' ? $name : $fallbackName;
         $position = trim((string) (data_get($profile, 'report_position') ?: data_get($staff, 'report_position')));
-        if ($position === '' && $useOfficeFallback) {
-            $position = trim((string) data_get($profile, 'office'));
+        $credentials = trim((string) (data_get($profile, 'report_credentials') ?: data_get($staff, 'report_credentials')));
+        if ($credentials !== '' && stripos($name, $credentials) === false) {
+            $name = trim($name . ', ' . $credentials, ', ');
         }
-
         return [
-            'name' => $name !== '' ? $name : $fallbackName,
+            'name' => $name,
             'position' => $position !== '' ? $position : $fallbackPosition,
         ];
     };
@@ -1877,7 +1882,7 @@
             if ($marPreparedBy) {
                 $marPreparedBy->loadMissing('adminProfile');
             }
-            $marPreparedIdentity = $resolveReportIdentity($marPreparedBy, 'CLINIC STAFF', 'Nurse / Clinic Staff');
+            $marPreparedIdentity = $resolveReportIdentity($marPreparedBy);
             $marPreparedByName = $marPreparedIdentity['name'];
             $marPreparedByPosition = $marPreparedIdentity['position'];
         @endphp
@@ -2383,7 +2388,7 @@
             $inventoryScope = $inventoryScope ?? 'all';
             $reportAsOf = $inventoryReportAsOf ?? \Carbon\Carbon::parse(($monthFilter ?? now()->format('Y-m')) . '-01')->endOfMonth();
             $preparedBy = $inventoryPreparedBy ?? null;
-            $preparedByIdentity = $resolveReportIdentity($preparedBy, 'CLINIC STAFF', 'Nurse / Clinic Staff', true);
+            $preparedByIdentity = $resolveReportIdentity($preparedBy);
             $preparedByName = $preparedByIdentity['name'];
             $preparedByPosition = $preparedByIdentity['position'];
             $inventoryTitle = $inventoryScope === 'medicines'
@@ -2557,7 +2562,7 @@
             if ($appointmentPreparedBy) {
                 $appointmentPreparedBy->loadMissing('adminProfile');
             }
-            $appointmentPreparedIdentity = $resolveReportIdentity($appointmentPreparedBy, 'CLINIC STAFF', 'Nurse / Clinic Staff');
+            $appointmentPreparedIdentity = $resolveReportIdentity($appointmentPreparedBy);
             $appointmentPreparedByName = $appointmentPreparedIdentity['name'];
             $appointmentPreparedByPosition = $appointmentPreparedIdentity['position'];
             $appointmentReportAsOf = $dateTo ?? now();
@@ -2756,8 +2761,8 @@
         <div class="footer-signatures" style="margin-top: 40px;">
             <div class="sig-box">
                 <p>Prepared by:</p>
-                <div class="sig-line">{{ data_get($resolveReportIdentity(auth('admin')->user() ?? auth()->user(), 'CLINIC STAFF', 'Nurse / Medical Staff'), 'name') }}</div>
-                <div class="sig-line">{{ data_get($resolveReportIdentity(auth('admin')->user() ?? auth()->user(), 'CLINIC STAFF', 'Nurse / Medical Staff'), 'position') }}</div>
+                <div class="sig-line">{{ data_get($resolveReportIdentity(auth('admin')->user() ?? auth()->user()), 'name') }}</div>
+                <div class="sig-line">{{ data_get($resolveReportIdentity(auth('admin')->user() ?? auth()->user()), 'position') }}</div>
             </div>
             <div class="sig-box">
                 <p>Noted by:</p>

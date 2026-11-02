@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Setting;
+use App\Models\SystemSetting;
 use Carbon\Carbon;
 
 class ClinicWorkflowService
@@ -32,6 +33,11 @@ class ClinicWorkflowService
         ]);
 
         return $this->settings;
+    }
+
+    public function doctorIsAvailable(): bool
+    {
+        return SystemSetting::booleanValue('clinic_doctor_available', true);
     }
 
     public function notificationsAreQuiet(?Carbon $at = null): bool

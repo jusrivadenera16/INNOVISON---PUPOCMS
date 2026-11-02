@@ -1771,8 +1771,19 @@
                     <div class="apt-date">{{ \Carbon\Carbon::parse($appt->date)->format('M d, Y') }} at {{ \Carbon\Carbon::parse($appt->time)->format('g:i A') }}</div>
                   </div>
                   
-                  @if($appt->notes)
-                      <div class="apt-notes"><strong>Notes:</strong> {{ $appt->notes }}</div>
+                  @if($appt->reason)
+                      <div class="apt-notes"><strong>Reason:</strong> {{ $appt->reason }}</div>
+                  @endif
+                  @if($appt->remarks)
+                      @php
+                          $appointmentRemarks = trim((string) $appt->remarks);
+                          $hasClinicClosureUpdate = str_contains($appointmentRemarks, '[Clinic Closure]');
+                          $appointmentRemarks = trim((string) preg_replace('/\[Clinic Closure\]\s*/', '', $appointmentRemarks));
+                          $appointmentRemarkLabel = strtolower((string) $appt->status) === 'rejected'
+                              ? 'Reason for Rejection'
+                              : ($hasClinicClosureUpdate ? 'Clinic Update' : 'Remarks');
+                      @endphp
+                      <div class="apt-notes"><strong>{{ $appointmentRemarkLabel }}:</strong> {{ $appointmentRemarks }}</div>
                   @endif
                   
                   <div class="apt-footer">

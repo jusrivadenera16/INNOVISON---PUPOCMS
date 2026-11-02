@@ -321,7 +321,8 @@
 @php
     $isReadonly = (bool) optional($existingFeedback)->submitted_at;
     $appointmentNumber = trim((string) ($appointment->apt_id ?? '')) ?: 'N/A';
-    $appointmentNotes = trim((string) ($appointment->notes ?? $appointment->remarks ?? ''));
+    $appointmentReason = trim((string) ($appointment->reason ?? ''));
+    $appointmentRemarks = trim((string) ($appointment->remarks ?? ''));
     $nurseRemarks = trim((string) optional($consultation)->comments);
     $selectedRating = (string) old('rating', optional($existingFeedback)->rating);
 @endphp
@@ -357,8 +358,11 @@
                 <div class="feedback-readonly-banner">Thank you for helping the clinic improve student care.</div>
                 <div class="feedback-detail-grid">
                     <div class="feedback-detail"><span>Appointment Number</span><strong>{{ $appointmentNumber }}</strong></div>
-                    <div class="feedback-detail"><span>Notes</span><p>{{ $appointmentNotes !== '' ? $appointmentNotes : 'No appointment notes recorded.' }}</p></div>
-                    <div class="feedback-detail"><span>Nurse Remarks</span><p>{{ $nurseRemarks !== '' ? $nurseRemarks : 'No nurse remarks recorded.' }}</p></div>
+                    <div class="feedback-detail"><span>Reason</span><p>{{ $appointmentReason !== '' ? $appointmentReason : 'No reason recorded.' }}</p></div>
+                    @if($appointmentRemarks !== '' && $appointmentRemarks !== $nurseRemarks)
+                        <div class="feedback-detail"><span>Remarks</span><p>{{ $appointmentRemarks }}</p></div>
+                    @endif
+                    <div class="feedback-detail"><span>Clinical Remarks</span><p>{{ $nurseRemarks !== '' ? $nurseRemarks : 'No clinical remarks recorded.' }}</p></div>
                 </div>
                 <label class="feedback-label">Comment</label>
                 <div class="feedback-text-static">{{ trim((string) optional($existingFeedback)->feedback) !== '' ? $existingFeedback->feedback : 'No written comments were added.' }}</div>
@@ -394,8 +398,11 @@
             <section class="feedback-right">
                 <div class="feedback-detail-grid">
                     <div class="feedback-detail"><span>Appointment Number</span><strong>{{ $appointmentNumber }}</strong></div>
-                    <div class="feedback-detail"><span>Notes</span><p>{{ $appointmentNotes !== '' ? $appointmentNotes : 'No appointment notes recorded.' }}</p></div>
-                    <div class="feedback-detail"><span>Nurse Remarks</span><p>{{ $nurseRemarks !== '' ? $nurseRemarks : 'No nurse remarks recorded.' }}</p></div>
+                    <div class="feedback-detail"><span>Reason</span><p>{{ $appointmentReason !== '' ? $appointmentReason : 'No reason recorded.' }}</p></div>
+                    @if($appointmentRemarks !== '' && $appointmentRemarks !== $nurseRemarks)
+                        <div class="feedback-detail"><span>Remarks</span><p>{{ $appointmentRemarks }}</p></div>
+                    @endif
+                    <div class="feedback-detail"><span>Clinical Remarks</span><p>{{ $nurseRemarks !== '' ? $nurseRemarks : 'No clinical remarks recorded.' }}</p></div>
                 </div>
                 <label class="feedback-label" for="feedbackText">Comment</label>
                 <textarea id="feedbackText" name="feedback" class="feedback-textarea" placeholder="Share anything helpful about your clinic experience.">{{ old('feedback', optional($existingFeedback)->feedback) }}</textarea>

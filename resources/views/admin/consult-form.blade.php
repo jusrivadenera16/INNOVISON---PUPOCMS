@@ -5328,7 +5328,7 @@
                     </div>
                     <div class="form-group visit-field">
                         <label for="consultReason">{{ ($user_source ?? '') === 'online' ? 'Appointment Remarks' : 'Reason for Visiting Clinic' }}</label>
-                        <textarea id="consultReason" name="reason_for_visit" class="form-control" rows="3" maxlength="255" placeholder="Describe the student's concern or reason for visit..." {{ ($user_source ?? '') === 'online' ? 'readonly' : '' }}>{{ $draftValue('reason_for_visit', optional($latestAppointment)->remarks) }}</textarea>
+                        <textarea id="consultReason" name="reason_for_visit" class="form-control" rows="3" maxlength="255" placeholder="Describe the patient's concern or reason for visit..." {{ ($user_source ?? '') === 'online' ? 'readonly' : '' }}>{{ $draftValue('reason_for_visit', optional($latestAppointment)->reason) }}</textarea>
                     </div>
                     <div class="form-group visit-field">
                         <label for="consultService">Purpose of Visit / Service</label>

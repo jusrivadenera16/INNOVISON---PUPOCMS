@@ -24,20 +24,19 @@ class Appointment extends Model
         'student_number', // Student number
         'name',         // Name of student
         'email',        // Email
-        'problem',      // Issue / reason for consultation
+        'reason',       // Reason provided when booking
         'service',      // Optional service type
         'date',         // Appointment date
         'time',         // Appointment time
         'status',       // Pending / Completed / Cancelled
         'type',         // Source: online or walkin
         'user_type',    // Role enum: Student/Faculty/Admin/Dependent
-        'notes',        // Stored DB field for notes
+        'remarks',      // Clinic-originated appointment remarks
         'approval_message',
         'approval_reminders',
         'consultation_id',
         'approved_at',
         'appointment_reminder_email_sent_at',
-        'remarks',      // Backward-compatible virtual alias to notes
     ];
 
     protected $casts = [
@@ -99,24 +98,6 @@ class Appointment extends Model
         } while ($existingAppointmentNumbers->contains($appointmentNumber));
 
         return $appointmentNumber;
-    }
-
-    /**
-     * Backward compatibility:
-     * old code reads $appointment->remarks, but DB column is `notes`.
-     */
-    public function getRemarksAttribute()
-    {
-        return $this->attributes['notes'] ?? null;
-    }
-
-    /**
-     * Backward compatibility:
-     * old code writes $appointment->remarks = '...'; save into `notes`.
-     */
-    public function setRemarksAttribute($value)
-    {
-        $this->attributes['notes'] = $value;
     }
 
     /**

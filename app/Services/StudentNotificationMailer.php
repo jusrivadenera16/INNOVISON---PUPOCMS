@@ -150,6 +150,9 @@ class StudentNotificationMailer
     {
         $service = trim((string) $appointment->service) ?: 'clinic';
         $schedule = $this->formatAppointmentSchedule($appointment);
+        $clinicUpdate = trim((string) $appointment->remarks);
+        $clinicUpdate = trim((string) preg_replace('/^\[Clinic Closure\]\s*/', '', $clinicUpdate));
+        $rejectionReason = trim((string) $appointment->remarks);
 
         $notice = match ($event) {
             'approved' => [
@@ -163,10 +166,29 @@ class StudentNotificationMailer
             'rejected' => [
                 'subject' => 'Appointment update - PUP Taguig Clinic',
                 'title' => 'Your appointment was not approved',
-                'message' => "Your {$service} appointment scheduled for {$schedule} was not approved. You may book a new appointment if you still need clinic assistance.",
+                'message' => "Your {$service} appointment scheduled for {$schedule} was not approved."
+                    . ($rejectionReason !== '' ? " Reason for rejection: {$rejectionReason}." : '')
+                    . ' You may book a new appointment if you still need clinic assistance.',
                 'action_label' => 'Book an Appointment',
                 'action_url' => url('/student/booking'),
-                'status_card' => $this->appointmentStatusCard($appointment, 'rejected', $schedule, $service),
+                'status_card' => $this->appointmentStatusCard($appointment, 'rejected', $schedule, $service, $rejectionReason),
+            ],
+            'cancelled' => [
+                'subject' => 'Appointment cancelled - PUP Taguig Clinic',
+                'title' => 'Your appointment was cancelled',
+                'message' => "Your {$service} appointment scheduled for {$schedule} was cancelled by the clinic. Please review your appointment history for any clinic remarks.",
+                'action_label' => 'View Appointment History',
+                'action_url' => url('/student/history'),
+                'status_card' => $this->appointmentStatusCard($appointment, 'cancelled', $schedule, $service),
+            ],
+            'clinic_closure' => [
+                'subject' => 'Appointment update: clinic closure - PUP Taguig Clinic',
+                'title' => 'Your appointment was cancelled due to a clinic closure',
+                'message' => "Your {$service} appointment scheduled for {$schedule} was cancelled because the clinic is unavailable."
+                    . ($clinicUpdate !== '' ? ' ' . $clinicUpdate : ' Please book a new appointment after the clinic reopens.'),
+                'action_label' => 'Book a New Appointment',
+                'action_url' => url('/student/booking'),
+                'status_card' => $this->appointmentStatusCard($appointment, 'clinic_closure', $schedule, $service, $clinicUpdate),
             ],
             'rescheduled' => [
                 'subject' => 'Appointment rescheduled - PUP Taguig Clinic',
@@ -277,20 +299,35 @@ class StudentNotificationMailer
         ];
     }
 
-    private function appointmentStatusCard(Appointment $appointment, string $event, string $schedule, string $service): array
+    private function appointmentStatusCard(Appointment $appointment, string $event, string $schedule, string $service, ?string $contextualRemark = null): array
     {
-        $isWarning = in_array($event, ['rejected', 'rescheduled'], true);
+        $isWarning = in_array($event, ['rejected', 'rescheduled', 'cancelled', 'clinic_closure'], true);
         $appointmentNumber = trim((string) $appointment->apt_id) ?: ('#' . ($appointment->id ?: 'N/A'));
         $scheduleLabel = match ($event) {
-            'rejected' => 'Requested Schedule',
+            'rejected', 'cancelled', 'clinic_closure' => 'Requested Schedule',
             'rescheduled' => 'New Schedule',
             default => 'Appointment Schedule',
         };
         $statusValue = match ($event) {
             'rejected' => 'NOT APPROVED',
+            'cancelled', 'clinic_closure' => 'CANCELLED',
             'rescheduled' => 'RESCHEDULED',
             default => 'APPROVED',
         };
+
+        $details = [
+            ['icon' => '&#128197;', 'label' => $scheduleLabel, 'value' => $schedule],
+            ['icon' => '#', 'label' => 'Appointment Number', 'value' => $appointmentNumber],
+            ['icon' => '&#128203;', 'label' => 'Clinic Service', 'value' => $service],
+        ];
+        $contextualRemark = trim((string) $contextualRemark);
+        if ($contextualRemark !== '') {
+            $details[] = [
+                'icon' => '&#128172;',
+                'label' => $event === 'rejected' ? 'Reason for Rejection' : 'Clinic Update',
+                'value' => $contextualRemark,
+            ];
+        }
 
         return [
             'tone' => $isWarning ? 'warning' : 'success',
@@ -298,11 +335,7 @@ class StudentNotificationMailer
             'status_icon' => $this->statusIconSvg($event),
             'status_label' => 'Status',
             'status_value' => $statusValue,
-            'details' => [
-                ['icon' => '&#128197;', 'label' => $scheduleLabel, 'value' => $schedule],
-                ['icon' => '#', 'label' => 'Appointment Number', 'value' => $appointmentNumber],
-                ['icon' => '&#128203;', 'label' => 'Clinic Service', 'value' => $service],
-            ],
+            'details' => $details,
         ];
     }
 
@@ -330,7 +363,7 @@ class StudentNotificationMailer
     private function statusIconSvg(string $event): string
     {
         $path = match ($event) {
-            'rejected' => '<path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />',
+            'rejected', 'cancelled', 'clinic_closure' => '<path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />',
             'rescheduled' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />',
             default => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />',
         };

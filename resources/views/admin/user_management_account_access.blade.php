@@ -1546,7 +1546,7 @@
                 <div class="um-modal-head-badge">AR</div>
                 <div>
                     <h3>Add Clinic Access</h3>
-                    <div class="um-note">Select a directory profile, choose a clinic role, then configure module access.</div>
+                    <div class="um-note">Select a directory profile and clinic role. Configure module access in User Settings.</div>
                 </div>
             </div>
             <button type="button" class="um-modal-close" data-close-lookup aria-label="Close role lookup">&times;</button>
@@ -1639,7 +1639,6 @@
                         <input type="radio" name="lookup_role" value="super_admin">
                         <span><strong>Super Admin</strong><small>Full clinic access, including restricted actions</small></span>
                     </label>
-                    <div class="access-onboard-module-slot" id="lookupModuleAccessSlot" hidden></div>
                 </div>
             </aside>
             </div>
@@ -1847,8 +1846,6 @@
     const moduleAccessSelectionSummary = document.getElementById('moduleAccessSelectionSummary');
     const resetModuleDefaultsButton = document.getElementById('resetModuleDefaultsButton');
     const moduleAccessSaveWarning = document.getElementById('moduleAccessSaveWarning');
-    const moduleAccessPreviewAnchor = document.getElementById('moduleAccessPreviewAnchor');
-    const lookupModuleAccessSlot = document.getElementById('lookupModuleAccessSlot');
     const modulePermissionInputs = Array.from(document.querySelectorAll('[data-module-permission]'));
     const moduleAccessItems = Array.from(document.querySelectorAll('[data-module-item]'));
     const detailManagementView = document.getElementById('detailManagementView');
@@ -1861,6 +1858,10 @@
     const adminEmailWrap = document.getElementById('adminEmailWrap');
     const detailAdminEmail = document.getElementById('detailAdminEmail');
     const detailOffice = document.getElementById('detailOffice');
+    const clinicPositionChoice = document.getElementById('clinicPositionChoice');
+    const clinicPositionOtherWrap = document.getElementById('clinicPositionOtherWrap');
+    const clinicPositionOther = document.getElementById('clinicPositionOther');
+    const clinicCredentials = document.getElementById('clinicCredentials');
     const adminHubSection = document.getElementById('adminHubSection');
     const adminOfficeWrap = document.getElementById('adminOfficeWrap');
     const detailAdminProfileStatus = document.getElementById('detailAdminProfileStatus');
@@ -1905,6 +1906,46 @@
     const onboardContinue = document.getElementById('onboardContinue');
     let lookupCurrentPage = 1;
     let selectedLookupRow = null;
+
+    const syncClinicPositionOther = () => {
+        if (!clinicPositionChoice || !clinicPositionOtherWrap || !clinicPositionOther) {
+            return;
+        }
+
+        const isOther = clinicPositionChoice.value === 'Other';
+        clinicPositionOtherWrap.style.display = isOther ? '' : 'none';
+        clinicPositionOther.required = isOther;
+        if (!isOther) {
+            clinicPositionOther.value = '';
+        }
+    };
+
+    const setClinicPosition = (position) => {
+        if (!clinicPositionChoice || !clinicPositionOther) {
+            return;
+        }
+
+        const normalizedPosition = String(position || '').trim();
+        if (normalizedPosition.toLowerCase() === 'doctor') {
+            clinicPositionChoice.value = 'Doctor';
+            clinicPositionOther.value = '';
+        } else if (normalizedPosition.toLowerCase() === 'nurse') {
+            clinicPositionChoice.value = 'Nurse';
+            clinicPositionOther.value = '';
+        } else if (normalizedPosition !== '') {
+            clinicPositionChoice.value = 'Other';
+            clinicPositionOther.value = normalizedPosition;
+        } else {
+            clinicPositionChoice.value = '';
+            clinicPositionOther.value = '';
+        }
+
+        syncClinicPositionOther();
+    };
+
+    if (clinicPositionChoice) {
+        clinicPositionChoice.addEventListener('change', syncClinicPositionOther);
+    }
 
     const updateLookupPagination = () => {
         if (!lookupResultsBody || !lookupPagination) {
@@ -2210,6 +2251,10 @@
                 return {};
             }
         })();
+        setClinicPosition(meta.report_position || '');
+        if (clinicCredentials) {
+            clinicCredentials.value = String(meta.report_credentials || '');
+        }
         const inheritedModulePermissions = Array.isArray(onboardingOptions.modulePermissions)
             ? onboardingOptions.modulePermissions
             : null;
@@ -2383,39 +2428,18 @@
         .replace(/\b\w/g, (character) => character.toUpperCase())
         .trim();
     const isEmergencyLookupIdentifier = (value) => /emergency[-_\s]?(admin|login)/i.test(String(value || ''));
-    const restoreLookupModuleAccess = () => {
-        if (moduleAccessPreview && moduleAccessPreviewAnchor?.parentNode) {
-            moduleAccessPreviewAnchor.insertAdjacentElement('afterend', moduleAccessPreview);
-        }
-        if (lookupModuleAccessSlot) {
-            lookupModuleAccessSlot.hidden = true;
-        }
-    };
-    const syncLookupModuleAccess = () => {
+    const syncLookupRole = () => {
         if (!selectedLookupRow || !detailRole) {
             return;
         }
 
         const selectedRole = document.querySelector('input[name="lookup_role"]:checked')?.value || 'admin_clinic_staff';
         detailRole.value = selectedRole;
-
-        if (selectedRole === 'super_admin') {
-            syncRoleUi({ canEdit: false, canOnboard: true, resetModuleDefaults: true });
-            restoreLookupModuleAccess();
-            return;
-        }
-
-        syncRoleUi({ canEdit: false, canOnboard: true, resetModuleDefaults: true });
-        if (moduleAccessPreview && lookupModuleAccessSlot) {
-            lookupModuleAccessSlot.appendChild(moduleAccessPreview);
-            lookupModuleAccessSlot.hidden = false;
-        }
     };
     const resetLookupSelection = () => {
         selectedLookupRow = null;
         lookupRows().forEach((row) => row.classList.remove('is-selected'));
         lookupSelectedProfile?.classList.remove('has-selection');
-        restoreLookupModuleAccess();
         if (onboardContinue) onboardContinue.disabled = true;
     };
     const selectLookupProfile = (row) => {
@@ -2457,7 +2481,7 @@
         if (lookupSelectedSecondaryValue) lookupSelectedSecondaryValue.textContent = isStudent ? yearAndSection : sourceSystem;
         if (onboardContinue) onboardContinue.disabled = false;
         if (lookupSelectedProfile) lookupSelectedProfile.scrollTop = 0;
-        syncLookupModuleAccess();
+        syncLookupRole();
         if (lookupSelectedProfile) lookupSelectedProfile.scrollTop = 0;
     };
     const applyLookupFilters = () => {
@@ -2603,22 +2627,16 @@
     });
 
     document.querySelectorAll('input[name="lookup_role"]').forEach((input) => {
-        input.addEventListener('change', syncLookupModuleAccess);
+        input.addEventListener('change', syncLookupRole);
     });
 
     onboardContinue?.addEventListener('click', () => {
         if (!selectedLookupRow) return;
 
         const selectedRole = document.querySelector('input[name="lookup_role"]:checked')?.value || 'admin_clinic_staff';
-        const selectedModulePermissions = moduleAccessPreview
-            ? Array.from(moduleAccessPreview.querySelectorAll('[data-module-permission]:checked, [data-module-action]:checked'))
-                .map((input) => input.value)
-            : [];
-        restoreLookupModuleAccess();
         lookupModal.classList.remove('show');
         openSettingsFromRow(selectedLookupRow, {
             role: selectedRole,
-            modulePermissions: selectedModulePermissions,
         });
     });
 
