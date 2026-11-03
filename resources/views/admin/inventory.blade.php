@@ -665,24 +665,22 @@
     body.admin-inventory-page #inventoryTable th:nth-child(5),
     body.admin-inventory-page #inventoryTable td:nth-child(5),
     body.admin-inventory-page #inventoryTable th:nth-child(6),
-    body.admin-inventory-page #inventoryTable td:nth-child(6),
+    body.admin-inventory-page #inventoryTable td:nth-child(6) {
+        width: 116px;
+    }
+
     body.admin-inventory-page #inventoryTable th:nth-child(7),
     body.admin-inventory-page #inventoryTable td:nth-child(7) {
-        width: 116px;
+        width: 126px;
     }
 
     body.admin-inventory-page #inventoryTable th:nth-child(8),
     body.admin-inventory-page #inventoryTable td:nth-child(8) {
-        width: 126px;
+        width: 112px;
     }
 
     body.admin-inventory-page #inventoryTable th:nth-child(9),
     body.admin-inventory-page #inventoryTable td:nth-child(9) {
-        width: 112px;
-    }
-
-    body.admin-inventory-page #inventoryTable th:nth-child(10),
-    body.admin-inventory-page #inventoryTable td:nth-child(10) {
         width: 138px;
     }
 
@@ -994,7 +992,7 @@
     }
     .view-item-stock-stats {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 6px;
     }
     .view-item-stock-stat {
@@ -6901,7 +6899,6 @@
                     <th>Stock No.</th>
                     <th>Medicines &amp; Materials</th>
                     <th>Unit</th>
-                    <th>Quantity</th>
                     <th>Consumed</th>
                     <th>Balance</th>
                     <th>Expiration Date</th>
@@ -6928,7 +6925,6 @@
                         data-category="{{ strtolower($item->category) }}"
                         data-medicine-type="{{ strtolower(trim((string) ($item->medicine_type ?: ''))) }}"
                         data-stock="{{ (float) $item->quantity }}"
-                        data-starting-stock="{{ (float) ($item->starting_stock ?: $item->quantity) }}"
                         data-effective-qty="{{ $effectiveQty }}"
                         data-minimum-stock="{{ (float) ($item->minimum_stock ?: 10) }}"
                         class="{{ $highlightClass }}"
@@ -6951,14 +6947,6 @@
                                     Dispense as: {{ $item->dispensing_unit }} ({{ $item->units_per_stock_unit }} per {{ $item->unit }})
                                 </small>
                             @endif
-                        </td>
-                                                <td>
-                            @php
-                                $startingStock = (float) ($item->starting_stock ?: $item->quantity);
-                                $startingDisplay = rtrim(rtrim(number_format($startingStock, 2, '.', ''), '0'), '.');
-                            @endphp
-                            <div style="font-weight: 700;">{{ $startingDisplay }} {{ $item->unit ?: 'pcs' }}</div>
-                            <small style="display:block; color:#64748b; margin-top:4px;">Starting stock</small>
                         </td>
                         <td>
                             @php
@@ -7023,7 +7011,6 @@
                                     'name' => $item->name,
                                     'category' => $item->category,
                                     'quantity' => $item->quantity,
-                                    'starting_stock' => $item->starting_stock,
                                     'consumed' => $item->consumed,
                                     'unit' => $item->unit,
                                     'minimum_stock_unit' => $effectiveMinUnit,
@@ -7072,7 +7059,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="10" style="text-align: center; padding: 30px; color: #888;">No items in inventory.</td></tr>
+                    <tr><td colspan="9" style="text-align: center; padding: 30px; color: #888;">No items in inventory.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -7218,7 +7205,6 @@
                                             <th>Category</th>
                                             <th>Stock No.</th>
                                             <th>Unit</th>
-                                            <th>Starting</th>
                                             <th>Consumed</th>
                                             <th>Balance</th>
                                             <th>Minimum</th>
@@ -7302,7 +7288,6 @@
                                                         <option value="piece" @selected(($row['unit'] ?? '') === 'piece')>piece</option>
                                                     </select>
                                                 </td>
-                                                <td><input class="inventory-import-input" type="number" step="0.01" min="0" name="import_items[{{ $rowIndex }}][starting_stock]" value="{{ $row['starting_stock'] ?? 0 }}"></td>
                                                 <td><input class="inventory-import-input" type="number" step="0.01" min="0" name="import_items[{{ $rowIndex }}][consumed]" value="{{ $row['consumed'] ?? 0 }}"></td>
                                                 <td><input class="inventory-import-input" type="number" step="0.01" min="0" name="import_items[{{ $rowIndex }}][quantity]" value="{{ $row['quantity'] ?? 0 }}" required></td>
                                                 <td><input class="inventory-import-input" type="number" step="0.01" min="0" name="import_items[{{ $rowIndex }}][minimum_stock]" value="{{ $row['minimum_stock'] ?? 10 }}"></td>
@@ -7440,10 +7425,9 @@
 
                                 <div class="inventory-inline-grid">
                                     <div class="form-group">
-                                        <label>Quantity</label>
-                                        <input type="number" name="starting_stock" id="iStartingStock" class="form-control" required min="0" step="0.01" placeholder="e.g. 100">
+                                        <label>Balance</label>
+                                        <input type="number" name="quantity" id="iQty" class="form-control" required min="0" step="0.01" placeholder="e.g. 86">
                                     </div>
-
                                     <div class="form-group">
                                         <label>Consumed</label>
                                         <input type="number" name="consumed" id="iConsumedQuantity" class="form-control" min="0" step="0.01" placeholder="e.g. 14">
@@ -7451,11 +7435,6 @@
                                 </div>
 
                                 <div class="inventory-inline-grid">
-                                    <div class="form-group">
-                                        <label>Balance</label>
-                                        <input type="number" name="quantity" id="iQty" class="form-control" required min="0" step="0.01" placeholder="e.g. 86">
-                                    </div>
-
                                     <div class="form-group">
                                         <label>Minimum Stock &mdash; <span id="iMinStockUnitLabel" style="font-weight:800; color:#70131B; text-transform:none;">pcs</span></label>
                                         <input type="number" name="minimum_stock" id="iMinimumStock" class="form-control" min="0" step="0.01" placeholder="e.g. 10">
@@ -7811,10 +7790,6 @@
                                 <span class="view-item-stock-stat-value"><strong id="viewItemQuantity">-</strong><small id="viewItemQuantityUnit"></small></span>
                             </div>
                             <div class="view-item-stock-stat">
-                                <span class="view-item-stock-stat-label">Starting Stock</span>
-                                <span class="view-item-stock-stat-value"><strong id="viewItemStartingStock">-</strong><small id="viewItemStartingStockUnit"></small></span>
-                            </div>
-                            <div class="view-item-stock-stat">
                                 <span class="view-item-stock-stat-label">Consumed</span>
                                 <span class="view-item-stock-stat-value"><strong id="viewItemConsumed">-</strong><small id="viewItemConsumedUnit"></small></span>
                             </div>
@@ -8041,7 +8016,6 @@
     const categoryDisplay = document.getElementById('inventoryCategoryDisplay');
     const categoryOptions = Array.from(document.querySelectorAll('.inventory-category-option'));
     const stockNumberInput = document.getElementById('iStockNumber');
-    const startingStockInput = document.getElementById('iStartingStock');
     const consumedQuantityInput = document.getElementById('iConsumedQuantity');
     const medicineTypeWrap = document.getElementById('inventoryMedicineTypeWrap');
     const medicineTypeDisplay = document.getElementById('inventoryMedicineTypeDisplay');
@@ -8631,9 +8605,6 @@
             stockNumberInput.value = '';
         }
         categorySelect.value = 'Medicine';
-        if (startingStockInput) {
-            startingStockInput.value = '';
-        }
         document.getElementById('iQty').value = '';
         if (consumedQuantityInput) {
             consumedQuantityInput.value = '0';
@@ -8675,9 +8646,6 @@
             stockNumberInput.value = item.stock_number || '';
         }
         categorySelect.value = item.category || 'Medicine';
-        if (startingStockInput) {
-            startingStockInput.value = item.starting_stock ?? item.quantity ?? '';
-        }
         document.getElementById('iQty').value = item.quantity ?? '';
         if (consumedQuantityInput) {
             consumedQuantityInput.value = item.consumed ?? '';
@@ -9221,7 +9189,6 @@
 
         const quantity = Number(item.quantity) || 0;
         const unit = item.unit || 'pcs';
-        const startingStock = Number(item.starting_stock) || quantity;
         const consumed = Number(item.consumed) || 0;
         const minimumStock = Number(item.minimum_stock) || 10;
         const unitsPerStockUnit = Number(item.units_per_stock_unit) || 1;
@@ -9260,8 +9227,6 @@
         setValue('viewItemCategory', displayValue(item.category));
         setValue('viewItemQuantity', number(quantity));
         setValue('viewItemQuantityUnit', unit);
-        setValue('viewItemStartingStock', number(startingStock));
-        setValue('viewItemStartingStockUnit', unit);
         setValue('viewItemConsumed', number(consumed));
         setValue('viewItemConsumedUnit', unit);
         setValue('viewItemMinimumStock', number(minimumStock));

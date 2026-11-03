@@ -522,7 +522,7 @@ PROMPT;
                 'materials',
             ]);
 
-            $quantity = $this->parseNumber($this->firstValue($row, [
+            $quantityValue = $this->firstValue($row, [
                 'quantity',
                 'qty',
                 'balance',
@@ -535,7 +535,9 @@ PROMPT;
                 'on_hand',
                 'available',
                 'remaining',
-            ]));
+            ]);
+            $hasQuantityValue = $quantityValue !== null && trim((string) $quantityValue) !== '';
+            $quantity = $this->parseNumber($quantityValue);
             $consumed = $this->parseNumber($this->firstValue($row, ['consumed', 'consumed_qty', 'used', 'used_qty', 'issued', 'issued_qty', 'out', 'dispensed']));
             $startingStock = $this->parseNumber($this->firstValue($row, [
                 'starting_stock',
@@ -546,6 +548,9 @@ PROMPT;
                 'start_stock',
                 'stock_on_hand_beginning',
             ]));
+            if (!$hasQuantityValue && $startingStock > 0) {
+                $quantity = max(0, $startingStock - $consumed);
+            }
 
             $hasMeaningfulInventoryValues = $quantity > 0
                 || $consumed > 0

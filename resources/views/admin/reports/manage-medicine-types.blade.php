@@ -770,7 +770,6 @@
                                     data-name="{{ e($item->name) }}"
                                     data-category="{{ e($item->category ?: 'Medicine') }}"
                                     data-stock-number="{{ e($item->stock_number) }}"
-                                    data-starting-stock="{{ $item->starting_stock }}"
                                     data-consumed="{{ $item->consumed ?? 0 }}"
                                     data-quantity="{{ $item->quantity }}"
                                     data-unit="{{ e($item->unit ?: 'pcs') }}"
@@ -876,7 +875,6 @@
 
                 <input type="hidden" name="category" id="editMedicineCategory">
                 <input type="hidden" name="stock_number" id="editMedicineStockNumber">
-                <input type="hidden" name="starting_stock" id="editMedicineStartingStock">
                 <input type="hidden" name="consumed" id="editMedicineConsumed">
                 <input type="hidden" name="quantity" id="editMedicineQuantity">
                 <input type="hidden" name="unit" id="editMedicineUnit">
@@ -977,7 +975,6 @@ function openEditMedicineModal(item) {
     setEditField('editMedicineName', item.name);
     setEditField('editMedicineCategory', item.category || 'Medicine');
     setEditField('editMedicineStockNumber', item.stock_number);
-    setEditField('editMedicineStartingStock', item.starting_stock || 0);
     setEditField('editMedicineConsumed', item.consumed || 0);
     setEditField('editMedicineQuantity', item.quantity || 0);
     setEditField('editMedicineUnit', item.unit || 'pcs');
