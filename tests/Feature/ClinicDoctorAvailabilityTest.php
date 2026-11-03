@@ -169,13 +169,26 @@ class ClinicDoctorAvailabilityTest extends TestCase
         $this->assertFalse(app(ClinicWorkflowService::class)->doctorIsAvailable());
     }
 
-    public function test_logging_out_does_not_turn_doctor_availability_off(): void
+    public function test_assigned_doctor_logout_turns_availability_off(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-11-02 10:00:00', config('app.timezone')));
         $doctor = $this->createAccountWithPosition('admin', 'Doctor');
         app(ClinicWorkflowService::class)->setDoctorAvailability(true);
 
         event(new Logout('admin', $doctor));
+
+        $this->assertFalse(app(ClinicWorkflowService::class)->doctorIsAvailable());
+        $this->assertSame('0', SystemSetting::getValue('clinic_doctor_available'));
+    }
+
+    public function test_other_admin_logout_does_not_turn_doctor_availability_off(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-11-02 10:00:00', config('app.timezone')));
+        $this->createAccountWithPosition('admin', 'Doctor');
+        $nurse = $this->createAccountWithPosition('admin', 'Nurse');
+        app(ClinicWorkflowService::class)->setDoctorAvailability(true);
+
+        event(new Logout('admin', $nurse));
 
         $this->assertTrue(app(ClinicWorkflowService::class)->doctorIsAvailable());
     }

@@ -3486,7 +3486,7 @@ PROMPT;
             return redirect()->back()->withInput()->with('error', 'You can issue up to five medicines per consultation.');
         }
 
-        $consultationResult = DB::transaction(function () use ($request, $student, $medicineLines, $requestedSource, $consultationStartedAt, $appointmentNumber) {
+        $consultationResult = DB::transaction(function () use ($request, $student, $medicineLines, $requestedSource, $consultationStartedAt, $appointmentNumber, $requiresCertificateDetails) {
             $isOnlineSource = $requestedSource === 'online';
             $finalSource = 'walkin';
             $patientType = Appointment::normalizeUserType($student->user_role ?? $student->user_type);
