@@ -939,6 +939,15 @@ class AdminController extends Controller
             ->whereColumn('quantity', '<=', 'minimum_stock')
             ->count();
         $inventoryOutOfStock = Item::where('quantity', '<=', 0)->count();
+        $nearExpiryStart = Carbon::today();
+        $nearExpiryEnd = $nearExpiryStart->copy()->addMonths(3);
+        $nearExpiryItems = Item::query()
+            ->whereIn('category', ['Medicine', 'Supplies'])
+            ->where('quantity', '>', 0)
+            ->whereNotNull('expiration_date')
+            ->whereDate('expiration_date', '>=', $nearExpiryStart->toDateString())
+            ->whereDate('expiration_date', '<=', $nearExpiryEnd->toDateString())
+            ->count();
 
         $dashboardRole = User::normalizeRole((string) (Auth::user()?->user_role ?? ''));
         $appointmentsUrl = $dashboardRole === User::ROLE_ADMIN
@@ -1099,8 +1108,6 @@ class AdminController extends Controller
             return $item;
         });
 
-        $clearanceRequests = HealthProfile::where('clearance_status', 'For Final Review')->count()
-            + EmployeeHealthProfile::where('clearance_status', 'For Final Review')->count();
         $needsAttentionItems = collect([
             [
                 'title' => 'Pending Requests',
@@ -1119,12 +1126,12 @@ class AdminController extends Controller
                 'url' => $appointmentsUrl,
             ],
             [
-                'title' => 'Clearance Requests',
-                'description' => 'Awaiting review',
-                'value' => $clearanceRequests,
-                'icon' => 'document-download',
-                'tone' => 'green',
-                'url' => $healthRecordsUrl,
+                'title' => 'Near-Expiry Items',
+                'description' => 'Medicines & supplies expiring within 3 months',
+                'value' => $nearExpiryItems,
+                'icon' => 'exclamation-triangle',
+                'tone' => 'rose',
+                'url' => $inventoryUrl,
             ],
             [
                 'title' => 'Low Stock Items',

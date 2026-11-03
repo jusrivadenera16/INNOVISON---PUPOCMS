@@ -6601,6 +6601,12 @@
         color: #94a3b8;
     }
 
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-action.is-initial { color: #1e40af !important; }
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-action.is-stock_in { color: #166534 !important; }
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-action.is-issued { color: #991b1b !important; }
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-action.is-adjusted { color: #92400e !important; }
+    html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-action.is-details_updated { color: #3730a3 !important; }
+
     html[data-theme="dark"] body.admin-inventory-page #viewItemModal .view-item-history-quantity.is-positive {
         color: #86efac;
     }
