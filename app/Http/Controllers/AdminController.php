@@ -438,7 +438,6 @@ class AdminController extends Controller
             'Medicine Type' => $text($item->medicine_type ?: $item->medicineType?->name),
             'Illness Category' => $text($item->illnessCategory?->name),
             'Current Stock' => $quantity($item->quantity),
-            'Starting Stock' => $quantity($item->starting_stock),
             'Consumed' => $quantity($item->consumed),
             'Minimum Stock' => $quantity($item->minimum_stock),
             'Unit' => $text($item->unit),
@@ -8734,7 +8733,6 @@ public function storeItem(Request $request)
         'name' => ['required', 'string', 'max:255'],
         'category' => ['required', 'string', 'max:255'],
         'stock_number' => ['nullable', 'string', 'max:50'],
-        'starting_stock' => ['required', 'numeric', 'min:0'],
         'consumed' => ['nullable', 'numeric', 'min:0'],
         'quantity' => ['required', 'numeric', 'min:0'],
         'unit' => ['required', 'string', 'max:50'],
@@ -8759,9 +8757,9 @@ public function storeItem(Request $request)
     if (Schema::hasColumn('items', 'stock_number')) {
         $data['stock_number'] = trim((string) $request->input('stock_number', '')) ?: null;
     }
-    $data['starting_stock'] = (float) $request->input('starting_stock', 0);
     $data['consumed'] = max(0, (float) $request->input('consumed', 0));
     $data['quantity'] = (float) $request->input('quantity', 0);
+    $data['starting_stock'] = $data['quantity'] + $data['consumed'];
     $data['minimum_stock'] = $request->filled('minimum_stock') ? (float) $request->input('minimum_stock') : 10;
     $data['dispensing_unit'] = trim((string) $request->input('dispensing_unit', '')) ?: null;
     $data['units_per_stock_unit'] = $request->filled('units_per_stock_unit')
@@ -8841,7 +8839,6 @@ public function updateItem($id, Request $request)
             'name' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:255'],
             'stock_number' => ['nullable', 'string', 'max:50'],
-            'starting_stock' => ['required', 'numeric', 'min:0'],
             'consumed' => ['nullable', 'numeric', 'min:0'],
             'quantity' => ['required', 'numeric', 'min:0'],
             'unit' => ['required', 'string', 'max:50'],
@@ -8864,12 +8861,12 @@ public function updateItem($id, Request $request)
         
         // 1. Prepare and sanitize data for update
         $data = $request->all();
+        unset($data['starting_stock']);
         $data['expiration_date'] = $normalizer->normalizeExpirationDate((string) $request->input('expiration_date', ''));
         $data['unit'] = trim((string) $request->input('unit', 'pcs')) ?: 'pcs';
         if (Schema::hasColumn('items', 'stock_number')) {
             $data['stock_number'] = trim((string) $request->input('stock_number', '')) ?: null;
         }
-        $data['starting_stock'] = (float) $request->input('starting_stock', 0);
         $data['consumed'] = max(0, (float) $request->input('consumed', 0));
         $data['quantity'] = (float) $request->input('quantity', 0);
         $data['minimum_stock'] = $request->filled('minimum_stock') ? (float) $request->input('minimum_stock') : (float) ($item->minimum_stock ?: 10);
