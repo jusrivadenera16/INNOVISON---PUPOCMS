@@ -8756,11 +8756,11 @@ public function storeItem(Request $request)
         'name' => ['required', 'string', 'max:255'],
         'category' => ['required', 'string', 'max:255'],
         'consultation_issuable' => ['nullable', 'boolean'],
-        'stock_number' => ['nullable', 'string', 'max:50'],
-        'consumed' => ['nullable', 'numeric', 'min:0'],
-        'quantity' => ['required', 'numeric', 'min:0'],
+        'stock_number' => ['required', 'string', 'max:50', Rule::unique('items', 'stock_number')],
+        'consumed' => ['nullable', 'integer', 'min:0'],
+        'quantity' => ['required', 'integer', 'min:0'],
         'unit' => ['required', 'string', 'max:50'],
-        'minimum_stock' => ['nullable', 'numeric', 'min:0'],
+        'minimum_stock' => ['nullable', 'integer', 'min:0'],
         'dispensing_unit' => ['nullable', 'string', 'max:50'],
         'units_per_stock_unit' => ['nullable', 'integer', 'min:1'],
         'date_added' => ['required', 'string'],
@@ -8773,6 +8773,14 @@ public function storeItem(Request $request)
         }],
     ]);
 
+    $totalStock = (int) $request->input('quantity', 0);
+    $consumedStock = (int) $request->input('consumed', 0);
+    if ($consumedStock > $totalStock) {
+        throw ValidationException::withMessages([
+            'consumed' => ['Consumed stock cannot exceed the total stock.'],
+        ]);
+    }
+
     // 1. Prepare data and sanitize medicine-specific fields
     $data = $request->all();
     $data['date_added'] = $normalizer->normalizeDate($request->input('date_added')) ?: now()->toDateString();
@@ -8784,10 +8792,10 @@ public function storeItem(Request $request)
     if (Schema::hasColumn('items', 'stock_number')) {
         $data['stock_number'] = trim((string) $request->input('stock_number', '')) ?: null;
     }
-    $data['consumed'] = max(0, (float) $request->input('consumed', 0));
-    $data['quantity'] = (float) $request->input('quantity', 0);
-    $data['starting_stock'] = $data['quantity'] + $data['consumed'];
-    $data['minimum_stock'] = $request->filled('minimum_stock') ? (float) $request->input('minimum_stock') : 10;
+    $data['consumed'] = $consumedStock;
+    $data['quantity'] = $totalStock - $consumedStock;
+    $data['starting_stock'] = $totalStock;
+    $data['minimum_stock'] = $request->filled('minimum_stock') ? (int) $request->input('minimum_stock') : 10;
     $data['dispensing_unit'] = trim((string) $request->input('dispensing_unit', '')) ?: null;
     $data['units_per_stock_unit'] = $request->filled('units_per_stock_unit')
         ? max(1, (int) $request->input('units_per_stock_unit'))
@@ -8868,11 +8876,11 @@ public function updateItem($id, Request $request)
             'name' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:255'],
             'consultation_issuable' => ['nullable', 'boolean'],
-            'stock_number' => ['nullable', 'string', 'max:50'],
-            'consumed' => ['nullable', 'numeric', 'min:0'],
-            'quantity' => ['required', 'numeric', 'min:0'],
+            'stock_number' => ['required', 'string', 'max:50', Rule::unique('items', 'stock_number')->ignore($item->id)],
+            'consumed' => ['nullable', 'integer', 'min:0'],
+            'quantity' => ['required', 'integer', 'min:0'],
             'unit' => ['required', 'string', 'max:50'],
-            'minimum_stock' => ['nullable', 'numeric', 'min:0'],
+            'minimum_stock' => ['nullable', 'integer', 'min:0'],
             'dispensing_unit' => ['nullable', 'string', 'max:50'],
             'units_per_stock_unit' => ['nullable', 'integer', 'min:1'],
             'date_added' => ['required', 'date'],
@@ -8884,6 +8892,14 @@ public function updateItem($id, Request $request)
                 }
             }],
         ]);
+
+        $totalStock = (int) $request->input('quantity', 0);
+        $consumedStock = (int) $request->input('consumed', 0);
+        if ($consumedStock > $totalStock) {
+            throw ValidationException::withMessages([
+                'consumed' => ['Consumed stock cannot exceed the total stock.'],
+            ]);
+        }
 
         $oldName = $item->name;
         $oldQuantity = (float) $item->quantity;
@@ -8900,9 +8916,10 @@ public function updateItem($id, Request $request)
         if (Schema::hasColumn('items', 'stock_number')) {
             $data['stock_number'] = trim((string) $request->input('stock_number', '')) ?: null;
         }
-        $data['consumed'] = max(0, (float) $request->input('consumed', 0));
-        $data['quantity'] = (float) $request->input('quantity', 0);
-        $data['minimum_stock'] = $request->filled('minimum_stock') ? (float) $request->input('minimum_stock') : (float) ($item->minimum_stock ?: 10);
+        $data['consumed'] = $consumedStock;
+        $data['quantity'] = $totalStock - $consumedStock;
+        $data['starting_stock'] = $totalStock;
+        $data['minimum_stock'] = $request->filled('minimum_stock') ? (int) $request->input('minimum_stock') : (int) ($item->minimum_stock ?: 10);
         $data['dispensing_unit'] = trim((string) $request->input('dispensing_unit', '')) ?: null;
         $data['units_per_stock_unit'] = $request->filled('units_per_stock_unit')
             ? max(1, (int) $request->input('units_per_stock_unit'))
@@ -9283,6 +9300,11 @@ public function commitInventoryImport(Request $request)
                 continue;
             }
 
+            if (trim((string) ($data['stock_number'] ?? '')) === '') {
+                $errors[] = 'Row ' . ($index + 1) . ' was skipped because the stock number is required.';
+                continue;
+            }
+
             $existingItem = null;
             $matchedItemId = (int) ($row['matched_item_id'] ?? 0);
             if ($matchedItemId > 0) {
@@ -9291,6 +9313,17 @@ public function commitInventoryImport(Request $request)
             if (!$existingItem) {
                 $existingItem = $this->findInventoryImportMatch($data);
             }
+
+            $stockNumberOwner = Item::query()->where('stock_number', $data['stock_number'])->first();
+            if ($action === 'create' && $stockNumberOwner) {
+                $errors[] = 'Row ' . ($index + 1) . ' was skipped because stock number ' . $data['stock_number'] . ' already exists.';
+                continue;
+            }
+            if ($stockNumberOwner && $existingItem && (int) $stockNumberOwner->id !== (int) $existingItem->id) {
+                $errors[] = 'Row ' . ($index + 1) . ' was skipped because stock number ' . $data['stock_number'] . ' belongs to another item.';
+                continue;
+            }
+            $existingItem = $existingItem ?: $stockNumberOwner;
 
             if ($action === 'update' && $existingItem) {
                 $oldQuantity = (float) $existingItem->quantity;

@@ -6900,7 +6900,7 @@
                     <th>Medicines &amp; Materials</th>
                     <th>Unit</th>
                     <th>Consumed</th>
-                    <th>Balance</th>
+                    <th>Available</th>
                     <th>Expiration Date</th>
                     <th>Stock Status</th>
                     <th>{{ $canChangeInventory ? 'Actions' : 'Access' }}</th>
@@ -7207,7 +7207,7 @@
                                             <th>Stock No.</th>
                                             <th>Unit</th>
                                             <th>Consumed</th>
-                                            <th>Balance</th>
+                                            <th>Available</th>
                                             <th>Minimum</th>
                                             <th>Date</th>
                                             <th>Expiration</th>
@@ -7365,7 +7365,7 @@
 
                                 <div class="form-group">
                                     <label>Stock Number</label>
-                                    <input name="stock_number" id="iStockNumber" class="form-control" placeholder="e.g. 03-005">
+                                    <input name="stock_number" id="iStockNumber" class="form-control" placeholder="e.g. 03-005" required maxlength="50">
                                 </div>
 
                                 <div class="form-group">
@@ -7443,19 +7443,20 @@
 
                                 <div class="inventory-inline-grid">
                                     <div class="form-group">
-                                        <label>Balance</label>
-                                        <input type="number" name="quantity" id="iQty" class="form-control" required min="0" step="0.01" placeholder="e.g. 86">
+                                        <label>Total Stock</label>
+                                        <input type="number" name="quantity" id="iQty" class="form-control" required min="0" step="1" placeholder="e.g. 120">
                                     </div>
                                     <div class="form-group">
                                         <label>Consumed</label>
-                                        <input type="number" name="consumed" id="iConsumedQuantity" class="form-control" min="0" step="0.01" placeholder="e.g. 14">
+                                        <input type="number" name="consumed" id="iConsumedQuantity" class="form-control" min="0" step="1" placeholder="e.g. 14">
                                     </div>
                                 </div>
+                                <span class="form-note" id="iAvailablePreview">Available after consumption: 0</span>
 
                                 <div class="inventory-inline-grid">
                                     <div class="form-group">
                                         <label>Minimum Stock &mdash; <span id="iMinStockUnitLabel" style="font-weight:800; color:#70131B; text-transform:none;">pcs</span></label>
-                                        <input type="number" name="minimum_stock" id="iMinimumStock" class="form-control" min="0" step="0.01" placeholder="e.g. 10">
+                                        <input type="number" name="minimum_stock" id="iMinimumStock" class="form-control" min="0" step="1" placeholder="e.g. 10">
                                         <span class="form-note" id="iMinStockNote">Value is in the stock unit shown above.</span>
                                     </div>
                                 </div>
@@ -8042,7 +8043,18 @@
     const supplyUsageDisplay = document.getElementById('inventorySupplyUsageDisplay');
     const supplyUsageOptions = Array.from(supplyUsageWrap.querySelectorAll('.inventory-supply-usage-option'));
     const stockNumberInput = document.getElementById('iStockNumber');
+    const inventoryQuantityInput = document.getElementById('iQty');
     const consumedQuantityInput = document.getElementById('iConsumedQuantity');
+    const availablePreview = document.getElementById('iAvailablePreview');
+    const updateAvailablePreview = () => {
+        if (!availablePreview) return;
+        const total = Math.max(0, Number(inventoryQuantityInput?.value) || 0);
+        const consumed = Math.max(0, Number(consumedQuantityInput?.value) || 0);
+        inventoryQuantityInput?.setCustomValidity(consumed > total ? 'Consumed stock cannot exceed the total stock.' : '');
+        availablePreview.textContent = `Available after consumption: ${Math.max(0, total - consumed)}`;
+    };
+    inventoryQuantityInput?.addEventListener('input', updateAvailablePreview);
+    consumedQuantityInput?.addEventListener('input', updateAvailablePreview);
     const medicineTypeWrap = document.getElementById('inventoryMedicineTypeWrap');
     const medicineTypeDisplay = document.getElementById('inventoryMedicineTypeDisplay');
     const medicineTypeMenu = document.getElementById('inventoryMedicineTypeMenu');
@@ -8652,6 +8664,7 @@
         if (consumedQuantityInput) {
             consumedQuantityInput.value = '0';
         }
+        updateAvailablePreview();
         document.getElementById('iMinimumStock').value = '10';
         document.getElementById('iUnit').value = 'pcs';
         syncUnitDisplay();
@@ -8689,11 +8702,14 @@
             stockNumberInput.value = item.stock_number || '';
         }
         categorySelect.value = item.category || 'Medicine';
-        document.getElementById('iQty').value = item.quantity ?? '';
+        const availableQuantity = Number(item.quantity) || 0;
+        const consumedQuantity = Number(item.consumed) || 0;
+        document.getElementById('iQty').value = String(Math.round(availableQuantity + consumedQuantity));
         if (consumedQuantityInput) {
-            consumedQuantityInput.value = item.consumed ?? '';
+            consumedQuantityInput.value = String(Math.round(consumedQuantity));
         }
-        document.getElementById('iMinimumStock').value = item.minimum_stock ?? '10';
+        document.getElementById('iMinimumStock').value = String(Math.round(Number(item.minimum_stock ?? 10)));
+        updateAvailablePreview();
         document.getElementById('iUnit').value = item.unit || 'pcs';
         document.getElementById('iConsultationIssuable').value = item.consultation_issuable === false ? '0' : '1';
         syncSupplyUsageDisplay();
