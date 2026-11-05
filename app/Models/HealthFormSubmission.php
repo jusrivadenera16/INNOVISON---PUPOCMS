@@ -30,6 +30,8 @@ class HealthFormSubmission extends Model
         'requested_at',
         'submitted_at',
         'approved_at',
+        'approved_by_user_id',
+        'status_changed_by_user_id',
         'remarks',
     ];
 
@@ -59,6 +61,16 @@ class HealthFormSubmission extends Model
     public function requestedBy()
     {
         return $this->belongsTo(User::class, 'requested_by_user_id');
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by_user_id');
+    }
+
+    public function statusChangedBy()
+    {
+        return $this->belongsTo(User::class, 'status_changed_by_user_id');
     }
 
     public function snapshotProfile(): array

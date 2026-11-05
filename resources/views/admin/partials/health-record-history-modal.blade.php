@@ -20,14 +20,24 @@
         border-radius: 50%; border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.12);
     }
     .health-record-history-heading-icon svg { width: 27px; height: 27px; }
-    .health-record-history-head h2 { margin: 0; color: #fff; font-size: 21px; line-height: 1.2; }
-    .health-record-history-head p { margin: 3px 0 0; color: rgba(255,255,255,.9); font-size: 12px; line-height: 1.4; }
+    #healthRecordHistoryModal .health-record-history-head h2 { margin: 0; color: #fff !important; font-size: 21px; line-height: 1.2; }
+    #healthRecordHistoryModal .health-record-history-head p { margin: 3px 0 0; color: rgba(255,255,255,.9) !important; font-size: 12px; line-height: 1.4; }
     .health-record-history-close {
-        display: grid; flex: 0 0 auto; place-items: center; width: 38px; height: 38px;
-        border: 0; border-radius: 9px; background: transparent; color: #fff; cursor: pointer;
+        position: relative; overflow: hidden; display: grid; flex: 0 0 auto; place-items: center; width: 38px; height: 38px;
+        border: 1px solid rgba(255,255,255,.24); border-radius: 999px; background: rgba(112,19,27,.45); color: #fff; cursor: pointer;
+        transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
     }
-    .health-record-history-close:hover, .health-record-history-close:focus-visible { background: rgba(255,255,255,.18); outline: 2px solid #facc15; }
-    .health-record-history-close svg { width: 24px; height: 24px; }
+    .health-record-history-close::after {
+        content: ""; position: absolute; top: -35%; left: -72%; width: 48%; height: 170%;
+        background: linear-gradient(120deg, transparent 0%, rgba(255,244,180,.18) 34%, rgba(255,244,180,.58) 50%, rgba(255,244,180,.18) 66%, transparent 100%);
+        transform: skewX(-18deg); transition: left .48s ease; pointer-events: none;
+    }
+    .health-record-history-close:hover, .health-record-history-close:focus-visible {
+        background: #facc15; border-color: #facc15; color: #70131b; transform: translateY(-1px);
+        box-shadow: 0 10px 22px rgba(250,204,21,.22); outline: none;
+    }
+    .health-record-history-close:hover::after, .health-record-history-close:focus-visible::after { left: 128%; }
+    .health-record-history-close svg { position: relative; z-index: 1; width: 18px; height: 18px; color: currentColor; stroke: currentColor; }
     .health-record-history-body { min-height: 0; overflow-y: auto; padding: 16px 20px 22px; }
     .health-record-history-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin: 13px 0; }
     .health-record-history-controls label { color: #334155; font-size: 12px; font-weight: 800; }

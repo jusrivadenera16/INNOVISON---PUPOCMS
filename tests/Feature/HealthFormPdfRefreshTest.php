@@ -94,6 +94,8 @@ class HealthFormPdfRefreshTest extends TestCase
             $table->timestamp('requested_at')->nullable();
             $table->timestamp('submitted_at')->nullable();
             $table->timestamp('approved_at')->nullable();
+            $table->unsignedBigInteger('approved_by_user_id')->nullable();
+            $table->unsignedBigInteger('status_changed_by_user_id')->nullable();
             $table->text('remarks')->nullable();
             $table->timestamps();
         });

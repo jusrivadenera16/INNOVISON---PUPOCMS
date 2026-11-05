@@ -20,7 +20,7 @@ class HealthRecordHistoryService
 
         $corrections = HealthProfileCorrectionRequest::query()
             ->withoutGlobalScope('activeLinkedUser')
-            ->with('requestedBy')
+            ->with(['requestedBy', 'reviewedBy', 'user'])
             ->where('employee_health_profile_id', $profile->id)
             ->get();
 
@@ -30,7 +30,7 @@ class HealthRecordHistoryService
                 || ($metadata['request_kind'] ?? null) === 'new_health_form'
                 || ($metadata['request_kind'] ?? null) === 'bulk_new_health_form';
             $kind = $isNewForm ? 'New Health Form' : ($correction->type === HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION ? 'File Correction' : 'Health Form Correction');
-            $actor = $correction->requestedBy?->name ?: $correction->requestedBy?->email ?: 'Clinic staff';
+            $actor = $this->actorName($correction->requestedBy);
             $documents = collect($correction->required_documents ?? [])->map(fn ($item) => Str::headline((string) $item))->implode(', ');
             $details = [
                 'Form Category' => $isNewForm ? ($metadata['category'] ?? null) : null,
@@ -41,23 +41,23 @@ class HealthRecordHistoryService
                 $events->push($this->event($correction->requested_at ?: $correction->created_at, $kind . ' Requested', 'Requested', $actor, $details, [], 'Requests'));
             }
             if ($correction->submitted_at) {
-                $events->push($this->event($correction->submitted_at, $kind . ' Submitted', 'Submitted', 'Record owner', [], [], 'Requests'));
+                $events->push($this->event($correction->submitted_at, $kind . ' Submitted', 'Submitted', $this->actorName($correction->user), [], [], 'Requests'));
             }
             if ($correction->status === HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW && $correction->updated_at) {
-                $events->push($this->event($correction->updated_at, $kind . ' Under Review', 'Under Review', 'Clinic staff', [], [], 'Requests'));
+                $events->push($this->event($correction->updated_at, $kind . ' Under Review', 'Under Review', $this->actorName($correction->reviewedBy), [], [], 'Requests'));
             }
             if (in_array($correction->status, [HealthProfileCorrectionRequest::STATUS_APPROVED, HealthProfileCorrectionRequest::STATUS_CANCELLED], true)) {
                 $closedAt = $correction->reviewed_at ?: $correction->updated_at;
                 if ($closedAt) {
                     $completed = $correction->status === HealthProfileCorrectionRequest::STATUS_APPROVED;
-                    $events->push($this->event($closedAt, $kind . ($completed ? ' Approved' : ' Cancelled'), $completed ? 'Approved' : 'Cancelled', 'Clinic staff', [], [], 'Requests'));
+                    $events->push($this->event($closedAt, $kind . ($completed ? ' Approved' : ' Cancelled'), $completed ? 'Approved' : 'Cancelled', $this->actorName($correction->reviewedBy), [], [], 'Requests'));
                 }
             }
         }
 
         $submissions = HealthFormSubmission::query()
             ->withoutGlobalScope('activeLinkedUser')
-            ->with('requestedBy')
+            ->with(['requestedBy', 'approvedBy', 'statusChangedBy', 'user'])
             ->where('employee_health_profile_id', $profile->id)
             ->get();
 
@@ -66,20 +66,20 @@ class HealthRecordHistoryService
             if ($submission->requested_at && !$corrections->contains(fn ($correction) =>
                 $correction->requested_at && abs($correction->requested_at->getTimestamp() - $submission->requested_at->getTimestamp()) < 60
             )) {
-                $actor = $submission->requestedBy?->name ?: $submission->requestedBy?->email ?: 'Clinic staff';
+                $actor = $this->actorName($submission->requestedBy);
                 $events->push($this->event($submission->requested_at, 'New Health Form Requested', 'Requested', $actor, $details, [], 'Requests'));
             }
             if ($submission->submitted_at) {
-                $events->push($this->event($submission->submitted_at, 'Health Form Submitted', 'Submitted', 'Record owner', $details, [], 'Forms'));
+                $events->push($this->event($submission->submitted_at, 'Health Form Submitted', 'Submitted', $this->actorName($submission->user), $details, [], 'Forms'));
             }
             if ($submission->approved_at) {
-                $events->push($this->event($submission->approved_at, 'Health Form Approved', 'Approved', 'Clinic staff', $details, [], 'Forms'));
+                $events->push($this->event($submission->approved_at, 'Health Form Approved', 'Approved', $this->approvalActor($submission, $profile), $details, [], 'Forms'));
             }
             if ($submission->status === HealthFormSubmission::STATUS_CANCELLED && $submission->updated_at) {
-                $events->push($this->event($submission->updated_at, 'Health Form Request Cancelled', 'Cancelled', 'Clinic staff', $details, [], 'Requests'));
+                $events->push($this->event($submission->updated_at, 'Health Form Request Cancelled', 'Cancelled', $this->actorName($submission->statusChangedBy), $details, [], 'Requests'));
             }
             if ($submission->status === HealthFormSubmission::STATUS_NEEDS_CORRECTION && $submission->updated_at) {
-                $events->push($this->event($submission->updated_at, 'Health Form Needs Correction', 'Needs Correction', 'Clinic staff', $details, [], 'Forms'));
+                $events->push($this->event($submission->updated_at, 'Health Form Needs Correction', 'Needs Correction', $this->actorName($submission->statusChangedBy), $details, [], 'Forms'));
             }
         }
 
@@ -93,7 +93,7 @@ class HealthRecordHistoryService
                 $assessment->created_at,
                 'Medical Assessment Updated',
                 'Updated',
-                $assessment->recordedBy?->name ?: 'Clinic staff',
+                $this->actorName($assessment->recordedBy),
                 ['Medical Condition' => $assessment->condition_or_illness, 'Findings' => $assessment->findings, 'Remarks' => $assessment->remarks, 'Reason' => $assessment->reason],
                 [],
                 'Medical Information'
@@ -107,7 +107,7 @@ class HealthRecordHistoryService
             ->get();
         foreach ($logs as $log) {
             if ($log->created_at) {
-                $events->push($this->event($log->created_at, 'Medical Information Updated', 'Completed', $log->user_name ?: 'Clinic staff', [], $this->medicalChanges($log), 'Medical Information'));
+                $events->push($this->event($log->created_at, 'Medical Information Updated', 'Completed', $log->user_name ?: 'Not recorded', [], $this->medicalChanges($log), 'Medical Information'));
             }
         }
 
@@ -120,7 +120,7 @@ class HealthRecordHistoryService
 
         $submissions = HealthFormSubmission::query()
             ->withoutGlobalScope('activeLinkedUser')
-            ->with('requestedBy')
+            ->with(['requestedBy', 'approvedBy', 'statusChangedBy', 'user'])
             ->where('user_id', $profile->user_id)
             ->where(function ($query) use ($profile) {
                 $query->where('health_profile_id', $profile->id)
@@ -130,27 +130,27 @@ class HealthRecordHistoryService
 
         foreach ($submissions as $submission) {
             $category = trim((string) $submission->category) ?: 'General Health Form';
-            $actor = $submission->requestedBy?->name ?: $submission->requestedBy?->email ?: 'Clinic staff';
+            $actor = $this->actorName($submission->requestedBy);
             if ($submission->requested_at) {
                 $events->push($this->event($submission->requested_at, 'New Health Form Requested', 'Requested', $actor, ['Form Category' => $category, 'Reason' => $submission->remarks], [], 'Requests'));
             }
             if ($submission->submitted_at) {
-                $events->push($this->event($submission->submitted_at, 'Health Form Submitted', 'Submitted', 'Record owner', ['Form Category' => $category], [], 'Forms'));
+                $events->push($this->event($submission->submitted_at, 'Health Form Submitted', 'Submitted', $this->actorName($submission->user), ['Form Category' => $category], [], 'Forms'));
             }
             if ($submission->approved_at) {
-                $events->push($this->event($submission->approved_at, 'Health Form Approved', 'Approved', 'Clinic staff', ['Form Category' => $category], [], 'Forms'));
+                $events->push($this->event($submission->approved_at, 'Health Form Approved', 'Approved', $this->approvalActor($submission, $profile), ['Form Category' => $category], [], 'Forms'));
             }
             if ($submission->status === HealthFormSubmission::STATUS_CANCELLED && $submission->updated_at) {
-                $events->push($this->event($submission->updated_at, 'Health Form Request Cancelled', 'Cancelled', 'Clinic staff', ['Form Category' => $category], [], 'Requests'));
+                $events->push($this->event($submission->updated_at, 'Health Form Request Cancelled', 'Cancelled', $this->actorName($submission->statusChangedBy), ['Form Category' => $category], [], 'Requests'));
             }
             if ($submission->status === HealthFormSubmission::STATUS_NEEDS_CORRECTION && $submission->updated_at) {
-                $events->push($this->event($submission->updated_at, 'Health Form Needs Correction', 'Needs Correction', 'Clinic staff', ['Form Category' => $category], [], 'Forms'));
+                $events->push($this->event($submission->updated_at, 'Health Form Needs Correction', 'Needs Correction', $this->actorName($submission->statusChangedBy), ['Form Category' => $category], [], 'Forms'));
             }
         }
 
         $corrections = HealthProfileCorrectionRequest::query()
             ->withoutGlobalScope('activeLinkedUser')
-            ->with('requestedBy')
+            ->with(['requestedBy', 'reviewedBy', 'user'])
             ->where('user_id', $profile->user_id)
             ->where('health_profile_id', $profile->id)
             ->whereIn('type', [
@@ -165,16 +165,16 @@ class HealthRecordHistoryService
                 : 'File correction';
             $documents = collect($correction->required_documents ?? [])->map(fn ($item) => Str::headline((string) $item))->implode(', ');
             $details = ['Reason' => $correction->admin_note, 'Files' => $documents];
-            $actor = $correction->requestedBy?->name ?: $correction->requestedBy?->email ?: 'Clinic staff';
+            $actor = $this->actorName($correction->requestedBy);
             $requestedAt = $correction->requested_at ?: $correction->created_at;
             if ($requestedAt) {
                 $events->push($this->event($requestedAt, Str::title($kind) . ' Requested', 'Requested', $actor, $details, [], 'Requests'));
             }
             if ($correction->submitted_at) {
-                $events->push($this->event($correction->submitted_at, Str::title($kind) . ' Submitted', 'Submitted', 'Record owner', [], [], 'Requests'));
+                $events->push($this->event($correction->submitted_at, Str::title($kind) . ' Submitted', 'Submitted', $this->actorName($correction->user), [], [], 'Requests'));
             }
             if ($correction->status === HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW && $correction->updated_at) {
-                $events->push($this->event($correction->updated_at, Str::title($kind) . ' Under Review', 'Under Review', 'Clinic staff', [], [], 'Requests'));
+                $events->push($this->event($correction->updated_at, Str::title($kind) . ' Under Review', 'Under Review', $this->actorName($correction->reviewedBy), [], [], 'Requests'));
             }
             if (in_array($correction->status, [
                 HealthProfileCorrectionRequest::STATUS_APPROVED,
@@ -186,7 +186,7 @@ class HealthRecordHistoryService
                         $closedAt,
                         Str::title($kind) . ($correction->status === HealthProfileCorrectionRequest::STATUS_APPROVED ? ' Approved' : ' Cancelled'),
                         Str::headline($correction->status),
-                        'Clinic staff',
+                        $this->actorName($correction->reviewedBy),
                         [],
                         [],
                         'Requests'
@@ -199,12 +199,12 @@ class HealthRecordHistoryService
         if ($profile->resubmission_requested_at && !$corrections->contains(fn ($item) =>
             $item->requested_at && abs($item->requested_at->getTimestamp() - $profile->resubmission_requested_at->getTimestamp()) < 60
         )) {
-            $events->push($this->event($profile->resubmission_requested_at, 'File Correction Requested', 'Requested', 'Clinic staff', [], [], 'Requests'));
+            $events->push($this->event($profile->resubmission_requested_at, 'File Correction Requested', 'Requested', 'Not recorded', [], [], 'Requests'));
         }
         if ($profile->resubmitted_at && !$corrections->contains(fn ($item) =>
             $item->submitted_at && abs($item->submitted_at->getTimestamp() - $profile->resubmitted_at->getTimestamp()) < 60
         )) {
-            $events->push($this->event($profile->resubmitted_at, 'File Correction Submitted', 'Submitted', 'Record owner', [], [], 'Requests'));
+            $events->push($this->event($profile->resubmitted_at, 'File Correction Submitted', 'Submitted', $this->actorName($profile->user), [], [], 'Requests'));
         }
 
         $assessments = StudentMedicalAssessment::query()
@@ -217,7 +217,7 @@ class HealthRecordHistoryService
                 $assessment->created_at,
                 'Medical Assessment Updated',
                 'Updated',
-                $assessment->recordedBy?->name ?: 'Clinic staff',
+                $this->actorName($assessment->recordedBy),
                 [
                     'Medical Condition' => $assessment->condition_or_illness,
                     'Findings' => $assessment->findings,
@@ -245,7 +245,7 @@ class HealthRecordHistoryService
 
         foreach ($logs as $log) {
             if (!$log->created_at) continue;
-            $actor = $log->user_name ?: 'Clinic staff';
+            $actor = $log->user_name ?: 'Not recorded';
             if (str_ends_with((string) $log->event_type, '_medical_information_updated')) {
                 $events->push($this->event($log->created_at, 'Medical Information Updated', 'Completed', $actor, [], $this->medicalChanges($log), 'Medical Information'));
                 continue;
@@ -319,7 +319,7 @@ class HealthRecordHistoryService
                 $legacyStatus['at'],
                 $legacyStatus['title'],
                 $legacyStatus['status'],
-                'Clinic staff',
+                'Not recorded',
                 $legacyStatus['details'],
                 [],
                 'Status Changes'
@@ -345,6 +345,32 @@ class HealthRecordHistoryService
             ])->values()->all(),
             'changes' => $changes,
         ];
+    }
+
+    private function actorName($user): string
+    {
+        return trim((string) ($user?->name ?: $user?->email ?: '')) ?: 'Not recorded';
+    }
+
+    private function approvalActor(HealthFormSubmission $submission, HealthProfile|EmployeeHealthProfile $profile): string
+    {
+        if ($submission->approvedBy) {
+            return $this->actorName($submission->approvedBy);
+        }
+
+        $snapshotApprover = data_get($submission->profile_snapshot, 'review.approved_by');
+        if (filled($snapshotApprover)) {
+            return (string) $snapshotApprover;
+        }
+
+        // Older submissions predate per-version approver tracking. Match the
+        // current profile approval time before using its recorded approver.
+        if ($profile->verified_at && $submission->approved_at
+            && abs($profile->verified_at->getTimestamp() - $submission->approved_at->getTimestamp()) < 60) {
+            return $this->actorName($profile->approvedBy);
+        }
+
+        return 'Not recorded';
     }
 
     private function medicalChanges(ActivityLog $log): array

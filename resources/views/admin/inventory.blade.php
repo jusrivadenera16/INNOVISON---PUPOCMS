@@ -7010,6 +7010,7 @@
                                     'id' => $item->id,
                                     'name' => $item->name,
                                     'category' => $item->category,
+                                    'consultation_issuable' => (bool) $item->consultation_issuable,
                                     'quantity' => $item->quantity,
                                     'consumed' => $item->consumed,
                                     'unit' => $item->unit,
@@ -7386,6 +7387,23 @@
                                     </div>
                                 </div>
 
+                                <div class="form-group" id="supplyUsageField" style="display:none;">
+                                    <label for="iConsultationIssuable">Supply Usage</label>
+                                    <div class="inventory-category-wrap" id="inventorySupplyUsageWrap">
+                                        <select name="consultation_issuable" id="iConsultationIssuable" class="form-control inventory-category-select">
+                                            <option value="1">Consultation and clinic usage</option>
+                                            <option value="0">Clinic usage only</option>
+                                        </select>
+                                        <button type="button" class="inventory-category-display" id="inventorySupplyUsageDisplay" aria-haspopup="listbox" aria-expanded="false" aria-controls="inventorySupplyUsageMenu">
+                                            Consultation and clinic usage
+                                        </button>
+                                        <div class="inventory-category-menu" id="inventorySupplyUsageMenu" role="listbox" aria-label="Supply usage options">
+                                            <button type="button" class="inventory-category-option inventory-supply-usage-option" data-supply-usage-value="1" role="option">Consultation and clinic usage</button>
+                                            <button type="button" class="inventory-category-option inventory-supply-usage-option" data-supply-usage-value="0" role="option">Clinic usage only</button>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div id="medicineFields" class="inventory-subgroup">
                                     <div class="form-group">
                                         <label>Medicine Type</label>
@@ -7546,6 +7564,10 @@
                                                     'Powder/Topical' => [
                                                         'sachet' => 'Sachet',
                                                         'gram' => 'Gram (g)',
+                                                    ],
+                                                    'Supplies' => [
+                                                        'pcs' => 'Piece (pcs)',
+                                                        'pair' => 'Pair',
                                                     ],
                                                 ];
                                             @endphp
@@ -8014,7 +8036,11 @@
     const categorySelect = document.getElementById('iCategory');
     const categoryWrap = document.getElementById('inventoryCategoryWrap');
     const categoryDisplay = document.getElementById('inventoryCategoryDisplay');
-    const categoryOptions = Array.from(document.querySelectorAll('.inventory-category-option'));
+    const categoryOptions = Array.from(categoryWrap.querySelectorAll('.inventory-category-option'));
+    const supplyUsageSelect = document.getElementById('iConsultationIssuable');
+    const supplyUsageWrap = document.getElementById('inventorySupplyUsageWrap');
+    const supplyUsageDisplay = document.getElementById('inventorySupplyUsageDisplay');
+    const supplyUsageOptions = Array.from(supplyUsageWrap.querySelectorAll('.inventory-supply-usage-option'));
     const stockNumberInput = document.getElementById('iStockNumber');
     const consumedQuantityInput = document.getElementById('iConsumedQuantity');
     const medicineTypeWrap = document.getElementById('inventoryMedicineTypeWrap');
@@ -8235,6 +8261,22 @@
         categoryWrap.classList.toggle('is-open', isOpen);
         categoryDisplay.classList.toggle('is-open', isOpen);
         categoryDisplay.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    function syncSupplyUsageDisplay() {
+        const selectedOption = supplyUsageSelect.options[supplyUsageSelect.selectedIndex];
+        supplyUsageDisplay.textContent = selectedOption ? selectedOption.text : 'Select supply usage';
+        supplyUsageOptions.forEach(function(option) {
+            const selected = option.dataset.supplyUsageValue === supplyUsageSelect.value;
+            option.classList.toggle('is-selected', selected);
+            option.setAttribute('aria-selected', selected ? 'true' : 'false');
+        });
+    }
+
+    function setSupplyUsageOpenState(isOpen) {
+        supplyUsageWrap.classList.toggle('is-open', isOpen);
+        supplyUsageDisplay.classList.toggle('is-open', isOpen);
+        supplyUsageDisplay.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
     }
 
     function syncMedicineTypeDisplay() {
@@ -8546,15 +8588,17 @@
         }
 
         const category = categorySelect.value;
-        medicineDispensingFields.style.display = category === 'Medicine' ? 'block' : 'none';
+        medicineDispensingFields.style.display = category === 'Medicine' || category === 'Supplies' ? 'block' : 'none';
         if (itemsPerUnitField) {
-            itemsPerUnitField.style.display = category === 'Medicine' ? 'flex' : 'none';
+            itemsPerUnitField.style.display = category === 'Medicine' || category === 'Supplies' ? 'flex' : 'none';
         }
     }
 
     function toggleMedicineFields() {
         const category = categorySelect.value;
         const supportsExpiry = category === 'Medicine' || category === 'Supplies';
+        document.getElementById('supplyUsageField').style.display = category === 'Supplies' ? 'block' : 'none';
+        if (category !== 'Supplies') setSupplyUsageOpenState(false);
         syncCategoryDisplay();
         medicineExpiryField.style.display = supportsExpiry ? 'block' : 'none';
         expDateInput.required = category === 'Medicine';
@@ -8569,26 +8613,23 @@
             toggleDispensingFields();
         } else {
             medicineFields.style.display = 'none';
-            if (medicineDispensingFields) {
-                medicineDispensingFields.style.display = 'none';
-            }
-            if (itemsPerUnitField) {
-                itemsPerUnitField.style.display = 'none';
-            }
             medicineSelect.removeAttribute('required');
             expDateInput.removeAttribute('required');
             medicineSelect.value = ''; 
             syncMedicineTypeDisplay();
-            if (dispensingUnitInput) {
-                dispensingUnitInput.value = '';
-                syncDispensingUnitDisplay();
-            }
-            if (unitsPerStockUnitInput) {
-                unitsPerStockUnitInput.value = '';
+            if (category !== 'Supplies') {
+                if (dispensingUnitInput) {
+                    dispensingUnitInput.value = '';
+                    syncDispensingUnitDisplay();
+                }
+                if (unitsPerStockUnitInput) {
+                    unitsPerStockUnitInput.value = '';
+                }
             }
             if (!supportsExpiry) {
                 expDateInput.value = '';
             }
+            toggleDispensingFields();
         }
     }
 
@@ -8605,6 +8646,8 @@
             stockNumberInput.value = '';
         }
         categorySelect.value = 'Medicine';
+        document.getElementById('iConsultationIssuable').value = '1';
+        syncSupplyUsageDisplay();
         document.getElementById('iQty').value = '';
         if (consumedQuantityInput) {
             consumedQuantityInput.value = '0';
@@ -8652,6 +8695,8 @@
         }
         document.getElementById('iMinimumStock').value = item.minimum_stock ?? '10';
         document.getElementById('iUnit').value = item.unit || 'pcs';
+        document.getElementById('iConsultationIssuable').value = item.consultation_issuable === false ? '0' : '1';
+        syncSupplyUsageDisplay();
         syncUnitDisplay();
         if (dispensingUnitInput) {
             dispensingUnitInput.value = item.dispensing_unit || '';
@@ -8692,6 +8737,7 @@
         if (!itemModal) return;
         itemModal.style.display = 'none';
         setCategoryOpenState(false);
+        setSupplyUsageOpenState(false);
         setMedicineTypeOpenState(false);
         setUnitOpenState(false);
         setDispensingUnitOpenState(false);
@@ -9402,6 +9448,7 @@
             setMedicineTypeOpenState(false);
             setUnitOpenState(false);
             setDispensingUnitOpenState(false);
+            setSupplyUsageOpenState(false);
             setCategoryOpenState(shouldOpen);
         });
 
@@ -9419,6 +9466,35 @@
 
         syncCategoryDisplay();
     }
+
+    supplyUsageDisplay.addEventListener('click', function(event) {
+        event.preventDefault();
+        const shouldOpen = !supplyUsageWrap.classList.contains('is-open');
+        setCategoryOpenState(false);
+        setMedicineTypeOpenState(false);
+        setUnitOpenState(false);
+        setDispensingUnitOpenState(false);
+        setSupplyUsageOpenState(shouldOpen);
+    });
+
+    supplyUsageOptions.forEach(function(option) {
+        option.addEventListener('click', function(event) {
+            event.preventDefault();
+            supplyUsageSelect.value = option.dataset.supplyUsageValue;
+            supplyUsageSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            setSupplyUsageOpenState(false);
+            supplyUsageDisplay.focus();
+        });
+    });
+
+    supplyUsageSelect.addEventListener('change', syncSupplyUsageDisplay);
+    document.addEventListener('click', function(event) {
+        if (!supplyUsageWrap.contains(event.target)) setSupplyUsageOpenState(false);
+    });
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') setSupplyUsageOpenState(false);
+    });
+    syncSupplyUsageDisplay();
 
     if (medicineTypeDisplay && medicineTypeMenu && medicineSelect) {
         medicineTypeDisplay.addEventListener('click', function(event) {

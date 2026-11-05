@@ -20,6 +20,7 @@ use App\Models\Consultation;
 use App\Models\ConsultationEvaluation;
 use App\Models\ConsultationDraft;
 use App\Models\ConsultationMedicine;
+use App\Models\ConsultationSupply;
 use App\Models\MarClearanceSubcategory;
 use App\Models\MarClearanceSubcategorySource;
 use App\Models\MarClearanceType;
@@ -2297,7 +2298,7 @@ class WalkInController extends Controller
             'covid_status' => ['nullable', 'in:Yes,No'],
             'covid_positive_date' => ['nullable', 'date'],
             'reason_for_visit' => ['nullable', 'string', 'max:255'],
-            'certificate_type' => ['nullable', 'string', 'max:160'],
+            'certificate_type' => ['nullable', 'string', 'max:120'],
             'certificate_details' => ['nullable', 'string', 'max:255'],
             'referral_type' => ['nullable', 'in:none,hospital_without_nurse,hospital_with_nurse,general,others'],
             'referral_details' => ['nullable', 'string', 'max:500'],
@@ -2305,6 +2306,11 @@ class WalkInController extends Controller
             'item_id.*' => ['nullable', 'integer', 'exists:items,id'],
             'issued_quantity' => ['nullable', 'array', 'max:5'],
             'issued_quantity.*' => ['nullable', 'numeric', 'min:0'],
+            'supplies_active' => ['nullable', 'boolean'],
+            'supply_item_id' => ['nullable', 'array', 'max:10'],
+            'supply_item_id.*' => ['nullable', 'integer', Rule::exists('items', 'id')->where('category', 'Supplies')],
+            'supply_quantity' => ['nullable', 'array', 'max:10'],
+            'supply_quantity.*' => ['nullable', 'numeric', 'min:0.01'],
             'consultation_started_at' => ['nullable', 'date_format:H:i:s'],
         ]);
 
@@ -2506,6 +2512,19 @@ class WalkInController extends Controller
             ->availableMedicinesFefo()
             ->get();
 
+        $supplyItems = Item::query()
+            ->where('category', 'Supplies')
+            ->where('consultation_issuable', true)
+            ->where('quantity', '>', 0)
+            ->where(function ($query) {
+                $query->whereNull('expiration_date')
+                    ->orWhereDate('expiration_date', '>=', now()->toDateString());
+            })
+            ->orderByRaw('CASE WHEN expiration_date IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('expiration_date')
+            ->orderBy('name')
+            ->get();
+
         $conditions = \App\Models\MedicalConditions::with('category')->get();
         $clearanceTypes = MarClearanceType::query()
             ->where('is_active', true)
@@ -2575,6 +2594,7 @@ class WalkInController extends Controller
         return view('admin.consult-form', compact(
             'student',
             'items',
+            'supplyItems',
             'conditions',
             'clearanceTypes',
             'referralOptions',
@@ -3343,7 +3363,7 @@ PROMPT;
             'covid_status' => 'required|in:Yes,No',
             'covid_positive_date' => 'required_if:covid_status,Yes|nullable|date|before_or_equal:today',
             'reason_for_visit' => 'nullable|string|max:255',
-            'certificate_type' => ['nullable', Rule::in(array_merge(
+            'certificate_type' => ['nullable', 'string', 'max:120', Rule::in(array_merge(
                 ['none'],
                 $clearanceSubcategoryCodes,
                 $clearanceTypeCodes
@@ -3360,8 +3380,47 @@ PROMPT;
             'item_id.*' => 'nullable|integer|exists:items,id',
             'issued_quantity' => 'nullable|array|max:5',
             'issued_quantity.*' => 'nullable|numeric|min:0.01',
+            'supplies_active' => 'nullable|boolean',
+            'supply_item_id' => 'nullable|array|max:10',
+            'supply_item_id.*' => ['nullable', 'integer', Rule::exists('items', 'id')->where('category', 'Supplies')],
+            'supply_quantity' => 'nullable|array|max:10',
+            'supply_quantity.*' => 'nullable|numeric|min:0.01',
             'consultation_started_at' => 'nullable|date_format:H:i:s',
         ]);
+
+        $supplyLines = [];
+        if ($request->boolean('supplies_active') && $request->input('service') !== 'Clinic Document Services') {
+            $supplyIds = (array) $request->input('supply_item_id', []);
+            $supplyQuantities = (array) $request->input('supply_quantity', []);
+            $selectedSupplies = [];
+            $supplyRows = max(count($supplyIds), count($supplyQuantities));
+
+            if ($supplyRows < 1 || $supplyRows > 10) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'supply_item_id' => 'Select between one and ten supplies, or remove the Supplies Dispensing section.',
+                ]);
+            }
+
+            for ($index = 0; $index < $supplyRows; $index++) {
+                $supplyId = trim((string) ($supplyIds[$index] ?? ''));
+                $quantity = trim((string) ($supplyQuantities[$index] ?? ''));
+                if ($supplyId === '' || $quantity === '') {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'supply_item_id' => 'Select a supply and enter its quantity for every visible supply entry.',
+                    ]);
+                }
+                if (in_array($supplyId, $selectedSupplies, true)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'supply_item_id' => 'Each supply can only be selected once per consultation.',
+                    ]);
+                }
+                $selectedSupplies[] = $supplyId;
+                $supplyLines[] = [
+                    'item_id' => (int) $supplyId,
+                    'quantity' => (float) $quantity,
+                ];
+            }
+        }
 
 
         $student = $this->findUserByIdentifier((string) $request->student_number);
@@ -3390,36 +3449,6 @@ PROMPT;
                 ? $submittedStartedAt
                 : now()->format('H:i:s');
             $request->session()->put($consultationSessionKey, $consultationStartedAt);
-        }
-
-        if ($request->filled('dob')) {
-            $student->DOB = $request->input('dob');
-        }
-
-        if ($request->filled('height')) {
-            $student->height = $request->input('height');
-        }
-
-        if ($request->filled('weight')) {
-            $student->weight = $request->input('weight');
-        }
-
-        $student->save();
-
-        if ($student->healthProfile) {
-            if ($request->filled('dob')) {
-                $student->healthProfile->birthday = $request->input('dob');
-            }
-
-            if ($request->filled('height')) {
-                $student->healthProfile->height = (string) $request->input('height');
-            }
-
-            if ($request->filled('weight')) {
-                $student->healthProfile->weight = (string) $request->input('weight');
-            }
-
-            $student->healthProfile->save();
         }
 
         $itemIds = $request->input('item_id', []);
@@ -3486,7 +3515,31 @@ PROMPT;
             return redirect()->back()->withInput()->with('error', 'You can issue up to five medicines per consultation.');
         }
 
-        $consultationResult = DB::transaction(function () use ($request, $student, $medicineLines, $requestedSource, $consultationStartedAt, $appointmentNumber, $requiresCertificateDetails) {
+        $consultationResult = DB::transaction(function () use ($request, $student, $medicineLines, $supplyLines, $requestedSource, $consultationStartedAt, $appointmentNumber, $requiresCertificateDetails) {
+            if ($request->filled('dob')) {
+                $student->DOB = $request->input('dob');
+            }
+            if ($request->filled('height')) {
+                $student->height = $request->input('height');
+            }
+            if ($request->filled('weight')) {
+                $student->weight = $request->input('weight');
+            }
+            $student->save();
+
+            if ($student->healthProfile) {
+                if ($request->filled('dob')) {
+                    $student->healthProfile->birthday = $request->input('dob');
+                }
+                if ($request->filled('height')) {
+                    $student->healthProfile->height = (string) $request->input('height');
+                }
+                if ($request->filled('weight')) {
+                    $student->healthProfile->weight = (string) $request->input('weight');
+                }
+                $student->healthProfile->save();
+            }
+
             $isOnlineSource = $requestedSource === 'online';
             $finalSource = 'walkin';
             $patientType = Appointment::normalizeUserType($student->user_role ?? $student->user_type);
@@ -3654,6 +3707,56 @@ PROMPT;
                     'item_id' => $medicineRecord['item_id'],
                     'medicine' => $medicineRecord['medicine'],
                     'quantity' => $medicineRecord['quantity'],
+                ]);
+            }
+
+            foreach ($supplyLines as $line) {
+                $item = Item::query()->lockForUpdate()->find($line['item_id']);
+                if (!$item || $item->category !== 'Supplies' || !$item->consultation_issuable
+                    || ($item->expiration_date && $item->expiration_date->lt(now()->startOfDay()))) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'supply_item_id' => ['One of the selected supplies is no longer available.'],
+                    ]);
+                }
+                if ($item->requiresDispensingConversion() && !$item->hasDispensingConversion()) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'supply_item_id' => ['Set the dispensing unit and units per stock unit for packaged supplies before issuing them.'],
+                    ]);
+                }
+                $issuedQuantity = $line['quantity'];
+                if ($issuedQuantity - $item->availableDispensingQuantity() > 0.00001) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'supply_quantity' => ['One of the selected supplies no longer has enough stock.'],
+                    ]);
+                }
+
+                $stockDeduction = $item->convertDispensingQuantityToStockQuantity($issuedQuantity);
+                $stockBefore = (float) $item->quantity;
+                $stockAfter = max(0, $stockBefore - $stockDeduction);
+                $item->quantity = $stockAfter;
+                $item->consumed = max(0, (float) ($item->consumed ?? 0)) + $stockDeduction;
+                $item->save();
+
+                InventoryMovement::create([
+                    'item_id' => $item->id,
+                    'user_id' => auth()->id(),
+                    'type' => 'consumed',
+                    'reason' => 'Dispensed to Patient',
+                    'quantity' => -$stockDeduction,
+                    'stock_before' => $stockBefore,
+                    'stock_after' => $stockAfter,
+                    'unit' => $item->unit ?: 'pcs',
+                    'batch_number' => $item->batch_number,
+                    'supplier_source' => $item->supplier_source,
+                    'notes' => 'Issued during consultation #' . $consultation->id . '.',
+                ]);
+
+                ConsultationSupply::create([
+                    'consultation_id' => $consultation->id,
+                    'item_id' => $item->id,
+                    'supply' => $item->name,
+                    'quantity' => $issuedQuantity,
+                    'unit' => $item->hasDispensingConversion() ? $item->dispensing_unit : ($item->unit ?: 'pcs'),
                 ]);
             }
 
@@ -4173,6 +4276,7 @@ PROMPT;
                 ->update([
                     'status' => HealthProfileCorrectionRequest::STATUS_APPROVED,
                     'reviewed_at' => now(),
+                    'reviewed_by_user_id' => auth()->id(),
                 ]);
         }
 
@@ -4658,6 +4762,8 @@ PROMPT;
                     ->update([
                         'status' => HealthFormSubmission::STATUS_APPROVED,
                         'approved_at' => $profile->verified_at ?: now(),
+                        'approved_by_user_id' => auth()->id(),
+                        'status_changed_by_user_id' => auth()->id(),
                         'updated_at' => now(),
                     ]);
             } elseif ($needsHealthFormCorrection) {
@@ -4679,6 +4785,7 @@ PROMPT;
                 if ($submission) {
                     $submission->status = HealthFormSubmission::STATUS_NEEDS_CORRECTION;
                     $submission->approved_at = null;
+                    $submission->status_changed_by_user_id = auth()->id();
                     $submission->save();
                 }
             }
@@ -4923,6 +5030,8 @@ PROMPT;
                         ->update([
                             'status' => HealthFormSubmission::STATUS_APPROVED,
                             'approved_at' => $profile->verified_at ?: now(),
+                            'approved_by_user_id' => auth()->id(),
+                            'status_changed_by_user_id' => auth()->id(),
                             'updated_at' => now(),
                         ]);
                 } elseif ($clearanceDecision === 'pending') {
