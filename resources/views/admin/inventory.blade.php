@@ -7364,8 +7364,8 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label>Stock Number</label>
-                                    <input name="stock_number" id="iStockNumber" class="form-control" placeholder="e.g. 03-005" required maxlength="50">
+                                    <label>Stock Number (Optional)</label>
+                                    <input name="stock_number" id="iStockNumber" class="form-control" placeholder="e.g. 03-005" maxlength="50">
                                 </div>
 
                                 <div class="form-group">

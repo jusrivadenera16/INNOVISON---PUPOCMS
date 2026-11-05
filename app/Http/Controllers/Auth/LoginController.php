@@ -182,7 +182,17 @@ class LoginController extends Controller
 
     private function localLoginEnabled(?Request $request = null): bool
     {
-        return true;
+        if (! (bool) config('services.local_login.enabled', false)) {
+            return false;
+        }
+
+        $host = strtolower(trim((string) optional($request)->getHost()));
+        $allowedHosts = array_map(
+            fn ($allowedHost) => strtolower(trim((string) $allowedHost)),
+            (array) config('services.local_login.allowed_hosts', [])
+        );
+
+        return $host !== '' && in_array($host, $allowedHosts, true);
     }
 
     private function redirectPathByRole(string $role): string
