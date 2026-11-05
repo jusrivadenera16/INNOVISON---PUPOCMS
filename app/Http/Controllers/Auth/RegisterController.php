@@ -24,13 +24,14 @@ class RegisterController extends Controller
         'middle_name' => 'nullable|string|max:255',
         'last_name'  => 'required|string|max:255',
         'email'      => 'required|email|unique:users',
-        'clinic_role' => 'required|string|in:student,faculty,guest,admin_clinic_staff,admin_designee,student_assistant,super_admin',
+        'clinic_role' => 'required|string|in:student,faculty,guest,admin,admin_clinic_staff,admin_designee,student_assistant,super_admin',
         'password'   => 'required|min:6|confirmed',
     ]);
 
     $selectedRole = (string) $request->input('clinic_role');
-    $isStudentSideUser = in_array($selectedRole, ['student', 'faculty', 'guest'], true);
-    $isAdminDesignee = in_array($selectedRole, ['admin_clinic_staff', 'admin_designee'], true);
+    $isNonTeachingAdmin = in_array($selectedRole, ['admin', 'admin_clinic_staff'], true);
+    $isStudentSideUser = in_array($selectedRole, ['student', 'faculty', 'guest'], true) || $isNonTeachingAdmin;
+    $isAdminDesignee = $selectedRole === 'admin_designee';
     $isStudentAssistant = $selectedRole === 'student_assistant';
     $userRole = match (true) {
         $selectedRole === 'super_admin' => User::ROLE_SUPERADMIN,
@@ -68,6 +69,7 @@ class RegisterController extends Controller
             $selectedRole === 'student' => 'Student',
             $selectedRole === 'faculty' => 'Faculty',
             $selectedRole === 'guest' => 'Guest',
+            $isNonTeachingAdmin || $isAdminDesignee => 'Admin',
             $isStudentAssistant => 'Assistant',
             default => 'Regular',
         };
