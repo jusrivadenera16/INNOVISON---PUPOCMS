@@ -2994,7 +2994,6 @@ class AppointmentController extends Controller
     {
         Appointment::expireOverduePending();
         $workflow = app(ClinicWorkflowService::class);
-
         /** @var \App\Models\User|null $user */
         $user = $this->promoteDesigneeAdminToStudentGuard() ?? Auth::guard('student')->user();
         if (!$user) {
@@ -3107,7 +3106,7 @@ class AppointmentController extends Controller
             'date' => ['required', 'date_format:Y-m-d'],
             'time' => ['required', 'date_format:H:i', Rule::in($appointmentScheduling->bookableTimeSlots())],
             'service' => ['required', Rule::in($configuredServices)],
-            'reason' => 'required|string',
+            'reason' => 'required|string|max:100',
         ], [
             'date.required' => 'Please select a preferred appointment date.',
             'date.date_format' => 'Please select a valid appointment date.',
@@ -3116,6 +3115,7 @@ class AppointmentController extends Controller
             'time.in' => 'Please select one of the available appointment times.',
             'service.required' => 'Please select a clinic service.',
             'reason.required' => 'Please enter a reason or describe your symptoms.',
+            'reason.max' => 'The reason must not exceed 100 characters.',
         ]);
 
         $selectedDate = Carbon::parse($request->date)->startOfDay();

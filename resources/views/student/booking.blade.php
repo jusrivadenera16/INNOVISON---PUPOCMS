@@ -2552,8 +2552,12 @@
                 </div>
 
                 <div class="input-group">
-                    <textarea name="reason" class="form-control" placeholder="Briefly describe what you are feeling..." rows="3" required>{{ $bookingReasonValue }}</textarea>
-                    <small class="booking-field-help">Please provide as much detail as possible to help our nurse prepare for your consultation.</small>
+                    <textarea id="appointmentReason" name="reason" class="form-control" placeholder="Briefly describe what you are feeling..." rows="3" maxlength="100" aria-describedby="reasonCharacterCount reasonFieldHelp" required>{{ $bookingReasonValue }}</textarea>
+                    <small class="booking-field-help" id="reasonCharacterCount" aria-live="polite">{{ mb_strlen((string) $bookingReasonValue) }}/100 characters</small>
+                    @error('reason')
+                        <small class="booking-field-help" role="alert">{{ $message }}</small>
+                    @enderror
+                    <small class="booking-field-help" id="reasonFieldHelp">Please provide a brief reason or symptom (maximum 100 characters).</small>
                 </div>
 
                 <div class="appointment-summary-notice">
@@ -2857,6 +2861,14 @@
         const serviceTypeDisplay = document.getElementById('serviceTypeDisplay');
         const serviceTypeMenu = document.getElementById('serviceTypeMenu');
         const reasonField = bookingForm ? bookingForm.querySelector('[name="reason"]') : null;
+        const reasonCharacterCount = document.getElementById('reasonCharacterCount');
+        const updateReasonCharacterCount = () => {
+            if (reasonField && reasonCharacterCount) {
+                reasonCharacterCount.textContent = `${reasonField.value.length}/100 characters`;
+            }
+        };
+        reasonField?.addEventListener('input', updateReasonCharacterCount);
+        updateReasonCharacterCount();
         const serviceTypeOptions = Array.from(document.querySelectorAll('.service-select-option'));
         const serviceTypeWrap = serviceTypeDisplay ? serviceTypeDisplay.closest('.service-select-wrap') : null;
         const headerAvailableSlots = document.getElementById('headerAvailableSlots');
