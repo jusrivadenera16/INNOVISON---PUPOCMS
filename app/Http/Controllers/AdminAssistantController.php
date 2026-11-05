@@ -447,7 +447,8 @@ PROMPT;
                 Log::warning('Clinic assistant OpenAI request failed.', [
                     'model' => $model,
                     'status' => $response->status(),
-                    'error' => trim((string) data_get($response->json() ?: [], 'error.message', '')),
+                    'error_type' => data_get($response->json() ?: [], 'error.type'),
+                    'error_code' => data_get($response->json() ?: [], 'error.code'),
                 ]);
 
                 return null;

@@ -103,7 +103,7 @@ class GeminiClient
     {
         $primary = trim((string) config('services.gemini.model', ''));
         if ($primary === '') {
-            $primary = 'gemini-2.5-flash';
+            $primary = 'gemini-3.8-flash';
         }
 
         $fallbacks = (array) config('services.gemini.fallback_models', []);
