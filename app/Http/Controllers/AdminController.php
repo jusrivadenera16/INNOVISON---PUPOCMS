@@ -8756,7 +8756,7 @@ public function storeItem(Request $request)
         'name' => ['required', 'string', 'max:255'],
         'category' => ['required', 'string', 'max:255'],
         'consultation_issuable' => ['nullable', 'boolean'],
-        'stock_number' => ['required', 'string', 'max:50', Rule::unique('items', 'stock_number')],
+        'stock_number' => ['nullable', 'string', 'max:50', Rule::unique('items', 'stock_number')],
         'consumed' => ['nullable', 'integer', 'min:0'],
         'quantity' => ['required', 'integer', 'min:0'],
         'unit' => ['required', 'string', 'max:50'],
@@ -8876,7 +8876,7 @@ public function updateItem($id, Request $request)
             'name' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:255'],
             'consultation_issuable' => ['nullable', 'boolean'],
-            'stock_number' => ['required', 'string', 'max:50', Rule::unique('items', 'stock_number')->ignore($item->id)],
+            'stock_number' => ['nullable', 'string', 'max:50', Rule::unique('items', 'stock_number')->ignore($item->id)],
             'consumed' => ['nullable', 'integer', 'min:0'],
             'quantity' => ['required', 'integer', 'min:0'],
             'unit' => ['required', 'string', 'max:50'],
@@ -9300,11 +9300,6 @@ public function commitInventoryImport(Request $request)
                 continue;
             }
 
-            if (trim((string) ($data['stock_number'] ?? '')) === '') {
-                $errors[] = 'Row ' . ($index + 1) . ' was skipped because the stock number is required.';
-                continue;
-            }
-
             $existingItem = null;
             $matchedItemId = (int) ($row['matched_item_id'] ?? 0);
             if ($matchedItemId > 0) {
@@ -9314,7 +9309,10 @@ public function commitInventoryImport(Request $request)
                 $existingItem = $this->findInventoryImportMatch($data);
             }
 
-            $stockNumberOwner = Item::query()->where('stock_number', $data['stock_number'])->first();
+            $stockNumber = trim((string) ($data['stock_number'] ?? ''));
+            $stockNumberOwner = $stockNumber === ''
+                ? null
+                : Item::query()->where('stock_number', $stockNumber)->first();
             if ($action === 'create' && $stockNumberOwner) {
                 $errors[] = 'Row ' . ($index + 1) . ' was skipped because stock number ' . $data['stock_number'] . ' already exists.';
                 continue;

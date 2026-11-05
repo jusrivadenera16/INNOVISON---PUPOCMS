@@ -654,44 +654,6 @@ Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->gr
     });
 });
 
-// Temporary dev login helper (debug mode only)
-Route::get('/dev-login/{id}', function ($id) {
-    if (!config('app.debug')) {
-        abort(404);
-    }
-
-    $user = User::find($id);
-    if ($user) {
-        $originalRole = strtolower((string) ($user->user_role ?? ''));
-        $normalizedRole = User::normalizeRole($user->user_role);
-        if ($normalizedRole !== $originalRole) {
-            $user->user_role = $normalizedRole;
-            $user->save();
-        }
-
-        if ($normalizedRole === User::ROLE_SUPERADMIN) {
-            Auth::guard('admin')->login($user);
-            return redirect('/admin/dashboard')->with('success', 'Logged in as ' . $user->name);
-        }
-        if ($normalizedRole === User::ROLE_ADMIN) {
-            $redirectPath = ClinicRoutes::workspaceRedirectForUser($user);
-
-            if ($redirectPath === '/student/home') {
-                Auth::guard('student')->login($user);
-                return redirect('/student/home')->with('success', 'Logged in as ' . $user->name);
-            }
-
-            Auth::guard('admin')->login($user);
-            return redirect($redirectPath)->with('success', 'Logged in as ' . $user->name);
-        }
-
-        Auth::guard('student')->login($user);
-        return redirect(ClinicRoutes::workspaceRedirectForUser($user))->with('success', 'Logged in as ' . $user->name);
-    }
-
-    return 'User not found!';
-});
-
 if (app()->environment('local')) {
     Route::get('/_evidence/err-01', function () {
         throw new \RuntimeException('ERR-01 controlled exception; this detail must remain server-side.');

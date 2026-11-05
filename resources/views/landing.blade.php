@@ -1,3 +1,13 @@
+@php
+    $landingHost = strtolower(trim((string) request()->getHost()));
+    $landingAllowedHosts = array_map(
+        static fn ($host) => strtolower(trim((string) $host)),
+        (array) config('services.local_login.allowed_hosts', [])
+    );
+    $showLandingLocalLogin = (bool) config('services.local_login.enabled', false)
+        && $landingHost !== ''
+        && in_array($landingHost, $landingAllowedHosts, true);
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8434,17 +8444,19 @@
                             <span>Need Help?</span>
                         </button>
 
-                        @guest('student')
-                            @guest('admin')
-                                <a class="local-login-link" href="{{ route('login') }}">
-                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                        <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor"/>
-                                        <path d="M8 8h8M8 12h5M8 16h3" stroke="currentColor" stroke-linecap="round"/>
-                                    </svg>
-                                    <span>Local Login</span>
-                                </a>
+                        @if($showLandingLocalLogin)
+                            @guest('student')
+                                @guest('admin')
+                                    <a class="local-login-link" href="{{ route('login') }}">
+                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor"/>
+                                            <path d="M8 8h8M8 12h5M8 16h3" stroke="currentColor" stroke-linecap="round"/>
+                                        </svg>
+                                        <span>Local Login</span>
+                                    </a>
+                                @endguest
                             @endguest
-                        @endguest
+                        @endif
                     </div>
 
                     <p class="system-foot">PUP Taguig Clinic Management System</p>
@@ -8561,17 +8573,19 @@
                                     <span>Need Help?</span>
                                 </button>
 
-                                @guest('student')
-                                    @guest('admin')
-                                        <a class="local-login-link" href="{{ route('login') }}">
-                                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor"/>
-                                                <path d="M8 8h8M8 12h5M8 16h3" stroke="currentColor" stroke-linecap="round"/>
-                                            </svg>
-                                            <span>Local Login</span>
-                                        </a>
+                                @if($showLandingLocalLogin)
+                                    @guest('student')
+                                        @guest('admin')
+                                            <a class="local-login-link" href="{{ route('login') }}">
+                                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                    <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor"/>
+                                                    <path d="M8 8h8M8 12h5M8 16h3" stroke="currentColor" stroke-linecap="round"/>
+                                                </svg>
+                                                <span>Local Login</span>
+                                            </a>
+                                        @endguest
                                     @endguest
-                                @endguest
+                                @endif
                             </div>
                         </div>
 
