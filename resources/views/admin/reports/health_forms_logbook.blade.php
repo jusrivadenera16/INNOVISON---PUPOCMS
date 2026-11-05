@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Health Forms Logbook')
+@section('title', 'Health Forms Logs')
 
 @push('styles')
 <style>
@@ -439,7 +439,7 @@
     ]])
     <header class="hf-logbook-header">
         <div>
-            <h1 class="hf-logbook-title">Health Forms Logbook</h1>
+            <h1 class="hf-logbook-title">Health Forms Logs</h1>
             <p class="hf-logbook-subtitle">Approved health form clinic visit logbook using Final Review time-in and approval time-out.</p>
         </div>
     </header>
