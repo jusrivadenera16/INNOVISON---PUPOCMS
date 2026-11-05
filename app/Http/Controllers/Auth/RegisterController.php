@@ -30,8 +30,7 @@ class RegisterController extends Controller
 
     $selectedRole = (string) $request->input('clinic_role');
     $isStudentSideUser = in_array($selectedRole, ['student', 'faculty', 'guest'], true);
-    $isClinicAdmin = $selectedRole === 'admin_clinic_staff';
-    $isAdminDesignee = $selectedRole === 'admin_designee';
+    $isAdminDesignee = in_array($selectedRole, ['admin_clinic_staff', 'admin_designee'], true);
     $isStudentAssistant = $selectedRole === 'student_assistant';
     $userRole = match (true) {
         $selectedRole === 'super_admin' => User::ROLE_SUPERADMIN,
@@ -95,7 +94,7 @@ class RegisterController extends Controller
         ));
     }
 
-    if (($isClinicAdmin || $selectedRole === 'super_admin') && Schema::hasTable('admins')) {
+    if ($selectedRole === 'super_admin' && Schema::hasTable('admins')) {
         $adminPayload = [
             'first_name' => $user->first_name,
             'middle_name' => $user->middle_name,
@@ -119,7 +118,7 @@ class RegisterController extends Controller
         Admin::create($adminPayload);
     }
 
-    $guard = $isStudentSideUser ? 'student' : 'admin';
+    $guard = ($isStudentSideUser || $isAdminDesignee) ? 'student' : 'admin';
     Auth::shouldUse($guard);
     Auth::guard($guard)->login($user);
     $request->session()->regenerate();

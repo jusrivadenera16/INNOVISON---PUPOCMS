@@ -200,6 +200,7 @@
                 0 0 12px rgba(248, 211, 104, 0.42),
                 0 0 38px rgba(244, 195, 58, 0.25),
                 inset 0 0 30px rgba(255, 183, 76, 0.08);
+            animation: maintenanceEdgeGlow 3.8s ease-in-out infinite;
         }
 
         .maintenance-orbit::before,
@@ -446,6 +447,23 @@
             to { transform: rotate(360deg); }
         }
 
+        @keyframes maintenanceEdgeGlow {
+            0%, 100% {
+                box-shadow:
+                    0 0 0 12px rgba(122, 20, 36, 0.16),
+                    0 0 12px rgba(248, 211, 104, 0.42),
+                    0 0 38px rgba(244, 195, 58, 0.25),
+                    inset 0 0 30px rgba(255, 183, 76, 0.08);
+            }
+            50% {
+                box-shadow:
+                    0 0 0 12px rgba(122, 20, 36, 0.16),
+                    0 0 22px rgba(248, 211, 104, 0.68),
+                    0 0 52px rgba(244, 195, 58, 0.36),
+                    inset 0 0 34px rgba(255, 183, 76, 0.14);
+            }
+        }
+
         @media (max-width: 820px) {
             .maintenance-page {
                 justify-content: flex-start;
@@ -588,6 +606,7 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
+            .maintenance-orbit,
             .maintenance-orbit::before {
                 animation: none;
             }
