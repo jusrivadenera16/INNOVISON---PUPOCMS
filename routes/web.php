@@ -269,7 +269,7 @@ Route::middleware(['auth:student', 'student.idle', 'account.active', 'idp.sessio
     Route::get('/fetch-user/{student_id}', [AppointmentController::class, 'fetchUser']);
 });
 
-Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->group(function () {
+Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::get('/assistant/choose-portal', [LoginController::class, 'showStudentAssistantPortalChooser'])->name('assistant.choose-portal');
         Route::get('/assistant/enter-student', [LoginController::class, 'enterStudentPortal'])->name('assistant.enter-student');
