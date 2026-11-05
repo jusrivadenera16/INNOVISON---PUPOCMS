@@ -23,8 +23,11 @@ return new class extends Migration
         foreach ($rows as $row) {
             $stockNumber = trim((string) $row->stock_number);
             if ($stockNumber === '') {
-                DB::table('items')->where('id', $row->id)->update(['stock_number' => null]);
-                continue;
+                $stockNumber = 'LEGACY-' . $row->id;
+                $suffix = 2;
+                while (DB::table('items')->whereRaw('LOWER(stock_number) = ?', [strtolower($stockNumber)])->exists()) {
+                    $stockNumber = 'LEGACY-' . $row->id . '-' . $suffix++;
+                }
             }
 
             if ($stockNumber !== $row->stock_number) {
@@ -59,6 +62,7 @@ return new class extends Migration
         }
 
         Schema::table('items', function (Blueprint $table): void {
+            $table->string('stock_number', 50)->nullable(false)->change();
             $table->unique('stock_number', 'items_stock_number_unique');
         });
     }
@@ -68,6 +72,7 @@ return new class extends Migration
         if (Schema::hasTable('items') && Schema::hasColumn('items', 'stock_number')) {
             Schema::table('items', function (Blueprint $table): void {
                 $table->dropUnique('items_stock_number_unique');
+                $table->string('stock_number', 50)->nullable()->change();
             });
         }
     }
