@@ -26,6 +26,18 @@ class GeminiClient
         ], $maxOutputTokens, $temperature);
     }
 
+    public function generateChatText(string $prompt, int $maxOutputTokens = 512, float $temperature = 0.2): ?string
+    {
+        return $this->generate(
+            [['text' => $prompt]],
+            $maxOutputTokens,
+            $temperature,
+            timeoutSeconds: 15,
+            thinkingLevel: 'low',
+            tryFallbackModels: false,
+        );
+    }
+
     public function generateImageText(string $prompt, UploadedFile $file, int $maxOutputTokens = 4096, float $temperature = 0.0): ?string
     {
         $path = (string) $file->getRealPath();
@@ -47,7 +59,14 @@ class GeminiClient
         ], $maxOutputTokens, $temperature);
     }
 
-    private function generate(array $parts, int $maxOutputTokens, float $temperature): ?string
+    private function generate(
+        array $parts,
+        int $maxOutputTokens,
+        float $temperature,
+        int $timeoutSeconds = 45,
+        ?string $thinkingLevel = null,
+        bool $tryFallbackModels = true,
+    ): ?string
     {
         $this->lastError = null;
 
@@ -58,24 +77,35 @@ class GeminiClient
         }
 
         $models = $this->modelsToTry();
+        if (!$tryFallbackModels) {
+            $models = array_slice($models, 0, 1);
+        }
         $errors = [];
 
         foreach ($models as $model) {
             try {
+                $generationConfig = [
+                    'maxOutputTokens' => $maxOutputTokens,
+                ];
+                if (!str_starts_with($model, 'gemini-3')) {
+                    $generationConfig['temperature'] = $temperature;
+                }
+                if ($thinkingLevel !== null) {
+                    $generationConfig['thinkingConfig'] = ['thinkingLevel' => $thinkingLevel];
+                }
+
                 $response = Http::withHeaders([
                     'x-goog-api-key' => $apiKey,
                 ])
                     ->acceptJson()
-                    ->timeout(45)
+                    ->connectTimeout(min(5, $timeoutSeconds))
+                    ->timeout($timeoutSeconds)
                     ->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent", [
                         'contents' => [[
                             'role' => 'user',
                             'parts' => $parts,
                         ]],
-                        'generationConfig' => [
-                            'temperature' => $temperature,
-                            'maxOutputTokens' => $maxOutputTokens,
-                        ],
+                        'generationConfig' => $generationConfig,
                     ]);
 
                 if (!$response->successful()) {

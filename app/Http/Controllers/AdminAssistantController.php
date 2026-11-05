@@ -407,7 +407,7 @@ User question:
 {$text}
 PROMPT;
 
-        $reply = $gemini->generateText($prompt, 2048, 0.2);
+        $reply = $gemini->generateChatText($prompt, 512, 0.2);
         if ($reply !== null) {
             return $reply;
         }
@@ -425,7 +425,8 @@ PROMPT;
         }
 
         try {
-            $response = Http::timeout(18)
+            $response = Http::connectTimeout(4)
+                ->timeout(12)
                 ->withToken($apiKey)
                 ->post('https://api.openai.com/v1/chat/completions', [
                     'model' => $model,
