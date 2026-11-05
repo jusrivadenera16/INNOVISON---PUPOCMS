@@ -13,6 +13,7 @@ use App\Models\MarClearanceSubcategorySource;
 use App\Models\StudentMedicalAssessment;
 use App\Models\User;
 use App\Services\HealthFormPdfSnapshotService;
+use App\Services\HealthRecordHistoryService;
 use App\Services\MarClearanceIssuanceService;
 use App\Services\StudentNotificationMailer;
 use App\Http\Controllers\WalkInController;
@@ -232,6 +233,8 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
             $table->timestamp('requested_at')->nullable();
             $table->timestamp('submitted_at')->nullable();
             $table->timestamp('approved_at')->nullable();
+            $table->unsignedBigInteger('approved_by_user_id')->nullable();
+            $table->unsignedBigInteger('status_changed_by_user_id')->nullable();
             $table->text('remarks')->nullable();
             $table->timestamps();
         });
@@ -250,6 +253,7 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
             $table->timestamp('requested_at')->nullable();
             $table->timestamp('submitted_at')->nullable();
             $table->timestamp('reviewed_at')->nullable();
+            $table->unsignedBigInteger('reviewed_by_user_id')->nullable();
             $table->json('metadata')->nullable();
             $table->timestamps();
         });
@@ -1037,8 +1041,14 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
         $this->assertSame('09222222222', $student->fresh()->contact_no);
         $this->assertSame('2005-02-12', $student->fresh()->DOB);
         $this->assertSame(HealthFormSubmission::STATUS_APPROVED, $newVersion->fresh()->status);
+        $this->assertSame($superadmin->id, $newVersion->fresh()->approved_by_user_id);
         $this->assertSame(HealthFormSubmission::STATUS_APPROVED, $previousVersion->fresh()->status);
         $this->assertSame(HealthProfileCorrectionRequest::STATUS_APPROVED, $newFormRequest->fresh()->status);
+        $this->assertSame($superadmin->id, $newFormRequest->fresh()->reviewed_by_user_id);
+        $approvalEvent = app(HealthRecordHistoryService::class)
+            ->forStudentProfile($profile->fresh())
+            ->first(fn (array $event) => $event['title'] === 'Health Form Approved' && $event['at']->equalTo($newVersion->fresh()->approved_at));
+        $this->assertSame($superadmin->name, $approvalEvent['actor']);
         $this->assertTrue((bool) $student->fresh()->is_health_profile_completed);
     }
 

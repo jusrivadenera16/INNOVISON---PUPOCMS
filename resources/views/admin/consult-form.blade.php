@@ -607,6 +607,40 @@
         display: grid;
         gap: 9px;
     }
+    .inventory-tally-list[hidden] { display: none !important; }
+    .inventory-stock-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+        margin: -4px 0 15px;
+        padding: 4px;
+        border: 1px solid #e2e8f0;
+        border-radius: 9px;
+        background: #f8fafc;
+    }
+    .inventory-stock-tab {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        min-width: 0;
+        min-height: 34px;
+        padding: 6px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: #475569;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+    }
+    .inventory-stock-tab svg { width: 14px; height: 14px; flex: 0 0 14px; }
+    .inventory-stock-tab.is-active { background: #800000; color: #fff; box-shadow: 0 3px 9px rgba(128, 0, 0, .18); }
+    .inventory-stock-tab:not(.is-active):hover,
+    .inventory-stock-tab:focus-visible { background: #facc15; color: #70131b; outline: none; }
+    .inventory-stock-tab-count { font-size: 10px; white-space: nowrap; }
     .inventory-tally-item {
         padding: 12px;
         border: 1px solid #e2e8f0;
@@ -708,6 +742,12 @@
     html[data-theme="dark"] .inventory-tally-expiry {
         color: #cbd5e1;
     }
+    html[data-theme="dark"] .inventory-tally-meta { color: #cbd5e1; }
+    html[data-theme="dark"] .inventory-stock-tabs { border-color: #374151; background: #172033; }
+    html[data-theme="dark"] .inventory-stock-tab { color: #cbd5e1; }
+    html[data-theme="dark"] .inventory-stock-tab.is-active { background: #8b1028; color: #fff; }
+    html[data-theme="dark"] .inventory-stock-tab:not(.is-active):hover,
+    html[data-theme="dark"] .inventory-stock-tab:focus-visible { background: #facc15; color: #70131b; }
     html[data-theme="dark"] .form-control,
     html[data-theme="dark"] .choice-card,
     html[data-theme="dark"] .inventory-tally-trigger,
@@ -857,6 +897,11 @@
     }
     #right-utility-panel.open {
         right: 0;
+    }
+    body:has(#right-utility-panel.open) .quick-actions-wrap {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
     }
     #right-utility-panel.is-expanded {
         width: min(1100px, calc(100vw - 72px));
@@ -3283,6 +3328,49 @@
     html[data-theme="dark"] .medicine-dispensing-card .medicine-entry .form-group > label {
         color: #cbd5e1;
     }
+    .supply-dispensing-card:not(.is-open) { padding-bottom: 0; }
+    .supply-dispensing-card:not(.is-open) .medicine-header { margin-bottom: 0; }
+    .supply-dispensing-card:not(.is-open) .medicine-header .consult-section-heading {
+        border-radius: 13px; background: linear-gradient(120deg, #fff8fa, #f7edf0); box-shadow: none;
+    }
+    .supply-dispensing-card:not(.is-open) .medicine-header .consult-section-copy h3 { color: var(--clinic-form-maroon) !important; }
+    .supply-dispensing-card:not(.is-open) .medicine-header .consult-section-copy p { color: #64748b !important; }
+    .supply-dispensing-card .medicine-header .consult-section-copy { min-width: 0; }
+    .supply-dispensing-card .supply-toggle-button {
+        display: inline-flex; align-items: center; justify-content: center; gap: 7px; flex: 0 0 auto;
+        margin-left: auto; min-height: 36px; padding: 7px 12px; border: 1px solid #9f1933;
+        border-radius: 7px; background: #fff7f8; color: #8b1028; font: inherit; font-size: .75rem; font-weight: 850;
+        cursor: pointer; transition: background .18s ease, color .18s ease, transform .18s ease;
+    }
+    .supply-dispensing-card.is-open .supply-toggle-button { border-color: rgba(255,255,255,.5); background: transparent; color: #fff; }
+    .supply-dispensing-card .supply-toggle-button:hover,
+    .supply-dispensing-card .supply-toggle-button:focus-visible { background: #facc15; border-color: #facc15; color: #70131b; transform: translateY(-1px); outline: none; }
+    .supply-dispensing-card .supply-toggle-button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .supply-dispensing-card .supply-toggle-button svg { display: block; width: 17px; height: 17px; }
+    .supply-dispensing-card .supply-toggle-button [hidden],
+    .supply-dispensing-card .supply-dispensing-body[hidden] { display: none !important; }
+    .supply-dispensing-card .supply-entry-fields { display: grid; gap: 12px; }
+    .supply-dispensing-card .supply-entry-fields .form-group { margin-bottom: 0; }
+    .supply-dispensing-card .supply-quantity-group { display: none; }
+    .supply-dispensing-card .supply-quantity-group.is-visible { display: block; }
+    .supply-dispensing-card input[data-supply-quantity] { box-sizing: border-box; padding: 12px 30px 12px 16px !important; }
+    .supply-dispensing-card .supply-preview-note,
+    .supply-dispensing-card .supply-empty-note { margin: 12px 0 0; color: #64748b; font-size: .75rem; }
+    .supply-dispensing-card:not(.is-open) .supply-empty-note { margin: 0 0 16px; }
+    html[data-theme="dark"] .supply-dispensing-card:not(.is-open) .medicine-header .consult-section-heading {
+        background: linear-gradient(120deg, #1c2637, #251b2c); border-bottom-color: #3b475b;
+    }
+    html[data-theme="dark"] .supply-dispensing-card:not(.is-open) .medicine-header .consult-section-copy h3 { color: #fff !important; }
+    html[data-theme="dark"] .supply-dispensing-card:not(.is-open) .medicine-header .consult-section-copy p,
+    html[data-theme="dark"] .supply-dispensing-card .supply-preview-note,
+    html[data-theme="dark"] .supply-dispensing-card .supply-empty-note { color: #cbd5e1 !important; }
+    html[data-theme="dark"] .supply-dispensing-card:not(.is-open) .supply-toggle-button { background: #182235; color: #facc15; border-color: #facc15; }
+    html[data-theme="dark"] .supply-dispensing-card .supply-toggle-button:hover,
+    html[data-theme="dark"] .supply-dispensing-card .supply-toggle-button:focus-visible { background: #facc15; color: #70131b; }
+    @media (max-width: 680px) {
+        .supply-dispensing-card .medicine-header .consult-section-heading { flex-wrap: wrap; }
+        .supply-dispensing-card .supply-toggle-button { margin-left: 0; width: 100%; }
+    }
     .consultation-main .clinical-findings-card {
         position: relative;
         z-index: 3;
@@ -5488,12 +5576,10 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="selected-stock" data-selected-stock aria-live="polite"></div>
                             </div>
                             <div class="form-group medicine-quantity-group" data-medicine-quantity-group>
                                 <label data-quantity-label for="consultIssuedQuantityInput{{ $medicineIndex }}">Quantity to Issue</label>
                                 <input type="number" name="issued_quantity[]" id="consultIssuedQuantityInput{{ $medicineIndex }}" class="form-control" data-medicine-quantity min="0" step="0.01" placeholder="Enter amount" value="{{ $oldMedicineQuantity }}">
-                                <div class="form-help" data-quantity-help>Select a medicine to see the dispensing unit and available stock.</div>
                             </div>
                         </div>
                     @endfor
@@ -5504,6 +5590,80 @@
                         <span>Add Another Medicine</span>
                     </button>
                     <span class="medicine-selection-count" id="medicineSelectionCount">0 of 5 selected</span>
+                </div>
+            </section>
+
+            @php
+                $oldSupplyIds = $draftValue('supply_item_id', []);
+                $oldSupplyQuantities = $draftValue('supply_quantity', []);
+                $oldSupplyIds = is_array($oldSupplyIds) ? $oldSupplyIds : [$oldSupplyIds];
+                $oldSupplyQuantities = is_array($oldSupplyQuantities) ? $oldSupplyQuantities : [$oldSupplyQuantities];
+                $suppliesOpen = (string) $draftValue('supplies_active', '0') === '1'
+                    || collect($oldSupplyIds)->contains(fn ($id) => filled($id));
+            @endphp
+            <section class="consult-card medicine-dispensing-card supply-dispensing-card {{ $suppliesOpen ? 'is-open' : '' }}" id="supplyDispensingCard" data-document-service-hide>
+                <div class="medicine-header">
+                    <div class="consult-section-heading">
+                        <span class="consult-section-icon" aria-hidden="true"><x-outline-icon name="cube" /></span>
+                        <div class="consult-section-copy">
+                            <h3>Supplies Dispensing</h3>
+                            <p>Optional · Medical supplies used or issued during the clinic visit.</p>
+                        </div>
+                        <button type="button" class="supply-toggle-button" id="toggleSuppliesButton" aria-expanded="{{ $suppliesOpen ? 'true' : 'false' }}" aria-controls="supplyDispensingBody" {{ $supplyItems->isEmpty() && !$suppliesOpen ? 'disabled' : '' }}>
+                            <span data-supply-add-icon {{ $suppliesOpen ? 'hidden' : '' }}><x-outline-icon name="plus-circle" /></span>
+                            <span data-supply-remove-icon {{ $suppliesOpen ? '' : 'hidden' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path stroke-linecap="round" d="M8 12h8" /></svg></span>
+                            <span>{{ $suppliesOpen ? 'Remove Supplies' : 'Add Supplies' }}</span>
+                        </button>
+                    </div>
+                </div>
+                <input type="hidden" name="supplies_active" id="suppliesActiveInput" value="{{ $suppliesOpen ? '1' : '0' }}">
+                @if($supplyItems->isEmpty())
+                    <p class="supply-empty-note">No available supplies in inventory.</p>
+                @endif
+                <div class="supply-dispensing-body" id="supplyDispensingBody" {{ $suppliesOpen ? '' : 'hidden' }}>
+                    <div class="medicine-entries" id="supplyEntries">
+                        @for($supplyIndex = 0; $supplyIndex < 10; $supplyIndex++)
+                            @php
+                                $oldSupplyId = trim((string) ($oldSupplyIds[$supplyIndex] ?? ''));
+                                $oldSupplyQuantity = $oldSupplyQuantities[$supplyIndex] ?? '';
+                                $supplyEntryVisible = $suppliesOpen && ($supplyIndex === 0 || $oldSupplyId !== '' || filled($oldSupplyQuantity));
+                            @endphp
+                            <div class="medicine-entry {{ $supplyEntryVisible ? 'is-visible' : '' }}" data-supply-entry data-index="{{ $supplyIndex }}">
+                                <div class="medicine-entry-head">
+                                    <div class="medicine-entry-title">
+                                        <span class="medicine-entry-number">{{ $supplyIndex + 1 }}</span>
+                                        <span>Supply {{ str_pad((string) ($supplyIndex + 1), 2, '0', STR_PAD_LEFT) }}</span>
+                                    </div>
+                                    <button type="button" class="medicine-remove-button" data-remove-supply aria-label="Remove supply {{ $supplyIndex + 1 }}" title="Remove supply"><x-outline-icon name="trash" /></button>
+                                </div>
+                                <div class="supply-entry-fields">
+                                    <div class="form-group">
+                                        <label for="consultSupplySelect{{ $supplyIndex }}">Select Supply (Inventory)</label>
+                                        <select name="supply_item_id[]" id="consultSupplySelect{{ $supplyIndex }}" class="form-control" data-supply-select data-clinic-select {{ $supplyEntryVisible ? 'required' : 'disabled' }}>
+                                            <option value="">-- Select Supply --</option>
+                                            @foreach($supplyItems as $supplyItem)
+                                                @php
+                                                    $availableSupplyQuantity = $supplyItem->availableDispensingQuantity();
+                                                    $supplyIssueUnit = $supplyItem->hasDispensingConversion() ? ($supplyItem->dispensing_unit ?: $supplyItem->unit) : ($supplyItem->unit ?: 'pcs');
+                                                    $supplyAvailableDisplay = rtrim(rtrim(number_format($availableSupplyQuantity, 2, '.', ''), '0'), '.');
+                                                @endphp
+                                                <option value="{{ $supplyItem->id }}" data-available="{{ $availableSupplyQuantity }}" data-unit="{{ $supplyIssueUnit }}" {{ $oldSupplyId === (string) $supplyItem->id ? 'selected' : '' }}>{{ $supplyItem->name }} (Available: {{ $supplyAvailableDisplay }} {{ $supplyIssueUnit }})</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group supply-quantity-group {{ $oldSupplyId !== '' ? 'is-visible' : '' }}" data-supply-quantity-group>
+                                        <label for="consultSupplyQuantity{{ $supplyIndex }}" data-supply-quantity-label>Quantity</label>
+                                        <input type="number" name="supply_quantity[]" id="consultSupplyQuantity{{ $supplyIndex }}" class="form-control" data-supply-quantity min="0.01" step="0.01" placeholder="Enter amount" value="{{ $oldSupplyQuantity }}" {{ $supplyEntryVisible && $oldSupplyId !== '' ? 'required' : 'disabled' }}>
+                                    </div>
+                                </div>
+                            </div>
+                        @endfor
+                    </div>
+                    <div class="medicine-add-row">
+                        <button type="button" class="medicine-add-button" id="addSupplyButton"><x-outline-icon name="plus-circle" /><span>Add Another Supply</span></button>
+                        <span class="medicine-selection-count" id="supplySelectionCount">0 of 10 selected</span>
+                    </div>
+                    <p class="supply-preview-note">Supply entries are for form preview only; stock is not deducted yet.</p>
                 </div>
             </section>
 
@@ -5613,7 +5773,7 @@
     <button type="button" class="utility-rail-button" data-utility-target="inventory" title="Live Stock Tally">
         <x-outline-icon name="cube" />
         <span>Stock Tally</span>
-        <span class="utility-rail-count">{{ $items->count() }}</span>
+        <span class="utility-rail-count">{{ $items->count() + $supplyItems->count() }}</span>
     </button>
     @if($student)
         <button type="button" class="utility-rail-button" data-utility-target="recent_records" title="Recent Records">
@@ -5774,6 +5934,16 @@
     </section>
 
     <section class="utility-panel-pane" data-utility-pane="inventory">
+        <div class="inventory-stock-tabs" role="tablist" aria-label="Inventory stock category">
+            <button type="button" class="inventory-stock-tab is-active" id="inventoryMedicineTab" data-stock-tab="medicine" role="tab" aria-selected="true" aria-controls="inventoryMedicineList">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="8" transform="rotate(45 12 12)" /><path d="m6.4 17.6 11.2-11.2" /></svg>
+                <span>Medicines</span><span class="inventory-stock-tab-count">({{ $items->count() }})</span>
+            </button>
+            <button type="button" class="inventory-stock-tab" id="inventorySupplyTab" data-stock-tab="supply" role="tab" aria-selected="false" aria-controls="inventorySupplyList">
+                <x-outline-icon name="cube" />
+                <span>Supplies</span><span class="inventory-stock-tab-count">({{ $supplyItems->count() }})</span>
+            </button>
+        </div>
         <div class="inventory-panel-search" id="inventoryPanelSearch">
             <div class="inventory-panel-search-wrap">
                 <input
@@ -5796,7 +5966,7 @@
                 <x-outline-icon name="magnifying-glass" />
             </button>
         </div>
-        <div class="inventory-tally-list">
+        <div class="inventory-tally-list" id="inventoryMedicineList" data-stock-list="medicine" role="tabpanel" aria-labelledby="inventoryMedicineTab">
             @forelse($items as $item)
                 @php
                     $drawerAvailable = $item->hasDispensingConversion() ? $item->availableDispensingQuantity() : (float) $item->quantity;
@@ -5805,7 +5975,7 @@
                     $drawerStockDisplay = rtrim(rtrim(number_format((float) $item->quantity, 2, '.', ''), '0'), '.');
                     $drawerLowStock = (float) $item->quantity <= (float) ($item->minimum_stock ?? 0);
                 @endphp
-                <article class="inventory-tally-item" data-inventory-item="{{ $item->id }}">
+                <article class="inventory-tally-item" data-inventory-item="{{ $item->id }}" data-stock-card>
                     <div class="inventory-tally-row">
                         <span class="inventory-tally-name">{{ $item->name }}</span>
                         <span class="stock-badge {{ $drawerLowStock ? 'low' : '' }}">{{ $drawerLowStock ? 'Low' : 'In Stock' }}</span>
@@ -5825,6 +5995,37 @@
                 </article>
             @empty
                 <div class="documents-empty">No medicines are currently available.</div>
+            @endforelse
+        </div>
+        <div class="inventory-tally-list" id="inventorySupplyList" data-stock-list="supply" role="tabpanel" aria-labelledby="inventorySupplyTab" hidden>
+            @forelse($supplyItems as $supplyItem)
+                @php
+                    $supplyAvailable = $supplyItem->availableDispensingQuantity();
+                    $supplyUnit = $supplyItem->hasDispensingConversion() ? ($supplyItem->dispensing_unit ?: $supplyItem->unit) : ($supplyItem->unit ?: 'pcs');
+                    $supplyAvailableDisplay = rtrim(rtrim(number_format($supplyAvailable, 2, '.', ''), '0'), '.');
+                    $supplyStockDisplay = rtrim(rtrim(number_format((float) $supplyItem->quantity, 2, '.', ''), '0'), '.');
+                    $supplyLowStock = (float) $supplyItem->quantity <= (float) ($supplyItem->minimum_stock ?? 0);
+                @endphp
+                <article class="inventory-tally-item inventory-supply-item" data-stock-card>
+                    <div class="inventory-tally-row">
+                        <span class="inventory-tally-name">{{ $supplyItem->name }}</span>
+                        <span class="stock-badge {{ $supplyLowStock ? 'low' : '' }}">{{ $supplyLowStock ? 'Low' : 'In Stock' }}</span>
+                    </div>
+                    <div class="inventory-tally-meta">
+                        {{ $supplyAvailableDisplay }} {{ $supplyUnit }} available
+                        @if($supplyItem->hasDispensingConversion())
+                            | {{ $supplyStockDisplay }} {{ $supplyItem->unit }} in storage
+                        @endif
+                    </div>
+                    <div class="inventory-tally-expiry">
+                        Expiration date: {{ optional($supplyItem->expiration_date)->format('M d, Y') ?: 'Not recorded' }}
+                    </div>
+                    <div class="inventory-tally-actions">
+                        <button type="button" class="inventory-issue-button" data-issue-supply="{{ $supplyItem->id }}">Issue</button>
+                    </div>
+                </article>
+            @empty
+                <div class="documents-empty">No supplies are currently available.</div>
             @endforelse
         </div>
         <div class="inventory-search-empty" id="inventorySearchEmpty">
@@ -5928,6 +6129,13 @@
         const medicineEntries = Array.from(document.querySelectorAll('[data-medicine-entry]'));
         const addMedicineButton = document.getElementById('addMedicineButton');
         const medicineSelectionCount = document.getElementById('medicineSelectionCount');
+        const supplyEntries = Array.from(document.querySelectorAll('[data-supply-entry]'));
+        const supplyCard = document.getElementById('supplyDispensingCard');
+        const supplyBody = document.getElementById('supplyDispensingBody');
+        const suppliesActiveInput = document.getElementById('suppliesActiveInput');
+        const supplyToggleButton = document.getElementById('toggleSuppliesButton');
+        const addSupplyButton = document.getElementById('addSupplyButton');
+        const supplySelectionCount = document.getElementById('supplySelectionCount');
         const utilityPanel = document.getElementById('right-utility-panel');
         const utilityRail = document.getElementById('consultationUtilityRail');
         const utilityButtons = Array.from(document.querySelectorAll('[data-utility-target]'));
@@ -5937,8 +6145,11 @@
         const expandUtilityPanel = document.getElementById('expand-utility-panel');
         const closeUtilityPanel = document.getElementById('close-utility-panel');
         const headerQuickActions = document.getElementById('headerQuickActions');
-        const inventoryCards = Array.from(document.querySelectorAll('[data-inventory-item]'));
+        const inventoryCards = Array.from(document.querySelectorAll('[data-stock-card]'));
         const issueButtons = Array.from(document.querySelectorAll('[data-issue-medicine]'));
+        const supplyIssueButtons = Array.from(document.querySelectorAll('[data-issue-supply]'));
+        const stockTabs = Array.from(document.querySelectorAll('[data-stock-tab]'));
+        const stockLists = Array.from(document.querySelectorAll('[data-stock-list]'));
         const inventorySearchShell = document.getElementById('inventoryPanelSearch');
         const inventorySearchInput = document.getElementById('inventoryPanelSearchInput');
         const inventorySearchToggle = document.getElementById('inventoryPanelSearchToggle');
@@ -5975,6 +6186,7 @@
         let activeUtility = '';
         let lastMarSubcategoryTrigger = null;
         let draftSaveTimer = null;
+        let activeStockCategory = 'medicine';
 
         function syncPopulatedFieldState(field) {
             if (!field) return;
@@ -6094,10 +6306,15 @@
                 }
 
                 targets.forEach(function (field, index) {
-                    const value = values[index] ?? values[0] ?? '';
+                    const value = field.closest('[data-supply-entry]')
+                        ? (values[index] ?? '')
+                        : (values[index] ?? values[0] ?? '');
                     field.value = value;
                     if (field.closest('[data-medicine-entry]') && value !== '') {
                         field.closest('[data-medicine-entry]').classList.add('is-visible');
+                    }
+                    if (field.closest('[data-supply-entry]') && value !== '') {
+                        field.closest('[data-supply-entry]').classList.add('is-visible');
                     }
                     field.dispatchEvent(new Event('change', { bubbles: true }));
                 });
@@ -6106,6 +6323,7 @@
             syncReferralDetails();
             syncCovidPositiveDate();
             updateMedicineSelections();
+            syncSupplyPanel();
             syncAllPopulatedFields();
         }
 
@@ -6268,6 +6486,7 @@
             documentServiceHideFields.forEach(function (field) {
                 field.classList.toggle('document-service-hidden', isDocumentService);
             });
+            syncSupplyPanel();
         };
 
         consultationServiceSelect?.addEventListener('change', syncDocumentServiceFields);
@@ -6406,7 +6625,7 @@
 
         const utilityLabels = {
             medical_conditions: 'Medical Conditions',
-            inventory: 'Live Medicine Stock',
+            inventory: 'Live Inventory Stock',
             recent_records: 'Recent Records'
         };
 
@@ -6415,20 +6634,47 @@
             inventorySearchShell.classList.toggle('is-open', isOpen);
             inventorySearchToggle.classList.toggle('is-open', isOpen);
             inventorySearchToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-            inventorySearchToggle.setAttribute('aria-label', isOpen ? 'Close medicine search' : 'Open medicine search');
+            const category = activeStockCategory === 'supply' ? 'supply' : 'medicine';
+            inventorySearchToggle.setAttribute('aria-label', isOpen ? 'Close ' + category + ' search' : 'Open ' + category + ' search');
         };
 
         const filterInventoryCards = function () {
             const searchTerm = (inventorySearchInput?.value || '').trim().toLowerCase();
+            const activeList = stockLists.find(function (list) { return list.dataset.stockList === activeStockCategory; });
+            const cards = Array.from(activeList?.querySelectorAll('[data-stock-card]') || []);
             let visibleCount = 0;
 
-            inventoryCards.forEach(function (card) {
+            cards.forEach(function (card) {
                 const matches = searchTerm === '' || card.textContent.toLowerCase().includes(searchTerm);
                 card.style.display = matches ? '' : 'none';
                 if (matches) visibleCount += 1;
             });
 
-            inventorySearchEmpty?.classList.toggle('is-visible', inventoryCards.length > 0 && visibleCount === 0);
+            inventorySearchEmpty?.classList.toggle('is-visible', cards.length > 0 && visibleCount === 0);
+        };
+
+        const setInventoryStockCategory = function (category) {
+            activeStockCategory = category === 'supply' ? 'supply' : 'medicine';
+            stockTabs.forEach(function (tab) {
+                const selected = tab.dataset.stockTab === activeStockCategory;
+                tab.classList.toggle('is-active', selected);
+                tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+            });
+            stockLists.forEach(function (list) {
+                list.hidden = list.dataset.stockList !== activeStockCategory;
+            });
+            if (inventorySearchInput) {
+                inventorySearchInput.value = '';
+                inventorySearchInput.placeholder = activeStockCategory === 'supply' ? 'Search supplies...' : 'Search medicines...';
+                inventorySearchInput.setAttribute('aria-label', activeStockCategory === 'supply' ? 'Search supply inventory' : 'Search medicine inventory');
+            }
+            if (inventorySearchEmpty) {
+                inventorySearchEmpty.textContent = activeStockCategory === 'supply'
+                    ? 'No supply matches your search.'
+                    : 'No medicine matches your search.';
+            }
+            setInventorySearchOpen(inventorySearchShell?.classList.contains('is-open') || false);
+            filterInventoryCards();
         };
 
         const closeUtility = function () {
@@ -6517,42 +6763,27 @@
             const quantityGroup = entry.querySelector('[data-medicine-quantity-group]');
             const quantityInput = entry.querySelector('[data-medicine-quantity]');
             const quantityLabel = entry.querySelector('[data-quantity-label]');
-            const quantityHelp = entry.querySelector('[data-quantity-help]');
-            const selectedStock = entry.querySelector('[data-selected-stock]');
             const selected = select?.options[select.selectedIndex];
 
-            if (!select || !quantityInput || !quantityGroup || !quantityLabel || !quantityHelp || !selectedStock) return;
+            if (!select || !quantityInput || !quantityGroup || !quantityLabel) return;
 
             quantityInput.setCustomValidity('');
             if (!selected || !selected.value) {
                 quantityGroup.classList.remove('is-visible');
                 quantityLabel.textContent = 'Quantity to Issue';
-                quantityHelp.textContent = 'Select a medicine to see the dispensing unit and available stock.';
                 quantityInput.placeholder = 'Enter amount';
                 quantityInput.value = '';
                 quantityInput.removeAttribute('max');
-                selectedStock.className = 'selected-stock';
-                selectedStock.textContent = '';
                 return;
             }
 
             const dispensingUnit = selected.dataset.dispensingUnit || selected.dataset.stockUnit || 'unit';
-            const stockUnit = selected.dataset.stockUnit || 'pcs';
             const availableValue = Number(selected.dataset.availableDispensing || 0);
-            const available = formatQty(availableValue);
-            const hasConversion = selected.dataset.hasConversion === '1';
-            const unitsPerStock = formatQty(selected.dataset.unitsPerStock || 1);
-            const isLowStock = selected.dataset.lowStock === '1';
 
             quantityGroup.classList.add('is-visible');
             quantityLabel.textContent = 'Quantity to Issue (' + dispensingUnit + ')';
             quantityInput.placeholder = 'Enter ' + dispensingUnit + ' quantity';
             quantityInput.max = String(availableValue);
-            quantityHelp.textContent = hasConversion
-                ? 'Available: ' + available + ' ' + dispensingUnit + ' (' + unitsPerStock + ' ' + dispensingUnit + ' per ' + stockUnit + ').'
-                : 'Available: ' + available + ' ' + stockUnit + '.';
-            selectedStock.className = 'selected-stock visible' + (isLowStock ? ' low' : '');
-            selectedStock.textContent = (isLowStock ? 'Low stock: ' : 'Available: ') + available + ' ' + dispensingUnit;
         };
 
         const updateMedicineSelections = function () {
@@ -6626,6 +6857,122 @@
 
         addMedicineButton?.addEventListener('click', showNextMedicineEntry);
 
+        const updateSupplyEntry = function (entry) {
+            const select = entry.querySelector('[data-supply-select]');
+            const quantity = entry.querySelector('[data-supply-quantity]');
+            const label = entry.querySelector('[data-supply-quantity-label]');
+            const quantityGroup = entry.querySelector('[data-supply-quantity-group]');
+            const option = select?.options[select.selectedIndex];
+            if (!select || !quantity || !label || !quantityGroup) return;
+
+            const unit = option?.value ? (option.dataset.unit || 'pcs') : '';
+            quantityGroup.classList.toggle('is-visible', Boolean(option?.value));
+            label.textContent = unit ? 'Quantity (' + unit + ')' : 'Quantity';
+            quantity.placeholder = unit ? 'Enter ' + unit + ' quantity' : 'Enter amount';
+            if (option?.value) {
+                quantity.max = option.dataset.available || '';
+            } else {
+                quantity.value = '';
+                quantity.removeAttribute('max');
+            }
+            const available = Number(option?.dataset.available || 0);
+            const requested = Number(quantity.value || 0);
+            quantity.setCustomValidity(option?.value && requested > available
+                ? 'Quantity cannot exceed the available supply stock.' : '');
+        };
+
+        const syncSupplyPanel = function () {
+            if (!supplyCard || !supplyBody || !suppliesActiveInput) return;
+            const hasSelection = supplyEntries.some(function (entry) {
+                return Boolean(entry.querySelector('[data-supply-select]')?.value);
+            });
+            if (hasSelection) suppliesActiveInput.value = '1';
+            const active = suppliesActiveInput.value === '1';
+            const isDocumentService = String(consultationServiceSelect?.value || '').trim().toLowerCase() === 'clinic document services';
+            supplyCard.classList.toggle('is-open', active);
+            supplyBody.hidden = !active;
+            supplyToggleButton?.setAttribute('aria-expanded', active ? 'true' : 'false');
+            const toggleLabel = supplyToggleButton?.querySelector('span:last-child');
+            if (toggleLabel) toggleLabel.textContent = active ? 'Remove Supplies' : 'Add Supplies';
+            const addIcon = supplyToggleButton?.querySelector('[data-supply-add-icon]');
+            const removeIcon = supplyToggleButton?.querySelector('[data-supply-remove-icon]');
+            if (addIcon) addIcon.hidden = active;
+            if (removeIcon) removeIcon.hidden = !active;
+
+            supplyEntries.forEach(function (entry) {
+                const enabled = active && entry.classList.contains('is-visible') && !isDocumentService;
+                const select = entry.querySelector('[data-supply-select]');
+                const quantity = entry.querySelector('[data-supply-quantity]');
+                if (select) {
+                    select.disabled = !enabled;
+                    select.required = enabled;
+                    const display = select.closest('.clinic-select-shell')?.querySelector('.clinic-select-display');
+                    if (display) display.disabled = !enabled;
+                }
+                updateSupplyEntry(entry);
+                if (quantity) {
+                    const quantityEnabled = enabled && Boolean(select?.value);
+                    quantity.disabled = !quantityEnabled;
+                    quantity.required = quantityEnabled;
+                }
+            });
+
+            const selectedCount = supplyEntries.filter(function (entry) {
+                return entry.classList.contains('is-visible') && Boolean(entry.querySelector('[data-supply-select]')?.value);
+            }).length;
+            const visibleCount = supplyEntries.filter(function (entry) { return entry.classList.contains('is-visible'); }).length;
+            const supplyEntriesWrap = document.getElementById('supplyEntries');
+            supplyEntriesWrap?.classList.toggle('is-multi', visibleCount > 1);
+            supplyEntriesWrap?.classList.toggle('is-odd', visibleCount > 1 && visibleCount % 2 === 1);
+            if (supplySelectionCount) supplySelectionCount.textContent = selectedCount + ' of 10 selected';
+            if (addSupplyButton) addSupplyButton.disabled = visibleCount >= 10;
+        };
+
+        supplyToggleButton?.addEventListener('click', function () {
+            if (suppliesActiveInput.value === '1') {
+                suppliesActiveInput.value = '0';
+                supplyEntries.forEach(function (entry) {
+                    entry.classList.remove('is-visible');
+                    const select = entry.querySelector('[data-supply-select]');
+                    const quantity = entry.querySelector('[data-supply-quantity]');
+                    if (select) { select.value = ''; select.dispatchEvent(new Event('change', { bubbles: true })); }
+                    if (quantity) { quantity.value = ''; quantity.setCustomValidity(''); }
+                });
+            } else {
+                suppliesActiveInput.value = '1';
+                supplyEntries[0]?.classList.add('is-visible');
+            }
+            syncSupplyPanel();
+            supplyEntries[0]?.querySelector('[data-supply-select]')?.focus();
+        });
+
+        addSupplyButton?.addEventListener('click', function () {
+            const next = supplyEntries.find(function (entry) { return !entry.classList.contains('is-visible'); });
+            if (!next) return;
+            next.classList.add('is-visible');
+            syncSupplyPanel();
+            next.querySelector('[data-supply-select]')?.focus();
+        });
+
+        supplyEntries.forEach(function (entry) {
+            entry.querySelector('[data-supply-select]')?.addEventListener('change', function () {
+                updateSupplyEntry(entry);
+                syncSupplyPanel();
+            });
+            entry.querySelector('[data-supply-quantity]')?.addEventListener('input', function () { updateSupplyEntry(entry); });
+            entry.querySelector('[data-remove-supply]')?.addEventListener('click', function () {
+                entry.classList.remove('is-visible');
+                const select = entry.querySelector('[data-supply-select]');
+                const quantity = entry.querySelector('[data-supply-quantity]');
+                if (select) { select.value = ''; select.dispatchEvent(new Event('change', { bubbles: true })); }
+                if (quantity) { quantity.value = ''; quantity.setCustomValidity(''); }
+                if (!supplyEntries.some(function (row) { return row.classList.contains('is-visible'); })) {
+                    suppliesActiveInput.value = '0';
+                }
+                syncSupplyPanel();
+            });
+        });
+
         const closeClinicSelects = function (exceptShell) {
             document.querySelectorAll('.clinic-select-shell.is-open').forEach(function (shell) {
                 if (shell === exceptShell) return;
@@ -6660,13 +7007,14 @@
             let searchInput = null;
             const isConditionSelect = select.id === 'consultCondition';
             const isMedicineSelect = select.matches('[data-medicine-select]');
-            const isSearchable = isConditionSelect || isMedicineSelect;
+            const isSupplySelect = select.matches('[data-supply-select]');
+            const isSearchable = isConditionSelect || isMedicineSelect || isSupplySelect;
 
             if (isSearchable) {
                 searchInput = document.createElement('input');
                 searchInput.type = 'text';
                 searchInput.className = 'clinic-select-search';
-                searchInput.placeholder = isConditionSelect ? 'Search condition...' : 'Search medicine...';
+                searchInput.placeholder = isConditionSelect ? 'Search condition...' : (isSupplySelect ? 'Search supply...' : 'Search medicine...');
                 searchInput.style.width = '100%';
                 searchInput.style.padding = '8px 12px';
                 searchInput.style.marginBottom = '8px';
@@ -6841,7 +7189,7 @@
 
         inventoryCards.forEach(function (card) {
             card.addEventListener('click', function (event) {
-                if (event.target.closest('[data-issue-medicine]')) return;
+                if (event.target.closest('[data-issue-medicine], [data-issue-supply]')) return;
                 const shouldSelect = !card.classList.contains('selected');
                 inventoryCards.forEach(function (item) {
                     item.classList.remove('selected');
@@ -6880,6 +7228,45 @@
             });
         });
 
+        supplyIssueButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                const itemId = button.dataset.issueSupply || '';
+                let targetEntry = supplyEntries.find(function (entry) {
+                    return entry.classList.contains('is-visible')
+                        && entry.querySelector('[data-supply-select]')?.value === itemId;
+                });
+
+                if (!targetEntry) {
+                    targetEntry = supplyEntries.find(function (entry) {
+                        return entry.classList.contains('is-visible')
+                            && !entry.querySelector('[data-supply-select]')?.value;
+                    });
+                }
+                if (!targetEntry) {
+                    targetEntry = supplyEntries.find(function (entry) {
+                        return !entry.classList.contains('is-visible');
+                    });
+                    targetEntry?.classList.add('is-visible');
+                }
+                if (!targetEntry) {
+                    window.alert('You can add up to 10 supplies per consultation.');
+                    return;
+                }
+
+                const supplySelect = targetEntry.querySelector('[data-supply-select]');
+                if (!Array.from(supplySelect?.options || []).some(function (option) { return option.value === itemId; })) return;
+                suppliesActiveInput.value = '1';
+                supplySelect.value = itemId;
+                supplySelect.dispatchEvent(new Event('change', { bubbles: true }));
+                syncSupplyPanel();
+                closeUtility();
+                targetEntry.closest('.consult-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                window.setTimeout(function () {
+                    targetEntry.querySelector('[data-supply-quantity]')?.focus();
+                }, 350);
+            });
+        });
+
         inventorySearchToggle?.addEventListener('click', function () {
             const isOpening = !inventorySearchShell.classList.contains('is-open');
             setInventorySearchOpen(isOpening);
@@ -6896,6 +7283,12 @@
         inventorySearchInput?.addEventListener('focus', function () {
             setInventorySearchOpen(true);
         });
+        stockTabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                setInventoryStockCategory(tab.dataset.stockTab);
+            });
+        });
+        setInventoryStockCategory('medicine');
 
         utilityButtons.forEach(function (button) {
             button.setAttribute('aria-expanded', 'false');
@@ -6975,6 +7368,7 @@
 
         medicineEntries.forEach(updateMedicineEntry);
         updateMedicineSelections();
+        syncSupplyPanel();
         syncDocumentServiceFields();
         syncReferralDetails();
         syncCovidPositiveDate();

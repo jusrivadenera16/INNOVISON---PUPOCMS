@@ -1544,6 +1544,55 @@
         font-size: .82rem;
         line-height: 1.45;
     }
+    #infoModal .appointment-consultation-panel {
+        padding: 15px 18px;
+        border-color: rgba(245, 158, 11, 0.28);
+        background: linear-gradient(135deg, #fff9e7, #fffdf8);
+        box-shadow: none;
+    }
+    #infoModal .appointment-consultation-panel h4 {
+        margin-bottom: 8px;
+        color: #70131B;
+        font-size: .78rem;
+        font-weight: 900;
+        letter-spacing: .04em;
+    }
+    #infoModal .appointment-consultation-panel h4 svg {
+        width: 17px;
+        height: 17px;
+    }
+    #infoModal .appointment-consultation-panel .appointment-notes-title {
+        margin-bottom: 5px;
+        color: #70131B;
+        font-size: .78rem;
+    }
+    #infoModal .appointment-consultation-panel .appointment-note-value {
+        margin: 0;
+        color: #111827;
+        font-size: .82rem;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+    }
+    #infoModal #appointmentRemarksBlock { margin-top: 12px; }
+    #infoModal .appointment-clinical-panel {
+        margin-top: 0;
+        padding-top: 15px;
+        border-top: 1px solid rgba(245, 158, 11, 0.28);
+    }
+    #infoModal .appointment-consultation-group {
+        margin-top: 10px;
+        padding-top: 9px;
+        border-top: 1px solid rgba(245, 158, 11, 0.24);
+    }
+    #infoModal .appointment-consultation-group h5 { margin-bottom: 5px; }
+    #infoModal .appointment-consultation-rows { gap: 3px 16px; }
+    #infoModal .appointment-consultation-row {
+        gap: 8px;
+        padding: 5px 0;
+        border-color: rgba(245, 158, 11, 0.16);
+        font-size: .82rem;
+        line-height: 1.45;
+    }
     .appointment-timeline-panel {
         padding: 15px 18px 18px;
     }
@@ -3512,6 +3561,8 @@
     html[data-theme="dark"] #infoModal .appointment-student-info > strong,
     html[data-theme="dark"] #infoModal .appointment-info-list strong,
     html[data-theme="dark"] #infoModal .appointment-notes-title,
+    html[data-theme="dark"] #infoModal .appointment-consultation-panel .appointment-notes-title,
+    html[data-theme="dark"] #infoModal .appointment-consultation-panel .appointment-note-value,
     html[data-theme="dark"] #infoModal .appointment-clinical-findings > span,
     html[data-theme="dark"] #infoModal .appointment-clinical-findings p,
     html[data-theme="dark"] #infoModal .appointment-consultation-panel h4,
@@ -3544,6 +3595,7 @@
 
     html[data-theme="dark"] #infoModal .appointment-info-list > div,
     html[data-theme="dark"] #infoModal .appointment-clinical-findings,
+    html[data-theme="dark"] #infoModal .appointment-consultation-group,
     html[data-theme="dark"] #infoModal .appointment-consultation-group + .appointment-consultation-group,
     html[data-theme="dark"] #infoModal .appointment-consultation-row {
         border-color: rgba(250, 204, 21, .14) !important;
@@ -6377,14 +6429,15 @@
                     </section>
                 </div>
 
-                <section class="appointment-notes-panel">
+                <section class="appointment-detail-card appointment-consultation-panel" id="appointmentConsultationPanel">
+                    <h4><x-outline-icon name="clipboard-document-list" /> Consultation Details</h4>
                     <div class="appointment-notes-title">
                         <span><x-outline-icon name="document-text" /> Reason</span>
                         <button type="button" class="appointment-detail-copy" data-copy-target="mReason" aria-label="Copy reason">
                             <x-outline-icon name="clipboard-document-list" />
                         </button>
                     </div>
-                    <p id="mReason">N/A</p>
+                    <p class="appointment-note-value" id="mReason">N/A</p>
                     <div id="appointmentRemarksBlock" hidden>
                         <div class="appointment-notes-title">
                             <span><x-outline-icon name="document-text" /> <span id="mRemarksLabel">Remarks</span></span>
@@ -6392,16 +6445,8 @@
                                 <x-outline-icon name="clipboard-document-list" />
                             </button>
                         </div>
-                        <p id="mRemarks">N/A</p>
+                        <p class="appointment-note-value" id="mRemarks">N/A</p>
                     </div>
-                    <div class="appointment-clinical-findings" id="appointmentClinicalFindings" hidden>
-                        <span><x-outline-icon name="clipboard-document-list" /> Clinical Findings</span>
-                        <p id="mClinicalFindings">N/A</p>
-                    </div>
-                </section>
-
-                <section class="appointment-detail-card appointment-consultation-panel" id="appointmentConsultationPanel" hidden>
-                    <h4><x-outline-icon name="clipboard-document-list" /> Consultation Details</h4>
                     <div class="appointment-consultation-group" id="consultationDetailsGroup" hidden>
                         <div class="appointment-consultation-rows" id="mConsultationDetails"></div>
                     </div>
@@ -6413,6 +6458,14 @@
                         <h5>Dispensed Medicines</h5>
                         <div class="appointment-consultation-rows" id="mConsultationMedicines"></div>
                     </div>
+                    <div class="appointment-consultation-group" id="consultationSuppliesGroup" hidden>
+                        <h5>Issued Supplies</h5>
+                        <div class="appointment-consultation-rows" id="mConsultationSupplies"></div>
+                    </div>
+                </section>
+                <section class="appointment-notes-panel appointment-clinical-findings appointment-clinical-panel" id="appointmentClinicalFindings" hidden>
+                    <span><x-outline-icon name="clipboard-document-list" /> Medical Assessment Notes</span>
+                    <p id="mClinicalFindings">N/A</p>
                 </section>
             </div>
             <div class="appointment-detail-actions" id="appointmentDetailActions" hidden>
@@ -6859,7 +6912,8 @@
             rescheduled: 'Rescheduling Reason'
         };
         const outcomeRemarksLabel = outcomeRemarksLabels[statusKey];
-        remarksBlock.hidden = statusKey !== 'completed' && !outcomeRemarksLabel;
+        remarksBlock.hidden = (statusKey !== 'completed' && !outcomeRemarksLabel)
+            || safeText(payload.remarks) === '-';
         document.getElementById('mRemarksLabel').innerText = outcomeRemarksLabel || 'Remarks';
 
         const statusAtLabels = {
@@ -6889,7 +6943,6 @@
         const clinicalFindings = safeText(payload.clinicalFindings);
         clinicalFindingsPanel.hidden = !isCompleted || clinicalFindings === '-' || clinicalFindings === '';
 
-        const consultationPanel = document.getElementById('appointmentConsultationPanel');
         const consultation = isCompleted ? payload.consultation : null;
         const renderRows = (containerId, entries) => {
             const container = document.getElementById(containerId);
@@ -6915,9 +6968,13 @@
         const medicines = Array.isArray(consultation?.medicines)
             ? consultation.medicines.map((medicine) => ({ label: 'Medicine', value: medicine }))
             : [];
+        const supplies = Array.isArray(consultation?.supplies)
+            ? consultation.supplies.map((supply) => ({ label: 'Supply', value: supply }))
+            : [];
         renderRows('mConsultationDetails', details);
         renderRows('mConsultationVitals', vitals);
         renderRows('mConsultationMedicines', medicines);
+        renderRows('mConsultationSupplies', supplies);
 
         const hasDetails = Array.isArray(details) && details.length > 0;
         const hasVitals = Array.isArray(vitals) && vitals.length > 0;
@@ -6925,7 +6982,7 @@
         document.getElementById('consultationDetailsGroup').hidden = !hasDetails;
         document.getElementById('consultationVitalsGroup').hidden = !hasVitals;
         document.getElementById('consultationMedicinesGroup').hidden = !hasMedicines;
-        consultationPanel.hidden = !consultation || !(hasDetails || hasVitals || hasMedicines);
+        document.getElementById('consultationSuppliesGroup').hidden = supplies.length === 0;
 
         const detailActions = document.getElementById('appointmentDetailActions');
         const approveAction = document.getElementById('mApproveAction');

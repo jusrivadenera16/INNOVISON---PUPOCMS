@@ -4882,11 +4882,15 @@ class AdminController extends Controller
                 return false;
             }
 
-            $submission->forceFill(['status' => HealthFormSubmission::STATUS_CANCELLED])->save();
+            $submission->forceFill([
+                'status' => HealthFormSubmission::STATUS_CANCELLED,
+                'status_changed_by_user_id' => $actor->id,
+            ])->save();
             if ($correctionRequest) {
                 $correctionRequest->forceFill([
                     'status' => HealthProfileCorrectionRequest::STATUS_CANCELLED,
                     'reviewed_at' => now(),
+                    'reviewed_by_user_id' => $actor->id,
                 ])->save();
             }
 
@@ -6438,6 +6442,8 @@ class AdminController extends Controller
                 $updatedSubmission->forceFill([
                     'status' => HealthFormSubmission::STATUS_APPROVED,
                     'approved_at' => now(),
+                    'approved_by_user_id' => Auth::guard('admin')->id() ?: Auth::id(),
+                    'status_changed_by_user_id' => Auth::guard('admin')->id() ?: Auth::id(),
                 ])->save();
 
                 app(HealthProfileSnapshotService::class)->promoteApprovedSubmission(
@@ -6450,14 +6456,17 @@ class AdminController extends Controller
                 $newHealthFormRequest->forceFill([
                     'status' => HealthProfileCorrectionRequest::STATUS_APPROVED,
                     'reviewed_at' => now(),
+                    'reviewed_by_user_id' => Auth::guard('admin')->id() ?: Auth::id(),
                 ])->save();
 
                 return $updatedSubmission->fresh();
             }
 
             $updatedSubmission->status = $targetStatus;
+            $updatedSubmission->status_changed_by_user_id = Auth::guard('admin')->id() ?: Auth::id();
             if ($targetStatus === HealthFormSubmission::STATUS_APPROVED) {
                 $updatedSubmission->approved_at = now();
+                $updatedSubmission->approved_by_user_id = Auth::guard('admin')->id() ?: Auth::id();
                 if ($updatedSubmission->healthProfile && $updatedSubmission->user) {
                     app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot(
                         $updatedSubmission->healthProfile,
@@ -6932,6 +6941,8 @@ public function updateClearance(Request $request, $id)
                 $lockedSubmission->forceFill([
                     'status' => HealthFormSubmission::STATUS_APPROVED,
                     'approved_at' => $approvalAt,
+                    'approved_by_user_id' => auth()->id(),
+                    'status_changed_by_user_id' => auth()->id(),
                 ])->save();
 
                 app(HealthProfileSnapshotService::class)->promoteApprovedSubmission(
@@ -6949,6 +6960,7 @@ public function updateClearance(Request $request, $id)
                 $lockedRequest->forceFill([
                     'status' => HealthProfileCorrectionRequest::STATUS_APPROVED,
                     'reviewed_at' => now(),
+                    'reviewed_by_user_id' => auth()->id(),
                 ])->save();
 
                 return $lockedProfile->fresh('user');
@@ -7039,6 +7051,7 @@ public function updateClearance(Request $request, $id)
                     ->update([
                         'status' => HealthProfileCorrectionRequest::STATUS_APPROVED,
                         'reviewed_at' => now(),
+                        'reviewed_by_user_id' => auth()->id(),
                         'updated_at' => now(),
                     ]);
 
@@ -7055,6 +7068,8 @@ public function updateClearance(Request $request, $id)
                         ->update([
                             'status' => HealthFormSubmission::STATUS_APPROVED,
                             'approved_at' => $record->verified_at ?: now(),
+                            'approved_by_user_id' => auth()->id(),
+                            'status_changed_by_user_id' => auth()->id(),
                             'updated_at' => now(),
                         ]);
                 }
@@ -7173,6 +7188,7 @@ public function updateClearance(Request $request, $id)
                 ->update([
                     'status' => HealthProfileCorrectionRequest::STATUS_CANCELLED,
                     'reviewed_at' => now(),
+                    'reviewed_by_user_id' => auth()->id(),
                     'updated_at' => now(),
                 ]);
 
@@ -7351,6 +7367,7 @@ public function updateClearance(Request $request, $id)
                 } else {
                     $submission->status = HealthFormSubmission::STATUS_NEEDS_CORRECTION;
                     $submission->approved_at = null;
+                    $submission->status_changed_by_user_id = auth()->id();
                     $submission->remarks = trim((string) ($submission->remarks ?: $pendingReason)) ?: null;
                     $submission->save();
                 }
@@ -7782,6 +7799,7 @@ public function updateClearance(Request $request, $id)
             'user.dependentProfile',
             'consultation.medicalCondition',
             'consultation.medicines.item',
+            'consultation.supplies.item',
             'consultation.medicineItem',
         ])
             ->orderByRaw("CASE LOWER(status)
@@ -7881,7 +7899,6 @@ public function updateClearance(Request $request, $id)
                 }
             };
 
-            $addDetail('Reason for visit', $consultation->reason_for_visit);
             $addDetail('Medical condition', $consultation->medicalCondition?->name);
 
             if (strtolower(trim((string) $consultation->covid_status)) !== '') {
@@ -7946,11 +7963,21 @@ public function updateClearance(Request $request, $id)
                 $medicines->push(trim((string) $consultation->medicine) . ' - ' . $quantity . ($unit !== '' ? ' ' . $unit : ''));
             }
 
+            $supplies = $consultation->supplies
+                ->map(function ($line) {
+                    $name = trim((string) ($line->supply ?: $line->item?->name));
+                    $quantity = rtrim(rtrim(number_format((float) $line->quantity, 4, '.', ''), '0'), '.');
+                    return $name !== '' ? $name . ' - ' . $quantity . ' ' . $line->unit : '';
+                })
+                ->filter()
+                ->values();
+
             $appointment->consultation_details_payload = [
                 'details' => $details,
                 'showVitals' => $showVitals,
                 'vitals' => $vitals,
                 'medicines' => $medicines->all(),
+                'supplies' => $supplies->all(),
             ];
         });
 
@@ -8732,6 +8759,7 @@ public function storeItem(Request $request)
     $request->validate([
         'name' => ['required', 'string', 'max:255'],
         'category' => ['required', 'string', 'max:255'],
+        'consultation_issuable' => ['nullable', 'boolean'],
         'stock_number' => ['nullable', 'string', 'max:50'],
         'consumed' => ['nullable', 'numeric', 'min:0'],
         'quantity' => ['required', 'numeric', 'min:0'],
@@ -8754,6 +8782,9 @@ public function storeItem(Request $request)
     $data['date_added'] = $normalizer->normalizeDate($request->input('date_added')) ?: now()->toDateString();
     $data['expiration_date'] = $normalizer->normalizeExpirationDate((string) $request->input('expiration_date', ''));
     $data['unit'] = trim((string) $request->input('unit', 'pcs')) ?: 'pcs';
+    $data['consultation_issuable'] = $request->category === 'Supplies'
+        ? $request->boolean('consultation_issuable')
+        : true;
     if (Schema::hasColumn('items', 'stock_number')) {
         $data['stock_number'] = trim((string) $request->input('stock_number', '')) ?: null;
     }
@@ -8786,8 +8817,10 @@ public function storeItem(Request $request)
         if ($request->category !== 'Supplies') {
             $data['expiration_date'] = null;
         }
-        $data['dispensing_unit'] = null;
-        $data['units_per_stock_unit'] = null;
+        if ($request->category !== 'Supplies') {
+            $data['dispensing_unit'] = null;
+            $data['units_per_stock_unit'] = null;
+        }
     }
 
     $item = Item::create($data);
@@ -8838,6 +8871,7 @@ public function updateItem($id, Request $request)
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:255'],
+            'consultation_issuable' => ['nullable', 'boolean'],
             'stock_number' => ['nullable', 'string', 'max:50'],
             'consumed' => ['nullable', 'numeric', 'min:0'],
             'quantity' => ['required', 'numeric', 'min:0'],
@@ -8864,6 +8898,9 @@ public function updateItem($id, Request $request)
         unset($data['starting_stock']);
         $data['expiration_date'] = $normalizer->normalizeExpirationDate((string) $request->input('expiration_date', ''));
         $data['unit'] = trim((string) $request->input('unit', 'pcs')) ?: 'pcs';
+        $data['consultation_issuable'] = $request->category === 'Supplies'
+            ? $request->boolean('consultation_issuable')
+            : true;
         if (Schema::hasColumn('items', 'stock_number')) {
             $data['stock_number'] = trim((string) $request->input('stock_number', '')) ?: null;
         }
@@ -8895,8 +8932,10 @@ public function updateItem($id, Request $request)
             if ($request->category !== 'Supplies') {
                 $data['expiration_date'] = null;
             }
-            $data['dispensing_unit'] = null;
-            $data['units_per_stock_unit'] = null;
+            if ($request->category !== 'Supplies') {
+                $data['dispensing_unit'] = null;
+                $data['units_per_stock_unit'] = null;
+            }
         }
 
         $item->update($data);

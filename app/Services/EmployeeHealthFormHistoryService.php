@@ -81,6 +81,7 @@ class EmployeeHealthFormHistoryService
             'snapshot_captured_at' => now(),
             'submitted_at' => $profile->certified_at ?: $profile->updated_at ?: now(),
             'approved_at' => $approvedAt,
+            'approved_by_user_id' => $profile->approved_by_user_id,
         ]);
     }
 
@@ -131,6 +132,8 @@ class EmployeeHealthFormHistoryService
             'profile_snapshot' => $this->capture($profile),
             'snapshot_captured_at' => now(),
             'approved_at' => $profile->verified_at ?: now(),
+            'approved_by_user_id' => $profile->approved_by_user_id,
+            'status_changed_by_user_id' => $profile->approved_by_user_id,
         ])->save();
 
         return $submission->fresh();

@@ -1118,7 +1118,7 @@
                 <label for="faqAnswer">Answer</label>
                 <textarea id="faqAnswer" name="answer" maxlength="10000" required>{{ old('answer') }}</textarea>
             </div>
-            <label class="faq-toggle-row">
+            <label class="faq-toggle-row" id="faqPublishRow" style="display:none;">
                 <input id="faqIsActive" name="is_active" type="checkbox" value="1" checked>
                 <span>Publish to student portal</span>
             </label>
@@ -1191,6 +1191,7 @@
         const questionInput = document.getElementById('faqQuestion');
         const answerInput = document.getElementById('faqAnswer');
         const isActiveInput = document.getElementById('faqIsActive');
+        const publishRow = document.getElementById('faqPublishRow');
 
         const searchInput = document.getElementById('faqAdminSearch');
         const categoryFilterSelect = document.getElementById('faqCategorySelect');
@@ -1231,7 +1232,11 @@
             if (modalTitleText) modalTitleText.textContent = 'Add FAQ';
             if (saveText) saveText.textContent = 'Add FAQ';
             faqForm.reset();
-            if (isActiveInput) isActiveInput.checked = true;
+            if (isActiveInput) {
+                isActiveInput.checked = true;
+                isActiveInput.disabled = true;
+            }
+            if (publishRow) publishRow.style.display = 'none';
             syncNewCategoryField();
         };
 
@@ -1253,7 +1258,11 @@
             if (categorySelect) categorySelect.value = payload.category;
             if (questionInput) questionInput.value = payload.question || '';
             if (answerInput) answerInput.value = payload.answer || '';
-            if (isActiveInput) isActiveInput.checked = Boolean(payload.is_active);
+            if (isActiveInput) {
+                isActiveInput.checked = Boolean(payload.is_active);
+                isActiveInput.disabled = false;
+            }
+            if (publishRow) publishRow.style.display = 'flex';
             syncNewCategoryField();
             openModal(faqModal);
             questionInput?.focus();

@@ -4187,11 +4187,13 @@ public function account(Request $request)
 
             $submission->forceFill([
                 'status' => HealthFormSubmission::STATUS_CANCELLED,
+                'status_changed_by_user_id' => $user->id,
             ])->save();
 
             $correctionRequest->forceFill([
                 'status' => HealthProfileCorrectionRequest::STATUS_CANCELLED,
                 'reviewed_at' => now(),
+                'reviewed_by_user_id' => $user->id,
             ])->save();
 
             return true;
@@ -4308,6 +4310,7 @@ public function account(Request $request)
             $correctionRequest->forceFill([
                 'status' => HealthProfileCorrectionRequest::STATUS_CANCELLED,
                 'reviewed_at' => now(),
+                'reviewed_by_user_id' => $user->id,
                 'metadata' => $metadata,
             ])->save();
 

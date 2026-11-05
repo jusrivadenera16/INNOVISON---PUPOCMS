@@ -7337,6 +7337,44 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     ];
 @endphp
 
+<div class="admin-loader-overlay admin-action-loader" id="adminActionLoader" role="status" aria-live="assertive" aria-label="Processing action" aria-hidden="true">
+    @include('partials.admin-loader-waves')
+    <div class="loading" aria-hidden="true">
+        <div class="admin-heart-rate" aria-hidden="true">
+            <svg viewBox="0 0 150 73" focusable="false" role="presentation">
+                <polyline points="0,45.486 38.514,45.486 44.595,33.324 50.676,45.486 57.771,45.486 62.838,55.622 71.959,9 80.067,63.729 84.122,45.486 97.297,45.486 103.379,40.419 110.473,45.486 150,45.486" class="loader-trace"></polyline>
+                <polyline points="0,45.486 38.514,45.486 44.595,33.324 50.676,45.486 57.771,45.486 62.838,55.622 71.959,9 80.067,63.729 84.122,45.486 97.297,45.486 103.379,40.419 110.473,45.486 150,45.486" class="loader-pulse" pathLength="500"></polyline>
+            </svg>
+        </div>
+        <div class="admin-loader-copy">
+            <div class="admin-loader-message">
+                <span data-admin-loader-message-text>{{ request()->routeIs('admin.health_records') ? 'Opening Health Records' : ((request()->routeIs('admin.show_health', 'admin.show_health_plain', 'admin.employee_health_profile.*')) ? 'Opening health record' : 'Loading') }}</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
+            </div>
+            <div class="admin-loader-detail" data-admin-loader-detail>Preparing your request, please wait.</div>
+        </div>
+    </div>
+    <div class="admin-action-brand-loader" aria-hidden="true">
+        <div class="capsule-loader-content">
+            <div class="capsule-loader">
+                <div class="capsule-medicine">
+                    <i></i><i></i><i></i><i></i><i></i>
+                    <i></i><i></i><i></i><i></i><i></i>
+                    <i></i><i></i><i></i><i></i><i></i>
+                    <i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div class="side"></div>
+                <div class="side"></div>
+            </div>
+        </div>
+        <div class="loader-bottom-brand">
+            <img src="{{ $brandLogo }}" alt="Clinic Logo" class="loader-bottom-logo">
+            <div class="admin-brand-logout-text" aria-label="Signing you out">
+                <span>Signing you out</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <header class="admin-header">
     <div class="header-left">
         <div class="header-brand-lockup">
@@ -7718,44 +7756,6 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 @endif
 
 @include('admin.partials.consultation-evaluation-prompt')
-
-<div class="admin-loader-overlay admin-action-loader" id="adminActionLoader" role="status" aria-live="assertive" aria-label="Processing action" aria-hidden="true">
-    @include('partials.admin-loader-waves')
-    <div class="loading" aria-hidden="true">
-        <div class="admin-heart-rate" aria-hidden="true">
-            <svg viewBox="0 0 150 73" focusable="false" role="presentation">
-                <polyline points="0,45.486 38.514,45.486 44.595,33.324 50.676,45.486 57.771,45.486 62.838,55.622 71.959,9 80.067,63.729 84.122,45.486 97.297,45.486 103.379,40.419 110.473,45.486 150,45.486" class="loader-trace"></polyline>
-                <polyline points="0,45.486 38.514,45.486 44.595,33.324 50.676,45.486 57.771,45.486 62.838,55.622 71.959,9 80.067,63.729 84.122,45.486 97.297,45.486 103.379,40.419 110.473,45.486 150,45.486" class="loader-pulse" pathLength="500"></polyline>
-            </svg>
-        </div>
-        <div class="admin-loader-copy">
-            <div class="admin-loader-message">
-                <span data-admin-loader-message-text>{{ request()->routeIs('admin.health_records') ? 'Opening Health Records' : ((request()->routeIs('admin.show_health', 'admin.show_health_plain', 'admin.employee_health_profile.*')) ? 'Opening health record' : 'Loading') }}</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
-            </div>
-            <div class="admin-loader-detail" data-admin-loader-detail>Preparing your request, please wait.</div>
-        </div>
-    </div>
-    <div class="admin-action-brand-loader" aria-hidden="true">
-        <div class="capsule-loader-content">
-            <div class="capsule-loader">
-                <div class="capsule-medicine">
-                    <i></i><i></i><i></i><i></i><i></i>
-                    <i></i><i></i><i></i><i></i><i></i>
-                    <i></i><i></i><i></i><i></i><i></i>
-                    <i></i><i></i><i></i><i></i><i></i>
-                </div>
-                <div class="side"></div>
-                <div class="side"></div>
-            </div>
-        </div>
-        <div class="loader-bottom-brand">
-            <img src="{{ $brandLogo }}" alt="Clinic Logo" class="loader-bottom-logo">
-            <div class="admin-brand-logout-text" aria-label="Signing you out">
-                <span>Signing you out</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div class="admin-logout-confirm" id="adminLogoutConfirm" aria-hidden="true">
     <section class="admin-logout-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="adminLogoutConfirmTitle" aria-describedby="adminLogoutConfirmCopy">
@@ -8552,7 +8552,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
         if (pendingNavigationHandoff) {
             showActionLoading(
-                pendingNavigationHandoff.title,
+                'Loading',
                 pendingNavigationHandoff.detail,
                 pendingNavigationHandoff.skeletonKind
             );

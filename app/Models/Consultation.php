@@ -48,6 +48,11 @@ class Consultation extends Model
         return $this->hasMany(ConsultationMedicine::class);
     }
 
+    public function supplies(): HasMany
+    {
+        return $this->hasMany(ConsultationSupply::class);
+    }
+
     public function evaluation(): HasOne
     {
         return $this->hasOne(ConsultationEvaluation::class);

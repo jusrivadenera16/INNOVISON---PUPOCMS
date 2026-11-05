@@ -33,6 +33,7 @@ class HealthProfileCorrectionRequest extends Model
         'requested_at',
         'submitted_at',
         'reviewed_at',
+        'reviewed_by_user_id',
         'metadata',
     ];
 
@@ -67,6 +68,11 @@ class HealthProfileCorrectionRequest extends Model
     public function requestedBy()
     {
         return $this->belongsTo(User::class, 'requested_by_user_id');
+    }
+
+    public function reviewedBy()
+    {
+        return $this->belongsTo(User::class, 'reviewed_by_user_id');
     }
 
     public function scopeActive($query)

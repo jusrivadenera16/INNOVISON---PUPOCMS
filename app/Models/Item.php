@@ -16,6 +16,7 @@ class Item extends Model
     protected $fillable = [
         'name',
         'category',
+        'consultation_issuable',
         'stock_number',
         'medicine_type_id',
         'medicine_type',
@@ -35,6 +36,7 @@ class Item extends Model
     ];
 
     protected $casts = [
+        'consultation_issuable' => 'boolean',
         'quantity' => 'decimal:6',
         'starting_stock' => 'decimal:6',
         'consumed' => 'decimal:6',
