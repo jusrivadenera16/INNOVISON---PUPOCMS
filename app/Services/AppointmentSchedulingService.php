@@ -42,7 +42,7 @@ class AppointmentSchedulingService
     {
         $query = Appointment::query()
             ->whereDate('date', $date)
-            ->where('status', '!=', 'Cancelled');
+            ->whereIn('status', Appointment::ACTIVE_BOOKING_STATUSES);
 
         if ($exceptAppointmentId !== null) {
             $query->where('id', '!=', $exceptAppointmentId);
@@ -61,7 +61,7 @@ class AppointmentSchedulingService
     {
         $query = Appointment::query()
             ->whereDate('date', $date)
-            ->where('status', '!=', 'Cancelled');
+            ->whereIn('status', Appointment::ACTIVE_BOOKING_STATUSES);
 
         if ($exceptAppointmentId !== null) {
             $query->where('id', '!=', $exceptAppointmentId);

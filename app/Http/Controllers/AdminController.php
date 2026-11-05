@@ -8570,17 +8570,13 @@ public function updateClearance(Request $request, $id)
         return redirect()->back()->with(
             'success',
             $available
-                ? 'Doctor marked as available. Appointment booking and consultations are open.'
-                : 'Doctor marked as out. New appointment bookings and consultations are paused until marked available.'
+                ? 'Doctor marked as in.'
+                : 'Doctor marked as out.'
         );
     }
 
     public function updateStatus($id, $status)
     {
-        if ($status === 'Approved' && !app(\App\Services\ClinicWorkflowService::class)->doctorIsAvailable()) {
-            return redirect()->back()->with('error', 'The doctor is currently marked out. This appointment cannot be approved until the doctor is marked available.');
-        }
-
         $appointmentScheduling = app(\App\Services\AppointmentSchedulingService::class);
         $previousStatus = '';
         $statusError = null;

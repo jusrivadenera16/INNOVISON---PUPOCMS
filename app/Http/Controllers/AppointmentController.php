@@ -2994,12 +2994,11 @@ class AppointmentController extends Controller
     {
         Appointment::expireOverduePending();
         $workflow = app(ClinicWorkflowService::class);
-        $doctorAvailable = $workflow->doctorIsAvailable();
 
         /** @var \App\Models\User|null $user */
         $user = $this->promoteDesigneeAdminToStudentGuard() ?? Auth::guard('student')->user();
         if (!$user) {
-            return view('student.booking-public', compact('doctorAvailable'));
+            return view('student.booking-public');
         }
 
         $studentContext = $this->resolveStudentContext($user);
@@ -3038,7 +3037,6 @@ class AppointmentController extends Controller
             'bookingFormLocked',
             'studentContext',
             'clinicClosure',
-            'doctorAvailable',
             'clinicHours',
             'otherServiceOptions',
             'onlineConsultationOptions',
@@ -3079,13 +3077,6 @@ class AppointmentController extends Controller
         }
 
         $workflow = app(ClinicWorkflowService::class);
-        if (!$workflow->doctorIsAvailable()) {
-            return redirect()->back()->withInput()->with(
-                'error',
-                'Appointment booking is temporarily unavailable because the doctor is currently out. Please check again later.'
-            );
-        }
-
         $closure = $workflow->activeClosure();
         if ($closure) {
             return redirect()->back()->withInput()->with(
@@ -3238,16 +3229,6 @@ class AppointmentController extends Controller
     public function availability(Request $request)
     {
         $workflow = app(ClinicWorkflowService::class);
-        if (!$workflow->doctorIsAvailable()) {
-            return response()->json([
-                'date' => (string) $request->query('date', ''),
-                'available' => false,
-                'reason' => 'doctor_unavailable',
-                'message' => 'Appointment booking is temporarily unavailable because the doctor is currently out. Please check again later.',
-                'slots' => [],
-            ], 423);
-        }
-
         $closure = $workflow->activeClosure();
         if ($closure) {
             return response()->json([
@@ -3288,7 +3269,7 @@ class AppointmentController extends Controller
 
         $appointmentScheduling = app(\App\Services\AppointmentSchedulingService::class);
         $takenTimes = Appointment::whereDate('date', $selectedDate->toDateString())
-            ->where('status', '!=', 'Cancelled')
+            ->whereIn('status', Appointment::ACTIVE_BOOKING_STATUSES)
             ->pluck('time')
             ->map(function ($time) {
                 return Carbon::parse($time)->format('H:i');

@@ -2325,8 +2325,7 @@
 @endpush
 
 @section('content')
-@php($doctorUnavailable = empty($doctorAvailable))
-@php($bookingUnavailable = !empty($clinicClosure) || $doctorUnavailable)
+@php($bookingUnavailable = !empty($clinicClosure))
 <div class="booking-page-shell">
 <div class="container booking-page-container">
     
@@ -2397,13 +2396,6 @@
                         @endif
                         Existing appointments and student records remain accessible.
                     </p>
-                </div>
-            @endif
-
-            @if($doctorUnavailable)
-                <div class="booking-closure-notice doctor-unavailable-notice" role="status">
-                    <strong>The doctor is currently out</strong>
-                    <p>Appointment booking and consultations are temporarily unavailable. Please check again when the doctor is marked available.</p>
                 </div>
             @endif
 
@@ -2572,10 +2564,10 @@
                     </span>
                 </div>
 
-                <button type="submit" class="btn-submit" {{ $bookingFormLocked || $bookingUnavailable || $bookingRestricted ? 'disabled' : '' }} aria-label="{{ $bookingFormLocked ? 'Active appointment exists' : (!empty($clinicClosure) ? 'Booking Temporarily Closed' : ($doctorUnavailable ? 'Doctor Unavailable' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment'))) }}">
+                <button type="submit" class="btn-submit" {{ $bookingFormLocked || $bookingUnavailable || $bookingRestricted ? 'disabled' : '' }} aria-label="{{ $bookingFormLocked ? 'Active appointment exists' : (!empty($clinicClosure) ? 'Booking Temporarily Closed' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment')) }}">
                     <span class="btn-submit-idle">
                         <x-outline-icon name="calendar-days" />
-                        <span>{{ $bookingFormLocked ? 'Active Appointment Exists' : (!empty($clinicClosure) ? 'Booking Temporarily Closed' : ($doctorUnavailable ? 'Doctor Unavailable' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment'))) }}</span>
+                        <span>{{ $bookingFormLocked ? 'Active Appointment Exists' : (!empty($clinicClosure) ? 'Booking Temporarily Closed' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment')) }}</span>
                         <x-outline-icon name="arrow-long-right" />
                     </span>
                     <span class="btn-submit-heartbeat" aria-hidden="true">

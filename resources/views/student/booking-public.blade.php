@@ -247,13 +247,6 @@
             <h1 class="public-appt-title">Book clinic services through One Portal</h1>
         </header>
 
-        @if(empty($doctorAvailable))
-            <div class="public-doctor-out-notice" role="status">
-                <strong>The doctor is currently out</strong>
-                Appointment booking and consultations are temporarily unavailable. Please check again when the doctor is marked available.
-            </div>
-        @endif
-
         <section class="public-appt-grid" aria-label="Public appointment access">
             <article class="public-appt-card">
                 <span class="public-appt-icon" aria-hidden="true">
