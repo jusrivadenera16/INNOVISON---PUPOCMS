@@ -382,9 +382,17 @@ class AdminAssistantController extends Controller
                 return $reply;
             }
 
+            $geminiFailure = $gemini->lastError();
             Log::warning('Clinic assistant Gemini request failed; trying OpenAI fallback.', [
-                'error' => $gemini->lastError(),
+                'error' => $geminiFailure,
             ]);
+
+            $openAiReply = $this->askOpenAi($text);
+            if ($openAiReply !== null && str_starts_with($openAiReply, 'OpenAI ')) {
+                return 'Gemini also failed: ' . ($geminiFailure ?: 'the configured model did not return a response.') . ' ' . $openAiReply;
+            }
+
+            return $openAiReply;
         }
 
         return $this->askOpenAi($text);
