@@ -327,6 +327,65 @@
         border-color: rgba(255, 255, 255, 0.10);
     }
 
+    .integration-list-panel {
+        min-height: 460px;
+    }
+
+    .integration-list-head,
+    .integration-list-title,
+    .token-summary-head,
+    .permissions-head,
+    .permissions-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .integration-list-head,
+    .token-summary-head,
+    .permissions-head {
+        justify-content: space-between;
+    }
+
+    .integration-list-head {
+        padding: 4px 4px 12px;
+        margin-bottom: 10px;
+        border-bottom: 1px solid rgba(127, 29, 45, 0.10);
+    }
+
+    .integration-list-title {
+        color: #8a1220;
+    }
+
+    .integration-list-title .panel-title {
+        margin: 0;
+    }
+
+    .system-count,
+    .permission-count {
+        border-radius: 999px;
+        padding: 5px 10px;
+        background: #f8e6e9;
+        color: #8a1220;
+        font-size: 0.72rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    html[data-theme="dark"] .integration-list-head {
+        border-color: rgba(255, 255, 255, 0.10);
+    }
+
+    html[data-theme="dark"] .integration-list-title {
+        color: #facc15;
+    }
+
+    html[data-theme="dark"] .system-count,
+    html[data-theme="dark"] .permission-count {
+        background: rgba(250, 204, 21, 0.15);
+        color: #facc15;
+    }
+
     .panel-title {
         margin: 4px 4px 12px;
         color: #111827;
@@ -350,7 +409,7 @@
         border-radius: 14px;
         padding: 12px;
         display: grid;
-        grid-template-columns: 42px 1fr auto;
+        grid-template-columns: 42px minmax(0, 1fr) auto;
         gap: 10px;
         align-items: center;
         text-align: left;
@@ -386,6 +445,30 @@
     .system-avatar {
         width: 38px;
         height: 38px;
+    }
+
+    .system-avatar,
+    .detail-avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .system-item-details {
+        min-width: 0;
+    }
+
+    .system-item-chevron {
+        color: #64748b;
+    }
+
+    .system-item.active .system-item-chevron {
+        color: #8a1220;
+    }
+
+    html[data-theme="dark"] .system-item-chevron {
+        color: #cbd5e1;
     }
 
     .detail-avatar {
@@ -429,11 +512,12 @@
         background: #f59e0b;
     }
 
-    .item-last-used {
-        color: #64748b;
-        font-size: 0.72rem;
-        font-weight: 800;
-        text-align: right;
+    .status-dot.error {
+        background: #ef4444;
+    }
+
+    .status-dot.inactive {
+        background: #94a3b8;
     }
 
     .detail-card {
@@ -469,6 +553,10 @@
         color: #fff;
     }
 
+    html[data-theme="dark"] .system-key-line {
+        color: #cbd5e1;
+    }
+
     .system-key-line {
         display: flex;
         align-items: center;
@@ -500,6 +588,27 @@
         color: #92400e;
     }
 
+    .connected-pill.is-disconnected {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .system-key-line {
+        flex-wrap: wrap;
+    }
+
+    .connected-pill.muted .status-dot {
+        background: #f59e0b;
+    }
+
+    .connected-pill.muted .status-dot.error {
+        background: #ef4444;
+    }
+
+    .connected-pill.muted .status-dot.inactive {
+        background: #94a3b8;
+    }
+
     .detail-menu {
         width: 42px;
         height: 42px;
@@ -515,13 +624,166 @@
         color: #f8fafc;
     }
 
+    .token-action-control {
+        flex-shrink: 0;
+    }
+
+    .token-action-menu {
+        position: relative;
+    }
+
+    .token-action-menu[hidden],
+    .head-generate-token-btn[hidden] {
+        display: none !important;
+    }
+
+    .token-action-menu > summary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        list-style: none;
+    }
+
+    .token-action-menu > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .token-action-menu > summary:hover,
+    .token-action-menu > summary:focus-visible {
+        color: #8a1220;
+        border-color: #facc15;
+        background: #facc15;
+    }
+
+    .token-action-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 20;
+        width: max-content;
+        min-width: 190px;
+        padding: 6px;
+        border: 1px solid rgba(127, 29, 45, 0.16);
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+    }
+
+    html[data-theme="dark"] .token-action-dropdown {
+        background: #1b2537;
+        border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    .token-action-dropdown button {
+        display: block;
+        width: 100%;
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 12px;
+        background: transparent;
+        color: #8a1220;
+        text-align: left;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    html[data-theme="dark"] .token-action-dropdown button {
+        color: #f8fafc;
+    }
+
+    .token-action-dropdown button:hover,
+    .token-action-dropdown button:focus-visible {
+        background: #facc15;
+        color: #8a1220;
+    }
+
     .token-row {
         margin: 12px 0;
     }
 
+    .token-summary,
+    .permissions-panel {
+        border: 1px solid rgba(127, 29, 45, 0.14);
+        border-radius: 14px;
+        padding: 12px;
+        background: #fff;
+    }
+
+    .token-summary-head,
+    .permissions-head {
+        margin-bottom: 10px;
+    }
+
+    .token-heading,
+    .permissions-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #8a1220;
+        font-weight: 900;
+    }
+
+    .token-state-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border-radius: 999px;
+        padding: 5px 9px;
+        background: #dcfce7;
+        color: #166534;
+        font-size: 0.72rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .token-state-pill.empty {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .token-security-note {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 8px;
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+
+    html[data-theme="dark"] .token-summary,
+    html[data-theme="dark"] .permissions-panel {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    html[data-theme="dark"] .token-heading,
+    html[data-theme="dark"] .permissions-title {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .token-security-note {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .token-state-pill {
+        background: rgba(34, 197, 94, 0.16);
+        color: #86efac;
+    }
+
+    html[data-theme="dark"] .token-state-pill.empty {
+        background: rgba(245, 158, 11, 0.16);
+        color: #fcd34d;
+    }
+
+    html[data-theme="dark"] .connected-pill.is-disconnected {
+        background: rgba(239, 68, 68, 0.18);
+        color: #fca5a5;
+    }
+
     .masked-token {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1fr);
         gap: 10px;
         align-items: center;
     }
@@ -582,7 +844,7 @@
 
     .token-facts {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
         margin: 14px 0;
     }
@@ -593,6 +855,29 @@
         padding: 12px;
         background: #fff;
         min-height: 82px;
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+    }
+
+    .fact-icon {
+        width: 34px;
+        height: 34px;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: #f8e6e9;
+        color: #8a1220 !important;
+    }
+
+    .fact-content {
+        min-width: 0;
+    }
+
+    .fact-content strong {
+        margin-top: 4px;
     }
 
     html[data-theme="dark"] .fact-card {
@@ -628,11 +913,56 @@
         color: #fff;
     }
 
-    .detail-actions {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 10px;
-        margin-top: 14px;
+    html[data-theme="dark"] .fact-card .fact-content span,
+    html[data-theme="dark"] .fact-card small {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .fact-icon {
+        background: rgba(250, 204, 21, 0.14);
+        color: #facc15 !important;
+    }
+
+    .permissions-panel {
+        margin-top: 12px;
+    }
+
+    .token-ability-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .permission-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 7px;
+        padding: 6px 10px;
+        background: #f9e9ec;
+        color: #8a1220;
+        font-size: 0.8rem;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+
+    .permission-chip::before {
+        content: '</>';
+        font-weight: 900;
+    }
+
+    html[data-theme="dark"] .permission-chip {
+        background: rgba(250, 204, 21, 0.13);
+        color: #f8fafc;
+    }
+
+    .permission-empty {
+        color: #64748b;
+        font-size: 0.8rem;
+    }
+
+    html[data-theme="dark"] .permission-empty {
+        color: #cbd5e1;
     }
 
     .generated-token-panel {
@@ -1017,7 +1347,6 @@
     @media (max-width: 1180px) {
         .integration-stats,
         .token-facts,
-        .detail-actions,
         .security-row {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -1025,6 +1354,10 @@
         .integration-workspace,
         .lower-grid {
             grid-template-columns: 1fr;
+        }
+
+        .integration-list-panel {
+            min-height: 0;
         }
     }
 
@@ -1046,7 +1379,6 @@
 
         .integration-stats,
         .token-facts,
-        .detail-actions,
         .security-row {
             grid-template-columns: 1fr;
         }
@@ -1147,8 +1479,14 @@
         </div>
 
         <div class="integration-workspace">
-            <aside class="integration-panel">
-                <h2 class="panel-title">Integrations</h2>
+            <aside class="integration-panel integration-list-panel">
+                <div class="integration-list-head">
+                    <div class="integration-list-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>
+                        <h2 class="panel-title">Integrations</h2>
+                    </div>
+                    <span class="system-count">{{ $clients->count() }} {{ $clients->count() === 1 ? 'System' : 'Systems' }}</span>
+                </div>
                 <div class="system-list" id="systemList">
                     @forelse($clients as $client)
                         @php
@@ -1169,13 +1507,11 @@
                             onclick="selectIntegration('{{ $client->id }}')"
                         >
                             <span class="system-avatar">{{ $initial }}</span>
-                            <span>
+                            <span class="system-item-details">
                                 <strong class="system-name">{{ $client->system_name }}</strong>
-                                <small><span class="status-dot {{ $isConnected ? '' : 'warn' }}"></span><span class="system-status-text">{{ !$client->is_active ? 'Inactive' : ($isConnected ? 'Connected' : ($hasToken ? 'Not connected' : 'No token')) }}</span></small>
+                                <small><span class="status-dot {{ $status === 'not-connected' ? 'error' : ($status === 'no-token' ? 'warn' : ($status === 'inactive' ? 'inactive' : '')) }}"></span><span class="system-status-text">{{ !$client->is_active ? 'Inactive' : ($isConnected ? 'Connected' : ($hasToken ? 'Not connected' : 'No token')) }}</span></small>
                             </span>
-                            <span class="item-last-used">
-                                {{ $isConnected ? $latest->last_used_at->diffForHumans() : ($latest ? 'Never used' : 'No token') }}
-                            </span>
+                            <svg class="system-item-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
                         </button>
                     @empty
                         <div class="no-token-message">No integration clients found.</div>
@@ -1190,13 +1526,13 @@
                         $hasToken = (bool) $latest;
                         $isConnected = $client->hasUsedToken();
                         $initial = strtoupper(substr($client->system_name, 0, 1));
-                        $abilities = $latest ? implode(', ', $latest->abilities ?? []) : 'None';
                     @endphp
                     <article
                         class="detail-card {{ $loop->first ? 'active' : '' }}"
                         id="integrationDetail-{{ $client->id }}"
                         data-client-id="{{ $client->id }}"
                         data-system-name="{{ $client->system_name }}"
+                        data-token-id="{{ $latest ? $latest->id : '' }}"
                     >
                         <div class="detail-head">
                             <div class="detail-title">
@@ -1210,86 +1546,96 @@
                                                 <rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
                                             </svg>
                                         </button>
+                                        <span class="connected-pill client-status-pill {{ $isConnected ? '' : 'muted' }} {{ $hasToken && !$isConnected ? 'is-disconnected' : '' }}">
+                                            <span class="status-dot {{ $hasToken && !$isConnected ? 'error' : (!$hasToken ? 'warn' : '') }}"></span>
+                                            {{ !$client->is_active ? 'Inactive' : ($isConnected ? 'Connected' : ($hasToken ? 'Not connected' : 'No Token')) }}
+                                        </span>
                                     </div>
                                 </div>
-                                <span class="connected-pill client-status-pill {{ $isConnected ? '' : 'muted' }}">
-                                    {{ !$client->is_active ? 'Inactive' : ($isConnected ? 'Connected' : ($hasToken ? 'Not connected' : 'No Token')) }}
-                                </span>
                             </div>
-                            <button type="button" class="detail-menu" title="More options">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
-                                </svg>
-                            </button>
+                            <div class="token-action-control">
+                                <details class="token-action-menu" {{ $hasToken ? '' : 'hidden' }}>
+                                    <summary class="detail-menu" aria-label="Token actions" title="Token actions">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                            <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+                                        </svg>
+                                    </summary>
+                                    <div class="token-action-dropdown">
+                                        <button type="button" onclick="this.closest('details').open = false; const card = this.closest('.detail-card'); generateToken(card.dataset.clientId, card.dataset.systemName, true)">Rotate Token</button>
+                                        <button type="button" onclick="this.closest('details').open = false; const card = this.closest('.detail-card'); revokeToken(card.dataset.clientId, card.dataset.systemName, card.dataset.tokenId)">Revoke Token</button>
+                                        <button type="button" onclick="this.closest('details').open = false; openIntegrationLogs(this.closest('.detail-card').dataset.clientId)">View Logs</button>
+                                    </div>
+                                </details>
+                                <button type="button" class="solid-btn generate-token-btn head-generate-token-btn" {{ $hasToken ? 'hidden' : '' }} onclick="const card = this.closest('.detail-card'); generateToken(card.dataset.clientId, card.dataset.systemName, false)">Generate Token</button>
+                            </div>
                         </div>
 
-                        <div class="token-row">
-                            <span class="token-label">API Token</span>
+                        <div class="token-row token-summary">
+                            <div class="token-summary-head">
+                                <span class="token-heading">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="15.5" cy="8.5" r="5.5"/><path d="m11.4 12.6-8.2 8.2H1v-2.2l2.2-2.2H6v-2.8h2.8l2.6-2.6"/></svg>
+                                    <span class="token-label">API Token</span>
+                                </span>
+                                <span class="token-state-pill {{ $hasToken ? '' : 'empty' }}">
+                                    <span class="token-state-icon" aria-hidden="true">{{ $hasToken ? '✓' : '•' }}</span>
+                                    <span class="token-state-text">{{ $hasToken ? 'Token Generated' : 'No Token' }}</span>
+                                </span>
+                            </div>
                             <div class="masked-token">
                                 <div class="masked-token-value">
                                     {{ $hasToken ? 'Token ID ' . $latest->id . '  |  ' . str_repeat('*', 80) : 'No token generated yet' }}
                                 </div>
-                                <button type="button" class="outline-btn copy-detail-token-btn" id="copyDetailToken_{{ $client->id }}" onclick="copyGeneratedTokenFromDetail('{{ $client->id }}')" {{ $hasToken ? '' : 'disabled' }}>
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-                                    </svg>
-                                    <span>Copy Token</span>
-                                </button>
+                            </div>
+                            <div class="token-security-note">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg>
+                                For security, the token value is hidden after its initial display.
                             </div>
                         </div>
 
                         <div class="token-facts">
                             <div class="fact-card">
-                                <span>Created</span>
-                                <span class="token-created-date" style="font-weight: 600; display: block; margin: 4px 0;">{{ $hasToken ? $latest->created_at->format('M d, Y') : 'N/A' }}</span>
-                                <small class="token-created-time">{{ $hasToken ? $latest->created_at->format('h:i A') : 'No token' }}</small>
+                                <span class="fact-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18m-13 4h3m-3 3h5"/></svg></span>
+                                <div class="fact-content">
+                                    <span>Created</span>
+                                    <strong class="token-created-date">{{ $hasToken ? $latest->created_at->format('M d, Y') : 'N/A' }}</strong>
+                                    <small class="token-created-time">{{ $hasToken ? $latest->created_at->format('h:i A') : 'No token' }}</small>
+                                </div>
                             </div>
                             <div class="fact-card">
-                                <span>Last Used</span>
-                                <span class="token-last-used-value" style="font-weight: 600; display: block; margin: 4px 0;">{{ $isConnected ? $latest->last_used_at->diffForHumans() : 'Never' }}</span>
-                                <small class="token-last-used-time">{{ $isConnected ? $latest->last_used_at->format('M d, h:i A') : 'No API call yet' }}</small>
+                                <span class="fact-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+                                <div class="fact-content">
+                                    <span>Last Used</span>
+                                    <strong class="token-last-used-value">{{ $isConnected ? $latest->last_used_at->diffForHumans() : 'Never' }}</strong>
+                                    <small class="token-last-used-time">{{ $isConnected ? $latest->last_used_at->format('M d, h:i A') : 'No API call yet' }}</small>
+                                </div>
                             </div>
                             <div class="fact-card">
-                                <span>Expires</span>
-                                <span style="font-weight: 600; display: block; margin: 4px 0;">Never</span>
-                                <small>No expiration</small>
-                            </div>
-                            <div class="fact-card">
-                                <span>Permissions</span>
-                                <span class="token-ability-count" style="font-weight: 600; display: block; margin: 4px 0;">{{ $hasToken ? count($latest->abilities ?? []) . ' abilities' : 'None' }}</span>
-                                <small class="token-ability-list">{{ $abilities }}</small>
+                                <span class="fact-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/></svg></span>
+                                <div class="fact-content">
+                                    <span>Expiration</span>
+                                    <strong>Never</strong>
+                                    <small>No expiration</small>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="detail-actions">
-                            @if ($hasToken)
-                                <button type="button" class="outline-btn rotate-token-btn" onclick="generateToken('{{ $client->id }}', '{{ $client->system_name }}', true)">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>
-                                    </svg>
-                                    Rotate Token
-                                </button>
-                                <button type="button" class="danger-btn" onclick="revokeToken('{{ $client->id }}', '{{ $client->system_name }}', '{{ $latest->id }}')">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/>
-                                    </svg>
-                                    Revoke Token
-                                </button>
-                            @else
-                                <button type="button" class="solid-btn generate-token-btn" onclick="generateToken('{{ $client->id }}', '{{ $client->system_name }}', false)">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M12 5v14M5 12h14"/>
-                                    </svg>
-                                    Generate Token
-                                </button>
-                            @endif
-                            <button type="button" class="outline-btn view-logs-btn" onclick="openIntegrationLogs('{{ $client->id }}')">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4v15.5A2.5 2.5 0 0 0 6.5 22H20V6a2 2 0 0 0-2-2H4Z"/>
-                                </svg>
-                                View Logs
-                            </button>
+                        <div class="permissions-panel">
+                            <div class="permissions-head">
+                                <span class="permissions-title">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+                                    Permissions
+                                </span>
+                                <span class="permission-count token-ability-count">{{ count($latest->abilities ?? []) }} {{ count($latest->abilities ?? []) === 1 ? 'Permission' : 'Permissions' }}</span>
+                            </div>
+                            <div class="token-ability-list">
+                                @forelse(($latest->abilities ?? []) as $ability)
+                                    <span class="permission-chip">{{ $ability }}</span>
+                                @empty
+                                    <span class="permission-empty">No permissions assigned</span>
+                                @endforelse
+                            </div>
                         </div>
+
                     </article>
                 @empty
                     <div class="no-token-message">No integration client selected.</div>
@@ -1435,6 +1781,10 @@
 
         document.querySelectorAll('.detail-card').forEach((card) => {
             card.classList.toggle('active', card.dataset.clientId === clientId);
+            if (card.dataset.clientId !== clientId) {
+                const menu = card.querySelector('.token-action-menu');
+                if (menu) menu.open = false;
+            }
         });
     }
 
@@ -1504,18 +1854,6 @@
             .replace(/'/g, '&#039;');
     }
 
-    function copyToken(clientId, tokenValue) {
-        if (!tokenValue) {
-            showAlert('Plaintext token is only available immediately after generation. Generate a new token if needed.', true);
-            return;
-        }
-        navigator.clipboard.writeText(tokenValue).then(() => {
-            showAlert('Token copied to clipboard.');
-        }).catch(() => {
-            showAlert('Failed to copy token.', true);
-        });
-    }
-
     function copyText(text) {
         navigator.clipboard.writeText(text).then(() => {
             showAlert('Copied to clipboard.');
@@ -1524,31 +1862,29 @@
         });
     }
 
-    async function copyGeneratedTokenFromDetail(clientId) {
-        if (!latestGeneratedToken) {
-            showAlert('No token available to copy.', true);
-            return;
+    let tokenIsVisible = false;
+
+    function clearGeneratedToken() {
+        latestGeneratedToken = '';
+        tokenIsVisible = false;
+
+        const tokenBox = document.getElementById('generatedTokenValue');
+        if (tokenBox) {
+            tokenBox.textContent = 'Token no longer available in this session.';
+            tokenBox.style.fontFamily = 'inherit';
         }
 
-        const copyBtn = document.getElementById(`copyDetailToken_${clientId}`);
-        const originalContent = copyBtn.innerHTML;
+        const copyButton = document.getElementById('copyButton');
+        if (copyButton) copyButton.disabled = true;
 
-        navigator.clipboard.writeText(latestGeneratedToken).then(() => {
-            copyBtn.classList.add('copied');
-            copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Copied</span>';
+        const visibilityButton = document.getElementById('toggleTokenVisibilityButton');
+        if (visibilityButton) visibilityButton.disabled = true;
 
-            setTimeout(() => {
-                copyBtn.classList.remove('copied');
-                copyBtn.innerHTML = originalContent;
-            }, 2000);
-
-            showAlert('Token copied to clipboard.');
-        }).catch(() => {
-            showAlert('Failed to copy token.', true);
-        });
+        const eyeIcon = document.getElementById('tokenEyeIcon');
+        if (eyeIcon) {
+            eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+        }
     }
-
-    let tokenIsVisible = false;
 
     function updateGeneratedTokenUi(clientId, systemName, data, rotated = false) {
         const detail = document.querySelector(`.detail-card[data-client-id="${clientId}"]`);
@@ -1567,9 +1903,13 @@
 
         if (detail) {
             const statusPill = detail.querySelector('.client-status-pill');
+            const statusDot = statusPill?.querySelector('.status-dot');
             const tokenValue = detail.querySelector('.masked-token-value');
-            const copyButton = detail.querySelector('.copy-detail-token-btn');
-            const revokeButton = detail.querySelector('.danger-btn');
+            const tokenState = detail.querySelector('.token-state-pill');
+            const tokenStateIcon = detail.querySelector('.token-state-icon');
+            const tokenStateText = detail.querySelector('.token-state-text');
+            const tokenMenu = detail.querySelector('.token-action-menu');
+            const generateButton = detail.querySelector('.head-generate-token-btn');
             const createdDateEl = detail.querySelector('.token-created-date');
             const createdTimeEl = detail.querySelector('.token-created-time');
             const abilityCount = detail.querySelector('.token-ability-count');
@@ -1577,41 +1917,40 @@
             const lastUsedValue = detail.querySelector('.token-last-used-value');
             const lastUsedTime = detail.querySelector('.token-last-used-time');
 
-            statusPill?.classList.add('muted');
+            statusPill?.classList.add('muted', 'is-disconnected');
             if (statusPill) statusPill.textContent = 'Not connected';
+            if (statusPill && statusDot) {
+                statusDot.classList.remove('warn', 'inactive');
+                statusDot.classList.add('error');
+                statusPill.prepend(statusDot);
+            }
             if (tokenValue) tokenValue.textContent = `Token ID ${tokenId}  |  ${'*'.repeat(80)}`;
-            copyButton?.removeAttribute('disabled');
+            tokenState?.classList.remove('empty');
+            if (tokenStateIcon) tokenStateIcon.textContent = '✓';
+            if (tokenStateText) tokenStateText.textContent = 'Token Generated';
+            detail.dataset.tokenId = String(tokenId);
+            if (tokenMenu) tokenMenu.hidden = false;
+            if (generateButton) generateButton.hidden = true;
             if (createdDateEl) createdDateEl.textContent = createdDate;
             if (createdTimeEl) createdTimeEl.textContent = createdTime;
             if (lastUsedValue) lastUsedValue.textContent = 'Never';
             if (lastUsedTime) lastUsedTime.textContent = 'No API call yet';
-            if (abilityCount) abilityCount.textContent = `${abilities.length} ${abilities.length === 1 ? 'ability' : 'abilities'}`;
-            if (abilityList) abilityList.textContent = abilities.length ? abilities.join(', ') : 'None';
-            if (!detail.querySelector('.rotate-token-btn')) {
-                const actionBar = detail.querySelector('.detail-actions');
-                const logsButton = actionBar?.querySelector('.view-logs-btn');
-                const generateButton = actionBar?.querySelector('.generate-token-btn');
-                const rotateButton = document.createElement('button');
-                rotateButton.type = 'button';
-                rotateButton.className = 'outline-btn rotate-token-btn';
-                rotateButton.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg> Rotate Token';
-                rotateButton.onclick = () => generateToken(clientId, systemName, true);
-
-                const newRevokeButton = document.createElement('button');
-                newRevokeButton.type = 'button';
-                newRevokeButton.className = 'danger-btn';
-                newRevokeButton.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/></svg> Revoke Token';
-                newRevokeButton.onclick = () => revokeToken(clientId, systemName, tokenId);
-
-                generateButton?.remove();
-                if (actionBar) {
-                    actionBar.insertBefore(rotateButton, logsButton || null);
-                    actionBar.insertBefore(newRevokeButton, logsButton || null);
+            if (abilityCount) abilityCount.textContent = `${abilities.length} ${abilities.length === 1 ? 'Permission' : 'Permissions'}`;
+            if (abilityList) {
+                abilityList.replaceChildren();
+                if (abilities.length) {
+                    abilities.forEach((ability) => {
+                        const chip = document.createElement('span');
+                        chip.className = 'permission-chip';
+                        chip.textContent = ability;
+                        abilityList.appendChild(chip);
+                    });
+                } else {
+                    const empty = document.createElement('span');
+                    empty.className = 'permission-empty';
+                    empty.textContent = 'No permissions assigned';
+                    abilityList.appendChild(empty);
                 }
-            }
-            if (revokeButton) {
-                revokeButton.removeAttribute('disabled');
-                revokeButton.onclick = () => revokeToken(clientId, systemName, tokenId);
             }
         }
 
@@ -1619,11 +1958,9 @@
             systemItem.dataset.status = 'not-connected';
             const statusDot = systemItem.querySelector('.status-dot');
             const statusText = systemItem.querySelector('.system-status-text');
-            const lastUsed = systemItem.querySelector('.item-last-used');
-
-            statusDot?.classList.add('warn');
+            statusDot?.classList.remove('warn', 'inactive');
+            statusDot?.classList.add('error');
             if (statusText) statusText.textContent = 'Not connected';
-            if (lastUsed) lastUsed.textContent = 'Never used';
         }
 
         const statCards = document.querySelectorAll('.integration-stats .stat-card');
@@ -1642,6 +1979,8 @@
     }
 
     async function toggleTokenVisibility() {
+        if (!latestGeneratedToken) return;
+
         const tokenBox = document.getElementById('generatedTokenValue');
         const eyeIcon = document.getElementById('tokenEyeIcon');
 
@@ -1661,25 +2000,16 @@
     }
 
     function closeGeneratedTokenModal() {
+        if (latestGeneratedToken && !confirm('This token cannot be viewed again after closing. Have you saved it securely?')) {
+            return;
+        }
+
+        clearGeneratedToken();
+        document.getElementById('generatedTokenMeta').textContent = '';
         const modal = document.getElementById('generatedTokenModal');
         if (modal) {
             modal.classList.remove('show');
         }
-        tokenIsVisible = false;
-        latestGeneratedToken = '';
-    }
-
-    async function copyGeneratedToken() {
-        if (!latestGeneratedToken) {
-            showAlert('No token available to copy.', true);
-            return;
-        }
-
-        navigator.clipboard.writeText(latestGeneratedToken).then(() => {
-            showAlert('Token copied to clipboard!');
-        }).catch(() => {
-            showAlert('Failed to copy token.', true);
-        });
     }
 
     async function generateToken(clientId, systemName, rotate = false) {
@@ -1700,18 +2030,19 @@
         .then(readJsonResponse)
         .then(data => {
             if (data.success) {
+                clearGeneratedToken();
                 latestGeneratedToken = data.token || '';
-                document.getElementById('generatedTokenValue').textContent = latestGeneratedToken;
-                document.getElementById('generatedTokenMeta').innerHTML = `<strong>System:</strong> ${systemName} | <strong>Token ID:</strong> ${data.token_id || 'N/A'} | <strong>Abilities:</strong> ${(data.abilities || []).join(', ')}`;
+                data.token = '';
+                document.getElementById('generatedTokenTitle').textContent = 'Token Generated!';
+                document.getElementById('generatedTokenNotice').textContent = 'Copy and save this token now. It cannot be retrieved later.';
+                document.getElementById('generatedTokenValue').textContent = '*'.repeat(80);
+                document.getElementById('generatedTokenMeta').textContent = `System: ${systemName} | Token ID: ${data.token_id || 'N/A'} | Abilities: ${(data.abilities || []).join(', ')}`;
                 document.getElementById('generatedTokenModal').classList.add('show');
                 updateGeneratedTokenUi(clientId, systemName, data, rotate);
                 tokenIsVisible = false;
                 document.getElementById('generatedTokenValue').style.fontFamily = 'inherit';
-                document.getElementById('generatedTokenValue').textContent = '*'.repeat(80);
-
-                if (latestGeneratedToken && navigator.clipboard) {
-                    navigator.clipboard.writeText(latestGeneratedToken).catch(() => {});
-                }
+                document.getElementById('copyButton').disabled = !latestGeneratedToken;
+                document.getElementById('toggleTokenVisibilityButton').disabled = !latestGeneratedToken;
             } else {
                 showAlert(data.message || 'Failed to generate token.', true);
             }
@@ -1758,20 +2089,20 @@
             return;
         }
 
-        const copyBtn = document.getElementById('copyButton');
-        const originalContent = copyBtn.innerHTML;
+        if (!navigator.clipboard?.writeText) {
+            showAlert('Clipboard is unavailable. Reveal the token and copy it manually before closing.', true);
+            return;
+        }
 
+        const copyButton = document.getElementById('copyButton');
+        copyButton.disabled = true;
         navigator.clipboard.writeText(latestGeneratedToken).then(() => {
-            copyBtn.classList.add('copied');
-            copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Copied</span>';
-
-            setTimeout(() => {
-                copyBtn.classList.remove('copied');
-                copyBtn.innerHTML = originalContent;
-            }, 2000);
-
-            showAlert('Token copied to clipboard.');
+            clearGeneratedToken();
+            document.getElementById('generatedTokenTitle').textContent = 'Token Copied';
+            document.getElementById('generatedTokenNotice').textContent = 'Paste it into a secure place before closing this window.';
+            showAlert('Token copied. Paste and save it securely; it cannot be shown again.');
         }).catch(() => {
+            copyButton.disabled = !latestGeneratedToken;
             showAlert('Failed to copy token.', true);
         });
     }
@@ -1855,6 +2186,12 @@
         });
     }
 
+    document.addEventListener('click', (e) => {
+        document.querySelectorAll('.token-action-menu[open]').forEach((menu) => {
+            if (!menu.contains(e.target)) menu.open = false;
+        });
+    });
+
     // Close modal when clicking outside
     document.getElementById('createClientModal')?.addEventListener('click', (e) => {
         if (e.target.id === 'createClientModal') {
@@ -1871,6 +2208,9 @@
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             closeIntegrationLogs();
+            document.querySelectorAll('.token-action-menu[open]').forEach((menu) => {
+                menu.open = false;
+            });
         }
     });
 </script>
@@ -1959,8 +2299,8 @@
                 </svg>
             </div>
             <div>
-                <h2 style="margin: 0; color: white; font-size: 1.3rem; font-weight: 900;">Token Generated!</h2>
-                <p style="margin: 4px 0 0; color: rgba(255, 255, 255, 0.85); font-size: 0.9rem;">Copy now, this is shown once only</p>
+                <h2 id="generatedTokenTitle" style="margin: 0; color: white; font-size: 1.3rem; font-weight: 900;">Token Generated!</h2>
+                <p id="generatedTokenNotice" style="margin: 4px 0 0; color: rgba(255, 255, 255, 0.85); font-size: 0.9rem;">Copy and save this token now. It cannot be retrieved later.</p>
             </div>
         </div>
 
@@ -1974,7 +2314,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
                     </svg>
                     <label style="color: #111827; font-size: 0.9rem; font-weight: 700;">API Token</label>
-                    <button type="button" onclick="toggleTokenVisibility()" style="border: none; background: none; cursor: pointer; color: #7f1d2d; padding: 4px; display: flex; align-items: center; margin-left: auto;">
+                    <button id="toggleTokenVisibilityButton" type="button" onclick="toggleTokenVisibility()" aria-label="Show or hide generated token" style="border: none; background: none; cursor: pointer; color: #7f1d2d; padding: 4px; display: flex; align-items: center; margin-left: auto;">
                         <svg id="tokenEyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
                         </svg>
@@ -2001,7 +2341,7 @@
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
-                        Continue
+                        I've Saved the Token
                     </span>
                 </button>
             </div>
@@ -2066,9 +2406,15 @@
         font-size: 0.9rem;
     }
 
-    .token-copy-btn:hover {
+    .token-copy-btn:not(:disabled):hover {
         background: #6a1220;
         box-shadow: 0 4px 12px rgba(127, 29, 45, 0.3);
+    }
+
+    .token-copy-btn:disabled,
+    #toggleTokenVisibilityButton:disabled {
+        cursor: not-allowed !important;
+        opacity: 0.5;
     }
 
     .token-copy-btn.copied {

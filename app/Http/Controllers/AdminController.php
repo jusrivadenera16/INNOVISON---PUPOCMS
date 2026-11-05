@@ -2444,7 +2444,7 @@ class AdminController extends Controller
             'header_name' => trim((string) config('services.external_admin_profile.header', 'X-External-Api-Key')),
             'system_header_name' => trim((string) config('services.external_admin_profile.system_header', 'X-External-System')),
             'auth_mode' => 'legacy-static-key',
-            'api_key_preview' => substr($apiKey, 0, 8) . '...' . substr($apiKey, -6),
+            'api_key_preview' => 'Configured (value hidden)',
         ], null];
     }
 
@@ -10908,7 +10908,8 @@ public function inventorySummary()
                 'abilities' => $abilities,
                 'created_date' => optional($newToken->accessToken->created_at)->format('M d, Y'),
                 'created_time' => optional($newToken->accessToken->created_at)->format('h:i A'),
-            ]);
+            ])->header('Cache-Control', 'no-store, private')
+                ->header('Pragma', 'no-cache');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to generate integration token.', [
                 'client_id' => $validated['client_id'] ?? null,

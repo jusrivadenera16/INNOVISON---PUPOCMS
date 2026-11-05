@@ -115,7 +115,13 @@ class IntegrationTokenGenerationTest extends TestCase
         $generated = $this->postJson(route('admin.integration-tokens.generate'), [
             'client_id' => $client->id,
         ])->assertOk()
-            ->assertJsonPath('success', true);
+            ->assertJsonPath('success', true)
+            ->assertHeader('Cache-Control', 'no-store, private');
+
+        $this->assertNotSame(
+            $generated->json('token'),
+            DB::table('personal_access_tokens')->where('id', $generated->json('token_id'))->value('token')
+        );
 
         $oldTokenId = $generated->json('token_id');
         $this->assertDatabaseHas('personal_access_tokens', [
@@ -134,13 +140,28 @@ class IntegrationTokenGenerationTest extends TestCase
             'rotate' => true,
         ])->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('message', 'Token rotated successfully');
+            ->assertJsonPath('message', 'Token rotated successfully')
+            ->assertHeader('Cache-Control', 'no-store, private');
 
         $newTokenId = $rotated->json('token_id');
         $this->assertNotSame($oldTokenId, $newTokenId);
         $this->assertDatabaseMissing('personal_access_tokens', ['id' => $oldTokenId]);
         $this->assertDatabaseHas('personal_access_tokens', ['id' => $newTokenId, 'tokenable_id' => $client->id]);
         $this->assertDatabaseCount('personal_access_tokens', 1);
+    }
+
+    public function test_api_dashboard_never_previews_legacy_key_characters(): void
+    {
+        config()->set('services.external_admin_profile.system_keys', [
+            'legacy' => 'short-key',
+        ]);
+
+        $method = new \ReflectionMethod(\App\Http\Controllers\AdminController::class, 'resolveExternalApiTestingSystemMeta');
+        [$isValid, $meta] = $method->invoke(new \App\Http\Controllers\AdminController(), 'legacy');
+
+        $this->assertTrue($isValid);
+        $this->assertSame('Configured (value hidden)', $meta['api_key_preview']);
+        $this->assertStringNotContainsString('short-key', json_encode($meta));
     }
 
     public function test_client_is_connected_only_after_its_token_has_been_used(): void
