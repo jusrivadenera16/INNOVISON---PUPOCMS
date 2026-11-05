@@ -8,6 +8,7 @@ use App\Services\GeminiClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class AdminAssistantController extends Controller
@@ -72,7 +73,9 @@ class AdminAssistantController extends Controller
 
         return response()->json([
             'type' => 'answer',
-            'message' => 'I can help with clinic commands and built-in guidance. Free-text AI replies are disabled until external data processing is approved.',
+            'message' => config('services.ai.external_processing_enabled', false)
+                ? 'The AI service is temporarily unavailable. Please try again shortly. Clinic commands and built-in safety guidance are still available.'
+                : 'I can help with clinic commands and built-in safety guidance. Free-text AI is disabled; enable AI_EXTERNAL_PROCESSING_ENABLED and refresh Laravel configuration to turn it on.',
             'source' => 'fallback',
         ]);
     }
@@ -356,11 +359,32 @@ class AdminAssistantController extends Controller
         $provider = strtolower(trim((string) config('services.ai.provider', 'auto')));
         $gemini = app(GeminiClient::class);
 
-        if ($provider === 'gemini' || ($provider === 'auto' && $gemini->configured())) {
+        if ($provider === 'gemini') {
+            if (!$gemini->configured()) {
+                return 'Gemini is selected, but GEMINI_API_KEY is not loaded. Set it in the host environment and refresh Laravel configuration.';
+            }
+
             $reply = $this->askGemini($text, $gemini);
-            if ($reply !== null || $provider === 'gemini') {
+            if ($reply !== null) {
                 return $reply;
             }
+
+            Log::warning('Clinic assistant Gemini request failed.', [
+                'error' => $gemini->lastError(),
+            ]);
+
+            return 'Gemini is configured but could not respond. ' . ($gemini->lastError() ?: 'Check the model and provider configuration.');
+        }
+
+        if ($provider === 'auto' && $gemini->configured()) {
+            $reply = $this->askGemini($text, $gemini);
+            if ($reply !== null) {
+                return $reply;
+            }
+
+            Log::warning('Clinic assistant Gemini request failed; trying OpenAI fallback.', [
+                'error' => $gemini->lastError(),
+            ]);
         }
 
         return $this->askOpenAi($text);
@@ -388,7 +412,7 @@ PROMPT;
             return $reply;
         }
 
-        return 'Gemini is configured but the API request failed. ' . ($gemini->lastError() ?: 'Check GEMINI_API_KEY and GEMINI_MODEL in .env.');
+        return null;
     }
 
     private function askOpenAi(string $text): ?string
@@ -420,12 +444,23 @@ PROMPT;
                 ]);
 
             if (!$response->successful()) {
+                Log::warning('Clinic assistant OpenAI request failed.', [
+                    'model' => $model,
+                    'status' => $response->status(),
+                    'error' => trim((string) data_get($response->json() ?: [], 'error.message', '')),
+                ]);
+
                 return null;
             }
 
             $content = trim((string) data_get($response->json(), 'choices.0.message.content'));
             return $content !== '' ? $content : null;
         } catch (\Throwable $e) {
+            Log::warning('Clinic assistant OpenAI request raised an exception.', [
+                'model' => $model,
+                'exception' => get_class($e),
+            ]);
+
             return null;
         }
     }
