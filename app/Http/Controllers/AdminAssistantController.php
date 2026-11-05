@@ -421,7 +421,7 @@ PROMPT;
         $model = config('services.openai.model') ?: env('OPENAI_MODEL', 'gpt-4o-mini');
 
         if (empty($apiKey)) {
-            return null;
+            return 'OpenAI fallback is not configured. Set OPENAI_API_KEY or configure Gemini as the active provider.';
         }
 
         try {
@@ -452,18 +452,24 @@ PROMPT;
                     'error_code' => data_get($response->json() ?: [], 'error.code'),
                 ]);
 
-                return null;
+                if (in_array($response->status(), [401, 403], true)) {
+                    return 'OpenAI rejected the configured API key (HTTP ' . $response->status() . '). Replace OPENAI_API_KEY in Hostinger and refresh Laravel configuration.';
+                }
+
+                return 'OpenAI could not complete the request (HTTP ' . $response->status() . '). Check the provider status and Laravel logs.';
             }
 
             $content = trim((string) data_get($response->json(), 'choices.0.message.content'));
-            return $content !== '' ? $content : null;
+            return $content !== ''
+                ? $content
+                : 'OpenAI returned an empty response. Check the selected model and Laravel logs.';
         } catch (\Throwable $e) {
             Log::warning('Clinic assistant OpenAI request raised an exception.', [
                 'model' => $model,
                 'exception' => get_class($e),
             ]);
 
-            return null;
+            return 'OpenAI could not be reached. Check Hostinger outbound HTTPS access and Laravel logs.';
         }
     }
 
