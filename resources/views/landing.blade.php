@@ -8482,7 +8482,7 @@
                                 <span class="gateway-title-line">PUP Taguig</span>
                                 <span class="gateway-title-line gateway-title-line--clinic" data-shine-text="Medical Clinic">Medical Clinic</span>
                             </h1>
-                            <p class="gateway-copy">Your secure portal for appointments, health records, and clinic updates.</p>
+                            <p class="gateway-copy">HOTDOGGGGGGGGGGGGGGGGGGGGGGGGGGGG.</p>
                         </div>
 
                         @if($errors->has('idp'))
