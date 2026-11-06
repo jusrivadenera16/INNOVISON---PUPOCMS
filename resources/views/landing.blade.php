@@ -8482,7 +8482,7 @@
                                 <span class="gateway-title-line">PUP Taguig</span>
                                 <span class="gateway-title-line gateway-title-line--clinic" data-shine-text="Medical Clinic">Medical Clinic</span>
                             </h1>
-                            <p class="gateway-copy">HOTDOGGGGGGGGGGGGGGGGGGGGGGGGGGGG.</p>
+                            <p class="gateway-copy">anlala.</p>
                         </div>
 
                         @if($errors->has('idp'))
