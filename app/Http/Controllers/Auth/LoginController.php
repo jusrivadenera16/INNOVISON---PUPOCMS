@@ -182,6 +182,10 @@ class LoginController extends Controller
 
     private function localLoginEnabled(?Request $request = null): bool
     {
+        if (! (bool) config('services.local_login.enabled', false)) {
+            return false;
+        }
+
         $host = strtolower(trim((string) optional($request)->getHost()));
         $allowedHosts = array_map(
             fn ($allowedHost) => strtolower(trim((string) $allowedHost)),

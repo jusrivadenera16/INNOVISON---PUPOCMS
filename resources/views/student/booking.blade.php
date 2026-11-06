@@ -2325,8 +2325,7 @@
 @endpush
 
 @section('content')
-@php($doctorUnavailable = empty($doctorAvailable))
-@php($bookingUnavailable = !empty($clinicClosure) || $doctorUnavailable)
+@php($bookingUnavailable = !empty($clinicClosure))
 <div class="booking-page-shell">
 <div class="container booking-page-container">
     
@@ -2397,13 +2396,6 @@
                         @endif
                         Existing appointments and student records remain accessible.
                     </p>
-                </div>
-            @endif
-
-            @if($doctorUnavailable)
-                <div class="booking-closure-notice doctor-unavailable-notice" role="status">
-                    <strong>The doctor is currently out</strong>
-                    <p>Appointment booking and consultations are temporarily unavailable. Please check again when the doctor is marked available.</p>
                 </div>
             @endif
 
@@ -2560,8 +2552,12 @@
                 </div>
 
                 <div class="input-group">
-                    <textarea name="reason" class="form-control" placeholder="Briefly describe what you are feeling..." rows="3" required>{{ $bookingReasonValue }}</textarea>
-                    <small class="booking-field-help">Please provide as much detail as possible to help our nurse prepare for your consultation.</small>
+                    <textarea id="appointmentReason" name="reason" class="form-control" placeholder="Briefly describe what you are feeling..." rows="3" maxlength="100" aria-describedby="reasonCharacterCount reasonFieldHelp" required>{{ $bookingReasonValue }}</textarea>
+                    <small class="booking-field-help" id="reasonCharacterCount" aria-live="polite">{{ mb_strlen((string) $bookingReasonValue) }}/100 characters</small>
+                    @error('reason')
+                        <small class="booking-field-help" role="alert">{{ $message }}</small>
+                    @enderror
+                    <small class="booking-field-help" id="reasonFieldHelp">Please provide a brief reason or symptom (maximum 100 characters).</small>
                 </div>
 
                 <div class="appointment-summary-notice">
@@ -2572,10 +2568,10 @@
                     </span>
                 </div>
 
-                <button type="submit" class="btn-submit" {{ $bookingFormLocked || $bookingUnavailable || $bookingRestricted ? 'disabled' : '' }} aria-label="{{ $bookingFormLocked ? 'Active appointment exists' : (!empty($clinicClosure) ? 'Booking Temporarily Closed' : ($doctorUnavailable ? 'Doctor Unavailable' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment'))) }}">
+                <button type="submit" class="btn-submit" {{ $bookingFormLocked || $bookingUnavailable || $bookingRestricted ? 'disabled' : '' }} aria-label="{{ $bookingFormLocked ? 'Active appointment exists' : (!empty($clinicClosure) ? 'Booking Temporarily Closed' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment')) }}">
                     <span class="btn-submit-idle">
                         <x-outline-icon name="calendar-days" />
-                        <span>{{ $bookingFormLocked ? 'Active Appointment Exists' : (!empty($clinicClosure) ? 'Booking Temporarily Closed' : ($doctorUnavailable ? 'Doctor Unavailable' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment'))) }}</span>
+                        <span>{{ $bookingFormLocked ? 'Active Appointment Exists' : (!empty($clinicClosure) ? 'Booking Temporarily Closed' : ($bookingRestricted ? 'Booking Restricted' : 'Confirm Appointment')) }}</span>
                         <x-outline-icon name="arrow-long-right" />
                     </span>
                     <span class="btn-submit-heartbeat" aria-hidden="true">
@@ -2865,6 +2861,14 @@
         const serviceTypeDisplay = document.getElementById('serviceTypeDisplay');
         const serviceTypeMenu = document.getElementById('serviceTypeMenu');
         const reasonField = bookingForm ? bookingForm.querySelector('[name="reason"]') : null;
+        const reasonCharacterCount = document.getElementById('reasonCharacterCount');
+        const updateReasonCharacterCount = () => {
+            if (reasonField && reasonCharacterCount) {
+                reasonCharacterCount.textContent = `${reasonField.value.length}/100 characters`;
+            }
+        };
+        reasonField?.addEventListener('input', updateReasonCharacterCount);
+        updateReasonCharacterCount();
         const serviceTypeOptions = Array.from(document.querySelectorAll('.service-select-option'));
         const serviceTypeWrap = serviceTypeDisplay ? serviceTypeDisplay.closest('.service-select-wrap') : null;
         const headerAvailableSlots = document.getElementById('headerAvailableSlots');

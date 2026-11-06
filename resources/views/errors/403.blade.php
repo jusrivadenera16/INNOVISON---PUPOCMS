@@ -15,15 +15,20 @@
 </head>
 <body>
     @php
-        $backUrl = optional(auth()->user())->isStudentAssistant()
-            ? url('/assistant/dashboard')
-            : url('/admin/dashboard');
+        $viewer = \Illuminate\Support\Facades\Auth::guard('student')->user() ?? auth()->user();
+        $isStudent = $viewer
+            && \App\Models\User::normalizeRole((string) $viewer->user_role) === \App\Models\User::ROLE_STUDENT;
+        $backUrl = $isStudent
+            ? url('/student/home')
+            : (optional($viewer)->isStudentAssistant()
+                ? url('/assistant/dashboard')
+                : url('/admin/dashboard'));
     @endphp
     <main>
         <div class="mark">!</div>
-        <h1>Access Restricted</h1>
-        <p>You do not have permission to open this area.</p>
-        <a href="{{ $backUrl }}">Return to Dashboard</a>
+        <h1>403 - Forbidden</h1>
+        <p>You do not have permission to access this page.</p>
+        <a href="{{ $backUrl }}">{{ $isStudent ? 'Return to Home' : 'Return to Dashboard' }}</a>
     </main>
 </body>
 </html>

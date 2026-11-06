@@ -269,7 +269,7 @@ Route::middleware(['auth:student', 'student.idle', 'account.active', 'idp.sessio
     Route::get('/fetch-user/{student_id}', [AppointmentController::class, 'fetchUser']);
 });
 
-Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->group(function () {
+Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::get('/assistant/choose-portal', [LoginController::class, 'showStudentAssistantPortalChooser'])->name('assistant.choose-portal');
         Route::get('/assistant/enter-student', [LoginController::class, 'enterStudentPortal'])->name('assistant.enter-student');
@@ -652,44 +652,6 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::get('/developer-tools', [AdminController::class, 'developerTools'])->middleware('role:superadmin')->name('developer-tools');
         Route::get('/api-testing', [AdminController::class, 'apiTesting'])->middleware('role:superadmin')->name('api-testing');
     });
-});
-
-// Temporary dev login helper (debug mode only)
-Route::get('/dev-login/{id}', function ($id) {
-    if (!config('app.debug')) {
-        abort(404);
-    }
-
-    $user = User::find($id);
-    if ($user) {
-        $originalRole = strtolower((string) ($user->user_role ?? ''));
-        $normalizedRole = User::normalizeRole($user->user_role);
-        if ($normalizedRole !== $originalRole) {
-            $user->user_role = $normalizedRole;
-            $user->save();
-        }
-
-        if ($normalizedRole === User::ROLE_SUPERADMIN) {
-            Auth::guard('admin')->login($user);
-            return redirect('/admin/dashboard')->with('success', 'Logged in as ' . $user->name);
-        }
-        if ($normalizedRole === User::ROLE_ADMIN) {
-            $redirectPath = ClinicRoutes::workspaceRedirectForUser($user);
-
-            if ($redirectPath === '/student/home') {
-                Auth::guard('student')->login($user);
-                return redirect('/student/home')->with('success', 'Logged in as ' . $user->name);
-            }
-
-            Auth::guard('admin')->login($user);
-            return redirect($redirectPath)->with('success', 'Logged in as ' . $user->name);
-        }
-
-        Auth::guard('student')->login($user);
-        return redirect(ClinicRoutes::workspaceRedirectForUser($user))->with('success', 'Logged in as ' . $user->name);
-    }
-
-    return 'User not found!';
 });
 
 if (app()->environment('local')) {

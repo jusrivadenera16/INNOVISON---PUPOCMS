@@ -602,6 +602,11 @@
         .modal-content .form-row {
             gap: 16px;
         }
+        .modal-content .register-name-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+        }
         .modal-content .form-group {
             margin-bottom: 18px;
         }
@@ -780,6 +785,11 @@
                 gap: 10px;
             }
 
+            .modal-content .register-name-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
             .modal-overlay {
                 align-items: flex-end;
             }
@@ -941,33 +951,36 @@
                 </p>
             </div>
 
-            @env('local')
-                <section class="dev-login-grid" aria-label="Static developer login options">
-                    <div class="dev-login-card">
-                        <div>
-                            <div class="dev-login-chip">Dev Login</div>
-                            <div class="dev-login-icon">S</div>
-                            <h3 class="dev-login-title">Student</h3>
-                            <p class="dev-login-copy">Static student login placeholder. This option is for local preview only and does not perform authentication yet.</p>
+            @if($localLoginEnabled)
+                <form id="loginForm" action="{{ url('/login-action') }}" method="POST">
+                    @csrf
+                    <div class="form-group">
+                        <label>EMAIL ADDRESS</label>
+                        <div class="input-wrap">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25v7.5A2.25 2.25 0 0 1 18.75 18H5.25A2.25 2.25 0 0 1 3 15.75v-7.5m18 0A2.25 2.25 0 0 0 18.75 6H5.25A2.25 2.25 0 0 0 3 8.25m18 0-7.47 4.662a2.25 2.25 0 0 1-2.42 0L3 8.25" />
+                            </svg>
+                            <input type="email" name="email" value="{{ old('email') }}" placeholder="Enter your email address" required>
                         </div>
-                        <a href="#" class="dev-login-cta" onclick="event.preventDefault();">
-                            Student Login
-                        </a>
                     </div>
 
-                    <div class="dev-login-card">
-                        <div>
-                            <div class="dev-login-chip">Dev Login</div>
-                            <div class="dev-login-icon">A</div>
-                            <h3 class="dev-login-title">Admin</h3>
-                            <p class="dev-login-copy">Static admin login placeholder. This option is for local preview only and does not perform authentication yet.</p>
+                    <div class="form-group">
+                        <label>PASSWORD</label>
+                        <div class="input-wrap">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V7.875a4.5 4.5 0 0 0-9 0V10.5m-.75 0A2.25 2.25 0 0 0 4.5 12.75v5.25A2.25 2.25 0 0 0 6.75 20.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-5.25A2.25 2.25 0 0 0 17.25 10.5h-10.5Z" />
+                            </svg>
+                            <input type="password" name="password" placeholder="Enter your password" required>
                         </div>
-                        <a href="#" class="dev-login-cta" onclick="event.preventDefault();">
-                            Admin Login
-                        </a>
                     </div>
-                </section>
-            @endenv
+
+                    <button id="loginSubmitBtn" type="submit" class="btn-submit">Login to Portal</button>
+                </form>
+
+                <div class="switch-form">
+                    Don't have an account? <span onclick="openModal('registerModal')">Create Account</span>
+                </div>
+            @endif
         @elseif($localLoginEnabled)
             <form id="loginForm" action="{{ url('/login-action') }}" method="POST">
                 @csrf
@@ -1020,47 +1033,49 @@
               </div>
               <form action="{{ url('/register-action') }}" method="POST">
                   @csrf
-                  <div class="form-row">
+                  <div class="register-name-grid">
                       <div class="form-group">
                           <label>FIRST NAME</label>
-                          <input type="text" name="first_name" required>
+                          <input type="text" name="first_name" value="{{ old('first_name') }}" autocomplete="given-name" required>
+                      </div>
+                      <div class="form-group">
+                          <label>MIDDLE NAME</label>
+                          <input type="text" name="middle_name" value="{{ old('middle_name') }}" autocomplete="additional-name">
                       </div>
                       <div class="form-group">
                           <label>LAST NAME</label>
-                          <input type="text" name="last_name" required>
+                          <input type="text" name="last_name" value="{{ old('last_name') }}" autocomplete="family-name" required>
+                      </div>
+                      <div class="form-group">
+                          <label>SUFFIX</label>
+                          <input type="text" name="suffix_name" value="{{ old('suffix_name') }}" placeholder="e.g., Jr., III" autocomplete="honorific-suffix">
                       </div>
                   </div>
 
                   <div class="register-grid">
                       <div class="form-group">
                           <label>EMAIL ADDRESS</label>
-                          <input type="email" name="email" required>
+                          <input type="email" name="email" value="{{ old('email') }}" autocomplete="email" required>
                       </div>
 
                       <div class="form-group">
                           <label>CLINIC ROLE</label>
                           <select name="clinic_role" required>
                               <option value="" disabled {{ old('clinic_role') ? '' : 'selected' }}>Select clinic role</option>
+                              <option value="applicant" {{ old('clinic_role') === 'applicant' ? 'selected' : '' }}>
+                                  Applicant
+                              </option>
                               <option value="student" {{ old('clinic_role') === 'student' ? 'selected' : '' }}>
                                   Student
                               </option>
                               <option value="faculty" {{ old('clinic_role') === 'faculty' ? 'selected' : '' }}>
                                   Faculty
                               </option>
+                              <option value="admin" {{ old('clinic_role') === 'admin' ? 'selected' : '' }}>
+                                  Admin
+                              </option>
                               <option value="guest" {{ old('clinic_role') === 'guest' ? 'selected' : '' }}>
                                   Guest
-                              </option>
-                              <option value="admin_clinic_staff" {{ old('clinic_role') === 'admin_clinic_staff' ? 'selected' : '' }}>
-                                  Admin - Clinic Staff
-                              </option>
-                              <option value="admin_designee" {{ old('clinic_role') === 'admin_designee' ? 'selected' : '' }}>
-                                  Admin - Designee
-                              </option>
-                              <option value="student_assistant" {{ old('clinic_role') === 'student_assistant' ? 'selected' : '' }}>
-                                  Admin - Student Assistant
-                              </option>
-                              <option value="super_admin" {{ old('clinic_role') === 'super_admin' ? 'selected' : '' }}>
-                                  Superadmin
                               </option>
                           </select>
                       </div>

@@ -3492,9 +3492,9 @@
   position: absolute;
   left: 50%;
   top: 52%;
-  width: 86px;
-  height: 86px;
-  background: url('{{ asset("images/pup_logo.png") }}') center / contain no-repeat;
+  width: 400px;
+  height: 400px;
+  background: url('{{ asset("images/stagingphonebg.png") }}') center / contain no-repeat;
   opacity: 0.18;
   transform: translate(-50%, -50%);
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.12));
