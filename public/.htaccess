@@ -24,4 +24,16 @@
     # Keep the hosting-layer CSP aligned with the application policy.
     Header always unset Content-Security-Policy
     Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.botpress.cloud https://cdn.jsdelivr.net https://code.jquery.com https://files.bpcontent.cloud https://unpkg.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https:; frame-src 'self' https:"
+
+    # Apply these protections to static files as well as Laravel responses.
+    Header always unset X-Frame-Options
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always unset X-Content-Type-Options
+    Header always set X-Content-Type-Options "nosniff"
+
+    # Remove framework and hosting panel identifiers when the host permits it.
+    Header always unset X-Powered-By
+    Header always unset platform
+    Header always unset panel
+
 </IfModule>
