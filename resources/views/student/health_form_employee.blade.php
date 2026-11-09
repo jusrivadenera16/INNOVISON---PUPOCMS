@@ -3069,6 +3069,7 @@
                 $employeeValue = fn (string $field, $fallback = '') => old($field, data_get($employeeProfile ?? null, $field, data_get($employeePrefill ?? [], $field, $fallback)));
                 $employeeCheckedValues = fn (string $field) => collect(old($field, data_get($employeeProfile ?? null, $field, [])))->filter()->values()->all();
                 $schoolYearValue = trim((string) ($currentSchoolYear ?? data_get($employeePrefill, 'school_year', '')));
+                $isDependentAccount = (bool) ($isDependentAccount ?? false);
                 $employeeName = trim((string) data_get($employeePrefill ?? [], 'first_name') . ' ' . (string) data_get($employeePrefill ?? [], 'middle_name') . ' ' . (string) data_get($employeePrefill ?? [], 'last_name') . ' ' . (string) data_get($employeePrefill ?? [], 'suffix_name'));
                 $employeeName = trim(preg_replace('/\s+/', ' ', $employeeName));
                 if ($employeeName === '') {
@@ -3083,7 +3084,7 @@
                     ])));
                 }
                 $employeeErrorGroups = [
-                    1 => ['first_name', 'last_name', 'street_address', 'barangay', 'city_municipality', 'province', 'contact_no', 'emergency_contact_person', 'emergency_contact_no', 'form_date', 'office', 'age', 'sex', 'civil_status', 'birthday'],
+                    1 => ['first_name', 'last_name', 'street_address', 'barangay', 'city_municipality', 'province', 'contact_no', 'emergency_contact_person', 'emergency_contact_no', 'form_date', 'office', 'id_number', 'age', 'sex', 'civil_status', 'birthday'],
                     2 => ['past_medical_history', 'past_medical_history_others', 'previous_hospitalization', 'previous_hospitalization_details', 'operation_surgery', 'operation_surgery_details', 'allergies'],
                     3 => ['family_history', 'family_history_others'],
                     4 => ['cigarette_smoking', 'alcohol_drinking', 'traveled_abroad', 'has_disability', 'disability_type'],
@@ -3098,7 +3099,7 @@
                     2 => 'Past Medical History',
                     3 => 'Family History',
                     4 => 'Personal History',
-                    5 => 'Employee Photo',
+                    5 => $isDependentAccount ? 'Photo' : 'Employee Photo',
                     6 => 'E-Signature',
                 ];
                 $selectedPastMedicalHistory = $employeeCheckedValues('past_medical_history');
@@ -3236,12 +3237,34 @@
                                             <path d="M8 7V5h8v2M3 12h18M10 12v2h4v-2"></path>
                                         </svg>
                                     </span>
-                                    <h3 class="section-title address-section-title">Employment Information</h3>
+                                    <h3 class="section-title address-section-title">{{ $isDependentAccount ? 'Dependent Information' : 'Employment Information' }}</h3>
                                 </div>
                                 <span class="address-section-divider" aria-hidden="true"></span>
-                                <p class="address-section-note">Provide your clinic employment and department details.</p>
+                                <p class="address-section-note">{{ $isDependentAccount ? 'Enter your ID Number and department, if applicable.' : 'Provide your clinic employment and department details.' }}</p>
                             </div>
                         <div class="employee-personal-row">
+                            @if($isDependentAccount)
+                            <div class="form-field">
+                                <label class="form-label" for="id_number">ID Number <span class="required">*</span></label>
+                                <div class="address-field-control">
+                                    <span class="address-field-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M7 9h10M7 13h6M7 16h4"></path></svg>
+                                    </span>
+                                    <input id="id_number" type="text" name="id_number" class="form-control" value="{{ $employeeValue('id_number') }}" maxlength="120" autocomplete="off" required>
+                                </div>
+                                <small class="field-hint">Enter your personal ID number.</small>
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="office">Department (Optional)</label>
+                                <div class="address-field-control">
+                                    <span class="address-field-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><path d="M4 21h16M6 21V5h8v16M14 9h4v12M9 8h2M9 12h2M9 16h2M16 12h1M16 16h1"></path></svg>
+                                    </span>
+                                    <input id="office" type="text" name="office" class="form-control" value="{{ $employeeValue('office') }}" maxlength="255">
+                                </div>
+                                <small class="field-hint">Enter your department, if applicable.</small>
+                            </div>
+                            @else
                             <div class="form-field">
                                 <label class="form-label" for="employee_number">Employee Number</label>
                                 <div class="address-field-control">
@@ -3262,6 +3285,7 @@
                                 </div>
                                 <small class="field-hint">Example: Medical Services Department</small>
                             </div>
+                            @endif
                         </div>
                         </div>
                         <div class="employee-category-section">
@@ -3701,21 +3725,21 @@
                 </div>
 
                 <div class="step-panel {{ $startStep === 5 ? '' : 'is-hidden' }}" id="stepPanel5">
-                    <h2 class="section-title step-page-title" data-title-letter="E">Employee Photo</h2>
-                    <p class="step-fill-note">Upload a formal, front-facing employee photo. It does not need to be 2x2; other clinic documents can be submitted later through My Account.</p>
+                    <h2 class="section-title step-page-title" data-title-letter="{{ $isDependentAccount ? 'P' : 'E' }}">{{ $isDependentAccount ? 'Photo' : 'Employee Photo' }}</h2>
+                    <p class="step-fill-note">{{ $isDependentAccount ? 'Upload a clear, front-facing photo. It does not need to be 2x2; other clinic documents can be submitted later through My Account.' : 'Upload a formal, front-facing employee photo. It does not need to be 2x2; other clinic documents can be submitted later through My Account.' }}</p>
                     <div class="requirement-grid">
                         <div class="requirement-card">
                             <div class="requirement-card-header">
                                 <div class="requirement-heading-main">
                                     <span class="requirement-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><circle cx="12" cy="9" r="2.5"></circle><path d="M8 17c.8-2 2.1-3 4-3s3.2 1 4 3"></path></svg></span>
                                     <span class="requirement-heading-copy">
-                                        <strong id="employeePhotoTitle">Employee Photo <span class="required">*</span></strong>
-                                        <span class="requirement-description">Formal, front-facing employee photo. A plain white background is not required.</span>
+                                        <strong id="employeePhotoTitle">{{ $isDependentAccount ? 'Photo' : 'Employee Photo' }} <span class="required">*</span></strong>
+                                        <span class="requirement-description">{{ $isDependentAccount ? 'Clear, front-facing photo. A plain white background is not required.' : 'Formal, front-facing employee photo. A plain white background is not required.' }}</span>
                                     </span>
                                 </div>
                                 <span class="requirement-badge is-required">Required</span>
                             </div>
-                            <p class="requirement-guideline">Upload a clear, formal, front-facing employee photo. It does not need to be 2x2, and the background does not need to be plain white.</p>
+                            <p class="requirement-guideline">{{ $isDependentAccount ? 'Upload a clear, front-facing photo. It does not need to be 2x2, and the background does not need to be plain white.' : 'Upload a clear, formal, front-facing employee photo. It does not need to be 2x2, and the background does not need to be plain white.' }}</p>
                             <input id="employee_student_photo" type="file" name="student_photo" class="form-control requirement-file-input" accept=".jpg,.jpeg,.png,image/jpeg,image/png" aria-labelledby="employeePhotoTitle" aria-describedby="employeePhotoFileMeta" data-upload-input data-preview-kind="image" required>
                             <div class="requirement-dropzone" data-upload-dropzone data-input-id="employee_student_photo">
                                 <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
@@ -3725,15 +3749,15 @@
                             </div>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             <button type="button" class="requirement-sample-button" data-sample-guide
-                                data-guide-title="Employee Photo"
-                                data-guide-description="Sample guide and requirements for the employee photo upload."
+                                data-guide-title="{{ $isDependentAccount ? 'Photo' : 'Employee Photo' }}"
+                                data-guide-description="{{ $isDependentAccount ? 'Sample guide and requirements for the photo upload.' : 'Sample guide and requirements for the employee photo upload.' }}"
                                 data-guide-correct-image="{{ asset('images/upload-guides/photo-formal-upload.jpg') }}"
-                                data-guide-correct-alt="Formal, front-facing employee portrait with a neutral background"
+                                data-guide-correct-alt="{{ $isDependentAccount ? 'Clear, front-facing portrait with a neutral background' : 'Formal, front-facing employee portrait with a neutral background' }}"
                                 data-guide-correct-caption="Formal, front-facing photo with clear lighting. A neat, non-distracting background is acceptable; it does not need to be white."
                                 data-guide-wrong-image="{{ asset('images/upload-guides/photo-casual-do-not-upload.jpg') }}"
                                 data-guide-wrong-alt="Casual outdoor selfie that should not be uploaded"
                                 data-guide-wrong-caption="Avoid selfies, casual poses, filters, and busy or distracting backgrounds. A neat, non-white background is acceptable."
-                                data-guide-reminder="Upload a clear, formal, front-facing employee photo. It does not need to be 2x2 or have a plain white background."
+                                data-guide-reminder="{{ $isDependentAccount ? 'Upload a clear, front-facing photo. It does not need to be 2x2 or have a plain white background.' : 'Upload a clear, formal, front-facing employee photo. It does not need to be 2x2 or have a plain white background.' }}"
                                 data-guide-file-info="Allowed: JPG or PNG only, max 1MB.">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
                                 <span>View Sample Guide</span>
@@ -4470,7 +4494,7 @@
                 let message = '';
                 if (birthdayValue < minimumBirthday) {
                     message = 'Birthday must be January 1, 1950 or later.';
-                } else if (maximumBirthday && birthdayValue > maximumBirthday) {
+                    } else if (maximumBirthday && birthdayValue > maximumBirthday) {
                     message = 'Age must be at least 15 years old.';
                 } else {
                     const birthday = new Date(`${birthdayValue}T00:00:00`);

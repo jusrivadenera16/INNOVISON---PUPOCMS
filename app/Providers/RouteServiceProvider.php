@@ -21,6 +21,16 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->getAuthIdentifier() ?: $request->ip());
         });
 
+        RateLimiter::for('login', function (Request $request) {
+            $emailKey = hash('sha256', mb_strtolower(trim((string) $request->input('email'))));
+            $ipKey = $request->ip() ?: 'unknown';
+
+            return [
+                Limit::perMinute(5)->by('login-account-ip:' . hash('sha256', $emailKey . '|' . $ipKey)),
+                Limit::perMinute(30)->by('login-ip:' . $ipKey),
+            ];
+        });
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')

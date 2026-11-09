@@ -89,6 +89,11 @@
         ?: ($accountProfileData['employee_number'] ?? '')
         ?: ($user->employee_number ?? '')
     ));
+    $isDependentHealthRecord = $user->clinicAccountTypeKey() === 'dependent';
+    $resolvedDependentIdNumber = trim((string) (
+        optional($healthProfileRecord)->id_number
+        ?: ($accountProfileData['id_number'] ?? '')
+    ));
     $isEmployeeHealthRecord = (bool) ($usesEmployeeHealthForm ?? false);
     $isStudentHealthRecord = !$isEmployeeHealthRecord && $resolvedStudentNumber !== '';
     $isApplicantHealthRecord = !$isEmployeeHealthRecord
@@ -96,6 +101,7 @@
         && ($resolvedAdmissionReference !== '' || str_contains($currentUserRoles, 'applicant'));
     $isApplicantHealthWorkflow = $isApplicantHealthRecord;
     $resolvedHealthFormType = match (true) {
+        $isDependentHealthRecord => 'Dependent Health Form',
         $isEmployeeHealthRecord => 'Employee Health Form',
         $isStudentHealthRecord => 'Student Health Form',
         default => 'Applicant Health Form',
@@ -109,7 +115,7 @@
         $looksLikeApplicantReference = (bool) preg_match('/^\d{4}-\d{4}-\d{4}/', $referenceNumber)
             || (bool) preg_match('/^\d{4}-[A-Z]+-\d+/', $referenceNumber);
 
-        $baseType = $isEmployeeHealthRecord ? 'Employee Health Form' : $resolvedHealthFormType;
+        $baseType = $resolvedHealthFormType;
         if (str_contains($category, 'ojt') || str_contains($category, 'on-the-job') || str_contains($category, 'student')) {
             $baseType = 'Student Health Form';
         } elseif (
@@ -155,12 +161,14 @@
         $latestFormType .= ' (' . $latestSchoolYear . ')';
     }
     $latestIdentifierLabel = match (true) {
+        $isDependentHealthRecord => 'ID Number',
         $isEmployeeHealthRecord => 'Employee Number',
         $isStudentHealthRecord => 'Student Number',
         $isTransfereeHealthRecord => 'Reference Number',
         default => 'Admission Reference',
     };
     $latestIdentifierValue = match (true) {
+        $isDependentHealthRecord => $resolvedDependentIdNumber,
         $isEmployeeHealthRecord => $resolvedEmployeeNumber,
         $isStudentHealthRecord => $resolvedStudentNumber,
         $isTransfereeHealthRecord => $resolvedSisReferenceNumber,

@@ -75,6 +75,7 @@ return [
             'reason' => 'reason_encrypted',
         ],
         'health_profile_emp' => [
+            'id_number' => 'id_number_encrypted',
             'home_address' => 'home_address_encrypted',
             'street' => 'street_encrypted',
             'barangay' => 'barangay_encrypted',

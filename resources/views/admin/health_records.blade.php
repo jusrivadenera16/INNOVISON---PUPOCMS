@@ -7553,6 +7553,17 @@
         letter-spacing: .05em;
         text-transform: uppercase;
     }
+    .health-bulk-request-saved-info-note {
+        margin: 0;
+        padding: 9px 10px;
+        border: 1px solid rgba(112, 19, 27, .14);
+        border-radius: 8px;
+        background: #fff8f0;
+        color: #475569;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1.4;
+    }
     .health-bulk-request-student-field .health-filter-select-wrap,
     .health-bulk-request-student-filter-field .health-filter-select-wrap {
         width: 100%;
@@ -7575,6 +7586,13 @@
         border-radius: 8px;
         background: #111827;
         box-shadow: 0 18px 32px rgba(0, 0, 0, .42);
+    }
+    .health-bulk-request-category-wrap.is-open .health-filter-custom-menu {
+        position: relative;
+        top: auto;
+        right: auto;
+        left: auto;
+        margin-top: 8px;
     }
     .health-bulk-request-student-card .health-filter-custom-option {
         border: 1px solid rgba(148, 163, 184, .30);
@@ -7847,6 +7865,11 @@
     html[data-theme="dark"] .health-bulk-request-student-filter-field label {
         color: #94a3b8;
     }
+    html[data-theme="dark"] .health-bulk-request-saved-info-note {
+        border-color: rgba(250, 204, 21, .2);
+        background: #182334;
+        color: #cbd5e1;
+    }
     html[data-theme="dark"] .health-bulk-request-student-card .health-filter-custom-trigger,
     html[data-theme="dark"] .health-bulk-request-student-search,
     html[data-theme="dark"] .health-bulk-request-student-footer .health-bulk-request-modal-cancel {
@@ -7904,6 +7927,11 @@
     html[data-theme="light"] .health-bulk-request-student-field label,
     html[data-theme="light"] .health-bulk-request-student-filter-field label {
         color: #64748b;
+    }
+    html[data-theme="light"] .health-bulk-request-saved-info-note {
+        border-color: #f1d5bd;
+        background: #fff8f0;
+        color: #475569;
     }
     html[data-theme="light"] .health-bulk-request-student-step-number {
         border-color: #70131B;
@@ -9954,7 +9982,7 @@
                     </span>
                     <div>
                         <h2 class="health-bulk-request-modal-title" id="healthBulkRequestTitle">Request New Health Form</h2>
-                        <p class="health-bulk-request-modal-copy">Select approved {{ strtolower($bulkRequestRoleLabel) }} to request an updated health form.</p>
+                        <p class="health-bulk-request-modal-copy">{{ $bulkRequestIsStudent ? 'Select approved students to request an updated health form.' : 'Create a new pending Health Form cycle for approved employees.' }}</p>
                     </div>
                 </div>
                 <button type="button" class="health-bulk-request-modal-close" data-health-bulk-request-close aria-label="Close request new health form modal">
@@ -9972,7 +10000,7 @@
                             <span class="health-bulk-request-student-step-number">1</span>
                             <div>
                                 <h3>Request Purpose</h3>
-                                <p>Choose the purpose for the new health form request.</p>
+                                <p>Choose the purpose for the new Health Form cycle.</p>
                             </div>
                         </div>
                         <div class="health-bulk-request-student-field">
@@ -9986,6 +10014,9 @@
                                 </select>
                             </div>
                         </div>
+                        @unless($bulkRequestIsStudent)
+                            <p class="health-bulk-request-saved-info-note">Bulk requests use each employee's saved information. To edit details, open that employee's profile and select <strong>Update Health Information</strong>.</p>
+                        @endunless
                     </section>
 
                     <section class="health-bulk-request-student-step health-bulk-request-student-selection-step">
@@ -9993,7 +10024,7 @@
                             <span class="health-bulk-request-student-step-number">2</span>
                             <div>
                                 <h3>Select {{ $bulkRequestRoleLabel }}</h3>
-                                <p>Filter and choose which {{ strtolower($bulkRequestRoleLabel) }} should receive the new health form request.</p>
+                                <p>{{ $bulkRequestIsStudent ? 'Filter and choose which students should receive the new health form request.' : 'Filter and choose which approved employees should enter Pending Approval.' }}</p>
                             </div>
                         </div>
 
@@ -10090,7 +10121,7 @@
                         <div class="health-bulk-request-student-footer-actions">
                             <button type="button" class="health-bulk-request-modal-cancel" data-health-bulk-request-close>Cancel</button>
                             <button type="submit" class="health-bulk-request-modal-send" disabled>
-                                <span>Send Request</span>
+                                <span>{{ $bulkRequestIsStudent ? 'Send Request' : 'Create Pending Cycle' }}</span>
                                 <x-outline-icon name="arrow-long-right" />
                             </button>
                         </div>
@@ -10222,7 +10253,7 @@
                 staff: 'Employee Information',
                 admin: 'Admin Information',
                 dependent: 'Dependent Information',
-                guest: 'Dependent Information',
+                guest: 'Guest Information',
             };
             var title = document.getElementById('verifyApprovalModalTitle');
             var identityHeading = document.getElementById('verifyApprovalIdentityHeading');
@@ -10235,7 +10266,7 @@
                 staff: 'Employee Name',
                 admin: 'Admin Name',
                 dependent: 'Dependent Name',
-                guest: 'Dependent Name',
+                guest: 'Guest Name',
             };
 
             if (title) {
@@ -10913,7 +10944,9 @@
             event.preventDefault();
             healthBulkRequestCategory?.reportValidity();
             healthBulkRequestCategory?.closest('.health-filter-select-wrap')?.querySelector('.health-filter-custom-trigger')?.focus();
+            return;
         }
+
     });
 
     healthBulkRequestModal?.addEventListener('click', function (event) {

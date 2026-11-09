@@ -18,6 +18,16 @@ final class HealthRecordIdentityResolver
 
         $normalizedIdpRole = str_replace(['-', ' '], '_', $idpRole);
         $normalizedUserType = str_replace(['-', ' '], '_', $userType);
+        $healthFormCategory = strtolower(trim((string) ($record->health_form_category ?? '')));
+        if ($healthFormCategory === 'dependent'
+            || $normalizedUserType === 'dependent'
+            || in_array($normalizedIdpRole, ['dependent', 'dependents'], true)) {
+            return 'Dependent';
+        }
+        if ($healthFormCategory === 'guest') {
+            return 'Guest';
+        }
+
         if ($hasStudentNumber
             && (in_array($normalizedIdpRole, ['student', 'ojt', 'student_ojt'], true)
                 || in_array($normalizedUserType, ['student', 'ojt', 'student_ojt'], true)
@@ -47,7 +57,7 @@ final class HealthRecordIdentityResolver
         if ($user?->adminHubProfile) {
             return 'Admin';
         }
-        if (self::hasRole($userType . ' ' . $idpRole . ' ' . $userRole, ['dependent', 'guest'])) {
+        if (self::hasRole($userType . ' ' . $idpRole . ' ' . $userRole, ['guest'])) {
             return 'Guest';
         }
         if (in_array($recordSource, ['employee', 'staff'], true)) {

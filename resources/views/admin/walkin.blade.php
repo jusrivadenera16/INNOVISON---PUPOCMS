@@ -4937,6 +4937,10 @@
         font-weight: 900;
     }
 
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-dependent-lookup .applicant-ref-result::before {
+        content: "Dependent Information";
+    }
+
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-ref-result::after {
         content: attr(data-initials);
         position: absolute;
@@ -5756,6 +5760,221 @@
         font-weight: 700;
     }
 
+    .health-info-select-wrap {
+        position: relative;
+        width: 100%;
+    }
+
+    .health-info-native-select {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+    .health-info-select-trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        min-height: 40px;
+        padding: 9px 12px;
+        border: 1px solid rgba(148, 163, 184, 0.45);
+        border-radius: 9px;
+        background: #ffffff;
+        color: #111827;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+
+    .health-info-select-trigger:hover,
+    .health-info-select-wrap.is-open .health-info-select-trigger,
+    .health-info-select-trigger:focus-visible {
+        outline: none;
+        border-color: #801b2d;
+        box-shadow: 0 0 0 3px rgba(128, 27, 45, .10);
+    }
+
+    .health-info-select-trigger:disabled {
+        opacity: .6;
+        cursor: wait;
+    }
+
+    .health-info-select-chevron {
+        flex: 0 0 8px;
+        width: 8px;
+        height: 8px;
+        margin-right: 3px;
+        border-right: 2px solid #801b2d;
+        border-bottom: 2px solid #801b2d;
+        transform: translateY(-2px) rotate(45deg);
+        transition: transform .16s ease;
+    }
+
+    .health-info-select-wrap.is-open .health-info-select-chevron {
+        transform: translateY(2px) rotate(225deg);
+    }
+
+    .health-info-select-menu {
+        position: absolute;
+        z-index: 1200;
+        top: calc(100% + 7px);
+        left: 0;
+        right: 0;
+        display: none;
+        gap: 7px;
+        max-height: 230px;
+        overflow-y: auto;
+        padding: 9px;
+        border: 1px solid rgba(128, 27, 45, .14);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, .99);
+        box-shadow: 0 16px 32px rgba(15, 23, 42, .18);
+        scrollbar-width: thin;
+    }
+
+    .health-info-select-wrap.is-open .health-info-select-menu {
+        display: grid;
+    }
+
+    .health-info-select-option {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        width: 100%;
+        min-height: 36px;
+        padding: 8px 11px;
+        border: 1px solid rgba(148, 163, 184, .24);
+        border-radius: 8px;
+        background: #ffffff;
+        color: #70131b;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        text-align: left;
+        cursor: pointer;
+        transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .health-info-select-option.is-selected {
+        border-color: #801b2d;
+        background: linear-gradient(135deg, #801b2d, #70131b);
+        color: #ffffff;
+    }
+
+    .health-info-select-option::before {
+        position: absolute;
+        z-index: 0;
+        inset: 0;
+        content: '';
+        pointer-events: none;
+        background: linear-gradient(105deg, transparent 28%, rgba(255, 249, 190, .86) 50%, transparent 72%);
+        transform: translateX(-110%);
+    }
+
+    .health-info-select-option > span {
+        position: relative;
+        z-index: 1;
+    }
+
+    .health-info-select-option:hover,
+    .health-info-select-option:focus-visible {
+        border-color: #eab308;
+        background: #facc15;
+        color: #70131b;
+        box-shadow: 0 4px 12px rgba(234, 179, 8, .2);
+        outline: none;
+    }
+
+    .health-info-select-option:hover::before,
+    .health-info-select-option:focus-visible::before {
+        animation: healthInfoDropdownSweep .65s ease-out;
+    }
+
+    @keyframes healthInfoDropdownSweep {
+        from { transform: translateX(-110%); }
+        to { transform: translateX(110%); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .health-info-select-option,
+        .health-info-select-option::before {
+            animation: none !important;
+            transition: none !important;
+        }
+    }
+
+    .health-info-option-checkbox {
+        display: inline-flex;
+        flex: 0 0 17px;
+        align-items: center;
+        justify-content: center;
+        width: 17px;
+        height: 17px;
+        border: 1.5px solid #9ca3af;
+        border-radius: 4px;
+        background: #ffffff;
+        color: transparent;
+        font-size: 12px;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .health-info-select-option.is-selected .health-info-option-checkbox {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+    }
+
+    .health-info-select-option:hover .health-info-option-checkbox,
+    .health-info-select-option:focus-visible .health-info-option-checkbox {
+        border-color: #70131b;
+        background: #fff9be;
+        color: #70131b;
+    }
+
+    .health-info-select-option-label {
+        flex: 1 1 auto;
+    }
+
+    .health-info-select-wrap:not(.is-multiple) .health-info-select-menu {
+        max-height: 260px;
+    }
+
+    .health-info-select-search {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        width: 100%;
+        min-height: 36px;
+        padding: 7px 10px;
+        border: 1px solid rgba(148, 163, 184, .35);
+        border-radius: 8px;
+        background: #ffffff;
+        color: #111827;
+        font: inherit;
+        font-size: 12px;
+        outline: none;
+    }
+
+    .health-info-select-empty {
+        padding: 10px;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
     .health-info-field.is-hidden {
         display: none;
     }
@@ -6368,6 +6587,10 @@
         display: none !important;
     }
 
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-dependent-lookup .employee-physical-exam-template {
+        display: block !important;
+    }
+
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-student-lookup .employee-physical-assessment-panel {
         padding: 0 18px 18px;
         border-color: rgba(112, 19, 27, .2);
@@ -6546,6 +6769,10 @@
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .employee-physical-assessment-panel .applicant-vitals-grid {
         display: grid !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-dependent-lookup .employee-physical-assessment-panel .applicant-vitals-grid {
+        display: none !important;
     }
 
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col {
@@ -10052,6 +10279,51 @@
         color: #f8fafc !important;
     }
 
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-select-trigger,
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-select-search {
+        border-color: rgba(148, 163, 184, .26) !important;
+        background: #1e293b !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-select-menu {
+        border-color: rgba(250, 204, 21, .16) !important;
+        background: rgba(15, 23, 42, .99) !important;
+        box-shadow: 0 20px 36px rgba(0, 0, 0, .42) !important;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-select-option {
+        border-color: rgba(148, 163, 184, .2) !important;
+        background: #1e293b !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-select-option.is-selected {
+        border-color: #801b2d !important;
+        background: linear-gradient(135deg, #801b2d, #70131b) !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-select-option:hover,
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-select-option:focus-visible {
+        border-color: #eab308 !important;
+        background: #facc15 !important;
+        color: #70131b !important;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-option-checkbox {
+        border-color: #94a3b8;
+        background: #0f172a;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-select-option.is-selected .health-info-option-checkbox,
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-select-option:hover .health-info-option-checkbox,
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-select-option:focus-visible .health-info-option-checkbox {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+    }
+
     html[data-theme="dark"] #applicantHealthInfoModal .health-info-vaccine-dose strong {
         color: #fde68a !important;
     }
@@ -11323,8 +11595,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h9" />
                         </svg>
                     </span>
-                    <h3 class="intake-option-title">Employee's, Students and Dependents</h3>
-                    <p class="intake-option-copy">Search an employee, student, or dependent ID to look up record.</p>
+                    <h3 class="intake-option-title">Employees, Students, and Dependents</h3>
+                    <p class="intake-option-copy">Search an employee, student, or dependent ID to look up a record.</p>
                 </div>
             </a>
             @endif
@@ -11412,7 +11684,7 @@
                             <span class="applicant-workflow-icon"><x-outline-icon name="document-clock" /></span>
                             <span class="applicant-workflow-copy">
                                 <strong>Saved Drafts</strong>
-                                <small>View and resume unfinished employee, student or dependent forms.</small>
+                                <small>View and resume unfinished employee, student, guest, or dependent forms.</small>
                             </span>
                             <span class="applicant-workflow-arrow"><x-outline-icon name="arrow-long-right" /></span>
                         </button>
@@ -14404,6 +14676,7 @@
         const saveStudentAssessmentUrl = '{{ url($basePrefix . '/walkin/student-assessment') }}';
         const applicantFinalReviewDraftUrl = '{{ url($basePrefix . '/walkin/applicant-final-review-draft') }}';
         const healthInfoUpdateBaseUrl = '{{ url($basePrefix . '/walkin/health-profile-information') }}';
+        const employeeHealthInfoUpdateBaseUrl = '{{ url($basePrefix . '/walkin/employee-health-profile-information') }}';
         const healthInfoTabs = document.getElementById('healthInfoTabs');
         const healthInfoFields = document.getElementById('healthInfoFields');
         const healthInfoSectionTitle = document.getElementById('healthInfoSectionTitle');
@@ -14419,7 +14692,11 @@
         }
 
         function isStudentLookupResult() {
-            return currentRecordType === 'student' || currentRecordType === 'dependent';
+            return ['student', 'dependent', 'guest'].includes(currentRecordType);
+        }
+
+        function isEmployeeAssessmentRecord() {
+            return isClinicLookupMode() && ['employee', 'dependent'].includes(currentRecordType);
         }
 
         function isEncodeWorkflow() {
@@ -14709,7 +14986,7 @@
             if (modalShell) {
                 modalShell.classList.toggle('is-employee-lookup', isClinicLookupMode());
                 modalShell.classList.toggle('is-applicant-lookup', !isClinicLookupMode());
-                modalShell.classList.remove('is-student-lookup');
+                modalShell.classList.remove('is-student-lookup', 'is-dependent-lookup');
                 if (isClinicLookupMode()) {
                     modalShell.classList.remove('is-encode-workflow', 'is-final-review-workflow', 'is-final-review-toolbar-stuck');
                 }
@@ -15158,7 +15435,7 @@
             resetLookupButtonToFind();
 
             if (modalShell) {
-                modalShell.classList.remove('is-final-review-toolbar-stuck', 'is-student-lookup');
+                modalShell.classList.remove('is-final-review-toolbar-stuck', 'is-student-lookup', 'is-dependent-lookup');
             }
             if (applicantFileActions) {
                 delete applicantFileActions.dataset.stickyOriginTop;
@@ -15404,6 +15681,52 @@
             syncFindingsReviewFields();
             syncCovidPositiveFields();
             validateVitals();
+        }
+
+        function normalizeDependentExamOption(value) {
+            const token = String(value ?? '')
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '_')
+                .replace(/^_+|_+$/g, '');
+            return ({
+                w_o_glasses: 'without_glasses',
+                w_glasses: 'with_glasses',
+                n_a: 'na'
+            })[token] || token;
+        }
+
+        function populateDependentAssessment(data) {
+            const saved = data && typeof data === 'object' ? data : {};
+            const fitStatus = String(saved.employee_exam_fit || '').trim();
+            const fitOtherMatch = fitStatus.match(/^Others:\s*(.*)$/i);
+            const values = { ...saved };
+            if (fitOtherMatch) {
+                values.employee_exam_fit = 'Others';
+                values.employee_exam_fit_other = fitOtherMatch[1];
+            }
+
+            Object.entries(values).forEach(([name, value]) => {
+                const fields = Array.from(document.querySelectorAll(`[name="${name}"]`));
+                if (!fields.length) return;
+
+                const selectedValues = Array.isArray(value) ? value : [value];
+                fields.forEach((field) => {
+                    if (field.type === 'checkbox' || field.type === 'radio') {
+                        field.checked = selectedValues.some((item) =>
+                            normalizeDependentExamOption(item) === normalizeDependentExamOption(field.value)
+                        );
+                    } else if (field.tagName === 'SELECT') {
+                        field.value = String(value ?? '');
+                    } else {
+                        field.value = value ? String(value).slice(0, 10) : '';
+                    }
+                });
+            });
+
+            document.getElementById('employeeExamFit')?.dispatchEvent(new Event('change', { bubbles: true }));
+            updateEmployeeBmi();
+            updateEmployeeExamValidation();
         }
 
         function populateEmployeeDraft(draft) {
@@ -16022,8 +16345,62 @@
             }
         ];
 
+        const employeeHealthInfoSections = [
+            {
+                key: 'personal_information', title: 'Personal Information', icon: 'PI', fields: [
+                    ['full_name', 'Full Name', 'readonly', 'root'],
+                    ['birthday', 'Date of Birth', 'date'],
+                    ['sex', 'Sex', 'select', null, { options: ['Male', 'Female'] }],
+                    ['civil_status', 'Civil Status', 'select', null, { options: ['Single', 'Married', 'Widowed', 'Separated'] }],
+                    ['contact_no', 'Contact Number'],
+                    ['office', 'Office'],
+                ]
+            },
+            {
+                key: 'address_information', title: 'Address Information', icon: 'AD', fields: [
+                    ['street', 'Street'],
+                    ['province', 'Province', 'psgc_select', null, { placeholder: 'Select province' }],
+                    ['municipality', 'City / Municipality', 'psgc_select', null, { placeholder: 'Select city or municipality' }],
+                    ['barangay', 'Barangay', 'psgc_select', null, { placeholder: 'Select barangay' }],
+                ]
+            },
+            {
+                key: 'emergency_contact', title: 'Emergency Contact', icon: 'EC', fields: [
+                    ['emergency_contact_person', 'Emergency Contact Person'],
+                    ['emergency_contact_no', 'Emergency Contact Number'],
+                ]
+            },
+            {
+                key: 'medical_history', title: 'Medical & Family History', icon: 'MH', fields: [
+                    ['past_medical_history', 'Past Medical History', 'multi_select', null, { options: ['Asthma', 'Heart Disease', 'Seizure Disorder', 'Others', 'Chicken Pox', 'Measles', 'Hypertension'], placeholder: 'Select applicable conditions' }],
+                    ['past_medical_history_others', 'Other Medical History', 'textarea', null, { dependsOnMultiSelect: ['past_medical_history', 'Others'] }],
+                    ['family_history', 'Family History', 'multi_select', null, { options: ['Diabetes', 'PTB', 'Hypertension', 'Cancer'], placeholder: 'Select family history' }],
+                    ['family_history_others', 'Other Family History', 'textarea'],
+                    ['has_disability', 'Has Disability', 'select', null, { options: healthInfoYesNoOptions }],
+                    ['disability_type', 'Disability Type', 'textarea', null, { dependsOn: ['has_disability', 'Yes'] }],
+                ]
+            },
+            {
+                key: 'hospitalization_surgery', title: 'Hospitalization & Surgery', icon: 'HS', fields: [
+                    ['previous_hospitalization', 'Previous Hospitalization', 'select', null, { options: healthInfoYesNoOptions }],
+                    ['previous_hospitalization_details', 'Hospitalization Details', 'textarea', null, { dependsOn: ['previous_hospitalization', 'Yes'] }],
+                    ['operation_surgery', 'Previous Operation / Surgery', 'select', null, { options: healthInfoYesNoOptions }],
+                    ['operation_surgery_details', 'Operation / Surgery Details', 'textarea', null, { dependsOn: ['operation_surgery', 'Yes'] }],
+                ]
+            },
+            {
+                key: 'medications_lifestyle', title: 'Medications, Allergies & Lifestyle', icon: 'ML', fields: [
+                    ['current_medications', 'Current Medications', 'textarea'],
+                    ['allergies', 'Allergies', 'textarea'],
+                    ['cigarette_smoking', 'Cigarette Smoking', 'select', null, { options: healthInfoYesNoOptions }],
+                    ['alcohol_drinking', 'Alcohol Drinking', 'select', null, { options: healthInfoYesNoOptions }],
+                    ['traveled_abroad', 'Traveled Abroad', 'select', null, { options: healthInfoYesNoOptions }],
+                ]
+            },
+        ];
+
         function activeHealthInfoSections() {
-            return healthInfoSections;
+            return currentRecordType === 'employee' ? employeeHealthInfoSections : healthInfoSections;
         }
 
         function getHealthInfoFieldValue(sectionKey, fieldKey, sourceType) {
@@ -16048,7 +16425,9 @@
                     );
             }
 
-            return currentHealthInfoData?.[sectionKey]?.[fieldKey] ?? '';
+            const value = currentHealthInfoData?.[sectionKey]?.[fieldKey] ?? '';
+            if (Array.isArray(value)) return value.join(', ');
+            return value;
         }
 
         function normalizeHealthInfoValue(value) {
@@ -16101,6 +16480,13 @@
                 if (!checkedValues.includes(expectedValue)) return false;
             }
 
+            if (config.dependsOnMultiSelect) {
+                const [multiSelectKey, expectedValue] = config.dependsOnMultiSelect;
+                const selectedValues = Array.from(healthInfoFields?.querySelector(`[data-health-field="${multiSelectKey}"]`)?.selectedOptions || [])
+                    .map(option => option.value);
+                if (!selectedValues.includes(expectedValue)) return false;
+            }
+
             if (['has_food_allergies', 'food_allergies', 'has_medicine_allergies', 'medicine_allergies', 'other_med_allergies'].includes(fieldKey)) {
                 const noAllergies = healthInfoFields?.querySelector('[data-health-field="no_allergies"]');
                 if (noAllergies?.checked) return false;
@@ -16121,6 +16507,298 @@
             ].join('');
         }
 
+        function renderHealthInfoDropdown(fieldKey, label, options, selectedValue, placeholder, isPsgc = false) {
+            let optionMarkup = options.map(function (option) {
+                const value = typeof option === 'string' ? option : option.value;
+                const text = typeof option === 'string' ? option : option.label;
+                return `<option value="${escapeApplicantHtml(value)}" ${normalizeHealthInfoValue(value) === normalizeHealthInfoValue(selectedValue) ? 'selected' : ''}>${escapeApplicantHtml(text)}</option>`;
+            }).join('');
+            if (isPsgc && selectedValue && !options.some(option => normalizeHealthInfoValue(typeof option === 'string' ? option : option.value) === normalizeHealthInfoValue(selectedValue))) {
+                optionMarkup += `<option value="${escapeApplicantHtml(selectedValue)}" selected>${escapeApplicantHtml(selectedValue)} (existing value)</option>`;
+            }
+            const selectedLabel = options.map(option => typeof option === 'string' ? option : option.label)
+                .find((text, index) => normalizeHealthInfoValue(typeof options[index] === 'string' ? options[index] : options[index].value) === normalizeHealthInfoValue(selectedValue))
+                || selectedValue
+                || placeholder;
+            const psgcAttr = isPsgc ? ` data-health-address-level="${escapeApplicantHtml(fieldKey)}"` : '';
+
+            return `
+                <div class="health-info-select-wrap" data-health-select-wrap="${escapeApplicantHtml(fieldKey)}">
+                    <select class="health-info-native-select" data-health-field="${escapeApplicantHtml(fieldKey)}" data-health-select-placeholder="${escapeApplicantHtml(placeholder)}"${psgcAttr} aria-hidden="true" tabindex="-1">
+                        <option value="">${escapeApplicantHtml(placeholder)}</option>${optionMarkup}
+                    </select>
+                    <button type="button" class="health-info-select-trigger" data-health-select-trigger aria-haspopup="listbox" aria-expanded="false">
+                        <span data-health-select-label>${escapeApplicantHtml(selectedLabel)}</span><span class="health-info-select-chevron" aria-hidden="true"></span>
+                    </button>
+                    <div class="health-info-select-menu" role="listbox" aria-label="${escapeApplicantHtml(label)} options"></div>
+                </div>
+            `;
+        }
+
+        function renderHealthInfoMultiDropdown(fieldKey, label, options, selectedValues, placeholder) {
+            const selected = new Set((selectedValues || []).map(String));
+            const optionMarkup = options.map(option => {
+                const value = typeof option === 'string' ? option : option.value;
+                const text = typeof option === 'string' ? option : option.label;
+                return `<option value="${escapeApplicantHtml(value)}" ${selected.has(String(value)) ? 'selected' : ''}>${escapeApplicantHtml(text)}</option>`;
+            }).join('');
+            return `
+                <div class="health-info-select-wrap is-multiple" data-health-select-wrap="${escapeApplicantHtml(fieldKey)}">
+                    <select class="health-info-native-select" data-health-field="${escapeApplicantHtml(fieldKey)}" data-health-select-placeholder="${escapeApplicantHtml(placeholder)}" multiple aria-hidden="true" tabindex="-1">
+                        ${optionMarkup}
+                    </select>
+                    <button type="button" class="health-info-select-trigger" data-health-select-trigger aria-haspopup="listbox" aria-expanded="false">
+                        <span data-health-select-label>${selected.size ? `${selected.size} selected` : escapeApplicantHtml(placeholder)}</span><span class="health-info-select-chevron" aria-hidden="true"></span>
+                    </button>
+                    <div class="health-info-select-menu" role="listbox" aria-label="${escapeApplicantHtml(label)} options" aria-multiselectable="true"></div>
+                </div>
+            `;
+        }
+
+        function syncHealthInfoDropdown(select) {
+            const wrap = select?.closest('.health-info-select-wrap');
+            if (!wrap) return;
+            const label = wrap.querySelector('[data-health-select-label]');
+            const menu = wrap.querySelector('.health-info-select-menu');
+            const trigger = wrap.querySelector('[data-health-select-trigger]');
+            const isMultiple = select.multiple;
+            const selectedOptions = Array.from(select.selectedOptions || []).filter(option => option.value !== '');
+            if (label) {
+                label.textContent = isMultiple
+                    ? (selectedOptions.length ? `${selectedOptions.length} selected` : (select.dataset.placeholder || 'Select options'))
+                    : (select.selectedOptions[0]?.textContent || select.options[0]?.textContent || 'Select');
+            }
+            if (trigger) trigger.disabled = Boolean(select.disabled);
+            if (!menu) return;
+            menu.innerHTML = Array.from(select.options)
+                .filter(option => option.value !== '')
+                .map(option => {
+                    const selected = option.selected;
+                    const checkbox = isMultiple
+                        ? `<span class="health-info-option-checkbox" aria-hidden="true">${selected ? '&#10003;' : ''}</span>`
+                        : '';
+                    const selectedMark = !isMultiple && selected
+                        ? '<span class="health-info-select-check" aria-hidden="true">&#10003;</span>'
+                        : '';
+                    return `<button type="button" class="health-info-select-option${isMultiple ? ' is-multiple-option' : ''}${selected ? ' is-selected' : ''}" role="option" aria-selected="${selected ? 'true' : 'false'}" data-health-option-value="${escapeApplicantHtml(option.value)}">${checkbox}<span class="health-info-select-option-label">${escapeApplicantHtml(option.textContent)}</span>${selectedMark}</button>`;
+                }).join('') || `<div class="health-info-select-empty">No options available.</div>`;
+            if (select.hasAttribute('data-health-address-level')) {
+                const search = document.createElement('input');
+                search.type = 'search';
+                search.className = 'health-info-select-search';
+                search.placeholder = `Search ${select.dataset.healthAddressLevel}...`;
+                search.setAttribute('aria-label', `Search ${select.dataset.healthAddressLevel} options`);
+                search.addEventListener('input', function () {
+                    const query = search.value.trim().toLocaleLowerCase();
+                    menu.querySelectorAll('[data-health-option-value]').forEach(option => {
+                        option.hidden = !option.textContent.trim().toLocaleLowerCase().includes(query);
+                    });
+                });
+                menu.prepend(search);
+            }
+        }
+
+        function initializeHealthInfoDropdowns() {
+            if (!healthInfoFields) return;
+            healthInfoFields.querySelectorAll('.health-info-select-wrap').forEach(function (wrap) {
+                const select = wrap.querySelector('.health-info-native-select');
+                const trigger = wrap.querySelector('[data-health-select-trigger]');
+                const menu = wrap.querySelector('.health-info-select-menu');
+                if (!select || !trigger || !menu) return;
+                select.dataset.placeholder = select.dataset.healthSelectPlaceholder || trigger.querySelector('[data-health-select-label]')?.textContent || 'Select';
+                syncHealthInfoDropdown(select);
+                trigger.addEventListener('click', function () {
+                    const opening = !wrap.classList.contains('is-open');
+                    healthInfoFields.querySelectorAll('.health-info-select-wrap.is-open').forEach(item => {
+                        item.classList.remove('is-open');
+                        item.querySelector('[data-health-select-trigger]')?.setAttribute('aria-expanded', 'false');
+                    });
+                    wrap.classList.toggle('is-open', opening);
+                    trigger.setAttribute('aria-expanded', opening ? 'true' : 'false');
+                });
+                menu.addEventListener('click', function (event) {
+                    const optionButton = event.target.closest('[data-health-option-value]');
+                    if (!optionButton) return;
+                    const option = Array.from(select.options).find(item => item.value === optionButton.dataset.healthOptionValue);
+                    if (!option || select.disabled) return;
+                    if (select.multiple) {
+                        option.selected = !option.selected;
+                    } else {
+                        select.value = option.value;
+                        wrap.classList.remove('is-open');
+                        trigger.setAttribute('aria-expanded', 'false');
+                    }
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                    syncHealthInfoDropdown(select);
+                });
+            });
+
+            if (!window.__walkinHealthInfoDropdownOutsideClick) {
+                window.__walkinHealthInfoDropdownOutsideClick = true;
+                document.addEventListener('click', function (event) {
+                    if (event.target.closest('.health-info-select-wrap')) return;
+                    healthInfoFields?.querySelectorAll('.health-info-select-wrap.is-open').forEach(item => {
+                        item.classList.remove('is-open');
+                        item.querySelector('[data-health-select-trigger]')?.setAttribute('aria-expanded', 'false');
+                    });
+                });
+            }
+        }
+
+        const healthInfoPsgcApiBase = 'https://psgc.gitlab.io/api';
+        const healthInfoAddressPlaceholder = {
+            province: 'Select province',
+            municipality: 'Select city or municipality',
+            barangay: 'Select barangay',
+        };
+
+        function normalizeHealthInfoAddressName(value) {
+            return String(value || '').trim().toLowerCase()
+                .replace(/^(city|municipality)\s+of\s+/, '')
+                .replace(/^(city|municipality)\s+/, '')
+                .replace(/\s+(city|municipality)$/, '')
+                .replace(/^(brgy\.?|barangay)\s+/, '')
+                .replace(/[^a-z0-9]+/g, ' ').trim();
+        }
+
+        function formatHealthInfoAddressName(value, level) {
+            const label = String(value || '').trim();
+            if (level !== 'municipality') return label;
+            const city = label.match(/^City of\s+(.+)$/i);
+            if (city) return `${city[1].trim()} City`;
+            const municipality = label.match(/^Municipality of\s+(.+)$/i);
+            return municipality ? `${municipality[1].trim()} Municipality` : label;
+        }
+
+        async function fetchHealthInfoPsgcCollection(path) {
+            const controller = new AbortController();
+            const timeout = window.setTimeout(() => controller.abort(), 10000);
+            try {
+                const response = await fetch(`${healthInfoPsgcApiBase}${path}`, {
+                    headers: { Accept: 'application/json' },
+                    credentials: 'omit',
+                    signal: controller.signal,
+                });
+                if (!response.ok) throw new Error(`Location lookup failed (${response.status}).`);
+                const payload = await response.json();
+                return Array.isArray(payload) ? payload : (Array.isArray(payload.value) ? payload.value : []);
+            } finally {
+                window.clearTimeout(timeout);
+            }
+        }
+
+        function setHealthInfoPsgcOptions(level, items, selectedValue = '') {
+            const select = healthInfoFields?.querySelector(`[data-health-address-level="${level}"]`);
+            if (!select) return null;
+            const selected = String(selectedValue || '').trim();
+            const formatLevel = level === 'municipality' ? 'municipality' : level;
+            const sorted = [...items].sort((left, right) => formatHealthInfoAddressName(left.name, formatLevel).localeCompare(
+                formatHealthInfoAddressName(right.name, formatLevel), undefined, { sensitivity: 'base' }
+            ));
+            const match = sorted.find(item => normalizeHealthInfoAddressName(item.name) === normalizeHealthInfoAddressName(selected));
+            select.replaceChildren(new Option(healthInfoAddressPlaceholder[level], ''));
+            sorted.forEach(item => {
+                const name = formatHealthInfoAddressName(item.name, formatLevel);
+                if (!name) return;
+                const option = new Option(name, name);
+                if (item.code) option.dataset.locationCode = item.code;
+                select.add(option);
+            });
+            const resolved = match ? formatHealthInfoAddressName(match.name, formatLevel) : selected;
+            if (resolved && !Array.from(select.options).some(option => option.value === resolved)) {
+                select.add(new Option(`${resolved} (existing value)`, resolved));
+            }
+            select.value = resolved;
+            syncHealthInfoDropdown(select);
+            return match;
+        }
+
+        function setHealthInfoAddressBusy(level, busy) {
+            const select = healthInfoFields?.querySelector(`[data-health-address-level="${level}"]`);
+            if (!select) return;
+            select.disabled = busy;
+            const trigger = select.closest('.health-info-select-wrap')?.querySelector('[data-health-select-trigger]');
+            if (trigger) trigger.disabled = busy;
+            syncHealthInfoDropdown(select);
+        }
+
+        async function loadHealthInfoAddressBarangays(cityCode, selectedBarangay = '') {
+            setHealthInfoAddressBusy('barangay', true);
+            setHealthInfoPsgcOptions('barangay', [], selectedBarangay);
+            if (!cityCode) {
+                setHealthInfoAddressBusy('barangay', false);
+                return;
+            }
+            const barangays = await fetchHealthInfoPsgcCollection(`/cities-municipalities/${encodeURIComponent(cityCode)}/barangays/`);
+            setHealthInfoPsgcOptions('barangay', barangays, selectedBarangay);
+            setHealthInfoAddressBusy('barangay', false);
+        }
+
+        async function loadHealthInfoAddressCities(provinceCode, selectedMunicipality = '', selectedBarangay = '') {
+            setHealthInfoAddressBusy('municipality', true);
+            setHealthInfoAddressBusy('barangay', true);
+            setHealthInfoPsgcOptions('municipality', [], selectedMunicipality);
+            setHealthInfoPsgcOptions('barangay', [], selectedBarangay);
+            if (!provinceCode) {
+                setHealthInfoAddressBusy('municipality', false);
+                setHealthInfoAddressBusy('barangay', false);
+                return;
+            }
+            const endpoint = provinceCode === '130000000'
+                ? '/regions/130000000/cities-municipalities/'
+                : `/provinces/${encodeURIComponent(provinceCode)}/cities-municipalities/`;
+            const cities = await fetchHealthInfoPsgcCollection(endpoint);
+            const selectedMatch = setHealthInfoPsgcOptions('municipality', cities, selectedMunicipality);
+            setHealthInfoAddressBusy('municipality', false);
+            await loadHealthInfoAddressBarangays(selectedMatch?.code || healthInfoFields?.querySelector('[data-health-address-level="municipality"]')?.selectedOptions[0]?.dataset.locationCode || '', selectedBarangay);
+        }
+
+        async function initializeEmployeeAddressDropdowns() {
+            const addressData = currentHealthInfoData?.address_information || {};
+            const provinceSelect = healthInfoFields?.querySelector('[data-health-address-level="province"]');
+            const municipalitySelect = healthInfoFields?.querySelector('[data-health-address-level="municipality"]');
+            const barangaySelect = healthInfoFields?.querySelector('[data-health-address-level="barangay"]');
+            if (!provinceSelect || !municipalitySelect || !barangaySelect || provinceSelect.dataset.psgcReady === 'true') return;
+            provinceSelect.dataset.psgcReady = 'true';
+
+            provinceSelect.addEventListener('change', async function () {
+                municipalitySelect.value = '';
+                barangaySelect.value = '';
+                setHealthInfoAddressBusy('municipality', true);
+                setHealthInfoAddressBusy('barangay', true);
+                try {
+                    await loadHealthInfoAddressCities(provinceSelect.selectedOptions[0]?.dataset.locationCode || '');
+                } catch (error) {
+                    setHealthInfoAddressBusy('municipality', false);
+                    setHealthInfoAddressBusy('barangay', false);
+                    setStatus('error', 'City and barangay options could not be loaded. Please try again.');
+                }
+            });
+            municipalitySelect.addEventListener('change', async function () {
+                try {
+                    await loadHealthInfoAddressBarangays(municipalitySelect.selectedOptions[0]?.dataset.locationCode || '');
+                } catch (error) {
+                    setHealthInfoAddressBusy('barangay', false);
+                    setStatus('error', 'Barangay options could not be loaded. Please try again.');
+                }
+            });
+
+            try {
+                setHealthInfoAddressBusy('province', true);
+                const provinces = [{ code: '130000000', name: 'Metro Manila' }, ...(await fetchHealthInfoPsgcCollection('/provinces/'))];
+                const provinceMatch = setHealthInfoPsgcOptions('province', provinces, addressData.province || '');
+                setHealthInfoAddressBusy('province', false);
+                await loadHealthInfoAddressCities(
+                    provinceMatch?.code || provinceSelect.selectedOptions[0]?.dataset.locationCode || '',
+                    addressData.municipality || '',
+                    addressData.barangay || ''
+                );
+            } catch (error) {
+                ['province', 'municipality', 'barangay'].forEach(level => setHealthInfoAddressBusy(level, false));
+                setStatus('error', 'Address options are unavailable. Existing saved values are preserved.');
+            }
+        }
+
         function renderHealthInfoInput(section, fieldKey, label, type, sourceType, config = {}) {
             const rawValue = getHealthInfoFieldValue(section.key, fieldKey, sourceType);
             const value = rawValue === true ? 'Yes' : (rawValue === false ? 'No' : String(rawValue ?? ''));
@@ -16129,7 +16807,7 @@
             const hiddenClass = isHealthInfoFieldVisible(section, [fieldKey, label, type, sourceType, config]) ? '' : ' is-hidden';
             const wrapperStart = `<div class="health-info-field${hiddenClass}" data-health-field-wrap="${escapeApplicantHtml(fieldKey)}">`;
 
-            if (type === 'textarea') {
+            if (type === 'textarea' || type === 'json_list_textarea') {
                 return `
                     ${wrapperStart}
                         <label for="${fieldId}">${escapeApplicantHtml(label)}</label>
@@ -16151,12 +16829,42 @@
             }
 
             if (type === 'select' || type === 'virtual_select') {
+                if (currentRecordType === 'employee') {
+                    return `
+                        ${wrapperStart}
+                            <label>${escapeApplicantHtml(label)}</label>
+                            ${renderHealthInfoDropdown(fieldKey, label, config.options || [], value, config.placeholder || ('Select ' + label.toLowerCase()))}
+                        </div>
+                    `;
+                }
                 return `
                     ${wrapperStart}
                         <label for="${fieldId}">${escapeApplicantHtml(label)}</label>
                         <select class="health-info-input" id="${fieldId}" data-health-field="${escapeApplicantHtml(fieldKey)}">
                             ${healthInfoOptionsMarkup(config.options || [], value, 'Select ' + label.toLowerCase())}
                         </select>
+                    </div>
+                `;
+            }
+
+            if (type === 'multi_select') {
+                const selectedItems = Array.isArray(currentHealthInfoData?.[section.key]?.[fieldKey])
+                    ? currentHealthInfoData[section.key][fieldKey].map(String)
+                    : String(rawValue || '').split(',').map(item => item.trim()).filter(Boolean);
+                return `
+                    ${wrapperStart}
+                        <label>${escapeApplicantHtml(label)}</label>
+                        ${renderHealthInfoMultiDropdown(fieldKey, label, config.options || [], selectedItems, config.placeholder || ('Select ' + label.toLowerCase()))}
+                    </div>
+                `;
+            }
+
+            if (type === 'psgc_select') {
+                const placeholder = config.placeholder || ('Select ' + label.toLowerCase());
+                return `
+                    ${wrapperStart}
+                        <label>${escapeApplicantHtml(label)}</label>
+                        ${renderHealthInfoDropdown(fieldKey, label, [], value, placeholder, true)}
                     </div>
                 `;
             }
@@ -16293,6 +17001,11 @@
                 `;
             }).join('');
 
+            initializeHealthInfoDropdowns();
+            if (isHealthInfoEditing && currentRecordType === 'employee' && section.key === 'address_information') {
+                initializeEmployeeAddressDropdowns();
+            }
+
             refreshHealthInfoConditionalVisibility();
             syncHealthInfoCourseFields();
         }
@@ -16338,7 +17051,7 @@
         function collectHealthInfoFields() {
             const payload = {};
 
-            healthInfoSections.forEach(function (section) {
+            activeHealthInfoSections().forEach(function (section) {
                 section.fields.forEach(function ([fieldKey, , type, sourceType]) {
                     if (type === 'readonly' || sourceType === 'root') return;
 
@@ -16372,6 +17085,15 @@
                         return;
                     }
 
+                    if (type === 'multi_select') {
+                        const field = healthInfoFields?.querySelector(`[data-health-field="${fieldKey}"]`);
+                        const values = field
+                            ? Array.from(field.selectedOptions).map(option => option.value)
+                            : (currentHealthInfoData?.[section.key]?.[fieldKey] || []);
+                        payload[fieldKey] = JSON.stringify(Array.isArray(values) ? values : []);
+                        return;
+                    }
+
                     if (type === 'vaccine_history') {
                         const doseInputs = Array.from(healthInfoFields?.querySelectorAll('[data-health-vaccine-dose]') || []);
                         if (!doseInputs.length) {
@@ -16387,6 +17109,16 @@
                             }
                         });
                         payload.vaccine_history = vaccineHistory;
+                        return;
+                    }
+
+                    if (type === 'json_list_textarea') {
+                        const field = healthInfoFields?.querySelector(`[data-health-field="${fieldKey}"]`);
+                        const value = field ? field.value : currentHealthInfoData?.[section.key]?.[fieldKey];
+                        const values = Array.isArray(value)
+                            ? value
+                            : String(value || '').split(/[\n,]+/).map(item => item.trim()).filter(Boolean);
+                        payload[fieldKey] = JSON.stringify(values);
                         return;
                     }
 
@@ -16440,15 +17172,18 @@
             if (healthInfoSaveBtn) healthInfoSaveBtn.disabled = true;
             setStatus('info', 'Saving health form information...');
 
-            fetch(`${healthInfoUpdateBaseUrl}/${profileId}`, {
-                method: 'POST',
+            const isEmployeeRecord = currentRecordType === 'employee';
+            const updates = collectHealthInfoFields();
+
+            fetch(`${isEmployeeRecord ? employeeHealthInfoUpdateBaseUrl : healthInfoUpdateBaseUrl}/${profileId}`, {
+                method: isEmployeeRecord ? 'PUT' : 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
-                body: JSON.stringify(collectHealthInfoFields())
+                body: JSON.stringify(isEmployeeRecord ? { medical_information: updates } : updates)
             })
             .then(response => response.json())
             .then(data => {
@@ -16456,6 +17191,19 @@
                     throw new Error(data.message || 'Unable to update health form information.');
                 }
                 currentHealthInfoData = data.health_form_information || currentHealthInfoData;
+                if (isEmployeeRecord && !data.health_form_information) {
+                    activeHealthInfoSections().forEach(function (section) {
+                        section.fields.forEach(function ([fieldKey]) {
+                            if (Object.prototype.hasOwnProperty.call(updates, fieldKey)) {
+                                currentHealthInfoData[section.key] = currentHealthInfoData[section.key] || {};
+                                const value = updates[fieldKey];
+                                currentHealthInfoData[section.key][fieldKey] = ['past_medical_history', 'family_history'].includes(fieldKey)
+                                    ? JSON.parse(value || '[]')
+                                    : value;
+                            }
+                        });
+                    });
+                }
                 setHealthInfoEditing(false);
                 setStatus('success', data.message || 'Health form information updated.');
             })
@@ -16538,6 +17286,10 @@
             if (modalShell) {
                 modalShell.classList.add('has-lookup-result');
                 modalShell.classList.toggle('is-student-lookup', isStudentRecord);
+                modalShell.classList.toggle('is-dependent-lookup', currentRecordType === 'dependent');
+            }
+            if (currentRecordType === 'dependent') {
+                populateDependentAssessment(data.dependent_assessment_data || {});
             }
             renderDocuments(data.documents);
             if (informationButton) {
@@ -16605,7 +17357,9 @@
             if (physicalExamTitle) {
                 physicalExamTitle.textContent = currentRecordType === 'dependent'
                     ? 'Dependent Assessment'
-                    : (isStudentRecord ? 'Student/OJT Assessment' : 'PHYSICAL EXAMINATION');
+                    : (currentRecordType === 'guest'
+                    ? 'Guest Assessment'
+                    : (isStudentRecord ? 'Student/OJT Assessment' : 'PHYSICAL EXAMINATION'));
             }
 
             populateAssessmentReview(currentAssessmentReview);
@@ -16810,7 +17564,8 @@
                         || data.approved === 1;
 
                     const isDependentRecord = data.record_type === 'dependent';
-                    const isStudentRecord = data.record_type === 'student' || isDependentRecord;
+                    const isGuestRecord = data.record_type === 'guest';
+                    const isStudentRecord = data.record_type === 'student' || isDependentRecord || isGuestRecord;
                     const isLocalHealthProfile = data.lookup_source === 'local_health_profile';
                     const isLocalSisReference = data.lookup_source === 'local_sis_reference';
                     const isLocalEmployeeReference = ['local_employee_reference', 'local_clinic_reference'].includes(data.lookup_source);
@@ -16844,13 +17599,15 @@
                         return;
                     }
 
-                    const lookupFoundMessage = isLocalHealthProfile
+                    const lookupFoundMessage = isGuestRecord
+                        ? (applicantName ? 'Guest patient record found: ' + applicantName + '.' : 'Guest patient record found.')
+                        : (isLocalHealthProfile
                         ? (data.sync_warning || 'Local health profile found. PUPTAS sync will still depend on a valid Admission reference.')
                         : (isStudentRecord
                             ? (applicantName ? 'Student/OJT health profile found: ' + applicantName + '.' : 'Student/OJT health profile found.')
                             : (isClinicLookupMode()
                                 ? (applicantName ? "Employee's record found: " + applicantName + '.' : "Employee's record found.")
-                                : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.')));
+                                : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.'))));
 
                     if (isAlreadyApproved && !isStudentRecord) {
                         showLookupDetails(data, ref);
@@ -16892,7 +17649,7 @@
                         isApprovalMode = !isEncodeWorkflow() && canSubmitDecision;
                         if (findBtn) {
                             findBtn.textContent = isStudentRecord
-                                ? 'Save Student Assessment'
+                                ? (currentRecordType === 'dependent' ? 'Save Dependent Assessment' : 'Save Student Assessment')
                                 : (alreadyEncodedForReview
                                 ? 'Already Encoded'
                                 : (isEncodeWorkflow()
@@ -17041,10 +17798,13 @@
 
         function saveStudentAssessment() {
             if (!currentLookupRef || !isStudentLookupResult()) {
-                setStatus('error', 'No student/OJT record is open.');
+                setStatus('error', currentRecordType === 'dependent'
+                    ? 'No dependent record is open.'
+                    : 'No student/OJT record is open.');
                 return;
             }
 
+            const isDependentRecord = currentRecordType === 'dependent';
             const medicalConditionInput = document.getElementById('applicantMedicalCondition');
             const findingRemarksInput = document.getElementById('applicantFindingRemarks');
             const conditionRemarksInput = document.getElementById('applicantConditionRemarks');
@@ -17055,12 +17815,12 @@
             const referralRequiredCheckbox = document.getElementById('applicantReferralRequired');
             const referralToInput = document.getElementById('applicantReferralTo');
             const referralNotesInput = document.getElementById('applicantReferralNotes');
-            const heightInput = document.getElementById('applicantHeight');
-            const weightInput = document.getElementById('applicantWeight');
-            const bloodPressureInput = document.getElementById('applicantBloodPressure');
-            const pulseRateInput = document.getElementById('applicantPulseRate');
-            const respiratoryRateInput = document.getElementById('applicantRespiratoryRate');
-            const temperatureInput = document.getElementById('applicantTemperature');
+            const heightInput = document.querySelector(isDependentRecord ? '[name="employee_exam_height"]' : '#applicantHeight');
+            const weightInput = document.querySelector(isDependentRecord ? '[name="employee_exam_weight"]' : '#applicantWeight');
+            const bloodPressureInput = document.querySelector(isDependentRecord ? '[name="employee_exam_bp"]' : '#applicantBloodPressure');
+            const pulseRateInput = document.querySelector(isDependentRecord ? '[name="employee_exam_hr"]' : '#applicantPulseRate');
+            const respiratoryRateInput = document.querySelector(isDependentRecord ? '[name="employee_exam_rr"]' : '#applicantRespiratoryRate');
+            const temperatureInput = document.querySelector(isDependentRecord ? '[name="employee_exam_temperature"]' : '#applicantTemperature');
             const covidPositiveInput = document.querySelector('input[name="applicant_covid_positive"]:checked');
             const covidPositiveDateInput = document.getElementById('applicantCovidPositiveDate');
 
@@ -17070,13 +17830,81 @@
                 return;
             }
 
+            if (isDependentRecord && [heightInput, weightInput, bloodPressureInput, pulseRateInput, respiratoryRateInput, temperatureInput]
+                .some((input) => !String(input?.value || '').trim())) {
+                setStatus('error', 'Please complete all required dependent assessment vital signs.');
+                return;
+            }
+
             if (findingsStatusInput?.value === 'With Findings' && referralRequiredCheckbox?.checked && !referralToInput?.value.trim()) {
                 setStatus('error', 'Please enter the referral destination.', { toastOnly: true });
                 referralToInput?.focus();
                 return;
             }
 
-            setStatus('info', 'Saving student/OJT assessment...');
+            setStatus('info', isDependentRecord ? 'Saving dependent assessment...' : 'Saving student/OJT assessment...');
+
+            const assessmentPayload = {
+                reference_number: currentLookupRef,
+                findings_status: findingsStatusInput?.value || '',
+                clearance_decision: clearanceDecisionInput?.value || '',
+                height: heightInput?.value || '',
+                weight: weightInput?.value || '',
+                blood_pressure: bloodPressureInput?.value.trim() || '',
+                pulse_rate: pulseRateInput?.value || '',
+                respiratory_rate: respiratoryRateInput?.value || '',
+                temperature: temperatureInput?.value || '',
+                covid_positive: isDependentRecord ? '' : (covidPositiveInput?.value || ''),
+                covid_positive_date: !isDependentRecord && covidPositiveInput?.value === 'Yes' ? (covidPositiveDateInput?.value || '') : '',
+                has_medical_condition: Boolean(medicalConditionCheckbox?.checked),
+                medical_condition: medicalConditionCheckbox?.checked ? (medicalConditionInput?.value.trim() || '') : '',
+                referral_required: Boolean(referralRequiredCheckbox?.checked),
+                referral_to: referralToInput?.value.trim() || '',
+                referral_notes: referralNotesInput?.value.trim() || '',
+                condition_remarks: conditionRemarksInput?.value.trim() || '',
+                med_assessment_remarks: findingsStatusInput?.value === 'With Findings'
+                    ? (findingRemarksInput?.value.trim() || '')
+                    : (normalRemarksInput?.value.trim() || '')
+            };
+
+            if (isDependentRecord) {
+                const checkedValues = (name) => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`))
+                    .map((input) => input.value);
+                const checkedValue = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value || '';
+                const fieldValue = (name) => document.querySelector(`[name="${name}"]`)?.value?.trim() || '';
+                Object.assign(assessmentPayload, {
+                    employee_exam_distress: checkedValue('employee_exam_distress'),
+                    employee_exam_height: fieldValue('employee_exam_height'),
+                    employee_exam_weight: fieldValue('employee_exam_weight'),
+                    employee_exam_bmi: fieldValue('employee_exam_bmi'),
+                    employee_exam_bp: fieldValue('employee_exam_bp'),
+                    employee_exam_hr: fieldValue('employee_exam_hr'),
+                    employee_exam_rr: fieldValue('employee_exam_rr'),
+                    employee_exam_temperature: fieldValue('employee_exam_temperature'),
+                    employee_exam_head: checkedValues('employee_exam_head[]'),
+                    employee_exam_eyes: checkedValues('employee_exam_eyes[]'),
+                    employee_exam_ears: checkedValues('employee_exam_ears[]'),
+                    employee_exam_throat: checkedValues('employee_exam_throat[]'),
+                    employee_exam_chest_lungs: checkedValue('employee_exam_chest_lungs'),
+                    employee_exam_chest_xray: checkedValue('employee_exam_chest_xray'),
+                    employee_exam_breast: checkedValues('employee_exam_breast[]'),
+                    employee_exam_heart_murmur: checkedValue('employee_exam_heart_murmur'),
+                    employee_exam_heart_rhythm: checkedValue('employee_exam_heart_rhythm'),
+                    employee_exam_abdomen: checkedValues('employee_exam_abdomen[]'),
+                    employee_exam_last_menstruation: fieldValue('employee_exam_last_menstruation'),
+                    employee_exam_extremities: checkedValues('employee_exam_extremities[]'),
+                    employee_exam_vertebral_column: checkedValue('employee_exam_vertebral_column'),
+                    employee_exam_skin: checkedValues('employee_exam_skin[]'),
+                    employee_exam_scars: checkedValue('employee_exam_scars'),
+                    employee_exam_working_impression: fieldValue('employee_exam_working_impression'),
+                    employee_exam_fit: fieldValue('employee_exam_fit'),
+                    employee_exam_fit_other: fieldValue('employee_exam_fit_other'),
+                    employee_exam_for_work_up: fieldValue('employee_exam_for_work_up'),
+                    employee_exam_referred_to: checkedValues('employee_exam_referred_to[]'),
+                    employee_exam_referred_to_others: fieldValue('employee_exam_referred_to_others'),
+                    employee_exam_follow_up_on: fieldValue('employee_exam_follow_up_on')
+                });
+            }
 
             fetch(saveStudentAssessmentUrl, {
                 method: 'POST',
@@ -17086,34 +17914,15 @@
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
-                body: JSON.stringify({
-                    reference_number: currentLookupRef,
-                    findings_status: findingsStatusInput?.value || '',
-                    clearance_decision: clearanceDecisionInput?.value || '',
-                    height: heightInput?.value || '',
-                    weight: weightInput?.value || '',
-                    blood_pressure: bloodPressureInput?.value.trim() || '',
-                    pulse_rate: pulseRateInput?.value || '',
-                    respiratory_rate: respiratoryRateInput?.value || '',
-                    temperature: temperatureInput?.value || '',
-                    covid_positive: covidPositiveInput?.value || '',
-                    covid_positive_date: covidPositiveInput?.value === 'Yes' ? (covidPositiveDateInput?.value || '') : '',
-                    has_medical_condition: Boolean(medicalConditionCheckbox?.checked),
-                    medical_condition: medicalConditionCheckbox?.checked ? (medicalConditionInput?.value.trim() || '') : '',
-                    referral_required: Boolean(referralRequiredCheckbox?.checked),
-                    referral_to: referralToInput?.value.trim() || '',
-                    referral_notes: referralNotesInput?.value.trim() || '',
-                    condition_remarks: conditionRemarksInput?.value.trim() || '',
-                    med_assessment_remarks: findingsStatusInput?.value === 'With Findings'
-                        ? (findingRemarksInput?.value.trim() || '')
-                        : (normalRemarksInput?.value.trim() || '')
-                })
+                body: JSON.stringify(assessmentPayload)
             })
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
                     const isApprovedDecision = clearanceDecisionInput?.value === 'approve';
-                    setStatus('success', data.message || (isApprovedDecision ? 'Medical clearance issued.' : 'Student/OJT assessment saved.'));
+                    setStatus('success', data.message || (isApprovedDecision
+                        ? 'Medical clearance issued.'
+                        : (isDependentRecord ? 'Dependent assessment saved.' : 'Student/OJT assessment saved.')));
                     currentAssessmentReview = data.assessment_review && typeof data.assessment_review === 'object'
                         ? data.assessment_review
                         : currentAssessmentReview;
@@ -17130,10 +17939,12 @@
                         findBtn.style.cursor = 'not-allowed';
                     }
                     showClinicSuccessOverlay(approvalOverlay, {
-                        title: isApprovedDecision ? 'Medical Clearance Issued' : 'Assessment Saved',
+                        title: isApprovedDecision ? 'Medical Clearance Issued' : (isDependentRecord ? 'Dependent Assessment Saved' : 'Assessment Saved'),
                         message: isApprovedDecision
-                            ? 'The student/OJT has been approved successfully.'
-                            : 'The student/OJT assessment has been saved to the health profile.',
+                            ? (isDependentRecord ? 'The dependent has been approved successfully.' : 'The student/OJT has been approved successfully.')
+                            : (isDependentRecord
+                                ? 'The dependent assessment has been saved to the health record.'
+                                : 'The student/OJT assessment has been saved to the health profile.'),
                         duration: 2500,
                         onDone: () => {
                             if (isApprovedDecision) {
@@ -17146,10 +17957,14 @@
                         }
                     });
                 } else {
-                    setStatus('error', data.message || 'Failed to save student/OJT assessment.');
+                    setStatus('error', data.message || (isDependentRecord
+                        ? 'Failed to save the dependent assessment.'
+                        : 'Failed to save student/OJT assessment.'));
                 }
             })
-            .catch(() => setStatus('error', 'Unable to save the student/OJT assessment right now. Please try again.'));
+            .catch(() => setStatus('error', isDependentRecord
+                ? 'Unable to save the dependent assessment right now. Please try again.'
+                : 'Unable to save the student/OJT assessment right now. Please try again.'));
         }
 
         function doApprove() {
@@ -17182,7 +17997,7 @@
             const temperatureInput = document.getElementById('applicantTemperature');
             const covidPositiveInput = document.querySelector('input[name="applicant_covid_positive"]:checked');
             const covidPositiveDateInput = document.getElementById('applicantCovidPositiveDate');
-            const isFacultyRecord = isClinicLookupMode() && !isStudentLookupResult();
+            const isFacultyRecord = isEmployeeAssessmentRecord();
             const facultyHeightInput = document.querySelector('[name="employee_exam_height"]');
             const facultyWeightInput = document.querySelector('[name="employee_exam_weight"]');
             const facultyBloodPressureInput = document.querySelector('[name="employee_exam_bp"]');
@@ -17784,7 +18599,7 @@
             const hasFindings = selectedFinding === 'With Findings';
             const hasNormalResult = selectedFinding === 'No Findings / Normal';
             const hasReviewResult = hasFindings || hasNormalResult;
-            const isFacultyRecord = isClinicLookupMode() && !isStudentLookupResult();
+            const isFacultyRecord = isEmployeeAssessmentRecord();
             if (hasReviewResult && !selectedDecision) {
                 const approveDecision = document.querySelector('input[name="applicant_clearance_decision"][value="approve"]');
                 if (approveDecision) {

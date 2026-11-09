@@ -5833,20 +5833,22 @@
         $appointmentPresentation = function ($appointment) use ($appointmentHasMedicalCondition, $basePrefix, $consultationStatuses): array {
             $user = $appointment->user;
             $studentProfile = $user?->healthProfile;
-            $employeeProfile = $user?->healthProfileStaff;
+            $employeeProfile = $user?->employeeHealthProfile ?: $user?->healthProfileStaff;
             $roleMarkers = strtolower(trim(implode(' ', array_filter([
                 (string) ($user?->user_type ?? ''),
                 (string) ($user?->user_role ?? ''),
                 (string) ($user?->idp_role ?? ''),
             ]))));
             $isDependent = $user?->dependentProfile !== null
-                || str_contains($roleMarkers, 'dependent')
-                || str_contains($roleMarkers, 'guest');
-            $usesEmployeeNumber = !$isDependent && collect(['faculty', 'admin', 'staff', 'employee'])
+                || str_contains($roleMarkers, 'dependent');
+            $isGuest = str_contains($roleMarkers, 'guest') && !$isDependent;
+            $usesEmployeeNumber = !$isDependent && !$isGuest && collect(['faculty', 'admin', 'staff', 'employee'])
                 ->contains(fn ($needle) => str_contains($roleMarkers, $needle));
+            $usesEmployeeProfile = $usesEmployeeNumber
+                || ($isDependent && strtolower(trim((string) ($employeeProfile?->health_form_category ?? ''))) === 'dependent');
             $currentStudentNumber = trim((string) ($studentProfile?->student_number ?: $user?->student_number ?: ''));
-            $isApplicant = !$isDependent && !$usesEmployeeNumber && str_contains($roleMarkers, 'applicant');
-            $profile = $usesEmployeeNumber ? ($employeeProfile ?: $studentProfile) : ($studentProfile ?: $employeeProfile);
+            $isApplicant = !$isDependent && !$isGuest && !$usesEmployeeNumber && str_contains($roleMarkers, 'applicant');
+            $profile = $usesEmployeeProfile ? ($employeeProfile ?: $studentProfile) : ($studentProfile ?: $employeeProfile);
             $firstName = trim((string) ($user?->first_name ?: $profile?->first_name ?: ''));
             $middleName = trim((string) ($user?->middle_name ?: $profile?->middle_name ?: ''));
             $lastName = trim((string) ($user?->last_name ?: $profile?->last_name ?: ''));
@@ -5856,22 +5858,24 @@
                 : trim(implode(' ', array_filter([$lastName, $firstName, $middleInitial])));
             $displayName = $displayName !== '' ? $displayName : trim((string) $appointment->name);
             $idNumber = $isDependent
-                ? ($user?->dependentProfile?->id_number ?: $appointment->student_number ?: $user?->student_number)
+                ? ($employeeProfile?->id_number ?: $user?->dependentProfile?->id_number ?: $appointment->student_number ?: $user?->student_number)
                 : ($usesEmployeeNumber
                 ? ($employeeProfile?->employee_number ?: $user?->employee_number ?: $appointment->student_number)
                 : ($currentStudentNumber ?: $appointment->student_number ?: $studentProfile?->reference_number ?: $user?->reference_number));
             $idLabel = $isDependent
                 ? 'ID Number'
-                : ($usesEmployeeNumber ? 'Employee Number' : ($isApplicant && $currentStudentNumber === '' ? 'Reference Number' : 'Student Number'));
+                : ($isGuest
+                    ? 'Patient ID Number'
+                    : ($usesEmployeeNumber ? 'Employee Number' : ($isApplicant && $currentStudentNumber === '' ? 'Reference Number' : 'Student Number')));
             $photoPath = $profile?->student_photo;
             $photoUrl = '';
 
             if ($photoPath && $profile) {
                 $isAssistant = request()->routeIs('assistant.*');
-                $routeName = $usesEmployeeNumber
+                $routeName = $usesEmployeeProfile
                     ? ($isAssistant ? 'assistant.walkin.employeeDocument' : 'walkin.employeeDocument')
                     : ($isAssistant ? 'assistant.walkin.document' : 'walkin.document');
-                $routeParameters = $usesEmployeeNumber
+                $routeParameters = $usesEmployeeProfile
                     ? ['employeeProfile' => $profile->id, 'document' => 'student_photo']
                     : ['healthProfile' => $profile->id, 'document' => 'student_photo'];
                 $photoUrl = route($routeName, $routeParameters);
@@ -5885,14 +5889,16 @@
                 }
             }
 
-            $program = $isDependent
-                ? ($user?->course ?: $studentProfile?->course_college ?: 'Guest')
+            $program = $isGuest
+                ? 'Guest'
+                : ($isDependent
+                ? ($user?->course ?: $studentProfile?->course_college ?: 'Dependent')
                 : ($usesEmployeeNumber
                 ? ($employeeProfile?->course_college ?: $user?->department ?: 'Employee')
                 : trim(implode(' ', array_filter([
                     $user?->course ?: $studentProfile?->course_college,
                     trim(implode('-', array_filter([$user?->year, $user?->section]))),
-                ]))));
+                ])))));
             $scheduledAt = in_array(strtolower(trim((string) $appointment->status)), $consultationStatuses, true)
                 ? \Carbon\Carbon::parse($appointment->date . ' ' . $appointment->time)
                 : null;

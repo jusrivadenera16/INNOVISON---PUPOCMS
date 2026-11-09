@@ -226,6 +226,15 @@
             margin-bottom: 2px;
         }
 
+        .student-signature-name {
+            min-height: 11px;
+            overflow: visible;
+            line-height: 1.15;
+            white-space: normal;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
         .generated-report-caption {
             border-top: 1px solid #9ca3af;
             margin: 16px 0 0;

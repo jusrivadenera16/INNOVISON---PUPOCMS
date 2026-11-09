@@ -2189,8 +2189,10 @@
             grid-column: 1;
             grid-row: auto;
             position: absolute;
-            top: 322px;
+            top: 360px;
+            bottom: auto;
             left: 0;
+            right: 0;
             margin: 0;
             justify-content: center;
         }
@@ -2211,6 +2213,27 @@
         }
         .profile-dashboard .profile-hero {
             min-height: 560px;
+        }
+        .profile-dashboard .hero-info {
+            display: contents;
+        }
+        .profile-dashboard .hero-name {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+        .profile-dashboard .hero-identity-meta {
+            grid-column: 2;
+        }
+        .profile-dashboard .hero-stats {
+            position: relative;
+            top: auto;
+            right: auto !important;
+            bottom: auto;
+            left: auto !important;
+            width: 100% !important;
+            transform: none;
+            grid-column: 1 / -1;
+            margin: 14px 0 0;
         }
         .profile-dashboard {
             gap: 12px;
@@ -2258,13 +2281,29 @@
             border-radius: 8px;
             align-items: start;
         }
-        .hero-name {
-            font-size: 24px;
+        .profile-dashboard .hero-avatar {
+            width: 76px;
+            height: 76px;
+            margin-top: 0;
+        }
+        .profile-dashboard .hero-name {
+            margin-top: 0;
+            font-size: clamp(17px, 4.8vw, 20px);
+            line-height: 1.12;
         }
         .profile-dashboard .hero-stats {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 10px;
+            gap: 0;
+        }
+        .profile-dashboard .hero-stats .stat-item {
+            padding: 0 4px;
+        }
+        .profile-dashboard .stat-label {
+            white-space: normal;
+            overflow-wrap: anywhere;
+            font-size: 9px;
+            line-height: 1.15;
         }
         .profile-grid-3,
         .profile-grid-2 {
@@ -7921,6 +7960,7 @@
     $isEnrolled = (bool) ($isEnrolled ?? false);
     $accountView = in_array(($accountView ?? 'profile'), ['profile', 'health-record', 'notifications'], true) ? $accountView : 'profile';
     $usesEmployeeHealthForm = $studentUsesEmployeeHealthForm ?? false;
+    $isDependentAccount = $user->clinicAccountTypeKey() === 'dependent';
     $canUpdateLadderizedStudentNumber = (bool) ($canUpdateLadderizedStudentNumber ?? false);
     $isLadderizedStudent = !$usesEmployeeHealthForm
         && $user->clinicAccountTypeKey() === 'student'
@@ -7940,16 +7980,19 @@
             break;
         }
     }
-    $heroActiveStatusLabel = $showsEmployeeActiveStatus ? 'Active Employee' : 'Active Student';
     $showOfficeField = in_array($linkedAccessLevel, ['clinic_staff', 'designee', 'admin_designee', 'superadmin', 'super_admin', 'faculty'], true) || str_contains($linkedAccessLevel, 'faculty');
     $hasGuisisAccountData = (bool) ($guisisAccountData['available'] ?? false);
-    $displayStudentNumber = $showsEmployeeActiveStatus
-        ? trim((string) ($accountProfileData['employee_number'] ?? $user->employee_number ?? ''))
-        : trim((string) ($accountProfileData['student_number'] ?? $user->student_number ?? $user->student_id ?? ''));
+    $displayStudentNumber = $isDependentAccount
+        ? trim((string) ($accountProfileData['id_number'] ?? optional($user->employeeHealthProfile)->id_number ?? ''))
+        : ($showsEmployeeActiveStatus
+            ? trim((string) ($accountProfileData['employee_number'] ?? $user->employee_number ?? ''))
+            : trim((string) ($accountProfileData['student_number'] ?? $user->student_number ?? $user->student_id ?? '')));
     if ($displayStudentNumber === '') {
-        $displayStudentNumber = $showsEmployeeActiveStatus
-            ? trim((string) ($user->employee_number ?? ''))
-            : trim((string) ($user->student_number ?? $user->student_id ?? ''));
+        $displayStudentNumber = $isDependentAccount
+            ? trim((string) optional($user->employeeHealthProfile)->id_number)
+            : ($showsEmployeeActiveStatus
+                ? trim((string) ($user->employee_number ?? ''))
+                : trim((string) ($user->student_number ?? $user->student_id ?? '')));
     }
     if ($isLadderizedStudent) {
         $localLadderizedStudentNumber = trim((string) ($user->student_number ?? optional($user->healthProfile)->student_number ?? ''));
@@ -7969,14 +8012,16 @@
     $referenceMode = trim((string) ($accountProfileData['reference_mode'] ?? 'admission'));
     $isTransfereeAccount = $user->clinicAccountTypeKey() === 'applicant'
         && strtolower(trim((string) $user->applicant_type)) === 'transferee';
-    $referenceHeading = $usesEmployeeHealthForm
+    $referenceHeading = $isDependentAccount
+        ? 'ID Number'
+        : ($usesEmployeeHealthForm
         ? 'Employee Number'
         : ($isTransfereeAccount
             ? 'SIS Reference Number'
             : ($user->clinicAccountTypeKey() === 'student'
                 ? 'Student Number'
-                : ($user->clinicAccountTypeKey() === 'dependent' ? 'ID Number' : 'Admission Reference')));
-    $idNumberHeading = $usesEmployeeHealthForm ? 'Employee Number' : ($referenceMode === 'admission' ? 'Student Number' : 'ID Number');
+                : 'Admission Reference')));
+    $idNumberHeading = $isDependentAccount ? 'ID Number' : ($usesEmployeeHealthForm ? 'Employee Number' : ($referenceMode === 'admission' ? 'Student Number' : 'ID Number'));
     $displayCourse = trim((string) ($accountProfileData['course_college'] ?? ''));
     $displayCourseCode = trim((string) ($accountProfileData['course_code'] ?? ''));
     if ($displayCourseCode === '' && $displayCourse !== '') {
@@ -8146,10 +8191,6 @@
                 @endif
             @else
                 <div class="hero-course">-</div>
-            @endif
-
-            @if($isEnrolled)
-                <div class="hero-status-line">{{ $heroActiveStatusLabel }}</div>
             @endif
 
             <div class="hero-stats">
@@ -8984,7 +9025,13 @@ document.addEventListener('DOMContentLoaded', function () {
             default => 'is-pending',
         };
         $clinicScheduleLabel = app(\App\Services\ClinicWorkflowService::class)->clinicScheduleLabel();
-        if ($usesEmployeeHealthForm) {
+        if ($isDependentAccount) {
+            $recordReferenceNumber = trim((string) (
+                optional($healthProfileRecord)->id_number
+                ?: optional($user->dependentProfile)->id_number
+                ?: ''
+            ));
+        } elseif ($usesEmployeeHealthForm) {
             $recordReferenceNumber = \App\Support\EmployeeNumber::normalize(
                 $accountProfileData['employee_number']
                 ?? optional($user->employeeHealthProfile)->employee_number
@@ -9001,12 +9048,6 @@ document.addEventListener('DOMContentLoaded', function () {
             $recordReferenceNumber = trim((string) (
                 optional($healthProfileRecord)->student_number
                 ?: $user->student_number
-                ?: ''
-            ));
-        } elseif ($user->clinicAccountTypeKey() === 'dependent') {
-            $recordReferenceNumber = trim((string) (
-                optional($user->dependentProfile)->id_number
-                ?: optional($healthProfileRecord)->id_number
                 ?: ''
             ));
         } else {
