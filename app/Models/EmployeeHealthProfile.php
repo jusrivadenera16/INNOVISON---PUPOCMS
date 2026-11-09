@@ -16,6 +16,8 @@ class EmployeeHealthProfile extends Model
     protected $fillable = [
         'user_id',
         'employee_number',
+        'id_number',
+        'linked_employee_user_id',
         'health_form_category',
         'employee_photo',
         'first_name',
@@ -144,6 +146,11 @@ class EmployeeHealthProfile extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function linkedEmployee()
+    {
+        return $this->belongsTo(User::class, 'linked_employee_user_id');
     }
 
     public function getStudentPhotoAttribute($value)

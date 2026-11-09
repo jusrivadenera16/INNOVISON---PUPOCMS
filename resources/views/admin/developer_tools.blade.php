@@ -153,6 +153,10 @@
         animation-delay: .45s;
     }
 
+    .dev-card:nth-child(3) .dev-icon {
+        animation-delay: .9s;
+    }
+
     .dev-card:hover .dev-icon {
         background: linear-gradient(145deg, #facc15, #f59e0b);
         color: #3f0b15;
@@ -2330,7 +2334,7 @@
     }
     @media (min-width: 721px) {
         .dev-grid {
-            grid-template-columns: repeat(2, minmax(220px, 224px)) !important;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 224px)) !important;
             justify-content: center !important;
             align-items: stretch !important;
         }
@@ -2473,6 +2477,22 @@
             <div class="dev-note">Static controls only.</div>
             <div class="dev-action">Click to view</div>
         </button>
+
+        @if($testAccountCreationEnabled ?? false)
+            <a href="{{ route('admin.developer-tools.test-accounts') }}" class="dev-card">
+                <span class="dev-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="10" cy="7" r="4"/>
+                        <path d="M20 8v6M17 11h6"/>
+                    </svg>
+                </span>
+                <h2>Test Account</h2>
+                <p>Create local test accounts for Applicants, Students, Faculty, or Non-teaching Staff.</p>
+                <div class="dev-note">No clinic staff or superadmin access is granted.</div>
+                <div class="dev-action">Click to create</div>
+            </a>
+        @endif
     </div>
 </div>
 

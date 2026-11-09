@@ -1452,7 +1452,9 @@ class AdminController extends Controller
         $resetOtpLockedUntil = $twoFactor->emergencyPasswordResetLockedUntil($configuredEmail) ?? 0;
         $resetHasAuthenticator = $twoFactor->hasAuthenticator($configuredEmail);
 
-        return view('admin.developer_tools', compact('resetOtpLockedUntil', 'resetHasAuthenticator'));
+        $testAccountCreationEnabled = DeveloperTestAccountController::isToolEnabled();
+
+        return view('admin.developer_tools', compact('resetOtpLockedUntil', 'resetHasAuthenticator', 'testAccountCreationEnabled'));
     }
 
     public function updateClinicLogo(Request $request)
@@ -4400,7 +4402,7 @@ class AdminController extends Controller
 
     public function showEmployeeHealthProfile(EmployeeHealthProfile $employeeProfile)
     {
-        $employeeProfile->loadMissing(['user', 'approvedBy']);
+        $employeeProfile->loadMissing(['user', 'approvedBy', 'linkedEmployee.employeeHealthProfile']);
         abort_unless($employeeProfile->user, 404);
 
         $medicalAssessmentProfileType = $this->employeeMedicalInformationProfileType($employeeProfile->user);
@@ -4470,13 +4472,19 @@ class AdminController extends Controller
                 $submission->id,
             ])
             ->first();
-        $displaySubmission = $latestApprovedEmployeeSubmission
-            && $latestApprovedEmployeeSubmission->snapshotProfile() !== []
-            ? $latestApprovedEmployeeSubmission
+        $activeRenewalSubmissionId = (int) ($activeNewHealthFormRequest?->health_form_submission_id ?? 0);
+        $activeRenewalSubmission = $activeRenewalSubmissionId > 0
+            ? $employeeSubmissions->first(fn (HealthFormSubmission $submission) => (int) $submission->id === $activeRenewalSubmissionId)
             : null;
-        $employeeProfileForDisplay = $displaySubmission
-            ? $this->employeeProfileFromSubmission($employeeProfile, $displaySubmission)
-            : $employeeProfile;
+        $displaySubmission = $activeRenewalSubmission
+            ?: ($latestApprovedEmployeeSubmission && $latestApprovedEmployeeSubmission->snapshotProfile() !== []
+                ? $latestApprovedEmployeeSubmission
+                : null);
+        $employeeProfileForDisplay = $activeRenewalSubmission
+            ? $employeeProfile
+            : ($displaySubmission
+                ? $this->employeeProfileFromSubmission($employeeProfile, $displaySubmission)
+                : $employeeProfile);
         if ($canUpdateMedicalAssessment) {
             foreach ($this->employeeMedicalAddressEditValues($employeeProfile, $employeeProfileForDisplay) as $field => $value) {
                 $medicalAssessmentEditableValues[$field] = $value;
@@ -4535,12 +4543,12 @@ class AdminController extends Controller
             ->filter(fn (HealthFormSubmission $submission) => $submission->snapshotProfile() !== [])
             ->map(function (HealthFormSubmission $submission) use (
                 $employeeProfile,
-                $latestApprovedEmployeeSubmission,
+                $displaySubmission,
                 $buildEmployeeDocuments
             ): array {
                 $versionProfile = $this->employeeProfileFromSubmission($employeeProfile, $submission);
-                $isCurrent = $latestApprovedEmployeeSubmission
-                    && (int) $latestApprovedEmployeeSubmission->id === (int) $submission->id;
+                $isCurrent = $displaySubmission
+                    && (int) $displaySubmission->id === (int) $submission->id;
 
                 return [
                     'submission' => $submission,
@@ -4749,6 +4757,136 @@ class AdminController extends Controller
             ->first();
     }
 
+    private function queueEmployeeHealthFormRenewal(
+        Request $request,
+        EmployeeHealthProfile $employeeProfile,
+        User $adminUser,
+        string $category,
+        string $remarks,
+        string $informationHandling,
+        string $audience,
+        bool $bulk
+    ): ?HealthProfileCorrectionRequest {
+        return DB::transaction(function () use (
+            $request,
+            $employeeProfile,
+            $adminUser,
+            $category,
+            $remarks,
+            $informationHandling,
+            $audience,
+            $bulk
+        ): ?HealthProfileCorrectionRequest {
+            User::query()->whereKey($employeeProfile->user_id)->lockForUpdate()->firstOrFail();
+            $profile = EmployeeHealthProfile::query()->lockForUpdate()->findOrFail($employeeProfile->id);
+
+            if ($this->activeEmployeeNewHealthFormRequest($profile)) {
+                return null;
+            }
+
+            $wasAlreadyIssued = in_array($profile->clearance_status, ['Approved', 'Issued', 'Fully Cleared', 'Cleared'], true)
+                || !empty($profile->verified_at);
+            if (!$wasAlreadyIssued) {
+                return null;
+            }
+
+            app(EmployeeHealthFormHistoryService::class)->ensureApprovedSnapshot($profile);
+
+            $requestedAt = now();
+            $profile->health_form_category = $category;
+            $profile->form_date = $requestedAt->toDateString();
+            $profile->clearance_status = 'For Verification';
+            $profile->submission_status = 'submitted';
+            $profile->pending_reason = null;
+            $profile->resubmission_required_fields = [];
+            $profile->resubmission_requested_at = null;
+            $profile->pending_compliance_reminder_sent_at = null;
+            $profile->pending_compliance_reminder_count = 0;
+            $profile->resubmitted_at = null;
+            $profile->verified_at = null;
+            $profile->approved_by_user_id = null;
+
+            // A renewal always requires a fresh physical assessment. Keep the submitted
+            // health information and documents, but clear results from the prior exam.
+            $profileColumns = array_flip(Schema::getColumnListing($profile->getTable()));
+            foreach ([
+                'vital_signs_distress_status', 'height', 'weight', 'bmi', 'bp', 'hr', 'rr', 'temperature',
+                'head_findings', 'eyes_findings', 'ears_findings', 'throat_findings', 'chest_lungs_findings',
+                'chest_xray_result', 'breast_findings', 'heart_murmur', 'heart_rhythm', 'abdomen_findings',
+                'genito_urinary_date_lmp', 'extremities_findings', 'vertebral_column_findings', 'skin_findings',
+                'scars_findings', 'working_impression', 'fit_status', 'for_work_up', 'referred_to',
+                'referred_to_others', 'follow_up_on',
+            ] as $assessmentField) {
+                if (isset($profileColumns[$assessmentField])) {
+                    $profile->{$assessmentField} = null;
+                }
+            }
+            $profile->save();
+
+            $requestKind = $bulk ? 'bulk_new_health_form' : 'new_health_form';
+            $correctionRequest = HealthProfileCorrectionRequest::create([
+                'user_id' => $profile->user_id,
+                'employee_health_profile_id' => $profile->id,
+                'type' => HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION,
+                'status' => HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+                'profile_kind' => 'employee',
+                'required_documents' => [],
+                'admin_note' => $remarks !== '' ? $remarks : null,
+                'requested_by_user_id' => $adminUser->id,
+                'requested_at' => $requestedAt,
+                'submitted_at' => $requestedAt,
+                'metadata' => [
+                    'request_kind' => $requestKind,
+                    'category' => $category,
+                    'audience' => $audience,
+                    'information_handling' => $informationHandling,
+                    'remarks' => $remarks !== '' ? $remarks : null,
+                    'was_already_issued' => true,
+                    'employee_login_required' => false,
+                ],
+            ]);
+
+            $submission = app(EmployeeHealthFormHistoryService::class)->createSubmittedSnapshot(
+                $profile->fresh(['user', 'approvedBy']),
+                $correctionRequest
+            );
+            $metadata = is_array($correctionRequest->metadata) ? $correctionRequest->metadata : [];
+            $metadata['health_form_submission_id'] = $submission->id;
+            $correctionRequest->forceFill([
+                'health_form_submission_id' => $submission->id,
+                'metadata' => $metadata,
+            ])->save();
+
+            ActivityLog::create([
+                'user_id' => $adminUser->id,
+                'user_name' => $adminUser->name ?? $adminUser->email ?? 'Unknown User',
+                'user_role' => strtolower((string) ($adminUser->user_role ?? '')),
+                'action' => $bulk ? 'Bulk Employee Health Form Renewal Requested' : 'Employee Health Form Renewal Requested',
+                'module' => 'Health Records',
+                'event_type' => $bulk ? 'employee_bulk_new_health_form_requested' : 'employee_new_health_form_requested',
+                'description' => 'Created a new pending Health Form cycle for employee health profile #' . $profile->id . ' under ' . $category . '.',
+                'route_name' => optional($request->route())->getName(),
+                'http_method' => $request->method(),
+                'request_path' => '/' . ltrim((string) $request->path(), '/'),
+                'status_code' => 200,
+                'subject_type' => EmployeeHealthProfile::class,
+                'subject_id' => (string) $profile->id,
+                'metadata' => [
+                    'employee_profile_id' => $profile->id,
+                    'employee_number' => $profile->employee_number,
+                    'category' => $category,
+                    'request_kind' => $requestKind,
+                    'information_handling' => $informationHandling,
+                    'health_form_submission_id' => $submission->id,
+                ],
+                'ip_address' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 255),
+            ]);
+
+            return $correctionRequest->fresh();
+        });
+    }
+
     public function requestNewHealthForm(Request $request, $id)
     {
         $profile = HealthProfile::with('user')->findOrFail($id);
@@ -4934,6 +5072,13 @@ class AdminController extends Controller
                 ->with('info', 'An existing Health Form request is already active for this record.');
         }
 
+        $wasAlreadyIssued = in_array($employeeProfile->clearance_status, ['Approved', 'Issued', 'Fully Cleared', 'Cleared'], true)
+            || !empty($employeeProfile->verified_at);
+        if (!$wasAlreadyIssued) {
+            return redirect()->route('admin.employee_health_profile.show', $employeeProfile->id)
+                ->with('error', 'A new Health Form cycle can only be started for an approved employee health record.');
+        }
+
         $employeeHealthFormAudience = $this->employeeHealthFormCategoryAudience($employeeProfile->user);
         $validated = $request->validate([
             'category' => [
@@ -4950,114 +5095,27 @@ class AdminController extends Controller
         ]);
 
         $adminUser = Auth::guard('admin')->user() ?: auth()->user();
+        abort_unless($adminUser, 403);
         $category = trim((string) $validated['category']);
         $remarks = trim((string) ($validated['remarks'] ?? ''));
-        $pendingReason = 'Health Form Correction requested: New Health Form for ' . $category;
-        if ($remarks !== '') {
-            $pendingReason .= ': ' . $remarks;
-        }
-
-        $wasAlreadyIssued = false;
-        $requestCreated = DB::transaction(function () use (
+        $correctionRequest = $this->queueEmployeeHealthFormRenewal(
+            $request,
             $employeeProfile,
             $adminUser,
             $category,
             $remarks,
-            $pendingReason,
-            &$wasAlreadyIssued
-        ) {
-            User::query()->whereKey($employeeProfile->user_id)->lockForUpdate()->firstOrFail();
+            'existing',
+            $employeeHealthFormAudience,
+            false
+        );
 
-            if ($this->activeEmployeeNewHealthFormRequest($employeeProfile)) {
-                return false;
-            }
-
-            $wasAlreadyIssued = in_array($employeeProfile->clearance_status, ['Approved', 'Issued', 'Fully Cleared', 'Cleared'], true)
-                || !empty($employeeProfile->verified_at);
-
-            if ($wasAlreadyIssued) {
-                app(EmployeeHealthFormHistoryService::class)->ensureApprovedSnapshot($employeeProfile);
-            } else {
-                $employeeProfile->health_form_category = $category;
-                $employeeProfile->pending_reason = $pendingReason;
-                $employeeProfile->documents_valid = false;
-                $employeeProfile->resubmission_required_fields = [];
-                $employeeProfile->resubmission_requested_at = now();
-                $employeeProfile->pending_compliance_reminder_sent_at = null;
-                $employeeProfile->pending_compliance_reminder_count = 0;
-                $employeeProfile->resubmitted_at = null;
-                $employeeProfile->clearance_status = 'Pending Resubmission';
-                $employeeProfile->submission_status = 'pending';
-                $employeeProfile->verified_at = null;
-                $employeeProfile->approved_by_user_id = null;
-                $employeeProfile->save();
-            }
-
-            HealthProfileCorrectionRequest::create([
-                'user_id' => $employeeProfile->user_id,
-                'employee_health_profile_id' => $employeeProfile->id,
-                'type' => HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION,
-                'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
-                'profile_kind' => 'employee',
-                'required_documents' => [],
-                'admin_note' => $pendingReason,
-                'requested_by_user_id' => $adminUser?->id,
-                'requested_at' => now(),
-                'metadata' => [
-                    'request_kind' => 'new_health_form',
-                    'category' => $category,
-                    'remarks' => $remarks !== '' ? $remarks : null,
-                    'was_already_issued' => $wasAlreadyIssued,
-                ],
-            ]);
-
-            return true;
-        });
-
-        if (!$requestCreated) {
+        if (!$correctionRequest) {
             return redirect()->route('admin.employee_health_profile.show', $employeeProfile->id)
-                ->with('info', 'An existing Health Form request is already active for this record.');
-        }
-
-        ActivityLog::create([
-            'user_id' => $adminUser?->id,
-            'user_name' => $adminUser?->name ?? $adminUser?->email ?? 'System',
-            'user_role' => strtolower((string) ($adminUser?->user_role ?? '')),
-            'action' => 'New Employee Health Form Requested',
-            'module' => 'Health Records',
-            'event_type' => 'employee_new_health_form_requested',
-            'description' => 'Requested a new Health Form for employee health profile #' . $employeeProfile->id . ' under ' . $category . '.',
-            'route_name' => optional($request->route())->getName(),
-            'http_method' => $request->method(),
-            'request_path' => '/' . ltrim((string) $request->path(), '/'),
-            'status_code' => 200,
-            'subject_type' => EmployeeHealthProfile::class,
-            'subject_id' => (string) $employeeProfile->id,
-            'metadata' => [
-                'employee_profile_id' => $employeeProfile->id,
-                'employee_number' => $employeeProfile->employee_number,
-                'category' => $category,
-                'request_kind' => 'new_health_form',
-            ],
-            'ip_address' => $request->ip(),
-            'user_agent' => substr((string) $request->userAgent(), 0, 255),
-        ]);
-
-        $emailStatus = 'skipped';
-        if ($employeeProfile->user) {
-            $emailStatus = app(StudentNotificationMailer::class)
-                ->sendHealthRecordNotice($employeeProfile->user, 'health_form_correction')['status'];
-        }
-
-        $message = 'New Health Form request sent to the employee.';
-        if ($emailStatus === 'sent') {
-            $message .= ' Email notification sent.';
-        } elseif ($emailStatus === 'failed') {
-            $message .= ' The employee will still see the request in the portal, but email delivery could not be confirmed.';
+                ->with('info', 'The employee record is no longer eligible or already has an active Health Form cycle.');
         }
 
         return redirect()->route('admin.employee_health_profile.show', $employeeProfile->id)
-            ->with('success', $message);
+            ->with('success', 'A new Health Form cycle was created and moved to Pending Approval. The employee does not need to log in or submit the form again.');
     }
 
     public function requestBulkEmployeeHealthForms(Request $request)
@@ -5100,107 +5158,31 @@ class AdminController extends Controller
         }
 
         $adminUser = Auth::guard('admin')->user() ?: auth()->user();
-        $emailCounts = [
-            'sent' => 0,
-            'failed' => 0,
-            'skipped' => 0,
-        ];
+        abort_unless($adminUser, 403);
         $alreadyRequestedCount = 0;
         $processedCount = 0;
 
         foreach ($employeeProfiles as $employeeProfile) {
-            $pendingReason = 'Health Form Correction requested: New Health Form for ' . $category;
-            $wasAlreadyIssued = false;
-            $requestCreated = DB::transaction(function () use (
+            $correctionRequest = $this->queueEmployeeHealthFormRenewal(
+                $request,
                 $employeeProfile,
                 $adminUser,
-                $pendingReason,
                 $category,
+                '',
+                'existing',
                 $userType,
-                &$wasAlreadyIssued
-            ) {
-                User::query()->whereKey($employeeProfile->user_id)->lockForUpdate()->firstOrFail();
+                true
+            );
 
-                if ($this->activeEmployeeNewHealthFormRequest($employeeProfile)) {
-                    return false;
-                }
-
-                $wasAlreadyIssued = in_array($employeeProfile->clearance_status, ['Approved', 'Issued', 'Fully Cleared', 'Cleared'], true)
-                    || !empty($employeeProfile->verified_at);
-
-                if ($wasAlreadyIssued) {
-                    app(EmployeeHealthFormHistoryService::class)->ensureApprovedSnapshot($employeeProfile);
-                }
-
-                HealthProfileCorrectionRequest::create([
-                    'user_id' => $employeeProfile->user_id,
-                    'employee_health_profile_id' => $employeeProfile->id,
-                    'type' => HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION,
-                    'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
-                    'profile_kind' => 'employee',
-                    'required_documents' => [],
-                    'admin_note' => $pendingReason,
-                    'requested_by_user_id' => $adminUser?->id,
-                    'requested_at' => now(),
-                    'metadata' => [
-                        'request_kind' => 'bulk_new_health_form',
-                        'category' => $category,
-                        'audience' => $userType,
-                        'was_already_issued' => $wasAlreadyIssued,
-                    ],
-                ]);
-
-                return true;
-            });
-
-            if (!$requestCreated) {
+            if (!$correctionRequest) {
                 $alreadyRequestedCount++;
                 continue;
             }
             $processedCount++;
-
-            ActivityLog::create([
-                'user_id' => $adminUser?->id,
-                'user_name' => $adminUser?->name ?? $adminUser?->email ?? 'System',
-                'user_role' => strtolower((string) ($adminUser?->user_role ?? '')),
-                'action' => 'Bulk Employee Health Form Requested',
-                'module' => 'Health Records',
-                'event_type' => 'employee_bulk_new_health_form_requested',
-                'description' => 'Requested a new Health Form for employee health profile #' . $employeeProfile->id . ' under ' . $category . '.',
-                'route_name' => optional($request->route())->getName(),
-                'http_method' => $request->method(),
-                'request_path' => '/' . ltrim((string) $request->path(), '/'),
-                'status_code' => 200,
-                'subject_type' => EmployeeHealthProfile::class,
-                'subject_id' => (string) $employeeProfile->id,
-                'metadata' => [
-                    'employee_profile_id' => $employeeProfile->id,
-                    'employee_number' => $employeeProfile->employee_number,
-                    'category' => $category,
-                    'audience' => $userType,
-                    'request_kind' => 'bulk_new_health_form',
-                ],
-                'ip_address' => $request->ip(),
-                'user_agent' => substr((string) $request->userAgent(), 0, 255),
-            ]);
-
-            if (!$employeeProfile->user) {
-                $emailCounts['skipped']++;
-                continue;
-            }
-
-            try {
-                $emailStatus = app(StudentNotificationMailer::class)
-                    ->sendHealthRecordNotice($employeeProfile->user, 'health_form_correction')['status'];
-                $emailCounts[$emailStatus] = ($emailCounts[$emailStatus] ?? 0) + 1;
-            } catch (\Throwable $exception) {
-                report($exception);
-                $emailCounts['failed']++;
-            }
         }
 
         $skippedCount = count($selectedProfileIds) - $processedCount;
-        $message = $processedCount . ' bulk Health Form request' . ($processedCount === 1 ? '' : 's') . ' sent.';
+        $message = $processedCount . ' employee Health Form cycle' . ($processedCount === 1 ? '' : 's') . ' created and moved to Pending Approval. Employees do not need to log in or submit a new form.';
         if ($alreadyRequestedCount > 0) {
             $message .= ' ' . $alreadyRequestedCount . ' record' . ($alreadyRequestedCount === 1 ? ' already has' : 's already have') . ' an active request and was not sent again.';
         }
@@ -5210,15 +5192,8 @@ class AdminController extends Controller
                 $message .= ' ' . $nonEligibleCount . ' selected record' . ($nonEligibleCount === 1 ? '' : 's') . ' was no longer eligible and was skipped.';
             }
         }
-        if ($emailCounts['sent'] > 0) {
-            $message .= ' Email notifications sent: ' . $emailCounts['sent'] . '.';
-        }
-        if ($emailCounts['failed'] > 0) {
-            $message .= ' Email notifications failed: ' . $emailCounts['failed'] . '; the requests remain available in the portal.';
-        }
-
         return redirect()
-            ->route('admin.health_records', ['tab' => 'approved', 'user_type' => $userType])
+            ->route('admin.health_records', ['tab' => 'pending_approval', 'user_type' => $userType])
             ->with('success', $message);
     }
 
@@ -5539,6 +5514,7 @@ class AdminController extends Controller
         $fields = $employee ? [
             'birthday' => $date,
             'sex' => ['nullable', 'string', 'max:30'],
+            'civil_status' => ['nullable', 'string', 'max:50'],
             'office' => ['nullable', 'string', 'max:255'],
             'contact_no' => ['nullable', 'string', 'max:50'],
             'street' => ['nullable', 'string', 'max:255'],
@@ -6037,10 +6013,19 @@ class AdminController extends Controller
             return $changedFields;
         });
 
-        return redirect()->route($redirectRoute, $routeParameters)->with(
-            'success',
-            $updatedFields === [] ? 'No medical information changes to save.' : 'Medical information updated successfully.'
-        );
+        $message = $updatedFields === []
+            ? 'No medical information changes to save.'
+            : 'Medical information updated successfully.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'updated_fields' => $updatedFields,
+            ]);
+        }
+
+        return redirect()->route($redirectRoute, $routeParameters)->with('success', $message);
     }
 
     private function medicalInformationValuesAreEquivalent(string $field, mixed $current, mixed $next): bool
@@ -7796,6 +7781,7 @@ public function updateClearance(Request $request, $id)
         $appointments = Appointment::with([
             'user.healthProfile',
             'user.healthProfileStaff',
+            'user.employeeHealthProfile',
             'user.dependentProfile',
             'consultation.medicalCondition',
             'consultation.medicines.item',

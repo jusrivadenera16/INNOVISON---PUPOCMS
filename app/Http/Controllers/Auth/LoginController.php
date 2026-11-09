@@ -182,6 +182,10 @@ class LoginController extends Controller
 
     private function localLoginEnabled(?Request $request = null): bool
     {
+        if ($this->useIdpAuth()) {
+            return false;
+        }
+
         if (! (bool) config('services.local_login.enabled', false)) {
             return false;
         }
@@ -222,6 +226,14 @@ class LoginController extends Controller
 
         if ($user->needsClinicAccountTypeSelection()) {
             $request->session()->flash('show_health_profile_prompt', true);
+            return;
+        }
+
+        if ($user->clinicHealthFormAudience() === 'employee') {
+            if (!$user->employeeHealthProfile()->exists()) {
+                $request->session()->flash('show_health_profile_prompt', true);
+            }
+
             return;
         }
 
@@ -2222,7 +2234,7 @@ class LoginController extends Controller
             );
 
             return back()->withErrors([
-                'email' => 'This email is not registered in our system.',
+                'login' => 'Unable to sign in with those credentials. Check your email and password, or contact the clinic administrator.',
             ])->withInput();
         }
 
@@ -2250,7 +2262,7 @@ class LoginController extends Controller
                 );
 
                 return back()->withErrors([
-                    'email' => 'This account is inactive. Please contact the clinic administrator.',
+                    'login' => 'Unable to sign in with those credentials. Check your email and password, or contact the clinic administrator.',
                 ])->withInput();
             }
 
@@ -2284,7 +2296,7 @@ class LoginController extends Controller
         );
 
         return back()->withErrors([
-            'password' => 'Incorrect password. Please try again.',
+            'login' => 'Unable to sign in with those credentials. Check your email and password, or contact the clinic administrator.',
         ])->withInput();
     }
 

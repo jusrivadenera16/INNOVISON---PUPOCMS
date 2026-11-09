@@ -290,7 +290,7 @@ class WalkInController extends Controller
 
         $normalizedIdentifier = strtoupper($identifier);
 
-        $user = User::with(['healthProfile', 'dependentProfile'])
+        $user = User::with(['healthProfile', 'dependentProfile', 'employeeHealthProfile'])
             ->visibleForAdminHubRecords()
             ->where(function ($query) use ($identifier, $normalizedIdentifier) {
                 $query->where(function ($exactQuery) use ($identifier) {
@@ -338,7 +338,8 @@ class WalkInController extends Controller
             return $profile->user->loadMissing('dependentProfile');
         }
 
-        return $this->findUserByDependentIdNumber($identifier);
+        return $this->findUserByDependentIdNumber($identifier)
+            ?: $this->findUserByEmployeeHealthProfileIdNumber($identifier);
     }
 
     private function findUserByLocalSisReference(string $referenceNumber): ?User
@@ -352,7 +353,7 @@ class WalkInController extends Controller
         $normalizedReference = strtoupper((string) preg_replace('/[^A-Z0-9]/i', '', $referenceNumber));
 
         if (\Schema::hasColumn('users', 'sis_reference_number')) {
-            $user = User::with(['healthProfile', 'dependentProfile'])
+            $user = User::with(['healthProfile', 'dependentProfile', 'employeeHealthProfile'])
                 ->visibleForAdminHubRecords()
                 ->whereRaw("REPLACE(REPLACE(UPPER(TRIM(sis_reference_number)), '-', ''), ' ', '') = ?", [$normalizedReference])
                 ->first();
@@ -389,7 +390,7 @@ class WalkInController extends Controller
 
         $normalizedIdentifier = strtoupper($identifier);
 
-        $user = User::with(['healthProfile', 'dependentProfile'])
+        $user = User::with(['healthProfile', 'dependentProfile', 'employeeHealthProfile'])
             ->visibleForAdminHubRecords()
             ->where(function ($query) use ($identifier, $normalizedIdentifier) {
                 $query->where(function ($exactQuery) use ($identifier) {
@@ -422,7 +423,8 @@ class WalkInController extends Controller
             return $profile->user->loadMissing('dependentProfile');
         }
 
-        return $this->findUserByDependentIdNumber($identifier);
+        return $this->findUserByDependentIdNumber($identifier)
+            ?: $this->findUserByEmployeeHealthProfileIdNumber($identifier);
     }
 
     private function findUserByClinicIdNumber(string $identifier): ?User
@@ -455,6 +457,23 @@ class WalkInController extends Controller
         return $profile?->user?->loadMissing('healthProfile', 'dependentProfile');
     }
 
+    private function findUserByEmployeeHealthProfileIdNumber(string $identifier): ?User
+    {
+        $identifier = mb_strtoupper(trim($identifier));
+        if ($identifier === '' || !\Schema::hasTable('health_profile_emp')) {
+            return null;
+        }
+
+        $profile = EmployeeHealthProfile::query()
+            ->with('user')
+            ->where('health_form_category', 'Dependent')
+            ->latest('id')
+            ->get()
+            ->first(fn (EmployeeHealthProfile $candidate) => mb_strtoupper(trim((string) $candidate->id_number)) === $identifier);
+
+        return $profile?->user?->loadMissing('healthProfile', 'dependentProfile', 'employeeHealthProfile');
+    }
+
     private function isDependentHealthProfileUser(?User $user): bool
     {
         if (!$user) {
@@ -477,6 +496,21 @@ class WalkInController extends Controller
 
         return \Schema::hasTable('dependents_profiles')
             && DependentsProfile::query()->where('user_id', $user->id)->exists();
+    }
+
+    private function isGuestHealthProfileUser(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        $markers = strtolower(trim(implode(' ', array_filter([
+            (string) ($user->user_type ?? ''),
+            (string) ($user->user_role ?? ''),
+            (string) ($user->idp_role ?? ''),
+        ]))));
+
+        return str_contains($markers, 'guest') && !str_contains($markers, 'dependent');
     }
 
     private function isStudentOjtHealthProfileUser(?User $user): bool
@@ -640,7 +674,9 @@ class WalkInController extends Controller
             'student_id' => (string) ($user->student_id ?: $identifier),
             'student_number' => (string) ($user->student_number ?: $dependentProfile?->id_number ?: ''),
             'reference_number' => (string) ($user->reference_number ?: $identifier),
-            'health_form_category' => $this->isDependentHealthProfileUser($user) ? 'Dependent' : null,
+            'health_form_category' => $this->isGuestHealthProfileUser($user)
+                ? 'Guest'
+                : ($this->isDependentHealthProfileUser($user) ? 'Dependent' : null),
             'home_address' => (string) ($dependentProfile?->home_address ?? ''),
             'street' => (string) ($dependentProfile?->street ?? ''),
             'barangay' => (string) ($dependentProfile?->barangay ?? ''),
@@ -652,7 +688,7 @@ class WalkInController extends Controller
             'civil_status' => (string) ($dependentProfile?->civil_status ?? ''),
             'landline' => (string) ($dependentProfile?->landline ?? ''),
             'cellphone' => (string) ($dependentProfile?->contact_no ?? $user->contact_no ?? ''),
-            'clearance_status' => 'Pending',
+            'clearance_status' => $this->isGuestHealthProfileUser($user) ? 'Not Applicable' : 'Pending',
         ]);
 
         $user->setRelation('healthProfile', $profile);
@@ -689,7 +725,7 @@ class WalkInController extends Controller
             return null;
         }
 
-        return EmployeeHealthProfile::query()
+        $profile = EmployeeHealthProfile::query()
             ->with('user')
             ->where(function ($query) use ($referenceNumber) {
                 $query->where('employee_number', $referenceNumber);
@@ -715,6 +751,12 @@ class WalkInController extends Controller
             })
             ->latest()
             ->first();
+
+        if ($profile) {
+            return $profile;
+        }
+
+        return $this->findUserByEmployeeHealthProfileIdNumber($referenceNumber)?->employeeHealthProfile;
     }
 
     private function formatEmployeeExamValue(?string $value): ?string
@@ -767,6 +809,45 @@ class WalkInController extends Controller
             ->all();
 
         return $items === [] ? null : $items;
+    }
+
+    private function dependentAssessmentPayload(?EmployeeHealthProfile $profile): array
+    {
+        if (!$profile) {
+            return [];
+        }
+
+        return [
+            'employee_exam_distress' => $profile->vital_signs_distress_status,
+            'employee_exam_height' => $profile->height,
+            'employee_exam_weight' => $profile->weight,
+            'employee_exam_bmi' => $profile->bmi,
+            'employee_exam_bp' => $profile->bp,
+            'employee_exam_hr' => $profile->hr,
+            'employee_exam_rr' => $profile->rr,
+            'employee_exam_temperature' => $profile->temperature,
+            'employee_exam_head' => $profile->head_findings ?: [],
+            'employee_exam_eyes' => $profile->eyes_findings ?: [],
+            'employee_exam_ears' => $profile->ears_findings ?: [],
+            'employee_exam_throat' => $profile->throat_findings ?: [],
+            'employee_exam_chest_lungs' => collect($profile->chest_lungs_findings ?: [])->first(),
+            'employee_exam_chest_xray' => $profile->chest_xray_result,
+            'employee_exam_breast' => $profile->breast_findings ? [$profile->breast_findings] : [],
+            'employee_exam_heart_murmur' => $profile->heart_murmur,
+            'employee_exam_heart_rhythm' => $profile->heart_rhythm,
+            'employee_exam_abdomen' => $profile->abdomen_findings ? [$profile->abdomen_findings] : [],
+            'employee_exam_last_menstruation' => $profile->genito_urinary_date_lmp,
+            'employee_exam_extremities' => $profile->extremities_findings ? [$profile->extremities_findings] : [],
+            'employee_exam_vertebral_column' => $profile->vertebral_column_findings,
+            'employee_exam_skin' => $profile->skin_findings ?: [],
+            'employee_exam_scars' => $profile->scars_findings,
+            'employee_exam_working_impression' => $profile->working_impression,
+            'employee_exam_fit' => $profile->fit_status,
+            'employee_exam_for_work_up' => $profile->for_work_up,
+            'employee_exam_referred_to' => $profile->referred_to ?: [],
+            'employee_exam_referred_to_others' => $profile->referred_to_others,
+            'employee_exam_follow_up_on' => $profile->follow_up_on,
+        ];
     }
 
     private function ensureLocalUserFromHealthProfile(HealthProfile $profile, string $referenceNumber): ?User
@@ -1504,6 +1585,61 @@ class WalkInController extends Controller
                 'xray_findings' => (string) ($profile->xray_findings ?? ''),
                 'xray_findings_details' => (string) ($profile->xray_findings_details ?? ''),
                 'xray_date' => $this->formatHealthProfileDateValue($profile->xray_date),
+            ],
+        ];
+    }
+
+    private function employeeHealthProfileInformationPayload(?EmployeeHealthProfile $profile, ?User $user = null): array
+    {
+        if (!$profile) {
+            return [];
+        }
+
+        $profile->loadMissing('user');
+        $user = $user ?: $profile->user;
+        $yesNo = static fn ($value): string => $value === null ? '' : ((bool) $value ? 'Yes' : 'No');
+
+        return [
+            'profile_id' => $profile->id,
+            'record_type' => 'employee',
+            'full_name' => trim((string) ($profile->name ?: $user?->name ?: '')),
+            'personal_information' => [
+                'birthday' => $this->formatHealthProfileDateValue($profile->birthday),
+                'sex' => (string) ($profile->sex ?? ''),
+                'civil_status' => (string) ($profile->civil_status ?? ''),
+                'contact_no' => (string) ($profile->contact_no ?? ''),
+                'office' => (string) ($profile->office ?? ''),
+            ],
+            'address_information' => [
+                'street' => (string) ($profile->street ?? ''),
+                'barangay' => (string) ($profile->barangay ?? ''),
+                'municipality' => (string) ($profile->municipality ?? ''),
+                'province' => (string) ($profile->province ?? ''),
+            ],
+            'emergency_contact' => [
+                'emergency_contact_person' => (string) ($profile->emergency_contact_person ?? ''),
+                'emergency_contact_no' => (string) ($profile->emergency_contact_no ?? ''),
+            ],
+            'medical_history' => [
+                'past_medical_history' => is_array($profile->past_medical_history) ? $profile->past_medical_history : [],
+                'past_medical_history_others' => (string) ($profile->past_medical_history_others ?? ''),
+                'family_history' => is_array($profile->family_history) ? $profile->family_history : [],
+                'family_history_others' => (string) ($profile->family_history_others ?? ''),
+                'has_disability' => $yesNo($profile->has_disability),
+                'disability_type' => (string) ($profile->disability_type ?? ''),
+            ],
+            'hospitalization_surgery' => [
+                'previous_hospitalization' => $yesNo($profile->previous_hospitalization),
+                'previous_hospitalization_details' => (string) ($profile->previous_hospitalization_details ?? ''),
+                'operation_surgery' => $yesNo($profile->operation_surgery),
+                'operation_surgery_details' => (string) ($profile->operation_surgery_details ?? ''),
+            ],
+            'medications_lifestyle' => [
+                'current_medications' => (string) ($profile->current_medications ?? ''),
+                'allergies' => (string) ($profile->allergies ?? ''),
+                'cigarette_smoking' => $yesNo($profile->cigarette_smoking),
+                'alcohol_drinking' => $yesNo($profile->alcohol_drinking),
+                'traveled_abroad' => $yesNo($profile->traveled_abroad),
             ],
         ];
     }
@@ -2776,17 +2912,25 @@ class WalkInController extends Controller
                 $student->setRelation('healthProfile', $healthProfile);
             }
             $hasCompletedHealthForm = $this->hasCompletedHealthForm($healthProfile, $student);
-            $dependentProfile = $isEmployeeLookupScope && $this->isDependentHealthProfileUser($student)
+            $isGuestAssistedIntake = $isEmployeeLookupScope
+                && $this->isGuestHealthProfileUser($student)
+                && !$student->dependentProfile
+                && $student->clinicAccountTypeKey() !== 'dependent';
+            $dependentProfile = $isEmployeeLookupScope && !$isGuestAssistedIntake && $this->isDependentHealthProfileUser($student)
                 ? $student->dependentProfile
                 : null;
             $employeeProfile = $isEmployeeLookupScope
                 ? EmployeeHealthProfile::where('user_id', $student->id)->latest()->first()
                 : null;
-            $recordType = $isEmployeeLookupScope && $dependentProfile
-                ? 'dependent'
-                : ($isEmployeeLookupScope && $this->isStudentOjtHealthProfileUser($student)
-                    ? 'student'
-                    : ($isEmployeeLookupScope ? 'employee' : 'applicant'));
+            $isEmployeeLinkedDependent = $isEmployeeLookupScope
+                && $student->clinicAccountTypeKey() === 'dependent';
+            $recordType = $isGuestAssistedIntake
+                ? 'guest'
+                : ($isEmployeeLookupScope && ($dependentProfile || $isEmployeeLinkedDependent)
+                    ? 'dependent'
+                    : ($isEmployeeLookupScope && $this->isStudentOjtHealthProfileUser($student)
+                        ? 'student'
+                        : ($isEmployeeLookupScope ? 'employee' : 'applicant')));
             $resolvedReferenceNumber = trim((string) (
                 ($lookup !== '' && !$this->looksLikeUuid($lookup) ? $lookup : null)
                 ?: $student->reference_number
@@ -2798,12 +2942,12 @@ class WalkInController extends Controller
             ));
             $resolvedYear = trim((string) ($student->year ?? ''));
             $resolvedSection = trim((string) ($student->section ?? ''));
-            $resolvedDob = !empty($student->DOB)
-                ? (string) $student->DOB
-                : (string) ($dependentProfile?->birthday ?? '');
+            $resolvedDob = (string) ($employeeProfile?->birthday ?: (!empty($student->DOB)
+                ? $student->DOB
+                : ($dependentProfile?->birthday ?? '')));
             $resolvedEmail = trim((string) ($student->email ?? ''));
-            $resolvedBirthday = trim((string) (optional($healthProfile)->birthday ?: ($dependentProfile?->birthday ?: $resolvedDob)));
-            $resolvedAge = optional($healthProfile)->age ?? $dependentProfile?->age;
+            $resolvedBirthday = trim((string) (optional($healthProfile)->birthday ?: ($employeeProfile?->birthday ?: ($dependentProfile?->birthday ?: $resolvedDob))));
+            $resolvedAge = optional($healthProfile)->age ?? $employeeProfile?->age ?? $dependentProfile?->age;
             if (($resolvedAge === null || $resolvedAge === '') && $resolvedBirthday !== '') {
                 try {
                     $resolvedAge = \Carbon\Carbon::parse($resolvedBirthday)->age;
@@ -2811,19 +2955,20 @@ class WalkInController extends Controller
                     $resolvedAge = null;
                 }
             }
-            $resolvedHeight = trim((string) (optional($healthProfile)->height ?: ($student->height ?? '')));
-            $resolvedWeight = trim((string) (optional($healthProfile)->weight ?: ($student->weight ?? '')));
-            $resolvedSex = trim((string) (optional($healthProfile)->sex ?: ($dependentProfile?->sex ?: ($student->gender ?? ''))));
-            $resolvedCivilStatus = trim((string) (optional($healthProfile)->civil_status ?: $dependentProfile?->civil_status));
+            $resolvedHeight = trim((string) (optional($healthProfile)->height ?: ($employeeProfile?->height ?: ($student->height ?? ''))));
+            $resolvedWeight = trim((string) (optional($healthProfile)->weight ?: ($employeeProfile?->weight ?: ($student->weight ?? ''))));
+            $resolvedSex = trim((string) (optional($healthProfile)->sex ?: ($employeeProfile?->sex ?: ($dependentProfile?->sex ?: ($student->gender ?? '')))));
+            $resolvedCivilStatus = trim((string) (optional($healthProfile)->civil_status ?: ($employeeProfile?->civil_status ?: $dependentProfile?->civil_status)));
             $resolvedContactNumber = trim((string) (
                 optional($healthProfile)->cellphone
                 ?: optional($healthProfile)->landline
+                ?: $employeeProfile?->contact_no
                 ?: $dependentProfile?->contact_no
                 ?: $dependentProfile?->landline
                 ?: ($student->contact_no ?? '')
             ));
             $walkinLookupIdentifier = (string) (
-                ($recordType === 'dependent' ? $dependentProfile?->id_number : null)
+                ($recordType === 'dependent' ? ($employeeProfile?->id_number ?: $dependentProfile?->id_number) : null)
                 ?: ($isEmployeeLookupScope ? ($student->employee_number ?: $student->student_number) : $student->student_number)
                 ?: $resolvedReferenceNumber
                 ?: $student->student_id
@@ -2832,7 +2977,9 @@ class WalkInController extends Controller
             $walkinRoutePrefix = Str::startsWith((string) optional($request->route())->getName(), 'assistant.')
                 ? '/assistant'
                 : '/admin';
-            $rawClearanceStatus = trim((string) optional($healthProfile)->clearance_status);
+            $rawClearanceStatus = trim((string) (
+                $recordType === 'dependent' ? ($employeeProfile?->clearance_status ?: optional($healthProfile)->clearance_status) : optional($healthProfile)->clearance_status
+            ));
             $medicalCertificateResult = trim((string) optional($healthProfile)->med_cert_findings);
             $medicalCertificateDetails = \Schema::hasColumn('health_profiles', 'med_cert_findings_details')
                 ? trim((string) optional($healthProfile)->med_cert_findings_details)
@@ -2852,7 +2999,7 @@ class WalkInController extends Controller
             $applicantPhotoUrl = $recordType === 'applicant' && filled(optional($healthProfile)->student_photo)
                 ? route($this->walkinRouteName($request, 'applicant-photo'), ['healthProfile' => $healthProfile->id])
                 : null;
-            $approvalDateSource = $recordType === 'employee'
+            $approvalDateSource = in_array($recordType, ['employee', 'dependent'], true)
                 ? (optional($employeeProfile)->verified_at ?: optional($employeeProfile)->certified_at)
                 : optional($healthProfile)->verified_at;
             $resolvedApprovedAt = $approvalDateSource
@@ -2865,7 +3012,7 @@ class WalkInController extends Controller
                     'reference_number' => $resolvedReferenceNumber,
                     'student_number' => $student->student_number ?: '',
                     'student_id' => $student->student_id ?: '',
-                    'dependent_id_number' => $dependentProfile?->id_number ?: '',
+                    'dependent_id_number' => $employeeProfile?->id_number ?: $dependentProfile?->id_number ?: '',
                     'student_name' => $resolvedName,
                     'applicant_photo_url' => $applicantPhotoUrl,
                     'course' => $resolvedCourse,
@@ -2899,10 +3046,13 @@ class WalkInController extends Controller
                     'xray_findings_details' => $xrayDetails,
                     'has_medical_condition' => $medicalConditionSummary['has_condition'],
                     'medical_condition_summary' => $medicalConditionSummary['items'],
-                    'health_form_information' => $this->healthProfileInformationPayload($healthProfile, $student),
+                    'health_form_information' => $recordType === 'employee'
+                        ? $this->employeeHealthProfileInformationPayload($employeeProfile, $student)
+                        : $this->healthProfileInformationPayload($healthProfile, $student),
                     'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
                     'applicant_final_review_draft_data' => $healthProfile?->final_review_draft_data ?: [],
                     'employee_draft_data' => $employeeProfile?->draft_data ?: [],
+                    'dependent_assessment_data' => $recordType === 'dependent' ? $this->dependentAssessmentPayload($employeeProfile) : [],
                     'documents' => $this->healthProfileDocuments($request, $healthProfile),
                     'name_matches' => $lookupName !== '' ? $this->namesRoughlyMatch($lookupName, $student) : null,
                     'lookup_status' => $lookupStatus,
@@ -2934,7 +3084,7 @@ class WalkInController extends Controller
                 'reference_number' => $resolvedReferenceNumber,
                 'student_number' => $student->student_number ?: '',
                 'student_id' => $student->student_id ?: '',
-                'dependent_id_number' => $dependentProfile?->id_number ?: '',
+                'dependent_id_number' => $employeeProfile?->id_number ?: $dependentProfile?->id_number ?: '',
                 'student_name' => $resolvedName,
                 'applicant_photo_url' => $applicantPhotoUrl,
                 'course' => $resolvedCourse,
@@ -2968,10 +3118,13 @@ class WalkInController extends Controller
                 'xray_findings_details' => $xrayDetails,
                 'has_medical_condition' => $medicalConditionSummary['has_condition'],
                 'medical_condition_summary' => $medicalConditionSummary['items'],
-                'health_form_information' => $this->healthProfileInformationPayload($healthProfile, $student),
+                'health_form_information' => $recordType === 'employee'
+                    ? $this->employeeHealthProfileInformationPayload($employeeProfile, $student)
+                    : $this->healthProfileInformationPayload($healthProfile, $student),
                 'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
                 'applicant_final_review_draft_data' => $healthProfile?->final_review_draft_data ?: [],
                 'employee_draft_data' => $employeeProfile?->draft_data ?: [],
+                'dependent_assessment_data' => $recordType === 'dependent' ? $this->dependentAssessmentPayload($employeeProfile) : [],
                 'documents' => $this->healthProfileDocuments($request, $healthProfile),
                 'lookup_status' => $lookupStatus,
                 'record_type' => $recordType,
@@ -4898,7 +5051,7 @@ PROMPT;
                 ?: $this->findUserByEmployeeIdNumber($referenceNumber)
                 ?: $this->findUserByIdentifier($referenceNumber);
 
-            $student?->loadMissing('healthProfile', 'dependentProfile');
+            $student?->loadMissing('healthProfile', 'dependentProfile', 'employeeHealthProfile');
             $isAssessmentPatient = $student
                 && (
                     $this->isStudentOjtHealthProfileUser($student)
@@ -4910,6 +5063,70 @@ PROMPT;
                     'success' => false,
                     'message' => 'Patient health profile was not found for that Patient ID Number.',
                 ], 404);
+            }
+
+            $dependentMarkers = strtolower(trim(implode(' ', array_filter([
+                (string) ($student->user_type ?? ''),
+                (string) ($student->user_role ?? ''),
+                (string) ($student->idp_role ?? ''),
+            ]))));
+            $employeeHealthProfile = \Schema::hasTable('health_profile_emp')
+                ? EmployeeHealthProfile::query()->where('user_id', $student->id)->latest('id')->first()
+                : null;
+            $isDependentAssessment = $student->clinicAccountTypeKey() === 'dependent'
+                || (bool) $student->dependentProfile
+                || str_contains($dependentMarkers, 'dependent')
+                || strtolower(trim((string) $employeeHealthProfile?->health_form_category)) === 'dependent';
+            if ($isDependentAssessment && !$employeeHealthProfile) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The dependent health form record was not found. Please verify the dependent record before saving the assessment.',
+                ], 404);
+            }
+
+            $dependentExam = [];
+            if ($isDependentAssessment) {
+                $dependentExam = $request->validate([
+                    'employee_exam_distress' => ['nullable', 'string', 'in:not_in_distress,in_distress'],
+                    'employee_exam_height' => ['required', 'string', 'max:20'],
+                    'employee_exam_weight' => ['required', 'numeric', 'min:1', 'max:1100'],
+                    'employee_exam_bmi' => ['nullable', 'string', 'max:20'],
+                    'employee_exam_bp' => ['required', 'string', 'max:20', 'regex:/^\d{2,3}\s*\/\s*\d{2,3}$/'],
+                    'employee_exam_hr' => ['required', 'integer', 'min:1', 'max:300'],
+                    'employee_exam_rr' => ['required', 'integer', 'min:1', 'max:120'],
+                    'employee_exam_temperature' => ['required', 'numeric', 'min:30', 'max:45'],
+                    'employee_exam_head' => ['nullable', 'array'],
+                    'employee_exam_head.*' => ['string', 'in:wound,mass,alopecia'],
+                    'employee_exam_eyes' => ['nullable', 'array'],
+                    'employee_exam_eyes.*' => ['string', 'in:without_glasses,with_glasses,anicteric_sclera,pink_palpebral_conjunctiva'],
+                    'employee_exam_ears' => ['nullable', 'array'],
+                    'employee_exam_ears.*' => ['string', 'in:no_gross_deformity,no_discharge'],
+                    'employee_exam_throat' => ['nullable', 'array'],
+                    'employee_exam_throat.*' => ['string', 'in:no_tpc,no_mass,no_lymphadenopathy'],
+                    'employee_exam_chest_lungs' => ['nullable', 'string', 'in:normal,wheeze,rales'],
+                    'employee_exam_chest_xray' => ['nullable', 'string', 'in:normal,with_findings,na'],
+                    'employee_exam_breast' => ['nullable', 'array'],
+                    'employee_exam_breast.*' => ['string', 'in:normal'],
+                    'employee_exam_heart_murmur' => ['nullable', 'string', 'in:present,absent,na'],
+                    'employee_exam_heart_rhythm' => ['nullable', 'string', 'in:regular,irregular,na'],
+                    'employee_exam_abdomen' => ['nullable', 'array'],
+                    'employee_exam_abdomen.*' => ['string', 'in:normal'],
+                    'employee_exam_last_menstruation' => ['nullable', 'date'],
+                    'employee_exam_extremities' => ['nullable', 'array'],
+                    'employee_exam_extremities.*' => ['string', 'in:no_deformities'],
+                    'employee_exam_vertebral_column' => ['nullable', 'string', 'in:normal,with_deformity'],
+                    'employee_exam_skin' => ['nullable', 'array'],
+                    'employee_exam_skin.*' => ['string', 'in:pallor,rashes,lesions'],
+                    'employee_exam_scars' => ['nullable', 'string', 'in:absent,present'],
+                    'employee_exam_working_impression' => ['nullable', 'string', 'max:2000'],
+                    'employee_exam_fit' => ['nullable', 'string', 'in:Fit for Work,Fit for School,Fit for Duty,Fit for Internship,Fit for Clinic Duty,Others'],
+                    'employee_exam_fit_other' => ['nullable', 'string', 'max:255'],
+                    'employee_exam_for_work_up' => ['nullable', 'string', 'max:2000'],
+                    'employee_exam_referred_to' => ['nullable', 'array'],
+                    'employee_exam_referred_to.*' => ['string', 'in:cardio,derma,ent,optha,pulmo'],
+                    'employee_exam_referred_to_others' => ['nullable', 'string', 'max:255'],
+                    'employee_exam_follow_up_on' => ['nullable', 'date'],
+                ]);
             }
 
             $assessmentWorkflow = $this->isDependentHealthProfileUser($student)
@@ -4928,7 +5145,7 @@ PROMPT;
                 }
             }
 
-            $profile = DB::transaction(function () use ($student, $healthProfile, $referenceNumber, $validated, $height, $heightInput, $referralDetails) {
+            $profile = DB::transaction(function () use ($student, $healthProfile, $referenceNumber, $validated, $height, $heightInput, $referralDetails, $employeeHealthProfile, $isDependentAssessment, $dependentExam) {
                 $profile = $healthProfile ?: HealthProfile::firstOrNew(['user_id' => $student->id]);
                 $profile->user_id = $student->id;
                 $profile->student_id = (string) ($profile->student_id ?: $student->student_id ?: $referenceNumber);
@@ -5015,6 +5232,16 @@ PROMPT;
                     $profile->pending_reason = null;
                     $hasAssessmentValue = true;
 
+                    if ($isDependentAssessment && $employeeHealthProfile) {
+                        $employeeHealthProfile->clearance_status = 'Fully Cleared';
+                        $employeeHealthProfile->submission_status = 'approved';
+                        $employeeHealthProfile->documents_valid = true;
+                        $employeeHealthProfile->verified_at = now();
+                        $employeeHealthProfile->certified_at = $employeeHealthProfile->certified_at ?: now();
+                        $employeeHealthProfile->approved_by_user_id = auth()->id();
+                        $employeeHealthProfile->pending_reason = null;
+                    }
+
                     $student->is_health_profile_completed = 1;
                     $student->save();
 
@@ -5042,6 +5269,15 @@ PROMPT;
                     $profile->approved_by_user_id = null;
                     $profile->pending_reason = $conditionRemarks !== '' ? $conditionRemarks : $medAssessmentRemarks;
                     $hasAssessmentValue = true;
+
+                    if ($isDependentAssessment && $employeeHealthProfile) {
+                        $employeeHealthProfile->clearance_status = 'Pending/Conditional';
+                        $employeeHealthProfile->submission_status = 'pending';
+                        $employeeHealthProfile->documents_valid = false;
+                        $employeeHealthProfile->verified_at = null;
+                        $employeeHealthProfile->approved_by_user_id = null;
+                        $employeeHealthProfile->pending_reason = $conditionRemarks !== '' ? $conditionRemarks : $medAssessmentRemarks;
+                    }
                 }
 
                 if ($hasAssessmentValue) {
@@ -5054,6 +5290,45 @@ PROMPT;
                 }
 
                 $profile->save();
+
+                if ($isDependentAssessment && $employeeHealthProfile) {
+                    $employeeHealthProfile->vital_signs_distress_status = $this->formatEmployeeExamValue($dependentExam['employee_exam_distress'] ?? null);
+                    $employeeHealthProfile->height = trim((string) $dependentExam['employee_exam_height']);
+                    $employeeHealthProfile->weight = (string) $dependentExam['employee_exam_weight'];
+                    $employeeHealthProfile->bmi = trim((string) ($dependentExam['employee_exam_bmi'] ?? '')) ?: null;
+                    $employeeHealthProfile->bp = preg_replace('/\s+/', '', (string) $dependentExam['employee_exam_bp']);
+                    $employeeHealthProfile->hr = (string) $dependentExam['employee_exam_hr'];
+                    $employeeHealthProfile->rr = (string) $dependentExam['employee_exam_rr'];
+                    $employeeHealthProfile->temperature = (string) $dependentExam['employee_exam_temperature'];
+                    $employeeHealthProfile->head_findings = $this->formatEmployeeExamArray($dependentExam['employee_exam_head'] ?? []);
+                    $employeeHealthProfile->eyes_findings = $this->formatEmployeeExamArray($dependentExam['employee_exam_eyes'] ?? []);
+                    $employeeHealthProfile->ears_findings = $this->formatEmployeeExamArray($dependentExam['employee_exam_ears'] ?? []);
+                    $employeeHealthProfile->throat_findings = $this->formatEmployeeExamArray($dependentExam['employee_exam_throat'] ?? []);
+                    $employeeHealthProfile->chest_lungs_findings = $this->formatEmployeeExamArray($dependentExam['employee_exam_chest_lungs'] ?? []);
+                    $employeeHealthProfile->chest_xray_result = $this->formatEmployeeExamValue($dependentExam['employee_exam_chest_xray'] ?? null);
+                    $employeeHealthProfile->breast_findings = $this->formatEmployeeExamValue(collect($dependentExam['employee_exam_breast'] ?? [])->first());
+                    $employeeHealthProfile->heart_murmur = $this->formatEmployeeExamValue($dependentExam['employee_exam_heart_murmur'] ?? null);
+                    $employeeHealthProfile->heart_rhythm = $this->formatEmployeeExamValue($dependentExam['employee_exam_heart_rhythm'] ?? null);
+                    $employeeHealthProfile->abdomen_findings = $this->formatEmployeeExamValue(collect($dependentExam['employee_exam_abdomen'] ?? [])->first());
+                    $employeeHealthProfile->genito_urinary_date_lmp = $dependentExam['employee_exam_last_menstruation'] ?? null;
+                    $employeeHealthProfile->extremities_findings = $this->formatEmployeeExamValue(collect($dependentExam['employee_exam_extremities'] ?? [])->first());
+                    $employeeHealthProfile->vertebral_column_findings = $this->formatEmployeeExamValue($dependentExam['employee_exam_vertebral_column'] ?? null);
+                    $employeeHealthProfile->skin_findings = $this->formatEmployeeExamArray($dependentExam['employee_exam_skin'] ?? []);
+                    if (\Schema::hasColumn('health_profile_emp', 'scars_findings')) {
+                        $employeeHealthProfile->scars_findings = $this->formatEmployeeExamValue($dependentExam['employee_exam_scars'] ?? null);
+                    }
+                    $employeeHealthProfile->working_impression = trim((string) ($dependentExam['employee_exam_working_impression'] ?? '')) ?: null;
+                    $fitStatus = trim((string) ($dependentExam['employee_exam_fit'] ?? ''));
+                    $fitOther = trim((string) ($dependentExam['employee_exam_fit_other'] ?? ''));
+                    $employeeHealthProfile->fit_status = $fitStatus === 'Others' && $fitOther !== ''
+                        ? 'Others: ' . $fitOther
+                        : ($fitStatus ?: null);
+                    $employeeHealthProfile->for_work_up = trim((string) ($dependentExam['employee_exam_for_work_up'] ?? '')) ?: null;
+                    $employeeHealthProfile->referred_to = $this->formatEmployeeExamArray($dependentExam['employee_exam_referred_to'] ?? []);
+                    $employeeHealthProfile->referred_to_others = trim((string) ($dependentExam['employee_exam_referred_to_others'] ?? '')) ?: null;
+                    $employeeHealthProfile->follow_up_on = $dependentExam['employee_exam_follow_up_on'] ?? null;
+                    $employeeHealthProfile->save();
+                }
 
                 return $profile;
             });
@@ -5082,10 +5357,10 @@ PROMPT;
                 'user_id' => auth()->id(),
                 'user_name' => auth()->user()?->name ?? auth()->user()?->email ?? 'System',
                 'user_role' => strtolower((string) (auth()->user()?->user_role ?? '')),
-                'action' => 'Student/OJT Assessment Saved',
+                'action' => $isDependentAssessment ? 'Dependent Assessment Saved' : 'Student/OJT Assessment Saved',
                 'module' => 'Patient Intake',
-                'event_type' => 'student_assessment_saved',
-                'description' => 'Student/OJT assessment saved.',
+                'event_type' => $isDependentAssessment ? 'dependent_assessment_saved' : 'student_assessment_saved',
+                'description' => $isDependentAssessment ? 'Dependent assessment saved.' : 'Student/OJT assessment saved.',
                 'route_name' => optional($request->route())->getName(),
                 'http_method' => 'POST',
                 'request_path' => '/' . ltrim((string) $request->path(), '/'),
@@ -5103,7 +5378,7 @@ PROMPT;
 
             return response()->json([
                 'success' => true,
-                'message' => 'Student/OJT assessment saved.',
+                'message' => $isDependentAssessment ? 'Dependent assessment saved.' : 'Student/OJT assessment saved.',
                 'status' => $profile->clearance_status,
                 'health_profile_id' => $profile->id,
                 'assessment_review' => $this->healthProfileAssessmentReview($profile->fresh()),

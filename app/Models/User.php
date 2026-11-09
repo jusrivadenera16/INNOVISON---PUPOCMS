@@ -48,7 +48,8 @@ class User extends Authenticatable
             'admin', 'staff', 'employee', 'designee', 'admin_designee',
             'non_teaching', 'non_teaching_staff' => 'Admin',
             'guest' => 'Guest',
-            default => 'Dependent',
+            'dependent', 'dependents' => 'Regular',
+            default => 'Regular',
         };
     }
 
@@ -57,7 +58,7 @@ class User extends Authenticatable
         'student' => 'Student',
         'faculty' => 'Faculty',
         'non_teaching_staff' => 'Non-teaching Staff / Admins',
-        'dependent' => 'Guest',
+        'dependent' => 'Dependent',
     ];
 
     public const STUDENT_TYPES = [
@@ -144,7 +145,7 @@ class User extends Authenticatable
             'student', 'ojt', 'student / ojt' => 'student',
             'faculty' => 'faculty',
             'admin', 'staff', 'employee', 'non-teaching staff', 'non-teaching staff / admins' => 'non_teaching_staff',
-            'guest', 'dependent' => 'dependent',
+            'dependent' => 'dependent',
             default => null,
         };
     }
@@ -176,13 +177,18 @@ class User extends Authenticatable
         }
 
         $role = str_replace(['-', ' '], '_', strtolower(trim((string) $this->idp_role)));
+        if ($role === 'guest') {
+            return [];
+        }
+
         $type = match ($role) {
             'applicant' => 'applicant',
             'student', 'ojt', 'student_ojt' => 'student',
             'faculty' => 'faculty',
             'admin', 'staff', 'employee', 'designee', 'admin_designee',
             'non_teaching', 'non_teaching_staff' => 'non_teaching_staff',
-            'guest', 'dependent', 'dependents' => 'dependent',
+            'dependent', 'dependents' => 'dependent',
+            'guest' => null,
             default => null,
         };
 
@@ -246,7 +252,7 @@ class User extends Authenticatable
             'faculty', 'non_teaching_staff' => 'employee',
             'student' => 'student',
             'applicant' => 'applicant',
-            'dependent' => 'dependent',
+            'dependent' => 'employee',
             default => 'unselected',
         };
     }
@@ -535,5 +541,10 @@ class User extends Authenticatable
     public function dependentProfile()
     {
         return $this->hasOne(DependentsProfile::class, 'user_id');
+    }
+
+    public function linkedDependents()
+    {
+        return $this->hasMany(EmployeeHealthProfile::class, 'linked_employee_user_id');
     }
 }

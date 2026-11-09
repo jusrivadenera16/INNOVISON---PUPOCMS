@@ -68,7 +68,7 @@ class DependentProfileWriteOnceTest extends TestCase
             Request::create('/student/dependent-profile', 'POST')
         );
 
-        $this->assertStringEndsWith('/student/account', $response->getTargetUrl());
+        $this->assertSame(route('health.form.employee'), $response->getTargetUrl());
         $this->assertSame(
             'original@example.test',
             DB::table('dependents_profiles')->where('user_id', $userId)->value('email')

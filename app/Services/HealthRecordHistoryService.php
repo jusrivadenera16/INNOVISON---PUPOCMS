@@ -26,21 +26,35 @@ class HealthRecordHistoryService
 
         foreach ($corrections as $correction) {
             $metadata = is_array($correction->metadata) ? $correction->metadata : [];
+            $isClinicManagedRenewal = ($metadata['employee_login_required'] ?? null) === false;
             $isNewForm = $correction->type === HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM
                 || ($metadata['request_kind'] ?? null) === 'new_health_form'
                 || ($metadata['request_kind'] ?? null) === 'bulk_new_health_form';
-            $kind = $isNewForm ? 'New Health Form' : ($correction->type === HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION ? 'File Correction' : 'Health Form Correction');
+            $kind = $isClinicManagedRenewal
+                ? 'New Health Form Cycle'
+                : ($isNewForm ? 'New Health Form' : ($correction->type === HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION ? 'File Correction' : 'Health Form Correction'));
             $actor = $this->actorName($correction->requestedBy);
             $documents = collect($correction->required_documents ?? [])->map(fn ($item) => Str::headline((string) $item))->implode(', ');
             $details = [
                 'Form Category' => $isNewForm ? ($metadata['category'] ?? null) : null,
+                'Information Handling' => $isClinicManagedRenewal
+                    ? (($metadata['information_handling'] ?? 'existing') === 'update' ? 'Update Information' : 'Use Existing Information')
+                    : null,
                 'Reason' => $correction->admin_note,
                 'Files' => $documents,
             ];
             if ($correction->requested_at ?: $correction->created_at) {
-                $events->push($this->event($correction->requested_at ?: $correction->created_at, $kind . ' Requested', 'Requested', $actor, $details, [], 'Requests'));
+                $events->push($this->event(
+                    $correction->requested_at ?: $correction->created_at,
+                    $isClinicManagedRenewal ? $kind . ' Created' : $kind . ' Requested',
+                    $isClinicManagedRenewal ? 'Pending Approval' : 'Requested',
+                    $actor,
+                    $details,
+                    [],
+                    'Requests'
+                ));
             }
-            if ($correction->submitted_at) {
+            if ($correction->submitted_at && !$isClinicManagedRenewal) {
                 $events->push($this->event($correction->submitted_at, $kind . ' Submitted', 'Submitted', $this->actorName($correction->user), [], [], 'Requests'));
             }
             if ($correction->status === HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW && $correction->updated_at) {
@@ -63,14 +77,34 @@ class HealthRecordHistoryService
 
         foreach ($submissions as $submission) {
             $details = ['Form Category' => trim((string) $submission->category) ?: 'General Health Form'];
+            $clinicManagedRenewal = $corrections->first(function (HealthProfileCorrectionRequest $correction) use ($submission): bool {
+                $metadata = is_array($correction->metadata) ? $correction->metadata : [];
+
+                return (int) ($correction->health_form_submission_id ?? 0) === (int) $submission->id
+                    && ($metadata['employee_login_required'] ?? null) === false;
+            });
+            if ($clinicManagedRenewal) {
+                $metadata = is_array($clinicManagedRenewal->metadata) ? $clinicManagedRenewal->metadata : [];
+                $details['Information Handling'] = ($metadata['information_handling'] ?? 'existing') === 'update'
+                    ? 'Update Information'
+                    : 'Use Existing Information';
+            }
             if ($submission->requested_at && !$corrections->contains(fn ($correction) =>
                 $correction->requested_at && abs($correction->requested_at->getTimestamp() - $submission->requested_at->getTimestamp()) < 60
             )) {
                 $actor = $this->actorName($submission->requestedBy);
                 $events->push($this->event($submission->requested_at, 'New Health Form Requested', 'Requested', $actor, $details, [], 'Requests'));
             }
-            if ($submission->submitted_at) {
-                $events->push($this->event($submission->submitted_at, 'Health Form Submitted', 'Submitted', $this->actorName($submission->user), $details, [], 'Forms'));
+            if ($submission->submitted_at && !$clinicManagedRenewal) {
+                $events->push($this->event(
+                    $submission->submitted_at,
+                    'Health Form Submitted',
+                    'Submitted',
+                    $this->actorName($submission->user),
+                    $details,
+                    [],
+                    'Forms'
+                ));
             }
             if ($submission->approved_at) {
                 $events->push($this->event($submission->approved_at, 'Health Form Approved', 'Approved', $this->approvalActor($submission, $profile), $details, [], 'Forms'));

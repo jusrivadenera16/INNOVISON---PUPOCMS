@@ -2,13 +2,13 @@
 
 use App\Http\Controllers\AdminAssistantController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\DeveloperTestAccountController;
 use App\Http\Controllers\AdminGlobalSearchController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\ClinicServiceOptionController;
 use App\Http\Controllers\Auth\EmergencyAuthController;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\HealthFormCategoryController;
 use App\Http\Controllers\LandingWeatherController;
 use App\Http\Controllers\MedicalConditionController;
@@ -112,7 +112,7 @@ Route::get('/preview/student-account-type-selector', function () {
 })->name('dev.student-account-type-selector-preview');
 Route::get('/login/portal', [LoginController::class, 'redirectToIdpPortal'])->name('login.portal');
 Route::get('/auth/callback', [LoginController::class, 'handleIdpCallback'])->name('auth.callback');
-Route::post('/login-action', [LoginController::class, 'login']);
+Route::post('/login-action', [LoginController::class, 'login'])->middleware('throttle:login');
 Route::post('/post-login-terms/acknowledge', [LoginController::class, 'acknowledgePostLoginTerms'])->name('post-login-terms.acknowledge');
 Route::middleware('emergency.enabled')->group(function () {
     Route::get('/system-admin/emergency-login', [EmergencyAuthController::class, 'showLoginForm'])->name('system-admin.emergency-login');
@@ -144,7 +144,6 @@ Route::middleware('emergency.enabled')->group(function () {
         ->name('system-admin.emergency-login.verify.submit');
 });
 Route::get('/maintenance', [MaintenanceController::class, 'show'])->name('maintenance');
-Route::post('/register-action', [RegisterController::class, 'register']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/idp/logout', [LoginController::class, 'handleIdpLogout'])->name('idp.logout');
 
@@ -399,6 +398,7 @@ Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->gr
         Route::get('/admin/walkin/staff-health-form/{staffProfile}', [WalkInController::class, 'showStaffHealthForm'])->middleware('module.permission:walkin.employee_view')->name('walkin.staffHealthForm');
         Route::get('/admin/walkin/staff-document/{staffProfile}/{document}', [WalkInController::class, 'showStaffDocument'])->middleware('module.permission:walkin.employee_view')->name('walkin.staffDocument');
         Route::post('/admin/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->middleware('module.permission:walkin.encode_assessment|walkin.edit_information')->name('walkin.health-profile-information.update');
+        Route::put('/admin/walkin/employee-health-profile-information/{employeeProfile}', [AdminController::class, 'updateEmployeeMedicalInformation'])->middleware('module.permission:walkin.edit_information')->name('walkin.employee-health-profile-information.update');
         Route::post('/admin/walkin/store', [WalkInController::class, 'store'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.store');
         Route::post('/admin/walkin/consultation-evaluation', [WalkInController::class, 'sendConsultationEvaluation'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.consultation-evaluation');
         Route::post('/admin/walkin/approval-evaluation', [WalkInController::class, 'sendApprovalEvaluation'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('admin.walkin.approval-evaluation');
@@ -472,6 +472,10 @@ Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->gr
         Route::middleware('role:superadmin')->group(function () {
             Route::get('/admin/developer-tools', [AdminController::class, 'developerTools'])->name('admin.developer-tools');
             Route::post('/admin/developer-tools/clinic-logo', [AdminController::class, 'updateClinicLogo'])->name('admin.developer-tools.clinic-logo.update');
+            Route::get('/admin/developer-tools/test-accounts', [DeveloperTestAccountController::class, 'index'])->name('admin.developer-tools.test-accounts');
+            Route::post('/admin/developer-tools/test-accounts', [DeveloperTestAccountController::class, 'store'])->middleware('throttle:5,1')->name('admin.developer-tools.test-accounts.store');
+            Route::put('/admin/developer-tools/test-accounts/{userId}', [DeveloperTestAccountController::class, 'update'])->middleware('throttle:10,1')->name('admin.developer-tools.test-accounts.update');
+            Route::delete('/admin/developer-tools/test-accounts/{userId}', [DeveloperTestAccountController::class, 'destroy'])->middleware('throttle:5,1')->name('admin.developer-tools.test-accounts.destroy');
             Route::get('/admin/api-testing', [AdminController::class, 'apiTesting'])->name('admin.api-testing');
             Route::post('/admin/api-testing/sync-student-numbers', [AdminController::class, 'syncMissingStudentNumbers'])->name('admin.api-testing.sync-student-numbers');
             Route::get('/admin/api/health-monitor', [AdminController::class, 'apiHealthMonitor'])->name('admin.api.health-monitor');
@@ -610,6 +614,7 @@ Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->gr
         Route::get('/walkin/staff-health-form/{staffProfile}', [WalkInController::class, 'showStaffHealthForm'])->middleware('module.permission:walkin.employee_view')->name('walkin.staffHealthForm');
         Route::get('/walkin/staff-document/{staffProfile}/{document}', [WalkInController::class, 'showStaffDocument'])->middleware('module.permission:walkin.employee_view')->name('walkin.staffDocument');
         Route::post('/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->middleware('module.permission:walkin.encode_assessment|walkin.edit_information')->name('walkin.health-profile-information.update');
+        Route::put('/walkin/employee-health-profile-information/{employeeProfile}', [AdminController::class, 'updateEmployeeMedicalInformation'])->middleware('module.permission:walkin.edit_information')->name('walkin.employee-health-profile-information.update');
         Route::post('/walkin/store', [WalkInController::class, 'store'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.store');
         Route::post('/walkin/consultation-evaluation', [WalkInController::class, 'sendConsultationEvaluation'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.consultation-evaluation');
         Route::post('/walkin/approval-evaluation', [WalkInController::class, 'sendApprovalEvaluation'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('walkin.approval-evaluation');

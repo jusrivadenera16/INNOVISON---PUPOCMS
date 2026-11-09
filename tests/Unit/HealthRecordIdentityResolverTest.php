@@ -61,6 +61,23 @@ class HealthRecordIdentityResolverTest extends TestCase
         $this->assertSame('Student', HealthRecordIdentityResolver::userType($record));
     }
 
+    public function test_dependent_and_guest_health_records_keep_distinct_types(): void
+    {
+        $dependent = (object) [
+            'health_form_category' => 'Dependent',
+            'student_number' => null,
+            'user' => (object) ['user_type' => 'Dependent', 'idp_role' => 'dependent'],
+        ];
+        $guest = (object) [
+            'health_form_category' => 'Guest',
+            'student_number' => '2026-12345-TG-1',
+            'user' => (object) ['user_type' => 'Guest', 'user_role' => 'Guest'],
+        ];
+
+        $this->assertSame('Dependent', HealthRecordIdentityResolver::userType($dependent));
+        $this->assertSame('Guest', HealthRecordIdentityResolver::userType($guest));
+    }
+
     public function test_employee_number_uses_canonical_sources_and_never_reference_number(): void
     {
         $record = (object) [

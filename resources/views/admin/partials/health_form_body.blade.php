@@ -63,6 +63,56 @@
                 $profile->user->last_name ?? '',
             ])))
         )) ?: 'N/A';
+        $healthFormIdentityData = is_array($healthFormIdentity ?? null) ? $healthFormIdentity : [];
+        $pickStudentNamePart = static function (...$values): string {
+            foreach ($values as $value) {
+                $value = trim((string) ($value ?? ''));
+                if ($value !== '') {
+                    return $value;
+                }
+            }
+
+            return '';
+        };
+        $signatureFirstName = $pickStudentNamePart(
+            $healthFormIdentityData['puptas_first_name'] ?? null,
+            $healthFormIdentityData['first_name'] ?? null,
+            data_get($profile, 'user.first_name')
+        );
+        $signatureMiddleName = $pickStudentNamePart(
+            $healthFormIdentityData['puptas_middle_name'] ?? null,
+            $healthFormIdentityData['middle_name'] ?? null,
+            data_get($profile, 'user.middle_name')
+        );
+        $signatureLastName = $pickStudentNamePart(
+            $healthFormIdentityData['puptas_last_name'] ?? null,
+            $healthFormIdentityData['last_name'] ?? null,
+            data_get($profile, 'user.last_name')
+        );
+        $signatureSuffix = $pickStudentNamePart(
+            $healthFormIdentityData['puptas_suffix_name'] ?? null,
+            $healthFormIdentityData['suffix_name'] ?? null,
+            data_get($profile, 'user.suffix_name'),
+            data_get($profile, 'suffix_name')
+        );
+        $signatureMiddleInitial = '';
+        if ($signatureMiddleName !== '' && preg_match('/\p{L}/u', $signatureMiddleName, $middleInitialMatch)) {
+            $middleInitial = function_exists('mb_strtoupper')
+                ? mb_strtoupper($middleInitialMatch[0], 'UTF-8')
+                : strtoupper($middleInitialMatch[0]);
+            $signatureMiddleInitial = $middleInitial . '.';
+        }
+        $signatureNameParts = array_values(array_filter(
+            [$signatureFirstName, $signatureMiddleInitial, $signatureLastName],
+            static fn ($part) => $part !== ''
+        ));
+        $printedStudentSignatureName = implode(' ', $signatureNameParts);
+        if ($printedStudentSignatureName !== '' && $signatureSuffix !== '') {
+            $printedStudentSignatureName .= ', ' . $signatureSuffix;
+        }
+        if ($printedStudentSignatureName === '') {
+            $printedStudentSignatureName = $printedStudentName;
+        }
         $printedStudentEmail = trim((string) ($healthFormIdentity['email'] ?? ''))
             ?: trim((string) ($profile->user->email ?? ''));
         $printedStudentContact = trim((string) ($healthFormIdentity['contact_no'] ?? ''))
@@ -269,10 +319,12 @@ for the improvement of healthcare services.
         $printedStudentSignatureDate = $studentSignatureDate
             ? \Carbon\Carbon::parse($studentSignatureDate)->format('m/d/Y')
             : '';
-        $studentSignatureNameLength = max(1, strlen($printedStudentName));
+        $studentSignatureNameLength = max(1, function_exists('mb_strlen')
+            ? mb_strlen($printedStudentSignatureName, 'UTF-8')
+            : strlen($printedStudentSignatureName));
         $studentSignatureNameFontSize = min(
             11,
-            max(4.5, floor((330 / $studentSignatureNameLength) * 2) / 2)
+            max(7, floor((260 / $studentSignatureNameLength) * 2) / 2)
         );
     @endphp
     <div class="signature-physician-block">
@@ -294,7 +346,7 @@ for the improvement of healthcare services.
                     @else
                         <div class="signature-space"></div>
                     @endif
-                    <div class="sig-line student-signature-name" style="font-size: {{ $studentSignatureNameFontSize }}px !important;">{{ strtoupper($printedStudentName) }}</div>
+                    <div class="sig-line student-signature-name" style="font-size: {{ $studentSignatureNameFontSize }}px !important;">{{ strtoupper($printedStudentSignatureName) }}</div>
                     <div class="signature-caption">(Printed name and signature of student)</div>
                 </td>
                 <td>

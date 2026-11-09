@@ -502,7 +502,7 @@ class AdminHubIdpLinkingTest extends TestCase
             ['student', 'Student', 'health.form.student'],
             ['faculty', 'Faculty', 'health.form.employee'],
             ['non_teaching_staff', 'Admin', 'health.form.employee'],
-            ['dependent', 'Dependent', 'dependent.profile.form'],
+            ['dependent', 'Dependent', 'health.form.employee'],
         ];
         foreach ($cases as $index => [$type, $label, $route]) {
             $user = $this->upsertFromIdp(['id' => 'choice-' . $index, 'email' => 'choice-' . $index . '@example.test', 'roles' => 'superadmin']);
@@ -753,8 +753,8 @@ class AdminHubIdpLinkingTest extends TestCase
         $this->assertStringContainsString('id="healthRoleApplicantTypeTransferee"', $html);
         $this->assertStringNotContainsString('id="healthRoleStudentTypeTransferee"', $html);
         $this->assertStringContainsString('Non-teaching Staff / Admins', $html);
-        $this->assertStringContainsString('Guest', $html);
-        $this->assertStringNotContainsString('Guest / Dependent', $html);
+        $this->assertStringContainsString('For dependents linked to a PUP employee.', $html);
+        $this->assertStringNotContainsString('For guest users needing clinic access.', $html);
         $this->assertStringContainsString('Confirm your account type', $html);
         $this->assertStringContainsString('Proceeding...', $html);
         $locked = view('student.partials.clinic_account_type_selector', ['studentPendingAdmission' => true])->render();
@@ -931,9 +931,17 @@ class AdminHubIdpLinkingTest extends TestCase
 
     public function test_recognized_idp_roles_restrict_options_and_reject_tampered_choices(): void
     {
-        foreach (['faculty' => 'faculty', 'student' => 'student', 'applicant' => 'applicant', 'guest' => 'dependent', 'dependent' => 'dependent', 'admin' => 'non_teaching_staff', 'non-teaching staff' => 'non_teaching_staff'] as $role => $expected) {
+        foreach ([
+            'faculty' => ['faculty'],
+            'student' => ['student'],
+            'applicant' => ['applicant'],
+            'guest' => [],
+            'dependent' => ['dependent'],
+            'admin' => ['non_teaching_staff'],
+            'non-teaching staff' => ['non_teaching_staff'],
+        ] as $role => $allowed) {
             $user = $this->upsertFromIdp(['id' => 'option-' . $role, 'email' => str_replace(' ', '-', $role) . '@example.test', 'roles' => $role]);
-            $allowed = [$expected];
+            $originalUserType = $user->user_type;
             $this->assertSame($allowed, $user->allowedClinicAccountTypes());
             foreach (array_diff(array_keys(User::CLINIC_ACCOUNT_TYPES), $allowed) as $type) {
                 try {
@@ -942,10 +950,12 @@ class AdminHubIdpLinkingTest extends TestCase
                 } catch (ValidationException $exception) {
                     $this->assertArrayHasKey('clinic_account_type', $exception->errors());
                 }
-                $this->assertNull($user->fresh()->user_type);
+                $this->assertSame($originalUserType, $user->fresh()->user_type);
             }
-            $this->saveClinicType($user, $allowed[0]);
-            $this->assertSame(User::ROLE_STUDENT, $user->fresh()->user_role);
+            if ($allowed !== []) {
+                $this->saveClinicType($user, $allowed[0]);
+                $this->assertSame(User::ROLE_STUDENT, $user->fresh()->user_role);
+            }
         }
         $this->assertDatabaseCount('admins', 0);
     }

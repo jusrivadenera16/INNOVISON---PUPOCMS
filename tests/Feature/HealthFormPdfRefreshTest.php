@@ -508,10 +508,14 @@ class HealthFormPdfRefreshTest extends TestCase
         $this->assertStringContainsString('.home-address-value { display: inline-block; width: 240pt;', $html);
     }
 
-    public function test_very_long_student_name_automatically_uses_a_smaller_single_line_font(): void
+    public function test_long_student_signature_uses_middle_initial_and_wraps_without_clipping(): void
     {
         $user = User::forceCreate([
             'name' => 'Alexandria Cassandra Maximiliana De Los Santos Evangelista',
+            'first_name' => 'Alexandria',
+            'middle_name' => 'Cassandra',
+            'last_name' => 'Maximiliana De Los Santos Evangelista',
+            'suffix_name' => 'Jr.',
             'student_number' => '2026-0002',
         ]);
         $profile = HealthProfile::forceCreate([
@@ -526,10 +530,12 @@ class HealthFormPdfRefreshTest extends TestCase
             'healthFormSubmittedAt' => Carbon::parse('2026-07-20 09:00:00'),
         ])->render();
 
-        $this->assertMatchesRegularExpression(
-            '/student-signature-name" style="font-size: (?:[4-9](?:\.\d+)?)px !important/',
+        $this->assertStringContainsString(
+            'student-signature-name" style="font-size: 7px !important;">ALEXANDRIA C. MAXIMILIANA DE LOS SANTOS EVANGELISTA, JR.',
             $html
         );
-        $this->assertStringContainsString('white-space: nowrap', $html);
+        $this->assertStringContainsString('Alexandria Cassandra Maximiliana De Los Santos Evangelista', $html);
+        $this->assertStringContainsString('white-space: normal', $html);
+        $this->assertStringContainsString('overflow-wrap: break-word', $html);
     }
 }

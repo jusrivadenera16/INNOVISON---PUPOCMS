@@ -977,9 +977,6 @@
                     <button id="loginSubmitBtn" type="submit" class="btn-submit">Login to Portal</button>
                 </form>
 
-                <div class="switch-form">
-                    Don't have an account? <span onclick="openModal('registerModal')">Create Account</span>
-                </div>
             @endif
         @elseif($localLoginEnabled)
             <form id="loginForm" action="{{ url('/login-action') }}" method="POST">
@@ -1007,9 +1004,6 @@
                 <button id="loginSubmitBtn" type="submit" class="btn-submit">Login to Portal</button>
             </form>
 
-            <div class="switch-form">
-                Don't have an account? <span onclick="openModal('registerModal')">Create Account</span>
-            </div>
         @else
             <div class="idp-login-wrap">
                 <p class="idp-login-note">
@@ -1020,90 +1014,6 @@
     </div>
   </main>
 
-  @if(! config('services.idp.enabled') && $localLoginEnabled)
-      <div id="registerModal" class="modal-overlay">
-          <div class="modal-content">
-              <span class="modal-close" onclick="closeModal('registerModal')">&times;</span>
-              <div class="register-hero">
-                  <div class="register-hero-top">
-                      <div class="register-kicker">Local Registration</div>
-                  </div>
-                  <h2>Create Account</h2>
-                  <p>Complete the quick local registration form to create your clinic account.</p>
-              </div>
-              <form action="{{ url('/register-action') }}" method="POST">
-                  @csrf
-                  <div class="register-name-grid">
-                      <div class="form-group">
-                          <label>FIRST NAME</label>
-                          <input type="text" name="first_name" value="{{ old('first_name') }}" autocomplete="given-name" required>
-                      </div>
-                      <div class="form-group">
-                          <label>MIDDLE NAME</label>
-                          <input type="text" name="middle_name" value="{{ old('middle_name') }}" autocomplete="additional-name">
-                      </div>
-                      <div class="form-group">
-                          <label>LAST NAME</label>
-                          <input type="text" name="last_name" value="{{ old('last_name') }}" autocomplete="family-name" required>
-                      </div>
-                      <div class="form-group">
-                          <label>SUFFIX</label>
-                          <input type="text" name="suffix_name" value="{{ old('suffix_name') }}" placeholder="e.g., Jr., III" autocomplete="honorific-suffix">
-                      </div>
-                  </div>
-
-                  <div class="register-grid">
-                      <div class="form-group">
-                          <label>EMAIL ADDRESS</label>
-                          <input type="email" name="email" value="{{ old('email') }}" autocomplete="email" required>
-                      </div>
-
-                      <div class="form-group">
-                          <label>CLINIC ROLE</label>
-                          <select name="clinic_role" required>
-                              <option value="" disabled {{ old('clinic_role') ? '' : 'selected' }}>Select clinic role</option>
-                              <option value="applicant" {{ old('clinic_role') === 'applicant' ? 'selected' : '' }}>
-                                  Applicant
-                              </option>
-                              <option value="student" {{ old('clinic_role') === 'student' ? 'selected' : '' }}>
-                                  Student
-                              </option>
-                              <option value="faculty" {{ old('clinic_role') === 'faculty' ? 'selected' : '' }}>
-                                  Faculty
-                              </option>
-                              <option value="admin" {{ old('clinic_role') === 'admin' ? 'selected' : '' }}>
-                                  Admin
-                              </option>
-                              <option value="guest" {{ old('clinic_role') === 'guest' ? 'selected' : '' }}>
-                                  Guest
-                              </option>
-                          </select>
-                      </div>
-
-                      <div class="form-row">
-                          <div class="form-group">
-                              <label>PASSWORD</label>
-                              <input type="password" name="password" required>
-                          </div>
-                          <div class="form-group">
-                              <label>CONFIRM PASSWORD</label>
-                              <input type="password" name="password_confirmation" required>
-                          </div>
-                      </div>
-                  </div>
-
-                  <button type="submit" class="register-submit">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M10 17l5-5-5-5" />
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H4" />
-                      </svg>
-                      Register Account
-                  </button>
-              </form>
-          </div>
-      </div>
-  @endif
-
   <div id="loginLoadingOverlay" class="login-loading-overlay" aria-hidden="true">
       <div class="login-loading-card">
           <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="Loading" class="login-loading-logo">
@@ -1112,15 +1022,6 @@
   </div>
 
   <script>
-      function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-      function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-      window.onclick = function(event) {
-          if (event.target.className === 'modal-overlay') {
-              event.target.style.display = 'none';
-          }
-      }
-
       (function () {
           const loginForm = document.getElementById('loginForm');
           const loginSubmitBtn = document.getElementById('loginSubmitBtn');

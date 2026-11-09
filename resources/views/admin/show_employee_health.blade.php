@@ -1,10 +1,14 @@
 @extends('layouts.admin')
 
-@section('title', 'Employee Health Profile')
+@section('title', (($employeeProfile?->health_form_category ?? '') === 'Dependent') ? 'Dependent Health Profile' : 'Employee Health Profile')
 
 @php
     $employeeProfile = $employeeProfile ?? null;
     $employeeUser = $employeeProfile?->user;
+    $isDependentRecord = strtolower(trim((string) ($employeeProfile?->health_form_category ?? ''))) === 'dependent'
+        || $employeeUser?->clinicAccountTypeKey() === 'dependent';
+    $linkedEmployee = $employeeProfile?->linkedEmployee;
+    $linkedEmployeeProfile = $linkedEmployee?->employeeHealthProfile;
     $formatValue = function ($value): string {
         if (is_array($value)) {
             $value = collect($value)->filter(fn ($item) => filled($item))->implode(', ');
@@ -35,15 +39,15 @@
         }
     };
     $yesNo = fn ($value): string => (bool) $value ? 'Yes' : 'No';
-    $displayName = trim((string) ($employeeProfile?->name ?: $employeeUser?->name ?: 'Employee'));
+    $displayName = trim((string) ($employeeProfile?->name ?: $employeeUser?->name ?: ($isDependentRecord ? 'Dependent' : 'Employee')));
     $profileInitials = collect(preg_split('/\s+/', $displayName, -1, PREG_SPLIT_NO_EMPTY) ?: [])
         ->take(2)
         ->map(fn (string $part): string => strtoupper(substr($part, 0, 1)))
         ->implode('');
     $profileInitials = $profileInitials !== '' ? $profileInitials : 'EP';
-    $profileOffice = trim((string) ($employeeProfile?->office ?: $employeeProfile?->course_college ?: 'Employee'));
+    $profileOffice = trim((string) ($employeeProfile?->office ?: $employeeProfile?->course_college ?: ($isDependentRecord ? 'Dependent' : 'Employee')));
     $status = trim((string) ($employeeProfile?->clearance_status ?: $employeeProfile?->submission_status ?: 'Not Processed'));
-    $employeeProfileTypeLabel = $employeeHealthFormAudience ?? 'admin';
+    $employeeProfileTypeLabel = $isDependentRecord ? 'Dependent' : ($employeeHealthFormAudience ?? 'admin');
     $statusClass = in_array(strtolower($status), ['issued', 'fully cleared', 'approved'], true)
         ? 'profile-status-issued'
         : (in_array(strtolower($status), ['pending', 'for verification', 'pending resubmission'], true)
@@ -62,6 +66,8 @@
         ?: ($employeeProfile?->health_form_category ?: 'General Health Form');
     $existingNewHealthFormRemarks = data_get($activeNewHealthFormRequest?->metadata, 'remarks')
         ?: ($activeNewHealthFormRequest?->admin_note ?: '');
+    $existingInformationHandling = data_get($activeNewHealthFormRequest?->metadata, 'information_handling', 'existing');
+    $existingIsClinicManagedRenewal = data_get($activeNewHealthFormRequest?->metadata, 'employee_login_required') === false;
 @endphp
 
 @push('styles')
@@ -1427,15 +1433,16 @@
 
     .employee-action-head h3 {
         margin: 0;
-        color: #ffffff;
+        color: #ffffff !important;
         font-size: 18px;
         font-weight: 900;
     }
 
     .employee-action-head p {
         margin: 4px 0 0;
-        color: rgba(255, 255, 255, .88);
+        color: rgba(255, 255, 255, .92) !important;
         font-size: 13px;
+        line-height: 1.4;
     }
 
     .employee-action-close {
@@ -1516,6 +1523,17 @@
         border-color: #facc15;
         box-shadow: 0 0 0 3px rgba(250, 204, 21, .14);
         outline: none;
+    }
+
+    .employee-action-saved-info-note {
+        margin: 0;
+        padding: 10px 11px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        background: #f8fafc;
+        color: #475569;
+        font-size: 12px;
+        line-height: 1.45;
     }
 
     .employee-action-select-wrap {
@@ -1814,6 +1832,11 @@
         background: #1e293b;
         color: #f8fafc;
     }
+    [data-theme="dark"] .employee-action-saved-info-note {
+        border-color: #475569;
+        background: #1e293b;
+        color: #cbd5e1;
+    }
 
     [data-theme="dark"] .employee-action-readonly-row {
         border-color: #475569;
@@ -1957,14 +1980,14 @@
     <nav class="profile-breadcrumb" aria-label="Breadcrumb">
         <a href="{{ route('admin.health_records') }}">Health Records</a>
         <span class="profile-breadcrumb-separator" aria-hidden="true">&rarr;</span>
-        <span class="profile-breadcrumb-current" aria-current="page">Employee Health Profile</span>
+        <span class="profile-breadcrumb-current" aria-current="page">{{ $isDependentRecord ? 'Dependent Health Profile' : 'Employee Health Profile' }}</span>
     </nav>
 
     <div class="profile-card profile-hero-card">
         <div class="profile-hero-head">
             <div>
-                <h1 class="profile-title">Employee Health Profile</h1>
-                <p class="profile-sub">Issued employee health profile details and submitted documents.</p>
+                <h1 class="profile-title">{{ $isDependentRecord ? 'Dependent Health Profile' : 'Employee Health Profile' }}</h1>
+                <p class="profile-sub">{{ $isDependentRecord ? 'Dependent health profile and linked employee details.' : 'Issued employee health profile details and submitted documents.' }}</p>
             </div>
         </div>
 
@@ -1985,7 +2008,10 @@
                 </div>
 
                 <div class="profile-quick-row">
-                    <div class="profile-quick-item"><span class="profile-quick-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z" /></svg></span><span>Employee No.<strong>{{ $formatValue($employeeProfile?->employee_number ?: $employeeUser?->employee_number) }}</strong></span></div>
+                    <div class="profile-quick-item"><span class="profile-quick-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z" /></svg></span><span>{{ $isDependentRecord ? 'ID Number' : 'Employee No.' }}<strong>{{ $formatValue($isDependentRecord ? $employeeProfile?->id_number : ($employeeProfile?->employee_number ?: $employeeUser?->employee_number)) }}</strong></span></div>
+                    @if($isDependentRecord)
+                        <div class="profile-quick-item"><span class="profile-quick-icon"><x-outline-icon name="briefcase" /></span><span>Related Employee<strong>{{ $formatValue($linkedEmployee?->name) }}</strong></span></div>
+                    @endif
                     <div class="profile-quick-item"><span class="profile-quick-icon"><x-outline-icon name="user-circle" /></span><span>Gender<strong>{{ $formatValue($employeeProfile?->sex) }}</strong></span></div>
                     <div class="profile-quick-item"><span class="profile-quick-icon"><x-outline-icon name="calendar-days" /></span><span>Age<strong>{{ $formatValue($employeeProfile?->age) }}</strong></span></div>
                     <div class="profile-quick-item"><span class="profile-quick-icon"><x-outline-icon name="envelope" /></span><span>Email<strong>{{ $formatValue($employeeUser?->email) }}</strong></span></div>
@@ -2055,7 +2081,7 @@
         <section class="profile-panel is-active" id="summaryPanel" role="tabpanel">
             <div class="profile-version-pane-head">
                 <div><h3>Personal Information</h3><p>Information submitted in the employee health form.</p></div>
-                <span class="profile-history-badge">Employee</span>
+                <span class="profile-history-badge">{{ $isDependentRecord ? 'Dependent' : 'Employee' }}</span>
             </div>
             <div class="employee-profile-sections">
                 <section class="employee-profile-section" aria-labelledby="employeePersonalDetailsHeading">
@@ -2078,11 +2104,18 @@
                 <section class="employee-profile-section" aria-labelledby="employeeWorkDetailsHeading">
                     <div class="employee-profile-section-head">
                         <span class="employee-profile-section-icon" aria-hidden="true"><x-outline-icon name="briefcase" /></span>
-                        <div><h4 id="employeeWorkDetailsHeading">Employment Details</h4><p>Employee number and clinic record information.</p></div>
+                        <div><h4 id="employeeWorkDetailsHeading">{{ $isDependentRecord ? 'Linked Employee Details' : 'Employment Details' }}</h4><p>{{ $isDependentRecord ? 'Employee account associated with this dependent record.' : 'Employee number and clinic record information.' }}</p></div>
                     </div>
                     <div class="profile-grid">
-                        <div class="profile-meta"><div class="profile-meta-k">Employee Number</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->employee_number ?: $employeeUser?->employee_number) }}</div></div>
-                        <div class="profile-meta"><div class="profile-meta-k">Office / Department</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->office) }}</div></div>
+                        @if($isDependentRecord)
+                            <div class="profile-meta"><div class="profile-meta-k">ID Number</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->id_number) }}</div></div>
+                            <div class="profile-meta"><div class="profile-meta-k">Related Employee Number</div><div class="profile-meta-v">{{ $formatValue($linkedEmployeeProfile?->employee_number ?: $linkedEmployee?->employee_number) }}</div></div>
+                            <div class="profile-meta"><div class="profile-meta-k">Related Employee</div><div class="profile-meta-v">{{ $formatValue($linkedEmployee?->name) }}</div></div>
+                            <div class="profile-meta"><div class="profile-meta-k">Employee Office / Department</div><div class="profile-meta-v">{{ $formatValue($linkedEmployeeProfile?->office) }}</div></div>
+                        @else
+                            <div class="profile-meta"><div class="profile-meta-k">Employee Number</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->employee_number ?: $employeeUser?->employee_number) }}</div></div>
+                            <div class="profile-meta"><div class="profile-meta-k">Office / Department</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->office) }}</div></div>
+                        @endif
                         <div class="profile-meta"><div class="profile-meta-k">Health Form Category</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->health_form_category) }}</div></div>
                         <div class="profile-meta"><div class="profile-meta-k">School Year</div><div class="profile-meta-v">{{ $formatValue($employeeProfile?->school_year) }}</div></div>
                         <div class="profile-meta"><div class="profile-meta-k">Form Date</div><div class="profile-meta-v">{{ $formatDate($employeeProfile?->form_date) }}</div></div>
@@ -2534,7 +2567,7 @@
                             >
                                 <span class="profile-version-choice-number">V{{ $versionNumber }}</span>
                                 <span class="profile-version-choice-copy">
-                                    <strong>{{ $versionLabel }}</strong>
+                                    <strong>{{ ($versionSubmission?->status ?? '') === \App\Models\HealthFormSubmission::STATUS_SUBMITTED ? 'Pending Review' : $versionLabel }}</strong>
                                     <small>{{ $formatDate($versionSubmission?->approved_at ?: $versionSubmission?->submitted_at ?: $employeeProfile?->form_date) }}</small>
                                 </span>
                             </button>
@@ -2598,8 +2631,8 @@
                 <div class="employee-action-head-main">
                     <span class="employee-action-head-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span>
                     <div>
-                        <h3 id="newEmployeeHealthFormTitle">{{ $canViewExistingNewEmployeeHealthFormRequest ? 'Existing Health Form Request' : 'Request New Health Form' }}</h3>
-                        <p>{{ $canViewExistingNewEmployeeHealthFormRequest ? 'Review the active Health Form request for this ' . $employeeProfileTypeLabel . '.' : 'Ask this ' . $employeeProfileTypeLabel . ' to submit an updated Health Examination Record.' }}</p>
+                        <h3 id="newEmployeeHealthFormTitle">{{ $canViewExistingNewEmployeeHealthFormRequest ? ($existingIsClinicManagedRenewal ? 'Pending Health Form Cycle' : 'Existing Health Form Request') : 'Request New Health Form' }}</h3>
+                        <p>{{ $canViewExistingNewEmployeeHealthFormRequest ? 'Review this pending Health Form cycle. The employee does not need to sign in or submit another form.' : 'Start a new Health Form cycle using the saved information. The employee does not need to sign in or submit another form.' }}</p>
                     </div>
                 </div>
                 <button type="button" class="employee-action-close" id="closeNewEmployeeHealthFormModal" aria-label="Close new health form modal">
@@ -2610,7 +2643,7 @@
                 <div class="employee-action-body">
                     <div class="employee-action-readonly-row">
                         <span>Status</span>
-                        <strong>{{ ucwords(str_replace('_', ' ', $activeNewHealthFormRequest->status)) }}</strong>
+                        <strong>{{ $existingIsClinicManagedRenewal ? 'Pending Approval' : ucwords(str_replace('_', ' ', $activeNewHealthFormRequest->status)) }}</strong>
                     </div>
                     <div class="employee-action-readonly-row">
                         <span>Category / Purpose</span>
@@ -2619,6 +2652,10 @@
                     <div class="employee-action-readonly-row">
                         <span>Requested At</span>
                         <strong>{{ optional($activeNewHealthFormRequest->requested_at)->format('M d, Y h:i A') ?: 'N/A' }}</strong>
+                    </div>
+                    <div class="employee-action-readonly-row">
+                        <span>Information Handling</span>
+                        <strong>{{ $existingInformationHandling === 'update' ? 'Clinic staff will update the saved information' : 'Use existing saved information' }}</strong>
                     </div>
                     @if(filled($existingNewHealthFormRemarks))
                         <div class="employee-action-readonly-row">
@@ -2648,6 +2685,7 @@
                             </select>
                         </div>
                     </div>
+                    <p class="employee-action-saved-info-note">This request uses the saved information. To edit this employee's details, close this window and choose <strong>Update Health Information</strong> from the profile menu.</p>
                     <div class="employee-action-field">
                         <label for="newEmployeeHealthFormRemarks">Remarks</label>
                         <textarea id="newEmployeeHealthFormRemarks" name="remarks" placeholder="Optional note for why a new form is needed.">{{ old('remarks') }}</textarea>

@@ -2596,13 +2596,18 @@ class AppointmentController extends Controller
 
     private function employeeHealthFormRecordCategory(User $user): string
     {
-        return $user->clinicAccountTypeKey() === 'faculty' ? 'Faculty' : 'Employee';
+        return match ($user->clinicAccountTypeKey()) {
+            'faculty' => 'Faculty',
+            'dependent' => 'Dependent',
+            default => 'Employee',
+        };
     }
 
     private function employeeConsentPurpose(?User $user): array
     {
         return match ($user?->clinicAccountTypeKey()) {
             'faculty' => ['purpose' => 'Faculty member', 'endorsement' => 'fitness for faculty duties'],
+            'dependent' => ['purpose' => 'Dependent of a PUP employee', 'endorsement' => 'eligibility for clinic services'],
             default => ['purpose' => 'Administrative personnel', 'endorsement' => 'fitness for administrative duties'],
         };
     }
@@ -2830,6 +2835,15 @@ class AppointmentController extends Controller
         }
 
         $user->loadMissing('healthProfile', 'employeeHealthProfile', 'adminProfile', 'dependentProfile');
+        if ($user->clinicAccountTypeKey() === 'dependent') {
+            return [
+                'student_id' => trim((string) ($user->student_id ?? '')),
+                'student_number' => trim((string) (optional($user->employeeHealthProfile)->id_number ?? '')),
+                'id_number_label' => 'ID Number',
+                'uses_staff_health_form' => true,
+            ];
+        }
+
         if ($this->isDependentProfileUser($user)) {
             return [
                 'student_id' => trim((string) ($user->student_id ?? '')),
@@ -2869,6 +2883,10 @@ class AppointmentController extends Controller
     private function resolveAppointmentIdentifier(User $user, array $studentContext = []): string
     {
         $user->loadMissing('healthProfile', 'employeeHealthProfile', 'dependentProfile');
+
+        if ($user->clinicAccountTypeKey() === 'dependent') {
+            return trim((string) optional($user->employeeHealthProfile)->id_number);
+        }
 
         if ($this->isDependentProfileUser($user)) {
             return trim((string) (
@@ -3490,6 +3508,7 @@ public function account(Request $request)
         $accountProfileData = array_merge($accountProfileData, [
             'student_number' => '',
             'employee_number' => trim((string) ($employeeProfileData['employee_number'] ?? $user->employee_number ?? '')),
+            'id_number' => trim((string) ($employeeProfileData['id_number'] ?? '')),
             'first_name' => $employeeFirstName,
             'middle_name' => $employeeMiddleName ?? '',
             'last_name' => $employeeLastName,
@@ -5764,6 +5783,7 @@ private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
     }
 
     $employeeProfile = $user->employeeHealthProfile;
+    $isDependentAccount = $user->clinicAccountTypeKey() === 'dependent';
     $activeEmployeeHealthFormRequest = $employeeProfile
         ? HealthProfileCorrectionRequest::query()
             ->where('user_id', $user->id)
@@ -5801,6 +5821,7 @@ private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
         'displayName',
         'employeeHealthFormCategory',
         'employeeConsentPurpose',
+        'isDependentAccount',
         'adminForm'
     ), ['currentSchoolYear' => $configuredSchoolYear]));
 }
@@ -5914,7 +5935,9 @@ public function showStaffHealthForm()
 private function buildEmployeeHealthFormPrefill(User $user, ?EmployeeHealthProfile $employeeProfile): array
 {
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
-    $facultyProfile = $this->fetchPuptFlssFacultyProfileForUser($user);
+    $facultyProfile = $user->clinicAccountTypeKey() === 'dependent'
+        ? null
+        : $this->fetchPuptFlssFacultyProfileForUser($user);
     $facultyAddress = data_get($facultyProfile, 'profile.address', []);
     $facultyBirthday = $this->normalizeDateValue(data_get($facultyProfile, 'profile.birthday'));
     $fallbackBirthday = $this->normalizeDateValue(optional($employeeProfile)->birthday ?: $user->DOB ?: optional($linkedAdminProfile)->birthday);
@@ -5942,6 +5965,7 @@ private function buildEmployeeHealthFormPrefill(User $user, ?EmployeeHealthProfi
             ?? EmployeeNumber::normalize($user->employee_number)
             ?? EmployeeNumber::normalize(optional($linkedAdminProfile)->employee_number)
             ?? '',
+        'id_number' => trim((string) optional($employeeProfile)->id_number),
         'office' => trim((string) (optional($employeeProfile)->office ?: data_get($facultyProfile, 'department') ?: optional($linkedAdminProfile)->office)),
         'birthday' => $birthday,
         'age' => $age,
@@ -6099,6 +6123,8 @@ private function processEmployeeHealthForm(Request $request, bool $adminForm = f
         return redirect('/login')->with('error', 'Please login first.');
     }
 
+    $isDependentAccount = !$adminForm && $user->clinicAccountTypeKey() === 'dependent';
+
     if ($adminForm) {
         abort_unless($this->canUseAdminEmployeeHealthForm($user), 403);
     } elseif (!$this->shouldUseEmployeeHealthForm($user)) {
@@ -6150,12 +6176,15 @@ private function processEmployeeHealthForm(Request $request, bool $adminForm = f
     $configuredSchoolYear = $this->configuredCurrentSchoolYear();
 
     $validated = $request->validate([
-        'employee_number' => [
+        'employee_number' => $isDependentAccount ? ['prohibited'] : [
             'nullable',
             'string',
             'regex:/^\d{5}$/',
             $employeeNumberRule,
         ],
+        'id_number' => $isDependentAccount
+            ? ['required', 'string', 'max:120']
+            : ['prohibited'],
         'first_name' => ['required', 'string', 'max:120'],
         'middle_name' => ['nullable', 'string', 'max:120'],
         'last_name' => ['required', 'string', 'max:120'],
@@ -6168,7 +6197,9 @@ private function processEmployeeHealthForm(Request $request, bool $adminForm = f
         'emergency_contact_person' => ['required', 'string', 'max:255'],
         'emergency_contact_no' => ['required', 'string', 'size:11', 'regex:/^09\d{9}$/'],
         'form_date' => ['required', 'date'],
-        'office' => ['required', 'string', 'max:255'],
+        'office' => $isDependentAccount
+            ? ['nullable', 'string', 'max:255']
+            : ['required', 'string', 'max:255'],
         'school_year' => ['nullable', 'string', 'max:40'],
         'school_year_not_applicable' => ['nullable', 'boolean'],
         'school_year_from' => $configuredSchoolYear !== '' ? ['nullable'] : ['nullable', 'integer', 'digits:4', 'between:1950,2100', 'required_with:school_year_to'],
@@ -6247,6 +6278,8 @@ private function processEmployeeHealthForm(Request $request, bool $adminForm = f
         'birthday.before_or_equal' => 'Age must be at least 15 years old.',
         'age.min' => 'Age must be at least 15 years old.',
     ]);
+
+    $linkedEmployee = $isDependentAccount ? $existingEmployeeProfile?->linkedEmployee : null;
 
     $schoolYearFrom = trim((string) ($validated['school_year_from'] ?? ''));
     $schoolYearTo = trim((string) ($validated['school_year_to'] ?? ''));
@@ -6360,17 +6393,17 @@ private function processEmployeeHealthForm(Request $request, bool $adminForm = f
             'guardianName' => '',
             'guardianSignatureSrc' => null,
             'hideGuardianBlock' => true,
-            'signatureAlt' => 'Employee Signature',
-            'signatureCaption' => "Employee's Signature Over Printed Name/ Date",
-            'fallbackSignerName' => 'EMPLOYEE NAME',
+            'signatureAlt' => $isDependentAccount ? 'Dependent Signature' : 'Employee Signature',
+            'signatureCaption' => $isDependentAccount ? "Dependent's Signature Over Printed Name/ Date" : "Employee's Signature Over Printed Name/ Date",
+            'fallbackSignerName' => $isDependentAccount ? 'DEPENDENT NAME' : 'EMPLOYEE NAME',
             'postRemarksNote' => 'Both employee and clinic staff will affix their signature if required by the Medical Clinic.',
         ])->setPaper('letter', 'portrait');
 
-        $declarationIdentifier = preg_replace('/[^A-Za-z0-9\-_]+/', '-', (string) (
-            $validated['employee_number']
-            ?: $user->employee_number
-            ?: $user->id
-        )) ?: 'employee-' . $user->id;
+        $declarationIdentifier = $isDependentAccount
+            ? 'dependent-' . $user->id
+            : (preg_replace('/[^A-Za-z0-9\-_]+/', '-', (string) (
+                $validated['employee_number'] ?? $user->employee_number ?? $user->id
+            )) ?: 'employee-' . $user->id);
         $employeeHealthDeclarationPath = 'health_profile_employees/health_declarations/declaration-'
             . $declarationIdentifier . '-' . now()->format('Ymd-His') . '.pdf';
         $this->healthFiles()->put($employeeHealthDeclarationPath, $declarationPdf->output());
@@ -6379,7 +6412,13 @@ private function processEmployeeHealthForm(Request $request, bool $adminForm = f
     $profile = $existingEmployeeProfile ?: new EmployeeHealthProfile();
     $profile->fill([
         'user_id' => $user->id,
-        'employee_number' => $validated['employee_number'] ?? null,
+        'employee_number' => $isDependentAccount ? null : ($validated['employee_number'] ?? null),
+        ...($isDependentAccount && Schema::hasColumn('health_profile_emp', 'id_number') ? [
+            'id_number' => $validated['id_number'],
+        ] : []),
+        ...($isDependentAccount && Schema::hasColumn('health_profile_emp', 'linked_employee_user_id') ? [
+            'linked_employee_user_id' => $linkedEmployee?->id,
+        ] : []),
         ...(\Schema::hasColumn('health_profile_emp', 'health_form_category') ? [
             'health_form_category' => $validated['employee_health_form_category'],
         ] : []),
@@ -6405,7 +6444,7 @@ private function processEmployeeHealthForm(Request $request, bool $adminForm = f
         'emergency_contact_person' => $validated['emergency_contact_person'],
         'emergency_contact_no' => $validated['emergency_contact_no'],
         'form_date' => $validated['form_date'],
-        'office' => $validated['office'],
+        'office' => $validated['office'] ?? null,
         'school_year' => $validated['school_year'] ?? null,
         'age' => $validated['age'],
         'sex' => $validated['sex'],
@@ -6527,7 +6566,9 @@ private function processEmployeeHealthForm(Request $request, bool $adminForm = f
     }
     $user->name = $fullName;
     $user->gender = $validated['sex'];
-    $user->employee_number = $validated['employee_number'] ?? null;
+    if (!$isDependentAccount) {
+        $user->employee_number = $validated['employee_number'] ?? null;
+    }
     $user->is_health_profile_completed = $adminForm ? 1 : 0;
     $user->save();
 
@@ -6539,7 +6580,9 @@ private function processEmployeeHealthForm(Request $request, bool $adminForm = f
             : 'Employee Health Examination Submitted',
         'description' => $adminForm
             ? 'Super Admin/Clinic Staff saved an automatically approved Health Examination Record.'
-            : 'Faculty/administrative employee/dependent submitted a Health Examination Record.',
+            : ($isDependentAccount
+                ? 'Dependent submitted a Health Examination Record.'
+                : 'Faculty/administrative employee submitted a Health Examination Record.'),
         'ip_address' => $request->ip(),
         'user_agent' => $request->userAgent(),
     ]);

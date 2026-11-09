@@ -20,6 +20,7 @@
                     'student' => 'identification',
                     'faculty' => 'user-circle',
                     'non_teaching_staff' => 'briefcase',
+                    'dependent' => 'users',
                     default => 'users',
                 };
                 $accountTypeDescription = match ($accountType) {
@@ -27,7 +28,8 @@
                     'student' => 'For Regular Students, Ladderized, Returnees, Shiftees, and OJT.',
                     'faculty' => 'For teaching personnel and academic staff.',
                     'non_teaching_staff' => 'For administrative and support personnel.',
-                    default => 'For guest users needing clinic access.',
+                    'dependent' => 'For dependents linked to a PUP employee.',
+                    default => '',
                 };
                 $accountTypeDisabled = true;
             @endphp

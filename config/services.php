@@ -58,6 +58,14 @@ return [
         ))),
     ],
 
+    'test_account_creation' => [
+        'enabled' => filter_var(env('TEST_ACCOUNT_CREATION_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'allowed_hosts' => array_values(array_filter(array_map(
+            static fn ($host) => strtolower(trim($host)),
+            explode(',', (string) env('TEST_ACCOUNT_CREATION_ALLOWED_HOSTS', 'staging.clinic-ms.inaebsit2027.com'))
+        ))),
+    ],
+
     'idp' => [
         'enabled' => filter_var(env('IDP_ENABLED', false), FILTER_VALIDATE_BOOL),
         'base_url' => rtrim((string) env('IDP_BASE_URL', ''), '/'),
