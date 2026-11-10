@@ -989,6 +989,7 @@
         .preferences-settings-page .preferences-school-year-grid .settings-field:nth-child(n) { border-top: 0; }
     }
 </style>
+@include('admin.partials.preferences-card-styles')
 @endpush
 
 @section('content')
@@ -1028,7 +1029,7 @@
     <section class="settings-section-hero">
         <div>
             <h1 class="settings-section-title"><span class="preferences-title-icon"><x-outline-icon name="code-bracket-square" /></span><span>System Preferences</span></h1>
-            <p>Configure admin appointment alerts, student email reminders, and clinic closures.</p>
+            <p>Manage alerts, reminders, Health Form requests, and clinic availability.</p>
             <span class="preferences-autosave-meta preferences-hero-save-meta">
                 <span class="preferences-autosave-status" data-preferences-autosave-status aria-live="polite"></span>
                 <span data-preferences-last-saved>
@@ -1056,26 +1057,24 @@
                 <input type="hidden" name="clinic_closure_message" value="{{ $settings->clinic_closure_message }}">
 
                 <div class="preferences-workflow-content">
-                    <section class="preferences-category" aria-labelledby="adminEmailAlertsHeading">
-                        <div class="preferences-subheading" id="adminEmailAlertsHeading">Admin Appointment Email Alerts</div>
-                        <p class="settings-field-note" style="padding:0 10px 8px;margin:0;">Optional alerts are sent for new online appointments to admin accounts that enable them. This account is off by default.</p>
+                    <section class="preferences-category preferences-category--alerts" aria-labelledby="adminEmailAlertsHeading">
+                        <div class="preferences-subheading" id="adminEmailAlertsHeading"><x-outline-icon name="bell" /> Admin Email Alerts</div>
+                        <p class="settings-field-note preferences-card-description">Email me when a new online appointment is submitted. Applies to this account only.</p>
                         <div class="settings-form-grid preferences-general-grid preferences-admin-grid">
                             <div class="settings-field">
-                                <label for="admin_appointment_email_alerts">New Online Appointment Email Alert</label>
                                 <input type="hidden" name="admin_appointment_email_alerts" value="0">
                                 <label class="switch preferences-switch-row" for="admin_appointment_email_alerts">
-                                    <input type="checkbox" id="admin_appointment_email_alerts" name="admin_appointment_email_alerts" value="1" {{ $adminAppointmentAlertsEnabled ? 'checked' : '' }}>
+                                    <input type="checkbox" id="admin_appointment_email_alerts" name="admin_appointment_email_alerts" aria-label="Receive email alerts for new online appointments" value="1" {{ $adminAppointmentAlertsEnabled ? 'checked' : '' }}>
                                     <span class="slider" aria-hidden="true"></span>
                                     <span class="preferences-switch-label is-on">Enabled</span>
                                     <span class="preferences-switch-label is-off">Disabled</span>
                                 </label>
-                                <span class="settings-field-note">Your choice applies to this account. Only opted-in admins receive the alert.</span>
                             </div>
                         </div>
                     </section>
                     <section class="preferences-category" aria-labelledby="currentSchoolYearHeading">
-                        <div class="preferences-subheading" id="currentSchoolYearHeading">Current School Year</div>
-                        <p class="settings-field-note" style="padding:0 10px 8px;margin:0;">Select the academic year used for new health forms. The other year will automatically stay one year apart.</p>
+                        <div class="preferences-subheading" id="currentSchoolYearHeading"><x-outline-icon name="calendar-days" /> Current School Year</div>
+                        <p class="settings-field-note preferences-card-description">Used for new Health Forms. The ending year adjusts automatically.</p>
                         <div class="settings-form-grid preferences-general-grid preferences-school-year-grid">
                             <div class="settings-field">
                                 <label for="academic_year_from">From Year</label>
@@ -1102,8 +1101,8 @@
                         </div>
                     </section>
                     <section class="preferences-category" aria-labelledby="studentReminderHeading">
-                        <div class="preferences-subheading" id="studentReminderHeading">Student Reminder Schedule</div>
-                        <p class="settings-field-note" style="padding:0 10px 8px;margin:0;">Reminder timing and quiet hours apply clinic-wide. Each student controls email delivery from their own account.</p>
+                        <div class="preferences-subheading" id="studentReminderHeading"><x-outline-icon name="clock" /> Student Reminders</div>
+                        <p class="settings-field-note preferences-card-description">Set clinic-wide reminder timing. Students manage their own email preferences.</p>
                         <div class="settings-form-grid preferences-general-grid preferences-student-grid">
                         <div class="settings-field">
                             <label for="appointment_reminder_hours">Appointment Reminder</label>
@@ -1150,35 +1149,13 @@
                         </div>
                     </section>
 
-                    <section class="preferences-category" aria-labelledby="studentReminderPreviewHeading">
-                        <div class="preferences-subheading" id="studentReminderPreviewHeading">Reminder Preview</div>
-                        <div class="preferences-reminder-preview" aria-live="polite">
-                            <div class="preferences-preview-item">
-                                <x-outline-icon name="calendar" />
-                                <div><strong>Appointment reminder</strong><span data-appointment-preview></span></div>
-                            </div>
-                            <div class="preferences-preview-item">
-                                <x-outline-icon name="bell" />
-                                <div><strong>Pending compliance reminder</strong><span data-compliance-preview></span></div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="preferences-category" aria-labelledby="clinicOperatingHeading">
-                        <div class="preferences-subheading" id="clinicOperatingHeading">Clinic Operating Schedule</div>
-                        <div class="preferences-schedule-row">
-                            <div class="preferences-schedule-copy">
-                                <x-outline-icon name="clock" />
-                                <span>Clinic operating hours:</span>
-                                <strong>{{ app(\App\Services\ClinicWorkflowService::class)->clinicScheduleLabel() }}</strong>
-                            </div>
-                            <a class="preferences-schedule-link" href="{{ route('admin.settings.clinic') }}">Manage Schedule <x-outline-icon name="chevron-right" /></a>
-                        </div>
-                    </section>
                 </div>
             </form>
         </div>
     </section>
+
+    <div class="preferences-action-grid">
+    @include('admin.partials.student-health-request-settings')
 
     <section class="settings-panel preferences-closure-card">
         <div class="settings-panel-head">
@@ -1196,6 +1173,7 @@
         </div>
     </section>
 
+    </div>
     <div class="preferences-modal" id="temporaryClosureModal" hidden>
         <section class="preferences-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="temporaryClosureTitle">
             <div class="preferences-modal-header">
@@ -1336,30 +1314,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return true;
     }
 
-    function updateReminderPreview() {
-        const appointmentField = document.querySelector('#appointment_reminder_hours');
-        const complianceField = document.querySelector('#pending_compliance_reminder_days');
-        const maxField = document.querySelector('#pending_compliance_reminder_max_count');
-        const quietEnabled = document.querySelector('#notification_quiet_hours_enabled')?.checked;
-        const quietStart = document.querySelector('#notification_quiet_hours_start')?.value || '20:00';
-        const quietEnd = document.querySelector('#notification_quiet_hours_end')?.value || '07:00';
-        const appointmentPreview = document.querySelector('[data-appointment-preview]');
-        const compliancePreview = document.querySelector('[data-compliance-preview]');
-        const quietText = quietEnabled ? ` Delivery pauses from ${quietStart} to ${quietEnd}.` : '';
-
-        if (appointmentPreview) {
-            const label = appointmentField?.selectedOptions[0]?.textContent || 'Disabled';
-            appointmentPreview.textContent = appointmentField?.value === '0'
-                ? 'No appointment reminder will be sent.'
-                : `One email is sent ${label.toLowerCase()}.${quietText}`;
-        }
-        if (compliancePreview) {
-            const label = complianceField?.selectedOptions[0]?.textContent || 'Disabled';
-            compliancePreview.textContent = complianceField?.value === '0'
-                ? 'No pending compliance reminder will be sent.'
-                : `${label}, up to ${maxField?.value || 3} reminder(s).${quietText}`;
-        }
-    }
 
     const academicYearFromInput = generalPreferencesForm?.querySelector('[data-year-picker-role="from"]');
     const academicYearToInput = generalPreferencesForm?.querySelector('[data-year-picker-role="to"]');
@@ -1601,7 +1555,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         storePendingPreferences();
         syncClosurePreferences();
-        updateReminderPreview();
         window.clearTimeout(autosaveTimer);
         autosaveTimer = window.setTimeout(saveGeneralPreferences, 180);
     });
@@ -1610,7 +1563,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!event.target.matches('input[type="time"]')) return;
         storePendingPreferences();
         syncClosurePreferences();
-        updateReminderPreview();
         window.clearTimeout(autosaveTimer);
         autosaveTimer = window.setTimeout(saveGeneralPreferences, 500);
     });
@@ -1624,7 +1576,6 @@ document.addEventListener('DOMContentLoaded', function () {
         syncClosurePreferences();
         window.setTimeout(saveGeneralPreferences, 250);
     }
-    updateReminderPreview();
 
     function toLocalDateTimeValue(date) {
         const pad = value => String(value).padStart(2, '0');
@@ -1671,6 +1622,20 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    const quietHoursToggle = document.getElementById('notification_quiet_hours_enabled');
+    function syncQuietHoursControls() {
+        ['notification_quiet_hours_start', 'notification_quiet_hours_end'].forEach(function (id) {
+            const input = document.getElementById(id);
+            if (!input) return;
+            input.readOnly = !quietHoursToggle.checked;
+            input.setAttribute('aria-disabled', String(!quietHoursToggle.checked));
+            input.closest('.settings-field')?.classList.toggle('is-quiet-inactive', !quietHoursToggle.checked);
+        });
+    }
+    quietHoursToggle?.addEventListener('change', syncQuietHoursControls);
+    if (quietHoursToggle) syncQuietHoursControls();
+    generalPreferencesForm?.addEventListener('reset', function () { window.setTimeout(syncQuietHoursControls, 0); });
+
     document.querySelectorAll('[data-preferences-modal-open]').forEach(function (button) {
         button.addEventListener('click', function () {
             const modal = document.querySelector(button.dataset.preferencesModalOpen);
@@ -1681,7 +1646,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    document.querySelectorAll('#temporaryClosureModal [data-preferences-modal-close], #temporaryClosureModal [data-preferences-modal-cancel]').forEach(function (button) {
+    document.querySelectorAll('.preferences-modal [data-preferences-modal-close], .preferences-modal [data-preferences-modal-cancel]').forEach(function (button) {
         button.addEventListener('click', function () {
             const modal = button.closest('.preferences-modal');
             if (!modal) return;
@@ -1691,11 +1656,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    document.querySelector('#temporaryClosureModal')?.addEventListener('click', function (event) {
-        if (event.target === this) {
-            this.hidden = true;
-            document.body.classList.remove('modal-open');
-        }
+    document.querySelectorAll('.preferences-modal').forEach(function (modal) {
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal) {
+                modal.hidden = true;
+                document.body.classList.remove('modal-open');
+            }
+        });
     });
 });
 </script>

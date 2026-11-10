@@ -4080,7 +4080,7 @@
                 </div>
                 <div class="correction-actions">
                     @if($profileIsLocalStudent && $activeNewHealthFormRequest->status === \App\Models\HealthFormSubmission::STATUS_REQUESTED)
-                        <form id="cancelExistingHealthFormRequest" method="POST" action="{{ route('admin.health_profile.health_form_request.cancel', [$profile->id, $activeNewHealthFormRequest->id]) }}">
+                        <form id="cancelExistingHealthFormRequest" method="POST" action="{{ route('admin.health_profile.health_form_request.cancel', [$profile->id, $activeNewHealthFormRequest->id]) }}" data-loader-message="Cancelling request" data-loader-detail="Cancelling the Health Form request and keeping the approved record and history.">
                             @csrf
                             <button type="submit" class="correction-cancel">Cancel Request</button>
                         </form>

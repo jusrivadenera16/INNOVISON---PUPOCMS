@@ -4641,7 +4641,12 @@
         @include('student.partials.clinic_account_type_selector')
     @endif
 
-    @if($showHealthFormActionModal)
+    @php
+        $canReuseRequestedHealthForm = $studentHealthActionMode === 'new'
+            && $studentPendingHealthFormRequest
+            && !$studentUsesEmployeeHealthForm && !$studentUsesDependentProfile;
+    @endphp
+    @if($showHealthFormActionModal || $canReuseRequestedHealthForm)
     <div
         id="healthFormActionModal"
         class="health-form-action-modal"
@@ -4689,7 +4694,7 @@
                         @if(filled(optional($studentPendingHealthFormRequest)->category))
                             for <strong>{{ $studentPendingHealthFormRequest->category }}</strong>
                         @endif.
-                        You can now fill out and submit a fresh form.
+                        Choose whether to submit your saved information or update it first.
                     </p>
                 @endif
 
@@ -4699,20 +4704,37 @@
                     </span>
                     <div>
                         <strong>{{ $studentHealthActionMode === 'correction' ? 'Clinic Note' : 'Request Details' }}</strong>
-                        <span>
-                            {{ $studentHealthActionNote !== ''
-                                ? $studentHealthActionNote
-                                : ($studentHealthActionMode === 'correction'
-                                    ? 'Please review and update the information identified by the Medical Clinic.'
-                                    : 'Please complete the new form using your current health information.') }}
-                        </span>
+                        <span class="health-form-action-note-copy">{{ $studentHealthActionNote !== '' ? $studentHealthActionNote : ($studentHealthActionMode === 'correction' ? 'Please review and update the information identified by the Medical Clinic.' : 'Please complete the new form using your current health information.') }}</span>
                     </div>
                 </div>
+                @if($canReuseRequestedHealthForm)
+                    <fieldset class="health-form-information-choices">
+                        <legend>Information for this Health Form</legend>
+                        <p class="health-form-choice-intro">How would you like to complete your new health information form?</p>
+                        <label class="health-form-information-option">
+                            <input type="radio" name="requested_information_choice" value="existing" checked>
+                            <span class="health-form-choice-icon" aria-hidden="true"><x-outline-icon name="document-check" /></span>
+                            <span class="health-form-choice-copy"><span class="health-form-choice-heading"><strong>Use Existing Information</strong><span class="health-form-choice-recommended">Recommended</span></span><small>Submit your previously saved health information without making changes.</small><span class="health-form-choice-hint"><x-outline-icon name="check" /> Uses your latest saved health record</span></span>
+                        </label>
+                        <label class="health-form-information-option">
+                            <input type="radio" name="requested_information_choice" value="update">
+                            <span class="health-form-choice-icon" aria-hidden="true"><x-outline-icon name="pencil-square" /></span>
+                            <span class="health-form-choice-copy"><span class="health-form-choice-heading"><strong>Update My Information</strong></span><small>Review and edit your existing health information before submitting the new form.</small><span class="health-form-choice-hint"><x-outline-icon name="check" /> Allows you to update your saved details</span></span>
+                        </label>
+                    </fieldset>
+                @endif
             </div>
 
             <footer class="health-form-action-actions">
                 <button type="button" class="health-form-action-later" data-health-form-action-close>Review Later</button>
-                <a href="{{ $studentHealthFormActionRoute }}" class="health-form-action-primary" data-health-form-action-primary>
+                @if($canReuseRequestedHealthForm)
+                    <form method="POST" action="{{ route('student.health_form.use_existing') }}" data-health-form-existing-submit>
+                        @csrf
+                        <input type="hidden" name="submission_id" value="{{ $studentPendingHealthFormRequest->id }}">
+                        <button type="submit" class="health-form-action-primary">Submit Existing Information <x-outline-icon name="arrow-long-right" /></button>
+                    </form>
+                @endif
+                <a href="{{ $studentHealthFormActionRoute }}" class="health-form-action-primary" data-health-form-action-primary @if($canReuseRequestedHealthForm) hidden @endif>
                     @if($studentHealthActionMode === 'correction')
                         <x-outline-icon name="pencil-square" />
                         <span>Edit Health Form</span>
@@ -4727,6 +4749,41 @@
     </div>
 
     <style>
+        #healthFormActionModal [hidden] { display: none !important; }
+        #healthFormActionModal .health-form-information-choices { min-width: 0; width: 100%; box-sizing: border-box; margin: 16px 0 0; padding: 0; border: 0; }
+        #healthFormActionModal .health-form-information-choices legend { margin: 0; padding: 0; font-size: 13px; font-weight: 800; color: #70131b; }
+        #healthFormActionModal .health-form-choice-intro { font-size: 11px; margin: 3px 0 10px; color: #475569; }
+        #healthFormActionModal .health-form-information-option { display: grid; grid-template-columns: 16px 32px minmax(0, 1fr); align-items: center; width: 100%; min-width: 0; box-sizing: border-box; gap: 12px; padding: 13px 12px; margin: 9px 0 0; border: 1px solid #cbd5e1; border-radius: 9px; cursor: pointer; text-align: left; }
+        #healthFormActionModal .health-form-information-option:has(input:checked) { border-color: #801b2d; background: #fff5dc; }
+        #healthFormActionModal .health-form-information-option input[type="radio"] { appearance: auto; display: inline-block; position: static; width: 15px !important; height: 15px !important; min-width: 15px; min-height: 15px; max-width: 15px; max-height: 15px; padding: 0 !important; margin: 0 !important; accent-color: #801b2d; box-shadow: none; cursor: pointer; }
+        #healthFormActionModal .health-form-choice-icon { display: grid; place-items: center; color: #801b2d; }
+        #healthFormActionModal .health-form-choice-icon svg { width: 30px; height: 30px; }
+        #healthFormActionModal .health-form-choice-copy { display: block; min-width: 0; text-transform: none; }
+        #healthFormActionModal .health-form-choice-heading { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+        #healthFormActionModal .health-form-choice-heading strong { color: #801b2d; font-size: 12px; font-weight: 800; text-transform: none; }
+        #healthFormActionModal .health-form-choice-recommended { display: inline-block; padding: 3px 7px; border-radius: 20px; background: #991b1b; color: #fff; font-size: 9px; line-height: 1.2; font-weight: 700; }
+        #healthFormActionModal .health-form-choice-copy small { display: block; color: #475569; margin-top: 4px; font-size: 11px; line-height: 1.45; text-transform: none; }
+        #healthFormActionModal .health-form-choice-hint { display: flex; align-items: center; gap: 5px; margin-top: 5px; color: #475569; font-size: 10px; line-height: 1.4; text-transform: none; }
+        #healthFormActionModal .health-form-choice-hint svg { flex: 0 0 13px; width: 13px; height: 13px; color: #801b2d; }
+        #healthFormActionModal .health-form-action-body > p { margin: 10px 0 14px; font-size: 12px; line-height: 1.6; }
+        #healthFormActionModal .health-form-action-note { grid-template-columns: 30px minmax(0, 1fr); align-items: center; padding: 12px; gap: 12px; margin-top: 14px; }
+        #healthFormActionModal .health-form-action-status { font-size: 12px; gap: 8px; margin-bottom: 12px; }
+        #healthFormActionModal .health-form-action-status > span { flex: 0 0 30px; width: 30px; height: 30px; }
+        #healthFormActionModal .health-form-action-note-icon { display: grid; place-items: center; width: 30px; height: 30px; color: #991b1b; }
+        #healthFormActionModal .health-form-action-note-icon svg,
+        #healthFormActionModal .health-form-action-status svg { display: block; width: 16px; height: 16px; }
+        html[data-theme="dark"] #healthFormActionModal .health-form-choice-heading strong,
+        html[data-theme="dark"] #healthFormActionModal .health-form-information-choices legend { color: #f8fafc; }
+        html[data-theme="dark"] #healthFormActionModal .health-form-choice-copy small,
+        html[data-theme="dark"] #healthFormActionModal .health-form-choice-intro,
+        html[data-theme="dark"] #healthFormActionModal .health-form-choice-hint { color: #cbd5e1; }
+        html[data-theme="dark"] #healthFormActionModal .health-form-information-option:has(input:checked) { background: #391520; border-color: #facc15; }
+        html[data-theme="dark"] #healthFormActionModal .health-form-choice-icon,
+        html[data-theme="dark"] #healthFormActionModal .health-form-choice-hint svg { color: #facc15; }
+        html[data-theme="dark"] .health-form-information-choices legend,
+        html[data-theme="dark"] .health-form-information-choices strong { color: #f8fafc; }
+        html[data-theme="dark"] .health-form-information-choices small { color: #cbd5e1; }
+        html[data-theme="dark"] .health-form-information-choices label:has(input:checked) { background: #391520; border-color: #facc15; }
         .health-form-action-modal[hidden] {
             display: none !important;
         }
@@ -4742,6 +4799,9 @@
         }
         .health-form-action-card {
             width: min(590px, 100%);
+            max-height: calc(100dvh - 40px);
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
             border: 1px solid rgba(250, 204, 21, .72);
             border-radius: 12px;
@@ -4842,6 +4902,8 @@
             left: 136%;
         }
         .health-form-action-body {
+            overflow-y: auto;
+            min-height: 0;
             padding: 24px;
         }
         .health-form-action-status {
@@ -4892,7 +4954,7 @@
             color: #991b1b;
         }
         .health-form-action-note strong,
-        .health-form-action-note span {
+        .health-form-action-note-copy {
             display: block;
         }
         .health-form-action-note strong {
@@ -4900,13 +4962,14 @@
             color: #7f1d1d;
             font-size: 12px;
         }
-        .health-form-action-note span {
+        .health-form-action-note-copy {
             color: #475569;
             font-size: 12px;
             line-height: 1.5;
             white-space: pre-line;
         }
         .health-form-action-actions {
+            flex-shrink: 0;
             display: flex;
             justify-content: flex-end;
             gap: 10px;
@@ -5028,16 +5091,35 @@
 
             const closeButtons = modal.querySelectorAll('[data-health-form-action-close]');
             const primaryAction = modal.querySelector('[data-health-form-action-primary]');
+            const existingForm = modal.querySelector('[data-health-form-existing-submit]');
+            let returnFocus = null;
+            function syncInformationChoice() {
+                if (!existingForm) return;
+                const useExisting = modal.querySelector('[name="requested_information_choice"]:checked')?.value === 'existing';
+                existingForm.hidden = !useExisting;
+                primaryAction.hidden = useExisting;
+            }
+            modal.querySelectorAll('[name="requested_information_choice"]').forEach(function (radio) {
+                radio.addEventListener('change', syncInformationChoice);
+            });
+            syncInformationChoice();
+            existingForm?.addEventListener('submit', function () {
+                const button = existingForm.querySelector('button[type="submit"]');
+                button.disabled = true;
+                button.textContent = 'Submitting...';
+            });
 
             function openHealthFormActionModal() {
+                returnFocus = document.activeElement;
                 modal.hidden = false;
                 document.body.style.overflow = 'hidden';
-                modal.querySelector('[data-health-form-action-primary]')?.focus();
+                (modal.querySelector('[name="requested_information_choice"]:checked') || primaryAction)?.focus();
             }
 
             function closeHealthFormActionModal() {
                 modal.hidden = true;
                 document.body.style.overflow = '';
+                returnFocus?.focus();
             }
 
             function openAfterTermsGate() {
@@ -5071,9 +5153,27 @@
                 if (event.key === 'Escape' && !modal.hidden) {
                     closeHealthFormActionModal();
                 }
+                if (event.key === 'Tab' && !modal.hidden) {
+                    const controls = Array.from(modal.querySelectorAll('a[href], button:not(:disabled), input:not([type="hidden"])'))
+                        .filter(function (control) { return control.getClientRects().length > 0; });
+                    const first = controls[0];
+                    const last = controls[controls.length - 1];
+                    if (event.shiftKey && document.activeElement === first) {
+                        event.preventDefault(); last?.focus();
+                    } else if (!event.shiftKey && document.activeElement === last) {
+                        event.preventDefault(); first?.focus();
+                    }
+                }
             });
 
-            openAfterTermsGate();
+            document.querySelectorAll('[data-new-health-form-choice]').forEach(function (button) {
+                button.addEventListener('click', function (event) {
+                    if (!existingForm) return;
+                    event.preventDefault();
+                    openHealthFormActionModal();
+                });
+            });
+            if (@json((bool) $showHealthFormActionModal)) openAfterTermsGate();
         })();
     </script>
     @endif

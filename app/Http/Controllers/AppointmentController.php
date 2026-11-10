@@ -1204,19 +1204,7 @@ class AppointmentController extends Controller
 
     private function healthFormCourseOptions(): array
     {
-        $courses = [
-            'BSBA-HRM' => 'Bachelor of Science in Business Administration major in Human Resource Management',
-            'BSBA-MM' => 'Bachelor of Science in Business Administration major in Marketing Management',
-            'BSECE' => 'Bachelor of Science in Electronics Engineering',
-            'BSIT' => 'Bachelor of Science in Information Technology',
-            'BSME' => 'Bachelor of Science in Mechanical Engineering',
-            'BSOA' => 'Bachelor of Science in Office Administration',
-            'BSPSY' => 'Bachelor of Science in Psychology',
-            'BSED-ENGLISH' => 'Bachelor of Secondary Education major in English',
-            'BSED-MATH' => 'Bachelor of Secondary Education major in Mathematics',
-            'DIT' => 'Diploma in Information Technology',
-            'DOMT' => 'Diploma in Office Management Technology',
-        ];
+        $courses = \App\Services\StudentHealthFormRequestService::COURSES;
 
         return collect($courses)
             ->map(fn (string $name, string $code) => [
@@ -5034,7 +5022,6 @@ public function updateContact(Request $request)
         'civil_status' => ['nullable', 'string', 'max:80'],
         'height' => ['nullable', 'numeric', 'between:1,8'],
         'weight' => ['nullable', 'numeric', 'between:1,1500'],
-        'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'extensions:jpg,jpeg,png', 'max:2048'],
     ];
     if ($hasStudentNumberField) {
         $validationRules['student_number'] = [
@@ -5055,24 +5042,9 @@ public function updateContact(Request $request)
         'height.between' => 'Height must be between 1 and 8 feet.',
         'weight.numeric' => 'Weight must be entered as a number in pounds.',
         'weight.between' => 'Weight must be between 1 and 1,500 pounds.',
-        'profile_photo.image' => 'Choose a valid image for your profile photo.',
-        'profile_photo.mimes' => 'Profile photos must be JPG or PNG files.',
-        'profile_photo.max' => 'Profile photos must not exceed 2 MB.',
         'student_number.regex' => 'Enter a valid Student Number in the format YYYY-#####-TG-#.',
         'student_number.unique' => 'That Student Number is already assigned to another account.',
     ]);
-
-    if ($request->hasFile('profile_photo')) {
-        $photoAvailableAt = $user->profile_photo_updated_at
-            ? $user->profile_photo_updated_at->copy()->addMonthsNoOverflow(6)
-            : null;
-
-        if ($photoAvailableAt && now()->lt($photoAvailableAt)) {
-            throw ValidationException::withMessages([
-                'profile_photo' => 'You can update your profile photo again on ' . $photoAvailableAt->format('F j, Y') . '.',
-            ]);
-        }
-    }
 
     $heightNumeric = $this->extractMeasurementNumber($validated['height'] ?? null);
     $weightNumeric = $this->extractMeasurementNumber($validated['weight'] ?? null);
@@ -5131,27 +5103,7 @@ public function updateContact(Request $request)
     }
     $user->height = $heightNumeric ?? $user->height;
     $user->weight = $weightNumeric ?? $user->weight;
-    $oldProfilePhotoPath = trim((string) ($user->profile_photo ?? ''));
-    $newProfilePhotoPath = null;
-    if ($request->hasFile('profile_photo')) {
-        $newProfilePhotoPath = $this->healthFiles()->store($request->file('profile_photo'), 'profile_photos');
-        $user->profile_photo = $newProfilePhotoPath;
-        $user->profile_photo_updated_at = now();
-    }
-
-    try {
-        $user->save();
-    } catch (\Throwable $exception) {
-        if ($newProfilePhotoPath !== null) {
-            $this->healthFiles()->delete($newProfilePhotoPath);
-        }
-
-        throw $exception;
-    }
-
-    if ($newProfilePhotoPath !== null && $oldProfilePhotoPath !== '' && $oldProfilePhotoPath !== $newProfilePhotoPath) {
-        $this->healthFiles()->delete($oldProfilePhotoPath);
-    }
+    $user->save();
 
     if ($this->shouldUseEmployeeHealthForm($user)) {
         $employeeProfile = $user->employeeHealthProfile()->first();
@@ -7770,6 +7722,104 @@ public function storeHealthForm(Request $request)
             ->withInput(HealthFormRecoveryInput::fromRequest($request))
             ->with('error', 'We could not save the health form. Your text entries were kept. Please reselect uploaded files and redraw your signature, then try again.');
     }
+}
+
+public function requestStudentHealthForm(Request $request)
+{
+    $user = Auth::guard('student')->user();
+    abort_unless($user, 401);
+    $validated = $request->validate([
+        'purpose_id' => ['required', 'integer'],
+        'information_handling' => ['required', 'in:existing,update'],
+    ]);
+    return DB::transaction(function () use ($request, $user, $validated) {
+        $user = User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+        $purpose = app(\App\Services\StudentHealthFormRequestService::class)
+            ->eligiblePurposes($user)->firstWhere('id', (int) $validated['purpose_id']);
+        if (!$purpose) {
+            throw ValidationException::withMessages(['purpose_id' => 'You are not eligible for this request, the request period is closed, you already have an active Health Form cycle, or your latest approval was less than 24 hours ago.']);
+        }
+        $profile = $user->healthProfile()->firstOrFail();
+        $submission = HealthFormSubmission::create([
+            'user_id' => $user->id, 'health_profile_id' => $profile->id,
+            'category' => $purpose->name, 'school_year' => $profile->school_year,
+            'status' => HealthFormSubmission::STATUS_REQUESTED,
+            'requested_by_user_id' => $user->id, 'requested_at' => now(),
+        ]);
+        HealthProfileCorrectionRequest::create([
+            'user_id' => $user->id, 'health_profile_id' => $profile->id,
+            'health_form_submission_id' => $submission->id,
+            'type' => HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM,
+            'status' => HealthProfileCorrectionRequest::STATUS_PENDING, 'profile_kind' => 'student',
+            'requested_by_user_id' => $user->id, 'requested_at' => now(), 'required_documents' => [],
+            'metadata' => ['category' => $purpose->name, 'request_source' => 'student', 'information_handling' => $validated['information_handling']],
+        ]);
+        ActivityLog::create([
+            'user_id' => $user->id, 'user_name' => $user->name, 'user_role' => $user->user_role,
+            'action' => 'New Health Form Requested', 'module' => 'Health Records',
+            'description' => 'Student started a new Health Form for ' . $purpose->name . '.',
+            'subject_type' => HealthProfile::class, 'subject_id' => (string) $profile->id,
+            'metadata' => ['health_form_submission_id' => $submission->id, 'request_source' => 'student'],
+            'ip_address' => $request->ip(), 'user_agent' => $request->userAgent(),
+        ]);
+        if ($validated['information_handling'] === 'existing') {
+            $request->merge(['submission_id' => $submission->id]);
+            return $this->submitExistingHealthForm($request);
+        }
+        return redirect()->route('health.form.student');
+    });
+}
+
+public function submitExistingHealthForm(Request $request)
+{
+    $user = Auth::guard('student')->user();
+    abort_unless($user && !$this->shouldUseEmployeeHealthForm($user), 403);
+    $validated = $request->validate(['submission_id' => ['required', 'integer']]);
+
+    DB::transaction(function () use ($user, $validated, $request) {
+        User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+        $pending = HealthFormSubmission::query()
+            ->where('user_id', $user->id)
+            ->where('status', HealthFormSubmission::STATUS_REQUESTED)
+            ->latest('requested_at')->latest('id')->lockForUpdate()->first();
+        abort_unless($pending && (int) $pending->id === (int) $validated['submission_id'], 409, 'This Health Form request is no longer awaiting submission. Refresh the page.');
+        $profile = HealthProfile::query()->where('user_id', $user->id)
+            ->whereKey($pending->health_profile_id)->firstOrFail();
+        abort_if(in_array($profile->pullout_status, [HealthProfile::PULLOUT_PENDING, HealthProfile::PULLOUT_COMPLETED], true), 409);
+
+        $snapshot = clone $profile;
+        $snapshot->forceFill([
+            'health_form_category' => $pending->category,
+            'clearance_status' => 'For Verification',
+            'verified_at' => null,
+        ]);
+        $submission = app(HealthFormPdfSnapshotService::class)->recordSubmittedWithoutPdf(
+            $profile, $user, $pending->category, $pending->remarks, false, $snapshot
+        );
+        HealthProfileCorrectionRequest::query()
+            ->where('user_id', $user->id)
+            ->where('health_profile_id', $profile->id)
+            ->where('health_form_submission_id', $pending->id)
+            ->where('type', HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM)
+            ->active()->get()->each(function ($correction) use ($submission) {
+                $correction->forceFill([
+                    'status' => HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+                    'submitted_at' => $submission->submitted_at,
+                ])->save();
+            });
+        ActivityLog::create([
+            'user_id' => $user->id, 'user_name' => $user->name,
+            'user_role' => strtolower((string) $user->user_role),
+            'action' => 'Health Form Submitted', 'module' => 'Health Records',
+            'description' => 'Submitted the requested Health Form using existing information.',
+            'subject_type' => HealthProfile::class, 'subject_id' => (string) $profile->id,
+            'metadata' => ['health_form_submission_id' => $submission->id, 'information_handling' => 'existing'],
+            'ip_address' => $request->ip(), 'user_agent' => $request->userAgent(),
+        ]);
+    });
+
+    return redirect('/student/account?view=health-record')
+        ->with('success', 'Health Form submitted using your saved information. It is now pending clinic approval.');
 }
 
 private function studentHealthInformationChangeMetadata(HealthProfile $before, HealthProfile $after): array

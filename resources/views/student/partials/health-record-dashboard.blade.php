@@ -34,7 +34,7 @@
     };
     $healthSubmissionStatus = function ($submission) use ($healthFormSubmitted, $isIssuedStatus): array {
         $statusKey = strtolower(trim((string) optional($submission)->status));
-        if ($statusKey === '' || ($isIssuedStatus && $statusKey === 'submitted')) {
+        if ($statusKey === '' || ($isIssuedStatus && $statusKey === 'submitted' && !optional($submission)->requested_at)) {
             $statusKey = !$healthFormSubmitted ? 'requested' : ($isIssuedStatus ? 'approved' : 'submitted');
         }
 
@@ -137,7 +137,7 @@
     };
     $latestStatus = $healthSubmissionStatus($latestHealthSubmission);
     $latestStatusKey = strtolower(trim((string) optional($latestHealthSubmission)->status));
-    if ($latestStatusKey === '' || ($isIssuedStatus && $latestStatusKey === 'submitted')) {
+    if ($latestStatusKey === '' || ($isIssuedStatus && $latestStatusKey === 'submitted' && !optional($latestHealthSubmission)->requested_at)) {
         $latestStatusKey = $isIssuedStatus ? 'approved' : ($healthFormSubmitted ? 'submitted' : 'requested');
     }
     $latestIsRequested = $latestStatusKey === 'requested';
@@ -301,6 +301,7 @@
         ->values();
     $healthSubmissionDocumentCount = $healthSubmissionDocumentGroups->sum(fn ($group) => $group['documents']->count());
     $canViewHealthFiles = $healthSubmissionDocumentGroups->isNotEmpty();
+    $studentRequestPurposes = app(\App\Services\StudentHealthFormRequestService::class)->eligiblePurposes($user);
 @endphp
 
 <div class="health-doc-layout">
@@ -359,7 +360,7 @@
                         </a>
                     @endif
                     @if($latestIsRequested)
-                        <a href="{{ $newStudentHealthFormRoute }}" class="health-doc-action is-edit">
+                        <a href="{{ $newStudentHealthFormRoute }}" class="health-doc-action is-edit" @if(!$isEmployeeHealthRecord) data-new-health-form-choice @endif>
                             <x-outline-icon name="document-text" />
                             Fill Up New Health Form
                         </a>
@@ -444,7 +445,7 @@
                         @php
                             $historyStatus = $healthSubmissionStatus($submission);
                             $historyStatusKey = strtolower(trim((string) optional($submission)->status));
-                            if ($historyStatusKey === '' || ($isIssuedStatus && $historyStatusKey === 'submitted')) {
+                            if ($historyStatusKey === '' || ($isIssuedStatus && $historyStatusKey === 'submitted' && !optional($submission)->requested_at)) {
                                 $historyStatusKey = $isIssuedStatus ? 'approved' : 'submitted';
                             }
                             $historyIsLatest = $historyIndex === 0;
@@ -482,11 +483,11 @@
                             <div data-label="Approved At"><strong>{{ $healthRecordDate(optional($submission)->approved_at ?: ($historyStatusKey === 'approved' ? $recordApprovedSource : null), 'Pending') }}</strong></div>
                             <div data-label="Status"><span class="health-doc-status {{ $historyStatus[1] }}">{{ $historyStatus[0] }}</span></div>
                             <div class="health-doc-history-actions" data-label="Actions">
-                                @if($historyHasPdf && $historyStatusKey !== 'requested')
+                                @if($historyHasPdf && !in_array($historyStatusKey, ['requested', 'cancelled'], true))
                                     <a href="{{ $historyPdfUrl }}" target="_blank" rel="noopener" aria-label="View Health Form" title="View Health Form"><x-outline-icon name="eye" /></a>
                                     <a href="{{ $historyPdfUrl }}" download aria-label="Download Health Form" title="Download Health Form"><x-outline-icon name="arrow-down-tray" /></a>
                                 @elseif($historyIsLatest && $historyStatusKey === 'requested')
-                                    <a href="{{ $newStudentHealthFormRoute }}"><x-outline-icon name="document-text" /></a>
+                                    <a href="{{ $newStudentHealthFormRoute }}" aria-label="Choose how to submit the requested Health Form" @if(!$isEmployeeHealthRecord) data-new-health-form-choice @endif><x-outline-icon name="document-text" /></a>
                                 @endif
                             </div>
                         </article>
@@ -498,12 +499,20 @@
 
             @if(!$latestIsRequested)
                 <div class="health-doc-history-request">
-                    <span><x-outline-icon name="information-circle" /> Need to submit a new Health Form?</span>
-                    <small>Please visit the Medical Clinic or contact the clinic staff.</small>
+                    <span><x-outline-icon name="information-circle" /> Need to submit a new Health Form?
+                    @if($studentRequestPurposes->isNotEmpty())
+                        <button type="button" class="health-doc-request-link" onclick="document.getElementById('studentNewCycleDialog').showModal()">Click here</button>
+                    @endif
+                    </span>
+                    @if($studentRequestPurposes->isEmpty())
+                        <small>Please visit the Medical Clinic or contact the clinic staff.</small>
+                    @endif
                 </div>
             @endif
         </section>
     </div>
+
+    @include('student.partials.request-new-health-form')
 
     <aside class="health-doc-sidebar" aria-label="Health Form status and reminders">
         <section class="health-doc-side-card">
