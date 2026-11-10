@@ -9375,6 +9375,7 @@
                         data-health-row
                         data-health-id="{{ $readonlyRecord->id }}"
                         @if($readonlyIsEmployee) data-employee-profile-id="{{ $readonlyRecord->id }}" @endif
+                        @unless($readonlyIsEmployee) data-student-health-profile-id="{{ $readonlyRecord->id }}" @endunless
                         data-record-payload="{{ json_encode($readonlyRecordPayload) }}"
                         data-search-text="{{ strtolower(trim((string) (optional($readonlyRecord->user)->name . ' ' . optional($readonlyRecord->user)->email . ' ' . $readonlyReference))) }}"
                         data-user-category="{{ strtolower(trim((string) $readonlyUserType)) }}"
@@ -10009,7 +10010,8 @@
         $bulkRequestTypeFilterLabel = $bulkRequestIsStudent ? 'Student Type' : 'User Type';
         $bulkRequestTypeFilterDefault = $bulkRequestIsStudent ? 'All Student Types' : 'All ' . $bulkRequestRoleLabel;
     @endphp
-    <div class="health-bulk-request-modal" id="healthBulkRequestModal" role="dialog" aria-modal="true" aria-labelledby="healthBulkRequestTitle" aria-hidden="true">
+    @if($bulkRequestIsStudent) @include('admin.partials.student-health-form-action-choice') @endif
+    <div class="health-bulk-request-modal" id="healthBulkRequestModal" role="dialog" aria-modal="true" aria-labelledby="healthBulkRequestTitle" aria-hidden="true" data-clinic-student-modal>
         <div class="health-bulk-request-modal-card health-bulk-request-student-card">
             <div class="health-bulk-request-modal-head">
                 <div class="health-bulk-request-modal-head-main">
@@ -10017,8 +10019,8 @@
                         <x-outline-icon name="document-text" />
                     </span>
                     <div>
-                        <h2 class="health-bulk-request-modal-title" id="healthBulkRequestTitle">{{ $bulkRequestIsStudent ? 'Request New Health Form' : 'Start New Health Assessment' }}</h2>
-                        <p class="health-bulk-request-modal-copy">{{ $bulkRequestIsStudent ? 'Select approved students to request an updated health form.' : 'Start fresh assessments using saved employee information, directly in Pending Approval.' }}</p>
+                        <h2 class="health-bulk-request-modal-title" id="healthBulkRequestTitle" data-clinic-form-heading>{{ $bulkRequestIsStudent ? 'Request New Health Form' : 'Start New Health Assessment' }}</h2>
+                        <p class="health-bulk-request-modal-copy" data-clinic-form-description>{{ $bulkRequestIsStudent ? 'Select approved students to request an updated health form.' : 'Start fresh assessments using saved employee information, directly in Pending Approval.' }}</p>
                     </div>
                 </div>
                 <button type="button" class="health-bulk-request-modal-close" data-health-bulk-request-close aria-label="{{ $bulkRequestIsStudent ? 'Close request new health form modal' : 'Close health assessment modal' }}">
@@ -10030,12 +10032,13 @@
                 <form method="POST" action="{{ route('admin.health_records.bulk_request_health_form') }}" id="healthBulkRequestForm" class="health-bulk-request-form health-bulk-request-student-form">
                     @csrf
                     <input type="hidden" name="user_type" value="{{ strtolower((string) $userTypeFilter) }}">
+                    @if($bulkRequestIsStudent)<input type="hidden" name="clinic_action" value="send">@endif
 
                     <section class="health-bulk-request-student-step">
                         <div class="health-bulk-request-student-step-heading">
                             <span class="health-bulk-request-student-step-number">1</span>
                             <div>
-                                <h3>{{ $bulkRequestIsStudent ? 'Request Purpose' : 'Assessment Purpose' }}</h3>
+                                <h3>{{ $bulkRequestIsStudent ? 'Health Form Purpose' : 'Assessment Purpose' }}</h3>
                                 <p>{{ $bulkRequestIsStudent ? 'Choose the purpose for the new Health Form cycle.' : 'Choose the purpose for the new health assessments.' }}</p>
                             </div>
                         </div>
@@ -10060,7 +10063,7 @@
                             <span class="health-bulk-request-student-step-number">2</span>
                             <div>
                                 <h3>Select {{ $bulkRequestRoleLabel }}</h3>
-                                <p>{{ $bulkRequestIsStudent ? 'Filter and choose which students should receive the new health form request.' : 'Filter and choose which approved employees should enter Pending Approval.' }}</p>
+                                <p>{{ $bulkRequestIsStudent ? 'Filter and choose the students for the selected Health Form action.' : 'Filter and choose which approved employees should enter Pending Approval.' }}</p>
                             </div>
                         </div>
 
@@ -10155,9 +10158,10 @@
                             <span>Select one or more {{ $bulkRequestNounPlural }} to continue.</span>
                         </div>
                         <div class="health-bulk-request-student-footer-actions">
+                            @if($bulkRequestIsStudent)<button type="button" class="health-bulk-request-modal-cancel" id="healthBulkRequestBack">Back</button>@endif
                             <button type="button" class="health-bulk-request-modal-cancel" data-health-bulk-request-close>Cancel</button>
                             <button type="submit" class="health-bulk-request-modal-send" disabled>
-                                <span>{{ $bulkRequestIsStudent ? 'Send Request' : 'Start New Health Assessment' }}</span>
+                                <span data-clinic-submit-label>{{ $bulkRequestIsStudent ? 'Send Request' : 'Start New Health Assessment' }}</span>
                                 <x-outline-icon name="arrow-long-right" />
                             </button>
                         </div>
@@ -10941,7 +10945,18 @@
 
     healthBulkRequestOpen?.addEventListener('click', function () {
         setHealthMoreActionsOpen(false);
+        if (healthBulkRequestIsStudent && typeof window.openClinicStudentFormChoice === 'function') {
+            window.openClinicStudentFormChoice(function (mode) {
+                window.configureClinicStudentForm(healthBulkRequestForm, mode);
+                setHealthBulkRequestModalOpen(true);
+            });
+            return;
+        }
         setHealthBulkRequestModalOpen(true);
+    });
+    document.getElementById('healthBulkRequestBack')?.addEventListener('click', function () {
+        setHealthBulkRequestModalOpen(false);
+        healthBulkRequestOpen?.click();
     });
 
     healthBulkRequestToggleSelection?.addEventListener('click', function () {
@@ -11178,6 +11193,11 @@
                 if (reviewButton && typeof window.openHealthReviewFromButton === 'function') {
                     window.openHealthReviewFromButton(reviewButton);
                 }
+            }
+            const studentProfileId = Number(@json(session('open_student_health_form')));
+            if (Number.isSafeInteger(studentProfileId) && studentProfileId > 0) {
+                const reviewButton = document.querySelector('#pendingApprovalRecordsList [data-student-health-profile-id="' + studentProfileId + '"] .js-open-verify-modal');
+                if (reviewButton && typeof window.openHealthReviewFromButton === 'function') window.openHealthReviewFromButton(reviewButton);
             }
         } else if (requestedTab === 'pending_conditional') {
             const pendingConditionalInfoModal = document.getElementById('pendingConditionalInfoModal');

@@ -366,8 +366,8 @@
         place-items: center;
         border-radius: 12px;
         border: 1px solid rgba(112, 19, 27, 0.18);
-        background: #ffffff;
-        color: #70131B;
+        background: #70131B;
+        color: #ffffff;
         cursor: pointer;
         box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
         transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
@@ -2344,6 +2344,11 @@
         border-color: #475569;
         color: #f8fafc;
     }
+    [data-theme="dark"] .profile-actions-toggle {
+        background: #70131B;
+        border-color: #8f2230;
+        color: #ffffff;
+    }
     [data-theme="dark"] .profile-actions-menu button {
         background: #1f2937;
         border-color: #475569;
@@ -4041,14 +4046,17 @@
 </div>
 
 @if($canManageNewHealthForm)
-<div class="correction-modal" id="newHealthFormModal" aria-hidden="true">
+@if($profileIsLocalStudent && !$canViewExistingNewHealthFormRequest)
+    @include('admin.partials.student-health-form-action-choice')
+@endif
+<div class="correction-modal" id="newHealthFormModal" aria-hidden="true" data-clinic-student-modal>
     <div class="correction-card">
         <div class="correction-head">
             <div class="correction-head-title">
                 <span class="correction-head-icon"><x-outline-icon name="document-text" /></span>
                 <div>
-                    <h3>{{ $canViewExistingNewHealthFormRequest ? 'Existing Health Form Request' : 'Request New Health Form' }}</h3>
-                    <p>{{ $canViewExistingNewHealthFormRequest ? 'Review the active Health Form request for this student.' : 'Ask this student to submit a fresh Health Information Form for a specific purpose.' }}</p>
+                    <h3 data-clinic-form-heading>{{ $canViewExistingNewHealthFormRequest ? 'Existing Health Form Request' : 'Request New Health Form' }}</h3>
+                    <p data-clinic-form-description>{{ $canViewExistingNewHealthFormRequest ? 'Review the active Health Form request for this student.' : 'Ask this student to submit a fresh Health Information Form for a specific purpose.' }}</p>
                 </div>
             </div>
             <button type="button" class="correction-close" id="closeNewHealthFormModal" aria-label="Close new health form modal">
@@ -4093,6 +4101,7 @@
         @else
             <form method="POST" action="{{ route('admin.health_profile.request_health_form', $profile->id) }}" class="correction-body">
                 @csrf
+                <input type="hidden" name="clinic_action" value="send">
                 <div class="correction-field">
                     <label for="newHealthFormCategory">Category / Purpose</label>
                     <div class="correction-select-wrap correction-custom-select-wrap">
@@ -4109,8 +4118,9 @@
                     <textarea id="newHealthFormRemarks" name="remarks" placeholder="Optional note for why a new form is needed.">{{ old('remarks') }}</textarea>
                 </div>
                 <div class="correction-actions">
+                    @if($profileIsLocalStudent)<button type="button" class="correction-cancel" id="backToStudentFormChoices">Back</button>@endif
                     <button type="button" class="correction-cancel" id="cancelNewHealthFormModal">Cancel</button>
-                    <button type="submit" class="correction-submit">Send Request</button>
+                    <button type="submit" class="correction-submit"><span data-clinic-submit-label>Send Request</span></button>
                 </div>
             </form>
         @endif
@@ -4693,7 +4703,18 @@
 
     openNewHealthFormModal?.addEventListener('click', function () {
         setProfileActionsMenu(false);
+        if (typeof window.openClinicStudentFormChoice === 'function') {
+            window.openClinicStudentFormChoice(function (mode) {
+                window.configureClinicStudentForm(newHealthFormModal.querySelector('form'), mode);
+                setNewHealthFormModal(true);
+            });
+            return;
+        }
         setNewHealthFormModal(true);
+    });
+    document.getElementById('backToStudentFormChoices')?.addEventListener('click', function () {
+        setNewHealthFormModal(false);
+        openNewHealthFormModal?.click();
     });
 
     document.getElementById('viewExistingHealthFormRecord')?.addEventListener('click', function () {
@@ -5023,6 +5044,9 @@
         }
 
         if (form.id === 'newHealthFormModal' || form.closest('#newHealthFormModal')) {
+            if (form.querySelector('[name="clinic_action"]')?.value === 'start') {
+                return { title: 'Start New Health Form?', message: 'Use saved student information and submit directly to Pending Approval? The previous approved form will remain stored.', confirm: 'Start New Health Form' };
+            }
             return {
                 title: 'Send Health Form Request?',
                 message: 'The student will be asked to submit a new Health Information Form. Continue?',
