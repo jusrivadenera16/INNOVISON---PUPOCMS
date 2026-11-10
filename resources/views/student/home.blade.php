@@ -4816,38 +4816,7 @@ html.home-reveal-enabled .home-announcement-card.home-scroll-reveal.is-next-far 
             <h3 id="evaluationTitle">What PUPians Are Saying</h3>
           </header>
 
-          <div class="feedback-stage">
-            @forelse($evaluationSlides as $evaluation)
-              @php
-                $evaluationRating = (int) ($evaluation['rating'] ?? 0);
-              @endphp
-              <article class="feedback-slide">
-                <span class="feedback-quote" aria-hidden="true">&ldquo;</span>
-                @if($evaluationRating >= 1 && $evaluationRating <= 5)
-                  <div class="feedback-stars" aria-label="{{ $evaluationRating }} out of 5 stars">
-                    @for($star = 1; $star <= 5; $star++)
-                      <span class="{{ $star <= $evaluationRating ? 'is-filled' : '' }}" aria-hidden="true">&#9733;</span>
-                    @endfor
-                  </div>
-                @endif
-                <div class="feedback-identity">
-                  <svg class="avatar" role="img" aria-label="User avatar"><use href="#avatar-placeholder"></use></svg>
-                  <div class="feedback-copy">
-                    <h4>{{ $evaluation['name'] }}</h4>
-                    <span class="comment-meta">{{ $evaluation['role'] }} &middot; {{ $evaluation['time'] }}</span>
-                    <p>{{ $evaluation['message'] }}</p>
-                  </div>
-                </div>
-              </article>
-            @empty
-              <article class="feedback-slide is-empty">
-                <div class="feedback-copy">
-                  <h4>No suggestions have been shared yet.</h4>
-                  <p>Suggestions from submitted service evaluations will appear here.</p>
-                </div>
-              </article>
-            @endforelse
-          </div>
+          @include('partials.clinic-review-cards', ['reviews' => $evaluationSlides])
         </section>
 
 

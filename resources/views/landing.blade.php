@@ -26,6 +26,7 @@
             --ink: #1f2937;
             --muted: rgba(255, 255, 255, 0.78);
             --line: rgba(255, 255, 255, 0.18);
+            --landing-dot-color: rgba(255, 255, 255, 0.16);
         }
 
         * {
@@ -61,82 +62,19 @@
         }
 
         body::after {
-            display: none;
-        }
-
-        .landing-starfield {
-            position: fixed;
+            content: "";
+            position: absolute;
             inset: 0;
             z-index: 0;
-            overflow: hidden;
             pointer-events: none;
-            isolation: isolate;
+            background-image: radial-gradient(circle, var(--landing-dot-color) 0.7px, transparent 1px);
+            background-size: 26px 26px;
+            mask-image: linear-gradient(to right, #000, transparent);
+            -webkit-mask-image: linear-gradient(to right, #000, transparent);
         }
 
-        #stars,
-        #stars2,
-        #stars3 {
-            position: absolute;
-            inset: -120px;
-            background-repeat: repeat;
-            will-change: background-position;
-            transform: translateZ(0);
-        }
-
-        #stars {
-            opacity: 0.82;
-            background-image:
-                radial-gradient(circle, #fff 0 0.7px, transparent 1px),
-                radial-gradient(circle, #fff 0 0.65px, transparent 0.95px),
-                radial-gradient(circle, rgba(255,255,255,.9) 0 0.7px, transparent 1px),
-                radial-gradient(circle, rgba(255,255,255,.78) 0 0.55px, transparent 0.85px);
-            background-size: 137px 149px, 191px 173px, 233px 211px, 283px 257px;
-            background-position: 17px 31px, 83px 109px, 149px 47px, 211px 163px;
-            animation: landingStarsFar 50s linear infinite;
-        }
-
-        #stars2 {
-            opacity: 0.88;
-            background-image:
-                radial-gradient(circle, #fff 0 1px, transparent 1.35px),
-                radial-gradient(circle, rgba(255,255,255,.9) 0 0.9px, transparent 1.25px),
-                radial-gradient(circle, rgba(255,255,255,.76) 0 0.85px, transparent 1.2px);
-            background-size: 251px 229px, 317px 293px, 389px 347px;
-            background-position: 41px 73px, 179px 137px, 283px 29px;
-            animation: landingStarsMiddle 100s linear infinite;
-        }
-
-        #stars3 {
-            opacity: 0.95;
-            background-image:
-                radial-gradient(circle, #fff 0 1.35px, transparent 1.75px),
-                radial-gradient(circle, rgba(255,255,255,.88) 0 1.2px, transparent 1.6px);
-            background-size: 431px 397px, 557px 503px;
-            background-position: 101px 59px, 347px 223px;
-            animation: landingStarsNear 150s linear infinite;
-        }
-
-        @keyframes landingStarsFar {
-            from { background-position: 17px 31px, 83px 109px, 149px 47px, 211px 163px; }
-            to { background-position: 17px -1969px, 83px -1891px, 149px -1953px, 211px -1837px; }
-        }
-
-        @keyframes landingStarsMiddle {
-            from { background-position: 41px 73px, 179px 137px, 283px 29px; }
-            to { background-position: 41px -1927px, 179px -1863px, 283px -1971px; }
-        }
-
-        @keyframes landingStarsNear {
-            from { background-position: 101px 59px, 347px 223px; }
-            to { background-position: 101px -1941px, 347px -1777px; }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            #stars,
-            #stars2,
-            #stars3 {
-                animation: none;
-            }
+        body.landing-theme-light {
+            --landing-dot-color: rgba(91, 7, 27, 0.16);
         }
 
         .landing-footer {
@@ -144,7 +82,7 @@
             z-index: 2;
             width: 100%;
             color: rgba(255, 255, 255, 0.92);
-            background: transparent;
+            background: #28030c;
             border-top: 1px solid rgba(250, 204, 21, 0.16);
             backdrop-filter: none;
             -webkit-backdrop-filter: none;
@@ -154,6 +92,7 @@
         .landing-footer__inner {
             min-height: 50px;
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             justify-content: center;
             gap: 15px;
@@ -186,6 +125,29 @@
             letter-spacing: 0;
         }
 
+        .landing-footer .help-btn.help-link {
+            min-height: 36px;
+            padding: 4px 0;
+            color: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .landing-footer .help-btn.help-link svg {
+            color: currentColor;
+        }
+
+        .landing-footer .help-btn.help-link:hover,
+        .landing-footer .help-btn.help-link:focus-visible {
+            color: #facc15;
+        }
+
+        .landing-footer .help-btn.help-link:focus-visible {
+            outline: 2px solid #facc15;
+            outline-offset: 3px;
+        }
+
         @media (max-width: 480px) {
             .landing-footer__inner {
                 min-height: 46px;
@@ -196,6 +158,14 @@
 
             .landing-footer__version {
                 font-size: 12px;
+            }
+
+            .landing-footer__message {
+                flex-basis: 100%;
+            }
+
+            .landing-footer__separator {
+                display: none;
             }
         }
 
@@ -4494,7 +4464,7 @@
             position: relative;
             order: 1;
             width: 100%;
-            min-height: 100svh;
+            min-height: calc(100svh - 72px);
             overflow: hidden;
             isolation: isolate;
             border: 0;
@@ -4530,7 +4500,7 @@
         .login-primary.gateway-stage {
             position: relative;
             z-index: 1;
-            min-height: 100svh;
+            min-height: calc(100svh - 72px);
             width: min(720px, calc(100% - 42px));
             margin: 0 auto;
             padding: 76px 0 54px !important;
@@ -4648,7 +4618,7 @@
 
         .workspace-entry.gateway-actions {
             width: min(520px, 100%);
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: minmax(0, 1fr);
             gap: 18px;
         }
 
@@ -5009,9 +4979,16 @@
         .announcement-modal-overlay::before {
             content: "Latest Updates";
             top: 18px;
+        }
+
+        .announcement-modal-overlay::before,
+        .landing-reviews-heading p {
             color: #facc15;
             font-size: 12px;
+            font-weight: 950;
             letter-spacing: 7px;
+            line-height: 1.2;
+            text-transform: uppercase;
         }
 
         .announcement-modal-overlay::after {
@@ -5167,9 +5144,13 @@
             .announcement-modal-overlay::before {
                 top: 20px;
                 width: calc(100% - 32px);
+                text-align: center;
+            }
+
+            .announcement-modal-overlay::before,
+            .landing-reviews-heading p {
                 font-size: 10px;
                 letter-spacing: 4px;
-                text-align: center;
             }
 
             .announcement-modal-overlay::after {
@@ -6234,8 +6215,7 @@
             }
         }
 
-        /* Replayable announcement scroll reveal */
-        .announcement-modal-overlay::before,
+        /* Keep Latest Updates visible while the title and cards reveal on scroll. */
         .announcement-modal-overlay::after,
         .announcement-modal-content::before,
         .landing-announcement-carousel,
@@ -6246,9 +6226,10 @@
         }
 
         .announcement-modal-overlay::before {
-            filter: blur(5px);
-            transform: translate(-50%, 13px) scale(.96);
-            transition: opacity .18s ease, transform .2s ease, filter .18s ease;
+            opacity: 1;
+            filter: none;
+            transform: translateX(-50%);
+            transition: none;
         }
 
         .announcement-modal-overlay::after {
@@ -6276,7 +6257,6 @@
             transition: opacity .18s ease, transform .2s ease, filter .18s ease, color .2s ease, background .2s ease, box-shadow .2s ease;
         }
 
-        .announcement-modal-overlay.is-heading-visible::before,
         .announcement-modal-overlay.is-heading-visible::after,
         .announcement-modal-overlay.is-visible .announcement-modal-content::before,
         .announcement-modal-overlay.is-visible .landing-announcement-carousel,
@@ -6286,32 +6266,13 @@
             filter: none;
         }
 
-        .announcement-modal-overlay.is-heading-visible::before,
         .announcement-modal-overlay.is-heading-visible::after {
             transform: translate(-50%, 0) scale(1);
-        }
-
-        .announcement-modal-overlay.is-heading-visible::before {
-            transition: opacity .48s ease 70ms, transform .58s cubic-bezier(.22, 1, .36, 1) 70ms, filter .48s ease 70ms;
-            animation: landingAnnouncementEyebrowReveal .72s cubic-bezier(.22, 1, .36, 1) both;
         }
 
         .announcement-modal-overlay.is-heading-visible::after {
             transition: opacity .54s ease 150ms, transform .66s cubic-bezier(.22, 1, .36, 1) 150ms, filter .54s ease 150ms;
             animation: landingAnnouncementTitleReveal .82s cubic-bezier(.22, 1, .36, 1) .14s both;
-        }
-
-        @keyframes landingAnnouncementEyebrowReveal {
-            from {
-                opacity: 0;
-                filter: blur(5px);
-                transform: translate(-50%, 16px) scale(.96);
-            }
-            to {
-                opacity: 1;
-                filter: blur(0);
-                transform: translate(-50%, 0) scale(1);
-            }
         }
 
         @keyframes landingAnnouncementTitleReveal {
@@ -7830,15 +7791,16 @@
         }
 
         .landing-doctor-status {
-            grid-column: 1 / -1;
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-            width: 100%;
+            grid-area: availability;
+            display: flex;
+            justify-self: center;
+            justify-content: center;
+            max-width: 100%;
             align-items: center;
-            gap: 10px;
-            margin: -6px 0 0;
+            gap: 8px;
+            margin: 0;
             color: rgba(255, 255, 255, .42);
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 800;
             line-height: 1.2;
         }
@@ -7904,7 +7866,7 @@
 
         @media (max-width: 640px) {
             .landing-doctor-status {
-                gap: 5px;
+                gap: 8px;
                 font-size: 13px;
             }
 
@@ -7915,16 +7877,906 @@
         }
 
 
+        .landing-header {
+            position: absolute;
+            inset: 0 0 auto;
+            z-index: 80;
+            isolation: isolate;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            grid-template-areas: "brand availability navigation";
+            align-items: center;
+            gap: 20px;
+            padding: 16px 28px 32px;
+        }
+
+        .landing-header::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background: rgba(40, 3, 12, .88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            mask-image: linear-gradient(to bottom, #000 55%, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+        }
+
+        .landing-header-brand {
+            grid-area: brand;
+            display: flex;
+            align-items: center;
+            justify-self: start;
+            gap: 4px;
+        }
+
+        .landing-header-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            flex: 0 0 auto;
+            overflow: hidden;
+        }
+
+        .landing-header-logo img {
+            display: block;
+            flex: 0 0 auto;
+            width: 32px;
+            height: 32px;
+            max-width: none;
+            object-fit: contain;
+        }
+
+        .landing-header-logo--clinic {
+            width: 46px;
+            height: 42px;
+        }
+
+        .landing-header-logo--clinic img {
+            width: 76px;
+            height: 48px;
+        }
+
+        .landing-header-name {
+            margin-left: 6px;
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: 0;
+            white-space: nowrap;
+        }
+
+        .landing-nav-toggle {
+            display: none;
+        }
+
+        .landing-nav {
+            grid-area: navigation;
+            display: flex;
+            align-items: center;
+            justify-self: end;
+            gap: 24px;
+            min-width: 0;
+        }
+
+        .landing-nav > .landing-nav-item {
+            position: relative;
+            inset: auto;
+            top: auto !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            width: auto !important;
+            min-width: 0;
+            height: 44px;
+            min-height: 44px;
+            margin: 0;
+            padding: 0 8px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: 0;
+            text-decoration: none;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .landing-nav > .landing-nav-item::after {
+            content: none;
+        }
+
+        .landing-nav > .landing-nav-item > svg {
+            display: none;
+            width: 22px;
+            height: 22px;
+            flex: 0 0 auto;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.7;
+        }
+
+        .landing-nav .announcement-badge {
+            top: -3px;
+            right: 0;
+        }
+
+        body.landing-theme-light .landing-header::before {
+            background: rgba(255, 250, 247, .92);
+        }
+
+        body.landing-theme-light .landing-nav > .landing-nav-item {
+            color: #5b071b;
+        }
+
+        .landing-nav > .landing-nav-item:hover,
+        .landing-nav > .landing-nav-item:focus-visible,
+        body.landing-theme-light .landing-nav > .landing-nav-item:hover,
+        body.landing-theme-light .landing-nav > .landing-nav-item:focus-visible {
+            color: #facc15;
+        }
+
+        .landing-nav > .landing-nav-item:focus-visible {
+            outline: 2px solid #facc15;
+            outline-offset: 2px;
+        }
+
+        .gateway-stage .workspace-entry.gateway-actions {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .gateway-stage .workspace-entry.gateway-actions > .portal-btn {
+            max-width: 320px;
+            min-width: 0;
+            justify-self: center;
+            font-family: inherit;
+        }
+
+        .landing-reviews-section {
+            position: relative;
+            order: 3;
+            padding: 80px 24px;
+            color: #ffffff;
+            background: transparent;
+        }
+
+        .landing-reviews-inner {
+            width: min(1100px, 100%);
+            margin: 0 auto;
+        }
+
+        .landing-reviews-heading {
+            margin-bottom: 36px;
+            text-align: center;
+        }
+
+        .landing-reviews-heading p {
+            margin: 0 0 12px;
+        }
+
+        .landing-reviews-heading h2 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 32px;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+        }
+
+        .landing-reviews-section .feedback-stage {
+            width: min(1060px, 100%);
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin: 0 auto;
+        }
+
+        .landing-reviews-section .feedback-slide {
+            min-height: 190px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            grid-template-areas: "quote stars" "identity identity";
+            gap: 10px 20px;
+            min-width: 0;
+            padding: 22px;
+            border: 1px solid rgba(255, 247, 240, .36);
+            border-radius: 10px;
+            background: rgba(69, 5, 23, .32);
+            box-shadow: 0 16px 30px rgba(27, 0, 8, .2), 1px 1px 0 rgba(250, 204, 21, .34);
+            transition: transform .32s cubic-bezier(.22, 1, .36, 1), border-color .25s ease, box-shadow .25s ease;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .landing-reviews-section .feedback-slide:hover,
+        .landing-reviews-section .feedback-slide:focus-within {
+            transform: translateY(-7px) scale(1.012);
+            border-color: rgba(250, 204, 21, .64);
+            box-shadow: 0 24px 42px rgba(27, 0, 8, .3), 1px 1px 0 rgba(250, 204, 21, .62);
+        }
+
+        .landing-reviews-section .feedback-slide.is-empty {
+            min-height: 150px;
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .landing-reviews-section .feedback-quote {
+            grid-area: quote;
+            color: #facc15;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 52px;
+            font-weight: 900;
+            line-height: .7;
+        }
+
+        .landing-reviews-section .feedback-stars {
+            grid-area: stars;
+            display: flex;
+            justify-content: flex-end;
+            gap: 4px;
+            color: rgba(255, 255, 255, .2);
+        }
+
+        .landing-reviews-section .feedback-stars span {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .landing-reviews-section .feedback-stars .is-filled {
+            color: #facc15;
+            text-shadow: 0 0 8px rgba(250, 204, 21, .24);
+        }
+
+        .landing-reviews-section .feedback-identity {
+            grid-area: identity;
+            width: 100%;
+            min-width: 0;
+            display: grid;
+            grid-template-columns: 56px minmax(0, 1fr);
+            gap: 15px;
+            align-items: center;
+        }
+
+        .landing-reviews-section .avatar {
+            width: 56px;
+            height: 56px;
+            margin: 0;
+            align-self: center;
+            fill: #cbd5e0;
+            border: 1px solid rgba(255, 255, 255, .16);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .1);
+        }
+
+        .landing-reviews-section .feedback-copy {
+            width: 100%;
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .landing-reviews-section .feedback-copy h4 {
+            margin: 0;
+            color: #fffaf7;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .landing-reviews-section .comment-meta {
+            display: block;
+            margin-top: 1px;
+            color: rgba(255, 250, 247, .68);
+            font-size: 11px;
+        }
+
+        .landing-reviews-section .feedback-copy p {
+            width: 100%;
+            margin: 7px 0 0;
+            color: rgba(255, 250, 247, .9);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        body.landing-theme-light .landing-reviews-section {
+            color: #5b071b;
+            background: transparent;
+        }
+
+        body.landing-theme-light .landing-reviews-heading p {
+            color: #8f1024;
+        }
+
+        body.landing-theme-light .landing-reviews-heading h2,
+        body.landing-theme-light .landing-reviews-section .feedback-copy h4,
+        body.landing-theme-light .landing-reviews-section .feedback-copy p {
+            color: #4b1520;
+        }
+
+        body.landing-theme-light .landing-reviews-section .feedback-slide {
+            border-color: rgba(91, 7, 27, .18);
+            background: rgba(255, 255, 255, .8);
+        }
+
+        body.landing-theme-light .landing-reviews-section .feedback-stars {
+            color: #b9a5aa;
+        }
+
+        body.landing-theme-light .landing-reviews-section .feedback-stars .is-filled {
+            color: #936800;
+        }
+
+        body.landing-theme-light .landing-reviews-section .comment-meta {
+            color: #6b4851;
+        }
+
+        @media (max-width: 1040px) {
+            .landing-reviews-section .feedback-stage {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            .landing-reviews-section .feedback-stage {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .landing-reviews-section .feedback-slide {
+                grid-template-columns: minmax(0, 1fr);
+                grid-template-areas: "quote" "stars" "identity";
+                gap: 10px;
+                padding: 20px;
+            }
+
+            .landing-reviews-section .feedback-stars {
+                justify-content: flex-start;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .landing-reviews-section .feedback-slide {
+                transition: none;
+            }
+
+            .landing-reviews-section .feedback-slide:hover,
+            .landing-reviews-section .feedback-slide:focus-within {
+                transform: none;
+            }
+        }
+
+        .landing-footer-stethoscope {
+            position: absolute;
+            /* Allow upward dragging while clipping the decoration at the footer edge. */
+            inset: -420px 0 0;
+            z-index: 0;
+            width: 100%;
+            height: auto;
+            overflow: hidden;
+            opacity: .45;
+        }
+
+        .landing-faq-section {
+            position: relative;
+            isolation: isolate;
+            order: 4;
+            padding: 80px 24px 96px;
+            border-top: 0;
+            background: transparent;
+            color: #ffffff;
+        }
+
+        .landing-faq-inner {
+            position: relative;
+            z-index: 1;
+            width: min(960px, 100%);
+            margin: 0 auto;
+        }
+
+        .landing-faq-section h2 {
+            margin: 0 0 32px;
+            color: #facc15;
+            font-size: 28px;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+        }
+
+        .landing-faq-item {
+            border-bottom: 1px solid rgba(255, 255, 255, .2);
+        }
+
+        .landing-faq-item summary {
+            padding: 22px 8px;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+            cursor: pointer;
+        }
+
+        .landing-faq-item summary::marker,
+        .landing-faq-item summary:hover,
+        .landing-faq-item[open] summary {
+            color: #facc15;
+        }
+
+        .landing-faq-item summary:focus-visible {
+            outline: 2px solid #facc15;
+            outline-offset: 2px;
+        }
+
+        .landing-faq-answer {
+            padding: 0 8px 24px;
+            color: rgba(255, 255, 255, .86);
+            font-size: 15px;
+            line-height: 1.7;
+            white-space: pre-line;
+            overflow-wrap: anywhere;
+        }
+
+        body.landing-theme-light .landing-faq-section {
+            background: transparent;
+            color: #5b071b;
+        }
+
+        body.landing-theme-light .landing-faq-section h2,
+        body.landing-theme-light .landing-faq-item summary:hover,
+        body.landing-theme-light .landing-faq-item[open] summary {
+            color: #8f1024;
+        }
+
+        body.landing-theme-light .landing-faq-item {
+            border-color: rgba(91, 7, 27, .2);
+        }
+
+        body.landing-theme-light .landing-faq-answer {
+            color: #4b1520;
+        }
+
+        @media (max-width: 1100px) {
+            .landing-header {
+                grid-template-columns: auto minmax(0, 1fr);
+                grid-template-areas: "brand navigation" "availability availability";
+                row-gap: 8px;
+            }
+
+        }
+
+        @media (max-width: 800px) {
+            .landing-header {
+                column-gap: 12px;
+                padding: 10px 12px 26px;
+            }
+
+            .landing-header-brand {
+                gap: 4px;
+            }
+
+            .landing-header-logo {
+                width: 26px;
+                height: 26px;
+            }
+
+            .landing-header-logo img {
+                width: 26px;
+                height: 26px;
+            }
+
+            .landing-header-logo--clinic {
+                width: 36px;
+                height: 34px;
+            }
+
+            .landing-header-logo--clinic img {
+                width: 64px;
+                height: 40px;
+            }
+
+            .landing-header-name {
+                display: none;
+                margin-left: 4px;
+                font-size: 15px;
+            }
+
+            .landing-nav-toggle {
+                position: relative;
+                grid-area: navigation;
+                display: grid;
+                place-items: center;
+                justify-self: end;
+                width: 44px;
+                height: 44px;
+                padding: 0;
+                border: 1px solid rgba(255, 255, 255, .2);
+                border-radius: 8px;
+                background: rgba(255, 255, 255, .06);
+                color: #ffffff;
+                cursor: pointer;
+                transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+            }
+
+            .landing-nav-toggle svg {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 24px;
+                height: 24px;
+                transform: translate(-50%, -50%) rotate(0deg) scale(1);
+                transition: transform .24s ease, opacity .18s ease;
+            }
+
+            .landing-nav-toggle .landing-nav-toggle__close {
+                opacity: 0;
+                transform: translate(-50%, -50%) rotate(-90deg) scale(.65);
+            }
+
+            .landing-nav-toggle[aria-expanded="true"] .landing-nav-toggle__menu {
+                opacity: 0;
+                transform: translate(-50%, -50%) rotate(90deg) scale(.65);
+            }
+
+            .landing-nav-toggle[aria-expanded="true"] .landing-nav-toggle__close {
+                opacity: 1;
+                transform: translate(-50%, -50%) rotate(0deg) scale(1);
+            }
+
+            .landing-nav-toggle:hover,
+            .landing-nav-toggle[aria-expanded="true"] {
+                border-color: #facc15;
+                background: rgba(250, 204, 21, .14);
+                color: #facc15;
+            }
+
+            .landing-nav-toggle:focus-visible {
+                outline: 2px solid #facc15;
+                outline-offset: 3px;
+            }
+
+            body.landing-theme-light .landing-nav-toggle {
+                border-color: rgba(91, 7, 27, .2);
+                color: #5b071b;
+            }
+
+            body.landing-theme-light .landing-nav-toggle:hover,
+            body.landing-theme-light .landing-nav-toggle[aria-expanded="true"] {
+                border-color: #facc15;
+                background: #facc15;
+            }
+
+            .landing-nav {
+                position: absolute;
+                grid-area: auto;
+                top: 64px;
+                right: 12px;
+                z-index: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                width: min(260px, calc(100% - 24px));
+                max-height: calc(100svh - 80px);
+                gap: 4px;
+                padding: 8px;
+                overflow-y: auto;
+                border: 1px solid rgba(255, 255, 255, .2);
+                border-radius: 8px;
+                background: rgba(83, 7, 25, .86);
+                box-shadow: 0 12px 32px rgba(24, 2, 10, .3);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transform: translateY(-8px) scale(.98);
+                transform-origin: top right;
+                transition: opacity .2s ease, transform .2s ease, visibility 0s linear .2s;
+            }
+
+            .landing-nav.is-open {
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+                transform: translateY(0) scale(1);
+                transition-delay: 0s;
+            }
+
+            .landing-nav > .landing-nav-item {
+                flex-direction: row;
+                justify-content: flex-start;
+                width: 100% !important;
+                padding: 0 12px;
+                border-radius: 6px;
+                white-space: normal;
+                overflow-wrap: anywhere;
+                line-height: 1.35;
+                text-align: left;
+            }
+
+            body.landing-theme-light .landing-nav > .landing-nav-item {
+                color: #ffffff;
+            }
+
+            .landing-nav > .landing-nav-item:hover,
+            .landing-nav > .landing-nav-item:focus-visible {
+                background: rgba(250, 204, 21, .12);
+            }
+
+            .landing-nav > .landing-nav-item > svg {
+                display: none;
+            }
+
+            .landing-nav > .landing-nav-item > .landing-nav-label {
+                display: block;
+                flex: 1 1 auto;
+                min-width: 0;
+                text-align: left;
+            }
+
+            .landing-nav .announcement-badge {
+                position: static;
+                order: 1;
+                flex: 0 0 auto;
+                margin-left: auto;
+            }
+
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .landing-nav-toggle,
+            .landing-nav-toggle svg,
+            .landing-nav {
+                transition: none;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .gateway-stage .workspace-entry.gateway-actions {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .landing-reviews-section {
+                padding: 64px 20px;
+            }
+
+            .landing-reviews-heading h2 {
+                font-size: 26px;
+            }
+
+            .landing-footer-stethoscope {
+                opacity: .3;
+            }
+
+            .landing-faq-section {
+                padding: 64px 20px;
+            }
+
+            .landing-faq-section h2 {
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .landing-header {
+                column-gap: 8px;
+                padding-inline: 8px;
+            }
+
+            .landing-header-brand {
+                gap: 2px;
+            }
+
+            .landing-header-logo,
+            .landing-header-logo img {
+                width: 22px;
+                height: 22px;
+            }
+
+            .landing-header-logo--clinic {
+                width: 30px;
+                height: 28px;
+            }
+
+            .landing-header-logo--clinic img {
+                width: 56px;
+                height: 36px;
+            }
+
+            .landing-header-name {
+                margin-left: 2px;
+                font-size: 12px;
+            }
+
+        }
+
+        .landing-footer.is-help-open {
+            z-index: 160;
+        }
+
+        .landing-help-bubble {
+            --help-surface: rgba(83, 7, 25, .9);
+            position: absolute;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            width: min(420px, calc(100% - 32px));
+            max-height: min(480px, calc(100svh - 64px));
+            margin: 0;
+            border: 1px solid rgba(255, 255, 255, .2);
+            border-radius: 8px;
+            background: var(--help-surface);
+            color: #ffffff;
+            box-shadow: 0 12px 38px rgba(24, 2, 10, .3);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            text-align: left;
+        }
+
+        .landing-help-bubble[hidden] {
+            display: none;
+        }
+
+        .landing-help-bubble::after {
+            content: "";
+            position: absolute;
+            bottom: -6px;
+            left: var(--help-arrow-x, 50%);
+            width: 12px;
+            height: 12px;
+            border: solid rgba(255, 255, 255, .2);
+            border-width: 0 1px 1px 0;
+            background: var(--help-surface);
+            transform: translateX(-50%) rotate(45deg);
+            pointer-events: none;
+        }
+
+        .landing-help-bubble[data-placement="below"]::after {
+            top: -6px;
+            bottom: auto;
+            border-width: 1px 0 0 1px;
+        }
+
+        .landing-help-bubble__head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex: 0 0 auto;
+            gap: 12px;
+            padding: 10px 12px 10px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, .14);
+        }
+
+        .landing-help-bubble__head h2 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+
+        .landing-help-bubble__close {
+            display: grid;
+            place-items: center;
+            width: 36px;
+            height: 36px;
+            flex: 0 0 auto;
+            padding: 0;
+            border: 1px solid rgba(255, 255, 255, .24);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .08);
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        .landing-help-bubble__close svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .landing-help-bubble__close:hover,
+        .landing-help-bubble__close:focus-visible {
+            background: #facc15;
+            color: #70131b;
+            outline: 2px solid #facc15;
+            outline-offset: 1px;
+        }
+
+        .landing-help-bubble__body {
+            min-height: 0;
+            padding: 0 12px 12px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+
+        .landing-help-bubble .help-guide {
+            gap: 0;
+            padding: 0;
+        }
+
+        .landing-help-bubble .help-accordion {
+            border: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .14);
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .landing-help-bubble .help-accordion:last-child {
+            border-bottom: 0;
+        }
+
+        .landing-help-bubble .help-accordion summary {
+            gap: 10px;
+            padding: 12px 4px;
+            color: #ffffff;
+        }
+
+        .landing-help-bubble .help-accordion-icon {
+            width: 28px;
+            height: 28px;
+            flex-basis: 28px;
+            border-radius: 6px;
+            background: rgba(250, 204, 21, .12);
+            color: #facc15;
+            box-shadow: none;
+        }
+
+        .landing-help-bubble .help-accordion-heading strong,
+        .landing-help-bubble .help-contact-card strong {
+            color: #ffffff;
+        }
+
+        .landing-help-bubble .help-accordion-heading span,
+        .landing-help-bubble .help-contact-card span,
+        .landing-help-bubble .help-check-list li,
+        .landing-help-bubble .help-issue-list li {
+            color: rgba(255, 255, 255, .84);
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+
+        .landing-help-bubble .help-accordion-chevron,
+        .landing-help-bubble .help-check-list li::before,
+        .landing-help-bubble .help-issue-list li::before {
+            color: #facc15;
+        }
+
+        .landing-help-bubble .help-accordion-body {
+            padding: 0 4px 16px 42px;
+        }
+
+        .landing-help-bubble .help-issue-list {
+            grid-template-columns: 1fr;
+        }
+
+        .landing-help-bubble .help-issue-list li {
+            padding: 0 0 0 18px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+        }
+
+        .landing-help-bubble .help-issue-list li::before {
+            top: 1px;
+            left: 0;
+        }
+
+        .landing-help-bubble .help-contact-card {
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+        }
     </style>
 </head>
 <body>
-    <div class="landing-starfield" aria-hidden="true">
-        <div id="stars"></div>
-        <div id="stars2"></div>
-        <div id="stars3"></div>
-        <div></div>
-    </div>
-
     @php
         $landingAdminUser = Auth::guard('admin')->user();
         $landingStudentUser = Auth::guard('student')->user();
@@ -7957,13 +8809,6 @@
         $landingAvailabilityPrefix = $landingClinicClosed ? 'The Clinic is' : 'The Doctor is';
         $landingAvailabilityValue = $landingClinicClosed ? 'CLOSED' : ($landingDoctorAvailable ? 'IN' : 'OUT');
 
-        if ($landingAdminUser) {
-            $workspaceHref = url('/admin/dashboard');
-        } elseif ($landingIsStudentAssistant) {
-            $workspaceHref = url('/student/home?workspace=sa');
-        } else {
-            $workspaceHref = url('/student/home');
-        }
     @endphp
 
     <!-- Full-Screen Preloader -->
@@ -7980,19 +8825,54 @@
             <p class="preloader-status">Preparing your clinic workspace</p>
         </div>
     </div>
-    <main class="landing-shell">
-        <button type="button" class="landing-announcement-btn" id="announcementBtn" aria-label="Announcements" title="Announcements">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 0 1-1.44-4.282m3.102.069a18.03 18.03 0 0 1-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 0 1 8.835 2.535M10.34 6.66a23.847 23.847 0 0 0 8.835-2.535m0 0A23.74 23.74 0 0 0 18.795 3m.38 1.125a23.91 23.91 0 0 1 1.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 0 0 1.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 0 1 0 3.46" />
+    <header class="landing-header">
+        <div class="landing-header-brand" aria-label="CareSync - PUP Taguig Medical Clinic">
+            <span class="landing-header-logo">
+                <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo" width="32" height="32">
+            </span>
+            <span class="landing-header-logo landing-header-logo--clinic">
+                <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="Clinic Logo" width="40" height="40">
+            </span>
+            <strong class="landing-header-name">Medical Clinic</strong>
+        </div>
+        <p
+            class="landing-doctor-status"
+            id="landingDoctorAvailability"
+            data-available="{{ $landingDoctorAvailable ? 'true' : 'false' }}"
+            data-clinic-closed="{{ $landingClinicClosed ? 'true' : 'false' }}"
+            data-status="{{ $landingAvailabilityStatus }}"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            aria-label="{{ $landingAvailabilityPrefix }} {{ $landingAvailabilityValue }}"
+        >
+            <svg class="landing-doctor-status__pulse" viewBox="0 0 58 24" aria-hidden="true" focusable="false">
+                <path d="M1 12h12l4-1 6-6 7 14 5-18 7 11 4 0h10" />
             </svg>
-            <span class="announcement-badge" id="announcementBadge" style="display: none;">1</span>
-            <span>Announcements</span>
+            <span class="landing-doctor-status__label"><span>{{ $landingAvailabilityPrefix }}</span> <strong>{{ $landingAvailabilityValue }}</strong></span>
+        </p>
+        <button type="button" class="landing-nav-toggle" id="landingNavToggle" aria-label="Open navigation" title="Menu" aria-controls="landingNavMenu" aria-expanded="false">
+            <x-outline-icon name="bars-3" class="landing-nav-toggle__menu" />
+            <x-outline-icon name="x-mark" class="landing-nav-toggle__close" />
         </button>
+        <nav class="landing-nav" id="landingNavMenu" aria-label="Main navigation">
+            <button type="button" class="landing-nav-item landing-announcement-btn" id="announcementBtn" aria-label="Announcements" title="Announcements">
+                <x-outline-icon name="megaphone" />
+                <span class="announcement-badge" id="announcementBadge" style="display: none;">1</span>
+                <span class="landing-nav-label">Announcements</span>
+            </button>
 
-        <button type="button" class="landing-assistant-btn landing-botpress-btn" id="bp-toggle-chat" aria-label="Open clinic chat" title="AI Assistant">
-            <img src="{{ asset('images/clinic-robot-nobg.png') }}" alt="" aria-hidden="true">
-            <span>AI Assistant</span>
-        </button>
+            <button type="button" class="landing-nav-item" id="landingFaqButton" aria-label="FAQs" title="FAQs" aria-controls="landingFaqSection">
+                <x-outline-icon name="information-circle" />
+                <span class="landing-nav-label">FAQs</span>
+            </button>
+            <button type="button" class="landing-nav-item landing-assistant-btn landing-botpress-btn" id="bp-toggle-chat" aria-label="Open clinic chat" title="AI Assistant">
+                <x-outline-icon name="sparkles" />
+                <span class="landing-nav-label">AI Assistant</span>
+            </button>
+        </nav>
+    </header>
+    <main class="landing-shell">
 
         <div class="landing-weather-widget" id="landingWeatherWidget" data-weather-status="static" aria-busy="false">
             <button type="button" class="landing-weather-trigger" id="landingWeatherTrigger" aria-label="Open weather details" aria-controls="landingWeatherPanel" aria-expanded="false" title="Weather details">
@@ -8290,18 +9170,6 @@
                     @endif
                 </div>
             </div>
-            <div class="landing-announcement-stethoscope" aria-hidden="true">
-                <canvas class="landing-stethoscope-hose-canvas"></canvas>
-                <div class="landing-stethoscope-chestpiece">
-                    <img
-                        class="landing-stethoscope-part landing-stethoscope-chestpiece-image"
-                        src="{{ asset('images/hero-stethoscope-chestpiece.png') }}"
-                        alt=""
-                        draggable="false"
-                        decoding="async"
-                    >
-                </div>
-            </div>
         </div>
 
         <section class="landing-panel" aria-label="PUP medical clinic access">
@@ -8398,15 +9266,6 @@
                         <p>Use your One Portal account to continue browsing other systems or clinic workspace.</p>
                     </div>
 
-                    <a class="portal-btn" href="{{ $workspaceHref }}">
-                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M15 12H4" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M20 4v16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span>View Clinic Workspace</span>
-                    </a>
-
                     @if($landingStudentUser)
                         <a class="portal-btn" href="{{ url('/student/account?view=profile') }}">
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -8435,15 +9294,6 @@
                     @endif
 
                     <div class="workspace-utility-actions">
-                        <button class="help-btn help-link" type="button" aria-controls="landingHelpPanel" aria-expanded="true">
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M12 18h.01" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M9.5 9a2.5 2.5 0 1 1 4.1 1.9c-.9.7-1.6 1.2-1.6 2.6v.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            <span>Need Help?</span>
-                        </button>
-
                         @if($showLandingLocalLogin)
                             @guest('student')
                                 @guest('admin')
@@ -8467,22 +9317,13 @@
                 <div class="login-card">
                     <div class="login-primary gateway-stage" id="landingLoginPrimary">
                         <div class="gateway-top-content">
-                        <div class="logo-stack gateway-logo-row" aria-label="PUP and clinic logos">
-                            <span class="logo-frame gateway-logo-card">
-                                <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo">
-                            </span>
-                            <span class="logo-frame logo-frame--clinic gateway-logo-card">
-                                <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="Clinic Logo">
-                            </span>
-                        </div>
-
                         <div class="login-copy gateway-brand-copy">
                             <p class="gateway-kicker">Medical Services Department</p>
                             <h1 class="gateway-title">
                                 <span class="gateway-title-line">PUP Taguig</span>
                                 <span class="gateway-title-line gateway-title-line--clinic" data-shine-text="Medical Clinic">Medical Clinic</span>
                             </h1>
-                            <p class="gateway-copy">Your secure portal for appointments, health records, and clinic updates.</p>
+                            <p class="gateway-copy">Your Health, Our Priority.</p>
                         </div>
 
                         @if($errors->has('idp'))
@@ -8490,21 +9331,11 @@
                         @endif
 
                         <div class="workspace-entry gateway-actions">
-                            <a href="{{ $workspaceHref }}" class="portal-btn portal-btn--workspace" id="viewClinicWorkspaceBtn">
-                                <span class="portal-btn__icon" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24">
-                                        <rect x="3" y="4" width="18" height="12" rx="2"></rect>
-                                        <path d="M8 20h8M12 16v4"></path>
-                                    </svg>
-                                </span>
-                                <span class="portal-btn__label">View Clinic Workspace</span>
-                                <span class="portal-btn__arrow" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M5 12h14"></path>
-                                        <path d="m13 6 6 6-6 6"></path>
-                                    </svg>
-                                </span>
-                            </a>
+                            <button type="button" class="portal-btn" id="landingReviewsButton" aria-controls="landingReviewsSection">
+                                <span class="portal-btn__icon" aria-hidden="true"><x-outline-icon name="chat-bubble-left-ellipsis" /></span>
+                                <span class="portal-btn__label">Clinic Reviews</span>
+                                <span class="portal-btn__arrow" aria-hidden="true"><x-outline-icon name="arrow-long-right" /></span>
+                            </button>
 
                             @if($landingStudentUser)
                                 <a class="portal-btn" href="{{ url('/student/account?view=profile') }}">
@@ -8540,39 +9371,7 @@
                                 </a>
                             @endif
 
-                            <p
-                                class="landing-doctor-status"
-                                id="landingDoctorAvailability"
-                                data-available="{{ $landingDoctorAvailable ? 'true' : 'false' }}"
-                                data-clinic-closed="{{ $landingClinicClosed ? 'true' : 'false' }}"
-                                data-status="{{ $landingAvailabilityStatus }}"
-                                role="status"
-                                aria-live="polite"
-                                aria-atomic="true"
-                                aria-label="{{ $landingAvailabilityPrefix }} {{ $landingAvailabilityValue }}"
-                            >
-                                <span class="landing-doctor-status__side landing-doctor-status__side--left" aria-hidden="true">
-                                    <span class="landing-doctor-status__rule"></span>
-                                    <svg class="landing-doctor-status__pulse" viewBox="0 0 58 24" focusable="false">
-                                        <path d="M1 12h12l4-1 6-6 7 14 5-18 7 11 4 0h10" />
-                                    </svg>
-                                </span>
-                                <span class="landing-doctor-status__label"><span>{{ $landingAvailabilityPrefix }}</span> <strong>{{ $landingAvailabilityValue }}</strong></span>
-                                <span class="landing-doctor-status__side landing-doctor-status__side--right" aria-hidden="true">
-                                    <span class="landing-doctor-status__rule"></span>
-                                </span>
-                            </p>
-
                             <div class="workspace-utility-actions gateway-utility">
-                                <button class="help-btn help-link" type="button" id="landingNeedHelpButton" aria-controls="landingHelpPanel" aria-expanded="false">
-                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                        <path d="M12 18h.01" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M9.5 9a2.5 2.5 0 1 1 4.1 1.9c-.9.7-1.6 1.2-1.6 2.6v.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    <span>Need Help?</span>
-                                </button>
-
                                 @if($showLandingLocalLogin)
                                     @guest('student')
                                         @guest('admin')
@@ -8671,170 +9470,48 @@
                         <p class="system-foot">© 2026 PUP Taguig Medical Clinic. All rights reserved.</p>
                     </div>
 
-                    <div class="help-panel" id="landingHelpPanel" aria-hidden="true">
-                        <div class="help-panel-head">
-                            <button type="button" class="help-panel-back" id="landingHelpBackButton" aria-label="Back to clinic access">
-                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                    <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </button>
-                            <p class="help-panel-kicker">Help Center</p>
-                            <h2 class="help-panel-title">Before You Continue</h2>
-                            <p class="help-panel-copy">Use this guide if you cannot continue through One Portal or you are unsure what to do next.</p>
-                        </div>
-
-                        <div class="help-guide" aria-label="Help Center guide">
-                            <details class="help-accordion" open>
-                                <summary>
-                                    <span class="help-accordion-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                            <circle cx="12" cy="7" r="4" stroke="currentColor"/>
-                                            <path d="M5 21v-2a7 7 0 0 1 14 0v2" stroke="currentColor" stroke-linecap="round"/>
-                                        </svg>
-                                    </span>
-                                    <span class="help-accordion-heading">
-                                        <strong>For Students</strong>
-                                        <span>Login, clinic records, and medical clearance</span>
-                                    </span>
-                                    <svg class="help-accordion-chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                        <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </summary>
-                                <div class="help-accordion-body">
-                                    <ul class="help-check-list">
-                                        <li>Use your official One Portal account.</li>
-                                        <li>If One Portal does not open, refresh the page and try again.</li>
-                                        <li>Contact clinic staff if your clinic record is not visible after login.</li>
-                                        <li>Prepare your Admission System reference number for medical clearance.</li>
-                                        <li>Visit the clinic when instructed to proceed with medical assessment.</li>
-                                    </ul>
-                                </div>
-                            </details>
-
-                            <details class="help-accordion">
-                                <summary>
-                                    <span class="help-accordion-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                            <path d="M4 5h16v14H4zM8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </span>
-                                    <span class="help-accordion-heading">
-                                        <strong>For Clinic Staff</strong>
-                                        <span>Staff access and system assistance</span>
-                                    </span>
-                                    <svg class="help-accordion-chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                        <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </summary>
-                                <div class="help-accordion-body">
-                                    <ul class="help-check-list">
-                                        <li>Use One Portal for the normal clinic login process.</li>
-                                        <li>Contact the system administrator when One Portal is unavailable.</li>
-                                    </ul>
-                                </div>
-                            </details>
-
-                            <details class="help-accordion">
-                                <summary>
-                                    <span class="help-accordion-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                            <path d="M12 3 2.8 20h18.4L12 3z" stroke="currentColor" stroke-linejoin="round"/>
-                                            <path d="M12 9v5M12 17h.01" stroke="currentColor" stroke-linecap="round"/>
-                                        </svg>
-                                    </span>
-                                    <span class="help-accordion-heading">
-                                        <strong>Common Issues</strong>
-                                        <span>Quick checks for access and record problems</span>
-                                    </span>
-                                    <svg class="help-accordion-chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                        <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </summary>
-                                <div class="help-accordion-body">
-                                    <ul class="help-issue-list">
-                                        <li>One Portal unavailable</li>
-                                        <li>Wrong account used</li>
-                                        <li>Missing reference number</li>
-                                        <li>Profile not submitted</li>
-                                        <li>Status not approved</li>
-                                        <li>Record under review</li>
-                                    </ul>
-                                </div>
-                            </details>
-
-                            <details class="help-accordion">
-                                <summary>
-                                    <span class="help-accordion-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                            <path d="M4 5h16v12H8l-4 4V5z" stroke="currentColor" stroke-linejoin="round"/>
-                                            <path d="M8 9h8M8 13h5" stroke="currentColor" stroke-linecap="round"/>
-                                        </svg>
-                                    </span>
-                                    <span class="help-accordion-heading">
-                                        <strong>Contact</strong>
-                                        <span>Where to request further assistance</span>
-                                    </span>
-                                    <svg class="help-accordion-chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                        <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </summary>
-                                <div class="help-accordion-body">
-                                    <div class="help-contact-card">
-                                        <strong>PUP Taguig Medical Clinic</strong>
-                                        <span>For clinic record, clearance, or assessment concerns, contact the clinic staff. For login or technical issues, contact the system administrator.</span>
-                                    </div>
-                                </div>
-                            </details>
-                        </div>
-
-                        <div class="help-guide help-guide-legacy" aria-hidden="true">
-                            <div class="help-guide-item">
-                                <span class="help-guide-number">1</span>
-                                <span class="help-guide-text">
-                                    <strong>For Students</strong>
-                                    <span>&middot; Make sure you are using your official One Portal account.</span>
-                                    <span>&middot; If One Portal does not open, refresh the page and try again.</span>
-                                    <span>&middot; If you can log in but cannot see your clinic record, contact the clinic staff.</span>
-                                    <span>&middot; For medical clearance, prepare your Admission System reference number.</span>
-                                    <span>&middot; Visit the clinic if you are instructed to proceed with medical assessment.</span>
-                                </span>
-                            </div>
-                            
-                            
-                            <div class="help-guide-item">
-                                <span class="help-guide-number">2</span>
-                                <span class="help-guide-text">
-                                    <strong>For Clinic Staff</strong>
-                                    <span>&middot; Use One Portal for normal login.</span>
-                                    <span>&middot;If One Portal is unavailable, contact the system administrator.</span>
-                                </span>
-                                </span>
-                            </div>
-                           
-                            <div class="help-guide-item">
-                                <span class="help-guide-number">3</span>
-                                <span class="help-guide-text">
-                                    <strong>Common Issues</strong>
-                                    <span>&middot; One Portal is unavailable</span>
-                                    <span>&middot; Wrong account used</span>
-                                    <span>&middot; Missing applicant reference number</span>
-                                    <span>&middot; Health profile not yet submitted</span>
-                                    <span>&middot; Medical status not yet approved</span>
-                                    <span>&middot; Clinic record is still under review</span>
-                                </span>
-                            </div>
-                           
-                                   
-                            <div class="help-guide-item">
-                                <span class="help-guide-number">4</span>
-                                <span class="help-guide-text">
-                                    <strong>Contact</strong>
-                                    <span>&middot; For assistance, contact the PUP Taguig Medical Clinic or the system administrator.</span>
-                                </span>
-                            </div>
-                        </div>
-
-                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="landing-reviews-section" id="landingReviewsSection" aria-labelledby="landingReviewsTitle">
+            <div class="landing-reviews-inner">
+                <header class="landing-reviews-heading">
+                    <p>Clinic Reviews</p>
+                    <h2 id="landingReviewsTitle">What PUPians Are Saying</h2>
+                </header>
+                <svg width="0" height="0" aria-hidden="true" focusable="false">
+                    <defs>
+                        <symbol id="landing-review-avatar" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="12" fill="#e2e8f0" />
+                            <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z" fill="#cbd5e0" />
+                        </symbol>
+                    </defs>
+                </svg>
+                @include('partials.clinic-review-cards', ['reviews' => $landingReviews ?? collect(), 'avatarSymbol' => 'landing-review-avatar'])
+            </div>
+        </section>
+        <section class="landing-faq-section" id="landingFaqSection" aria-labelledby="landingFaqTitle">
+            <div class="landing-faq-inner">
+                <h2 id="landingFaqTitle">Frequently Asked Questions</h2>
+                @forelse($landingFaqs ?? collect() as $faq)
+                    <details class="landing-faq-item">
+                        <summary>{{ $faq->question }}</summary>
+                        <div class="landing-faq-answer">{{ $faq->answer }}</div>
+                    </details>
+                @empty
+                    <p>No FAQs available at the moment.</p>
+                @endforelse
+            </div>
+            <div class="landing-announcement-stethoscope landing-footer-stethoscope" aria-hidden="true">
+                <canvas class="landing-stethoscope-hose-canvas"></canvas>
+                <div class="landing-stethoscope-chestpiece">
+                    <img
+                        class="landing-stethoscope-part landing-stethoscope-chestpiece-image"
+                        src="{{ asset('images/hero-stethoscope-chestpiece.png') }}"
+                        alt=""
+                        draggable="false"
+                        decoding="async"
+                    >
                 </div>
             </div>
         </section>
@@ -8902,7 +9579,83 @@
             <span class="landing-footer__message"><em>Mula sa'yo,</em> <strong>Para sa Bayan!</strong></span>
             <span class="landing-footer__separator" aria-hidden="true"></span>
             <span class="landing-footer__version">OCMS V.26</span>
+            <span class="landing-footer__separator" aria-hidden="true"></span>
+            <button class="help-btn help-link" type="button" id="landingNeedHelpButton" aria-controls="landingHelpPanel" aria-haspopup="dialog" aria-expanded="false">
+                <x-outline-icon name="information-circle" />
+                <span>Need Help?</span>
+            </button>
         </div>
+        <section class="landing-help-bubble" id="landingHelpPanel" role="dialog" aria-modal="false" aria-labelledby="landingHelpTitle" aria-hidden="true" hidden>
+            <div class="landing-help-bubble__head">
+                <h2 id="landingHelpTitle">Need Help?</h2>
+                <button type="button" class="landing-help-bubble__close" id="landingHelpBackButton" aria-label="Close help" title="Close help">
+                    <x-outline-icon name="x-mark" />
+                </button>
+            </div>
+            <div class="landing-help-bubble__body">
+                <div class="help-guide" aria-label="Help Center guide">
+                    <details class="help-accordion" open>
+                        <summary>
+                            <span class="help-accordion-icon"><x-outline-icon name="academic-cap" /></span>
+                            <span class="help-accordion-heading"><strong>For Students</strong><span>Login, clinic records, and medical clearance</span></span>
+                            <x-outline-icon name="chevron-down" class="help-accordion-chevron" />
+                        </summary>
+                        <div class="help-accordion-body">
+                            <ul class="help-check-list">
+                                <li>Use your official One Portal account.</li>
+                                <li>If One Portal does not open, refresh the page and try again.</li>
+                                <li>Contact clinic staff if your clinic record is not visible after login.</li>
+                                <li>Prepare your Admission System reference number for medical clearance.</li>
+                                <li>Visit the clinic when instructed to proceed with medical assessment.</li>
+                            </ul>
+                        </div>
+                    </details>
+                    <details class="help-accordion">
+                        <summary>
+                            <span class="help-accordion-icon"><x-outline-icon name="briefcase" /></span>
+                            <span class="help-accordion-heading"><strong>For Clinic Staff</strong><span>Staff access and system assistance</span></span>
+                            <x-outline-icon name="chevron-down" class="help-accordion-chevron" />
+                        </summary>
+                        <div class="help-accordion-body">
+                            <ul class="help-check-list">
+                                <li>Use One Portal for the normal clinic login process.</li>
+                                <li>Contact the system administrator when One Portal is unavailable.</li>
+                            </ul>
+                        </div>
+                    </details>
+                    <details class="help-accordion">
+                        <summary>
+                            <span class="help-accordion-icon"><x-outline-icon name="exclamation-triangle" /></span>
+                            <span class="help-accordion-heading"><strong>Common Issues</strong><span>Quick checks for access and record problems</span></span>
+                            <x-outline-icon name="chevron-down" class="help-accordion-chevron" />
+                        </summary>
+                        <div class="help-accordion-body">
+                            <ul class="help-issue-list">
+                                <li>One Portal unavailable</li>
+                                <li>Wrong account used</li>
+                                <li>Missing reference number</li>
+                                <li>Profile not submitted</li>
+                                <li>Status not approved</li>
+                                <li>Record under review</li>
+                            </ul>
+                        </div>
+                    </details>
+                    <details class="help-accordion">
+                        <summary>
+                            <span class="help-accordion-icon"><x-outline-icon name="information-circle" /></span>
+                            <span class="help-accordion-heading"><strong>Contact</strong><span>Where to request further assistance</span></span>
+                            <x-outline-icon name="chevron-down" class="help-accordion-chevron" />
+                        </summary>
+                        <div class="help-accordion-body">
+                            <div class="help-contact-card">
+                                <strong>PUP Taguig Medical Clinic</strong>
+                                <span>For clinic record, clearance, or assessment concerns, contact the clinic staff. For login or technical issues, contact the system administrator.</span>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </section>
     </footer>
     <script>
 
@@ -8910,7 +9663,8 @@
         const saSelector = document.getElementById('saWorkspaceSelector');
         const landingPanel = document.querySelector('.landing-panel');
         const helpPanel = document.getElementById('landingHelpPanel');
-        const infoLoginSwap = document.querySelector('.info-login-swap');
+        const helpFooter = document.querySelector('.landing-footer');
+        const helpTrigger = document.getElementById('landingNeedHelpButton');
         const helpButtons = Array.from(document.querySelectorAll('.help-btn'));
         const helpBackButton = document.getElementById('landingHelpBackButton');
         const helpAccordions = Array.from(document.querySelectorAll('.help-accordion'));
@@ -9897,6 +10651,7 @@
 
         function initializeLandingChestpiece() {
             const chestpiece = document.querySelector('.landing-stethoscope-chestpiece');
+            const chestImage = chestpiece?.querySelector('img');
             const hoseCanvas = document.querySelector('.landing-stethoscope-hose-canvas');
             const stethoscopeStage = chestpiece?.closest('.landing-announcement-stethoscope');
             if (!chestpiece || !hoseCanvas || !stethoscopeStage || chestpiece.dataset.chestpieceReady === '1') {
@@ -9905,6 +10660,9 @@
 
             chestpiece.dataset.chestpieceReady = '1';
             const hoseContext = hoseCanvas.getContext('2d');
+            if (!hoseContext) {
+                return;
+            }
             const isCompact = window.matchMedia('(max-width: 900px)').matches;
             const maxDragX = isCompact ? 45 : 160;
             const maxDragY = isCompact ? 140 : 180;
@@ -9932,6 +10690,8 @@
                 const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
                 hoseCanvas.width = Math.max(1, Math.round(stageRect.width * pixelRatio));
                 hoseCanvas.height = Math.max(1, Math.round(stageRect.height * pixelRatio));
+                hoseCanvas.style.top = '0px';
+                hoseCanvas.style.bottom = 'auto';
                 hoseCanvas.style.width = `${stageRect.width}px`;
                 hoseCanvas.style.height = `${stageRect.height}px`;
                 hoseContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
@@ -9945,8 +10705,12 @@
 
                 const stageRect = stethoscopeStage.getBoundingClientRect();
                 const chestRect = chestpiece.getBoundingClientRect();
-                const startX = chestRect.right - stageRect.left - 45;
-                const startY = chestRect.top - stageRect.top + chestRect.height * 0.67;
+                const imageRect = chestImage?.getBoundingClientRect() ?? chestRect;
+                const imageScale = imageRect.width / 1658;
+                // The cropped bitmap ends at the connector's center, at source-image y=674.
+                const startX = chestRect.right - stageRect.left - 1;
+                const startY = imageRect.top - stageRect.top + 674 * imageScale;
+                const hoseWidth = 58 * imageScale;
                 const anchorX = stageRect.width + 18;
                 if (hoseAnchorRatio === null) {
                     hoseAnchorRatio = Math.max(80, startY - 36) / Math.max(1, stageRect.height);
@@ -9954,7 +10718,7 @@
                 const anchorY = Math.min(stageRect.height - 32, Math.max(32, stageRect.height * hoseAnchorRatio));
                 const distance = Math.max(48, anchorX - startX);
                 const controlX1 = startX + distance * 0.36;
-                const controlY1 = startY + 54;
+                const controlY1 = startY;
                 const controlX2 = anchorX - distance * 0.22;
                 const controlY2 = anchorY + 16;
                 const drawPath = function () {
@@ -9969,19 +10733,19 @@
 
                 drawPath();
                 hoseContext.strokeStyle = '#240107';
-                hoseContext.lineWidth = 22;
+                hoseContext.lineWidth = hoseWidth;
                 hoseContext.stroke();
                 drawPath();
                 hoseContext.strokeStyle = '#5f0617';
-                hoseContext.lineWidth = 17;
+                hoseContext.lineWidth = hoseWidth * 17 / 22;
                 hoseContext.stroke();
                 drawPath();
                 hoseContext.strokeStyle = '#8f0c26';
-                hoseContext.lineWidth = 9;
+                hoseContext.lineWidth = hoseWidth * 9 / 22;
                 hoseContext.stroke();
                 drawPath();
                 hoseContext.strokeStyle = 'rgba(255, 193, 202, .52)';
-                hoseContext.lineWidth = 2;
+                hoseContext.lineWidth = Math.max(1, hoseWidth / 11);
                 hoseContext.stroke();
 
                 hoseContext.beginPath();
@@ -9994,6 +10758,7 @@
             };
 
             window.addEventListener('resize', resizeHoseCanvas);
+            chestImage?.addEventListener('load', resizeHoseCanvas);
             if ('ResizeObserver' in window) {
                 const hoseResizeObserver = new ResizeObserver(resizeHoseCanvas);
                 hoseResizeObserver.observe(stethoscopeStage);
@@ -10685,18 +11450,47 @@
         }
 
        
-        function setLandingHelpMode(nextState) {
-            if (!landingPanel || !helpPanel) {
+        function positionLandingHelpBubble() {
+            if (!isHelpMode || !helpPanel || !helpTrigger || !helpFooter) {
+                return;
+            }
+
+            const triggerRect = helpTrigger.getBoundingClientRect();
+            const footerRect = helpFooter.getBoundingClientRect();
+            const width = helpPanel.offsetWidth;
+            const maxLeft = Math.max(16, footerRect.width - width - 16);
+            const left = Math.max(16, Math.min(triggerRect.right - footerRect.left - width, maxLeft));
+            const spaceAbove = Math.max(0, triggerRect.top - 28);
+            const spaceBelow = Math.max(0, window.innerHeight - triggerRect.bottom - 28);
+            const above = spaceAbove >= 160 || spaceAbove >= spaceBelow;
+
+            helpPanel.style.left = `${left}px`;
+            helpPanel.style.maxHeight = `${Math.min(480, above ? spaceAbove : spaceBelow)}px`;
+            helpPanel.style.top = above ? 'auto' : `${triggerRect.bottom - footerRect.top + 12}px`;
+            helpPanel.style.bottom = above ? `${footerRect.bottom - triggerRect.top + 12}px` : 'auto';
+            helpPanel.style.setProperty('--help-arrow-x', `${Math.max(24, Math.min(width - 24, triggerRect.left + triggerRect.width / 2 - footerRect.left - left))}px`);
+            helpPanel.dataset.placement = above ? 'above' : 'below';
+        }
+
+        function setLandingHelpMode(nextState, restoreFocus = false) {
+            if (!helpPanel) {
                 return;
             }
 
             isHelpMode = !!nextState;
-            landingPanel.classList.toggle('is-help', isHelpMode);
+            helpPanel.hidden = !isHelpMode;
             helpPanel.setAttribute('aria-hidden', isHelpMode ? 'false' : 'true');
-            infoLoginSwap?.setAttribute('aria-hidden', isHelpMode ? 'false' : 'true');
+            helpFooter?.classList.toggle('is-help-open', isHelpMode);
             helpButtons.forEach(function (button) {
                 button.setAttribute('aria-expanded', isHelpMode ? 'true' : 'false');
             });
+
+            if (isHelpMode) {
+                positionLandingHelpBubble();
+                helpBackButton?.focus({ preventScroll: true });
+            } else if (restoreFocus) {
+                helpTrigger?.focus({ preventScroll: true });
+            }
         }
 
         helpButtons.forEach(function (button) {
@@ -10706,8 +11500,29 @@
         });
 
         helpBackButton?.addEventListener('click', function () {
-            setLandingHelpMode(false);
+            setLandingHelpMode(false, true);
         });
+
+        document.addEventListener('pointerdown', function (event) {
+            if (isHelpMode && !helpPanel.contains(event.target) && !helpTrigger?.contains(event.target)) {
+                setLandingHelpMode(false);
+            }
+        });
+
+        document.addEventListener('focusin', function (event) {
+            if (isHelpMode && !helpPanel.contains(event.target) && !helpTrigger?.contains(event.target)) {
+                setLandingHelpMode(false);
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && isHelpMode) {
+                event.preventDefault();
+                setLandingHelpMode(false, true);
+            }
+        });
+
+        window.addEventListener('resize', positionLandingHelpBubble);
 
         helpAccordions.forEach(function (accordion) {
             accordion.addEventListener('toggle', function () {
@@ -10723,8 +11538,113 @@
             });
         });
 
+        function initializeLandingMobileNavigation() {
+            const toggle = document.getElementById('landingNavToggle');
+            const menu = document.getElementById('landingNavMenu');
+            if (!toggle || !menu) {
+                return;
+            }
+
+            const mobileViewport = window.matchMedia('(max-width: 800px)');
+            const items = Array.from(menu.querySelectorAll('.landing-nav-item'));
+            let isOpen = false;
+
+            function setOpen(nextState, restoreFocus = false) {
+                isOpen = mobileViewport.matches && nextState;
+                menu.classList.toggle('is-open', isOpen);
+                toggle.setAttribute('aria-expanded', String(isOpen));
+                toggle.setAttribute('aria-label', isOpen ? 'Close navigation' : 'Open navigation');
+                menu.inert = mobileViewport.matches && !isOpen;
+                if (mobileViewport.matches) {
+                    menu.setAttribute('aria-hidden', String(!isOpen));
+                } else {
+                    menu.removeAttribute('aria-hidden');
+                }
+                if (restoreFocus) {
+                    toggle.focus({ preventScroll: true });
+                }
+            }
+
+            toggle.addEventListener('click', function () {
+                setOpen(!isOpen);
+            });
+
+            toggle.addEventListener('keydown', function (event) {
+                if (!mobileViewport.matches || !['ArrowDown', 'ArrowUp'].includes(event.key)) {
+                    return;
+                }
+                event.preventDefault();
+                setOpen(true);
+                items[event.key === 'ArrowUp' ? items.length - 1 : 0]?.focus();
+            });
+
+            menu.addEventListener('click', function (event) {
+                if (mobileViewport.matches && event.target.closest('.landing-nav-item')) {
+                    setOpen(false, menu.contains(document.activeElement));
+                }
+            }, true);
+
+            menu.addEventListener('keydown', function (event) {
+                if (!isOpen || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+                    return;
+                }
+                event.preventDefault();
+                const currentIndex = items.indexOf(document.activeElement);
+                let nextIndex = event.key === 'Home' ? 0 : items.length - 1;
+                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                    nextIndex = (currentIndex + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+                }
+                items[nextIndex]?.focus();
+            });
+
+            function closeFromOutside(event) {
+                if (isOpen && !menu.contains(event.target) && !toggle.contains(event.target)) {
+                    setOpen(false);
+                }
+            }
+
+            document.addEventListener('pointerdown', closeFromOutside);
+            document.addEventListener('focusin', closeFromOutside);
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && isOpen) {
+                    event.preventDefault();
+                    setOpen(false, true);
+                }
+            });
+
+            function syncViewport() {
+                const focusInMenu = menu.contains(document.activeElement);
+                const toggleWasFocused = document.activeElement === toggle;
+                setOpen(false, mobileViewport.matches && focusInMenu);
+                if (!mobileViewport.matches && toggleWasFocused) {
+                    items[0]?.focus();
+                }
+            }
+
+            if (mobileViewport.addEventListener) {
+                mobileViewport.addEventListener('change', syncViewport);
+            } else {
+                mobileViewport.addListener(syncViewport);
+            }
+            setOpen(false);
+        }
+
+        initializeLandingMobileNavigation();
+
         // Announcement Modal Handler
         const announcementBtn = document.getElementById('announcementBtn');
+        document.getElementById('landingReviewsButton')?.addEventListener('click', function () {
+            document.getElementById('landingReviewsSection')?.scrollIntoView({
+                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+                block: 'start',
+            });
+        });
+        document.getElementById('landingFaqButton')?.addEventListener('click', function () {
+            document.getElementById('landingFaqSection')?.scrollIntoView({
+                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+                block: 'start',
+            });
+        });
         const announcementModal = document.getElementById('announcementModal');
         const announcementModalOverlay = document.getElementById('announcementModalOverlay');
         const announcementModalClose = document.getElementById('announcementModalClose');
