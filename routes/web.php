@@ -20,6 +20,7 @@ use App\Http\Controllers\StudentAssistantController;
 use App\Http\Controllers\TriageSurveyController;
 use App\Http\Controllers\WalkInController;
 use App\Models\Announcement;
+use App\Models\Faq;
 use App\Models\User;
 use App\Support\ClinicRoutes;
 use Illuminate\Support\Facades\Auth;
@@ -101,7 +102,28 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
         $landingAnnouncements = collect();
     }
 
-    return view('landing', compact('landingAnnouncements'));
+    $landingFaqs = collect();
+
+    try {
+        if (Schema::hasTable('faqs')) {
+            $landingFaqs = Faq::query()
+                ->where('is_active', true)
+                ->latest()
+                ->get();
+        }
+    } catch (\Throwable) {
+        $landingFaqs = collect();
+    }
+
+    $landingReviews = collect();
+
+    try {
+        $landingReviews = app(\App\Services\ClinicReviewService::class)->recent(10);
+    } catch (\Throwable) {
+        $landingReviews = collect();
+    }
+
+    return view('landing', compact('landingAnnouncements', 'landingReviews', 'landingFaqs'));
 })->name('landing');
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::view('/loader-preview', 'dev.loader-preview')->name('dev.loader-preview');
