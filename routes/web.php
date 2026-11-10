@@ -189,6 +189,11 @@ Route::middleware(['auth:student', 'student.idle', 'account.active', 'idp.sessio
             ->name('student.health_form.employee.activity');
         Route::get('/student/health-form', [AppointmentController::class, 'showHealthForm'])->name('health.form');
         Route::get('/student/health-form/student', [AppointmentController::class, 'showHealthForm'])->name('health.form.student');
+        Route::post('/student/health-form/use-existing', [AppointmentController::class, 'submitExistingHealthForm'])
+            ->middleware('throttle:6,1')
+            ->name('student.health_form.use_existing');
+        Route::post('/student/health-form/request', [AppointmentController::class, 'requestStudentHealthForm'])
+            ->middleware('throttle:6,1')->name('student.health_form.request');
         Route::get('/student/health-form/transferee', [AppointmentController::class, 'showHealthForm'])->name('health.form.transferee');
         Route::get('/student/health-form/employee', [AppointmentController::class, 'showEmployeeHealthForm'])->name('health.form.employee');
         Route::get('/student/health-form/staff', [AppointmentController::class, 'showStaffHealthForm'])->name('health.form.staff');
@@ -311,6 +316,9 @@ Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->gr
     Route::post('/employee-health-profile/{employeeProfile}/request-health-form', [AdminController::class, 'requestNewEmployeeHealthForm'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_health_form'])
         ->name('admin.employee_health_profile.request_health_form');
+    Route::post('/employee-health-profile/{employeeProfile}/assessment/{submissionId}/cancel', [AdminController::class, 'cancelEmployeeHealthAssessment'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_health_form'])
+        ->name('admin.employee_health_profile.assessment.cancel');
     Route::post('/health-records/bulk-request-health-form', [AdminController::class, 'requestBulkEmployeeHealthForms'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_health_form'])
         ->name('admin.health_records.bulk_request_health_form');

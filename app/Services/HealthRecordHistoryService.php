@@ -31,7 +31,7 @@ class HealthRecordHistoryService
                 || ($metadata['request_kind'] ?? null) === 'new_health_form'
                 || ($metadata['request_kind'] ?? null) === 'bulk_new_health_form';
             $kind = $isClinicManagedRenewal
-                ? 'New Health Form Cycle'
+                ? 'Health Assessment'
                 : ($isNewForm ? 'New Health Form' : ($correction->type === HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION ? 'File Correction' : 'Health Form Correction'));
             $actor = $this->actorName($correction->requestedBy);
             $documents = collect($correction->required_documents ?? [])->map(fn ($item) => Str::headline((string) $item))->implode(', ');
@@ -46,8 +46,8 @@ class HealthRecordHistoryService
             if ($correction->requested_at ?: $correction->created_at) {
                 $events->push($this->event(
                     $correction->requested_at ?: $correction->created_at,
-                    $isClinicManagedRenewal ? $kind . ' Created' : $kind . ' Requested',
-                    $isClinicManagedRenewal ? 'Pending Approval' : 'Requested',
+                    $isClinicManagedRenewal ? $kind . ' Started' : $kind . ' Requested',
+                    $isClinicManagedRenewal ? 'Awaiting Assessment' : 'Requested',
                     $actor,
                     $details,
                     [],

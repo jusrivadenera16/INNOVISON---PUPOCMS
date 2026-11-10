@@ -945,6 +945,45 @@
         overflow: visible;
         padding-bottom: 0;
     }
+    /* Match the appointment page's maroon glass surfaces without changing FAQ behavior. */
+    body:has(.faq-page),
+    html[data-theme="dark"] body:has(.faq-page) {
+        background:
+            radial-gradient(circle at 91% 11%, rgba(250, 204, 21, .18), transparent 170px),
+            radial-gradient(circle at 54% 87%, rgba(250, 204, 21, .16), transparent 180px),
+            linear-gradient(90deg, rgba(72, 3, 12, .96) 0%, rgba(112, 19, 27, .88) 45%, rgba(112, 19, 27, .58) 100%),
+            linear-gradient(180deg, rgba(28, 4, 10, .16), rgba(28, 4, 10, .34)),
+            url('{{ asset("images/PUPBG.jpg") }}') center center / cover fixed no-repeat !important;
+    }
+    body:has(.faq-page) main { background: transparent; }
+    .faq-page { --faq-ink: #fff7ed; --faq-muted: #ead5dc; --faq-line: rgba(255, 219, 229, .2); color: var(--faq-ink); }
+    .faq-page :is(.faq-main-card, .sidebar-widget) {
+        background: rgba(83, 7, 27, .78) !important;
+        border: 1px solid rgba(250, 204, 21, .3) !important;
+        box-shadow: 0 14px 30px rgba(35, 0, 9, .22);
+        backdrop-filter: blur(10px);
+    }
+    .faq-page :is(.faq-title, .faq-card-title, .faq-group-title, .widget-title, .faq-empty strong, .faq-question summary) { color: #fff7ed !important; }
+    .faq-page :is(.faq-subtitle, .faq-empty, .faq-empty span, .faq-answer, .portal-copy, .portal-link, .stat-row, .reminder-text) { color: #ead5dc !important; }
+    .faq-page .stat-val { color: #facc15 !important; }
+    .faq-page :is(.faq-card-header, .portal-links, .stat-row) { border-color: rgba(255, 219, 229, .2); }
+    .faq-page :is(.faq-search-shell, .faq-filter, .faq-question) {
+        background: rgba(35, 2, 14, .48) !important;
+        border-color: rgba(255, 219, 229, .3) !important;
+        color: #fff7ed !important;
+    }
+    .faq-page .faq-search-input { background: transparent; color: #fff7ed !important; }
+    .faq-page .faq-search-input::placeholder { color: #d9b9c3 !important; }
+    .faq-page .faq-search-shell:focus-within { border-color: #facc15 !important; box-shadow: 0 0 0 3px rgba(250, 204, 21, .14); }
+    .faq-page :is(.faq-search-shell > svg, .faq-popular, .faq-view-all, .portal-link svg) { color: #facc15 !important; }
+    .faq-page :is(.faq-card-icon, .faq-filter-icon, .faq-group-title-icon, .portal-icon, .question-icon, .reminder-icon) {
+        background: rgba(250, 204, 21, .12) !important;
+        color: #facc15 !important;
+    }
+    .faq-page .faq-filter:is(:hover, :focus-visible, .is-active),
+    .faq-page .btn-action:is(:hover, :focus-visible) { background: #facc15 !important; color: #70131b !important; border-color: #facc15 !important; }
+    .faq-page .faq-filter:is(:hover, :focus-visible, .is-active) .faq-filter-icon { color: #70131b !important; background: transparent !important; }
+    .faq-page .faq-question[open] { border-color: rgba(250, 204, 21, .6) !important; }
 </style>
 @endpush
 

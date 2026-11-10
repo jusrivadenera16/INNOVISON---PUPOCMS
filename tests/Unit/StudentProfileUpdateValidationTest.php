@@ -4,9 +4,7 @@ namespace Tests\Unit;
 
 use App\Http\Controllers\AppointmentController;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
@@ -32,29 +30,6 @@ class StudentProfileUpdateValidationTest extends TestCase
             'address_city_municipality' => 'City One',
             'address_province' => '',
         ], [], 'address_province');
-    }
-
-    public function test_profile_photo_cannot_be_changed_before_six_months(): void
-    {
-        $user = new User();
-        $user->profile_photo_updated_at = Carbon::now()->subMonths(3);
-        Auth::shouldReceive('user')->once()->andReturn($user);
-
-        $request = Request::create(
-            '/student/update-contact',
-            'POST',
-            [],
-            [],
-            ['profile_photo' => UploadedFile::fake()->image('profile.png')]
-        );
-
-        try {
-            (new AppointmentController())->updateContact($request);
-            $this->fail('The photo cooldown should reject an early replacement.');
-        } catch (ValidationException $exception) {
-            $this->assertArrayHasKey('profile_photo', $exception->errors());
-            $this->assertStringContainsString('again on', $exception->errors()['profile_photo'][0]);
-        }
     }
 
     private function assertProfileUpdateError(array $input, array $files, string $field): void

@@ -325,11 +325,12 @@
 
     .profile-dashboard .profile-card-head {
         display: flex;
-        grid-column: 1;
-        grid-row: 1;
-        align-self: start;
+        position: absolute;
+        top: 322px;
+        left: 0;
+        right: 0;
         justify-content: center;
-        margin: 322px 0 0;
+        margin: 0;
         z-index: 4;
         pointer-events: none;
     }
@@ -839,7 +840,20 @@
         border-radius: 12px;
         background: rgba(255, 255, 255, .105);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07);
-        overflow: hidden;
+        overflow: visible;
+    }
+
+    .profile-dashboard .hero-stats::before {
+        content: "";
+        position: absolute;
+        top: -16px;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: rgba(250, 204, 21, .55);
+        clip-path: polygon(0 50%, 12% 0, 88% 0, 100% 50%, 88% 100%, 12% 100%);
+        z-index: 3;
+        pointer-events: none;
     }
 
     .profile-dashboard .hero-stats .stat-item {
@@ -1459,39 +1473,6 @@
         font-weight: 800;
     }
 
-    .profile-photo-editor {
-        display: grid;
-        grid-template-columns: 76px minmax(0, 1fr);
-        align-items: center;
-        gap: 16px;
-    }
-
-    .profile-photo-preview {
-        display: grid;
-        width: 76px;
-        aspect-ratio: 1;
-        place-items: center;
-        overflow: hidden;
-        border: 1px solid rgba(112, 19, 27, 0.2);
-        border-radius: 50%;
-        background: #f1f5f9;
-        color: #70131b;
-        font-size: 24px;
-        font-weight: 900;
-    }
-
-    .profile-photo-preview img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .profile-photo-controls {
-        display: grid;
-        min-width: 0;
-        gap: 8px;
-    }
-
     .profile-edit-help {
         color: #64748b;
         font-size: 11px;
@@ -1806,11 +1787,6 @@
         background: rgba(15, 23, 42, 0.5);
         border-color: rgba(148, 163, 184, 0.18);
         color: #94a3b8;
-    }
-    html[data-theme="dark"] .profile-photo-preview {
-        background: #1e293b;
-        border-color: rgba(148, 163, 184, 0.35);
-        color: #f8fafc;
     }
     html[data-theme="dark"] .profile-edit-help {
         color: #94a3b8;
@@ -2280,30 +2256,79 @@
         .profile-dashboard .profile-hero {
             border-radius: 8px;
             align-items: start;
+            align-content: start;
+            min-height: 0;
         }
         .profile-dashboard .hero-avatar {
             width: 76px;
             height: 76px;
             margin-top: 0;
+            grid-row: 1;
         }
         .profile-dashboard .hero-name {
+            grid-column: 2;
             margin-top: 0;
             font-size: clamp(17px, 4.8vw, 20px);
             line-height: 1.12;
         }
+        .profile-dashboard .hero-identity {
+            grid-column: 2;
+            grid-row: 1;
+            min-width: 0;
+        }
+        .profile-dashboard .hero-identity-meta {
+            grid-column: 2;
+            margin-top: 8px;
+        }
         .profile-dashboard .hero-stats {
             display: grid;
+            grid-row: 2;
             grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 0;
+            margin-top: 14px;
+            padding: 12px 0;
         }
         .profile-dashboard .hero-stats .stat-item {
-            padding: 0 4px;
+            position: relative;
+            padding: 4px;
+            min-width: 0;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
-        .profile-dashboard .stat-label {
-            white-space: normal;
-            overflow-wrap: anywhere;
-            font-size: 9px;
-            line-height: 1.15;
+        .profile-dashboard .hero-stats .stat-label {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            width: max-content;
+            max-width: 150px;
+            padding: 7px 9px;
+            border: 1px solid #facc15;
+            border-radius: 7px;
+            background: #4b071c;
+            color: #fff7ed;
+            box-shadow: 0 5px 14px rgba(0, 0, 0, .25);
+            font-size: 11px;
+            line-height: 1.3;
+            white-space: nowrap;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .profile-dashboard .hero-stats .stat-item:first-child .stat-label { left: 0; transform: none; }
+        .profile-dashboard .hero-stats .stat-item:last-child .stat-label { left: auto; right: 0; transform: none; }
+        .profile-dashboard .hero-stats .stat-item:is(.is-label-visible, :focus-visible) .stat-label { visibility: visible; opacity: 1; }
+        .profile-dashboard .hero-stats .stat-item:focus-visible { outline: 2px solid #facc15; outline-offset: 2px; border-radius: 6px; }
+        .profile-dashboard .profile-hero-quote {
+            display: block;
+            position: relative;
+            grid-column: 1 / -1;
+            grid-row: 4;
+            left: auto;
+            bottom: auto;
+            margin-top: 20px;
+            padding: 16px 0 8px;
         }
         .profile-grid-3,
         .profile-grid-2 {
@@ -2332,6 +2357,14 @@
         }
         .profile-dashboard .profile-card-head {
             align-items: center;
+            position: static;
+            inset: auto;
+            width: 100%;
+            grid-column: 1 / -1;
+            grid-row: 3;
+            justify-content: center;
+            margin: 4px 0 0;
+            pointer-events: auto;
         }
         .profile-dashboard .profile-card-head .profile-edit-btn {
             width: auto;
@@ -8071,13 +8104,6 @@
     $profilePhotoRecord = $clinicMeasurementProfile;
     $profilePhotoPath = trim((string) ($user->profile_photo ?? ''));
     $profilePhotoFallbackExists = trim((string) optional($profilePhotoRecord)->student_photo) !== '';
-    $profilePhotoUrl = $profilePhotoPath !== ''
-        ? route('student.health_record.document', ['document' => 'profile_photo'])
-        : ($profilePhotoFallbackExists ? route('student.health_record.document', ['document' => 'student_photo']) : null);
-    $profilePhotoNextChangeAt = $user->profile_photo_updated_at
-        ? $user->profile_photo_updated_at->copy()->addMonthsNoOverflow(6)
-        : null;
-    $profilePhotoChangeLocked = $profilePhotoNextChangeAt && now()->lt($profilePhotoNextChangeAt);
     $clinicProfileApprovalStatus = strtolower(trim((string) optional($clinicMeasurementProfile)->clearance_status));
     $canEditClinicProfileInfo = in_array($clinicProfileApprovalStatus, ['approved', 'issued', 'fully cleared', 'cleared'], true);
     $canOpenProfileEditModal = $canEditClinicProfileInfo || $canUpdateLadderizedStudentNumber;
@@ -8093,7 +8119,7 @@
     $profileEditErrorFields = [
         'student_number', 'contact_no', 'address', 'address_street', 'address_barangay',
         'address_city_municipality', 'address_province', 'emergency_contact_person',
-        'emergency_contact_no', 'civil_status', 'height', 'weight', 'profile_photo',
+        'emergency_contact_no', 'civil_status', 'height', 'weight',
     ];
     $hasProfileEditErrors = isset($errors)
         && collect($profileEditErrorFields)->contains(fn ($field) => $errors->has($field));
@@ -8167,6 +8193,7 @@
             </span>
         </button>
         <div class="hero-info">
+            <div class="hero-identity">
             <h1 class="hero-name">{{ $displayFullName }}</h1>
             @if($displayStudentNumber !== '' || $displayCourseCode !== '')
                 <div class="hero-identity-meta">
@@ -8178,6 +8205,7 @@
                     @endif
                 </div>
             @endif
+            </div>
             @if($isEnrolled)
                 @if(!empty($heroAcademicParts))
                     <div class="hero-course" @if($linkedRoleLabel) style="display: none;" @endif>
@@ -8191,6 +8219,21 @@
                 @endif
             @else
                 <div class="hero-course">-</div>
+            @endif
+
+            @if($isEnrolled)
+                <div class="profile-card-head">
+                    <div class="profile-card-heading">
+                        <h1 class="profile-card-title">Personal Information</h1>
+                        <p class="profile-card-description">Review your personal account details and keep your clinic information up to date.</p>
+                    </div>
+                    <button type="button" id="editBtn" class="profile-edit-btn" onclick="openProfileEditModal({{ $canOpenProfileEditModal ? 'true' : 'false' }})">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                        </svg>
+                        Edit Profile
+                    </button>
+                </div>
             @endif
 
             <div class="hero-stats">
@@ -8212,7 +8255,7 @@
                 <div class="stat-item">
                     <span class="stat-icon"><x-outline-icon name="x-mark" /></span>
                     <span class="stat-val">{{ $cancelledCount ?? 0 }}</span>
-                    <span class="stat-label">Cancelled / Rejected</span>
+                    <span class="stat-label">Unsuccessful</span>
                 </div>
             </div>
         </div>
@@ -8241,21 +8284,6 @@ document.addEventListener('DOMContentLoaded', function () {
 @if($accountView === 'profile')
 {{-- Full Profile Widget --}}
             <div class="widget-card">
-    <div class="profile-card-head">
-        <div class="profile-card-heading">
-            <h1 class="profile-card-title">Personal Information</h1>
-            <p class="profile-card-description">Review your personal account details and keep your clinic information up to date.</p>
-        </div>
-        @if($isEnrolled)
-            <button type="button" id="editBtn" class="profile-edit-btn" onclick="openProfileEditModal({{ $canOpenProfileEditModal ? 'true' : 'false' }})">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                </svg>
-                Edit Profile
-            </button>
-        @endif
-    </div>
-
     <div class="profile-readonly-content">
         @if(!$isEnrolled)
             <div class="profile-enrollment-empty">
@@ -8570,7 +8598,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="profile-edit-modal" id="profileEditModal" aria-hidden="true">
             <div class="profile-edit-backdrop" data-profile-modal-close></div>
             <section class="profile-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="profileEditModalTitle">
-                <form action="{{ route('student.updateContact') }}" method="POST" id="profileEditForm" class="profile-edit-form" enctype="multipart/form-data" novalidate>
+                <form action="{{ route('student.updateContact') }}" method="POST" id="profileEditForm" class="profile-edit-form" novalidate>
                     @csrf
                     @if(!empty($linkedAdminProfile))
                         <input type="hidden" name="admin_profile_id" value="{{ $linkedAdminProfile->admin_id }}">
@@ -8696,39 +8724,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                         <input type="text" value="{{ $profileModalSection }}" disabled>
                                     </label>
                                 @endif
-                            </div>
-                        </div>
-
-                        <div class="profile-edit-section">
-                            <h3>Profile Photo</h3>
-                            <div class="profile-photo-editor">
-                                <div class="profile-photo-preview" id="profilePhotoPreview" aria-label="Profile photo preview">
-                                    @if($profilePhotoUrl)
-                                        <img src="{{ $profilePhotoUrl }}" alt="Current profile photo">
-                                    @else
-                                        <span>{{ strtoupper(substr($displayFullName, 0, 1)) }}</span>
-                                    @endif
-                                </div>
-                                <div class="profile-photo-controls">
-                                    <label class="profile-edit-field">
-                                        <span>Update Photo</span>
-                                        <input
-                                            type="file"
-                                            name="profile_photo"
-                                            id="profilePhotoInput"
-                                            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-                                            {{ $profilePhotoChangeLocked ? 'disabled' : '' }}
-                                        >
-                                    </label>
-                                    <small class="profile-edit-help" id="profilePhotoAvailability">
-                                        @if($profilePhotoChangeLocked)
-                                            You can update your photo again on {{ $profilePhotoNextChangeAt->format('F j, Y') }}.
-                                        @else
-                                            JPG or PNG, up to 2 MB. Photo changes are allowed once every six months.
-                                        @endif
-                                    </small>
-                                    @error('profile_photo')<em>{{ $message }}</em>@enderror
-                                </div>
                             </div>
                         </div>
 
@@ -10466,9 +10461,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const profileEditForm = document.getElementById('profileEditForm');
-    const profilePhotoInput = document.getElementById('profilePhotoInput');
-    const profilePhotoPreview = document.getElementById('profilePhotoPreview');
-    let profilePhotoPreviewUrl = '';
 
     function showProfileEditToast(message, titleText = 'Please check your profile details') {
         const stack = document.querySelector('[data-student-toast-stack]');
@@ -10694,26 +10686,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     loadProfileAddressOptions();
 
-    profilePhotoInput?.addEventListener('change', function () {
-        const file = profilePhotoInput.files?.[0];
-        if (!file) return;
-        const extension = file.name.split('.').pop()?.toLowerCase();
-        if (!['jpg', 'jpeg', 'png'].includes(extension) || file.size > 2 * 1024 * 1024) {
-            profilePhotoInput.value = '';
-            showProfileEditToast(file.size > 2 * 1024 * 1024
-                ? 'Profile photos must be JPG or PNG and no larger than 2 MB.'
-                : 'Choose a JPG or PNG profile photo.');
-            return;
-        }
-
-        if (profilePhotoPreviewUrl) URL.revokeObjectURL(profilePhotoPreviewUrl);
-        profilePhotoPreviewUrl = URL.createObjectURL(file);
-        const image = document.createElement('img');
-        image.alt = 'Selected profile photo preview';
-        image.src = profilePhotoPreviewUrl;
-        profilePhotoPreview?.replaceChildren(image);
-    });
-
     profileEditForm?.addEventListener('submit', function (event) {
         const heightField = profileEditForm.elements.namedItem('height');
         const weightField = profileEditForm.elements.namedItem('weight');
@@ -10750,12 +10722,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const photoFile = profilePhotoInput?.files?.[0];
-        if (photoFile && photoFile.size > 2 * 1024 * 1024) {
-            event.preventDefault();
-            showProfileEditToast('Profile photos must not exceed 2 MB.');
-            profilePhotoInput.focus();
-        }
     });
 
     document.querySelectorAll('[data-notification-toggle]').forEach(function (toggle) {
@@ -10789,6 +10755,47 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     const profileHeroCard = document.getElementById('profileHeroCard');
+    // Keep mobile statistics compact; a deliberate hold reveals their labels.
+    const profileStatsMobile = window.matchMedia('(max-width: 760px)');
+    document.querySelectorAll('.profile-dashboard .hero-stats .stat-item').forEach(function (item) {
+        const label = item.querySelector('.stat-label');
+        const value = item.querySelector('.stat-val');
+        if (!label || !value) return;
+        let holdTimer;
+        let startX = 0;
+        let startY = 0;
+        function clearStatHold() {
+            clearTimeout(holdTimer);
+            item.classList.remove('is-label-visible');
+        }
+        function syncStatAccessibility() {
+            clearStatHold();
+            if (profileStatsMobile.matches) {
+                item.tabIndex = 0;
+                item.setAttribute('role', 'group');
+                item.setAttribute('aria-label', value.textContent.trim() + ' ' + label.textContent.trim());
+            } else {
+                item.removeAttribute('tabindex');
+                item.removeAttribute('role');
+                item.removeAttribute('aria-label');
+            }
+        }
+        item.addEventListener('pointerdown', function (event) {
+            if (!profileStatsMobile.matches || event.button !== 0) return;
+            clearStatHold();
+            startX = event.clientX;
+            startY = event.clientY;
+            holdTimer = setTimeout(function () { item.classList.add('is-label-visible'); }, 400);
+        });
+        item.addEventListener('pointermove', function (event) {
+            if (Math.abs(event.clientX - startX) > 10 || Math.abs(event.clientY - startY) > 10) clearStatHold();
+        });
+        ['pointerup', 'pointercancel', 'pointerleave', 'blur'].forEach(function (type) { item.addEventListener(type, clearStatHold); });
+        item.addEventListener('contextmenu', function (event) { if (profileStatsMobile.matches) event.preventDefault(); });
+        profileStatsMobile.addEventListener('change', syncStatAccessibility);
+        syncStatAccessibility();
+    });
+
     const profilePhotoToggle = document.getElementById('profilePhotoToggle');
     const profileDashboard = profileHeroCard?.closest('.profile-dashboard');
     const modal = document.getElementById('healthRecordModal');

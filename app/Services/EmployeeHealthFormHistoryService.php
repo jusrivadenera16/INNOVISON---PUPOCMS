@@ -5,10 +5,67 @@ namespace App\Services;
 use App\Models\EmployeeHealthProfile;
 use App\Models\HealthFormSubmission;
 use App\Models\HealthProfileCorrectionRequest;
+use Illuminate\Support\Carbon;
 
 class EmployeeHealthFormHistoryService
 {
     public const SCHEMA_VERSION = 1;
+    public const ASSESSMENT_FIELDS = [
+        'vital_signs_distress_status', 'height', 'weight', 'bmi', 'bp', 'hr', 'rr', 'temperature',
+        'head_findings', 'eyes_findings', 'ears_findings', 'throat_findings', 'chest_lungs_findings',
+        'chest_xray_result', 'breast_findings', 'heart_murmur', 'heart_rhythm', 'abdomen_findings',
+        'genito_urinary_date_lmp', 'extremities_findings', 'vertebral_column_findings', 'skin_findings',
+        'scars_findings', 'working_impression', 'fit_status', 'for_work_up', 'referred_to',
+        'referred_to_others', 'follow_up_on',
+    ];
+
+    public function canCancelAssessment(EmployeeHealthProfile $profile, HealthProfileCorrectionRequest $request, ?HealthFormSubmission $submission): bool
+    {
+        if (!$submission || (int) $request->employee_health_profile_id !== (int) $profile->id
+            || (int) $request->user_id !== (int) $profile->user_id
+            || (int) $submission->employee_health_profile_id !== (int) $profile->id
+            || (int) $submission->user_id !== (int) $profile->user_id
+            || (int) $request->health_form_submission_id !== (int) $submission->id
+            || data_get($request->metadata, 'employee_login_required') !== false
+            || $request->status !== HealthProfileCorrectionRequest::STATUS_SUBMITTED || $request->reviewed_at
+            || $submission->status !== HealthFormSubmission::STATUS_SUBMITTED || $submission->approved_at
+            || $submission->status_changed_by_user_id
+            || $profile->clearance_status !== 'For Verification' || $profile->submission_status !== 'submitted'
+            || filled($profile->draft_data)) return false;
+
+        $current = $this->capture($profile)['profile'];
+        $initial = $submission->snapshotProfile();
+        unset($current['created_at'], $current['updated_at'], $initial['created_at'], $initial['updated_at']);
+        return $initial !== [] && $current == $initial;
+    }
+
+    public function approvedBeforeAssessment(EmployeeHealthProfile $profile, HealthProfileCorrectionRequest $request): ?HealthFormSubmission
+    {
+        $approvedId = data_get($request->metadata, 'previous_approved_submission_id');
+        return HealthFormSubmission::query()->where('employee_health_profile_id', $profile->id)
+            ->where('user_id', $profile->user_id)->where('status', HealthFormSubmission::STATUS_APPROVED)
+            ->when($approvedId, fn ($query) => $query->whereKey($approvedId))
+            ->where('id', '<', $request->health_form_submission_id)
+            ->latest('approved_at')->latest('id')->first();
+    }
+
+    public function restoreBeforeAssessment(EmployeeHealthProfile $profile, HealthFormSubmission $approved): void
+    {
+        // Restore only fields reset when starting the cycle, not identity, documents or contact data.
+        $fields = array_merge(self::ASSESSMENT_FIELDS, [
+            'health_form_category', 'form_date', 'clearance_status', 'submission_status', 'pending_reason',
+            'resubmission_required_fields', 'resubmission_requested_at', 'pending_compliance_reminder_sent_at',
+            'pending_compliance_reminder_count', 'resubmitted_at', 'verified_at', 'approved_by_user_id',
+        ]);
+        $values = array_intersect_key($approved->snapshotProfile(), array_flip($fields));
+        foreach ($values as $field => $value) {
+            if ($value !== null && in_array($profile->getCasts()[$field] ?? null, ['date', 'datetime'], true)) {
+                // Snapshot dates are serialized in UTC; preserve their original app-local instant.
+                $values[$field] = Carbon::parse($value)->setTimezone(config('app.timezone'));
+            }
+        }
+        $profile->forceFill($values)->save();
+    }
 
     public function capture(EmployeeHealthProfile $profile): array
     {

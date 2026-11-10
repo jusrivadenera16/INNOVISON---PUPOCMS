@@ -307,6 +307,34 @@
         font-weight: 900;
         word-break: break-word;
     }
+    .readonly-modal-tools { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; position: relative; z-index: 5; }
+    #pendingApprovalInfoModal .readonly-modal-tools,
+    #pendingConditionalInfoModal .readonly-modal-tools { z-index: 30; }
+    #pendingApprovalInfoModal .pending-approval-list,
+    #pendingConditionalInfoModal .pending-approval-list { min-height: min(330px, 45vh); align-content: start; position: relative; z-index: 0; }
+    #pendingApprovalInfoModal .readonly-modal-pagination,
+    #pendingConditionalInfoModal .readonly-modal-pagination { position: relative; z-index: 1; }
+    .readonly-modal-pagination[hidden], .pending-approval-empty[hidden] { display: none !important; }
+    .readonly-modal-tools .readonly-modal-search { order: 1; flex: 1 1 auto; min-width: 0; margin: 0; position: relative; top: auto; }
+    .readonly-user-category-label { order: 2; flex: 0 0 180px; min-width: 0; }
+    .readonly-user-category-label .premium-select-shell { width: 100%; }
+    .readonly-user-category-label .premium-select-button { min-height: 44px; padding: 10px 14px; border-radius: 12px; font-size: 12px; }
+    .readonly-user-category-label .premium-select-menu { top: calc(100% + 8px); bottom: auto; max-height: min(310px, 45vh); overflow-y: auto; border-radius: 12px; }
+    .readonly-user-category-label .premium-select-option { position: relative; isolation: isolate; overflow: hidden; flex-shrink: 0; min-height: 36px; border-radius: 8px; transition: background .18s ease, color .18s ease; }
+    .readonly-user-category-label .premium-select-option > span { position: relative; z-index: 1; }
+    .readonly-user-category-label .premium-select-option::before { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 15%, #fff7bd 50%, transparent 85%); transform: translateX(-110%); pointer-events: none; }
+    .readonly-user-category-label .premium-select-option:hover::before,
+    .readonly-user-category-label .premium-select-option:focus-visible::before { animation: readonlyCategorySweep .65s ease-out; }
+    @keyframes readonlyCategorySweep { from { transform: translateX(-110%); } to { transform: translateX(110%); } }
+    .readonly-user-category-label .premium-select-option.is-selected,
+    html[data-theme="dark"] .readonly-user-category-label .premium-select-option.is-selected { background: #801b2d !important; color: #fff !important; border-color: #801b2d !important; }
+    .readonly-user-category-label .premium-select-option:hover,
+    .readonly-user-category-label .premium-select-option:focus-visible,
+    html[data-theme="dark"] .readonly-user-category-label .premium-select-option:hover,
+    html[data-theme="dark"] .readonly-user-category-label .premium-select-option:focus-visible { background: #facc15 !important; color: #70131b !important; border-color: #facc15 !important; outline: none; }
+    @media (prefers-reduced-motion: reduce) { .readonly-user-category-label .premium-select-option::before { animation: none !important; } }
+    .readonly-user-category-label select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 12px; font: inherit; background: #fff; color: #70131b; }
+    @media (max-width: 620px) { .readonly-modal-tools { flex-direction: column; } .readonly-user-category-label { flex: 0 0 auto; width: 100%; } .readonly-modal-tools .readonly-modal-search { width: 100%; box-sizing: border-box; } }
     .readonly-modal-search {
         position: sticky;
         top: -24px;
@@ -8734,7 +8762,7 @@
                         </button>
                         <div class="health-more-actions-menu" id="healthMoreActionsMenu" role="menu" aria-hidden="true">
                             <button type="button" class="health-more-actions-item" id="healthBulkRequestOpen" role="menuitem">
-                                <span>Request New Health Form</span>
+                                <span>{{ strtolower((string) ($userTypeFilter ?? '')) === 'student' ? 'Request New Health Form' : 'Start New Health Assessment' }}</span>
                                 <span aria-hidden="true">+</span>
                             </button>
                         </div>
@@ -9111,10 +9139,13 @@
             </button>
         </div>
         <div class="awaiting-links-modal-body">
+            <div class="readonly-modal-tools">
+            @include('admin.partials.health-record-user-filter', ['filterListId' => 'pendingApprovalRecordsList'])
             <label class="readonly-modal-search" for="pendingApprovalSearchInput">
                 <x-outline-icon name="magnifying-glass" />
                 <input type="search" id="pendingApprovalSearchInput" data-readonly-modal-search="pendingApprovalRecordsList" placeholder="Search by name, email, or reference number">
             </label>
+            </div>
             <div class="pending-approval-list" id="pendingApprovalRecordsList">
                 @forelse($records->filter(fn ($record) => in_array((string) ($record->record_key ?? (($record->record_source ?? 'health') . ':' . $record->id)), $pendingApprovalRecordIds, true)) as $readonlyRecord)
                     @php
@@ -9343,8 +9374,10 @@
                         class="readonly-record-card"
                         data-health-row
                         data-health-id="{{ $readonlyRecord->id }}"
+                        @if($readonlyIsEmployee) data-employee-profile-id="{{ $readonlyRecord->id }}" @endif
                         data-record-payload="{{ json_encode($readonlyRecordPayload) }}"
                         data-search-text="{{ strtolower(trim((string) (optional($readonlyRecord->user)->name . ' ' . optional($readonlyRecord->user)->email . ' ' . $readonlyReference))) }}"
+                        data-user-category="{{ strtolower(trim((string) $readonlyUserType)) }}"
                     >
                         <div class="readonly-record-head">
                             <div class="readonly-record-identity">
@@ -9521,10 +9554,13 @@
             </button>
         </div>
         <div class="awaiting-links-modal-body">
+            <div class="readonly-modal-tools">
+            @include('admin.partials.health-record-user-filter', ['filterListId' => 'pendingComplianceRecordsList'])
             <label class="readonly-modal-search" for="pendingComplianceSearchInput">
                 <x-outline-icon name="magnifying-glass" />
                 <input type="search" id="pendingComplianceSearchInput" data-readonly-modal-search="pendingComplianceRecordsList" placeholder="Search by name, email, or reference number">
             </label>
+            </div>
             <div class="pending-approval-list" id="pendingComplianceRecordsList">
                 @forelse($records->filter(fn ($record) => in_array((string) ($record->record_key ?? (($record->record_source ?? 'health') . ':' . $record->id)), $pendingConditionalRecordIds, true)) as $readonlyRecord)
                     @php
@@ -9555,7 +9591,7 @@
                             ->all();
                         $imagePreviewExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
                     @endphp
-                    <article class="readonly-record-card" data-search-text="{{ strtolower(trim((string) (optional($readonlyRecord->user)->name . ' ' . optional($readonlyRecord->user)->email . ' ' . $readonlyReference))) }}">
+                    <article class="readonly-record-card" data-user-category="{{ strtolower(trim((string) $resolveHealthRecordUserType($readonlyRecord))) }}" data-search-text="{{ strtolower(trim((string) (optional($readonlyRecord->user)->name . ' ' . optional($readonlyRecord->user)->email . ' ' . $readonlyReference))) }}">
                         <div class="readonly-record-head">
                             <div>
                                 <h4 class="readonly-record-name">{{ optional($readonlyRecord->user)->name ?: 'Unnamed Student' }}</h4>
@@ -9981,11 +10017,11 @@
                         <x-outline-icon name="document-text" />
                     </span>
                     <div>
-                        <h2 class="health-bulk-request-modal-title" id="healthBulkRequestTitle">Request New Health Form</h2>
-                        <p class="health-bulk-request-modal-copy">{{ $bulkRequestIsStudent ? 'Select approved students to request an updated health form.' : 'Create a new pending Health Form cycle for approved employees.' }}</p>
+                        <h2 class="health-bulk-request-modal-title" id="healthBulkRequestTitle">{{ $bulkRequestIsStudent ? 'Request New Health Form' : 'Start New Health Assessment' }}</h2>
+                        <p class="health-bulk-request-modal-copy">{{ $bulkRequestIsStudent ? 'Select approved students to request an updated health form.' : 'Start fresh assessments using saved employee information, directly in Pending Approval.' }}</p>
                     </div>
                 </div>
-                <button type="button" class="health-bulk-request-modal-close" data-health-bulk-request-close aria-label="Close request new health form modal">
+                <button type="button" class="health-bulk-request-modal-close" data-health-bulk-request-close aria-label="{{ $bulkRequestIsStudent ? 'Close request new health form modal' : 'Close health assessment modal' }}">
                     <x-outline-icon name="x-mark" />
                 </button>
             </div>
@@ -9999,8 +10035,8 @@
                         <div class="health-bulk-request-student-step-heading">
                             <span class="health-bulk-request-student-step-number">1</span>
                             <div>
-                                <h3>Request Purpose</h3>
-                                <p>Choose the purpose for the new Health Form cycle.</p>
+                                <h3>{{ $bulkRequestIsStudent ? 'Request Purpose' : 'Assessment Purpose' }}</h3>
+                                <p>{{ $bulkRequestIsStudent ? 'Choose the purpose for the new Health Form cycle.' : 'Choose the purpose for the new health assessments.' }}</p>
                             </div>
                         </div>
                         <div class="health-bulk-request-student-field">
@@ -10015,7 +10051,7 @@
                             </div>
                         </div>
                         @unless($bulkRequestIsStudent)
-                            <p class="health-bulk-request-saved-info-note">Bulk requests use each employee's saved information. To edit details, open that employee's profile and select <strong>Update Health Information</strong>.</p>
+                            <p class="health-bulk-request-saved-info-note">Assessments use each employee's saved information and preserve the previous approved form. No employee login is needed. Clinic staff can select <strong>Update Health Information</strong> during assessment before approval.</p>
                         @endunless
                     </section>
 
@@ -10121,7 +10157,7 @@
                         <div class="health-bulk-request-student-footer-actions">
                             <button type="button" class="health-bulk-request-modal-cancel" data-health-bulk-request-close>Cancel</button>
                             <button type="submit" class="health-bulk-request-modal-send" disabled>
-                                <span>{{ $bulkRequestIsStudent ? 'Send Request' : 'Create Pending Cycle' }}</span>
+                                <span>{{ $bulkRequestIsStudent ? 'Send Request' : 'Start New Health Assessment' }}</span>
                                 <x-outline-icon name="arrow-long-right" />
                             </button>
                         </div>
@@ -11136,6 +11172,13 @@
         if (requestedTab === 'pending_approval') {
             const pendingApprovalInfoModal = document.getElementById('pendingApprovalInfoModal');
             if (pendingApprovalInfoModal) pendingApprovalInfoModal.style.display = 'flex';
+            const assessmentProfileId = Number(@json(session('open_employee_assessment')));
+            if (Number.isSafeInteger(assessmentProfileId) && assessmentProfileId > 0) {
+                const reviewButton = document.querySelector('#pendingApprovalRecordsList [data-employee-profile-id="' + assessmentProfileId + '"] .js-open-verify-modal');
+                if (reviewButton && typeof window.openHealthReviewFromButton === 'function') {
+                    window.openHealthReviewFromButton(reviewButton);
+                }
+            }
         } else if (requestedTab === 'pending_conditional') {
             const pendingConditionalInfoModal = document.getElementById('pendingConditionalInfoModal');
             if (pendingConditionalInfoModal) pendingConditionalInfoModal.style.display = 'flex';
@@ -11526,6 +11569,7 @@
             if (!pagination) return;
 
             const shouldShowPagination = visibleCards.length > 0;
+            pagination.hidden = !shouldShowPagination;
             pagination.classList.toggle('is-visible', shouldShowPagination);
 
             const summary = pagination.querySelector('[data-pagination-summary]');
@@ -11549,12 +11593,14 @@
             if (!list) return;
 
             const query = (input.value || '').trim().toLowerCase();
+            const category = document.querySelector(`[data-readonly-user-category="${listId}"]`)?.value || '';
             const cards = Array.from(list.querySelectorAll('.readonly-record-card'));
             let visibleCount = 0;
 
             cards.forEach(function (card) {
                 const searchText = (card.getAttribute('data-search-text') || card.innerText || '').toLowerCase();
-                const isVisible = query === '' || searchText.includes(query);
+                const isVisible = (query === '' || searchText.includes(query))
+                    && (category === '' || card.dataset.userCategory === category);
                 card.dataset.searchVisible = isVisible ? '1' : '0';
                 if (isVisible) {
                     visibleCount += 1;
@@ -11565,13 +11611,22 @@
             paginateReadonlyList(list);
 
             const emptyState = list.querySelector('[data-readonly-search-empty]');
+            const initialEmptyState = list.querySelector('.pending-approval-empty');
+            if (initialEmptyState) initialEmptyState.hidden = query !== '' || category !== '';
             if (emptyState) {
-                emptyState.classList.toggle('is-visible', query !== '' && visibleCount === 0);
+                emptyState.classList.toggle('is-visible', (query !== '' || category !== '') && visibleCount === 0);
             }
         };
 
         document.querySelectorAll('[data-readonly-modal-search]').forEach(function (input) {
             input.addEventListener('input', function () {
+                filterReadonlyCards(input);
+            });
+        });
+
+        document.querySelectorAll('[data-readonly-user-category]').forEach(function (select) {
+            select.addEventListener('change', function () {
+                const input = document.querySelector(`[data-readonly-modal-search="${select.dataset.readonlyUserCategory}"]`);
                 filterReadonlyCards(input);
             });
         });
@@ -11604,6 +11659,10 @@
         });
 
         const resetReadonlyModalSearch = function (modal) {
+            modal?.querySelectorAll('[data-readonly-user-category]').forEach(function (select) {
+                select.value = '';
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+            });
             modal?.querySelectorAll('[data-readonly-modal-search]').forEach(function (input) {
                 input.value = '';
                 filterReadonlyCards(input);
@@ -12137,6 +12196,9 @@
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'premium-select-button';
+            if (select.hasAttribute('data-readonly-user-category')) {
+                button.setAttribute('aria-label', 'Filter by user category');
+            }
             const menu = document.createElement('div');
             menu.className = 'premium-select-menu';
             menu.setAttribute('role', 'listbox');
@@ -12184,7 +12246,7 @@
             select.addEventListener('change', rebuild);
         }
 
-        document.querySelectorAll('.readonly-pagination-per-page-select').forEach(enhance);
+        document.querySelectorAll('.readonly-pagination-per-page-select, .readonly-user-category-select').forEach(enhance);
         document.addEventListener('click', function() {
             document.querySelectorAll('.premium-select-shell.is-open').forEach(function(shell) {
                 shell.classList.remove('is-open');

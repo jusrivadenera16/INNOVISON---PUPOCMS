@@ -996,7 +996,7 @@
 
     .audit-primary-filters {
         display: grid;
-        grid-template-columns: minmax(250px, 1.7fr) repeat(2, minmax(135px, .8fr)) auto;
+        grid-template-columns: minmax(0, 1fr) auto;
         align-items: end;
         gap: 14px;
     }
@@ -1637,7 +1637,7 @@
         }
 
         .audit-primary-filters {
-            grid-template-columns: minmax(220px, 1.35fr) repeat(2, minmax(140px, .8fr));
+            grid-template-columns: minmax(0, 1fr) auto;
         }
 
         .audit-more-filters {
@@ -1900,24 +1900,6 @@
                     <label class="audit-filter-label" for="audit_q">Search</label>
                     <span class="audit-search-control"><x-outline-icon name="magnifying-glass" /><input id="audit_q" name="q" type="text" class="audit-input" value="{{ request('q') }}" placeholder="Search events, actors, modules, or endpoints..."></span>
                 </div>
-                <div class="audit-filter-group">
-                    <label class="audit-filter-label" for="audit_module">Module</label>
-                    <select id="audit_module" name="module" class="audit-select">
-                        <option value="">All Modules</option>
-                        @foreach($moduleOptions as $moduleOption)
-                            <option value="{{ $moduleOption }}" @selected(request('module') === $moduleOption)>{{ $moduleOption }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="audit-filter-group">
-                    <label class="audit-filter-label" for="audit_actor_role">Role</label>
-                    <select id="audit_actor_role" name="actor_role" class="audit-select">
-                        <option value="">All Roles</option>
-                        @foreach($roleOptions as $roleOption)
-                            <option value="{{ $roleOption }}" @selected(request('actor_role') === $roleOption)>{{ $roleLabelMap[$roleOption] ?? ucwords(str_replace('_', ' ', $roleOption)) }}</option>
-                        @endforeach
-                    </select>
-                </div>
                 <button type="button" class="audit-more-filters" data-audit-more-filters aria-controls="auditMoreFiltersModal" aria-expanded="{{ $showAdvancedFilters ? 'true' : 'false' }}" aria-label="More filters" title="More filters">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" focusable="false">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
@@ -1946,6 +1928,24 @@
                     <div class="audit-more-modal__body">
                         <div class="audit-advanced-filters">
                             <div class="audit-filters">
+                                <div class="audit-filter-group">
+                                    <label class="audit-filter-label" for="audit_module">Module</label>
+                                    <select id="audit_module" name="module" class="audit-select">
+                                        <option value="">All Modules</option>
+                                        @foreach($moduleOptions as $moduleOption)
+                                            <option value="{{ $moduleOption }}" @selected(request('module') === $moduleOption)>{{ $moduleOption }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="audit-filter-group">
+                                    <label class="audit-filter-label" for="audit_actor_role">Role</label>
+                                    <select id="audit_actor_role" name="actor_role" class="audit-select">
+                                        <option value="">All Roles</option>
+                                        @foreach($roleOptions as $roleOption)
+                                            <option value="{{ $roleOption }}" @selected(request('actor_role') === $roleOption)>{{ $roleLabelMap[$roleOption] ?? ucwords(str_replace('_', ' ', $roleOption)) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                                 <div class="audit-filter-group">
                                     <label class="audit-filter-label" for="audit_date_from">Date From</label>
                                     <span class="audit-date-control"><x-outline-icon name="calendar-days" /><input id="audit_date_from" name="date_from" type="date" class="audit-input" value="{{ request('date_from') }}"></span>

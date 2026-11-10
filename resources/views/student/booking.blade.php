@@ -612,9 +612,7 @@
         text-align: left;
         cursor: pointer;
         transition: all 0.18s ease;
-        box-shadow:
-            0 12px 22px rgba(15, 23, 42, 0.08),
-            0 1px 0 rgba(255,255,255,0.82) inset;
+        box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
     }
     .service-select-option:hover {
         transform: translateY(-1px);
@@ -2320,6 +2318,109 @@
         .page-header-stats { grid-template-columns: 1fr; text-align: left; }
         .page-header-stat + .page-header-stat { border-top: 1px solid rgba(255,255,255,.13); border-left: 0; }
         .booking-grid-2 { grid-template-columns: 1fr; gap: 0; }
+    }
+    /* Trial: Home campus backdrop, scoped to the appointment page. */
+    body:has(.booking-page-shell) main {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        background: #48030c;
+    }
+    .booking-page-shell,
+    html[data-theme="dark"] .booking-page-shell {
+        background:
+            radial-gradient(circle at 91% 11%, rgba(250, 204, 21, .18), transparent 170px),
+            radial-gradient(circle at 54% 87%, rgba(250, 204, 21, .16), transparent 180px),
+            linear-gradient(90deg, rgba(72, 3, 12, .96) 0%, rgba(112, 19, 27, .88) 45%, rgba(112, 19, 27, .58) 100%),
+            linear-gradient(180deg, rgba(28, 4, 10, .16), rgba(28, 4, 10, .34)),
+            url('{{ asset("images/PUPBG.jpg") }}') center center / cover fixed no-repeat !important;
+    }
+    html:not([data-theme="dark"]) .booking-page-shell .booking-form-section,
+    html:not([data-theme="dark"]) .booking-page-shell .info-card,
+    html:not([data-theme="dark"]) .booking-page-shell .booking-reminder-card {
+        background: rgba(83, 7, 27, .78);
+        border-color: rgba(250, 204, 21, .3);
+        box-shadow: 0 14px 30px rgba(35, 0, 9, .22);
+        backdrop-filter: blur(10px);
+        color: #fff7ed;
+    }
+    html:not([data-theme="dark"]) .booking-page-shell :is(.form-section-title, .booking-subsection-title, .input-label, .info-title, .booking-reminder-card .note-header) {
+        color: #fff7ed;
+        border-color: rgba(255, 255, 255, .18);
+    }
+    html:not([data-theme="dark"]) .booking-page-shell :is(.booking-field-help, .time-slot-hint, .booking-reminder-card p, .clinic-information-item small) { color: #ead5dc; }
+    html:not([data-theme="dark"]) .booking-page-shell .clinic-information-item strong { color: #fff7ed; }
+    html:not([data-theme="dark"]) .booking-page-shell :is(.info-title-icon, .booking-subsection-title svg, .booking-reminder-card .note-header svg) { color: #facc15; }
+    html:not([data-theme="dark"]) .booking-page-shell :is(.booking-empty-state, .appt-item) {
+        background: rgba(38, 2, 14, .35);
+        border-color: rgba(255, 255, 255, .16);
+    }
+    html:not([data-theme="dark"]) .booking-page-shell :is(.booking-empty-state strong, .appt-item) { color: #fff7ed; }
+    html:not([data-theme="dark"]) .booking-page-shell .booking-empty-state p { color: #ead5dc; }
+    html:not([data-theme="dark"]) .booking-page-shell .booking-form-section :is(.form-control, .service-select-display) {
+        background: rgba(35, 2, 14, .48);
+        border-color: rgba(255, 219, 229, .3);
+        color: #fff7ed;
+        color-scheme: dark;
+    }
+    html:not([data-theme="dark"]) .booking-page-shell .booking-form-section .form-control[readonly] {
+        background: rgba(35, 2, 14, .32);
+        border-color: rgba(255, 219, 229, .22);
+    }
+    html:not([data-theme="dark"]) .booking-page-shell .booking-form-section .form-control::placeholder,
+    html:not([data-theme="dark"]) .booking-page-shell .booking-form-section textarea[name="reason"]::placeholder {
+        color: #d9b9c3 !important;
+        opacity: 1;
+    }
+    html:not([data-theme="dark"]) .booking-page-shell .booking-form-section :is(.booking-field-icon, .date-picker-toggle) { color: #facc15; }
+    html:not([data-theme="dark"]) .booking-page-shell .booking-form-section :is(.form-control:focus, .service-select-display:focus-visible, .service-select-display.is-open) {
+        border-color: #facc15;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .14);
+    }
+    html:not([data-theme="dark"]) .booking-page-shell .service-select-menu { background: #4b0b20; border-color: rgba(255, 219, 229, .3); }
+    html:not([data-theme="dark"]) .booking-page-shell .service-select-option { background: transparent; color: #fff7ed; border-color: rgba(255, 219, 229, .2); }
+    html:not([data-theme="dark"]) .booking-page-shell .service-select-option:is(:hover, :focus-visible, .is-selected) { background: #facc15; color: #70131b; }
+    html:not([data-theme="dark"]) .booking-page-shell .service-select-wrap::after { border-color: #facc15; }
+    html:not([data-theme="dark"]) .booking-page-shell .service-select-wrap::before { background: rgba(255, 219, 229, .25); }
+    .booking-page-shell .booking-form-section :is(input.form-control, textarea.form-control, select.form-control, .form-control option, .service-select-display) {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff;
+    }
+    .booking-page-shell .booking-form-section .form-control::placeholder {
+        -webkit-text-fill-color: #d9b9c3;
+    }
+    .booking-page-shell .booking-form-section .form-control option { background: #4b0b20; }
+    .booking-page-shell .booking-form-section :is(.date-picker-panel, .time-slots-container, .appointment-summary-notice) {
+        background: rgba(55, 3, 20, .96) !important;
+        border-color: rgba(255, 219, 229, .3) !important;
+        box-shadow: 0 12px 28px rgba(35, 0, 9, .24) !important;
+        color: #ffffff;
+    }
+    .booking-page-shell .booking-form-section :is(.date-picker-month, .date-picker-weekdays span, .appointment-summary-notice strong) { color: #ffffff !important; }
+    .booking-page-shell .booking-form-section .appointment-summary-notice small { color: #ead5dc !important; }
+    .booking-page-shell .booking-form-section .appointment-summary-icon { background: rgba(250, 204, 21, .12) !important; color: #facc15 !important; }
+    .booking-page-shell .booking-form-section :is(.time-slot-btn, .calendar-day, .date-picker-nav) {
+        background: rgba(112, 19, 40, .7) !important;
+        border-color: rgba(255, 219, 229, .26) !important;
+        color: #ffffff !important;
+        box-shadow: none !important;
+    }
+    .booking-page-shell .booking-form-section :is(.time-slot-btn, .calendar-day, .date-picker-nav):is(:hover, :focus-visible):not(:disabled),
+    .booking-page-shell .booking-form-section :is(.time-slot-btn.selected, .calendar-day.selected) {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #70131b !important;
+    }
+    .booking-page-shell .booking-form-section :is(.time-slot-btn, .calendar-day, .date-picker-nav):disabled {
+        background: rgba(35, 2, 14, .45) !important;
+        color: #a88a94 !important;
+        opacity: .6;
+    }
+    .booking-page-shell .booking-form-section :is(.service-select-display, .service-select-menu, .service-select-option, .btn-submit) {
+        border: 1px solid rgba(250, 204, 21, .28) !important;
+    }
+    .booking-page-shell .booking-form-section :is(.service-select-display, .service-select-option, .btn-submit):is(:hover, :focus-visible),
+    .booking-page-shell .booking-form-section .service-select-display.is-open {
+        border-color: rgba(250, 204, 21, .65) !important;
     }
 </style>
 @endpush

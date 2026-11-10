@@ -68,6 +68,14 @@
         ?: ($activeNewHealthFormRequest?->admin_note ?: '');
     $existingInformationHandling = data_get($activeNewHealthFormRequest?->metadata, 'information_handling', 'existing');
     $existingIsClinicManagedRenewal = data_get($activeNewHealthFormRequest?->metadata, 'employee_login_required') === false;
+    $assessmentToRestore = $canViewExistingNewEmployeeHealthFormRequest && $existingIsClinicManagedRenewal
+        ? app(\App\Services\EmployeeHealthFormHistoryService::class)->approvedBeforeAssessment($employeeProfile, $activeNewHealthFormRequest)
+        : null;
+    $canCancelEmployeeAssessment = $canViewExistingNewEmployeeHealthFormRequest && $existingIsClinicManagedRenewal
+        && app(\App\Services\EmployeeHealthFormHistoryService::class)->canCancelAssessment(
+            $employeeProfile, $activeNewHealthFormRequest, $activeNewHealthFormRequest->healthFormSubmission
+        )
+        && in_array(data_get($assessmentToRestore?->profile_snapshot, 'profile.clearance_status'), ['Approved', 'Issued', 'Fully Cleared', 'Cleared'], true);
 @endphp
 
 @push('styles')
@@ -2054,7 +2062,7 @@
                     <div class="employee-profile-actions-menu" id="employeeProfileActionsMenu" role="menu" aria-hidden="true">
                         @if($canManageNewEmployeeHealthForm)
                             <button type="button" id="openNewEmployeeHealthFormModal" role="menuitem">
-                                <span>{{ $canViewExistingNewEmployeeHealthFormRequest ? 'View Existing Request' : 'Request New Health Form' }}</span>
+                                <span>{{ $canViewExistingNewEmployeeHealthFormRequest ? 'View Current Assessment' : 'Start New Health Assessment' }}</span>
                                 <span aria-hidden="true">@if($canViewExistingNewEmployeeHealthFormRequest)&rarr;@else+@endif</span>
                             </button>
                         @endif
@@ -2631,11 +2639,11 @@
                 <div class="employee-action-head-main">
                     <span class="employee-action-head-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span>
                     <div>
-                        <h3 id="newEmployeeHealthFormTitle">{{ $canViewExistingNewEmployeeHealthFormRequest ? ($existingIsClinicManagedRenewal ? 'Pending Health Form Cycle' : 'Existing Health Form Request') : 'Request New Health Form' }}</h3>
-                        <p>{{ $canViewExistingNewEmployeeHealthFormRequest ? 'Review this pending Health Form cycle. The employee does not need to sign in or submit another form.' : 'Start a new Health Form cycle using the saved information. The employee does not need to sign in or submit another form.' }}</p>
+                        <h3 id="newEmployeeHealthFormTitle">{{ $canViewExistingNewEmployeeHealthFormRequest ? ($existingIsClinicManagedRenewal ? 'Current Health Assessment' : 'Existing Health Form Request') : 'Start New Health Assessment' }}</h3>
+                        <p>{{ $canViewExistingNewEmployeeHealthFormRequest ? 'Review this health assessment in Pending Approval. The employee does not need to sign in or submit another form.' : 'Use saved employee information to start a fresh assessment in Pending Approval. No employee login or form submission is needed.' }}</p>
                     </div>
                 </div>
-                <button type="button" class="employee-action-close" id="closeNewEmployeeHealthFormModal" aria-label="Close new health form modal">
+                <button type="button" class="employee-action-close" id="closeNewEmployeeHealthFormModal" aria-label="Close health assessment modal">
                     <x-outline-icon name="x-mark" />
                 </button>
             </div>
@@ -2643,14 +2651,14 @@
                 <div class="employee-action-body">
                     <div class="employee-action-readonly-row">
                         <span>Status</span>
-                        <strong>{{ $existingIsClinicManagedRenewal ? 'Pending Approval' : ucwords(str_replace('_', ' ', $activeNewHealthFormRequest->status)) }}</strong>
+                        <strong>{{ $existingIsClinicManagedRenewal ? 'Awaiting Assessment' : ucwords(str_replace('_', ' ', $activeNewHealthFormRequest->status)) }}</strong>
                     </div>
                     <div class="employee-action-readonly-row">
                         <span>Category / Purpose</span>
                         <strong>{{ $existingNewHealthFormCategory }}</strong>
                     </div>
                     <div class="employee-action-readonly-row">
-                        <span>Requested At</span>
+                        <span>{{ $existingIsClinicManagedRenewal ? 'Started At' : 'Requested At' }}</span>
                         <strong>{{ optional($activeNewHealthFormRequest->requested_at)->format('M d, Y h:i A') ?: 'N/A' }}</strong>
                     </div>
                     <div class="employee-action-readonly-row">
@@ -2664,10 +2672,17 @@
                         </div>
                     @endif
                     <div class="employee-action-request-notice">
-                        A Health Form request is already active for this record. No new request can be sent until this request is completed or closed.
+                        A health assessment is already active for this record. Complete or close it before starting another assessment.
                     </div>
                     <div class="employee-action-actions">
-                        <button type="button" class="employee-action-cancel" id="cancelNewEmployeeHealthFormModal">Close</button>
+                        @if($canCancelEmployeeAssessment)
+                            <form method="POST" action="{{ route('admin.employee_health_profile.assessment.cancel', [$employeeProfile->id, $activeNewHealthFormRequest->health_form_submission_id]) }}" data-loader-message="Cancelling request" data-loader-detail="Cancelling the health assessment and restoring the previous approved record." onsubmit="if (!window.confirm('Cancel this health assessment and restore the previous approved record? Assessment history will be retained.')) return false; this.querySelector('button').disabled = true;">
+                                @csrf
+                                <button type="submit" class="employee-action-cancel">Cancel Assessment</button>
+                            </form>
+                        @else
+                            <span class="employee-action-saved-info-note">Cancellation is unavailable after assessment changes or review.</span>
+                        @endif
                         <button type="button" class="employee-action-submit" id="viewExistingEmployeeHealthFormRecord">View Health Form Record</button>
                     </div>
                 </div>
@@ -2685,14 +2700,14 @@
                             </select>
                         </div>
                     </div>
-                    <p class="employee-action-saved-info-note">This request uses the saved information. To edit this employee's details, close this window and choose <strong>Update Health Information</strong> from the profile menu.</p>
+                    <p class="employee-action-saved-info-note">This assessment uses saved employee information and preserves the previous approved form. Clinic staff can review and update details through <strong>Update Health Information</strong> during assessment before approval.</p>
                     <div class="employee-action-field">
                         <label for="newEmployeeHealthFormRemarks">Remarks</label>
-                        <textarea id="newEmployeeHealthFormRemarks" name="remarks" placeholder="Optional note for why a new form is needed.">{{ old('remarks') }}</textarea>
+                        <textarea id="newEmployeeHealthFormRemarks" name="remarks" placeholder="Optional note for this health assessment.">{{ old('remarks') }}</textarea>
                     </div>
                     <div class="employee-action-actions">
                         <button type="button" class="employee-action-cancel" id="cancelNewEmployeeHealthFormModal">Cancel</button>
-                        <button type="submit" class="employee-action-submit">Send Request</button>
+                        <button type="submit" class="employee-action-submit">Start New Health Assessment</button>
                     </div>
                 </form>
             @endif
