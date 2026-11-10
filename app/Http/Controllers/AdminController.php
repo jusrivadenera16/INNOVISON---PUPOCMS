@@ -4749,6 +4749,7 @@ class AdminController extends Controller
         if (!$latestSubmission || !in_array($latestSubmission->status, [
             HealthFormSubmission::STATUS_REQUESTED,
             HealthFormSubmission::STATUS_SUBMITTED,
+            'under_review',
             HealthFormSubmission::STATUS_NEEDS_CORRECTION,
         ], true)) {
             return null;
@@ -4929,6 +4930,7 @@ class AdminController extends Controller
         }
 
         $validated = $request->validate([
+            'clinic_action' => ['nullable', Rule::in(['start', 'send'])],
             'category' => [
                 'required',
                 'string',
@@ -4943,14 +4945,18 @@ class AdminController extends Controller
         ]);
 
         $adminUser = Auth::guard('admin')->user();
+        abort_unless($adminUser, 403);
+        $startInClinic = ($validated['clinic_action'] ?? 'send') === 'start';
+        abort_if($startInClinic && !$this->isStudentHealthProfile($profile), 422, 'Clinic-started forms are available only for student records.');
 
-        $submission = DB::transaction(function () use ($profile, $validated, $adminUser) {
+        $submission = DB::transaction(function () use ($profile, $validated, $adminUser, $startInClinic) {
             User::query()->whereKey($profile->user_id)->lockForUpdate()->firstOrFail();
 
             if ($this->activeStudentNewHealthFormRequest($profile)) {
                 return null;
             }
 
+            if ($startInClinic) $this->preserveClinicStudentApprovedForm($profile);
             $requestedAt = now();
             $submission = HealthFormSubmission::create([
                 'user_id' => $profile->user_id,
@@ -4980,12 +4986,19 @@ class AdminController extends Controller
                 ],
             ]);
 
+            if ($startInClinic) $submission = $this->submitClinicStartedStudentForm($profile, $submission, $adminUser);
             return $submission;
         });
 
         if (!$submission) {
             return redirect()->route('admin.show_health', $profile->id)
                 ->with('info', 'An existing Health Form request is already active for this record.');
+        }
+
+        if ($startInClinic) {
+            return redirect()->route('admin.health_records', ['tab' => 'pending_approval', 'user_type' => 'student'])
+                ->with('open_student_health_form', $profile->id)
+                ->with('success', 'New Health Form started using saved student information and moved to Pending Approval. No student login or submission is needed.');
         }
 
         $this->logActivity(
@@ -5001,6 +5014,36 @@ class AdminController extends Controller
 
         return redirect()->route('admin.show_health', $profile->id)
             ->with('success', 'New Health Form request sent to the student.');
+    }
+
+    private function preserveClinicStudentApprovedForm(HealthProfile $profile): void
+    {
+        if (!$profile->latestApprovedHealthFormSubmission()->exists()) {
+            $approved = app(HealthFormPdfSnapshotService::class)->ensureApprovedSnapshot($profile, $profile->user);
+            $approved->forceFill(['approved_at' => $profile->verified_at ?: $profile->updated_at ?: $profile->created_at])->save();
+        }
+    }
+
+    private function submitClinicStartedStudentForm(HealthProfile $profile, HealthFormSubmission $pending, User $actor): HealthFormSubmission
+    {
+        $snapshots = app(HealthFormPdfSnapshotService::class);
+        $staged = clone $profile;
+        $staged->forceFill(['health_form_category' => $pending->category, 'clearance_status' => 'For Verification', 'verified_at' => null]);
+        $submission = $snapshots->recordSubmittedWithoutPdf($profile, $profile->user, $pending->category, $pending->remarks, false, $staged);
+        $correction = HealthProfileCorrectionRequest::query()->where('health_form_submission_id', $pending->id)
+            ->where('health_profile_id', $profile->id)->where('type', HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM)->firstOrFail();
+        $correction->forceFill([
+            'status' => HealthProfileCorrectionRequest::STATUS_SUBMITTED, 'submitted_at' => $submission->submitted_at,
+            'metadata' => array_merge($correction->metadata ?? [], ['request_source' => 'clinic', 'information_handling' => 'existing', 'student_login_required' => false]),
+        ])->save();
+        ActivityLog::create([
+            'user_id' => $actor->id, 'user_name' => $actor->name, 'user_role' => strtolower((string) $actor->user_role),
+            'action' => 'Student Health Form Started', 'module' => 'Health Records', 'event_type' => 'student_health_form_started',
+            'description' => 'Clinic started a new Health Form using saved information for student health profile #' . $profile->id . '.',
+            'subject_type' => HealthProfile::class, 'subject_id' => (string) $profile->id,
+            'metadata' => ['health_form_submission_id' => $submission->id, 'request_source' => 'clinic'],
+        ]);
+        return $submission;
     }
 
     public function cancelNewHealthFormRequest(Request $request, $id, $submissionId)
@@ -5269,6 +5312,7 @@ class AdminController extends Controller
     private function requestBulkStudentHealthForms(Request $request)
     {
         $validated = $request->validate([
+            'clinic_action' => ['nullable', Rule::in(['start', 'send'])],
             'user_type' => ['required', Rule::in(['student'])],
             'category' => [
                 'required',
@@ -5285,6 +5329,7 @@ class AdminController extends Controller
         ]);
 
         $category = trim((string) $validated['category']);
+        $startInClinic = ($validated['clinic_action'] ?? 'send') === 'start';
         $selectedProfileIds = array_values(array_unique(array_map('intval', $validated['health_profile_ids'])));
         $studentQuery = HealthProfile::query()
             ->with('user')
@@ -5300,6 +5345,7 @@ class AdminController extends Controller
         }
 
         $adminUser = Auth::guard('admin')->user() ?: auth()->user();
+        abort_unless($adminUser, 403);
         $emailCounts = [
             'sent' => 0,
             'failed' => 0,
@@ -5307,15 +5353,17 @@ class AdminController extends Controller
         ];
         $alreadyRequestedCount = 0;
         $processedCount = 0;
+        $startedStudentProfileIds = [];
 
         foreach ($studentProfiles as $profile) {
-            $requestCreated = DB::transaction(function () use ($profile, $adminUser, $category) {
+            $requestCreated = DB::transaction(function () use ($profile, $adminUser, $category, $startInClinic) {
                 User::query()->whereKey($profile->user_id)->lockForUpdate()->firstOrFail();
 
                 if ($this->activeStudentNewHealthFormRequest($profile)) {
                     return false;
                 }
 
+                if ($startInClinic) $this->preserveClinicStudentApprovedForm($profile);
                 $requestedAt = now();
                 $submission = HealthFormSubmission::create([
                     'user_id' => $profile->user_id,
@@ -5346,6 +5394,7 @@ class AdminController extends Controller
                     ],
                 ]);
 
+                if ($startInClinic) $this->submitClinicStartedStudentForm($profile, $submission, $adminUser);
                 return true;
             });
 
@@ -5354,6 +5403,10 @@ class AdminController extends Controller
                 continue;
             }
             $processedCount++;
+            if ($startInClinic) {
+                $startedStudentProfileIds[] = $profile->id;
+                continue;
+            }
 
             ActivityLog::create([
                 'user_id' => $adminUser?->id,
@@ -5412,8 +5465,10 @@ class AdminController extends Controller
             $message .= ' Email notifications failed: ' . $emailCounts['failed'] . '; the requests remain available in the portal.';
         }
 
+        if ($startInClinic) $message = $processedCount . ' Health Form(s) started using saved student information and moved to Pending Approval. ' . $skippedCount . ' record(s) skipped. No student login or submission is needed.';
         return redirect()
-            ->route('admin.health_records', ['tab' => 'approved', 'user_type' => 'student'])
+            ->route('admin.health_records', ['tab' => $startInClinic ? 'pending_approval' : 'approved', 'user_type' => 'student'])
+            ->with('open_student_health_form', count($startedStudentProfileIds) === 1 ? $startedStudentProfileIds[0] : null)
             ->with('success', $message);
     }
 
