@@ -4754,6 +4754,12 @@
         line-height: 1.35;
     }
 
+    #applicantRefModal #applicantAlreadyApprovedMessage,
+    #applicantRefModal #applicantAlreadyApprovedResult [data-approved-clearance-prompt] {
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
     #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-approved-result-meta {
         padding-top: 8px;
         font-size: 11px;
@@ -11802,11 +11808,7 @@
                                     $draftName = $draftName !== '' ? $draftName : ($employeeDraft->user?->name ?: 'Employee');
                                     $draftReference = trim((string) ($employeeDraft->employee_number ?: $employeeDraft->user?->employee_number ?: $employeeDraft->id));
                                     $draftSearch = strtolower(trim($draftName . ' ' . ($employeeDraft->user?->email ?? '') . ' ' . $draftReference));
-                                    $hasStudentDraftPhoto = $employeeDraft->draft_record_type === 'Student'
-                                        && filled($employeeDraft->user?->healthProfile?->student_photo);
-                                    $draftPhotoUrl = filled($employeeDraft->student_photo) || $hasStudentDraftPhoto
-                                        ? route(request()->routeIs('assistant.*') ? 'assistant.walkin.draft-photo' : 'walkin.draft-photo', ['employeeProfile' => $employeeDraft->id])
-                                        : '';
+                                    $draftPhotoUrl = $employeeDraft->draft_photo_url ?: '';
                                 @endphp
                                 <article class="applicant-final-review-card employee-draft-card" data-employee-draft-row data-search="{{ $draftSearch }}">
                                     <div class="applicant-final-review-person">
@@ -11826,7 +11828,7 @@
                                     <div>
                                         <small>ID Number</small>
                                         <strong class="employee-draft-id">{{ $draftReference }}</strong>
-                                        <span>{{ $employeeDraft->health_form_category ?: 'Employee Health Form' }} - {{ optional($employeeDraft->updated_at)->format('M d, Y g:i A') }}</span>
+                                        <span>{{ $employeeDraft->draft_display_category ?: 'Employee Health Form' }} - {{ optional($employeeDraft->updated_at)->format('M d, Y g:i A') }}</span>
                                     </div>
                                     <button type="button" class="applicant-final-review-btn employee-draft-resume-btn" data-employee-draft-reference="{{ $draftReference }}">
                                         <x-outline-icon name="pencil-square-resume" />
@@ -11901,13 +11903,13 @@
                                 <span class="applicant-reference-verification-item-icon"><x-outline-icon name="medical-clearance-issued" /></span>
                                 <span class="applicant-reference-verification-item-copy">
                                     <small>Health Information Form</small>
-                                    <strong class="applicant-reference-form-status" id="applicantReferenceVerificationFormStatus">Not yet filled</strong>
+                                    <strong class="applicant-reference-form-status" id="applicantReferenceVerificationFormStatus">Not Yet Submitted</strong>
                                 </span>
                             </div>
                         </div>
 
                         <p class="applicant-reference-form-warning" id="applicantReferenceVerificationWarning" role="status" hidden>
-                            This applicant has not filled out the Health Information Form yet. Continue is unavailable until the form is submitted.
+                            The Health Information Form has not been submitted yet. Lookup is available, but review and approval are unavailable until the form is submitted.
                         </p>
 
                         <div class="applicant-reference-verification-actions">
@@ -11928,6 +11930,8 @@
                                 <x-outline-icon name="calendar-days" />
                                 <span id="applicantAlreadyApprovedMeta">Approved at: -</span>
                             </div>
+                            @include('admin.partials.medical-clearance-panel', ['clearanceDocumentsOnly' => true])
+                            @include('admin.partials.approved-clearance-review')
                         </div>
                     </div>
 
@@ -12044,7 +12048,7 @@
                     {{-- Medical Condition Section --}}
                     <div class="applicant-medical-condition-section">
                         <section class="applicant-screening-panel applicant-review-panel" id="applicantNurseReviewPanel">
-                            <h4 class="applicant-screening-panel-title">Nurse Findings Review</h4>
+                            <h4 class="applicant-screening-panel-title">Doctor Review</h4>
                             <div class="applicant-lookup-grid applicant-review-source-grid">
                                 <div class="applicant-lookup-item">
                                     <div class="applicant-lookup-card">
@@ -12109,6 +12113,7 @@
                                     </label>
                                 </div>
                             </div>
+                            @include('admin.partials.review-medical-clearance')
                             <div id="applicantNormalRemarksFields" class="applicant-condition-fields" style="display: none;">
                                 <div class="applicant-condition-field">
                                     <label for="applicantNormalRemarks">Remarks <span style="color: #94a3b8;">(Optional)</span></label>
@@ -12592,11 +12597,11 @@
                 <div class="applicant-modal-head-main">
                     <div class="applicant-modal-head-badge">RV</div>
                     <div class="applicant-modal-head-copy">
-                        <h3>Saved Nurse Review</h3>
+                        <h3>Saved Doctor Review</h3>
                         <p>Previously recorded findings and physical assessment.</p>
                     </div>
                 </div>
-                <button type="button" class="applicant-modal-close" id="closeSavedAssessmentModal" aria-label="Close saved nurse review">
+                <button type="button" class="applicant-modal-close" id="closeSavedAssessmentModal" aria-label="Close saved doctor review">
                     <x-outline-icon name="x-mark" />
                 </button>
             </div>
@@ -12633,6 +12638,7 @@
             </div>
             <strong id="applicantApprovalOverlayTitle">Approved!</strong>
             <p id="applicantApprovalOverlayMessage">The applicant decision has been saved successfully.</p>
+            <a data-approved-clearance-link href="#" target="_blank" rel="noopener" hidden>View / Reprint Medical Clearance</a>
             <hr>
             <div class="approval-evaluation-actions" id="approvalEvaluationActions" hidden>
                 <button type="button" class="approval-evaluation-skip" data-approval-evaluation="skip">Skip</button>
@@ -13169,6 +13175,7 @@
 </div>
 @endif
 </div>
+@include('admin.partials.medical-clearance-modal')
 @endsection
 
 @push('scripts')
@@ -14845,6 +14852,8 @@
         }
 
         function showClinicSuccessOverlay(overlay, options = {}) {
+            const clearanceLink = overlay?.querySelector('[data-approved-clearance-link]');
+            if (clearanceLink) { clearanceLink.hidden = !options.medicalClearanceUrl; clearanceLink.href = options.medicalClearanceUrl || '#'; }
             if (!overlay) return;
             if (approvalOverlayTitle && options.title && overlay === approvalOverlay) {
                 approvalOverlayTitle.textContent = options.title;
@@ -15049,7 +15058,7 @@
                 ? 'Encode Assessment'
                 : (isFinalReview ? 'Final Review' : (isReferenceLookup ? 'Reference Lookup' : 'Applicants'));
             if (lookupModalSubtitle) lookupModalSubtitle.textContent = isEncode
-                ? "Record the applicant's vital signs during the nurse review."
+                ? "Record the applicant's vital signs during the doctor review."
                 : (isFinalReview
                     ? 'Review encoded applicants and approve or mark pending compliance.'
                     : (isReferenceLookup ? 'Look up an applicant by reference number.' : "Enter the applicant's reference number to look up the record."));
@@ -15101,20 +15110,30 @@
         }
 
         function hideAlreadyApprovedResult() {
+            window.ApprovedClearanceReview?.configure(null);
             alreadyApprovedResult?.classList.remove('is-visible');
             alreadyApprovedCloseRow?.classList.remove('is-visible');
             modalShell?.classList.remove('is-approved-result-only');
         }
 
         function showAlreadyApprovedResult(data) {
+            window.ApprovedClearanceReview?.configure(
+                isClinicLookupMode() ? data.record_type : null,
+                data.health_form_information?.profile_id || data.health_profile_id
+            );
+            window.ClinicMedicalClearance?.loadRecord(
+                document.querySelector('#applicantAlreadyApprovedResult [data-clearance-panel]'),
+                isClinicLookupMode() ? data.record_type : null,
+                data.health_form_information?.profile_id || data.health_profile_id
+            );
             const approvedDate = data.approved_at
                 || data.verified_at
                 || data.certified_at
                 || data.updated_at
                 || '';
             const isEmployee = isClinicLookupMode();
-            const personType = isEmployee ? 'employee' : 'applicant';
-            if (lookupModalTitle) lookupModalTitle.textContent = isEmployee ? 'Employee Assessment' : 'Encode Assessment';
+            const personType = isEmployee ? (data.record_type === 'student' ? 'student' : (data.record_type === 'dependent' ? 'dependent' : 'employee')) : 'applicant';
+            if (lookupModalTitle) lookupModalTitle.textContent = isEmployee ? 'Health Form Status' : 'Encode Assessment';
             if (lookupModalSubtitle) lookupModalSubtitle.textContent = `Review the ${personType}'s clinic assessment status.`;
             if (alreadyApprovedMessage) {
                 alreadyApprovedMessage.textContent = `This ${personType}'s health profile has already been cleared by the clinic. No further assessment is required.`;
@@ -15304,6 +15323,7 @@
         }
 
         function resetLookupState() {
+            window.ReviewMedicalClearance?.reset();
             pendingReferenceLookup = null;
             if (entryPane) entryPane.classList.remove('is-reference-verification', 'is-reference-lookup');
             if (referenceVerification) referenceVerification.hidden = true;
@@ -17256,6 +17276,9 @@
             const studentNumber = data.student_number || '';
             const yearSection = [data.year || '', data.section || ''].filter(Boolean).join(' / ') || 'N/A';
             currentRecordType = data.record_type || (isClinicLookupMode() ? 'employee' : 'applicant');
+            window.ReviewMedicalClearance?.configure(isClinicLookupMode() ? currentRecordType : null,
+                data.health_form_information?.profile_id || data.health_profile_id,
+                data.has_reviewable_health_form === true || data.has_reviewable_health_form === 1 || data.has_reviewable_health_form === '1');
             const isStudentRecord = isStudentLookupResult();
 
             console.log('Setting lookup values:', {
@@ -17383,8 +17406,11 @@
             }
 
             populateAssessmentReview(currentAssessmentReview);
+            const encodeRemarksField = document.getElementById('applicantEncodeRemarksField');
+            if (encodeRemarksField) encodeRemarksField.hidden = isClinicLookupMode() || isStudentRecord;
             const encodeRemarksInput = document.getElementById('applicantEncodeRemarks');
             if (encodeRemarksInput) {
+                encodeRemarksInput.disabled = isClinicLookupMode() || isStudentRecord;
                 encodeRemarksInput.readOnly = isFinalReviewWorkflow();
                 encodeRemarksInput.placeholder = isFinalReviewWorkflow()
                     ? 'No encode remarks recorded.'
@@ -17423,12 +17449,12 @@
         }
 
         function showApplicantReferenceVerification(data, reference, applicantName, hasCompletedHealthForm) {
-            const fullName = String(applicantName || reference || 'Applicant').trim();
+            const fullName = String(applicantName || reference || (isClinicLookupMode() ? 'Patient' : 'Applicant')).trim();
             const formComplete = Boolean(hasCompletedHealthForm);
 
             pendingReferenceLookup = {
                 data,
-                referenceNumber: data.reference_number || reference,
+                referenceNumber: isClinicLookupMode() ? reference : (data.reference_number || reference),
                 applicantName: fullName,
                 hasCompletedHealthForm: formComplete
             };
@@ -17458,17 +17484,19 @@
             const applicantType = String(data.applicant_type || '').trim().toLowerCase();
             if (referenceVerificationApplicantStatus) {
                 referenceVerificationApplicantStatus.textContent = applicantStatus || 'Awaiting Uploads';
-                referenceVerificationApplicantStatus.setAttribute('aria-label', `Applicant status: ${applicantStatus || 'Awaiting Uploads'}`);
+                referenceVerificationApplicantStatus.setAttribute('aria-label', `Record status: ${applicantStatus || 'Awaiting Uploads'}`);
             }
             if (referenceVerificationApplicantType) {
-                referenceVerificationApplicantType.textContent = applicantType === 'transferee' ? 'Transferee' : 'Applicant';
+                referenceVerificationApplicantType.textContent = isClinicLookupMode()
+                    ? ({ student: 'Student', employee: 'Employee', dependent: 'Dependent', guest: 'Guest' }[data.record_type] || 'Patient')
+                    : (applicantType === 'transferee' ? 'Transferee' : 'Applicant');
                 referenceVerificationApplicantType.setAttribute('aria-label', `Applicant type: ${referenceVerificationApplicantType.textContent}`);
             }
-            if (referenceVerificationRef) referenceVerificationRef.textContent = data.reference_number || reference || 'N/A';
+            if (referenceVerificationRef) referenceVerificationRef.textContent = (isClinicLookupMode() ? reference : data.reference_number || reference) || 'N/A';
             if (referenceVerificationCourse) referenceVerificationCourse.textContent = data.course || data.course_name || 'N/A';
             if (referenceVerificationEmail) referenceVerificationEmail.textContent = data.email || data.email_address || 'N/A';
             if (referenceVerificationFormStatus) {
-                referenceVerificationFormStatus.textContent = formComplete ? 'Submitted' : 'Not yet filled';
+                referenceVerificationFormStatus.textContent = formComplete ? 'Submitted' : 'Not Yet Submitted';
                 referenceVerificationFormStatus.classList.toggle('is-ready', formComplete);
                 referenceVerificationFormStatus.classList.toggle('is-missing', !formComplete);
             }
@@ -17482,7 +17510,7 @@
                     'success',
                     formComplete
                         ? `${fullName} found. Health Information Form submitted.`
-                        : `${fullName} found. Health Information Form not yet filled.`
+                        : `${fullName} found. Health Information Form not yet submitted.`
                 );
             }
 
@@ -17596,6 +17624,13 @@
                         || data.has_completed_health_form === 1
                         || data.has_completed_health_form === '1';
 
+                    if (isClinicLookupMode() && !hasCompletedHealthForm) {
+                        isApprovalMode = false;
+                        setReviewDraftButtonVisible(false);
+                        showApplicantReferenceVerification(data, ref, applicantName, false);
+                        return;
+                    }
+
                     if (currentApplicantWorkflow === 'reference_lookup') {
                         if (!cachedLookupData || !hasCompletedHealthForm) {
                             showApplicantReferenceVerification(data, ref, applicantName, hasCompletedHealthForm);
@@ -17629,7 +17664,11 @@
                                 ? (applicantName ? "Employee's record found: " + applicantName + '.' : "Employee's record found.")
                                 : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.'))));
 
-                    if (isAlreadyApproved && !isStudentRecord) {
+                    const hasReviewableHealthForm = data.has_reviewable_health_form === true
+                        || data.has_reviewable_health_form === 1
+                        || data.has_reviewable_health_form === '1';
+                    if (isAlreadyApproved && (!isStudentRecord || isClinicLookupMode())
+                        && (!isClinicLookupMode() || !hasReviewableHealthForm)) {
                         showLookupDetails(data, ref);
                         showAlreadyApprovedResult(data);
                         populateEmployeeDraft(data.employee_draft_data || {});
@@ -17930,6 +17969,8 @@
                 });
             }
 
+            try { Object.assign(assessmentPayload, window.ReviewMedicalClearance?.collect(clearanceDecisionInput?.value === 'approve') || {}); }
+            catch (error) { setStatus('error', error.message); return; }
             fetch(saveStudentAssessmentUrl, {
                 method: 'POST',
                 headers: {
@@ -17971,7 +18012,8 @@
                         }
                         : null;
                     showClinicSuccessOverlay(approvalOverlay, {
-                        title: isApprovedDecision ? 'Medical Clearance Issued' : (isDependentRecord ? 'Dependent Assessment Saved' : 'Assessment Saved'),
+                        title: isApprovedDecision ? (data.medical_clearance_url ? 'Medical Clearance Issued' : 'Approved!') : (isDependentRecord ? 'Dependent Assessment Saved' : 'Assessment Saved'),
+                        medicalClearanceUrl: data.medical_clearance_url,
                         message: evaluationPrompt
                             ? 'The student has been approved. Would you like to send a service evaluation form?'
                             : isApprovedDecision
@@ -17980,7 +18022,7 @@
                                 ? 'The dependent assessment has been saved to the health record.'
                                 : 'The student/OJT assessment has been saved to the health profile.'),
                         evaluationPrompt,
-                        persistent: Boolean(evaluationPrompt),
+                        persistent: Boolean(evaluationPrompt || data.medical_clearance_url),
                         duration: 2500,
                         onDone: () => {
                             if (isApprovedDecision) {
@@ -18049,7 +18091,7 @@
             const vitalValue = (input) => String(input?.value ?? '').trim();
 
             if (!findingsStatusInput) {
-                setStatus('error', 'Please select the nurse findings review result.', { toastOnly: true });
+                setStatus('error', 'Please select the doctor review result.', { toastOnly: true });
                 return;
             }
             if (!clearanceDecisionInput) {
@@ -18139,6 +18181,9 @@
                     ? (findingRemarksInput?.value.trim() || '')
                     : (normalRemarksInput?.value.trim() || '')
             };
+
+            try { Object.assign(approvalData, window.ReviewMedicalClearance?.collect(clearanceDecisionInput.value === 'approve') || {}); }
+            catch (error) { setStatus('error', error.message); return; }
 
             if (isClinicLookupMode()) {
                 const checkedValues = (name) => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`))
@@ -18242,7 +18287,8 @@
                     }
 
                     showClinicSuccessOverlay(approvalOverlay, {
-                        title: isPendingDecision ? 'Marked Pending' : 'Approved!',
+                        title: isPendingDecision ? 'Marked Pending' : (data.medical_clearance_url ? 'Medical Clearance Issued' : 'Approved!'),
+                        medicalClearanceUrl: data.medical_clearance_url,
                         message: isPendingDecision
                             ? (isFacultyApproval
                                 ? 'The faculty/employee record has been moved to pending compliance for follow-up.'
@@ -18253,7 +18299,7 @@
                                     ? 'The faculty/employee record has been approved successfully.'
                                     : 'The applicant has been approved successfully.')),
                         evaluationPrompt,
-                        persistent: Boolean(evaluationPrompt),
+                        persistent: Boolean(evaluationPrompt || data.medical_clearance_url),
                         duration: 3000,
                         onDone: () => {
                             if (isFinalReviewWorkflow()) {

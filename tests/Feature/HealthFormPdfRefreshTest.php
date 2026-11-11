@@ -248,6 +248,40 @@ class HealthFormPdfRefreshTest extends TestCase
         }
     }
 
+    public function test_repeated_approval_without_a_new_submission_reuses_the_frozen_ojt_form(): void
+    {
+        $user = User::forceCreate(['name' => 'OJT Student']);
+        $profile = HealthProfile::forceCreate(['user_id' => $user->id]);
+        $approved = HealthFormSubmission::create([
+            'user_id' => $user->id, 'health_profile_id' => $profile->id, 'category' => 'On the Job Training',
+            'status' => 'approved', 'submitted_at' => now()->subDay(), 'approved_at' => now(),
+            'pdf_path' => 'frozen-ojt.pdf',
+        ]);
+        Pdf::shouldReceive('loadView')->never();
+        $result = app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($profile);
+        $this->assertSame($approved->id, $result->id);
+        $this->assertSame('On the Job Training', $result->category);
+        $this->assertSame('frozen-ojt.pdf', $result->pdf_path);
+        $this->assertSame(1, HealthFormSubmission::count());
+    }
+
+    public function test_new_ojt_submission_is_approved_in_place_without_replacing_its_category(): void
+    {
+        $user = User::forceCreate(['name' => 'OJT Student']);
+        $profile = HealthProfile::forceCreate(['user_id' => $user->id, 'health_form_category' => 'Student']);
+        HealthFormSubmission::create(['user_id' => $user->id, 'health_profile_id' => $profile->id, 'category' => 'Student', 'status' => 'approved', 'approved_at' => now()->subDay()]);
+        $pending = HealthFormSubmission::create(['user_id' => $user->id, 'health_profile_id' => $profile->id, 'category' => 'On the Job Training', 'status' => 'submitted', 'submitted_at' => now()]);
+        $pdf = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+        $pdf->shouldReceive('setPaper')->once()->andReturnSelf();
+        $pdf->shouldReceive('output')->once()->andReturn('OJT final PDF');
+        Pdf::shouldReceive('loadView')->once()->andReturn($pdf);
+        $approved = app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($profile, targetSubmission: $pending);
+        $this->assertSame($pending->id, $approved->id);
+        $this->assertSame('On the Job Training', $approved->category);
+        $this->assertSame('approved', $approved->status);
+        $this->assertSame(2, HealthFormSubmission::count());
+    }
+
     public function test_resubmission_after_approval_creates_a_new_review_copy_and_prints_it_without_overwriting_history(): void
     {
         $user = User::forceCreate(['name' => 'Revision Patient']);

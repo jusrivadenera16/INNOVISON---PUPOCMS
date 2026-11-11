@@ -109,12 +109,22 @@ class HealthFormPdfSnapshotService
         }
 
         $submission = $targetSubmission ?: $this->submissionForUpdate($profile, $user, false, false);
+        // Repeated approval without a new submission must not invent another form.
+        if (!$submission->exists) {
+            $approved = HealthFormSubmission::query()
+                ->where('health_profile_id', $profile->id)
+                ->where(function ($query) {
+                    $query->whereNotNull('approved_at')->orWhereIn('status', ['approved', 'Approved']);
+                })
+                ->latest('id')->first();
+            if ($approved) return $approved;
+        }
         $persistedSubmission = $submission->exists ? $submission->fresh() : null;
         if ($persistedSubmission && ($persistedSubmission->approved_at
             || strcasecmp((string) $persistedSubmission->status, HealthFormSubmission::STATUS_APPROVED) === 0)) {
             return $persistedSubmission;
         }
-        $resolvedCategory = trim((string) ($submission->category ?: $category)) ?: 'General';
+        $resolvedCategory = trim((string) ($submission->category ?: $category ?: $profile->health_form_category)) ?: 'General';
         $timestamp = now();
         $submittedAt = $submission->submitted_at ?: $profile->resubmitted_at ?: $profile->created_at ?: $timestamp;
         $filePath = $this->buildSnapshotPath($profile, $user, $resolvedCategory, $timestamp);

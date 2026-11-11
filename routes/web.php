@@ -305,12 +305,35 @@ Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->gr
     Route::get('/health-records', [AdminController::class, 'viewHealth'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
         ->name('admin.health_records');
+    Route::get('/admin/medical-clearances/{type}/{profile}', [\App\Http\Controllers\MedicalClearanceController::class, 'index'])
+        ->whereIn('type', ['student', 'employee'])->whereNumber('profile')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
+        ->name('admin.medical_clearances.index');
+    Route::post('/admin/medical-clearances/{type}/{profile}', [\App\Http\Controllers\MedicalClearanceController::class, 'store'])
+        ->whereIn('type', ['student', 'employee'])->whereNumber('profile')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.update_assessment'])
+        ->name('admin.medical_clearances.store');
+    Route::get('/admin/medical-clearances/{type}/{profile}/review-options', [\App\Http\Controllers\MedicalClearanceController::class, 'reviewOptions'])
+        ->whereIn('type', ['student', 'employee'])->whereNumber('profile')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.update_assessment'])
+        ->name('admin.medical_clearances.review_options');
+    Route::get('/admin/medical-clearances/{type}/{profile}/{document}', [\App\Http\Controllers\MedicalClearanceController::class, 'show'])
+        ->whereIn('type', ['student', 'employee'])->whereNumber('profile')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
+        ->name('admin.medical_clearances.show');
     Route::get('/health-records/stats', [AdminController::class, 'healthRecordStats'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
         ->name('admin.health_records.stats');
     Route::get('/health-profile/{id}', [AdminController::class, 'showHealth'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
         ->name('admin.show_health');
+    // Temporary student-only correction; no new form/request or approval is created.
+    Route::get('/health-profile/{healthProfile}/pending-category', [\App\Http\Controllers\TemporaryStudentFormCategoryController::class, 'show'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.update_assessment'])
+        ->name('admin.health_profile.pending_category');
+    Route::post('/health-profile/{healthProfile}/pending-category', [\App\Http\Controllers\TemporaryStudentFormCategoryController::class, 'update'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.update_assessment'])
+        ->name('admin.health_profile.pending_category.update');
     Route::get('/employee-health-profile/{employeeProfile}', [AdminController::class, 'showEmployeeHealthProfile'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
         ->name('admin.employee_health_profile.show');
@@ -423,6 +446,7 @@ Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->gr
         Route::get('/admin/walkin/final-review-applicants', [WalkInController::class, 'finalReviewApplicants'])->middleware('module.permission:walkin.review_submission')->name('walkin.final-review-applicants');
         Route::get('/admin/walkin/employee-drafts', [WalkInController::class, 'employeeDrafts'])->middleware('module.permission:walkin.employee_lookup')->name('walkin.employee-drafts');
         Route::get('/admin/walkin/draft-photo/{employeeProfile}', [WalkInController::class, 'showEmployeeDraftPhoto'])->middleware('module.permission:walkin.employee_lookup')->name('walkin.draft-photo');
+        Route::get('/admin/walkin/student-draft-photo/{healthProfile}', [WalkInController::class, 'showStudentDraftPhoto'])->middleware('module.permission:walkin.employee_lookup')->name('walkin.student-draft-photo');
         Route::get('/admin/walkin/consultation-drafts', [WalkInController::class, 'consultationDrafts'])->middleware('module.permission:walkin.scan_id')->name('walkin.consultation-drafts');
         Route::post('/admin/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->middleware(['module.permission:walkin.scan_id', 'throttle:10,1'])->name('walkin.verify-id-ai');
         Route::post('/admin/walkin/register', [WalkInController::class, 'registerStudent'])->middleware('module.permission:walkin.register_patient')->name('walkin.registerStudent');
@@ -642,6 +666,7 @@ Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->gr
         Route::get('/walkin/final-review-applicants', [WalkInController::class, 'finalReviewApplicants'])->middleware('module.permission:walkin.review_submission')->name('walkin.final-review-applicants');
         Route::get('/walkin/employee-drafts', [WalkInController::class, 'employeeDrafts'])->middleware('module.permission:walkin.employee_lookup')->name('walkin.employee-drafts');
         Route::get('/walkin/draft-photo/{employeeProfile}', [WalkInController::class, 'showEmployeeDraftPhoto'])->middleware('module.permission:walkin.employee_lookup')->name('walkin.draft-photo');
+        Route::get('/walkin/student-draft-photo/{healthProfile}', [WalkInController::class, 'showStudentDraftPhoto'])->middleware('module.permission:walkin.employee_lookup')->name('walkin.student-draft-photo');
         Route::get('/walkin/consultation-drafts', [WalkInController::class, 'consultationDrafts'])->middleware('module.permission:walkin.scan_id')->name('walkin.consultation-drafts');
         Route::post('/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->middleware(['module.permission:walkin.scan_id', 'throttle:10,1'])->name('walkin.verify-id-ai');
         Route::post('/walkin/register', [WalkInController::class, 'registerStudent'])->middleware('module.permission:walkin.register_patient')->name('walkin.registerStudent');

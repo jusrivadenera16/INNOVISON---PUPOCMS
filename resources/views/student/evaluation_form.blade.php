@@ -1222,6 +1222,37 @@
         font-weight: 700;
     }
 
+    .survey-submitted-actions {
+        display: flex;
+        justify-content: center;
+        margin: 16px 0 4px;
+    }
+
+    .survey-submitted-actions .survey-return-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        max-width: 100%;
+        min-height: 42px;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        transition: background-color .18s ease, color .18s ease, border-color .18s ease;
+    }
+
+    .survey-submitted-actions .survey-return-link:hover,
+    .survey-submitted-actions .survey-return-link:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #86111f;
+    }
+
+    .survey-submitted-actions .survey-return-link:focus-visible {
+        outline: 2px solid #86111f;
+        outline-offset: 3px;
+    }
+
     .survey-submitted {
         padding: 18px;
         border: 1px solid #bbdfc8;
@@ -1420,6 +1451,9 @@
 
             @if($isSubmitted)
                 <div class="survey-submitted">Your Online Client Satisfaction Survey has already been submitted. Thank you for helping PUP improve its services.</div>
+                <div class="survey-submitted-actions">
+                    <a href="{{ url('/') }}" class="survey-button primary survey-return-link">Back to CareSync</a>
+                </div>
             @else
                 <form method="POST" action="{{ $isPreview ? '#' : route('student.evaluation.store', ['evaluation' => $evaluation->id]) }}" id="clientSatisfactionSurvey" data-initial-step="{{ $initialStep }}" novalidate @if($isPreview) onsubmit="return false;" @endif>
                     @if(!$isPreview)

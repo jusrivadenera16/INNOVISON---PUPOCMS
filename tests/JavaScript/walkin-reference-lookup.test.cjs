@@ -135,3 +135,102 @@ test('An intentional cached successful response continues to details without fet
     assert.equal(context.pendingReferenceLookup, null);
     assert.equal(calls.errors.length, 0);
 });
+
+test('clinic ID lookup without a submission shows verification only even if the record says approved', async () => {
+    for (const recordType of ['student', 'employee', 'dependent']) {
+        const response = { status: 'preview', record_type: recordType, student_name: 'Record Found', has_completed_health_form: false, approved: true };
+        const { calls, context, findBtn } = harness(response);
+        context.isClinicLookupMode = () => true;
+        context.currentApplicantWorkflow = 'review';
+        findBtn.click();
+        await settle();
+        assert.equal(calls.verification.length, 1);
+        assert.equal(calls.verification[0][3], false);
+        assert.equal(calls.details.length, 0);
+        assert.equal(context.isApprovalMode, false);
+        assert.equal(calls.errors.length, 0);
+    }
+});
+
+test('clinic ID lookup with a submitted approved form still opens its details', async () => {
+    const response = { status: 'preview', record_type: 'employee', student_name: 'Employee', has_completed_health_form: true, approved: true };
+    const { calls, context, findBtn } = harness(response);
+    context.isClinicLookupMode = () => true;
+    context.currentApplicantWorkflow = 'review';
+    findBtn.click();
+    await settle();
+    assert.equal(calls.verification.length, 0);
+    assert.equal(calls.details.length, 1);
+    assert.equal(calls.errors.length, 0);
+});
+
+test('approved students and dependents use the same view-only branch as approved employees', async () => {
+    for (const recordType of ['student', 'dependent', 'employee']) {
+        const response = { status: 'preview', record_type: recordType, student_name: 'Approved Patient', has_completed_health_form: true, has_reviewable_health_form: false, approved: true };
+        const { calls, context, findBtn } = harness(response);
+        context.isClinicLookupMode = () => true;
+        context.currentApplicantWorkflow = 'review';
+        let approvedView = 0;
+        context.showAlreadyApprovedResult = () => approvedView++;
+        findBtn.click();
+        await settle();
+        assert.equal(approvedView, 1);
+        assert.equal(calls.details.length, 1);
+        assert.equal(context.isApprovalMode, false);
+        assert.equal(calls.errors.length, 0);
+    }
+});
+
+test('a genuinely new submitted form can still be reviewed after a previous approval', async () => {
+    const response = { status: 'preview', record_type: 'student', student_name: 'OJT Student', has_completed_health_form: true, has_reviewable_health_form: true, approved: true };
+    const { calls, context, findBtn } = harness(response);
+    findBtn.style = {};
+    Object.assign(context, {
+        isClinicLookupMode: () => true, currentApplicantWorkflow: 'review',
+        foundName: { textContent: '' }, getApplicantInitials: () => 'OS',
+        isEncodeWorkflow: () => false, canApproveFinalReview: true,
+        currentRecordType: 'student', canLookupEmployeeRecords: true,
+        defaultPane: null, syncFindingsReviewFields() {},
+        saveStudentAssessment() {}, doApprove() {}, saveApplicantEncoding() {}, enterSavedReviewEditMode() {},
+    });
+    let approvedView = 0;
+    context.showAlreadyApprovedResult = () => approvedView++;
+    findBtn.click();
+    await settle();
+    assert.equal(approvedView, 0);
+    assert.equal(calls.details.length, 1);
+    assert.equal(context.isApprovalMode, true);
+    assert.equal(findBtn.disabled, false);
+    assert.equal(calls.errors.length, 0);
+});
+
+test('the shared applicant verification card disables Continue and shows Not Yet Submitted for clinic users too', () => {
+    const start = blade.indexOf('        function showApplicantReferenceVerification(');
+    const end = blade.indexOf('        function returnToApplicantReferenceSearch(', start);
+    for (const type of ['applicant', 'employee', 'student']) {
+        const node = () => ({ hidden: true, disabled: false, textContent: '',
+            classList: { toggle() {}, add() {} }, setAttribute() {}, removeAttribute() {}, focus() {},
+        });
+        const context = {
+            URL, setTimeout: callback => callback(),
+            window: { location: { origin: 'http://localhost', href: 'http://localhost/admin/walkin' } },
+            getApplicantInitials: () => 'RP', setStatus() {},
+            isClinicLookupMode: () => type !== 'applicant',
+            currentApplicantWorkflow: type === 'applicant' ? 'reference_lookup' : 'review',
+            pendingReferenceLookup: null,
+            entryPane: node(),
+        };
+        for (const name of ['Initials', 'Photo', 'Name', 'ApplicantStatus', 'ApplicantType', 'Ref', 'Course', 'Email', 'FormStatus', 'Warning', 'Continue', 'Cancel']) {
+            context['referenceVerification' + name] = node();
+        }
+        context.referenceVerification = node();
+        vm.createContext(context);
+        vm.runInContext(blade.slice(start, end), context);
+        context.showApplicantReferenceVerification({ record_type: type }, 'ID-123', 'Record Patient', false);
+        assert.equal(context.referenceVerification.hidden, false);
+        assert.equal(context.referenceVerificationFormStatus.textContent, 'Not Yet Submitted');
+        assert.equal(context.referenceVerificationContinue.disabled, true);
+        assert.equal(context.referenceVerificationWarning.hidden, false);
+        assert.equal(context.referenceVerificationApplicantType.textContent, type[0].toUpperCase() + type.slice(1));
+    }
+});

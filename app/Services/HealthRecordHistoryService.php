@@ -268,6 +268,7 @@ class HealthRecordHistoryService
             ->where('subject_id', (string) $profile->id)
             ->whereIn('event_type', [
                 'student_medical_information_updated',
+                'student_health_form_category_changed',
                 'applicant_medical_information_updated',
                 'health_profile_pulled_out',
                 'health_profile_pullout_restored',
@@ -280,6 +281,13 @@ class HealthRecordHistoryService
         foreach ($logs as $log) {
             if (!$log->created_at) continue;
             $actor = $log->user_name ?: 'Not recorded';
+            if ($log->event_type === 'student_health_form_category_changed') {
+                $metadata = is_array($log->metadata) ? $log->metadata : [];
+                $events->push($this->event($log->created_at, 'Health Form Category Changed', 'Updated', $actor,
+                    ['Previous Category' => $metadata['previous_category'] ?? null, 'Form Category' => $metadata['category'] ?? null,
+                        'Submission ID' => $metadata['health_form_submission_id'] ?? null], [], 'Forms'));
+                continue;
+            }
             if (str_ends_with((string) $log->event_type, '_medical_information_updated')) {
                 $events->push($this->event($log->created_at, 'Medical Information Updated', 'Completed', $actor, [], $this->medicalChanges($log), 'Medical Information'));
                 continue;

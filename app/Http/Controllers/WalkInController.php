@@ -103,6 +103,52 @@ class WalkInController extends Controller
             ->exists();
     }
 
+    private function hasSubmittedClinicHealthForm(HealthProfile|EmployeeHealthProfile|null $profile): bool
+    {
+        if (!$profile) return false;
+        $column = $profile instanceof EmployeeHealthProfile ? 'employee_health_profile_id' : 'health_profile_id';
+        $submission = HealthFormSubmission::query()
+            ->where($column, $profile->id)
+            ->whereIn('status', ['requested', 'submitted', 'under_review', 'needs_correction', 'approved', 'Approved'])
+            ->latest('id')->first();
+
+        return $submission
+            && in_array(strtolower((string) $submission->status), ['submitted', 'under_review', 'needs_correction', 'approved'], true)
+            && ($submission->submitted_at || $submission->approved_at);
+    }
+
+    private function healthFormNotSubmittedResponse()
+    {
+        return response()->json([
+            'success' => false,
+            'code' => 'health_form_not_completed',
+            'message' => 'Not Yet Submitted. A submitted Health Information Form is required before reviewing or approving this record.',
+        ], 422);
+    }
+
+    private function reviewableClinicSubmission(HealthProfile|EmployeeHealthProfile|null $profile): ?HealthFormSubmission
+    {
+        if (!$profile) return null;
+        $column = $profile instanceof EmployeeHealthProfile ? 'employee_health_profile_id' : 'health_profile_id';
+        $submission = HealthFormSubmission::query()->where($column, $profile->id)->latest('id')->first();
+
+        return $submission && !$submission->approved_at && $submission->submitted_at
+            && in_array(strtolower((string) $submission->status), ['submitted', 'under_review'], true)
+            ? $submission : null;
+    }
+
+    private function requireReviewableClinicSubmission(HealthProfile|EmployeeHealthProfile $profile): HealthFormSubmission
+    {
+        $submission = $this->reviewableClinicSubmission($profile);
+        if (!$submission) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'reference_number' => ['No new submitted Health Form is awaiting review. This record is view-only. Start a new Health Form before another assessment.'],
+            ]);
+        }
+
+        return $submission;
+    }
+
     private function resolveClearanceTargetForWorkflow(
         ?string $category,
         string $sourceWorkflow,
@@ -1844,6 +1890,17 @@ class WalkInController extends Controller
         return $this->showApplicantDocument($studentProfile, 'student_photo');
     }
 
+    public function showStudentDraftPhoto(HealthProfile $healthProfile)
+    {
+        abort_unless($this->isStudentOjtHealthProfileUser($healthProfile->user), 404);
+        $path = $this->studentDraftPhotoPath($healthProfile);
+        abort_unless(filled($path), 404);
+        $photoProfile = clone $healthProfile;
+        $photoProfile->student_photo = $path;
+
+        return $this->showApplicantDocument($photoProfile, 'student_photo');
+    }
+
     public function showEmployeeHealthForm(Request $request, EmployeeHealthProfile $employeeProfile)
     {
         $employeeProfile->loadMissing('user');
@@ -2011,7 +2068,12 @@ class WalkInController extends Controller
         ? $this->employeeDraftQuery()
             ->get()
             ->filter(fn (EmployeeHealthProfile $profile) => is_array($profile->draft_data) && count($profile->draft_data) > 0)
-            ->each(fn (EmployeeHealthProfile $profile) => $profile->setAttribute('draft_record_type', $this->employeeDraftType($profile)))
+            ->each(function (EmployeeHealthProfile $profile) use ($request) {
+                $payload = $this->employeeDraftPayload($profile, $request);
+                $profile->setAttribute('draft_record_type', $payload['record_type']);
+                $profile->setAttribute('draft_display_category', $payload['health_form_category']);
+                $profile->setAttribute('draft_photo_url', $payload['photo_url']);
+            })
         : collect();
     
     return view('admin.walkin', compact('walkins', 'mode', 'reviewReference', 'reviewType', 'reviewWorkflow', 'finalReviewApplicants', 'employeeDrafts'));
@@ -2401,11 +2463,49 @@ class WalkInController extends Controller
             'employee_number' => $employeeNumber,
             'photo_url' => $photoUrl,
             'record_type' => $this->employeeDraftType($profile),
-            'health_form_category' => trim((string) ($profile->health_form_category ?: 'Employee Health Form')),
+            'health_form_category' => $this->employeeDraftType($profile) === 'Student'
+                ? ($user?->healthProfile
+                    ? $this->studentDraftCategory($user->healthProfile)
+                    : $this->studentDraftTypeLabel($profile->health_form_category, $user?->student_type))
+                : trim((string) ($profile->health_form_category ?: 'Employee Health Form')),
             'status' => $status,
             'saved_at' => optional($profile->updated_at)->toIso8601String(),
             'search' => Str::lower(trim($name . ' ' . $email . ' ' . $employeeNumber)),
         ];
+    }
+
+    private function studentDraftSubmission(HealthProfile $profile): ?HealthFormSubmission
+    {
+        if ($profile->relationLoaded('healthFormSubmissions')) {
+            return $profile->healthFormSubmissions->first();
+        }
+
+        return $profile->healthFormSubmissions()
+            ->whereIn('status', ['submitted', 'under_review', 'needs_correction', 'approved', 'Approved'])
+            ->whereNotNull('submitted_at')->latest('submitted_at')->latest('id')->first();
+    }
+
+    private function studentDraftTypeLabel(?string $category, ?string $studentType): string
+    {
+        foreach ([$category, $studentType] as $value) {
+            $key = trim(preg_replace('/[^a-z0-9]+/', ' ', strtolower(trim((string) $value))));
+            if (preg_match('/\b(?:ojt|on the job(?: training)?)\b/', $key)) return 'On the Job Training';
+            if (str_contains($key, 'ladder')) return 'Ladderized';
+            if ($key === 'regular' || $key === 'regular student') return 'Regular';
+        }
+
+        return 'Regular';
+    }
+
+    private function studentDraftCategory(HealthProfile $profile): string
+    {
+        $submission = $this->studentDraftSubmission($profile);
+        return $this->studentDraftTypeLabel($submission?->category ?: $profile->health_form_category, $profile->user?->student_type);
+    }
+
+    private function studentDraftPhotoPath(HealthProfile $profile): string
+    {
+        return trim((string) ($profile->student_photo ?: data_get($this->studentDraftSubmission($profile)?->profile_snapshot, 'profile.student_photo', '')));
     }
 
     public function employeeDrafts(Request $request)
@@ -2417,13 +2517,15 @@ class WalkInController extends Controller
             ->values();
 
         // Student assessment drafts belong to clinic Record Management, not applicant Final Review.
-        $studentDrafts = HealthProfile::with('user')
+        $studentDrafts = HealthProfile::with(['user', 'healthFormSubmissions' => fn ($query) => $query
+            ->whereIn('status', ['submitted', 'under_review', 'needs_correction', 'approved', 'Approved'])
+            ->whereNotNull('submitted_at')->latest('submitted_at')->latest('id')])
             ->whereNotNull('final_review_draft_data')
             ->latest('updated_at')
             ->get()
             ->filter(fn (HealthProfile $profile) => ($profile->final_review_draft_data['lookup_scope'] ?? null) === 'student_local'
                 && $this->isStudentOjtHealthProfileUser($profile->user))
-            ->map(function (HealthProfile $profile) {
+            ->map(function (HealthProfile $profile) use ($request) {
                 $reference = trim((string) ($profile->student_number ?: $profile->user?->student_number
                     ?: $profile->reference_number ?: $profile->student_id));
                 $name = trim((string) ($profile->user?->name ?: implode(' ', array_filter([
@@ -2435,9 +2537,11 @@ class WalkInController extends Controller
                     'name' => $name ?: 'Student',
                     'email' => $profile->user?->email ?? '',
                     'employee_number' => $reference,
-                    'photo_url' => '',
+                    'photo_url' => $this->studentDraftPhotoPath($profile) !== ''
+                        ? route($request->routeIs('assistant.*') ? 'assistant.walkin.student-draft-photo' : 'walkin.student-draft-photo', ['healthProfile' => $profile->id])
+                        : '',
                     'record_type' => 'Student',
-                    'health_form_category' => $profile->health_form_category ?: 'Student Health Form',
+                    'health_form_category' => $this->studentDraftCategory($profile),
                     'status' => 'Draft',
                     'saved_at' => optional($profile->updated_at)->toIso8601String(),
                     'search' => Str::lower($name . ' ' . $profile->user?->email . ' ' . $reference),
@@ -3032,6 +3136,11 @@ class WalkInController extends Controller
                     : ($isEmployeeLookupScope && $this->isStudentOjtHealthProfileUser($student)
                         ? 'student'
                         : ($isEmployeeLookupScope ? 'employee' : 'applicant')));
+            if ($isEmployeeLookupScope) {
+                $hasCompletedHealthForm = $this->hasSubmittedClinicHealthForm(
+                    in_array($recordType, ['employee', 'dependent'], true) ? $employeeProfile : $healthProfile
+                );
+            }
             $resolvedReferenceNumber = trim((string) (
                 ($lookup !== '' && !$this->looksLikeUuid($lookup) ? $lookup : null)
                 ?: $student->reference_number
@@ -3079,7 +3188,7 @@ class WalkInController extends Controller
                 ? '/assistant'
                 : '/admin';
             $rawClearanceStatus = trim((string) (
-                $recordType === 'dependent' ? ($employeeProfile?->clearance_status ?: optional($healthProfile)->clearance_status) : optional($healthProfile)->clearance_status
+                in_array($recordType, ['employee', 'dependent'], true) ? ($employeeProfile?->clearance_status ?: optional($healthProfile)->clearance_status) : optional($healthProfile)->clearance_status
             ));
             $medicalCertificateResult = trim((string) optional($healthProfile)->med_cert_findings);
             $medicalCertificateDetails = \Schema::hasColumn('health_profiles', 'med_cert_findings_details')
@@ -3140,6 +3249,7 @@ class WalkInController extends Controller
                     'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
                     'health_profile_id' => optional($healthProfile)->id,
                     'has_completed_health_form' => $hasCompletedHealthForm,
+                    'has_reviewable_health_form' => $isEmployeeLookupScope && (bool) $this->reviewableClinicSubmission(in_array($recordType, ['employee', 'dependent'], true) ? $employeeProfile : $healthProfile),
                     'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
                     'medical_certificate_result' => $medicalCertificateResult,
                     'medical_certificate_findings_details' => $medicalCertificateDetails,
@@ -3213,6 +3323,7 @@ class WalkInController extends Controller
                 'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
                 'health_profile_id' => optional($healthProfile)->id,
                 'has_completed_health_form' => $hasCompletedHealthForm,
+                'has_reviewable_health_form' => $isEmployeeLookupScope && (bool) $this->reviewableClinicSubmission(in_array($recordType, ['employee', 'dependent'], true) ? $employeeProfile : $healthProfile),
                 'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
                 'medical_certificate_result' => $medicalCertificateResult,
                 'medical_certificate_findings_details' => $medicalCertificateDetails,
@@ -4447,7 +4558,14 @@ PROMPT;
 
         $employeeProfile->loadMissing('user');
         $previousClearanceStatus = trim((string) $employeeProfile->clearance_status);
+        if (!$this->hasSubmittedClinicHealthForm($employeeProfile)) {
+            return $this->healthFormNotSubmittedResponse();
+        }
+        $clearanceInput = app(\App\Services\MedicalClearanceService::class)->approvalInput($request, !$hasPendingFinding,
+            in_array($employeeProfile->user?->clinicAccountTypeKey(), ['faculty', 'non_teaching_staff'], true));
+        $issuedMedicalClearance = null;
         $employeeProfile = DB::transaction(function () use (
+            $clearanceInput, &$issuedMedicalClearance,
             $request,
             $validated,
             $employeeProfile,
@@ -4462,6 +4580,8 @@ PROMPT;
             $conditionRemarks,
             $medAssessmentRemarks
         ) {
+            EmployeeHealthProfile::query()->whereKey($employeeProfile->id)->lockForUpdate()->firstOrFail();
+            $this->requireReviewableClinicSubmission($employeeProfile);
             $height = trim((string) $request->input('employee_exam_height', $validated['height'] ?? ''));
             $weight = trim((string) $request->input('employee_exam_weight', $validated['weight'] ?? ''));
             $bp = trim((string) $request->input('employee_exam_bp', $validated['blood_pressure'] ?? ''));
@@ -4545,6 +4665,10 @@ PROMPT;
                 $employeeProfile->user->save();
             }
 
+            if ($clearanceInput) {
+                $issuedMedicalClearance = app(\App\Services\MedicalClearanceService::class)->issue('employee', $employeeProfile->id, $clearanceInput, auth()->user());
+            }
+
             return $employeeProfile->fresh('user');
         });
 
@@ -4625,6 +4749,7 @@ PROMPT;
                 ? 'Employee saved under Pending Compliance.'
                 : 'Employee approved and Health Examination Record PDF saved.',
             'lookup_source' => 'local_employee_reference',
+            'medical_clearance_url' => $issuedMedicalClearance ? route('admin.medical_clearances.show', ['employee', $employeeProfile->id, $issuedMedicalClearance->id]) : null,
             'pdf_path' => $employeeProfile->staff_health_form_pdf_path,
             'evaluation_source_type' => $hasPendingFinding ? null : 'employee_approval',
             'evaluation_source_id' => $hasPendingFinding ? null : $employeeProfile->id,
@@ -4791,6 +4916,7 @@ PROMPT;
                 );
             }
 
+            app(\App\Services\MedicalClearanceService::class)->approvalInput($request, !$hasPendingFinding, false);
             // Fetch applicant details to get student ID
             $applicantData = $forceLocalEmployeeApproval
                 ? null
@@ -5192,6 +5318,13 @@ PROMPT;
                 ], 404);
             }
 
+            if (!$this->hasSubmittedClinicHealthForm($isDependentAssessment ? $employeeHealthProfile : ($healthProfile ?: $student->healthProfile))) {
+                return $this->healthFormNotSubmittedResponse();
+            }
+            $clearanceInput = app(\App\Services\MedicalClearanceService::class)->approvalInput($request,
+                ($validated['clearance_decision'] ?? '') === 'approve', !$isDependentAssessment && $student->clinicAccountTypeKey() === 'student');
+            $issuedMedicalClearance = null;
+
             $dependentExam = [];
             if ($isDependentAssessment) {
                 $dependentExam = $request->validate([
@@ -5253,7 +5386,10 @@ PROMPT;
                 }
             }
 
-            $profile = DB::transaction(function () use ($student, $healthProfile, $referenceNumber, $validated, $height, $heightInput, $referralDetails, $employeeHealthProfile, $isDependentAssessment, $dependentExam) {
+            $profile = DB::transaction(function () use ($student, $healthProfile, $referenceNumber, $validated, $height, $heightInput, $referralDetails, $employeeHealthProfile, $isDependentAssessment, $dependentExam, $clearanceInput, &$issuedMedicalClearance) {
+                $reviewProfile = $isDependentAssessment ? $employeeHealthProfile : $healthProfile;
+                $reviewProfile->newQuery()->whereKey($reviewProfile->id)->lockForUpdate()->firstOrFail();
+                $reviewSubmission = $this->requireReviewableClinicSubmission($reviewProfile);
                 $profile = $healthProfile ?: HealthProfile::firstOrNew(['user_id' => $student->id]);
                 $profile->user_id = $student->id;
                 $profile->student_id = (string) ($profile->student_id ?: $student->student_id ?: $referenceNumber);
@@ -5403,7 +5539,9 @@ PROMPT;
                 $profile->save();
 
                 if (!$isDependentAssessment && ($validated['clearance_decision'] ?? '') === 'approve') {
-                    $approvedSubmission = app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($profile->fresh('user'));
+                    $approvedSubmission = app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot(
+                        $profile->fresh('user'), category: $reviewSubmission->category, targetSubmission: $reviewSubmission
+                    );
                     $approvedSubmission->forceFill([
                         'approved_by_user_id' => auth()->id(),
                         'status_changed_by_user_id' => auth()->id(),
@@ -5447,6 +5585,10 @@ PROMPT;
                     $employeeHealthProfile->referred_to_others = trim((string) ($dependentExam['employee_exam_referred_to_others'] ?? '')) ?: null;
                     $employeeHealthProfile->follow_up_on = $dependentExam['employee_exam_follow_up_on'] ?? null;
                     $employeeHealthProfile->save();
+                }
+
+                if ($clearanceInput) {
+                    $issuedMedicalClearance = app(\App\Services\MedicalClearanceService::class)->issue('student', $profile->id, $clearanceInput, auth()->user());
                 }
 
                 return $profile;
@@ -5498,6 +5640,7 @@ PROMPT;
             return response()->json([
                 'success' => true,
                 'message' => $isDependentAssessment ? 'Dependent assessment saved.' : 'Student/OJT assessment saved.',
+                'medical_clearance_url' => $issuedMedicalClearance ? route('admin.medical_clearances.show', ['student', $profile->id, $issuedMedicalClearance->id]) : null,
                 'status' => $profile->clearance_status,
                 'health_profile_id' => $profile->id,
                 'evaluation_source_type' => !$isDependentAssessment && $clearanceDecision === 'approve' ? 'student_approval' : null,

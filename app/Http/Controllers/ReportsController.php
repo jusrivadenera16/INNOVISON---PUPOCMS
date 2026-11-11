@@ -2778,11 +2778,11 @@ private function exportReportsPreview(Request $request, string $reportType)
             'kicker' => 'Medical Clearance',
             'subtitle' => 'Preview health form records before exporting the report.',
             'export_label' => 'Health Forms',
-            'export_url' => $healthFormsExportUrl . '?' . http_build_query($healthFormsExportQuery + ['output' => 'csv']),
+            'export_url' => $healthFormsExportUrl . '?' . http_build_query($healthFormsExportQuery + ['output' => 'xlsx']),
             'export_links' => [
                 [
                     'label' => 'Excel Export',
-                    'url' => $healthFormsExportUrl . '?' . http_build_query($healthFormsExportQuery + ['output' => 'csv']),
+                    'url' => $healthFormsExportUrl . '?' . http_build_query($healthFormsExportQuery + ['output' => 'xlsx']),
                 ],
                 [
                     'label' => 'PDF Export',
@@ -3001,7 +3001,7 @@ private function exportHealthFormsPreviewColumns(Request $request): array
         'Gender' => fn (HealthProfile $record) => $record->sex ?: optional($record->user)->gender ?: 'N/A',
         'Status' => $statusLabel,
         'With Condition' => fn (HealthProfile $record) => $record->hasMedicalCondition() ? 'Yes' : 'No',
-        'Condition Details' => fn (HealthProfile $record) => Str::limit($this->healthProfileConditionText($record), 90) ?: 'N/A',
+        'Condition Details' => fn (HealthProfile $record) => app(\App\Services\HealthFormReportFindings::class)->text($record),
         'BMI Category' => fn (HealthProfile $record) => $this->healthProfileBmiCategoryLabel($this->healthProfileBmi($record)),
         'BMI' => fn (HealthProfile $record) => ($bmi = $this->healthProfileBmi($record)) !== null ? number_format($bmi, 1) : 'N/A',
         'Record Date' => $recordDate,
@@ -3318,6 +3318,10 @@ public function exportHealthForms(Request $request)
         return $this->exportHealthFormsCourseSheets($records, $dateFrom, $dateTo, $sortMode);
     }
 
+    if (strtolower(trim((string) $request->query('output', 'csv'))) === 'xlsx') {
+        return $this->streamHealthFormsXlsx($records, $dateFrom, $dateTo);
+    }
+
     $filename = 'health-forms-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '-' . now()->format('His') . '.csv';
 
     return response()->streamDownload(function () use ($records) {
@@ -3353,7 +3357,7 @@ public function exportHealthForms(Request $request)
                 $record->hasMedicalCondition() ? 'Yes' : 'No',
                 ($bmi = $this->healthProfileBmi($record)) !== null ? number_format($bmi, 1) : 'N/A',
                 $this->healthProfileBmiCategoryLabel($bmi ?? null),
-                $this->healthProfileConditionText($record, 'all') ?: 'N/A',
+                app(\App\Services\HealthFormReportFindings::class)->text($record),
                 $record->verified_at ? Carbon::parse($record->verified_at)->format('M d, Y g:i A') : 'N/A',
             ]);
         }
@@ -3406,7 +3410,7 @@ private function streamHealthFormsPdf(Collection $records, Carbon $dateFrom, Car
             'guardian' => $guardianDetails !== '' ? $guardianDetails : 'N/A',
             'vaccination_status' => $isVaccinated ? ($firstDose && $secondDose ? 'FV' : 'Vaccinated') : (trim((string) $record->covid_vaccinated) ?: 'N/A'),
             'vaccination_doses' => collect([$firstDose, $secondDose])->filter()->values()->all(),
-            'illness' => Str::limit($this->healthProfileConditionText($record, 'all') ?: 'N/A', 220),
+            'illness' => app(\App\Services\HealthFormReportFindings::class)->text($record),
             'living_with' => 'N/A',
         ];
     })->values();
@@ -3507,6 +3511,18 @@ private function exportHealthFormsCourseSheets(Collection $records, Carbon $date
     ]);
 }
 
+private function streamHealthFormsXlsx(Collection $records, Carbon $dateFrom, Carbon $dateTo)
+{
+    $headers = ['Reference Number', 'Full Name', 'Course', 'Gender', 'Status', 'Medical Condition', 'BMI', 'BMI Category', 'Medical Condition / Findings', 'Approval Date and Time'];
+    $bytes = $this->healthFormsCourseSheetsXlsx(collect(['Health Forms' => $records]), $headers);
+    $filename = 'health-forms-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '-' . now()->format('His') . '.xlsx';
+    return response($bytes, 200, [
+        'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        'Cache-Control' => 'no-store, no-cache, must-revalidate',
+    ]);
+}
+
 private function healthFormsCourseSheetsXlsx(Collection $sheets, array $headers): string
 {
     $usedSheetNames = [];
@@ -3548,8 +3564,12 @@ private function xlsxWorksheetXml(array $headers, array $rows): string
 {
     $xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n";
     $xml .= '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">';
-    $xml .= '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>';
-    $xml .= '<sheetFormatPr defaultRowHeight="18"/><sheetData>';
+    $xml .= '<sheetViews><sheetView workbookViewId="0" showGridLines="0"><pane xSplit="2" ySplit="1" topLeftCell="C2" activePane="bottomRight" state="frozen"/></sheetView></sheetViews>';
+    $xml .= '<sheetFormatPr defaultRowHeight="24"/><cols>';
+    foreach ([23, 34, 42, 12, 15, 20, 12, 18, 55, 27] as $index => $width) {
+        $xml .= '<col min="'.($index + 1).'" max="'.($index + 1).'" width="'.$width.'" customWidth="1"/>';
+    }
+    $xml .= '</cols><sheetData>';
     $xml .= $this->xlsxRowXml(1, $headers, 1);
 
     foreach ($rows as $index => $row) {
@@ -3557,18 +3577,35 @@ private function xlsxWorksheetXml(array $headers, array $rows): string
     }
 
     $xml .= '</sheetData><autoFilter ref="A1:' . $this->xlsxColumnName(max(count($headers), 1)) . max(count($rows) + 1, 1) . '"/>';
-    $xml .= '</worksheet>';
+    $xml .= '<pageMargins left="0.25" right="0.25" top="0.4" bottom="0.4" header="0.2" footer="0.2"/>';
+    $xml .= '<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>';
 
     return $xml;
 }
 
 private function xlsxRowXml(int $rowNumber, array $values, int $styleIndex = 0): string
 {
-    $xml = '<row r="' . $rowNumber . '">';
+    $widths = [23, 34, 42, 12, 15, 20, 12, 18, 55, 27];
+    $lines = 1;
+    foreach (array_values($values) as $index => $value) {
+        if ($value instanceof \DateTimeInterface) continue;
+        $lines = max($lines, (int) ceil(mb_strlen((string) $value) / max(1, ($widths[$index] ?? 20) - 3)));
+    }
+    $height = $rowNumber === 1 ? 34 : max(24, min(409, $lines * 15 + 8));
+    $xml = '<row r="' . $rowNumber . '" ht="'.$height.'" customHeight="1">';
 
     foreach (array_values($values) as $columnIndex => $value) {
         $cellRef = $this->xlsxColumnName($columnIndex + 1) . $rowNumber;
-        $style = $styleIndex > 0 ? ' s="' . $styleIndex . '"' : '';
+        if ($rowNumber > 1 && $value instanceof \DateTimeInterface) {
+            $serial = Carbon::create(1899, 12, 30, 0, 0, 0, 'UTC')->diffInSeconds(Carbon::parse($value->format('Y-m-d H:i:s'), 'UTC'), false) / 86400;
+            $xml .= '<c r="'.$cellRef.'" s="3" t="n"><v>'.number_format($serial, 10, '.', '').'</v></c>';
+            continue;
+        }
+        if ($rowNumber > 1 && (is_int($value) || is_float($value))) {
+            $xml .= '<c r="'.$cellRef.'" s="2" t="n"><v>'.$value.'</v></c>';
+            continue;
+        }
+        $style = ' s="' . $styleIndex . '"';
         $xml .= '<c r="' . $cellRef . '" t="inlineStr"' . $style . '><is><t xml:space="preserve">'
             . $this->excelXml($value)
             . '</t></is></c>';
@@ -3631,11 +3668,16 @@ private function xlsxStylesXml(): string
 {
     return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n"
         . '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-        . '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'
-        . '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF8E8EA"/><bgColor indexed="64"/></patternFill></fill></fills>'
+        . '<numFmts count="2"><numFmt numFmtId="164" formatCode="0.0"/><numFmt numFmtId="165" formatCode="mmm d, yyyy h:mm AM/PM"/></numFmts>'
+        . '<fonts count="2"><font><sz val="11"/><name val="Arial"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Arial"/></font></fonts>'
+        . '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF70131B"/><bgColor indexed="64"/></patternFill></fill></fills>'
         . '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
         . '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
-        . '<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="1" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs>'
+        . '<cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
+        . '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>'
+        . '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment horizontal="right" vertical="top"/></xf>'
+        . '<xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment vertical="top"/></xf></cellXfs>'
+        . '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'
         . '</styleSheet>';
 }
 
@@ -3697,10 +3739,10 @@ private function healthFormsCourseSheetRow(HealthProfile $record): array
         $record->sex ?: optional($record->user)->gender ?: 'N/A',
         $this->healthFormsCourseSheetStatus($record),
         $record->hasMedicalCondition() ? 'Yes' : 'No',
-        $bmi !== null ? number_format($bmi, 1) : 'N/A',
+        $bmi !== null ? round($bmi, 1) : 'N/A',
         $this->healthProfileBmiCategoryLabel($bmi),
-        $this->healthProfileConditionText($record, 'all') ?: 'N/A',
-        $record->verified_at ? Carbon::parse($record->verified_at)->format('M d, Y g:i A') : 'N/A',
+        app(\App\Services\HealthFormReportFindings::class)->text($record),
+        $record->verified_at ? Carbon::parse($record->verified_at) : 'N/A',
     ];
 }
 

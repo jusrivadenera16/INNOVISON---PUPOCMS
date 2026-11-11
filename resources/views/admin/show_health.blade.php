@@ -3380,7 +3380,7 @@
                 </button>
                 <button type="button" class="profile-tab" data-profile-tab-target="docsPanel">
                     <x-outline-icon name="document-text" />
-                    <span class="profile-tab-label">Uploaded Documents</span>
+                    <span class="profile-tab-label">Documents</span>
                 </button>
             </div>
             <div class="profile-actions-menu-wrap">
@@ -3510,6 +3510,7 @@
             $profileVersionAudience = in_array($healthFormAudience ?? null, ['student', 'applicant'], true);
             $hasProfileVersionHistory = $profileVersionCount > 1;
             $currentProfileDate = optional($currentHealthFormSubmission)->submitted_at ?: ($profile->resubmitted_at ?: $profile->created_at);
+            $currentProfileCategory = $currentHealthFormSubmission?->category ?: data_get($currentProfileHistory, 'submission.category') ?: $profile->health_form_category;
         @endphp
 
         <div class="profile-version-shell{{ $profileVersionAudience ? ' health-profile-version-shell' . ($hasProfileVersionHistory ? '' : ' is-versions-collapsed is-version-nav-hidden') : '' }}">
@@ -3540,8 +3541,7 @@
                     >
                         <span class="profile-version-choice-number">{{ $currentProfileVersion ? 'V' . $currentProfileVersion : 'LIVE' }}</span>
                         <span class="profile-version-choice-copy">
-                            <strong>Current Health Profile</strong>
-                            <small>{{ $currentProfileDate ? $currentProfileDate->format('M d, Y') : 'Latest saved information' }}</small>
+                            @include('admin.partials.health-form-version-label', ['versionCategory' => $currentProfileCategory, 'versionDateLabel' => $currentProfileDate ? $currentProfileDate->format('M d, Y') : 'Date unavailable', 'versionLatest' => true])
                         </span>
                     </button>
 
@@ -3561,8 +3561,7 @@
                         >
                             <span class="profile-version-choice-number">V{{ $history['version'] }}</span>
                             <span class="profile-version-choice-copy">
-                                <strong>{{ $historySubmission->category ?: 'General Health Form' }}</strong>
-                                <small>{{ $historyDate ? $historyDate->format('M d, Y') : 'Date unavailable' }}</small>
+                                @include('admin.partials.health-form-version-label', ['versionCategory' => $historySubmission->category, 'versionDateLabel' => $historyDate ? $historyDate->format('M d, Y') : 'Date unavailable', 'versionLatest' => false])
                             </span>
                         </button>
                     @endforeach
@@ -3574,7 +3573,7 @@
                 <section class="profile-version-pane is-active" id="currentHealthProfileVersion" role="tabpanel">
                     <div class="profile-version-pane-head">
                         <div>
-                            <h3>Current Health Profile</h3>
+                            <h3>{{ app(\App\Services\HealthRecordCategoryFilter::class)->label($currentProfileCategory) }}</h3>
                             <p>Latest medical information used for the active health record.</p>
                         </div>
                         <div class="profile-version-pane-badges">
@@ -3720,6 +3719,9 @@
     </div>
 
     <div class="profile-panel" id="docsPanel">
+        @if($profile->user?->clinicAccountTypeKey() === 'student')
+            @include('admin.partials.medical-clearance-panel', ['clearanceRecordUrl' => route('admin.medical_clearances.index', ['student', $profile->id])])
+        @endif
         @if($hasCorrectionRequest && $correctionStatusLabel === 'Pending')
             <div class="health-record-correction-banner" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;border:1px solid #f0b179;border-radius:14px;background:#fff6ee;padding:1rem 1.25rem;margin:0 0 1rem;color:#7a3b11;">
                 <div style="display:flex;align-items:flex-start;gap:0.75rem;">
@@ -3739,7 +3741,7 @@
             </div>
         @endif
         <div class="profile-version-shell profile-documents-version-shell">
-            <aside class="profile-version-sidebar" aria-label="Uploaded Documents versions">
+            <aside class="profile-version-sidebar" aria-label="Documents versions">
                 <div class="profile-version-sidebar-head">
                     <div>
                         <h3>Document Versions</h3>
@@ -3748,7 +3750,7 @@
                     <span class="profile-history-count">{{ $profileVersionCount }}</span>
                 </div>
 
-                <div class="profile-version-nav" role="tablist" aria-label="Uploaded Documents versions">
+                <div class="profile-version-nav" role="tablist" aria-label="Documents versions">
                     <button
                         type="button"
                         class="profile-version-choice is-active"
@@ -3758,8 +3760,7 @@
                     >
                         <span class="profile-version-choice-number">{{ $currentProfileVersion ? 'V' . $currentProfileVersion : 'LIVE' }}</span>
                         <span class="profile-version-choice-copy">
-                            <strong>Current Documents</strong>
-                            <small>{{ $currentProfileDate ? $currentProfileDate->format('M d, Y') : 'Latest saved files' }}</small>
+                            @include('admin.partials.health-form-version-label', ['versionCategory' => $currentProfileCategory, 'versionDateLabel' => $currentProfileDate ? $currentProfileDate->format('M d, Y') : 'Date unavailable', 'versionLatest' => true])
                         </span>
                     </button>
 
@@ -3779,8 +3780,7 @@
                         >
                             <span class="profile-version-choice-number">V{{ $history['version'] }}</span>
                             <span class="profile-version-choice-copy">
-                                <strong>{{ $historySubmission->category ?: 'General Health Form' }}</strong>
-                                <small>{{ $historyDate ? $historyDate->format('M d, Y') : 'Date unavailable' }}</small>
+                                @include('admin.partials.health-form-version-label', ['versionCategory' => $historySubmission->category, 'versionDateLabel' => $historyDate ? $historyDate->format('M d, Y') : 'Date unavailable', 'versionLatest' => false])
                             </span>
                         </button>
                     @endforeach
@@ -3791,7 +3791,7 @@
                 <section class="profile-version-pane is-active" id="currentHealthDocumentsVersion" role="tabpanel">
                     <div class="profile-version-pane-head">
                         <div>
-                            <h3>Current Uploaded Documents</h3>
+                            <h3>Documents</h3>
                             <p>Latest files attached to the active Health Profile.</p>
                         </div>
                         <div class="profile-version-pane-badges">
@@ -4281,6 +4281,9 @@
 </div>
 @endif
 
+@if($profile->user?->clinicAccountTypeKey() === 'student')
+    @include('admin.partials.medical-clearance-modal')
+@endif
 @if($canSendRecordEvaluation)
     @include('admin.partials.health-record-evaluation-modal', [
         'recordEvaluationUrl' => route('admin.health_profile.send_evaluation', $profile),

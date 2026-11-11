@@ -3106,7 +3106,7 @@ class AdminController extends Controller
                 'Physical assessment status' => $profile->physical_assessment_status,
                 'Assessment remarks' => $profile->med_assessment_remarks ?: $profile->assessment_remarks,
                 'Medical condition remarks' => $profile->medical_condition_remarks,
-                'Nurse review remarks' => $profile->pending_reason,
+                'Doctor review remarks' => $profile->pending_reason,
             ],
             'Medical Certificate & Imaging' => [
                 '2x2 student photo' => filled($profile->student_photo) ? 'Uploaded' : 'Not uploaded',
@@ -3520,6 +3520,9 @@ class AdminController extends Controller
 
     public function viewHealth(Request $request)
     {
+        $formCategoryFilter = trim((string) $request->query('form_category', ''));
+        $categoryFilterService = app(\App\Services\HealthRecordCategoryFilter::class);
+        $formCategoryOptions = $categoryFilterService->options();
         $search = trim((string) $request->query('q', ''));
         $courseFilter = trim((string) $request->query('course', ''));
         $dateFilter = trim((string) $request->query('date', ''));
@@ -3807,6 +3810,7 @@ class AdminController extends Controller
                 ?: 0;
         };
         $issuedCombinedRecords = $issuedRecords->merge($issuedEmployeeRecords);
+        $issuedCombinedRecords = $categoryFilterService->filter($issuedCombinedRecords, $formCategoryFilter, true);
         $this->attachAdminHubProfilesByEmail($issuedCombinedRecords);
         $issuedCombinedRecords = match ($sortFilter) {
             'alphabetical' => $issuedCombinedRecords->sort(function ($left, $right) use ($healthRecordName, $healthRecordApprovedTimestamp) {
@@ -3863,6 +3867,8 @@ class AdminController extends Controller
 
         $this->applySubmittedRenewalQueueState($records);
 
+        $records = $categoryFilterService->filter($records, $formCategoryFilter);
+
         // Only active submissions describe the purpose of the form currently in either queue.
         $pendingHealthFormCategories = HealthFormSubmission::query()
             ->whereIn('health_profile_id', $records->filter(fn ($record) => ($record->record_source ?? 'health') === 'health')->pluck('id'))
@@ -3900,6 +3906,8 @@ class AdminController extends Controller
         ]);
 
         return view('admin.health_records', compact(
+            'formCategoryFilter',
+            'formCategoryOptions',
             'records',
             'healthProfileSummaryRecords',
             'search',
@@ -3951,6 +3959,8 @@ class AdminController extends Controller
 
     public function healthRecordStats(Request $request)
     {
+        $formCategoryFilter = trim((string) $request->query('form_category', ''));
+        $categoryFilterService = app(\App\Services\HealthRecordCategoryFilter::class);
         $search = trim((string) $request->query('q', ''));
         $courseFilter = trim((string) $request->query('course', ''));
         $dateFilter = trim((string) $request->query('date', ''));
@@ -4140,6 +4150,9 @@ class AdminController extends Controller
                 return $record;
             }));
         $this->applySubmittedRenewalQueueState($records);
+        $records = $categoryFilterService->filter($records, $formCategoryFilter);
+        $issuedHealthRecords = $categoryFilterService->filter($issuedHealthRecords, $formCategoryFilter, true);
+        $issuedEmployeeRecords = $categoryFilterService->filter($issuedEmployeeRecords, $formCategoryFilter, true);
         $stats = [
             'total_approved' => $issuedHealthRecords->count() + $issuedEmployeeRecords->count(),
             'with_conditions' => $issuedHealthRecords->filter(fn ($record) => $record->hasMedicalCondition())->count()
