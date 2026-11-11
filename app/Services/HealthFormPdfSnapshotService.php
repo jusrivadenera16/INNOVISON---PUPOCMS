@@ -6,6 +6,9 @@ use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class HealthFormPdfSnapshotService
 {
@@ -25,6 +28,16 @@ class HealthFormPdfSnapshotService
         bool $refreshDeclaration = false
     ): HealthFormSubmission
     {
+        return DB::transaction(function () use ($profile, $user, $category, $remarks, $createNewSubmission, $snapshotProfile, $refreshDeclaration) {
+            HealthProfile::query()->whereKey($profile->id)->lockForUpdate()->firstOrFail();
+            return $this->writeSubmittedSnapshot($profile, $user, $category, $remarks, $createNewSubmission, $snapshotProfile, $refreshDeclaration);
+        });
+    }
+
+    private function writeSubmittedSnapshot(
+        HealthProfile $profile, User $user, ?string $category, ?string $remarks,
+        bool $createNewSubmission, ?HealthProfile $snapshotProfile, bool $refreshDeclaration
+    ): HealthFormSubmission {
         $profile->loadMissing('user');
         $submission = $this->submissionForUpdate($profile, $user, $createNewSubmission);
         $resolvedCategory = trim((string) ($submission->category ?: $category)) ?: 'General';
@@ -45,7 +58,9 @@ class HealthFormPdfSnapshotService
             'healthFormSubmittedAt' => $timestamp,
         ]);
         $pdf->setPaper([0, 0, 612, 936]);
-        $this->healthFiles->put($filePath, $pdf->output());
+        if (!$this->healthFiles->put($filePath, $pdf->output())) {
+            throw new \RuntimeException('Unable to write the submitted Health Form PDF.');
+        }
 
         $oldPath = $this->normalizeStoragePath((string) $submission->pdf_path);
 
@@ -64,9 +79,7 @@ class HealthFormPdfSnapshotService
         ]);
         $submission->save();
 
-        if ($oldPath !== '' && $oldPath !== $filePath && $this->healthFiles->exists($oldPath)) {
-            $this->healthFiles->delete($oldPath);
-        }
+        $this->deleteReplacedDraftPdf($oldPath, $filePath);
 
         return $submission;
     }
@@ -79,6 +92,15 @@ class HealthFormPdfSnapshotService
         ?HealthFormSubmission $targetSubmission = null
     ): HealthFormSubmission
     {
+        return DB::transaction(function () use ($profile, $user, $category, $remarks, $targetSubmission) {
+            HealthProfile::query()->whereKey($profile->id)->lockForUpdate()->firstOrFail();
+            return $this->writeApprovedSnapshot($profile, $user, $category, $remarks, $targetSubmission);
+        });
+    }
+
+    private function writeApprovedSnapshot(
+        HealthProfile $profile, ?User $user, ?string $category, ?string $remarks, ?HealthFormSubmission $targetSubmission
+    ): HealthFormSubmission {
         $profile->loadMissing('user');
         $user = $user ?: $profile->user;
 
@@ -87,6 +109,11 @@ class HealthFormPdfSnapshotService
         }
 
         $submission = $targetSubmission ?: $this->submissionForUpdate($profile, $user, false, false);
+        $persistedSubmission = $submission->exists ? $submission->fresh() : null;
+        if ($persistedSubmission && ($persistedSubmission->approved_at
+            || strcasecmp((string) $persistedSubmission->status, HealthFormSubmission::STATUS_APPROVED) === 0)) {
+            return $persistedSubmission;
+        }
         $resolvedCategory = trim((string) ($submission->category ?: $category)) ?: 'General';
         $timestamp = now();
         $submittedAt = $submission->submitted_at ?: $profile->resubmitted_at ?: $profile->created_at ?: $timestamp;
@@ -100,7 +127,9 @@ class HealthFormPdfSnapshotService
             'healthFormSubmittedAt' => $submittedAt,
         ]);
         $pdf->setPaper([0, 0, 612, 936]);
-        $this->healthFiles->put($filePath, $pdf->output());
+        if (!$this->healthFiles->put($filePath, $pdf->output())) {
+            throw new \RuntimeException('Unable to write the approved Health Form PDF.');
+        }
 
         $oldPath = $this->normalizeStoragePath((string) $submission->pdf_path);
 
@@ -119,9 +148,7 @@ class HealthFormPdfSnapshotService
         ]);
         $submission->save();
 
-        if ($oldPath !== '' && $oldPath !== $filePath && $this->healthFiles->exists($oldPath)) {
-            $this->healthFiles->delete($oldPath);
-        }
+        $this->deleteReplacedDraftPdf($oldPath, $filePath);
 
         return $submission;
     }
@@ -193,7 +220,15 @@ class HealthFormPdfSnapshotService
         return $approved->fresh();
     }
 
-    public function refreshExistingSnapshot(HealthProfile $profile): ?HealthFormSubmission
+    public function refreshExistingSnapshot(HealthProfile $profile, ?array $updatedFields = null): ?HealthFormSubmission
+    {
+        return DB::transaction(function () use ($profile, $updatedFields) {
+            HealthProfile::query()->whereKey($profile->id)->lockForUpdate()->firstOrFail();
+            return $this->refreshPendingSnapshot($profile, $updatedFields);
+        });
+    }
+
+    private function refreshPendingSnapshot(HealthProfile $profile, ?array $updatedFields): ?HealthFormSubmission
     {
         $profile->loadMissing('user');
         $user = $profile->user;
@@ -207,11 +242,11 @@ class HealthFormPdfSnapshotService
                 $query->where('health_profile_id', $profile->id)
                     ->orWhere('user_id', $user->id);
             })
-            ->whereNotNull('pdf_path')
+            ->whereNull('approved_at')
             ->whereIn('status', [
                 HealthFormSubmission::STATUS_SUBMITTED,
-                HealthFormSubmission::STATUS_APPROVED,
                 HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                'under_review',
             ])
             ->latest('submitted_at')
             ->latest('approved_at')
@@ -226,9 +261,19 @@ class HealthFormPdfSnapshotService
         $resolvedCategory = trim((string) $submission->category) ?: 'General';
         $filePath = $this->buildSnapshotPath($profile, $user, $resolvedCategory, $timestamp);
         $oldPath = $this->normalizeStoragePath((string) $submission->pdf_path);
+        $snapshotProfile = $profile->fresh('user') ?: $profile;
+        if ($updatedFields !== null && $submission->snapshotProfile() !== []) {
+            $liveProfile = clone $snapshotProfile;
+            $snapshotProfile = clone $snapshotProfile;
+            $snapshotProfile->setRelation('user', clone $snapshotProfile->user);
+            $this->profileSnapshots->applySubmissionSnapshot($snapshotProfile, $submission, $snapshotProfile->user);
+            foreach (array_intersect($updatedFields, HealthProfileSnapshotService::DOCUMENT_FIELDS) as $field) {
+                $snapshotProfile->{$field} = $liveProfile->{$field};
+            }
+        }
 
         $pdf = Pdf::loadView('student.print_health_form', [
-            'profile' => $profile->fresh('user') ?: $profile,
+            'profile' => $snapshotProfile,
             'pdfMode' => true,
             'healthFormIdentity' => [],
             'healthFormSubmittedAt' => $submission->submitted_at ?: $profile->resubmitted_at ?: $profile->created_at,
@@ -241,6 +286,8 @@ class HealthFormPdfSnapshotService
 
         try {
             $submission->pdf_path = $filePath;
+            $submission->profile_snapshot = $this->profileSnapshots->capture($snapshotProfile);
+            $submission->snapshot_captured_at = $timestamp;
             $submission->save();
         } catch (\Throwable $exception) {
             if ($filePath !== $oldPath) {
@@ -250,11 +297,21 @@ class HealthFormPdfSnapshotService
             throw $exception;
         }
 
-        if ($oldPath !== '' && $oldPath !== $filePath && $this->healthFiles->exists($oldPath)) {
-            $this->healthFiles->delete($oldPath);
-        }
+        $this->deleteReplacedDraftPdf($oldPath, $filePath);
 
         return $submission->fresh();
+    }
+
+    public function refreshAfterDocumentResubmission(HealthProfile $profile, array $updatedFields): HealthFormSubmission
+    {
+        $profile->loadMissing('user');
+        $refreshed = $this->refreshExistingSnapshot($profile, $updatedFields);
+        if ($refreshed) {
+            return $refreshed;
+        }
+
+        // A correction after approval starts a new review copy; the approved PDF stays untouched.
+        return $this->recordSubmittedWithoutPdf($profile, $profile->user, $profile->health_form_category, null, true);
     }
 
     private function submissionForUpdate(
@@ -268,6 +325,7 @@ class HealthFormPdfSnapshotService
             $pendingRequest = HealthFormSubmission::query()
                 ->where('user_id', $user->id)
                 ->where('status', HealthFormSubmission::STATUS_REQUESTED)
+                ->whereNull('approved_at')
                 ->latest('requested_at')
                 ->latest('id')
                 ->first();
@@ -289,10 +347,11 @@ class HealthFormPdfSnapshotService
                 $query->where('health_profile_id', $profile->id)
                     ->orWhere('user_id', $user->id);
             })
+            ->whereNull('approved_at')
             ->whereIn('status', [
                 HealthFormSubmission::STATUS_SUBMITTED,
-                HealthFormSubmission::STATUS_APPROVED,
                 HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                'under_review',
             ])
             ->latest('submitted_at')
             ->latest('approved_at')
@@ -318,12 +377,28 @@ class HealthFormPdfSnapshotService
         $safeIdentifier = preg_replace('/[^A-Za-z0-9\-_]+/', '-', $baseIdentifier) ?: (string) $profile->id;
         $safeCategory = preg_replace('/[^A-Za-z0-9\-_]+/', '-', strtolower($category)) ?: 'general';
 
-        return 'health_form_submissions/' . $user->id . '/health-form-' . $safeIdentifier . '-' . $safeCategory . '-' . $timestamp->format('Ymd-His') . '.pdf';
+        return 'health_form_submissions/' . $user->id . '/health-form-' . $safeIdentifier . '-' . $safeCategory . '-' . $timestamp->format('Ymd-His') . '-' . Str::uuid() . '.pdf';
     }
 
     private function normalizeStoragePath(string $path): string
     {
         $path = ltrim($path, '/');
         return preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+    }
+
+    private function deleteReplacedDraftPdf(string $oldPath, string $newPath): void
+    {
+        if ($oldPath === '' || $oldPath === $newPath) return;
+        $cleanup = function () use ($oldPath): void {
+            try {
+                if (!HealthFormSubmission::query()->where('pdf_path', $oldPath)->exists() && $this->healthFiles->exists($oldPath)) {
+                    $this->healthFiles->delete($oldPath);
+                }
+            } catch (\Throwable $exception) {
+                Log::warning('Unable to clean up a replaced draft Health Form PDF.', ['exception_type' => get_class($exception)]);
+            }
+        };
+        if (DB::transactionLevel() > 0) DB::afterCommit($cleanup);
+        else $cleanup();
     }
 }

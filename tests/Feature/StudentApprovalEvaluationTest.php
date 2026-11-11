@@ -80,7 +80,9 @@ class StudentApprovalEvaluationTest extends TestCase
         $profile = $this->profile();
         $this->mock(StudentNotificationMailer::class)->shouldReceive('sendServiceEvaluationNotice')->once()
             ->andReturn(['status' => 'sent']);
-        $this->assertTrue($this->choose($profile, 'send')->getData(true)['success']);
+        $first = $this->choose($profile, 'send')->getData(true);
+        $this->assertTrue($first['success']);
+        $this->assertStringContainsString('Approval completed.', $first['message']);
         $this->assertTrue($this->choose($profile, 'send')->getData(true)['success']);
         $this->assertSame(1, DB::table('eval_form')->count());
         $this->assertSame('student_approval', DB::table('eval_form')->value('source_type'));
@@ -120,6 +122,7 @@ class StudentApprovalEvaluationTest extends TestCase
             'source_id' => 999, 'source_type' => 'employee_approval', 'decision' => 'skip',
         ]), $profile);
         $this->assertTrue($response->getData(true)['success']);
+        $this->assertSame('The service evaluation link was emailed successfully.', $response->getData(true)['message']);
         $this->assertSame(1, DB::table('eval_form')->count());
         $this->assertSame($originalId, DB::table('eval_form')->value('id'));
         $this->assertSame('student_approval', DB::table('eval_form')->value('source_type'));
@@ -138,6 +141,7 @@ class StudentApprovalEvaluationTest extends TestCase
         $result = $controller->sendStudentRecordEvaluation(Request::create('/', 'POST'), $profile)->getData(true);
         $this->assertTrue($result['success']);
         $this->assertStringContainsString('already been submitted', $result['message']);
+        $this->assertStringNotContainsString('Approval', $result['message']);
         $this->assertSame(409, $controller->sendStudentRecordEvaluation(Request::create('/', 'POST'), $this->profile('Pending/Conditional'))->getStatusCode());
         $this->assertSame(404, $controller->sendStudentRecordEvaluation(Request::create('/', 'POST'), $this->profile('Fully Cleared', 'Applicant'))->getStatusCode());
         $profile->pullout_status = HealthProfile::PULLOUT_COMPLETED;
@@ -169,5 +173,14 @@ class StudentApprovalEvaluationTest extends TestCase
             $this->assertContains('module.permission:health_records.update_assessment', $route->gatherMiddleware());
             $this->assertContains('role:superadmin,admin', $route->gatherMiddleware());
         }
+    }
+
+    public function test_manual_send_failure_does_not_mention_approval(): void
+    {
+        $this->mock(StudentNotificationMailer::class)->shouldReceive('sendServiceEvaluationNotice')->once()
+            ->andReturn(['status' => 'failed']);
+        $response = app(WalkInController::class)->sendStudentRecordEvaluation(Request::create('/', 'POST'), $this->profile());
+        $this->assertSame(422, $response->getStatusCode());
+        $this->assertSame('The evaluation email could not be sent. Check the mail settings and try again.', $response->getData(true)['message']);
     }
 }

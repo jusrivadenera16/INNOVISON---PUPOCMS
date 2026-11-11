@@ -12,6 +12,8 @@ use App\Services\HealthProfileSnapshotService;
 use App\Services\StoredImageDataUri;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -42,6 +44,8 @@ class HealthFormPdfRefreshTest extends TestCase
             $table->string('middle_name')->nullable();
             $table->string('last_name')->nullable();
             $table->string('email')->nullable();
+            $table->string('user_type')->nullable();
+            $table->string('user_role')->nullable();
             $table->string('student_id')->nullable();
             $table->string('student_number')->nullable();
             $table->string('employee_number')->nullable();
@@ -68,10 +72,16 @@ class HealthFormPdfRefreshTest extends TestCase
             $table->string('health_form_category')->nullable();
             $table->string('home_address')->nullable();
             $table->string('digital_signature')->nullable();
+            $table->string('student_photo')->nullable();
             $table->string('medical_condition_remarks')->nullable();
             $table->boolean('documents_valid')->default(false);
             $table->string('medical_certificate')->nullable();
             $table->string('clearance_status')->nullable();
+            $table->string('pending_reason')->nullable();
+            $table->string('physical_assessment_status')->nullable();
+            $table->json('resubmission_required_documents')->nullable();
+            $table->timestamp('resubmission_requested_at')->nullable();
+            $table->timestamp('resubmitted_at')->nullable();
             $table->timestamp('clearance_revoked_at')->nullable();
             $table->timestamp('verified_at')->nullable();
             $table->unsignedBigInteger('approved_by_user_id')->nullable();
@@ -84,6 +94,7 @@ class HealthFormPdfRefreshTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('health_profile_id')->nullable();
+            $table->unsignedBigInteger('employee_health_profile_id')->nullable();
             $table->string('category')->nullable();
             $table->string('school_year')->nullable();
             $table->string('status');
@@ -107,7 +118,31 @@ class HealthFormPdfRefreshTest extends TestCase
             $table->string('uploaded_signature_path')->nullable();
             $table->longText('staff_signature')->nullable();
             $table->string('staff_health_form_pdf_path')->nullable();
+            $table->string('student_photo')->nullable();
+            $table->string('clearance_status')->nullable();
+            $table->string('submission_status')->nullable();
+            $table->string('health_form_category')->nullable();
+            $table->string('school_year')->nullable();
+            $table->timestamp('verified_at')->nullable();
+            $table->timestamp('certified_at')->nullable();
+            $table->unsignedBigInteger('approved_by_user_id')->nullable();
             $table->softDeletes();
+            $table->timestamps();
+        });
+
+        Schema::create('health_profile_correction_requests', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->unsignedBigInteger('health_profile_id')->nullable();
+            $table->string('status');
+            $table->string('type');
+            $table->timestamp('requested_at')->nullable();
+            $table->timestamps();
+        });
+        Schema::create('activity_logs', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('user_id')->nullable();
+            foreach (['user_name', 'action', 'description', 'ip_address', 'user_agent'] as $field) $table->text($field)->nullable();
             $table->timestamps();
         });
 
@@ -170,6 +205,214 @@ class HealthFormPdfRefreshTest extends TestCase
         $this->assertNotSame($oldPath, $refreshed->pdf_path);
         Storage::disk('health_private')->assertMissing($oldPath);
         $this->assertSame('new-pdf', Storage::disk('health_private')->get($refreshed->pdf_path));
+    }
+
+    public function test_corrected_photo_refreshes_pending_pdf_and_snapshot_then_freezes_on_approval(): void
+    {
+        foreach (['Student', 'Applicant'] as $type) {
+            $user = User::forceCreate(['name' => 'Corrected Patient', 'user_type' => $type]);
+            $profile = HealthProfile::forceCreate([
+                'user_id' => $user->id, 'student_photo' => 'new-photo.png', 'home_address' => 'Current address',
+            ]);
+            $oldPath = 'health_form_submissions/' . $user->id . '/pending.pdf';
+            Storage::disk('health_private')->put($oldPath, 'old PDF with wrong photo');
+            $submission = HealthFormSubmission::create([
+                'user_id' => $user->id, 'health_profile_id' => $profile->id,
+                'status' => HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                'pdf_path' => $oldPath, 'submitted_at' => now(),
+                'profile_snapshot' => ['profile' => ['student_photo' => 'wrong-photo.png', 'home_address' => 'Staged address']],
+            ]);
+            $pdf = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+            $pdf->shouldReceive('setPaper')->twice()->andReturnSelf();
+            $pdf->shouldReceive('output')->twice()->andReturn('corrected PDF', 'final approved PDF');
+            Pdf::shouldReceive('loadView')->twice()->with('student.print_health_form', Mockery::on(
+                fn (array $data) => $data['profile']->student_photo === 'new-photo.png'
+            ))->andReturn($pdf);
+            $service = app(HealthFormPdfSnapshotService::class);
+            $pending = $service->refreshAfterDocumentResubmission($profile, ['student_photo']);
+            $this->assertSame($submission->id, $pending->id);
+            $this->assertSame(HealthFormSubmission::STATUS_NEEDS_CORRECTION, $pending->status);
+            $this->assertSame('new-photo.png', data_get($pending->profile_snapshot, 'profile.student_photo'));
+            $this->assertSame('Staged address', data_get($pending->profile_snapshot, 'profile.home_address'));
+            $pendingPath = $pending->pdf_path;
+            $approved = $service->saveApprovedSnapshot($profile, $user, null, null, $pending);
+            $frozenSnapshot = $approved->profile_snapshot;
+            $frozenPath = $approved->pdf_path;
+            $this->assertNotSame($pendingPath, $frozenPath);
+            $profile->student_photo = 'later-edit.png';
+            $profile->save();
+            $this->assertNull($service->refreshExistingSnapshot($profile));
+            $this->assertSame($frozenPath, $service->saveApprovedSnapshot($profile, $user, null, null, $approved)->pdf_path);
+            $this->assertSame($frozenSnapshot, $approved->fresh()->profile_snapshot);
+            $this->assertSame('final approved PDF', Storage::disk('health_private')->get($frozenPath));
+        }
+    }
+
+    public function test_resubmission_after_approval_creates_a_new_review_copy_and_prints_it_without_overwriting_history(): void
+    {
+        $user = User::forceCreate(['name' => 'Revision Patient']);
+        $profile = HealthProfile::forceCreate(['user_id' => $user->id, 'student_photo' => 'correct-photo.png']);
+        $approvedPath = 'health_form_submissions/' . $user->id . '/approved.pdf';
+        Storage::disk('health_private')->put($approvedPath, 'frozen approved PDF');
+        $approved = HealthFormSubmission::create([
+            'user_id' => $user->id, 'health_profile_id' => $profile->id,
+            'status' => HealthFormSubmission::STATUS_APPROVED, 'pdf_path' => $approvedPath,
+            'submitted_at' => now()->subMonth(), 'approved_at' => now()->subMonth(),
+            'profile_snapshot' => ['profile' => ['student_photo' => 'original-approved-photo.png']],
+        ]);
+        $pdf = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+        $pdf->shouldReceive('setPaper')->once()->andReturnSelf();
+        $pdf->shouldReceive('output')->once()->andReturn('new review PDF');
+        Pdf::shouldReceive('loadView')->once()->andReturn($pdf);
+        $pending = app(HealthFormPdfSnapshotService::class)->refreshAfterDocumentResubmission($profile, ['student_photo']);
+        $this->assertNotSame($approved->id, $pending->id);
+        $this->assertSame(HealthFormSubmission::STATUS_SUBMITTED, $pending->status);
+        $this->assertSame('correct-photo.png', data_get($pending->profile_snapshot, 'profile.student_photo'));
+        $this->assertSame($approvedPath, $approved->fresh()->pdf_path);
+        $this->assertSame('original-approved-photo.png', data_get($approved->fresh()->profile_snapshot, 'profile.student_photo'));
+        $this->assertSame('frozen approved PDF', Storage::disk('health_private')->get($approvedPath));
+        $method = new \ReflectionMethod(\App\Http\Controllers\AppointmentController::class, 'latestHealthFormSubmissionForProfile');
+        $this->assertSame($pending->id, $method->invoke(app(\App\Http\Controllers\AppointmentController::class), $profile)->id);
+    }
+
+    public function test_employee_pdf_is_frozen_after_approval_and_corrections_use_a_separate_review_copy(): void
+    {
+        $user = User::forceCreate(['name' => 'Employee Patient']);
+        $approvedAt = now()->subMonth();
+        $approvedPath = 'health_profile_employees/health_forms/approved.pdf';
+        Storage::disk('health_private')->put($approvedPath, 'frozen employee PDF');
+        $profile = EmployeeHealthProfile::forceCreate([
+            'user_id' => $user->id, 'clearance_status' => 'Fully Cleared', 'submission_status' => 'approved',
+            'verified_at' => $approvedAt, 'staff_health_form_pdf_path' => $approvedPath, 'student_photo' => 'changed-photo.png',
+        ]);
+        $approved = HealthFormSubmission::create([
+            'user_id' => $user->id, 'employee_health_profile_id' => $profile->id, 'status' => HealthFormSubmission::STATUS_APPROVED,
+            'approved_at' => $approvedAt, 'submitted_at' => $approvedAt, 'pdf_path' => $approvedPath,
+            'profile_snapshot' => ['profile' => ['student_photo' => 'original-photo.png']],
+        ]);
+        $service = app(EmployeeHealthFormPdfService::class);
+        $this->assertSame($approvedPath, $service->generate($profile));
+        $profile->clearance_status = 'For Verification';
+        $profile->save();
+        $pdf = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+        $pdf->shouldReceive('setPaper')->once()->andReturnSelf();
+        $pdf->shouldReceive('output')->once()->andReturn('corrected employee review');
+        Pdf::shouldReceive('loadView')->once()->with('student.print_employee_health_form', Mockery::on(
+            fn (array $data) => $data['employeeProfile']->student_photo === 'changed-photo.png'
+        ))->andReturn($pdf);
+        $path = $service->generate($profile);
+        $pending = app(\App\Services\EmployeeHealthFormHistoryService::class)->refreshSubmittedSnapshot($profile->fresh());
+        $this->assertNotSame($approvedPath, $path);
+        $this->assertSame($path, $pending->pdf_path);
+        $this->assertSame(HealthFormSubmission::STATUS_SUBMITTED, $pending->status);
+        $this->assertSame('changed-photo.png', data_get($pending->profile_snapshot, 'profile.student_photo'));
+        $this->assertSame('original-photo.png', data_get($approved->fresh()->profile_snapshot, 'profile.student_photo'));
+        $this->assertSame('frozen employee PDF', Storage::disk('health_private')->get($approvedPath));
+    }
+
+    public function test_photo_resubmission_controller_refreshes_the_pending_pdf(): void
+    {
+        $user = User::forceCreate(['name' => 'Photo Student', 'user_type' => 'Student']);
+        $user->setRelation('adminProfile', null)->setRelation('adminHubProfile', null);
+        $this->actingAs($user);
+        $profile = HealthProfile::forceCreate([
+            'user_id' => $user->id, 'clearance_status' => 'Pending Resubmission',
+            'student_photo' => 'old-photo.png', 'resubmission_required_documents' => ['student_photo'],
+        ]);
+        $submission = HealthFormSubmission::create([
+            'user_id' => $user->id, 'health_profile_id' => $profile->id, 'submitted_at' => now(),
+            'status' => HealthFormSubmission::STATUS_NEEDS_CORRECTION, 'pdf_path' => 'old-form.pdf',
+        ]);
+        Storage::disk('health_private')->put('old-form.pdf', 'old PDF');
+        $pdf = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+        $pdf->shouldReceive('setPaper')->once()->andReturnSelf();
+        $pdf->shouldReceive('output')->once()->andReturn('corrected resubmitted PDF');
+        Pdf::shouldReceive('loadView')->once()->with('student.print_health_form', Mockery::on(
+            fn (array $data) => $data['profile']->student_photo !== 'old-photo.png'
+                && str_starts_with($data['profile']->student_photo, 'health_profiles/photos/')
+        ))->andReturn($pdf);
+        $request = Request::create('/student/health-record/resubmit', 'POST', [], [], [
+            'student_photo' => UploadedFile::fake()->image('correct.jpg', 100, 100),
+        ]);
+        $response = app(\App\Http\Controllers\AppointmentController::class)->resubmitHealthRecordRequirements($request);
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertFalse(session()->has('error'), (string) session('error'));
+        $this->assertSame('For Verification', $profile->fresh()->clearance_status);
+        $this->assertNotSame('old-photo.png', $profile->fresh()->student_photo);
+        $this->assertSame($profile->fresh()->student_photo, data_get($submission->fresh()->profile_snapshot, 'profile.student_photo'));
+        $this->assertSame('corrected resubmitted PDF', Storage::disk('health_private')->get($submission->fresh()->pdf_path));
+    }
+
+    public function test_failed_resubmission_pdf_rolls_back_the_photo_and_review_state(): void
+    {
+        $user = User::forceCreate(['name' => 'Retry Student', 'user_type' => 'Student']);
+        $user->setRelation('adminProfile', null)->setRelation('adminHubProfile', null);
+        $this->actingAs($user);
+        $profile = HealthProfile::forceCreate([
+            'user_id' => $user->id, 'clearance_status' => 'Pending Resubmission',
+            'student_photo' => 'original-photo.png', 'resubmission_required_documents' => ['student_photo'],
+        ]);
+        $submission = HealthFormSubmission::create([
+            'user_id' => $user->id, 'health_profile_id' => $profile->id, 'submitted_at' => now(),
+            'status' => HealthFormSubmission::STATUS_NEEDS_CORRECTION, 'pdf_path' => 'original-form.pdf',
+        ]);
+        Storage::disk('health_private')->put('original-form.pdf', 'original PDF');
+        Pdf::shouldReceive('loadView')->once()->andThrow(new \RuntimeException('PDF rendering failed'));
+        $request = Request::create('/student/health-record/resubmit', 'POST', [], [], [
+            'student_photo' => UploadedFile::fake()->image('replacement.jpg', 100, 100),
+        ]);
+        app(\App\Http\Controllers\AppointmentController::class)->resubmitHealthRecordRequirements($request);
+        $this->assertTrue(session()->has('error'));
+        $this->assertSame('original-photo.png', $profile->fresh()->student_photo);
+        $this->assertSame('Pending Resubmission', $profile->fresh()->clearance_status);
+        $this->assertSame('original-form.pdf', $submission->fresh()->pdf_path);
+        $this->assertSame('original PDF', Storage::disk('health_private')->get('original-form.pdf'));
+    }
+
+    public function test_admin_approval_is_not_saved_when_final_pdf_generation_fails(): void
+    {
+        $owner = User::forceCreate(['name' => 'Approval Student', 'user_type' => 'Student']);
+        $admin = User::forceCreate(['name' => 'Approving Admin', 'user_role' => User::ROLE_SUPERADMIN]);
+        $this->actingAs($admin);
+        $profile = HealthProfile::forceCreate(['user_id' => $owner->id, 'clearance_status' => 'For Verification']);
+        $this->mock(HealthFormPdfSnapshotService::class)->shouldReceive('saveApprovedSnapshot')->once()
+            ->andThrow(new \RuntimeException('Final PDF failed'));
+        $request = Request::create('/health-profile/' . $profile->id . '/clearance', 'PUT', [
+            'clearance_status' => 'Fully Cleared', 'documents_valid' => 'yes',
+            'physical_assessment_status' => 'Completed / Passed',
+        ]);
+        app(\App\Http\Controllers\AdminController::class)->updateClearance($request, $profile->id);
+        $this->assertStringContainsString('Approval was not saved', (string) session('error'));
+        $this->assertSame('For Verification', $profile->fresh()->clearance_status);
+        $this->assertNull($profile->fresh()->verified_at);
+        $this->assertSame(0, HealthFormSubmission::count());
+    }
+
+    public function test_missing_approved_employee_pdf_rebuilds_from_frozen_photo_not_later_edits(): void
+    {
+        $user = User::forceCreate(['name' => 'Frozen Employee']);
+        $approvedAt = now()->subMonth();
+        $profile = EmployeeHealthProfile::forceCreate([
+            'user_id' => $user->id, 'clearance_status' => 'Fully Cleared', 'verified_at' => $approvedAt,
+            'student_photo' => 'later-edit.png', 'staff_health_form_pdf_path' => 'missing.pdf',
+        ]);
+        $approved = HealthFormSubmission::create([
+            'user_id' => $user->id, 'employee_health_profile_id' => $profile->id,
+            'status' => HealthFormSubmission::STATUS_APPROVED, 'approved_at' => $approvedAt,
+            'pdf_path' => 'missing.pdf', 'profile_snapshot' => ['profile' => ['student_photo' => 'approved-photo.png']],
+        ]);
+        $snapshot = $approved->profile_snapshot;
+        $pdf = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+        $pdf->shouldReceive('setPaper')->once()->andReturnSelf();
+        $pdf->shouldReceive('output')->once()->andReturn('rebuilt frozen PDF');
+        Pdf::shouldReceive('loadView')->once()->with('student.print_employee_health_form', Mockery::on(
+            fn (array $data) => $data['employeeProfile']->student_photo === 'approved-photo.png'
+        ))->andReturn($pdf);
+        $path = app(EmployeeHealthFormPdfService::class)->generate($profile);
+        $this->assertSame('rebuilt frozen PDF', Storage::disk('health_private')->get($path));
+        $this->assertSame($path, $approved->fresh()->pdf_path);
+        $this->assertSame($snapshot, $approved->fresh()->profile_snapshot);
+        $this->assertSame('later-edit.png', $profile->fresh()->student_photo);
     }
 
     public function test_student_submission_saves_a_frozen_health_profile_snapshot(): void

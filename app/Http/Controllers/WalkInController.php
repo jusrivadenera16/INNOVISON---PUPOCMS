@@ -2176,7 +2176,9 @@ class WalkInController extends Controller
         if (!$recipient) {
             return response()->json([
                 'success' => false,
-                'message' => 'Approval is complete, but there is no linked account to receive the evaluation email.',
+                'message' => $allowResend
+                    ? 'There is no linked account to receive the evaluation email.'
+                    : 'Approval is complete, but there is no linked account to receive the evaluation email.',
             ], 422);
         }
 
@@ -2188,7 +2190,9 @@ class WalkInController extends Controller
         if ($evaluation->status === 'submitted' && $evaluation->submitted_at) {
             return response()->json([
                 'success' => true,
-                'message' => 'Approval completed. This service evaluation has already been submitted.',
+                'message' => $allowResend
+                    ? 'This service evaluation has already been submitted.'
+                    : 'Approval completed. This service evaluation has already been submitted.',
             ]);
         }
 
@@ -2228,7 +2232,9 @@ class WalkInController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Approval completed. The service evaluation link was emailed.',
+                'message' => $allowResend
+                    ? 'The service evaluation link was emailed successfully.'
+                    : 'Approval completed. The service evaluation link was emailed.',
             ]);
         }
 
@@ -2238,9 +2244,13 @@ class WalkInController extends Controller
 
         return response()->json([
             'success' => false,
-            'message' => $mailResult['status'] === 'skipped'
-                ? 'Approval is complete, but the evaluation email was not sent because notifications are disabled or no valid email is available.'
-                : 'Approval is complete, but the evaluation email could not be sent. Check the mail settings and try again.',
+            'message' => $allowResend
+                ? ($mailResult['status'] === 'skipped'
+                    ? 'The evaluation email was not sent because notifications are disabled or no valid email is available.'
+                    : 'The evaluation email could not be sent. Check the mail settings and try again.')
+                : ($mailResult['status'] === 'skipped'
+                    ? 'Approval is complete, but the evaluation email was not sent because notifications are disabled or no valid email is available.'
+                    : 'Approval is complete, but the evaluation email could not be sent. Check the mail settings and try again.'),
         ], 422);
     }
 
@@ -4527,6 +4537,7 @@ PROMPT;
 
             if (!$hasPendingFinding) {
                 $this->generateEmployeeHealthFormPdf($employeeProfile);
+                app(EmployeeHealthFormHistoryService::class)->finalizeLatestSubmission($employeeProfile->fresh(['user', 'approvedBy']));
             }
 
             if ($employeeProfile->user) {
@@ -4538,7 +4549,6 @@ PROMPT;
         });
 
         if (!$hasPendingFinding) {
-            app(EmployeeHealthFormHistoryService::class)->finalizeLatestSubmission($employeeProfile->fresh(['user', 'approvedBy']));
             HealthProfileCorrectionRequest::query()
                 ->where('employee_health_profile_id', $employeeProfile->id)
                 ->whereIn('status', [
@@ -4961,6 +4971,11 @@ PROMPT;
                 if (!$hasPendingFinding) {
                     $profile->medical_assessment_upload = $this->generateMedicalAssessmentCopy($profile);
                     $profile->save();
+                    $approvedSubmission = app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($profile->fresh('user'));
+                    $approvedSubmission->forceFill([
+                        'approved_by_user_id' => auth()->id(),
+                        'status_changed_by_user_id' => auth()->id(),
+                    ])->save();
                 }
 
                 $student->is_health_profile_completed = $hasPendingFinding ? 0 : 1;
@@ -5012,42 +5027,15 @@ PROMPT;
                 'user_id' => auth()->id(),
             ]);
 
-            if (!$hasPendingFinding) {
-                try {
-                    app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($profile->fresh('user'));
-                } catch (\Throwable $exception) {
-                    Log::error('Unable to save approved applicant Health Form PDF snapshot.', [
-                        'health_profile_id' => $profile->id,
-                        'reference_number' => SensitiveLogRedactor::identifier($referenceNumber),
-                        ...SensitiveLogRedactor::exceptionContext($exception),
-                    ]);
-                }
-
-                HealthFormSubmission::query()
-                    ->where(function ($query) use ($profile) {
-                        $query->where('health_profile_id', $profile->id)
-                            ->orWhere('user_id', $profile->user_id);
-                    })
-                    ->whereIn('status', [
-                        HealthFormSubmission::STATUS_SUBMITTED,
-                        HealthFormSubmission::STATUS_NEEDS_CORRECTION,
-                    ])
-                    ->update([
-                        'status' => HealthFormSubmission::STATUS_APPROVED,
-                        'approved_at' => $profile->verified_at ?: now(),
-                        'approved_by_user_id' => auth()->id(),
-                        'status_changed_by_user_id' => auth()->id(),
-                        'updated_at' => now(),
-                    ]);
-            } elseif ($needsHealthFormCorrection) {
+            if ($hasPendingFinding && $needsHealthFormCorrection) {
                 $submission = HealthFormSubmission::query()
                     ->where(function ($query) use ($profile) {
                         $query->where('health_profile_id', $profile->id)
                             ->orWhere('user_id', $profile->user_id);
                     })
+                    ->whereNull('approved_at')
                     ->whereIn('status', [
                         HealthFormSubmission::STATUS_SUBMITTED,
-                        HealthFormSubmission::STATUS_APPROVED,
                         HealthFormSubmission::STATUS_NEEDS_CORRECTION,
                     ])
                     ->latest('submitted_at')
@@ -5365,22 +5353,24 @@ PROMPT;
                     $student->is_health_profile_completed = 1;
                     $student->save();
 
-                    HealthFormSubmission::query()
-                        ->where(function ($query) use ($profile) {
-                            $query->where('health_profile_id', $profile->id)
-                                ->orWhere('user_id', $profile->user_id);
-                        })
-                        ->whereIn('status', [
-                            HealthFormSubmission::STATUS_SUBMITTED,
-                            HealthFormSubmission::STATUS_NEEDS_CORRECTION,
-                        ])
-                        ->update([
-                            'status' => HealthFormSubmission::STATUS_APPROVED,
-                            'approved_at' => $profile->verified_at ?: now(),
-                            'approved_by_user_id' => auth()->id(),
-                            'status_changed_by_user_id' => auth()->id(),
-                            'updated_at' => now(),
-                        ]);
+                    if ($isDependentAssessment) {
+                        HealthFormSubmission::query()
+                            ->where(function ($query) use ($profile) {
+                                $query->where('health_profile_id', $profile->id)
+                                    ->orWhere('user_id', $profile->user_id);
+                            })
+                            ->whereIn('status', [
+                                HealthFormSubmission::STATUS_SUBMITTED,
+                                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                            ])
+                            ->update([
+                                'status' => HealthFormSubmission::STATUS_APPROVED,
+                                'approved_at' => $profile->verified_at ?: now(),
+                                'approved_by_user_id' => auth()->id(),
+                                'status_changed_by_user_id' => auth()->id(),
+                                'updated_at' => now(),
+                            ]);
+                    }
                 } elseif ($clearanceDecision === 'pending') {
                     $profile->clearance_status = 'Pending/Conditional';
                     $profile->clearance_revoked_at = null;
@@ -5411,6 +5401,14 @@ PROMPT;
 
                 $profile->final_review_draft_data = null;
                 $profile->save();
+
+                if (!$isDependentAssessment && ($validated['clearance_decision'] ?? '') === 'approve') {
+                    $approvedSubmission = app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($profile->fresh('user'));
+                    $approvedSubmission->forceFill([
+                        'approved_by_user_id' => auth()->id(),
+                        'status_changed_by_user_id' => auth()->id(),
+                    ])->save();
+                }
 
                 if ($isDependentAssessment && $employeeHealthProfile) {
                     $employeeHealthProfile->vital_signs_distress_status = $this->formatEmployeeExamValue($dependentExam['employee_exam_distress'] ?? null);
