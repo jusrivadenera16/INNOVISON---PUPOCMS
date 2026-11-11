@@ -118,7 +118,7 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
     $landingReviews = collect();
 
     try {
-        $landingReviews = app(\App\Services\ClinicReviewService::class)->recent(10);
+        $landingReviews = app(\App\Services\ClinicReviewService::class)->recent(3);
     } catch (\Throwable) {
         $landingReviews = collect();
     }

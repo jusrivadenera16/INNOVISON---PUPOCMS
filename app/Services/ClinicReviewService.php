@@ -20,13 +20,29 @@ class ClinicReviewService
             ->where('status', 'submitted')
             ->whereNotNull('submitted_at')
             ->whereNotNull('consent_at')
-            ->latest('submitted_at');
+            ->latest('submitted_at')
+            ->latest('id');
 
         if ($limit !== null) {
-            $query->limit($limit);
+            $query->limit(30);
         }
 
-        return $query->get()->map(function (ConsultationEvaluation $evaluation): array {
+        $evaluations = $query->get();
+        if ($limit !== null) {
+            $evaluations = $evaluations->sort(function (ConsultationEvaluation $a, ConsultationEvaluation $b): int {
+                $hasSuggestionA = trim((string) $a->suggestions) !== '';
+                $hasSuggestionB = trim((string) $b->suggestions) !== '';
+                $ratingA = in_array((int) $a->rating, range(1, 5), true) ? (int) $a->rating : 0;
+                $ratingB = in_array((int) $b->rating, range(1, 5), true) ? (int) $b->rating : 0;
+
+                return ($hasSuggestionB <=> $hasSuggestionA)
+                    ?: ($ratingB <=> $ratingA)
+                    ?: ($b->submitted_at->getTimestamp() <=> $a->submitted_at->getTimestamp())
+                    ?: ($b->id <=> $a->id);
+            })->take(max(0, $limit))->values();
+        }
+
+        return $evaluations->map(function (ConsultationEvaluation $evaluation): array {
             $user = $evaluation->user;
             $rating = (int) $evaluation->rating;
 

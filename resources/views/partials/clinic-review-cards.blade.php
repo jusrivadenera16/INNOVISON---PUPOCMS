@@ -5,9 +5,7 @@
             $reviewMessage = trim((string) ($evaluation['message'] ?? ''));
         @endphp
         <article class="feedback-slide">
-            @if($reviewMessage !== '')
-                <span class="feedback-quote" aria-hidden="true">&ldquo;</span>
-            @endif
+            <span class="feedback-quote" aria-hidden="true">&ldquo;</span>
             @if($evaluationRating >= 1 && $evaluationRating <= 5)
                 <div class="feedback-stars" role="img" aria-label="{{ $evaluationRating }} out of 5 stars">
                     @for($star = 1; $star <= 5; $star++)
