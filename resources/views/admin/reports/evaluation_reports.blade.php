@@ -594,7 +594,7 @@
     .evaluation-response-heading h2 {
         margin: 0;
         color: #7f1d2d;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 900;
     }
     .evaluation-response-heading span {
@@ -603,15 +603,31 @@
         font-weight: 700;
     }
     .evaluation-response-card .evaluation-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
         display: grid;
         place-items: center;
         background: #fff1f2;
         color: #70131B;
     }
     .evaluation-response-card .evaluation-avatar svg {
-        width: 24px;
-        height: 24px;
+        width: 20px;
+        height: 20px;
     }
+    .evaluation-response-card {
+        padding: 14px 16px;
+        gap: 12px;
+        border-radius: 16px;
+    }
+    .evaluation-response-card .evaluation-card-name { font-size: 15px; }
+    .evaluation-response-card .evaluation-card-meta { font-size: 11px; }
+    .evaluation-response-card .evaluation-card-head { gap: 8px; margin-bottom: 6px; }
+    .evaluation-response-card .evaluation-chip-row { margin-bottom: 0; }
+    .evaluation-response-card .evaluation-message { margin-top: 8px; font-size: 13px; }
+    .evaluation-response-card .evaluation-side { min-width: 72px; }
+    .evaluation-response-card .evaluation-rating { font-size: 22px; }
+    .evaluation-response-card .evaluation-rating-sub { font-size: 10px; }
     html[data-theme="dark"] .evaluation-field label,
     html[data-theme="dark"] .evaluation-sqd-meta,
     html[data-theme="dark"] .evaluation-cc-choice,

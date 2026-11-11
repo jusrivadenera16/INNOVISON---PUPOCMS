@@ -60,6 +60,7 @@ class ConsultationEvaluation extends Model
         return match ((string) $this->source_type) {
             'applicant_approval' => 'Applicant Health Form Review',
             'employee_approval' => 'Employee Health Examination',
+            'student_approval' => 'Student Health Form Review',
             default => trim((string) ($this->consultation?->service ?? '')) ?: 'Medical Consultation',
         };
     }

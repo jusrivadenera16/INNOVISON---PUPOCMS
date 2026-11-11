@@ -20,8 +20,6 @@ class ClinicReviewService
             ->where('status', 'submitted')
             ->whereNotNull('submitted_at')
             ->whereNotNull('consent_at')
-            ->whereNotNull('suggestions')
-            ->whereRaw("TRIM(suggestions) <> ''")
             ->latest('submitted_at');
 
         if ($limit !== null) {
@@ -43,7 +41,7 @@ class ClinicReviewService
         });
     }
 
-    private function displayName(?User $user): string
+    public function displayName(?User $user): string
     {
         $firstName = trim((string) ($user?->first_name ?? ''));
         $lastName = trim((string) ($user?->last_name ?? ''));
@@ -60,7 +58,7 @@ class ClinicReviewService
             return 'Clinic User';
         }
 
-        $lastInitial = $lastName !== '' ? strtoupper(substr($lastName, 0, 1)) . '.' : '';
+        $lastInitial = $lastName !== '' ? mb_strtoupper(mb_substr($lastName, 0, 1)) . '.' : '';
 
         return trim($firstName . ' ' . $lastInitial);
     }
