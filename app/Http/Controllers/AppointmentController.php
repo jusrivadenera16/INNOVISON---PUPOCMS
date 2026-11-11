@@ -812,7 +812,7 @@ class AppointmentController extends Controller
         }
 
         $this->promoteDesigneeAdminToStudentGuard();
-        $recentEvaluations = $this->buildRecentEvaluationCollection(10);
+        $recentEvaluations = $this->buildRecentEvaluationCollection(9);
         $clinicHoursStatus = $this->buildClinicHoursStatus();
         $homeAnnouncements = Announcement::query()
             ->where('status', Announcement::STATUS_ACTIVE)
@@ -3949,8 +3949,17 @@ public function account(Request $request)
 
         $storedPaths = [];
         $oldPaths = [];
+        $resubmissionTransactionLevel = DB::transactionLevel();
 
         try {
+            DB::beginTransaction();
+            if ($isApprovedStatus) {
+                if ($usesEmployeeHealthForm) {
+                    app(EmployeeHealthFormHistoryService::class)->ensureApprovedSnapshot($healthProfile);
+                } else {
+                    app(HealthFormPdfSnapshotService::class)->ensureApprovedSnapshot($healthProfile);
+                }
+            }
             foreach ($requiredDocuments as $document) {
                 if (!$request->hasFile($document)) {
                     continue;
@@ -3984,10 +3993,22 @@ public function account(Request $request)
             $healthProfile->resubmitted_at = now();
             $healthProfile->save();
 
+            if (!$usesEmployeeHealthForm) {
+                $reviewSubmission = app(HealthFormPdfSnapshotService::class)->refreshAfterDocumentResubmission(
+                    $healthProfile->fresh('user'), array_keys($storedPaths)
+                );
+            } else {
+                $this->generateEmployeeHealthFormPdf($healthProfile);
+                $reviewSubmission = app(EmployeeHealthFormHistoryService::class)->refreshSubmittedSnapshot(
+                    $healthProfile->fresh(['user', 'approvedBy']), $activeCorrectionRequest
+                );
+            }
+
             if ($activeCorrectionRequest) {
                 $metadata = is_array($activeCorrectionRequest->metadata) ? $activeCorrectionRequest->metadata : [];
                 $metadata['uploaded_documents'] = $storedPaths;
                 $metadata['legacy_health_profile_updated'] = true;
+                $activeCorrectionRequest->health_form_submission_id = $reviewSubmission->id;
 
                 if ($activeCorrectionRequest->type === HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION) {
                     $activeCorrectionRequest->forceFill([
@@ -4009,12 +4030,6 @@ public function account(Request $request)
                 $user->save();
             }
 
-            if (!$usesEmployeeHealthForm) {
-                foreach ($oldPaths as $oldPath) {
-                    $this->deleteHealthFileIfUnreferenced($oldPath);
-                }
-            }
-
             \App\Models\ActivityLog::create([
                 'user_id' => $user->id,
                 'user_name' => $user->name,
@@ -4024,6 +4039,17 @@ public function account(Request $request)
                 'user_agent' => $request->userAgent(),
             ]);
 
+            DB::commit();
+            if (!$usesEmployeeHealthForm) {
+                foreach ($oldPaths as $oldPath) {
+                    try {
+                        $this->deleteHealthFileIfUnreferenced($oldPath);
+                    } catch (\Throwable $cleanupException) {
+                        Log::warning('Unable to clean up a replaced requirement file.', ['profile_id' => $healthProfile->id]);
+                    }
+                }
+            }
+
             $successMessage = $requiresManualComplianceAfterUpload
                 ? 'Replacement files uploaded successfully. Your record remains pending compliance until the remaining correction is reviewed.'
                 : 'Replacement requirement files uploaded successfully. Your record is back for clinic review.';
@@ -4031,6 +4057,9 @@ public function account(Request $request)
             return redirect('/student/account?view=health-record')
                 ->with('success', $successMessage);
         } catch (\Throwable $e) {
+            if (DB::transactionLevel() > $resubmissionTransactionLevel) {
+                DB::rollBack();
+            }
             foreach ($storedPaths as $path) {
                 if ($path && $this->healthFiles()->exists($path)) {
                     $this->healthFiles()->delete($path);
@@ -8155,10 +8184,7 @@ private function latestHealthFormSubmissionForProfile(HealthProfile $profile): ?
             HealthFormSubmission::STATUS_APPROVED,
             'Approved',
             HealthFormSubmission::STATUS_NEEDS_CORRECTION,
-        ])
-        ->orderByRaw("CASE WHEN status IN (?, ?) THEN 0 ELSE 1 END", [
-            HealthFormSubmission::STATUS_APPROVED,
-            'Approved',
+            'under_review',
         ])
         ->latest('submitted_at')
         ->latest('id')

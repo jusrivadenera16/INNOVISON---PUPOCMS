@@ -51,6 +51,13 @@ class WalkInLocalSisReferenceLookupTest extends TestCase
             $table->timestamps();
         });
 
+        Schema::connection('sqlite')->create('health_profile_emp', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->softDeletes();
+            $table->timestamps();
+        });
+
         Schema::connection('sqlite')->create('health_form_submissions', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('user_id')->nullable();

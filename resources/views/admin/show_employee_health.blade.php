@@ -60,6 +60,10 @@
         : null;
     $employeeDocuments = collect($employeeDocuments ?? []);
     $canManageNewEmployeeHealthForm = (bool) ($canRequestNewEmployeeHealthForm ?? false);
+    $canSendRecordEvaluation = !$isDependentRecord
+        && in_array($status, ['Issued', 'Fully Cleared'], true)
+        && strtolower(trim((string) $employeeProfile?->submission_status)) === 'approved'
+        && (optional(auth()->user())->canAccessPermission('health_records.update_assessment') ?? false);
     $canRequestNewEmployeeHealthForm = $canManageNewEmployeeHealthForm && !$activeNewHealthFormRequest;
     $canViewExistingNewEmployeeHealthFormRequest = $canManageNewEmployeeHealthForm && (bool) $activeNewHealthFormRequest;
     $existingNewHealthFormCategory = data_get($activeNewHealthFormRequest?->metadata, 'category')
@@ -2043,7 +2047,7 @@
             <div class="profile-switch" role="tablist" aria-label="Employee health profile sections">
                 <button type="button" class="profile-tab is-active" data-profile-tab-target="summaryPanel" role="tab" aria-selected="true"><x-outline-icon name="user-circle" /><span>Personal Information</span></button>
                 <button type="button" class="profile-tab" data-profile-tab-target="healthPanel" role="tab" aria-selected="false"><x-outline-icon name="information-circle" /><span>Health Profile</span></button>
-                <button type="button" class="profile-tab" data-profile-tab-target="docsPanel" role="tab" aria-selected="false"><x-outline-icon name="document-text" /><span>Uploaded Documents</span></button>
+                <button type="button" class="profile-tab" data-profile-tab-target="docsPanel" role="tab" aria-selected="false"><x-outline-icon name="document-text" /><span>Documents</span></button>
             </div>
             <div class="employee-profile-actions" id="employeeProfileActions">
                     <button
@@ -2076,6 +2080,12 @@
                             <button type="button" data-medical-assessment-trigger role="menuitem">
                                 <span>Update Health Information</span>
                                 <span aria-hidden="true">+</span>
+                            </button>
+                        @endif
+                        @if($canSendRecordEvaluation)
+                            <button type="button" data-record-evaluation-open role="menuitem" aria-haspopup="dialog" aria-controls="recordEvaluationModal">
+                                <span>Send Evaluation</span>
+                                <span aria-hidden="true"><x-outline-icon name="envelope" /></span>
                             </button>
                         @endif
                         <button type="button" data-health-record-history-open aria-haspopup="dialog" aria-controls="healthRecordHistoryModal" role="menuitem">
@@ -2207,8 +2217,7 @@
                                 >
                                     <span class="profile-version-choice-number">{{ !empty($version['is_current']) ? (($version['version'] ?? null) ? 'V' . $version['version'] : 'LIVE') : 'V' . ($version['version'] ?? '') }}</span>
                                     <span class="profile-version-choice-copy">
-                                        <strong>{{ !empty($version['is_current']) ? 'Current Health Profile' : ($versionSubmission?->category ?: 'Employee Health Form') }}</strong>
-                                        <small>{{ $versionDate ? $versionDate->format('M d, Y') : ($version['profile']?->form_date ? $formatDate($version['profile']->form_date) : 'Latest saved information') }}</small>
+                                        @include('admin.partials.health-form-version-label', ['versionCategory' => $versionSubmission?->category ?: $version['profile']?->health_form_category, 'versionDateLabel' => $versionDate ? $versionDate->format('M d, Y') : ($version['profile']?->form_date ? $formatDate($version['profile']->form_date) : 'Date unavailable'), 'versionLatest' => !empty($version['is_current'])])
                                     </span>
                                 </button>
                             @endforeach
@@ -2254,7 +2263,7 @@
                         <section class="profile-version-pane{{ $versionIsCurrent ? ' is-active' : '' }}" id="{{ $versionTarget }}" role="tabpanel" aria-hidden="{{ $versionIsCurrent ? 'false' : 'true' }}" @if(!$versionIsCurrent) hidden @endif>
                             <div class="profile-version-pane-head">
                                 <div>
-                                    <h3>{{ $versionIsCurrent ? 'Current Employee Health Profile' : 'Employee Health Profile - Version ' . ($version['version'] ?? '') }}</h3>
+                                    <h3>{{ app(\App\Services\HealthRecordCategoryFilter::class)->label($versionSubmission?->category ?: $employeeProfile->health_form_category) }}</h3>
                                     <p>{{ $versionIsCurrent ? 'Latest medical information and examination details.' : 'Saved medical information from this employee health form submission.' }}</p>
                                 </div>
                                 <span class="profile-history-badge {{ $versionIsCurrent ? '' : $versionStatusClass }}">{{ $versionIsCurrent ? 'Current' : $versionStatus }}</span>
@@ -2537,6 +2546,9 @@
         </section>
 
         <section class="profile-panel" id="docsPanel" role="tabpanel" hidden>
+            @if(in_array($employeeProfile->user?->clinicAccountTypeKey(), ['faculty', 'non_teaching_staff'], true))
+                @include('admin.partials.medical-clearance-panel', ['clearanceRecordUrl' => route('admin.medical_clearances.index', ['employee', $employeeProfile->id])])
+            @endif
             @php
                 $employeeVersionHistory = collect($employeeVersionHistory ?? []);
                 $employeeCurrentVersion = $employeeVersionHistory->first(fn (array $version): bool => (bool) ($version['is_current'] ?? false))
@@ -2544,7 +2556,7 @@
                 $employeeCurrentVersionNumber = (int) ($employeeCurrentVersion['version'] ?? 1);
             @endphp
             <div class="profile-version-shell profile-documents-version-shell">
-                <aside class="profile-version-sidebar" aria-label="Uploaded Documents versions">
+                <aside class="profile-version-sidebar" aria-label="Documents versions">
                     <div class="profile-version-sidebar-head">
                         <div>
                             <h3>Document Versions</h3>
@@ -2552,7 +2564,7 @@
                         </div>
                         <span class="profile-history-count">{{ $employeeVersionHistory->count() }}</span>
                     </div>
-                    <div class="profile-version-nav" role="tablist" aria-label="Uploaded Documents versions">
+                    <div class="profile-version-nav" role="tablist" aria-label="Documents versions">
                         @foreach($employeeVersionHistory as $version)
                             @php
                                 $versionNumber = (int) ($version['version'] ?? 1);
@@ -2575,8 +2587,7 @@
                             >
                                 <span class="profile-version-choice-number">V{{ $versionNumber }}</span>
                                 <span class="profile-version-choice-copy">
-                                    <strong>{{ ($versionSubmission?->status ?? '') === \App\Models\HealthFormSubmission::STATUS_SUBMITTED ? 'Pending Review' : $versionLabel }}</strong>
-                                    <small>{{ $formatDate($versionSubmission?->approved_at ?: $versionSubmission?->submitted_at ?: $employeeProfile?->form_date) }}</small>
+                                    @include('admin.partials.health-form-version-label', ['versionCategory' => $versionSubmission?->category ?: $employeeProfile->health_form_category, 'versionDateLabel' => $formatDate($versionSubmission?->approved_at ?: $versionSubmission?->submitted_at ?: $employeeProfile?->form_date), 'versionLatest' => (bool) ($version['is_current'] ?? false)])
                                 </span>
                             </button>
                         @endforeach
@@ -2600,7 +2611,7 @@
                         >
                             <div class="profile-version-pane-head">
                                 <div>
-                                    <h3>{{ $versionIsActive ? 'Current Uploaded Documents' : 'Saved Documents - Version ' . $versionNumber }}</h3>
+                                    <h3>{{ $versionIsActive ? 'Documents' : 'Saved Documents - Version ' . $versionNumber }}</h3>
                                     <p>{{ $versionIsActive ? 'Latest approved files attached to the Employee Health Profile.' : 'Files saved with this employee health form version.' }}</p>
                                 </div>
                                 <span class="profile-history-badge">{{ $versionIsActive ? 'Current' : 'Archived' }}</span>
@@ -2774,6 +2785,15 @@
         'medicalAssessmentEditableValues' => $medicalAssessmentEditableValues,
         'employeeDocuments' => $employeeDocuments,
         'useUnifiedRecordHistory' => true,
+    ])
+@endif
+@if(in_array($employeeProfile->user?->clinicAccountTypeKey(), ['faculty', 'non_teaching_staff'], true))
+    @include('admin.partials.medical-clearance-modal')
+@endif
+@if($canSendRecordEvaluation)
+    @include('admin.partials.health-record-evaluation-modal', [
+        'recordEvaluationUrl' => route('admin.employee_health_profile.send_evaluation', $employeeProfile),
+        'recordEvaluationName' => $displayName,
     ])
 @endif
 @include('admin.partials.health-record-history-modal')

@@ -51,6 +51,9 @@ return [
         'health_form_submissions' => [
             'pdf_path',
         ],
+        'issued_medical_clearances' => [
+            'pdf_path',
+        ],
         'pending_medical_assessments' => [
             'file_path',
         ],

@@ -197,7 +197,7 @@
                         <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="health_records.update_assessment" data-module-action>
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
-                            <span><strong>Update assessment</strong><small>Edit nurse review and assessment details</small></span>
+                            <span><strong>Update assessment</strong><small>Edit doctor review and assessment details</small></span>
                         </label>
                         <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="health_records.revoke_clearance" data-module-action>

@@ -9649,7 +9649,7 @@
                         <div class="help-accordion-body">
                             <div class="help-contact-card">
                                 <strong>PUP Taguig Medical Clinic</strong>
-                                <span>For clinic record, clearance, or assessment concerns, contact the clinic staff. For login or technical issues, contact the system administrator.</span>
+                                <span>For clinic record, clearance, or assessment concerns, contact us at puptclinic@gmail.com or visit our clinic. For login or technical issues, contact the system administrator.</span>
                             </div>
                         </div>
                     </details>

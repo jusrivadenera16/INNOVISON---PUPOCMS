@@ -164,10 +164,30 @@ class EmployeeHealthFormHistoryService
         ]);
     }
 
+    public function refreshSubmittedSnapshot(EmployeeHealthProfile $profile, ?HealthProfileCorrectionRequest $request = null): HealthFormSubmission
+    {
+        $submission = HealthFormSubmission::query()
+            ->where('employee_health_profile_id', $profile->id)
+            ->whereNull('approved_at')
+            ->whereIn('status', [HealthFormSubmission::STATUS_SUBMITTED, HealthFormSubmission::STATUS_NEEDS_CORRECTION, 'under_review'])
+            ->latest('submitted_at')->latest('id')->first();
+        if (!$submission) {
+            return $this->createSubmittedSnapshot($profile, $request);
+        }
+        $submission->forceFill([
+            'pdf_path' => $profile->staff_health_form_pdf_path,
+            'profile_snapshot' => $this->capture($profile),
+            'snapshot_captured_at' => now(),
+        ])->save();
+
+        return $submission->fresh();
+    }
+
     public function finalizeLatestSubmission(EmployeeHealthProfile $profile): ?HealthFormSubmission
     {
         $submission = HealthFormSubmission::query()
             ->where('employee_health_profile_id', $profile->id)
+            ->whereNull('approved_at')
             ->whereIn('status', [
                 HealthFormSubmission::STATUS_SUBMITTED,
                 HealthFormSubmission::STATUS_NEEDS_CORRECTION,

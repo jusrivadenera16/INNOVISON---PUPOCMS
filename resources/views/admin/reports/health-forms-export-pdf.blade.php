@@ -5,7 +5,6 @@
     $hasPupLogo = file_exists($pupLogo);
     $hasGovernmentLogo = file_exists($governmentLogo);
     $hasFooterImage = file_exists($footerImage);
-    $periodLabel = $dateFrom->format('M d, Y') . ' - ' . $dateTo->format('M d, Y');
     $resolveReportIdentity = static function ($staff, string $fallbackName = 'CLINIC STAFF', string $fallbackPosition = ''): array {
         $profile = data_get($staff, 'adminProfile') ?: $staff;
         $loggedInUser = auth('admin')->user() ?: auth()->user();
@@ -201,12 +200,6 @@
             font-weight: 700;
         }
 
-        .report-heading .report-period {
-            margin: 3px 0 0;
-            font-size: 8px;
-            font-weight: 400;
-        }
-
         .health-export-meta {
             width: 100%;
             margin: 14px 0 10px;
@@ -216,14 +209,14 @@
 
         .health-export-meta td {
             border: 0;
-            padding: 2px 4px;
-            font-size: 9px;
+            padding: 4px;
+            font-size: 11px;
             vertical-align: bottom;
         }
 
         .health-export-meta .meta-label {
             display: inline-block;
-            min-width: 55px;
+            min-width: 65px;
             font-weight: 700;
             text-transform: uppercase;
         }
@@ -369,7 +362,6 @@
         <div class="report-heading">
             <h1>{{ $reportCourse }}</h1>
             <p class="report-level">{{ $reportLevel !== '' ? $reportLevel . ' ' : '' }}SY {{ $schoolYear }}</p>
-            <p class="report-period">Health Forms Report | {{ $periodLabel }} | Generated {{ $generatedAt->format('M d, Y g:i A') }}</p>
         </div>
 
         <table class="health-export-meta">
@@ -412,7 +404,7 @@
                     <th>Contact Number<br>(Student)</th>
                     <th>2 Names of Parents / Guardian with Contact Number (Required)</th>
                     <th>COVID Vaccination - Fully Vaccinated (First and Second Dose)</th>
-                    <th>Pre-existing Illness</th>
+                    <th>Medical Condition / Findings</th>
                     <th>Living with Parent - P<br>Guardian - G<br>Boarding House - BH</th>
                 </tr>
             </thead>

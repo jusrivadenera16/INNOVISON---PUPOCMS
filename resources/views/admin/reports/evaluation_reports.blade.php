@@ -430,21 +430,32 @@
         border-color: rgba(250, 204, 21, .22) !important;
         color: #f8fafc !important;
     }
-    html[data-theme="dark"] .evaluation-pagination nav,
-    html[data-theme="dark"] .evaluation-pagination nav > div,
-    html[data-theme="dark"] .evaluation-pagination p {
-        color: #f8fafc !important;
+    #submitted-responses { scroll-margin-top: 100px; }
+    .evaluation-pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .evaluation-pager-summary { margin: 0; color: #334155; font-size: 11px; font-weight: 900; }
+    .evaluation-pager-actions { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+    .evaluation-pager-btn {
+        position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center;
+        min-width: 34px; height: 34px; padding: 0 8px; border: 1px solid #ead8dc; border-radius: 7px;
+        background: #fff; color: #70131B; font-size: 11px; font-weight: 900; text-decoration: none;
+        box-shadow: 0 8px 18px rgba(15,23,42,.05); transition: background .18s, color .18s, transform .18s;
     }
-    html[data-theme="dark"] .evaluation-pagination a,
-    html[data-theme="dark"] .evaluation-pagination span {
-        background: #111827 !important;
-        border-color: rgba(250, 204, 21, .16) !important;
-        color: #f8fafc !important;
+    a.evaluation-pager-btn::before {
+        content: ''; position: absolute; top: -45%; left: -135%; width: 72%; height: 190%;
+        transform: skewX(-20deg); background: rgba(255,247,178,.72); transition: left .72s; pointer-events: none;
     }
-    html[data-theme="dark"] .evaluation-pagination span[aria-current] span {
-        background: #7f0010 !important;
-        border-color: #facc15 !important;
-        color: #ffffff !important;
+    a.evaluation-pager-btn:hover::before, a.evaluation-pager-btn:focus-visible::before { left: 135%; }
+    a.evaluation-pager-btn:hover, a.evaluation-pager-btn:focus-visible {
+        border-color: #facc15; background: #facc15; color: #70131B; transform: translateY(-1px);
+    }
+    .evaluation-pager-btn.is-active { background: #8f0015; border-color: #8f0015; color: #fff; }
+    .evaluation-pager-btn.is-disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+    .evaluation-pager-gap { color: #64748b; font-size: 12px; }
+    html[data-theme="dark"] .evaluation-pager-summary, html[data-theme="dark"] .evaluation-pager-gap { color: #cbd5e1; }
+    html[data-theme="dark"] .evaluation-pager-btn { background: #111827; border-color: rgba(250,204,21,.22); color: #f8fafc; }
+    html[data-theme="dark"] .evaluation-pager-btn.is-active { background: #8f0015; border-color: #facc15; color: #fff; }
+    html[data-theme="dark"] a.evaluation-pager-btn:hover, html[data-theme="dark"] a.evaluation-pager-btn:focus-visible {
+        background: #facc15; color: #70131B; border-color: #facc15;
     }
     @media (max-width: 1100px) {
         .evaluation-layout {

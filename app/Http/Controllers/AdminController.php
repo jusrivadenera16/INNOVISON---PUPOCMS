@@ -3106,7 +3106,7 @@ class AdminController extends Controller
                 'Physical assessment status' => $profile->physical_assessment_status,
                 'Assessment remarks' => $profile->med_assessment_remarks ?: $profile->assessment_remarks,
                 'Medical condition remarks' => $profile->medical_condition_remarks,
-                'Nurse review remarks' => $profile->pending_reason,
+                'Doctor review remarks' => $profile->pending_reason,
             ],
             'Medical Certificate & Imaging' => [
                 '2x2 student photo' => filled($profile->student_photo) ? 'Uploaded' : 'Not uploaded',
@@ -3520,6 +3520,9 @@ class AdminController extends Controller
 
     public function viewHealth(Request $request)
     {
+        $formCategoryFilter = trim((string) $request->query('form_category', ''));
+        $categoryFilterService = app(\App\Services\HealthRecordCategoryFilter::class);
+        $formCategoryOptions = $categoryFilterService->options();
         $search = trim((string) $request->query('q', ''));
         $courseFilter = trim((string) $request->query('course', ''));
         $dateFilter = trim((string) $request->query('date', ''));
@@ -3807,6 +3810,7 @@ class AdminController extends Controller
                 ?: 0;
         };
         $issuedCombinedRecords = $issuedRecords->merge($issuedEmployeeRecords);
+        $issuedCombinedRecords = $categoryFilterService->filter($issuedCombinedRecords, $formCategoryFilter, true);
         $this->attachAdminHubProfilesByEmail($issuedCombinedRecords);
         $issuedCombinedRecords = match ($sortFilter) {
             'alphabetical' => $issuedCombinedRecords->sort(function ($left, $right) use ($healthRecordName, $healthRecordApprovedTimestamp) {
@@ -3863,6 +3867,8 @@ class AdminController extends Controller
 
         $this->applySubmittedRenewalQueueState($records);
 
+        $records = $categoryFilterService->filter($records, $formCategoryFilter);
+
         // Only active submissions describe the purpose of the form currently in either queue.
         $pendingHealthFormCategories = HealthFormSubmission::query()
             ->whereIn('health_profile_id', $records->filter(fn ($record) => ($record->record_source ?? 'health') === 'health')->pluck('id'))
@@ -3900,6 +3906,8 @@ class AdminController extends Controller
         ]);
 
         return view('admin.health_records', compact(
+            'formCategoryFilter',
+            'formCategoryOptions',
             'records',
             'healthProfileSummaryRecords',
             'search',
@@ -3951,6 +3959,8 @@ class AdminController extends Controller
 
     public function healthRecordStats(Request $request)
     {
+        $formCategoryFilter = trim((string) $request->query('form_category', ''));
+        $categoryFilterService = app(\App\Services\HealthRecordCategoryFilter::class);
         $search = trim((string) $request->query('q', ''));
         $courseFilter = trim((string) $request->query('course', ''));
         $dateFilter = trim((string) $request->query('date', ''));
@@ -4140,6 +4150,9 @@ class AdminController extends Controller
                 return $record;
             }));
         $this->applySubmittedRenewalQueueState($records);
+        $records = $categoryFilterService->filter($records, $formCategoryFilter);
+        $issuedHealthRecords = $categoryFilterService->filter($issuedHealthRecords, $formCategoryFilter, true);
+        $issuedEmployeeRecords = $categoryFilterService->filter($issuedEmployeeRecords, $formCategoryFilter, true);
         $stats = [
             'total_approved' => $issuedHealthRecords->count() + $issuedEmployeeRecords->count(),
             'with_conditions' => $issuedHealthRecords->filter(fn ($record) => $record->hasMedicalCondition())->count()
@@ -6496,13 +6509,12 @@ class AdminController extends Controller
                 ->lockForUpdate()
                 ->first();
 
-            if ($newHealthFormRequest
-                && $updatedSubmission->status === HealthFormSubmission::STATUS_APPROVED
+            if (($updatedSubmission->approved_at || strcasecmp((string) $updatedSubmission->status, HealthFormSubmission::STATUS_APPROVED) === 0)
                 && $targetStatus === HealthFormSubmission::STATUS_APPROVED) {
                 return $updatedSubmission;
             }
 
-            if ($newHealthFormRequest && $updatedSubmission->status === HealthFormSubmission::STATUS_APPROVED
+            if (($updatedSubmission->approved_at || strcasecmp((string) $updatedSubmission->status, HealthFormSubmission::STATUS_APPROVED) === 0)
                 && $targetStatus !== HealthFormSubmission::STATUS_APPROVED) {
                 throw ValidationException::withMessages([
                     'status' => 'An approved Health Form version cannot be moved back. Submit a new correction or Health Form request instead.',
@@ -6525,7 +6537,7 @@ class AdminController extends Controller
                     'approved_at' => now(),
                     'approved_by_user_id' => Auth::guard('admin')->id() ?: Auth::id(),
                     'status_changed_by_user_id' => Auth::guard('admin')->id() ?: Auth::id(),
-                ])->save();
+                ]);
 
                 app(HealthProfileSnapshotService::class)->promoteApprovedSubmission(
                     $profile,
@@ -6533,6 +6545,8 @@ class AdminController extends Controller
                     $user,
                     Auth::guard('admin')->id() ?: Auth::id()
                 );
+
+                app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($profile->fresh('user'), $user, null, null, $updatedSubmission);
 
                 $newHealthFormRequest->forceFill([
                     'status' => HealthProfileCorrectionRequest::STATUS_APPROVED,
@@ -6851,7 +6865,6 @@ class AdminController extends Controller
                 HealthFormSubmission::STATUS_APPROVED,
                 HealthFormSubmission::STATUS_NEEDS_CORRECTION,
             ])
-            ->orderByRaw("CASE WHEN status IN (?, ?) THEN 0 ELSE 1 END", [HealthFormSubmission::STATUS_APPROVED, 'Approved'])
             ->latest('submitted_at')
             ->latest('id')
             ->first();
@@ -7003,8 +7016,11 @@ public function updateClearance(Request $request, $id)
     }
     $record->resubmitted_at = $requestedStatus === 'Pending Resubmission' ? null : $record->resubmitted_at;
 
-    if ($record->save()) {
-        if ($isApproval && $newHealthFormRequest && $newHealthFormSubmission
+    $approvalTransactionLevel = DB::transactionLevel();
+    try {
+        DB::beginTransaction();
+        $recordSaved = $record->save();
+        if ($recordSaved && $isApproval && $newHealthFormRequest && $newHealthFormSubmission
             && $newHealthFormSubmission->status === HealthFormSubmission::STATUS_SUBMITTED) {
             $promotedProfile = DB::transaction(function () use ($record, $newHealthFormRequest, $newHealthFormSubmission, $requestedStatus) {
                 $lockedProfile = HealthProfile::with('user')->lockForUpdate()->findOrFail($record->id);
@@ -7015,7 +7031,7 @@ public function updateClearance(Request $request, $id)
                     || $lockedSubmission->status !== HealthFormSubmission::STATUS_SUBMITTED
                     || !$lockedSubmission->submitted_at
                     || !$lockedSubmission->profile_snapshot) {
-                    return null;
+                    throw ValidationException::withMessages(['clearance_status' => 'This submitted Health Form is no longer available for approval. Refresh the record and try again.']);
                 }
 
                 $approvalAt = $lockedProfile->verified_at ?: now();
@@ -7024,7 +7040,7 @@ public function updateClearance(Request $request, $id)
                     'approved_at' => $approvalAt,
                     'approved_by_user_id' => auth()->id(),
                     'status_changed_by_user_id' => auth()->id(),
-                ])->save();
+                ]);
 
                 app(HealthProfileSnapshotService::class)->promoteApprovedSubmission(
                     $lockedProfile,
@@ -7037,6 +7053,10 @@ public function updateClearance(Request $request, $id)
                 $lockedProfile->verified_at = $approvalAt;
                 $lockedProfile->approved_by_user_id = auth()->id();
                 $lockedProfile->save();
+
+                app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot(
+                    $lockedProfile->fresh('user'), $lockedProfile->user, null, null, $lockedSubmission
+                );
 
                 $lockedRequest->forceFill([
                     'status' => HealthProfileCorrectionRequest::STATUS_APPROVED,
@@ -7051,6 +7071,21 @@ public function updateClearance(Request $request, $id)
                 $record = $promotedProfile;
             }
         }
+
+        if ($recordSaved && $isApproval && !$newHealthFormRequest && $record->user) {
+            app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($record->fresh('user'));
+        }
+        DB::commit();
+    } catch (\Throwable $exception) {
+        if (DB::transactionLevel() > $approvalTransactionLevel) DB::rollBack();
+        \Log::error('Unable to finalize the approved Health Form PDF.', [
+            'health_profile_id' => $record->id,
+            ...SensitiveLogRedactor::exceptionContext($exception),
+        ]);
+        return back()->withInput()->with('error', 'The Health Form PDF could not be finalized. Approval was not saved. Please try again.');
+    }
+
+    if ($recordSaved) {
 
         try {
             app(MarClearanceIssuanceService::class)->syncApprovedHealthProfile(
@@ -7110,17 +7145,6 @@ public function updateClearance(Request $request, $id)
             }
 
             if ($isApproval) {
-                if (!$newHealthFormRequest) {
-                    try {
-                        app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($record->fresh('user'));
-                    } catch (\Throwable $exception) {
-                        \Log::error('Unable to save approved Health Form PDF snapshot.', [
-                            'health_profile_id' => $record->id,
-                            ...SensitiveLogRedactor::exceptionContext($exception),
-                        ]);
-                    }
-                }
-
                 HealthProfileCorrectionRequest::query()
                     ->where('health_profile_id', $record->id)
                     ->where('type', '!=', HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM)

@@ -9143,7 +9143,7 @@
                 <div class="awaiting-links-modal-badge">PA</div>
                 <div class="awaiting-links-modal-copy">
                     <h3>Pending Approval</h3>
-                    <p>Users in this state have uploaded clinic requirements and are waiting for nurse review.</p>
+                    <p>Users in this state have uploaded clinic requirements and are waiting for doctor review.</p>
                 </div>
             </div>
             <button type="button" class="awaiting-links-modal-close" id="closePendingApprovalInfoModal" aria-label="Close pending approval modal" onclick="document.getElementById('pendingApprovalInfoModal').style.display='none';">
@@ -9309,6 +9309,10 @@
                         $readonlyIsWithdrawn = $readonlyStatusNormalized === 'withdrawn';
                         $readonlyIsApproved = in_array($readonlyStatusNormalized, ['issued', 'fully cleared'], true);
                         $readonlyRecordPayload = [
+                            'category_change_url' => config('health_form_features.temporary_student_category_change')
+                                && !$readonlyIsEmployee && optional($readonlyRecord->user)->clinicAccountTypeKey() === 'student'
+                                && optional(auth()->user())->canAccessPermission('health_records.update_assessment')
+                                ? route('admin.health_profile.pending_category', $readonlyRecord->id) : '',
                             'id' => $readonlyRecord->id,
                             'record_type' => $readonlyIsEmployee ? 'employee' : strtolower((string) $readonlyUserType),
                             'applicant_review_workflow' => $readonlyUsesApplicantReviewWorkflow,
@@ -9870,6 +9874,9 @@
             </form>
             <div class="verify-content-actions" aria-label="Additional review actions">
                 <div class="verify-content-action-group">
+                    @if(config('health_form_features.temporary_student_category_change'))
+                        @include('admin.partials.temporary-student-category-menu')
+                    @endif
                     <button type="submit" form="verifyWithdrawHealthRecordForm" class="verify-proposed-withdraw" id="verifyWithdrawHealthRecordBtn" disabled><span>Mark as Withdrawn</span></button>
                     @if($canSignHealth)
                         <button type="submit" form="verifyRegularStudentDecisionForm" class="verify-proposed-walkin" id="verifyRegularStudentApproveBtn" data-regular-decision="Fully Cleared" hidden><span>Approve</span></button>
@@ -9927,7 +9934,7 @@
                 </span>
                 <div>
                     <h3 class="health-filter-modal-title">Health Records Filter</h3>
-                    <p class="health-filter-modal-copy">Narrow and arrange the issued medical clearance list by user type, course, year level, approval date, or sort order.</p>
+                    <p class="health-filter-modal-copy">Narrow and arrange the records by user type, Health Form category, course, year level, approval date, or sort order.</p>
                 </div>
             </div>
             <button type="button" class="health-filter-modal-close" id="healthFilterCloseBtn" aria-label="Close filter popup">
@@ -9936,6 +9943,19 @@
         </div>
 
         <form method="GET" class="health-filter-form" id="healthFilterForm">
+            @if(request('q'))<input type="hidden" name="q" value="{{ request('q') }}">@endif
+            @if(request('per_page'))<input type="hidden" name="per_page" value="{{ request('per_page') }}">@endif
+            <div class="health-filter-field">
+                <label for="healthFormCategoryFilter">Health Form Category</label>
+                <div class="health-filter-select-wrap">
+                    <select id="healthFormCategoryFilter" name="form_category" class="health-filter-select health-filter-custom-source">
+                        <option value="">All Health Form Categories</option>
+                        @foreach(($formCategoryOptions ?? collect()) as $categoryOption)
+                            <option value="{{ $categoryOption }}" @selected(($formCategoryFilter ?? '') === $categoryOption)>{{ $categoryOption }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
             <div class="health-filter-field">
                 <label for="userTypeFilter">User Type</label>
                 <div class="health-filter-select-wrap">
@@ -10189,6 +10209,9 @@
         </div>
     </div>
 @endif
+@if(config('health_form_features.temporary_student_category_change'))
+    @include('admin.partials.temporary-student-category-assets')
+@endif
 @endsection
 
 @push('scripts')
@@ -10302,6 +10325,7 @@
         };
 
         function setVerifyApprovalModalTitle(payload) {
+            window.TemporaryStudentFormCategory?.configure(payload.category_change_url || '');
             var type = String(payload.record_type || payload.user_type || '').trim().toLowerCase();
             var titles = {
                 applicant: 'Applicant Information',
