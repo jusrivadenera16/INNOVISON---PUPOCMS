@@ -3106,7 +3106,7 @@ class AdminController extends Controller
                 'Physical assessment status' => $profile->physical_assessment_status,
                 'Assessment remarks' => $profile->med_assessment_remarks ?: $profile->assessment_remarks,
                 'Medical condition remarks' => $profile->medical_condition_remarks,
-                'Doctor review remarks' => $profile->pending_reason,
+                'Final review remarks' => $profile->pending_reason,
             ],
             'Medical Certificate & Imaging' => [
                 '2x2 student photo' => filled($profile->student_photo) ? 'Uploaded' : 'Not uploaded',

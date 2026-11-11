@@ -45,16 +45,19 @@ class MedicalClearanceController extends Controller
     public function store(Request $request, string $type, int $profile, MedicalClearanceService $service)
     {
         $input = $request->validate([
-            'request_key' => ['required', 'uuid'], 'issued_on' => ['required', 'date_format:Y-m-d'],
+            'request_key' => ['required', 'uuid'], 'issued_on' => ['required_without:doctor_review', 'date_format:Y-m-d'],
             'purpose' => ['required', 'string', 'max:180'],
             'other_purpose' => ['required_if:purpose,__other__', 'nullable', 'string', 'max:180'],
             'submission_id' => ['required_with:doctor_review', 'integer', 'min:1'],
-            'doctor_review' => ['sometimes', 'array:category,findings,remarks,decision'],
+            'doctor_review' => ['sometimes', 'array:category,findings,remarks,decision,assessment'],
+            'doctor_review.assessment' => ['nullable', 'array:height,weight,blood_pressure,pulse_rate,respiratory_rate,temperature'],
+            'doctor_review.assessment.*' => ['nullable', 'string', 'max:100'],
             'doctor_review.category' => ['required_with:doctor_review', 'string', 'max:180'],
             'doctor_review.findings' => ['required_with:doctor_review', 'in:No Findings / Normal,With Findings'],
             'doctor_review.decision' => ['required_with:doctor_review', 'in:issue'],
             'doctor_review.remarks' => ['nullable', 'string', 'max:4000'],
         ]);
+        if (isset($input['doctor_review'])) $input['issued_on'] = now()->toDateString();
         $document = $service->issue($type, $profile, $input, $request->user());
 
         return response()->json(['message' => 'Medical Clearance issued and saved.', 'document' => $this->documentPayload($document)])

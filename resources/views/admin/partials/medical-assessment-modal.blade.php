@@ -22,7 +22,7 @@
                     ->all();
             }
             if ($name === 'Vitals & Assessment') {
-                $items = collect($items)->except(['Medical condition remarks', 'Nurse review remarks', 'Doctor review remarks'])->all();
+                $items = collect($items)->except(['Medical condition remarks', 'Nurse review remarks', 'Doctor review remarks', 'Final review remarks'])->all();
             }
             if ($name === 'Referral') {
                 $items = collect($items)->except(['Encoded findings'])->all();

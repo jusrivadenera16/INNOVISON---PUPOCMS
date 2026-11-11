@@ -95,8 +95,8 @@ class MarClearanceTypeController extends Controller
     {
         return [
             MarClearanceSubcategorySource::APPLICANT_FINAL_REVIEW => 'Applicant Final Review',
-            MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW => 'Student Doctor Review',
-            MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW => 'Employee Doctor Review',
+            MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW => 'Student Final Review',
+            MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW => 'Employee Final Review',
             MarClearanceSubcategorySource::PATIENT_INTAKE => 'Patient Intake',
             MarClearanceSubcategorySource::CONSULTATION => 'Consultation',
         ];

@@ -1595,6 +1595,8 @@ class WalkInController extends Controller
                 'course_college' => (string) ($profile->course_college ?? ''),
                 'course_code' => (string) ($profile->course_code ?? ''),
                 'school_year' => (string) ($profile->school_year ?? ''),
+                'year_level' => (string) ($user?->year ?: $profile->year_level ?: ''),
+                'section' => (string) ($user?->section ?: $profile->section ?: ''),
             ],
             'contact_information' => [
                 'contact_no' => (string) ($user->contact_no ?? ''),
@@ -4561,6 +4563,7 @@ PROMPT;
         if (!$this->hasSubmittedClinicHealthForm($employeeProfile)) {
             return $this->healthFormNotSubmittedResponse();
         }
+        $this->requireReviewableClinicSubmission($employeeProfile);
         $clearanceInput = app(\App\Services\MedicalClearanceService::class)->approvalInput($request, !$hasPendingFinding,
             in_array($employeeProfile->user?->clinicAccountTypeKey(), ['faculty', 'non_teaching_staff'], true));
         $issuedMedicalClearance = null;
@@ -5321,6 +5324,7 @@ PROMPT;
             if (!$this->hasSubmittedClinicHealthForm($isDependentAssessment ? $employeeHealthProfile : ($healthProfile ?: $student->healthProfile))) {
                 return $this->healthFormNotSubmittedResponse();
             }
+            $this->requireReviewableClinicSubmission($isDependentAssessment ? $employeeHealthProfile : ($healthProfile ?: $student->healthProfile));
             $clearanceInput = app(\App\Services\MedicalClearanceService::class)->approvalInput($request,
                 ($validated['clearance_decision'] ?? '') === 'approve', !$isDependentAssessment && $student->clinicAccountTypeKey() === 'student');
             $issuedMedicalClearance = null;
