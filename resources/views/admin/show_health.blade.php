@@ -3240,6 +3240,9 @@
         && (optional(auth()->user())->canAccessPermission('health_records.revoke_clearance') ?? false);
     $canUpdateMedicalAssessment = ($canHaveMedicalAssessment ?? false) && !$isPulloutPending && !$isPulledOut
         && (optional(auth()->user())->canAccessPermission('health_records.update_assessment') ?? false);
+    $canSendRecordEvaluation = $profileIsLocalStudent && !$isPulloutPending && !$isPulledOut
+        && in_array($profileStatusRaw, ['Issued', 'Fully Cleared'], true)
+        && (optional(auth()->user())->canAccessPermission('health_records.update_assessment') ?? false);
     $canRequestPullout = !$profileIsDependent && in_array($profileStatusRaw, ['Issued', 'Fully Cleared'], true)
         && !$isPulloutPending
         && !$isPulledOut
@@ -3409,6 +3412,12 @@
                         <button type="button" data-medical-assessment-trigger>
                             Update Health Information
                             <span aria-hidden="true">+</span>
+                        </button>
+                    @endif
+                    @if($canSendRecordEvaluation)
+                        <button type="button" data-record-evaluation-open aria-haspopup="dialog" aria-controls="recordEvaluationModal">
+                            Send Evaluation
+                            <span aria-hidden="true"><x-outline-icon name="envelope" /></span>
                         </button>
                     @endif
                     @if($canRevokeClearance)
@@ -4272,6 +4281,12 @@
 </div>
 @endif
 
+@if($canSendRecordEvaluation)
+    @include('admin.partials.health-record-evaluation-modal', [
+        'recordEvaluationUrl' => route('admin.health_profile.send_evaluation', $profile),
+        'recordEvaluationName' => $profileName,
+    ])
+@endif
 @if($canViewPullout || $canManageNewHealthForm || $canRequestFileCorrection || $canUpdateMedicalAssessment || $canRevokeClearance)
 <dialog class="pullout-confirm-overlay" id="pulloutConfirmModal" aria-hidden="true" aria-labelledby="pulloutConfirmTitle" aria-describedby="pulloutConfirmMessage">
     <div class="pullout-confirm-card">

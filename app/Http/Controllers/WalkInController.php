@@ -2108,6 +2108,32 @@ class WalkInController extends Controller
 
     public function sendApprovalEvaluation(Request $request)
     {
+        return $this->deliverApprovalEvaluation($request);
+    }
+
+    public function sendStudentRecordEvaluation(Request $request, HealthProfile $healthProfile)
+    {
+        if (in_array($healthProfile->pullout_status, [HealthProfile::PULLOUT_PENDING, HealthProfile::PULLOUT_COMPLETED], true)) {
+            return response()->json(['success' => false, 'message' => 'Evaluation cannot be sent for a pulled-out record or pending pullout.'], 409);
+        }
+        $request->merge(['source_type' => 'student_approval', 'source_id' => $healthProfile->id, 'decision' => 'send']);
+
+        return $this->deliverApprovalEvaluation($request, true);
+    }
+
+    public function sendEmployeeRecordEvaluation(Request $request, EmployeeHealthProfile $employeeProfile)
+    {
+        if (!$employeeProfile->user || in_array($employeeProfile->user->clinicAccountTypeKey(), ['dependent', 'guest', 'student', 'applicant'], true)
+            || strtolower(trim((string) $employeeProfile->health_form_category)) === 'dependent') {
+            return response()->json(['success' => false, 'message' => 'An employee health record is required.'], 404);
+        }
+        $request->merge(['source_type' => 'employee_approval', 'source_id' => $employeeProfile->id, 'decision' => 'send']);
+
+        return $this->deliverApprovalEvaluation($request, true);
+    }
+
+    private function deliverApprovalEvaluation(Request $request, bool $allowResend = false)
+    {
         $validated = $request->validate([
             'source_type' => ['required', Rule::in(['applicant_approval', 'employee_approval', 'student_approval'])],
             'source_id' => ['required', 'integer', 'min:1'],
@@ -2166,7 +2192,7 @@ class WalkInController extends Controller
             ]);
         }
 
-        if ($evaluation->status === 'sent' && $evaluation->sent_at) {
+        if (!$allowResend && $evaluation->status === 'sent' && $evaluation->sent_at) {
             return response()->json([
                 'success' => true,
                 'message' => 'Approval completed. The service evaluation link was already sent.',

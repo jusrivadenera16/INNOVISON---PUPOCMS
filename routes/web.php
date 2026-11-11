@@ -359,6 +359,12 @@ Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->gr
     Route::put('/employee-health-profile/{employeeProfile}/medical-information', [AdminController::class, 'updateEmployeeMedicalInformation'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.update_assessment'])
         ->name('admin.employee_health_profile.medical_information.update');
+    Route::post('/health-profile/{healthProfile}/send-evaluation', [WalkInController::class, 'sendStudentRecordEvaluation'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.update_assessment'])
+        ->name('admin.health_profile.send_evaluation');
+    Route::post('/employee-health-profile/{employeeProfile}/send-evaluation', [WalkInController::class, 'sendEmployeeRecordEvaluation'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.update_assessment'])
+        ->name('admin.employee_health_profile.send_evaluation');
     Route::post('/health-profile/{id}/pullout/request', [AdminController::class, 'requestHealthProfilePullout'])
         ->middleware('role:superadmin')
         ->name('admin.health_profile.pullout.request');

@@ -60,6 +60,10 @@
         : null;
     $employeeDocuments = collect($employeeDocuments ?? []);
     $canManageNewEmployeeHealthForm = (bool) ($canRequestNewEmployeeHealthForm ?? false);
+    $canSendRecordEvaluation = !$isDependentRecord
+        && in_array($status, ['Issued', 'Fully Cleared'], true)
+        && strtolower(trim((string) $employeeProfile?->submission_status)) === 'approved'
+        && (optional(auth()->user())->canAccessPermission('health_records.update_assessment') ?? false);
     $canRequestNewEmployeeHealthForm = $canManageNewEmployeeHealthForm && !$activeNewHealthFormRequest;
     $canViewExistingNewEmployeeHealthFormRequest = $canManageNewEmployeeHealthForm && (bool) $activeNewHealthFormRequest;
     $existingNewHealthFormCategory = data_get($activeNewHealthFormRequest?->metadata, 'category')
@@ -2078,6 +2082,12 @@
                                 <span aria-hidden="true">+</span>
                             </button>
                         @endif
+                        @if($canSendRecordEvaluation)
+                            <button type="button" data-record-evaluation-open role="menuitem" aria-haspopup="dialog" aria-controls="recordEvaluationModal">
+                                <span>Send Evaluation</span>
+                                <span aria-hidden="true"><x-outline-icon name="envelope" /></span>
+                            </button>
+                        @endif
                         <button type="button" data-health-record-history-open aria-haspopup="dialog" aria-controls="healthRecordHistoryModal" role="menuitem">
                             <span>History</span>
                             <span aria-hidden="true"><x-outline-icon name="clock" /></span>
@@ -2774,6 +2784,12 @@
         'medicalAssessmentEditableValues' => $medicalAssessmentEditableValues,
         'employeeDocuments' => $employeeDocuments,
         'useUnifiedRecordHistory' => true,
+    ])
+@endif
+@if($canSendRecordEvaluation)
+    @include('admin.partials.health-record-evaluation-modal', [
+        'recordEvaluationUrl' => route('admin.employee_health_profile.send_evaluation', $employeeProfile),
+        'recordEvaluationName' => $displayName,
     ])
 @endif
 @include('admin.partials.health-record-history-modal')
