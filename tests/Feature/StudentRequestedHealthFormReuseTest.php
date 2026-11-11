@@ -39,9 +39,9 @@ class StudentRequestedHealthFormReuseTest extends TestCase
     {
         Storage::fake('health_private');
         $pdf = \Mockery::mock(\Barryvdh\DomPDF\PDF::class);
-        $pdf->shouldReceive('setPaper')->once();
-        $pdf->shouldReceive('output')->once()->andReturn('%PDF-1.4 test');
-        Pdf::shouldReceive('loadView')->once()->andReturn($pdf);
+        $pdf->shouldReceive('setPaper')->twice();
+        $pdf->shouldReceive('output')->twice()->andReturn('%PDF-1.4 test');
+        Pdf::shouldReceive('loadView')->twice()->andReturn($pdf);
         [$student, $profile, $pending, $correction] = $this->pendingCycle();
         $approved = HealthFormSubmission::create([
             'user_id' => $student->id, 'health_profile_id' => $profile->id,

@@ -2501,32 +2501,7 @@ class AppointmentController extends Controller
             return ['purpose' => 'clinic services', 'endorsement' => 'fitness for clinic services'];
         }
 
-        return match ($selectedType) {
-            'ladderized' => [
-                'purpose' => 'Ladderized Program',
-                'endorsement' => 'Ladderized Program',
-            ],
-            'ojt' => [
-                'purpose' => 'On-the-Job Training (OJT)',
-                'endorsement' => 'On-the-Job Training (OJT)',
-            ],
-            'returnee' => [
-                'purpose' => 'returning to school',
-                'endorsement' => 'return to school as an enrolled student',
-            ],
-            'shiftee' => [
-                'purpose' => 'shifting academic program',
-                'endorsement' => 'status as an enrolled student in a new academic program',
-            ],
-            'transferee' => [
-                'purpose' => 'currently enrolled transferee student',
-                'endorsement' => 'status as a currently enrolled transferee student',
-            ],
-            default => [
-                'purpose' => 'currently enrolled student',
-                'endorsement' => 'status as a currently enrolled student',
-            ],
-        };
+        return app(\App\Services\StudentHealthDeclarationService::class)->purpose($category, $studentType);
     }
 
     private function employeeHealthFormRecordCategory(User $user): string
@@ -7741,7 +7716,7 @@ public function submitExistingHealthForm(Request $request)
             'verified_at' => null,
         ]);
         $submission = app(HealthFormPdfSnapshotService::class)->recordSubmittedWithoutPdf(
-            $profile, $user, $pending->category, $pending->remarks, false, $snapshot
+            $profile, $user, $pending->category, $pending->remarks, false, $snapshot, true
         );
         HealthProfileCorrectionRequest::query()
             ->where('user_id', $user->id)

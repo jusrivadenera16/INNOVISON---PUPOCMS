@@ -103,15 +103,15 @@ class StudentHealthFormCategoryMappingTest extends TestCase
         $this->assertArrayNotHasKey('applicant', HealthFormCategory::AUDIENCE_LABELS);
     }
 
-    public function test_regular_consent_purpose_does_not_depend_on_a_health_form_category(): void
+    public function test_explicit_form_category_drives_regular_student_consent_purpose(): void
     {
         $method = new ReflectionMethod(AppointmentController::class, 'studentDeclarationPurposeText');
         $method->setAccessible(true);
 
         $declaration = $method->invoke(new AppointmentController(), 'Annual Medical Clearance', 'regular', 'student');
 
-        $this->assertSame('currently enrolled student', $declaration['purpose']);
-        $this->assertSame('status as a currently enrolled student', $declaration['endorsement']);
+        $this->assertSame('Annual Medical Clearance', $declaration['purpose']);
+        $this->assertSame('Annual Medical Clearance', $declaration['endorsement']);
     }
 
     public function test_applicant_consent_purpose_uses_the_selected_new_or_transferee_type(): void

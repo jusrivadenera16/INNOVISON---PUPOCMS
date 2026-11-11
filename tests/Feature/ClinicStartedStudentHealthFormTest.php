@@ -53,6 +53,9 @@ class ClinicStartedStudentHealthFormTest extends TestCase
         $this->assertSame($purpose->name, $pending->category);
         $this->assertSame('Saved address', data_get($pending->profile_snapshot, 'profile.home_address'));
         $this->assertNotNull($pending->pdf_path);
+        $declarationPath = data_get($pending->profile_snapshot, 'profile.health_declaration');
+        $this->assertNotEmpty($declarationPath);
+        $this->assertTrue(app(\App\Services\HealthFileStorage::class)->exists($declarationPath));
         $this->assertSame('Issued', $profile->fresh()->clearance_status);
         $this->assertSame($before, $approved->fresh()->getAttributes());
         $correction = HealthProfileCorrectionRequest::where('health_form_submission_id', $pending->id)->sole();

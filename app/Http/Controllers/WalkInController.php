@@ -1799,6 +1799,15 @@ class WalkInController extends Controller
         abort_unless(in_array($document, $allowedDocuments, true), 404);
 
         $path = ltrim((string) $healthProfile->{$document}, '/');
+        if ($document === 'health_declaration') {
+            $pendingDeclaration = \App\Models\HealthProfileCorrectionRequest::query()
+                ->where('health_profile_id', $healthProfile->id)
+                ->where('type', \App\Models\HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM)
+                ->whereIn('status', ['submitted', 'under_review'])
+                ->whereHas('healthFormSubmission', fn ($query) => $query->where('status', 'submitted'))
+                ->with('healthFormSubmission')->latest('submitted_at')->latest('id')->first();
+            $path = data_get($pendingDeclaration?->healthFormSubmission?->profile_snapshot, 'profile.health_declaration') ?: $path;
+        }
         $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
 
         abort_if($path === '' || !$this->healthFiles()->exists($path), 404, 'Uploaded document not found.');

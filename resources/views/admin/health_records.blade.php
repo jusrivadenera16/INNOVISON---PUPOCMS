@@ -9155,6 +9155,9 @@
                             ? route('walkin.employeeHealthForm', ['employeeProfile' => $readonlyRecord->id, 'fresh' => 1])
                             : route('walkin.healthForm', ['healthProfile' => $readonlyRecord->id]);
                         $readonlyDocumentUrl = function ($documentKey) use ($readonlyIsEmployee, $readonlyRecord) {
+                            if (!$readonlyIsEmployee && $documentKey === 'health_declaration' && $readonlyRecord->relationLoaded('pendingHealthFormSubmission')) {
+                                return route('admin.health_form_submissions.document', [$readonlyRecord->pendingHealthFormSubmission->id, $documentKey]);
+                            }
                             return $readonlyIsEmployee
                                 ? route('walkin.employeeDocument', ['employeeProfile' => $readonlyRecord->id, 'document' => $documentKey])
                                 : route('walkin.document', ['healthProfile' => $readonlyRecord->id, 'document' => $documentKey]);
