@@ -3863,6 +3863,13 @@ class AdminController extends Controller
 
         $this->applySubmittedRenewalQueueState($records);
 
+        // Only active submissions describe the purpose of the form currently in either queue.
+        $pendingHealthFormCategories = HealthFormSubmission::query()
+            ->whereIn('health_profile_id', $records->filter(fn ($record) => ($record->record_source ?? 'health') === 'health')->pluck('id'))
+            ->whereIn('status', [HealthFormSubmission::STATUS_SUBMITTED, HealthFormSubmission::STATUS_NEEDS_CORRECTION, 'under_review'])
+            ->latest('submitted_at')->latest('id')->get(['health_profile_id', 'category'])
+            ->unique('health_profile_id')->pluck('category', 'health_profile_id');
+
         $courseOptions = HealthProfile::query()
             ->notPulledOut()
             ->with('user:id,course')
@@ -3910,7 +3917,8 @@ class AdminController extends Controller
             'issuedWithConditions',
             'issuedLatestApprovedAt',
             'bulkHealthFormRequestRecords',
-            'bulkHealthFormRequestCategories'
+            'bulkHealthFormRequestCategories',
+            'pendingHealthFormCategories'
         ));
     }
 
