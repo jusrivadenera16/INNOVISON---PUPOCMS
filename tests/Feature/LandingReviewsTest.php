@@ -101,7 +101,7 @@ class LandingReviewsTest extends TestCase
         $this->assertStringNotContainsString('<p>', $homeHtml);
     }
 
-    public function test_landing_is_limited_to_three_while_home_can_show_ten(): void
+    public function test_landing_and_home_are_both_limited_to_three(): void
     {
         for ($day = 1; $day <= 12; $day++) {
             $this->createReview([
@@ -116,7 +116,12 @@ class LandingReviewsTest extends TestCase
                 'Review 12', 'Review 11', 'Review 10',
             ]);
         $method = new \ReflectionMethod(AppointmentController::class, 'buildRecentEvaluationCollection');
-        $this->assertCount(10, $method->invoke(app(AppointmentController::class), 10));
+        $homeReviews = $method->invoke(app(AppointmentController::class), 3);
+        $this->assertSame(['Review 12', 'Review 11', 'Review 10'], $homeReviews->pluck('message')->all());
+        $this->assertStringContainsString(
+            '$recentEvaluations = $this->buildRecentEvaluationCollection(3);',
+            file_get_contents(app_path('Http/Controllers/AppointmentController.php'))
+        );
     }
 
     public function test_review_priority_is_suggestion_then_rating_then_recency(): void

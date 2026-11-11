@@ -812,7 +812,7 @@ class AppointmentController extends Controller
         }
 
         $this->promoteDesigneeAdminToStudentGuard();
-        $recentEvaluations = $this->buildRecentEvaluationCollection(10);
+        $recentEvaluations = $this->buildRecentEvaluationCollection(3);
         $clinicHoursStatus = $this->buildClinicHoursStatus();
         $homeAnnouncements = Announcement::query()
             ->where('status', Announcement::STATUS_ACTIVE)
