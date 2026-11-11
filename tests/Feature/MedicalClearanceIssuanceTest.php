@@ -80,13 +80,14 @@ class MedicalClearanceIssuanceTest extends TestCase
             $this->assertSame([$category], $options['health_form_categories']);
             $count = HealthFormSubmission::count();
             $input = $this->input(['purpose' => $category, 'submission_id' => $submission->id,
-                'doctor_review' => ['category' => $category, 'findings' => 'No Findings / Normal', 'decision' => 'issue', 'remarks' => 'Reviewed for another clearance.']]);
+                'doctor_review' => ['category' => $category, 'findings' => 'No Findings / Normal', 'decision' => 'issue', 'remarks' => 'Reviewed for another clearance.', 'assessment' => ['height' => "5'6\"", 'weight' => '120']]]);
             $request = Request::create('/', 'POST', $input); $request->setUserResolver(fn () => $actor);
             $response = app(MedicalClearanceController::class)->store($request, $type, $profile->id, $this->service());
             $this->assertSame(200, $response->getStatusCode());
             $document = IssuedMedicalClearance::latest('id')->first();
             $this->assertSame($category, $document->doctor_review['category']);
             $this->assertSame($actor->id, $document->doctor_review['reviewed_by_user_id']);
+            $this->assertSame("5'6\"", $document->doctor_review['assessment']['height']);
             $this->assertStringNotContainsString('Reviewed for another clearance.', DB::table('issued_medical_clearances')->where('id', $document->id)->value('doctor_review'));
             $this->assertSame($originalProfile, $profile->fresh()->getRawOriginal());
             $this->assertSame($originalSubmission, $submission->fresh()->getRawOriginal());
@@ -305,11 +306,14 @@ class MedicalClearanceIssuanceTest extends TestCase
         $this->assertContains('module.permission:health_records.update_assessment', $middleware);
     }
 
-    public function test_pending_or_unchecked_review_does_not_require_or_issue_a_certificate(): void
+    public function test_pending_does_not_issue_but_student_employee_approval_requires_purpose(): void
     {
         $request = Request::create('/', 'POST', ['issue_medical_clearance' => true]);
         $this->assertNull($this->service()->approvalInput($request, false, true));
-        $this->assertNull($this->service()->approvalInput(Request::create('/', 'POST'), true, true));
+        $request = Request::create('/', 'POST');
+        $actor = $this->actor(); $request->setUserResolver(fn () => $actor);
+        $this->expectException(ValidationException::class);
+        $this->service()->approvalInput($request, true, true);
         $this->assertSame(0, IssuedMedicalClearance::count());
     }
 
@@ -317,6 +321,18 @@ class MedicalClearanceIssuanceTest extends TestCase
     {
         $this->expectException(ValidationException::class);
         $this->service()->approvalInput(Request::create('/', 'POST', ['issue_medical_clearance' => true]), true, false);
+    }
+
+    public function test_review_uses_server_issue_date_and_does_not_require_a_checkbox_patient_or_date_input(): void
+    {
+        $actor = $this->actor();
+        $request = Request::create('/', 'POST', ['medical_clearance' => ['request_key' => (string) Str::uuid(), 'purpose' => 'On the Job Training', 'issued_on' => '2000-01-01', 'name' => 'Forged name']]);
+        $request->setUserResolver(fn () => $actor);
+        $input = $this->service()->approvalInput($request, true, true);
+        $this->assertSame('On the Job Training', $input['purpose']);
+        $this->assertSame(now()->toDateString(), $input['issued_on']);
+        $this->assertArrayNotHasKey('name', $input);
+        $this->assertSame(0, IssuedMedicalClearance::count());
     }
 
     private function prepareStudentReview(): array

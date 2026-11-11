@@ -107,7 +107,7 @@ class MedicalClearanceService
                         throw ValidationException::withMessages(['doctor_review.category' => 'Select an active Health Form category for this patient type.']);
                     }
                     if (($input['doctor_review']['decision'] ?? '') !== 'issue') {
-                        throw ValidationException::withMessages(['doctor_review.decision' => 'A Medical Clearance can only be issued after a cleared Doctor Review.']);
+                        throw ValidationException::withMessages(['doctor_review.decision' => 'A Medical Clearance can only be issued after a cleared Final Review.']);
                     }
                 }
                 $identity = $this->identity($profile, $input['issued_on']);
@@ -158,16 +158,18 @@ class MedicalClearanceService
 
     public function approvalInput(Request $request, bool $approved, bool $allowed): ?array
     {
-        if (!$approved || !$request->boolean('issue_medical_clearance')) return null;
-        if (!$allowed) throw ValidationException::withMessages(['issue_medical_clearance' => 'Medical Clearances are available for student and employee reviews only.']);
+        if (!$approved) return null;
+        if (!$allowed) {
+            if ($request->boolean('issue_medical_clearance')) throw ValidationException::withMessages(['issue_medical_clearance' => 'Medical Clearances are available for student and employee reviews only.']);
+            return null;
+        }
         abort_unless(app(ModulePermissionService::class)->can($request->user(), 'health_records.update_assessment'), 403);
         $validated = $request->validate([
             'medical_clearance.request_key' => ['required', 'uuid'],
-            'medical_clearance.issued_on' => ['required', 'date_format:Y-m-d'],
             'medical_clearance.purpose' => ['required', 'string', 'max:180'],
             'medical_clearance.other_purpose' => ['required_if:medical_clearance.purpose,__other__', 'nullable', 'string', 'max:180'],
         ]);
 
-        return $validated['medical_clearance'];
+        return array_merge($validated['medical_clearance'], ['issued_on' => now()->toDateString()]);
     }
 }

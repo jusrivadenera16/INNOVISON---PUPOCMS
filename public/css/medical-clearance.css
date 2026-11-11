@@ -38,20 +38,17 @@ html[data-theme="dark"] .medical-clearance-status[data-success="true"] { color: 
 @media (max-width: 520px) { .medical-clearance-header, .medical-clearance-modal form { padding: 17px; } .medical-clearance-panel li { flex-direction: column; align-items: flex-start; } }
 @media (prefers-reduced-motion: reduce) { .medical-clearance-actions button, .medical-clearance-primary { transition: none; } }
 .review-medical-clearance { margin: 16px 0; padding: 15px; border: 1px solid #e6c7cb; border-radius: 12px; background: #fffafa; }
-.review-clearance-toggle { display: flex; align-items: flex-start; gap: 9px; color: #70131b; font-size: 14px; font-weight: 800; cursor: pointer; }
-.review-clearance-toggle input { margin-top: 4px; accent-color: #70131b; }
-.review-clearance-toggle small { display: block; margin-top: 4px; font-size: 11px; font-weight: 500; color: #52647d; }
 .review-clearance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
 .review-clearance-grid label { font-size: 12px; font-weight: 700; color: #172033; }
 .review-clearance-grid input, .review-clearance-grid select { display: block; width: 100%; min-height: 42px; margin-top: 6px; padding: 9px 11px; border: 1px solid #e5bfc3; border-radius: 9px; background: #fff; color: #172033; font: inherit; }
 .review-clearance-grid input[readonly] { background: #f1f5f9; }
 .review-clearance-full { grid-column: 1 / -1; }
 .review-medical-clearance[hidden], .review-medical-clearance [hidden], [data-approved-clearance-link][hidden] { display: none !important; }
+[data-review-clearance-document][hidden] { display: none !important; }
+[data-review-clearance-document] { display: inline-block; margin-top: 12px; font-size: 13px; font-weight: 700; color: #70131b; text-decoration: underline; }
 #applicantEncodeRemarksField[hidden] { display: none !important; }
 [data-approved-clearance-link] { display: inline-block; margin: 10px 0; color: #70131b; font-size: 13px; font-weight: 800; text-decoration: underline; }
 html[data-theme="dark"] .review-medical-clearance { background: #172033; border-color: #79414a; }
-html[data-theme="dark"] .review-clearance-toggle { color: #facc15; }
-html[data-theme="dark"] .review-clearance-toggle small { color: #cbd5e1; }
 html[data-theme="dark"] .review-clearance-grid label { color: #f8fafc; }
 html[data-theme="dark"] .review-clearance-grid input, html[data-theme="dark"] .review-clearance-grid select { background: #111827; border-color: #79414a; color: #f8fafc; }
 @media (max-width: 560px) { .review-clearance-grid { grid-template-columns: 1fr; } }
@@ -59,17 +56,4 @@ html[data-theme="dark"] .review-clearance-grid input, html[data-theme="dark"] .r
 #applicantAlreadyApprovedResult [data-clearance-open] { display: none !important; }
 .approved-clearance-review[hidden], .approved-clearance-review [hidden] { display: none !important; }
 .approved-clearance-link { padding: 0; border: 0; background: none; color: #70131b; font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; }
-.approved-clearance-doctor { text-align: left; color: #172033; }
-.approved-clearance-doctor h3 { margin: 0 0 12px; color: #70131b; }
-.approved-clearance-doctor textarea { box-sizing: border-box; display: block; width: 100%; margin-top: 6px; padding: 10px; border: 1px solid #e5bfc3; border-radius: 9px; background: #fff; color: #172033; font: inherit; resize: vertical; }
-.approved-clearance-actions { display: flex; justify-content: flex-end; gap: 10px; margin: 15px 0; }
-.approved-clearance-actions > button { min-height: 42px; padding: 9px 15px; border: 1px solid #e5bfc3; border-radius: 9px; cursor: pointer; }
-.approved-clearance-actions > button:disabled { opacity: .65; cursor: wait; }
-.applicant-approved-result.is-clearance-review > .applicant-approved-result-icon,
-.applicant-approved-result.is-clearance-review > .applicant-approved-result-copy > :not(.approved-clearance-review) { display: none !important; }
-.applicant-approved-result.is-clearance-review .approved-clearance-review { border: 0; margin: 0; padding: 0; }
-#applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-approved-result.is-clearance-review { grid-template-columns: minmax(0, 1fr); background: #fffafa; border-color: #e5bfc3; }
-html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-approved-result.is-clearance-review { background: #172033; border-color: #79414a; }
-html[data-theme="dark"] .approved-clearance-doctor, html[data-theme="dark"] .approved-clearance-doctor h3 { color: #f8fafc; }
 html[data-theme="dark"] .approved-clearance-link { color: #facc15; }
-html[data-theme="dark"] .approved-clearance-doctor textarea { background: #111827; color: #f8fafc; border-color: #79414a; }

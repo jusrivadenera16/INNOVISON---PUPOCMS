@@ -9143,7 +9143,7 @@
                 <div class="awaiting-links-modal-badge">PA</div>
                 <div class="awaiting-links-modal-copy">
                     <h3>Pending Approval</h3>
-                    <p>Users in this state have uploaded clinic requirements and are waiting for doctor review.</p>
+                    <p>Users in this state have uploaded clinic requirements and are waiting for final review.</p>
                 </div>
             </div>
             <button type="button" class="awaiting-links-modal-close" id="closePendingApprovalInfoModal" aria-label="Close pending approval modal" onclick="document.getElementById('pendingApprovalInfoModal').style.display='none';">

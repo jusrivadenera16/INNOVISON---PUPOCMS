@@ -5246,14 +5246,25 @@
 
     .applicant-health-info-modal {
         width: min(1040px, calc(100vw - 48px));
+        height: min(720px, calc(100dvh - 48px));
+        display: flex;
+        flex-direction: column;
     }
 
     .applicant-health-info-modal-body {
         padding: 18px;
-        max-height: calc(100vh - 140px);
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .applicant-health-info-modal > .applicant-modal-head {
+        flex-shrink: 0;
     }
 
     .applicant-health-info-modal .applicant-information-details {
+        height: 100%;
+        min-height: 0;
         margin: 0;
         padding: 0;
         border: 0;
@@ -5608,6 +5619,8 @@
 
     .health-info-editor {
         display: grid;
+        height: 100%;
+        min-height: 0;
         grid-template-columns: 220px minmax(0, 1fr);
         border: 1px solid rgba(148, 163, 184, 0.28);
         border-radius: 14px;
@@ -5619,6 +5632,8 @@
     .health-info-tabs {
         display: flex;
         flex-direction: column;
+        min-height: 0;
+        overflow-y: auto;
         padding: 12px;
         gap: 6px;
         background: linear-gradient(180deg, #fffaf0 0%, #ffffff 72%);
@@ -5657,6 +5672,9 @@
 
     .health-info-content {
         min-width: 0;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
         padding: 18px;
     }
 
@@ -6052,9 +6070,13 @@
     @media (max-width: 760px) {
         .health-info-editor {
             grid-template-columns: 1fr;
+            grid-template-rows: auto minmax(0, 1fr);
         }
 
         .health-info-tabs {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            max-height: 150px;
             border-right: 0;
             border-bottom: 1px solid rgba(148, 163, 184, 0.22);
         }
@@ -11665,7 +11687,7 @@
                         <button type="button" class="applicant-workflow-card" id="btnStartApplicantFinalReview">
                             <span class="applicant-workflow-icon"><x-outline-icon name="document-check" /></span>
                             <span class="applicant-workflow-copy">
-                                <strong>Final Review</strong>
+                                <strong>Applicants Final Review</strong>
                                 <small>Review completed assessments for approval and finalization.</small>
                             </span>
                             <span class="applicant-workflow-arrow"><x-outline-icon name="arrow-long-right" /></span>
@@ -11943,7 +11965,7 @@
                         @if($canEditInformation)
                             <button type="button" id="btnViewApplicantInformation" class="applicant-documents-trigger applicant-file-action">
                                 <x-outline-icon name="user-circle" />
-                                <span data-information-button-label>Health Information Form</span>
+                                <span data-information-button-label>Personal Information</span>
                             </button>
                         @endif
                         <button type="button" id="btnViewMedicalCondition" class="applicant-documents-trigger applicant-file-action">
@@ -12048,7 +12070,7 @@
                     {{-- Medical Condition Section --}}
                     <div class="applicant-medical-condition-section">
                         <section class="applicant-screening-panel applicant-review-panel" id="applicantNurseReviewPanel">
-                            <h4 class="applicant-screening-panel-title">Doctor Review</h4>
+                            <h4 class="applicant-screening-panel-title" data-final-review-title>Final Review</h4>
                             <div class="applicant-lookup-grid applicant-review-source-grid">
                                 <div class="applicant-lookup-item">
                                     <div class="applicant-lookup-card">
@@ -12484,13 +12506,13 @@
         <div class="applicant-modal-shell applicant-health-info-modal">
             <div class="applicant-modal-head">
                 <div class="applicant-modal-head-main">
-                    <div class="applicant-modal-head-badge">HF</div>
+                    <div class="applicant-modal-head-badge">PI</div>
                     <div class="applicant-modal-head-copy">
-                        <h3>Health Information Form</h3>
-                        <p>Complete health form information for the selected record.</p>
+                        <h3>Personal Information</h3>
+                        <p>Review information for the selected record.</p>
                     </div>
                 </div>
-                <button type="button" class="applicant-modal-close" id="closeApplicantHealthInfoModal" aria-label="Close health information form">
+                <button type="button" class="applicant-modal-close" id="closeApplicantHealthInfoModal" aria-label="Close personal information">
                     <x-outline-icon name="x-mark" />
                 </button>
             </div>
@@ -12502,7 +12524,7 @@
                             <div class="health-info-header">
                                 <div>
                                     <p class="health-info-kicker">Health Form</p>
-                                    <h4 id="healthInfoSectionTitle">Health Information Form</h4>
+                                    <h4 id="healthInfoSectionTitle">Personal Information</h4>
                                 </div>
                                 <div class="health-info-actions">
                                     @if($canEditInformation)
@@ -12597,11 +12619,11 @@
                 <div class="applicant-modal-head-main">
                     <div class="applicant-modal-head-badge">RV</div>
                     <div class="applicant-modal-head-copy">
-                        <h3>Saved Doctor Review</h3>
+                        <h3>Saved Final Review</h3>
                         <p>Previously recorded findings and physical assessment.</p>
                     </div>
                 </div>
-                <button type="button" class="applicant-modal-close" id="closeSavedAssessmentModal" aria-label="Close saved doctor review">
+                <button type="button" class="applicant-modal-close" id="closeSavedAssessmentModal" aria-label="Close saved final review">
                     <x-outline-icon name="x-mark" />
                 </button>
             </div>
@@ -14675,6 +14697,8 @@
         let currentLookupRedirect = '';
         let currentAssessmentReview = {};
         let currentRecordType = 'applicant';
+        let currentClinicLookupData = null;
+        let repeatClearanceReview = null;
         const canReviewFinalSubmission = @json($canReviewFinalSubmission);
         const canEncodeApplicantAssessment = @json($canEncodeAssessment);
         const canLookupEmployeeRecords = @json($canLookupEmployeeRecords);
@@ -14769,7 +14793,7 @@
             if (informationButton) {
                 informationButton.setAttribute('aria-expanded', 'false');
                 const label = informationButton.querySelector('[data-information-button-label]');
-                if (label) label.textContent = 'Health Information Form';
+                if (label) label.textContent = 'Personal Information';
             }
         }
 
@@ -15056,9 +15080,9 @@
             }
             if (lookupModalTitle) lookupModalTitle.textContent = isEncode
                 ? 'Encode Assessment'
-                : (isFinalReview ? 'Final Review' : (isReferenceLookup ? 'Reference Lookup' : 'Applicants'));
+                : (isFinalReview ? 'Applicants Final Review' : (isReferenceLookup ? 'Reference Lookup' : 'Applicants'));
             if (lookupModalSubtitle) lookupModalSubtitle.textContent = isEncode
-                ? "Record the applicant's vital signs during the doctor review."
+                ? "Record the applicant's vital signs for Applicants Final Review."
                 : (isFinalReview
                     ? 'Review encoded applicants and approve or mark pending compliance.'
                     : (isReferenceLookup ? 'Look up an applicant by reference number.' : "Enter the applicant's reference number to look up the record."));
@@ -15072,7 +15096,7 @@
                     : (isReferenceLookup ? 'Enter the reference number from the Admission System.' : "Choose an action to process or manage an applicant's record."));
             if (lookupModalEntryButtonText) lookupModalEntryButtonText.textContent = isEncode ? 'Input Reference Number' : 'Reference Lookup';
             if (lookupModalHelpCopy) lookupModalHelpCopy.innerHTML = isEncode
-                ? 'Encode only the physical assessment here. Final approval and PUPTAS sync remain in <strong>Final Review</strong>.'
+                ? 'Encode only the physical assessment here. Final approval and PUPTAS sync remain in <strong>Applicants Final Review</strong>.'
                 : (isReferenceLookup
                     ? 'Enter the complete reference number (e.g., 2026-0123-4567).'
                     : "Find the reference number in the <strong>Admission System</strong> under the applicant's profile or registration form.");
@@ -15084,6 +15108,7 @@
         }
 
         function resetLookupButtonToFind() {
+            findBtn?.removeEventListener('click', submitRepeatMedicalClearance);
             if (!findBtn) return;
 
             setReviewDraftButtonVisible(false);
@@ -15323,6 +15348,9 @@
         }
 
         function resetLookupState() {
+            repeatClearanceReview = null;
+            currentClinicLookupData = null;
+            findBtn?.removeEventListener('click', submitRepeatMedicalClearance);
             window.ReviewMedicalClearance?.reset();
             pendingReferenceLookup = null;
             if (entryPane) entryPane.classList.remove('is-reference-verification', 'is-reference-lookup');
@@ -15368,7 +15396,7 @@
             if (informationButton) {
                 informationButton.classList.remove('is-visible');
                 const label = informationButton.querySelector('[data-information-button-label]');
-                if (label) label.textContent = 'Health Information Form';
+                if (label) label.textContent = 'Personal Information';
                 informationButton.setAttribute('aria-expanded', 'false');
             }
             if (medicalConditionButton) {
@@ -16317,7 +16345,9 @@
                     ['blood_type', 'Blood Type', 'select', null, { options: ['Unknown', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] }],
                     ['course_college', 'Course / Program', 'course'],
                     ['course_code', 'Course Code', 'readonly'],
-                    ['school_year', 'School Year']
+                    ['school_year', 'School Year'],
+                    ['year_level', 'Year Level', 'readonly'],
+                    ['section', 'Section', 'readonly']
                 ]
             },
             {
@@ -17255,6 +17285,77 @@
             });
         }
 
+        function openExistingFinalReview(context) {
+            const data = currentClinicLookupData;
+            const profileId = Number(data?.health_form_information?.profile_id || data?.health_profile_id);
+            if (!isClinicLookupMode() || !data || context.type !== data.record_type || Number(context.id) !== profileId
+                || !['student', 'employee'].includes(context.type) || !context.options?.can_issue || !window.ReviewMedicalClearance) return false;
+            resetLookupButtonToFind();
+            applyLookupMode('clinic');
+            showLookupDetails(data, currentLookupRef);
+            repeatClearanceReview = {...context, busy: false, issued: false};
+            isApprovalMode = false;
+            window.ReviewMedicalClearance.configureApproved(context.options, context.category);
+            if (foundName) foundName.textContent = currentLookupName || data.student_name || '';
+            if (foundCard) foundCard.style.display = 'flex';
+            if (defaultPane) defaultPane.style.display = 'none';
+            document.querySelector('.applicant-ref-lookup-row')?.style.setProperty('display', 'none');
+            if (medicalConditionSection) { medicalConditionSection.classList.add('show'); medicalConditionSection.style.display = 'grid'; }
+            setFinalReviewPhysicalReadonly(false);
+            document.querySelectorAll('input[name="applicant_clearance_decision"]').forEach(input => { input.checked = false; });
+            setReviewDraftButtonVisible(false);
+            syncFindingsReviewFields();
+            if (findBtn) {
+                findBtn.removeEventListener('click', doLookup);
+                findBtn.removeEventListener('click', doApprove);
+                findBtn.removeEventListener('click', saveStudentAssessment);
+                findBtn.textContent = 'Issue Medical Clearance'; findBtn.disabled = false;
+                findBtn.style.opacity = ''; findBtn.style.cursor = '';
+                findBtn.addEventListener('click', submitRepeatMedicalClearance);
+            }
+            setStatus('info', 'Final Review for another Medical Clearance. The existing Health Form and approval stay unchanged.');
+            return true;
+        }
+
+        async function submitRepeatMedicalClearance() {
+            const active = repeatClearanceReview;
+            if (!active || active.busy || active.issued) return;
+            const decision = document.querySelector('input[name="applicant_clearance_decision"]:checked')?.value;
+            const findings = document.querySelector('input[name="applicant_findings_status"]:checked')?.value;
+            if (decision !== 'approve' || !findings) { setStatus('error', 'Select a review result and Approve / Issue before issuing the Medical Clearance.'); return; }
+            let clearance;
+            try {
+                clearance = window.ReviewMedicalClearance.collect(true).medical_clearance;
+                if (!clearance) throw new Error('Select the required Request for / Purpose.');
+            } catch (error) { setStatus('error', error.message); return; }
+            const assessment = {};
+            for (const [key, id, employeeName] of [['height','applicantHeight','employee_exam_height'], ['weight','applicantWeight','employee_exam_weight'],
+                ['blood_pressure','applicantBloodPressure','employee_exam_bp'], ['pulse_rate','applicantPulseRate','employee_exam_hr'],
+                ['respiratory_rate','applicantRespiratoryRate','employee_exam_rr'], ['temperature','applicantTemperature','employee_exam_temperature']]) {
+                const field = active.type === 'employee' ? document.querySelector(`[name="${employeeName}"]`) : document.getElementById(id);
+                if (field?.reportValidity && !field.reportValidity()) { setStatus('error', 'Complete the required assessment fields.'); return; }
+                assessment[key] = String(field?.value || '').trim();
+            }
+            const remarks = document.getElementById(findings === 'With Findings' ? 'applicantFindingRemarks' : 'applicantNormalRemarks')?.value || '';
+            active.busy = true; if (findBtn) findBtn.disabled = true;
+            setStatus('info', 'Issuing Medical Clearance...');
+            try {
+                const response = await fetch(active.url, {method:'POST', credentials:'same-origin', headers:{Accept:'application/json', 'Content-Type':'application/json',
+                    'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]')?.content || ''}, body:JSON.stringify({...clearance,
+                    submission_id:active.options.submission_id, doctor_review:{category:active.category, findings, decision:'issue', remarks, assessment}})});
+                const data = await response.json();
+                if (repeatClearanceReview !== active) return;
+                if (!response.ok) throw new Error(Object.values(data.errors || {}).flat()[0] || data.message || 'Unable to issue Medical Clearance.');
+                active.issued = true;
+                const link = document.querySelector('[data-review-clearance-document]');
+                if (link) { link.href = data.document.url; link.hidden = false; }
+                if (findBtn) findBtn.textContent = 'Medical Clearance Issued';
+                setStatus('success', 'Medical Clearance issued and saved to Documents. The existing Health Form approval was not changed.');
+            } catch (error) { if (repeatClearanceReview === active) setStatus('error', error.message); }
+            finally { if (repeatClearanceReview === active) { active.busy = false; if (findBtn) findBtn.disabled = active.issued; } }
+        }
+        window.ClinicExistingFinalReview = {open: openExistingFinalReview};
+
         function renderApplicantReviewSource(element, value, fallbackText) {
             if (!element) return;
 
@@ -17265,6 +17366,9 @@
         }
 
         function showLookupDetails(data, fallbackRef) {
+            currentClinicLookupData = isClinicLookupMode() ? data : null;
+            const reviewTitle = document.querySelector('[data-final-review-title]');
+            if (reviewTitle) reviewTitle.textContent = isClinicLookupMode() ? 'Final Review' : 'Applicants Final Review';
             console.log('showLookupDetails called with data:', data);
 
             if (!lookupDetails) {
@@ -17339,7 +17443,7 @@
                 informationButton.classList.add('is-visible');
                 informationButton.setAttribute('aria-expanded', 'false');
                 const label = informationButton.querySelector('[data-information-button-label]');
-                if (label) label.textContent = 'Health Information Form';
+                if (label) label.textContent = 'Personal Information';
             }
             renderHealthInfoEditor(data.health_form_information || {});
             if (medicalConditionButton) {
@@ -17860,6 +17964,7 @@
         }
 
         function saveStudentAssessment() {
+            if (repeatClearanceReview) return submitRepeatMedicalClearance();
             if (!currentLookupRef || !isStudentLookupResult()) {
                 setStatus('error', currentRecordType === 'dependent'
                     ? 'No dependent record is open.'
@@ -18046,6 +18151,7 @@
         }
 
         function doApprove() {
+            if (repeatClearanceReview) return submitRepeatMedicalClearance();
             if (!currentLookupRef) {
                 setStatus('error', 'No applicant to approve.');
                 return;
@@ -18091,7 +18197,7 @@
             const vitalValue = (input) => String(input?.value ?? '').trim();
 
             if (!findingsStatusInput) {
-                setStatus('error', 'Please select the doctor review result.', { toastOnly: true });
+                setStatus('error', 'Please select the final review result.', { toastOnly: true });
                 return;
             }
             if (!clearanceDecisionInput) {
