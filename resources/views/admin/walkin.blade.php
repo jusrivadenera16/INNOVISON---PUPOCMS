@@ -3375,6 +3375,12 @@
         display: block;
     }
 
+    .employee-draft-card .applicant-final-review-avatar {
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+    }
+
     .applicant-final-review-card small {
         color: #64748b;
         font-size: 10px;
@@ -11796,8 +11802,10 @@
                                     $draftName = $draftName !== '' ? $draftName : ($employeeDraft->user?->name ?: 'Employee');
                                     $draftReference = trim((string) ($employeeDraft->employee_number ?: $employeeDraft->user?->employee_number ?: $employeeDraft->id));
                                     $draftSearch = strtolower(trim($draftName . ' ' . ($employeeDraft->user?->email ?? '') . ' ' . $draftReference));
-                                    $draftPhotoUrl = filled($employeeDraft->student_photo)
-                                        ? route(request()->routeIs('assistant.*') ? 'assistant.walkin.employeeDocument' : 'walkin.employeeDocument', ['employeeProfile' => $employeeDraft->id, 'document' => 'student_photo'])
+                                    $hasStudentDraftPhoto = $employeeDraft->draft_record_type === 'Student'
+                                        && filled($employeeDraft->user?->healthProfile?->student_photo);
+                                    $draftPhotoUrl = filled($employeeDraft->student_photo) || $hasStudentDraftPhoto
+                                        ? route(request()->routeIs('assistant.*') ? 'assistant.walkin.draft-photo' : 'walkin.draft-photo', ['employeeProfile' => $employeeDraft->id])
                                         : '';
                                 @endphp
                                 <article class="applicant-final-review-card employee-draft-card" data-employee-draft-row data-search="{{ $draftSearch }}">
@@ -14674,6 +14682,7 @@
         const finalReviewTimeOutUrl = '{{ url($basePrefix . '/walkin/final-review/time-out') }}';
         const saveEncodingUrl = '{{ url($basePrefix . '/walkin/applicant-encoding') }}';
         const saveStudentAssessmentUrl = '{{ url($basePrefix . '/walkin/student-assessment') }}';
+        const studentApprovalEvaluationUrl = '{{ url($basePrefix . '/walkin/student-approval-evaluation') }}';
         const applicantFinalReviewDraftUrl = '{{ url($basePrefix . '/walkin/applicant-final-review-draft') }}';
         const studentAssessmentDraftUrl = '{{ url($basePrefix . '/walkin/student-assessment-draft') }}';
         const healthInfoUpdateBaseUrl = '{{ url($basePrefix . '/walkin/health-profile-information') }}';
@@ -14814,7 +14823,7 @@
             approvalEvaluationInProgress = true;
             approvalEvaluationActions?.querySelectorAll('button').forEach((button) => { button.disabled = true; });
 
-            fetch(approvalEvaluationUrl, {
+            fetch(pendingApprovalEvaluation.url || approvalEvaluationUrl, {
                 method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
@@ -17953,13 +17962,25 @@
                         findBtn.style.opacity = '1';
                         findBtn.style.cursor = 'not-allowed';
                     }
+                    const evaluationPrompt = isApprovedDecision && data.evaluation_source_type === 'student_approval' && data.evaluation_source_id
+                        ? {
+                            sourceType: data.evaluation_source_type,
+                            sourceId: data.evaluation_source_id,
+                            subject: 'Student',
+                            url: studentApprovalEvaluationUrl
+                        }
+                        : null;
                     showClinicSuccessOverlay(approvalOverlay, {
                         title: isApprovedDecision ? 'Medical Clearance Issued' : (isDependentRecord ? 'Dependent Assessment Saved' : 'Assessment Saved'),
-                        message: isApprovedDecision
+                        message: evaluationPrompt
+                            ? 'The student has been approved. Would you like to send a service evaluation form?'
+                            : isApprovedDecision
                             ? (isDependentRecord ? 'The dependent has been approved successfully.' : 'The student/OJT has been approved successfully.')
                             : (isDependentRecord
                                 ? 'The dependent assessment has been saved to the health record.'
                                 : 'The student/OJT assessment has been saved to the health profile.'),
+                        evaluationPrompt,
+                        persistent: Boolean(evaluationPrompt),
                         duration: 2500,
                         onDone: () => {
                             if (isApprovedDecision) {

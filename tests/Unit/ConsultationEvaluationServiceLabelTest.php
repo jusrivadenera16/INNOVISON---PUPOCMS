@@ -12,9 +12,11 @@ class ConsultationEvaluationServiceLabelTest extends TestCase
     {
         $applicantEvaluation = new ConsultationEvaluation(['source_type' => 'applicant_approval']);
         $employeeEvaluation = new ConsultationEvaluation(['source_type' => 'employee_approval']);
+        $studentEvaluation = new ConsultationEvaluation(['source_type' => 'student_approval']);
 
         $this->assertSame('Applicant Health Form Review', $applicantEvaluation->serviceLabel());
         $this->assertSame('Employee Health Examination', $employeeEvaluation->serviceLabel());
+        $this->assertSame('Student Health Form Review', $studentEvaluation->serviceLabel());
     }
 
     public function test_it_uses_the_consultation_service_for_legacy_evaluations(): void

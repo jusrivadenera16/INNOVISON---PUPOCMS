@@ -1830,6 +1830,20 @@ class WalkInController extends Controller
         return $this->showApplicantDocument($healthProfile, 'student_photo');
     }
 
+    public function showEmployeeDraftPhoto(EmployeeHealthProfile $employeeProfile)
+    {
+        if (filled($employeeProfile->student_photo)) {
+            return $this->showEmployeeDocument($employeeProfile, 'student_photo');
+        }
+
+        $studentProfile = $this->employeeDraftType($employeeProfile) === 'Student'
+            ? $employeeProfile->user?->healthProfile
+            : null;
+        abort_unless($studentProfile && filled($studentProfile->student_photo), 404);
+
+        return $this->showApplicantDocument($studentProfile, 'student_photo');
+    }
+
     public function showEmployeeHealthForm(Request $request, EmployeeHealthProfile $employeeProfile)
     {
         $employeeProfile->loadMissing('user');
@@ -2085,10 +2099,17 @@ class WalkInController extends Controller
             );
     }
 
+    public function sendStudentApprovalEvaluation(Request $request)
+    {
+        $request->validate(['source_type' => ['required', Rule::in(['student_approval'])]]);
+
+        return $this->sendApprovalEvaluation($request);
+    }
+
     public function sendApprovalEvaluation(Request $request)
     {
         $validated = $request->validate([
-            'source_type' => ['required', Rule::in(['applicant_approval', 'employee_approval'])],
+            'source_type' => ['required', Rule::in(['applicant_approval', 'employee_approval', 'student_approval'])],
             'source_id' => ['required', 'integer', 'min:1'],
             'decision' => ['required', Rule::in(['send', 'skip'])],
         ]);
@@ -2100,6 +2121,10 @@ class WalkInController extends Controller
 
         if (!$profile) {
             return response()->json(['success' => false, 'message' => 'The approved health record could not be found.'], 404);
+        }
+
+        if ($sourceType === 'student_approval' && !$this->isStudentOjtHealthProfileUser($profile->user)) {
+            return response()->json(['success' => false, 'message' => 'Student health profile was not found.'], 404);
         }
 
         $isApproved = $sourceType === 'employee_approval'
@@ -2261,7 +2286,7 @@ class WalkInController extends Controller
                 ? 'draft_data_encrypted'
                 : 'draft_data';
 
-        return EmployeeHealthProfile::with('user')
+        return EmployeeHealthProfile::with('user.healthProfile')
             ->whereNotNull($draftColumn)
             ->latest('updated_at')
             ->take(50);
@@ -2324,11 +2349,13 @@ class WalkInController extends Controller
         ));
         $email = trim((string) ($user?->email ?? ''));
         $status = trim((string) ($profile->clearance_status ?: $profile->submission_status ?: 'Draft'));
-        $employeeDocumentRoute = $request->routeIs('assistant.*')
-            ? 'assistant.walkin.employeeDocument'
-            : 'walkin.employeeDocument';
-        $photoUrl = filled($profile->student_photo)
-            ? route($employeeDocumentRoute, ['employeeProfile' => $profile->id, 'document' => 'student_photo'])
+        $draftPhotoRoute = $request->routeIs('assistant.*')
+            ? 'assistant.walkin.draft-photo'
+            : 'walkin.draft-photo';
+        $hasStudentPhoto = $this->employeeDraftType($profile) === 'Student'
+            && filled($user?->healthProfile?->student_photo);
+        $photoUrl = filled($profile->student_photo) || $hasStudentPhoto
+            ? route($draftPhotoRoute, ['employeeProfile' => $profile->id])
             : '';
 
         return [
@@ -5449,6 +5476,8 @@ PROMPT;
                 'message' => $isDependentAssessment ? 'Dependent assessment saved.' : 'Student/OJT assessment saved.',
                 'status' => $profile->clearance_status,
                 'health_profile_id' => $profile->id,
+                'evaluation_source_type' => !$isDependentAssessment && $clearanceDecision === 'approve' ? 'student_approval' : null,
+                'evaluation_source_id' => !$isDependentAssessment && $clearanceDecision === 'approve' ? $profile->id : null,
                 'assessment_review' => $this->healthProfileAssessmentReview($profile->fresh()),
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
