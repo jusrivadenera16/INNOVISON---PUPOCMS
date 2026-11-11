@@ -101,7 +101,7 @@ class LandingReviewsTest extends TestCase
         $this->assertStringNotContainsString('<p>', $homeHtml);
     }
 
-    public function test_landing_and_home_are_both_limited_to_three(): void
+    public function test_landing_and_home_have_nine_reviews_in_three_pages_of_three(): void
     {
         for ($day = 1; $day <= 12; $day++) {
             $this->createReview([
@@ -110,18 +110,30 @@ class LandingReviewsTest extends TestCase
             ]);
         }
 
-        $this->get('/')
+        $response = $this->get('/')
             ->assertOk()
             ->assertViewHas('landingReviews', fn ($reviews): bool => $reviews->pluck('message')->all() === [
-                'Review 12', 'Review 11', 'Review 10',
+                'Review 12', 'Review 11', 'Review 10', 'Review 9', 'Review 8', 'Review 7', 'Review 6', 'Review 5', 'Review 4',
             ]);
         $method = new \ReflectionMethod(AppointmentController::class, 'buildRecentEvaluationCollection');
-        $homeReviews = $method->invoke(app(AppointmentController::class), 3);
-        $this->assertSame(['Review 12', 'Review 11', 'Review 10'], $homeReviews->pluck('message')->all());
+        $homeReviews = $method->invoke(app(AppointmentController::class), 9);
+        $this->assertCount(9, $homeReviews);
         $this->assertStringContainsString(
-            '$recentEvaluations = $this->buildRecentEvaluationCollection(3);',
+            '$recentEvaluations = $this->buildRecentEvaluationCollection(9);',
             file_get_contents(app_path('Http/Controllers/AppointmentController.php'))
         );
+        foreach ([$response->getContent(), view('partials.clinic-review-cards', ['reviews' => $homeReviews])->render()] as $html) {
+            $document = new \DOMDocument();
+            @$document->loadHTML($html);
+            $xpath = new \DOMXPath($document);
+            $this->assertSame(3, $xpath->query('//*[@data-review-page]')->length);
+            $this->assertSame(2, $xpath->query('//*[@data-review-page and @hidden]')->length);
+            $this->assertSame(3, $xpath->query('//*[@data-review-page and not(@hidden)]/article')->length);
+            $this->assertSame(9, $xpath->query('//*[@data-review-page]/article')->length);
+            $this->assertSame(3, $xpath->query('//button[@data-review-dot]')->length);
+            $this->assertSame(2, $xpath->query('//*[contains(@class, "feedback-carousel-line")]')->length);
+            $this->assertSame(9, $xpath->query('//article/p[@class="feedback-review-message"]/following-sibling::div[@class="feedback-identity"]')->length);
+        }
     }
 
     public function test_review_priority_is_suggestion_then_rating_then_recency(): void
@@ -134,10 +146,10 @@ class LandingReviewsTest extends TestCase
         $reviews = app(\App\Services\ClinicReviewService::class)->recent(10);
         $this->assertSame(['Newer high', 'Older high', 'Latest low', '', ''], $reviews->pluck('message')->all());
         $this->assertSame([5, 5, 2, 5, 1], $reviews->pluck('rating')->all());
-        $response = $this->get('/')->assertOk()->assertViewHas('landingReviews', fn ($items): bool => $items->count() === 3);
+        $response = $this->get('/')->assertOk()->assertViewHas('landingReviews', fn ($items): bool => $items->count() === 5);
         $document = new \DOMDocument();
         @$document->loadHTML($response->getContent());
-        $this->assertSame(3, (new \DOMXPath($document))->query('//*[@id="landingReviewsSection"]//article[contains(@class, "feedback-slide")]')->length);
+        $this->assertSame(3, (new \DOMXPath($document))->query('//*[@id="landingReviewsSection"]//*[@data-review-page and not(@hidden)]/article')->length);
     }
 
     public function test_featured_reviews_are_selected_only_from_the_latest_thirty(): void

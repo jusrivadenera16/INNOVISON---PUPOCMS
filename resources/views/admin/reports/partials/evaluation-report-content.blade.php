@@ -96,7 +96,7 @@
                 </div>
             </div>
 
-            <div class="evaluation-response-heading">
+            <div class="evaluation-response-heading" id="submitted-responses">
                 <h2>Submitted Responses</h2>
                 <span>{{ number_format($totalSubmissions) }} total</span>
             </div>
@@ -109,7 +109,7 @@
                 </div>
 
                 <div class="evaluation-pagination">
-                    {{ $evaluationItems->links() }}
+                    {{ $evaluationItems->onEachSide(1)->links('admin.reports.partials.evaluation-pagination') }}
                 </div>
             @else
                 <div class="evaluation-empty">No submitted service evaluations were found for this date range.</div>

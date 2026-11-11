@@ -2400,7 +2400,7 @@ class ReportsController extends Controller
         $evaluationItems = new LengthAwarePaginator(
             collect(),
             0,
-            10,
+            5,
             LengthAwarePaginator::resolveCurrentPage(),
             ['path' => LengthAwarePaginator::resolveCurrentPath()]
         );
@@ -2464,7 +2464,9 @@ class ReportsController extends Controller
                 ->select(['id', 'user_id', 'consultation_id', 'source_type', 'client_type', 'submitted_at', 'rating', 'suggestions'])
                 ->with(['consultation:id,service,consultation_date', 'user:id,first_name,last_name,name'])
                 ->latest('submitted_at')
-                ->paginate(10)
+                ->latest('id')
+                ->paginate(5)
+                ->fragment('submitted-responses')
                 ->withQueryString();
         }
 
