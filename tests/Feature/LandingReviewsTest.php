@@ -54,7 +54,7 @@ class LandingReviewsTest extends TestCase
         $workflow->shouldReceive('activeClosure')->andReturn(null);
     }
 
-    public function test_only_submitted_consented_nonempty_reviews_are_public(): void
+    public function test_submitted_consented_reviews_are_public_even_without_suggestions(): void
     {
         $this->createReview(['suggestions' => 'Eligible review']);
         $this->createReview(['status' => 'requested', 'suggestions' => 'Not submitted']);
@@ -66,11 +66,39 @@ class LandingReviewsTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertViewHas('landingReviews', function ($reviews): bool {
-                return $reviews->pluck('message')->all() === ['Eligible review'];
+                return $reviews->count() === 3
+                    && $reviews->pluck('message')->filter()->values()->all() === ['Eligible review'];
             })
             ->assertSee('Eligible review')
             ->assertDontSee('Missing consent')
             ->assertDontSee('Not submitted');
+    }
+
+    public function test_rating_only_reviews_show_on_landing_and_home_without_empty_comment_markup(): void
+    {
+        $userId = DB::table('users')->insertGetId([
+            'first_name' => 'Maya', 'last_name' => 'Reviewer', 'user_role' => 'student',
+        ]);
+        $this->createReview(['user_id' => $userId, 'suggestions' => null, 'rating' => 5]);
+        $this->createReview(['user_id' => $userId, 'suggestions' => '   ', 'rating' => 4]);
+        $method = new \ReflectionMethod(AppointmentController::class, 'buildRecentEvaluationCollection');
+        $homeReviews = $method->invoke(app(AppointmentController::class), 10);
+        $this->assertCount(2, $homeReviews);
+        $response = $this->get('/')->assertOk()
+            ->assertViewHas('landingReviews', fn ($reviews): bool => $reviews->all() === $homeReviews->all())
+            ->assertSee('Maya R.')->assertDontSee('Maya Reviewer');
+        $document = new \DOMDocument();
+        @$document->loadHTML($response->getContent());
+        $xpath = new \DOMXPath($document);
+        $section = '//*[@id="landingReviewsSection"]';
+        $this->assertSame(2, $xpath->query($section . '//article[contains(@class, "feedback-slide")]')->length);
+        $this->assertSame(2, $xpath->query($section . '//*[contains(@class, "feedback-stars")]')->length);
+        $this->assertSame(0, $xpath->query($section . '//*[@class="feedback-quote"]')->length);
+        $this->assertSame(0, $xpath->query($section . '//*[@class="feedback-copy"]/p')->length);
+        $homeHtml = view('partials.clinic-review-cards', ['reviews' => $homeReviews])->render();
+        $this->assertStringContainsString('5 out of 5 stars', $homeHtml);
+        $this->assertStringContainsString('4 out of 5 stars', $homeHtml);
+        $this->assertStringNotContainsString('<p>', $homeHtml);
     }
 
     public function test_it_displays_the_ten_most_recent_reviews_like_the_homepage(): void
@@ -94,7 +122,7 @@ class LandingReviewsTest extends TestCase
     {
         $response = $this->get('/')
             ->assertOk()
-            ->assertSee('No suggestions have been shared yet.')
+            ->assertSee('No feedback has been shared yet.')
             ->assertSee('What PUPians Are Saying')
             ->assertDontSee('What Our Clients Say');
         $html = $response->getContent();
@@ -205,7 +233,7 @@ class LandingReviewsTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertViewHas('landingReviews', fn ($reviews): bool => $reviews->isEmpty())
-            ->assertSee('No suggestions have been shared yet.');
+            ->assertSee('No feedback has been shared yet.');
     }
 
     private function createReview(array $attributes = []): void
