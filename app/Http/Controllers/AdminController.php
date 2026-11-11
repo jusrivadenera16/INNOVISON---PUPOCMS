@@ -86,47 +86,7 @@ class AdminController extends Controller
 
     private function studentDeclarationPurposeText(?string $category, ?string $studentType = null): array
     {
-        $category = trim((string) $category);
-        $normalized = strtolower($category);
-        $normalizedStudentType = strtolower(trim((string) $studentType));
-
-        if ($normalized === '' || $normalized === 'general') {
-            $category = 'Student';
-            $normalized = 'student';
-        }
-
-        if (
-            $normalizedStudentType === 'ladderized'
-            || ($normalizedStudentType === '' && $normalized === 'ladderized')
-        ) {
-            return [
-                'purpose' => 'Ladderized Program',
-                'endorsement' => 'Ladderized Program',
-            ];
-        }
-
-        if (str_contains($normalized, 'ojt') || str_contains($normalized, 'on-the-job')) {
-            return [
-                'purpose' => 'On-the-Job Training (OJT)',
-                'endorsement' => 'On-the-Job Training (OJT)',
-            ];
-        }
-
-        if ($normalized === 'student') {
-            return [
-                'purpose' => 'currently enrolled student',
-                'endorsement' => 'status as a currently enrolled student',
-            ];
-        }
-
-        return [
-            'purpose' => $category,
-            'endorsement' => match (true) {
-                str_contains($normalized, 'return to school') => 'return to school',
-                str_contains($normalized, 'transfer') => 'transfer as a student',
-                default => $normalized,
-            },
-        ];
+        return app(\App\Services\StudentHealthDeclarationService::class)->purpose($category, $studentType);
     }
 
     private function updateCurrentHealthFormSubmissionStatus(HealthProfile $profile, string $status): ?HealthFormSubmission
@@ -3903,6 +3863,13 @@ class AdminController extends Controller
 
         $this->applySubmittedRenewalQueueState($records);
 
+        // Only active submissions describe the purpose of the form currently in either queue.
+        $pendingHealthFormCategories = HealthFormSubmission::query()
+            ->whereIn('health_profile_id', $records->filter(fn ($record) => ($record->record_source ?? 'health') === 'health')->pluck('id'))
+            ->whereIn('status', [HealthFormSubmission::STATUS_SUBMITTED, HealthFormSubmission::STATUS_NEEDS_CORRECTION, 'under_review'])
+            ->latest('submitted_at')->latest('id')->get(['health_profile_id', 'category'])
+            ->unique('health_profile_id')->pluck('category', 'health_profile_id');
+
         $courseOptions = HealthProfile::query()
             ->notPulledOut()
             ->with('user:id,course')
@@ -3950,29 +3917,34 @@ class AdminController extends Controller
             'issuedWithConditions',
             'issuedLatestApprovedAt',
             'bulkHealthFormRequestRecords',
-            'bulkHealthFormRequestCategories'
+            'bulkHealthFormRequestCategories',
+            'pendingHealthFormCategories'
         ));
     }
 
     private function applySubmittedRenewalQueueState($records): void
     {
         $profileIds = $records->filter(fn ($record) => ($record->record_source ?? 'health') === 'health')->pluck('id');
-        $pendingIds = HealthProfileCorrectionRequest::query()
+        $pendingRequests = HealthProfileCorrectionRequest::query()
             ->whereIn('health_profile_id', $profileIds)
             ->where('type', HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM)
             ->whereIn('status', [HealthProfileCorrectionRequest::STATUS_SUBMITTED, HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW])
             ->whereHas('healthFormSubmission', fn ($query) => $query->where('status', HealthFormSubmission::STATUS_SUBMITTED))
-            ->pluck('health_profile_id')->all();
+            ->with('healthFormSubmission')->latest('submitted_at')->latest('id')->get()->unique('health_profile_id')->keyBy('health_profile_id');
 
         foreach ($records as $record) {
-            if (($record->record_source ?? 'health') !== 'health' || !in_array($record->id, $pendingIds)) continue;
+            if (($record->record_source ?? 'health') !== 'health' || !$pendingRequests->has($record->id)) continue;
+            $pendingSubmission = $pendingRequests->get($record->id)->healthFormSubmission;
             // Present the new cycle in the approval queue without changing its historical issued profile.
             $record->setRelation('latestApprovedHealthFormSubmission', null);
+            $record->setRelation('pendingHealthFormSubmission', $pendingSubmission);
             $record->forceFill([
                 'clearance_status' => 'For Verification',
                 'pending_reason' => null,
                 'medical_condition_remarks' => null,
                 'verified_at' => null,
+                'health_form_category' => $pendingSubmission->category ?: $record->health_form_category,
+                'health_declaration' => data_get($pendingSubmission->profile_snapshot, 'profile.health_declaration') ?: $record->health_declaration,
             ]);
         }
     }
@@ -5029,7 +5001,7 @@ class AdminController extends Controller
         $snapshots = app(HealthFormPdfSnapshotService::class);
         $staged = clone $profile;
         $staged->forceFill(['health_form_category' => $pending->category, 'clearance_status' => 'For Verification', 'verified_at' => null]);
-        $submission = $snapshots->recordSubmittedWithoutPdf($profile, $profile->user, $pending->category, $pending->remarks, false, $staged);
+        $submission = $snapshots->recordSubmittedWithoutPdf($profile, $profile->user, $pending->category, $pending->remarks, false, $staged, true);
         $correction = HealthProfileCorrectionRequest::query()->where('health_form_submission_id', $pending->id)
             ->where('health_profile_id', $profile->id)->where('type', HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM)->firstOrFail();
         $correction->forceFill([

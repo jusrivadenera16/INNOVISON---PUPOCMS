@@ -21,7 +21,8 @@ class HealthFormPdfSnapshotService
         ?string $category = null,
         ?string $remarks = null,
         bool $createNewSubmission = false,
-        ?HealthProfile $snapshotProfile = null
+        ?HealthProfile $snapshotProfile = null,
+        bool $refreshDeclaration = false
     ): HealthFormSubmission
     {
         $profile->loadMissing('user');
@@ -30,6 +31,12 @@ class HealthFormPdfSnapshotService
         $timestamp = now();
         $filePath = $this->buildSnapshotPath($profile, $user, $resolvedCategory, $timestamp);
         $snapshotProfile = $snapshotProfile ?: ($profile->fresh('user') ?: $profile);
+        if ($refreshDeclaration) {
+            $snapshotProfile = clone $snapshotProfile;
+            $snapshotProfile->health_declaration = app(StudentHealthDeclarationService::class)->generate(
+                $snapshotProfile, $user, $resolvedCategory, $timestamp, $remarks
+            );
+        }
 
         $pdf = Pdf::loadView('student.print_health_form', [
             'profile' => $snapshotProfile,

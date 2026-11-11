@@ -125,9 +125,9 @@ class StudentInitiatedHealthFormRequestTest extends TestCase
     {
         Storage::fake('health_private');
         $pdf = \Mockery::mock(\Barryvdh\DomPDF\PDF::class);
-        $pdf->shouldReceive('setPaper')->once();
-        $pdf->shouldReceive('output')->once()->andReturn('%PDF-1.4 test');
-        Pdf::shouldReceive('loadView')->once()->andReturn($pdf);
+        $pdf->shouldReceive('setPaper')->twice();
+        $pdf->shouldReceive('output')->twice()->andReturn('%PDF-1.4 test');
+        Pdf::shouldReceive('loadView')->twice()->andReturn($pdf);
         [$student, $profile, $purpose] = $this->eligibleStudent();
         $this->actingAs($student, 'student');
         $response = app(AppointmentController::class)->requestStudentHealthForm(Request::create('/student/health-form/request', 'POST', ['purpose_id' => $purpose->id, 'information_handling' => 'existing']));

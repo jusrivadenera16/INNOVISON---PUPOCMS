@@ -49,6 +49,7 @@ function harness(response, functionSource = lookupSource) {
         showLookupDetails: (...args) => calls.details.push(args),
         showAlreadyApprovedResult() {},
         populateEmployeeDraft() {},
+        populateStudentAssessmentDraft() {},
         populateApplicantFinalReviewDraft() {},
         setReviewDraftButtonVisible() {},
         fetch: async (url, options) => {

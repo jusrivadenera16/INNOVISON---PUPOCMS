@@ -14675,6 +14675,7 @@
         const saveEncodingUrl = '{{ url($basePrefix . '/walkin/applicant-encoding') }}';
         const saveStudentAssessmentUrl = '{{ url($basePrefix . '/walkin/student-assessment') }}';
         const applicantFinalReviewDraftUrl = '{{ url($basePrefix . '/walkin/applicant-final-review-draft') }}';
+        const studentAssessmentDraftUrl = '{{ url($basePrefix . '/walkin/student-assessment-draft') }}';
         const healthInfoUpdateBaseUrl = '{{ url($basePrefix . '/walkin/health-profile-information') }}';
         const employeeHealthInfoUpdateBaseUrl = '{{ url($basePrefix . '/walkin/employee-health-profile-information') }}';
         const healthInfoTabs = document.getElementById('healthInfoTabs');
@@ -15731,6 +15732,10 @@
 
         function populateEmployeeDraft(draft) {
             if (!isClinicLookupMode()) return;
+            if (currentRecordType === 'student') {
+                // Student drafts are restored separately from employee/local backups.
+                return;
+            }
             const serverDraft = draft && typeof draft === 'object' ? draft : {};
             const savedDraft = Object.keys(serverDraft).length ? serverDraft : readLocalEmployeeDraft(currentLookupRef);
             applyReviewDraftFields(savedDraft);
@@ -15740,7 +15745,13 @@
             updateEmployeeExamValidation();
         }
 
+        function populateStudentAssessmentDraft(draft) {
+            if (currentRecordType !== 'student' || !isClinicLookupMode()) return;
+            if (draft?.lookup_scope === 'student_local') applyReviewDraftFields(draft);
+        }
+
         function populateApplicantFinalReviewDraft(draft) {
+            if (currentRecordType === 'student') return;
             if (!isFinalReviewWorkflow()) return;
             const serverDraft = draft && typeof draft === 'object' ? draft : {};
             const savedDraft = Object.keys(serverDraft).length
@@ -17613,6 +17624,7 @@
                         showLookupDetails(data, ref);
                         showAlreadyApprovedResult(data);
                         populateEmployeeDraft(data.employee_draft_data || {});
+                        populateStudentAssessmentDraft(data.student_assessment_draft_data || {});
                         populateApplicantFinalReviewDraft(data.applicant_final_review_draft_data || {});
                         const approvedMedicalConditionSection = document.querySelector('.applicant-medical-condition-section');
                         if (approvedMedicalConditionSection) {
@@ -17631,6 +17643,7 @@
                         }
                         const hasSavedReview = showLookupDetails(data, ref);
                         populateEmployeeDraft(data.employee_draft_data || {});
+                        populateStudentAssessmentDraft(data.student_assessment_draft_data || {});
                         populateApplicantFinalReviewDraft(data.applicant_final_review_draft_data || {});
                         const alreadyEncodedForReview = isEncodeWorkflow() && isEncodedForFinalReview(currentAssessmentReview, data);
                         if (alreadyEncodedForReview) {
@@ -17678,7 +17691,9 @@
                                 findBtn.addEventListener('click', doApprove);
                             }
                         }
-                        setReviewDraftButtonVisible(!isStudentRecord && canApproveFinalReview && (isClinicLookupMode() || isFinalReviewWorkflow()));
+                        setReviewDraftButtonVisible(currentRecordType === 'student'
+                            ? isClinicLookupMode() && canLookupEmployeeRecords
+                            : !isStudentRecord && canApproveFinalReview && (isClinicLookupMode() || isFinalReviewWorkflow()));
                         if (!hasSavedReview) syncFindingsReviewFields();
                     }
                 } else {
@@ -18305,6 +18320,7 @@
 
         function cacheCurrentEmployeeDraft() {
             if (!isClinicLookupMode() || !currentLookupRef) return;
+            if (currentRecordType === 'student') return;
             try {
                 localStorage.setItem(employeeDraftStorageKey(currentLookupRef), JSON.stringify(collectEmployeeDraftData()));
             } catch (error) {
@@ -18314,6 +18330,7 @@
 
         function cacheCurrentApplicantFinalReviewDraft() {
             if (!isFinalReviewWorkflow() || !currentLookupRef) return;
+            if (currentRecordType === 'student') return;
             try {
                 localStorage.setItem(
                     applicantFinalReviewDraftStorageKey(currentLookupRef),
@@ -18322,6 +18339,34 @@
             } catch (error) {
                 // Local backup is best effort; the server Draft action remains available.
             }
+        }
+
+        function saveStudentAssessmentDraft() {
+            if (!currentLookupRef || !isClinicLookupMode() || currentRecordType !== 'student') return;
+            setStatus('info', 'Saving student assessment draft...');
+            if (reviewDraftBtn) reviewDraftBtn.disabled = true;
+
+            fetch(studentAssessmentDraftUrl, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(collectReviewDraftData('student_local'))
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    setStatus('success', data.message || 'Student assessment draft saved successfully.');
+                    closeApplicantsModal();
+                    return;
+                }
+                setStatus('error', data.message || 'Unable to save student assessment draft.');
+            })
+            .catch(() => setStatus('error', 'Unable to save student assessment draft right now.'))
+            .finally(() => { if (reviewDraftBtn) reviewDraftBtn.disabled = false; });
         }
 
         function saveEmployeeDraft() {
@@ -18393,6 +18438,10 @@
         }
 
         reviewDraftBtn?.addEventListener('click', function () {
+            if (isClinicLookupMode() && currentRecordType === 'student') {
+                saveStudentAssessmentDraft();
+                return;
+            }
             if (isFinalReviewWorkflow()) {
                 saveApplicantFinalReviewDraft();
                 return;

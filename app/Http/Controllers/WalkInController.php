@@ -1799,6 +1799,15 @@ class WalkInController extends Controller
         abort_unless(in_array($document, $allowedDocuments, true), 404);
 
         $path = ltrim((string) $healthProfile->{$document}, '/');
+        if ($document === 'health_declaration') {
+            $pendingDeclaration = \App\Models\HealthProfileCorrectionRequest::query()
+                ->where('health_profile_id', $healthProfile->id)
+                ->where('type', \App\Models\HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM)
+                ->whereIn('status', ['submitted', 'under_review'])
+                ->whereHas('healthFormSubmission', fn ($query) => $query->where('status', 'submitted'))
+                ->with('healthFormSubmission')->latest('submitted_at')->latest('id')->first();
+            $path = data_get($pendingDeclaration?->healthFormSubmission?->profile_snapshot, 'profile.health_declaration') ?: $path;
+        }
         $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
 
         abort_if($path === '' || !$this->healthFiles()->exists($path), 404, 'Uploaded document not found.');
@@ -2343,6 +2352,35 @@ class WalkInController extends Controller
             ->filter(fn (EmployeeHealthProfile $profile) => is_array($profile->draft_data) && count($profile->draft_data) > 0)
             ->map(fn (EmployeeHealthProfile $profile) => $this->employeeDraftPayload($profile, $request))
             ->values();
+
+        // Student assessment drafts belong to clinic Record Management, not applicant Final Review.
+        $studentDrafts = HealthProfile::with('user')
+            ->whereNotNull('final_review_draft_data')
+            ->latest('updated_at')
+            ->get()
+            ->filter(fn (HealthProfile $profile) => ($profile->final_review_draft_data['lookup_scope'] ?? null) === 'student_local'
+                && $this->isStudentOjtHealthProfileUser($profile->user))
+            ->map(function (HealthProfile $profile) {
+                $reference = trim((string) ($profile->student_number ?: $profile->user?->student_number
+                    ?: $profile->reference_number ?: $profile->student_id));
+                $name = trim((string) ($profile->user?->name ?: implode(' ', array_filter([
+                    $profile->first_name, $profile->middle_name, $profile->last_name,
+                ]))));
+
+                return [
+                    'id' => $profile->id,
+                    'name' => $name ?: 'Student',
+                    'email' => $profile->user?->email ?? '',
+                    'employee_number' => $reference,
+                    'photo_url' => '',
+                    'record_type' => 'Student',
+                    'health_form_category' => $profile->health_form_category ?: 'Student Health Form',
+                    'status' => 'Draft',
+                    'saved_at' => optional($profile->updated_at)->toIso8601String(),
+                    'search' => Str::lower($name . ' ' . $profile->user?->email . ' ' . $reference),
+                ];
+            });
+        $drafts = $drafts->concat($studentDrafts)->sortByDesc('saved_at')->values();
 
         return response()->json([
             'success' => true,
@@ -3050,7 +3088,8 @@ class WalkInController extends Controller
                         ? $this->employeeHealthProfileInformationPayload($employeeProfile, $student)
                         : $this->healthProfileInformationPayload($healthProfile, $student),
                     'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
-                    'applicant_final_review_draft_data' => $healthProfile?->final_review_draft_data ?: [],
+                    'student_assessment_draft_data' => ($healthProfile?->final_review_draft_data['lookup_scope'] ?? null) === 'student_local' ? $healthProfile->final_review_draft_data : [],
+                    'applicant_final_review_draft_data' => ($healthProfile?->final_review_draft_data['lookup_scope'] ?? null) === 'student_local' ? [] : ($healthProfile?->final_review_draft_data ?: []),
                     'employee_draft_data' => $employeeProfile?->draft_data ?: [],
                     'dependent_assessment_data' => $recordType === 'dependent' ? $this->dependentAssessmentPayload($employeeProfile) : [],
                     'documents' => $this->healthProfileDocuments($request, $healthProfile),
@@ -3122,7 +3161,8 @@ class WalkInController extends Controller
                     ? $this->employeeHealthProfileInformationPayload($employeeProfile, $student)
                     : $this->healthProfileInformationPayload($healthProfile, $student),
                 'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
-                'applicant_final_review_draft_data' => $healthProfile?->final_review_draft_data ?: [],
+                'student_assessment_draft_data' => ($healthProfile?->final_review_draft_data['lookup_scope'] ?? null) === 'student_local' ? $healthProfile->final_review_draft_data : [],
+                'applicant_final_review_draft_data' => ($healthProfile?->final_review_draft_data['lookup_scope'] ?? null) === 'student_local' ? [] : ($healthProfile?->final_review_draft_data ?: []),
                 'employee_draft_data' => $employeeProfile?->draft_data ?: [],
                 'dependent_assessment_data' => $recordType === 'dependent' ? $this->dependentAssessmentPayload($employeeProfile) : [],
                 'documents' => $this->healthProfileDocuments($request, $healthProfile),
@@ -4227,6 +4267,33 @@ PROMPT;
         }
     }
 
+    public function saveStudentAssessmentDraft(Request $request)
+    {
+        $validated = $request->validate([
+            'reference_number' => ['required', 'string', 'max:120'],
+            'lookup_scope' => ['required', 'in:student_local'],
+        ]);
+        $profile = $this->findHealthProfileByReference($validated['reference_number']);
+        if (!$profile) {
+            $student = $this->findUserByEmployeeIdNumber($validated['reference_number'])
+                ?: $this->findUserByIdentifier($validated['reference_number']);
+            $profile = $student?->healthProfile;
+        }
+        if (!$profile || !$this->isStudentOjtHealthProfileUser($profile->user)) {
+            return response()->json(['success' => false, 'message' => 'Student health profile was not found.'], 404);
+        }
+
+        // Store unfinished inputs only; do not change the actual assessment or approval status.
+        $profile->final_review_draft_data = $request->except(['_token', 'reference_number']);
+        $profile->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Student assessment draft saved successfully.',
+            'saved_at' => now()->toIso8601String(),
+        ]);
+    }
+
     public function saveEmployeeDraft(Request $request)
     {
         $validated = $request->validate([
@@ -5289,6 +5356,7 @@ PROMPT;
                     }
                 }
 
+                $profile->final_review_draft_data = null;
                 $profile->save();
 
                 if ($isDependentAssessment && $employeeHealthProfile) {

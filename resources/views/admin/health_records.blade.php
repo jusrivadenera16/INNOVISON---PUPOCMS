@@ -6539,6 +6539,18 @@
         background: #ccfbf1;
         color: #0f766e;
     }
+    :is(#pendingApprovalInfoModal, #pendingConditionalInfoModal) .health-user-type-badge.is-purpose-ojt {
+        border-color: #bfdbfe; background: #eff6ff; color: #1d4ed8;
+    }
+    :is(#pendingApprovalInfoModal, #pendingConditionalInfoModal) .health-user-type-badge.is-purpose-ladderized {
+        border-color: #facc15; background: #fff7d6; color: #801b2d;
+    }
+    html[data-theme="dark"] :is(#pendingApprovalInfoModal, #pendingConditionalInfoModal) .health-user-type-badge.is-purpose-ojt {
+        border-color: #3b82f6; background: #172c4a; color: #bfdbfe;
+    }
+    html[data-theme="dark"] :is(#pendingApprovalInfoModal, #pendingConditionalInfoModal) .health-user-type-badge.is-purpose-ladderized {
+        border-color: #a78316; background: #3b2819; color: #fde68a;
+    }
     .readonly-modal-pagination .premium-select-shell,
     .readonly-pagination-per-page-form .premium-select-shell {
         min-width: 132px;
@@ -9155,6 +9167,9 @@
                             ? route('walkin.employeeHealthForm', ['employeeProfile' => $readonlyRecord->id, 'fresh' => 1])
                             : route('walkin.healthForm', ['healthProfile' => $readonlyRecord->id]);
                         $readonlyDocumentUrl = function ($documentKey) use ($readonlyIsEmployee, $readonlyRecord) {
+                            if (!$readonlyIsEmployee && $documentKey === 'health_declaration' && $readonlyRecord->relationLoaded('pendingHealthFormSubmission')) {
+                                return route('admin.health_form_submissions.document', [$readonlyRecord->pendingHealthFormSubmission->id, $documentKey]);
+                            }
                             return $readonlyIsEmployee
                                 ? route('walkin.employeeDocument', ['employeeProfile' => $readonlyRecord->id, 'document' => $documentKey])
                                 : route('walkin.document', ['healthProfile' => $readonlyRecord->id, 'document' => $documentKey]);
@@ -9384,7 +9399,7 @@
                             <div class="readonly-record-identity">
                                 <div class="readonly-record-name-line">
                                     <h4 class="readonly-record-name">{{ optional($readonlyRecord->user)->name ?: 'Unnamed User' }}</h4>
-                                    <span class="health-user-type-badge is-{{ $readonlyUserTypeClass }}">{{ $readonlyUserType }}</span>
+                                    @include('admin.partials.pending-health-form-user-badge', ['record' => $readonlyRecord])
                                 </div>
                                 <p class="readonly-record-sub">{{ optional($readonlyRecord->user)->email ?: '-' }}</p>
                             </div>
@@ -9595,7 +9610,10 @@
                     <article class="readonly-record-card" data-user-category="{{ strtolower(trim((string) $resolveHealthRecordUserType($readonlyRecord))) }}" data-search-text="{{ strtolower(trim((string) (optional($readonlyRecord->user)->name . ' ' . optional($readonlyRecord->user)->email . ' ' . $readonlyReference))) }}">
                         <div class="readonly-record-head">
                             <div>
-                                <h4 class="readonly-record-name">{{ optional($readonlyRecord->user)->name ?: 'Unnamed Student' }}</h4>
+                                <div class="readonly-record-name-line">
+                                    <h4 class="readonly-record-name">{{ optional($readonlyRecord->user)->name ?: 'Unnamed Student' }}</h4>
+                                    @include('admin.partials.pending-health-form-user-badge', ['record' => $readonlyRecord])
+                                </div>
                                 <p class="readonly-record-sub">{{ optional($readonlyRecord->user)->email ?: '-' }}</p>
                             </div>
                             <div class="readonly-record-meta">
