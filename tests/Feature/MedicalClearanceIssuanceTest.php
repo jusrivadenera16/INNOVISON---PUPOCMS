@@ -165,7 +165,7 @@ class MedicalClearanceIssuanceTest extends TestCase
         $this->assertSame('M', $document->patient_sex);
         $this->assertSame('On the Job Training', $document->purpose);
         $this->assertSame($actor->id, $document->issued_by_user_id);
-        $this->assertStringStartsWith('MC-'.now()->year.'-', $document->control_number);
+        $this->assertNull($document->control_number);
         $this->assertNotSame('Juan Dela Cruz', DB::table('issued_medical_clearances')->value('patient_name'));
         $stored = Storage::disk('health_private')->get($document->pdf_path);
         $this->assertStringNotContainsString('%PDF-', $stored);
@@ -176,7 +176,7 @@ class MedicalClearanceIssuanceTest extends TestCase
         $this->assertSame(1, DB::table('activity_logs')->count());
     }
 
-    public function test_documents_are_empty_before_issuance_and_reprint_is_the_original_after_profile_changes(): void
+    public function test_reprint_refreshes_template_using_saved_details_without_reissuing_or_overwriting_archive(): void
     {
         $profile = $this->patient();
         $actor = $this->actor();
@@ -187,13 +187,27 @@ class MedicalClearanceIssuanceTest extends TestCase
         $this->assertTrue($before['can_issue']);
         $this->assertSame([], $before['documents']);
         $document = $this->service()->issue('student', $profile->id, $this->input(), $actor);
-        $original = $controller->show('student', $profile->id, $document, $this->service())->getContent();
+        $document->forceFill(['control_number' => 'MC-2026-000087'])->save();
+        $snapshot = $document->fresh()->getRawOriginal();
+        $archived = app(HealthFileEncryption::class)->encrypt('%PDF-legacy-full-page');
+        Storage::disk('health_private')->put($document->pdf_path, $archived);
         $profile->user->forceFill(['name' => 'Later Name', 'DOB' => '2000-01-01'])->save();
         $profile->forceFill(['clearance_status' => 'Pending/Conditional'])->save();
-        Pdf::shouldReceive('loadView')->never();
+        $rendered = \Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+        $rendered->shouldReceive('setPaper')->with('letter')->once()->andReturnSelf();
+        $rendered->shouldReceive('output')->once()->andReturn('%PDF-refreshed-half-page');
+        Pdf::shouldReceive('loadView')->once()->with('admin.templates.medical-clearance', [
+            'templatePreview' => false, 'clearance' => ['date' => 'Nov 11, 2026', 'name' => 'Juan Dela Cruz',
+                'age' => 22, 'sex' => 'M', 'purpose' => 'On the Job Training'],
+        ])->andReturn($rendered);
         $response = $controller->show('student', $profile->id, $document->fresh(), $this->service());
-        $this->assertSame($original, $response->getContent());
+        $this->assertSame('%PDF-refreshed-half-page', $response->getContent());
+        $this->assertSame($archived, Storage::disk('health_private')->get($document->pdf_path));
+        $this->assertSame($snapshot, $document->fresh()->getRawOriginal());
+        $this->assertSame(1, IssuedMedicalClearance::count());
+        $this->assertSame(1, DB::table('activity_logs')->count());
         $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+        $this->assertSame('inline; filename="medical-clearance.pdf"', $response->headers->get('Content-Disposition'));
         $this->assertSame('Juan Dela Cruz', $document->fresh()->patient_name);
         $after = $controller->index($request, 'student', $profile->id, $this->service())->getData(true);
         $this->assertFalse($after['can_issue']);

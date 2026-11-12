@@ -43,6 +43,22 @@ html[data-theme="dark"] .medical-clearance-status[data-success="true"] { color: 
 .review-clearance-grid input, .review-clearance-grid select { display: block; width: 100%; min-height: 42px; margin-top: 6px; padding: 9px 11px; border: 1px solid #e5bfc3; border-radius: 9px; background: #fff; color: #172033; font: inherit; }
 .review-clearance-grid input[readonly] { background: #f1f5f9; }
 .review-clearance-full { grid-column: 1 / -1; }
+.review-medical-clearance .review-purpose-trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 44px; margin-top: 6px; padding: 10px 13px; border: 1px solid #efc7c7; border-radius: 14px; background: #fffdf8; color: #70131b; font: inherit; font-size: 12px; font-weight: 700; text-align: left; box-shadow: 0 2px 6px #70131b08; cursor: pointer; transition: border-color .18s, box-shadow .18s, background .18s; }
+.review-medical-clearance .review-purpose-trigger span { min-width: 0; overflow-wrap: anywhere; }
+.review-medical-clearance .review-purpose-trigger svg { width: 18px; height: 18px; flex-shrink: 0; transition: transform .18s; }
+.review-medical-clearance .review-purpose-trigger[aria-expanded="true"] svg { transform: rotate(180deg); }
+.review-medical-clearance .review-purpose-trigger:hover:not(:disabled), .review-medical-clearance .review-purpose-trigger[aria-expanded="true"] { border-color: #9f1239; background: #fffbeb; }
+.review-medical-clearance .review-purpose-trigger:focus-visible, .review-medical-clearance .category-bubble-option:focus-visible { outline: 2px solid #facc15; outline-offset: 2px; }
+.review-medical-clearance .review-purpose-trigger:disabled { opacity: .55; cursor: not-allowed; }
+/* In-flow menu stays within the scrollable Final Review panel on small screens. */
+.review-medical-clearance .review-purpose-menu { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; overscroll-behavior: contain; margin-top: 6px; padding: 8px; border: 1px solid #f3c7c7; border-radius: 14px; background: #fff; box-shadow: 0 10px 25px #70131b18; }
+.review-medical-clearance .category-bubble-option { flex-shrink: 0; width: 100%; min-height: 34px; padding: 8px 14px; border: 0; border-radius: 9px; background: transparent; color: #70131b; text-align: left; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .15s, color .15s; }
+.review-medical-clearance .category-bubble-option[aria-selected="true"] { background: #70131b; color: #fff; }
+.review-medical-clearance .category-bubble-option:hover:not(:disabled), .review-medical-clearance .category-bubble-option:focus-visible { background: #facc15; color: #70131b; }
+html[data-theme="dark"] .review-medical-clearance .review-purpose-trigger, html[data-theme="dark"] .review-medical-clearance .review-purpose-menu { background: #111827; border-color: #79414a; color: #f8fafc; }
+html[data-theme="dark"] .review-medical-clearance .category-bubble-option { color: #f8fafc; }
+html[data-theme="dark"] .review-medical-clearance .category-bubble-option:hover:not(:disabled), html[data-theme="dark"] .review-medical-clearance .category-bubble-option:focus-visible { color: #70131b; }
+@media (prefers-reduced-motion: reduce) { .review-medical-clearance .review-purpose-trigger, .review-medical-clearance .review-purpose-trigger svg, .review-medical-clearance .category-bubble-option { transition: none; } }
 .review-medical-clearance[hidden], .review-medical-clearance [hidden], [data-approved-clearance-link][hidden] { display: none !important; }
 [data-review-clearance-document][hidden] { display: none !important; }
 [data-review-clearance-document] { display: inline-block; margin-top: 12px; font-size: 13px; font-weight: 700; color: #70131b; text-decoration: underline; }

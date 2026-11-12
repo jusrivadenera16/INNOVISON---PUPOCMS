@@ -4,6 +4,9 @@
     if (!root) return;
     const node = key => root.querySelector(`[data-review-clearance-${key}]`);
     let current = null, token = null;
+    const purposeSelect = window.CategoryBubbleSelect?.create({
+        select: node('purpose'), trigger: node('purpose-trigger'), menu: node('purpose-menu'), onChange: sync,
+    });
     function status(message) { node('status').textContent = message; node('status').hidden = !message; }
     function sync() {
         const pending = document.querySelector('[name="applicant_clearance_decision"]:checked')?.value === 'pending';
@@ -15,6 +18,7 @@
         }
         if (pending) status('Pending decision selected. No Medical Clearance will be issued.');
         else if (current) status('');
+        purposeSelect?.refresh();
     }
     function reset() {
         token = null; current = null; root.hidden = true;
@@ -52,7 +56,12 @@
             if (root.hidden || !approved) return { issue_medical_clearance: false };
             if (!current) throw new Error('Medical Clearance purposes are not ready. Please wait or try again.');
             for (const key of ['purpose', 'other']) {
-                if (!node(key).disabled && !node(key).reportValidity()) throw new Error('Select the required Request for / Purpose.');
+                const field = node(key);
+                if (!field.disabled && field.required && !field.value.trim()) {
+                    if (key === 'purpose' && purposeSelect) purposeSelect.focus();
+                    else field.reportValidity();
+                    throw new Error('Select the required Request for / Purpose.');
+                }
             }
             return { issue_medical_clearance: true, medical_clearance: { request_key: current.request_key,
                 purpose: node('purpose').value, other_purpose: node('other').value.trim() } };

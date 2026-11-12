@@ -27,7 +27,7 @@
         for (const documentData of documents) {
             const row = document.createElement('li');
             const description = document.createElement('span');
-            description.textContent = `${documentData.control_number} - ${documentData.purpose} - ${documentData.issued_on}`;
+            description.textContent = [documentData.control_number, documentData.purpose, documentData.issued_on].filter(Boolean).join(' - ');
             const link = document.createElement('a');
             link.href = documentData.url;
             link.target = '_blank';

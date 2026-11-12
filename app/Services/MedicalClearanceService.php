@@ -128,15 +128,10 @@ class MedicalClearanceService
                     'issued_on' => $input['issued_on'], 'purpose' => $purpose, 'issued_by_user_id' => $actor->id,
                     'doctor_review' => isset($input['doctor_review']) ? array_merge($input['doctor_review'], ['reviewed_at' => now()->toIso8601String(), 'reviewed_by_user_id' => $actor->id]) : null,
                 ]);
-                $document->control_number = 'MC-' . now()->format('Y') . '-' . str_pad((string) $document->id, 6, '0', STR_PAD_LEFT);
+                // Numbering is deferred until manual and system issuances are reconciled.
                 $document->pdf_path = 'issued_medical_clearances/' . $profile->user_id . '/' . $input['request_key'] . '.pdf';
-                $pdf = Pdf::loadView('admin.templates.medical-clearance', ['templatePreview' => false, 'clearance' => [
-                    'control_number' => $document->control_number, 'date' => $document->issued_on->format('M d, Y'),
-                    'name' => $document->patient_name, 'age' => $document->patient_age, 'sex' => $document->patient_sex,
-                    'purpose' => $document->purpose,
-                ]])->setPaper('letter');
                 $writtenPath = $document->pdf_path;
-                if (!Storage::disk('health_private')->put($writtenPath, app(HealthFileEncryption::class)->encrypt($pdf->output()))) {
+                if (!Storage::disk('health_private')->put($writtenPath, app(HealthFileEncryption::class)->encrypt($this->renderPdf($document)))) {
                     throw new \RuntimeException('Unable to save the Medical Clearance PDF.');
                 }
                 $document->save();
@@ -154,6 +149,16 @@ class MedicalClearanceService
             if ($writtenPath) Storage::disk('health_private')->delete($writtenPath);
             throw $exception;
         }
+    }
+
+    /** Refresh presentation only; never read current patient data or re-issue the record. */
+    public function renderPdf(IssuedMedicalClearance $document): string
+    {
+        return Pdf::loadView('admin.templates.medical-clearance', ['templatePreview' => false, 'clearance' => [
+            'date' => $document->issued_on->format('M d, Y'),
+            'name' => $document->patient_name, 'age' => $document->patient_age, 'sex' => $document->patient_sex,
+            'purpose' => $document->purpose,
+        ]])->setPaper('letter')->output();
     }
 
     public function approvalInput(Request $request, bool $approved, bool $allowed): ?array

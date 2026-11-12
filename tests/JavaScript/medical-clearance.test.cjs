@@ -95,6 +95,14 @@ test('Others requires custom text and changing the date updates the displayed ag
     assert.equal(h.patient.value, 'Juan Dela Cruz  21 / M');
 });
 
+test('unnumbered certificates show only purpose and date in Documents', async () => {
+    const h = harness(() => response(info({ documents: [
+        { control_number: null, purpose: 'OJT', issued_on: 'Nov 11, 2026', url: '/saved.pdf' },
+    ] })));
+    await h.load('/record');
+    assert.equal(h.list.children[0].children[0].textContent, 'OJT - Nov 11, 2026');
+});
+
 test('Generate saves only once while busy and then shows the saved View/Reprint link', async () => {
     let finish;
     const pending = new Promise(resolve => { finish = resolve; });

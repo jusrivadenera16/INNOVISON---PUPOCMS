@@ -3,9 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\IssuedMedicalClearance;
-use App\Services\{HealthFileEncryption, HealthFileStorage, MedicalClearanceService, ModulePermissionService};
+use App\Services\{HealthFileStorage, MedicalClearanceService, ModulePermissionService};
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class MedicalClearanceController extends Controller
 {
@@ -68,12 +67,11 @@ class MedicalClearanceController extends Controller
     {
         $service->profile($type, $profile);
         abort_unless($document->record_type === $type && (int) $document->profile_id === $profile, 404);
-        $disk = Storage::disk('health_private');
-        abort_unless($document->pdf_path && $disk->exists($document->pdf_path), 404, 'The saved clearance PDF was not found.');
-        $bytes = app(HealthFileEncryption::class)->decrypt($disk->get($document->pdf_path));
+        // Re-render saved issuance details with the latest template. Keep the archived PDF untouched.
+        $bytes = $service->renderPdf($document);
 
         return response($bytes, 200, array_merge(HealthFileStorage::NO_STORE_HEADERS, [
-            'Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="' . $document->control_number . '.pdf"',
+            'Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="medical-clearance.pdf"',
             'X-Content-Type-Options' => 'nosniff',
         ]));
     }

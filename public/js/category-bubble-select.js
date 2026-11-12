@@ -1,6 +1,6 @@
 (() => {
     'use strict';
-    window.CategoryBubbleSelect = { create({ select, trigger, menu, onToggle = () => {} }) {
+    window.CategoryBubbleSelect = { create({ select, trigger, menu, onToggle = () => {}, onChange = () => {} }) {
         if (!select || !trigger || !menu) return null;
         select.hidden = true; trigger.hidden = false;
         const label = trigger.querySelector('span');
@@ -24,6 +24,7 @@
                     label.textContent = option.textContent;
                     for (const item of buttons()) item.setAttribute('aria-selected', String(item === button));
                     close(true);
+                    onChange(select.value);
                 });
                 menu.append(button);
             }

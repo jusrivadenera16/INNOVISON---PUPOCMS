@@ -8568,7 +8568,8 @@
         to { left: 150%; }
     }
 
-    #applicantFinalReviewConfirmOverlay {
+    #applicantFinalReviewConfirmOverlay,
+    #medicalClearancePrintPrompt {
         padding: 18px;
         background: rgba(15, 23, 42, .66);
     }
@@ -12648,6 +12649,8 @@
         </div>
     </div>
 
+    @include('admin.partials.medical-clearance-print-prompt')
+
     <div class="clinic-success-overlay" id="applicantApprovalOverlay" aria-live="assertive" aria-hidden="true">
         <div class="clinic-success-card">
             <button type="button" class="clinic-success-close" data-success-close aria-label="Close success message">
@@ -12660,7 +12663,6 @@
             </div>
             <strong id="applicantApprovalOverlayTitle">Approved!</strong>
             <p id="applicantApprovalOverlayMessage">The applicant decision has been saved successfully.</p>
-            <a data-approved-clearance-link href="#" target="_blank" rel="noopener" hidden>View / Reprint Medical Clearance</a>
             <hr>
             <div class="approval-evaluation-actions" id="approvalEvaluationActions" hidden>
                 <button type="button" class="approval-evaluation-skip" data-approval-evaluation="skip">Skip</button>
@@ -14876,8 +14878,10 @@
         }
 
         function showClinicSuccessOverlay(overlay, options = {}) {
-            const clearanceLink = overlay?.querySelector('[data-approved-clearance-link]');
-            if (clearanceLink) { clearanceLink.hidden = !options.medicalClearanceUrl; clearanceLink.href = options.medicalClearanceUrl || '#'; }
+            if (options.medicalClearanceUrl && window.MedicalClearancePrintPrompt?.show(options.medicalClearanceUrl, () => {
+                if (options.evaluationPrompt) showClinicSuccessOverlay(overlay, {...options, medicalClearanceUrl: null});
+                else options.onDone?.();
+            })) return;
             if (!overlay) return;
             if (approvalOverlayTitle && options.title && overlay === approvalOverlay) {
                 approvalOverlayTitle.textContent = options.title;
@@ -17351,6 +17355,7 @@
                 if (link) { link.href = data.document.url; link.hidden = false; }
                 if (findBtn) findBtn.textContent = 'Medical Clearance Issued';
                 setStatus('success', 'Medical Clearance issued and saved to Documents. The existing Health Form approval was not changed.');
+                window.MedicalClearancePrintPrompt?.show(data.document.url);
             } catch (error) { if (repeatClearanceReview === active) setStatus('error', error.message); }
             finally { if (repeatClearanceReview === active) { active.busy = false; if (findBtn) findBtn.disabled = active.issued; } }
         }
