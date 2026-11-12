@@ -66,4 +66,31 @@ class HealthRecordCategoryFilterTest extends TestCase
         $this->assertStringContainsString('Annual', $previous);
         $this->assertStringNotContainsString('>Latest</span>', $previous);
     }
+
+    public function test_active_ojt_submission_overrides_regular_account_approval_shortcut(): void
+    {
+        $user = new \App\Models\User(['user_type' => 'student', 'student_type' => 'regular']);
+        $user->setRelation('healthProfile', null);
+        $student = (new HealthProfile)->forceFill(['id' => 11, 'health_form_category' => 'Regular']);
+        $student->setRelation('user', $user);
+        $filter = app(HealthRecordCategoryFilter::class);
+        $this->assertTrue($filter->isRegularStudentReview($student));
+        HealthFormSubmission::create(['health_profile_id' => 11, 'category' => 'Regular', 'status' => 'approved']);
+        foreach (['OJT', 'On the Job Training', 'On-the-job Training'] as $category) {
+            $submission = HealthFormSubmission::create(['health_profile_id' => 11, 'category' => $category, 'status' => 'submitted']);
+            $this->assertFalse($filter->isRegularStudentReview($student));
+            $submission->update(['status' => 'cancelled']);
+            $this->assertTrue($filter->isRegularStudentReview($student));
+        }
+        $student->health_form_category = 'OJT';
+        HealthFormSubmission::create(['health_profile_id' => 11, 'category' => 'Regular', 'status' => 'submitted']);
+        $this->assertTrue($filter->isRegularStudentReview($student));
+    }
+
+    public function test_student_information_modal_has_no_category_change_action(): void
+    {
+        $source = file_get_contents(resource_path('views/admin/health_records.blade.php'));
+        $this->assertStringNotContainsString("@include('admin.partials.temporary-student-category-menu')", $source);
+        $this->assertSame(3, substr_count($source, '->isRegularStudentReview('));
+    }
 }

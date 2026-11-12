@@ -4,7 +4,7 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const blade=fs.readFileSync(require('node:path').join(__dirname,'../../resources/views/admin/walkin.blade.php'),'utf8');
 const source=blade.slice(blade.indexOf('        function openExistingFinalReview(context) {'),blade.indexOf('        function renderApplicantReviewSource('));
-function element(value='') {return {value,checked:false,disabled:false,textContent:'',hidden:true,style:{},classList:{add(){}},addEventListener(){},removeEventListener(){}};}
+function element(value='') {return {value,checked:false,disabled:false,textContent:'',hidden:true,style:{},classList:{add(){},remove(){}},addEventListener(){},removeEventListener(){}};}
 function harness(type='student',fetcher=()=>({ok:true,json:async()=>({document:{url:'/saved.pdf'}})})) {
     const decision=element('approve'),findings=element('No Findings / Normal'),button=element(),link=element(); findings.checked=true;
     const fields={applicantHeight:element("5'6\""),applicantWeight:element('120'),applicantNormalRemarks:element('Reviewed')};
@@ -17,7 +17,7 @@ function harness(type='student',fetcher=()=>({ok:true,json:async()=>({document:{
         currentClinicLookupData:data,currentLookupRef:'STUDENT-1',currentLookupName:'Sample Patient',repeatClearanceReview:null,isApprovalMode:false,
         isClinicLookupMode:()=>true,resetLookupButtonToFind(){},applyLookupMode(){},showLookupDetails(){},
         foundName:element(),foundCard:element(),defaultPane:element(),medicalConditionSection:element(),findBtn:button,
-        modalShell:element(),lookupModalSubtitle:element(),reviewDraftBtn:element(),canApproveFinalReview:true,
+        modalShell:element(),lookupModalTitle:element(),lookupModalSubtitle:element(),reviewDraftBtn:element(),canApproveFinalReview:true,
         setFinalReviewPhysicalReadonly:value=>physicalLocks.push(value),setReviewDraftButtonVisible:value=>draftVisibility.push(value),syncFindingsReviewFields(){},
         applyReviewDraftFields:value=>restored.push(value),
         openFinalReviewConfirmModal:(...args)=>confirmations.push(args),setFinalReviewConfirmLoading(){},closeFinalReviewConfirmModal(){},

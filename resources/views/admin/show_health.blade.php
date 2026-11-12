@@ -3719,9 +3719,6 @@
     </div>
 
     <div class="profile-panel" id="docsPanel">
-        @if($profile->user?->clinicAccountTypeKey() === 'student')
-            @include('admin.partials.medical-clearance-panel', ['clearanceRecordUrl' => route('admin.medical_clearances.index', ['student', $profile->id])])
-        @endif
         @if($hasCorrectionRequest && $correctionStatusLabel === 'Pending')
             <div class="health-record-correction-banner" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;border:1px solid #f0b179;border-radius:14px;background:#fff6ee;padding:1rem 1.25rem;margin:0 0 1rem;color:#7a3b11;">
                 <div style="display:flex;align-items:flex-start;gap:0.75rem;">
@@ -3800,6 +3797,7 @@
                     </div>
 
                     <div class="doc-grid">
+            @include('admin.partials.issued-clearance-document-cards', ['issuedClearances' => ($issuedMedicalClearancesBySubmission ?? collect())->get($currentHealthFormSubmission?->id, collect())])
             <div class="doc-file">
                 <h4>Health Information Form</h4>
                 @php
@@ -3975,6 +3973,8 @@
                             ->keys()
                             ->filter(fn ($key) => filled($historyProfileData[$key] ?? null))
                             ->count();
+                        $historyIssuedClearances = ($issuedMedicalClearancesBySubmission ?? collect())->get($historySubmission->id, collect());
+                        $historyDocumentCount += $historyIssuedClearances->count();
                     @endphp
                     <section class="profile-version-pane" id="healthDocumentsVersion{{ $historySubmission->id }}" role="tabpanel">
                         <div class="profile-version-pane-head">
@@ -3993,8 +3993,9 @@
                             <div><span>Saved Documents</span><strong>{{ $historyDocumentCount }}</strong></div>
                         </div>
 
-                        @if($history['has_snapshot'] || filled($historySubmission->pdf_path))
+                        @if($history['has_snapshot'] || filled($historySubmission->pdf_path) || $historyIssuedClearances->isNotEmpty())
                             <div class="doc-grid">
+                                @include('admin.partials.issued-clearance-document-cards', ['issuedClearances' => $historyIssuedClearances])
                                 <div class="doc-file">
                                     <h4>Health Information Form PDF</h4>
                                     @if(filled($historySubmission->pdf_path))
@@ -4096,7 +4097,7 @@
                     A Health Form request is already active for this record. No new request can be sent until this request is completed or closed.
                 </div>
                 <div class="correction-actions">
-                    @if($profileIsLocalStudent && $activeNewHealthFormRequest->status === \App\Models\HealthFormSubmission::STATUS_REQUESTED)
+                    @if($profileIsLocalStudent && !$activeNewHealthFormRequest->approved_at && in_array($activeNewHealthFormRequest->status, ['requested', 'submitted', 'under_review', 'needs_correction'], true))
                         <form id="cancelExistingHealthFormRequest" method="POST" action="{{ route('admin.health_profile.health_form_request.cancel', [$profile->id, $activeNewHealthFormRequest->id]) }}" data-loader-message="Cancelling request" data-loader-detail="Cancelling the Health Form request and keeping the approved record and history.">
                             @csrf
                             <button type="submit" class="correction-cancel">Cancel Request</button>
@@ -4162,11 +4163,11 @@
             ]))
                 <div class="pullout-error" role="alert">{{ $pulloutValidationErrors->first() }}</div>
             @endif
-            @if($isPulloutPending || $isPulledOut || $isPulloutRestored)
+            @if($isPulloutPending || $isPulledOut)
                 <div class="pullout-status-summary">
                     <div class="pullout-status-heading">
                         <span class="profile-status-badge {{ $isPulledOut ? 'profile-status-rejected' : ($isPulloutPending ? 'profile-status-pending' : 'profile-status-issued') }}">
-                            {{ $isPulledOut ? 'Pulled Out' : ($isPulloutPending ? 'Pullout Pending' : 'Restored') }}
+                            {{ $isPulledOut ? 'Pulled Out' : 'Pullout Pending' }}
                         </span>
                         <strong>No medical information or uploaded file has been deleted.</strong>
                     </div>
@@ -4183,7 +4184,7 @@
                             <dt>Requested At</dt>
                             <dd>{{ $profile->pullout_requested_at ? $profile->pullout_requested_at->format('M d, Y h:i A') : 'N/A' }}</dd>
                         </div>
-                        @if($isPulledOut || $isPulloutRestored)
+                        @if($isPulledOut)
                             <div>
                                 <dt>Completed By</dt>
                                 <dd>{{ optional($profile->pulloutCompletedBy)->name ?: optional($profile->pulloutCompletedBy)->email ?: 'N/A' }}</dd>
@@ -4197,25 +4198,12 @@
                                 <dd>{{ $profile->pullout_reference ?: 'N/A' }}</dd>
                             </div>
                         @endif
-                        @if($isPulloutRestored)
-                            <div>
-                                <dt>Restored By</dt>
-                                <dd>{{ optional($profile->pulloutRestoredBy)->name ?: optional($profile->pulloutRestoredBy)->email ?: 'N/A' }}</dd>
-                            </div>
-                            <div>
-                                <dt>Restored At</dt>
-                                <dd>{{ $profile->pullout_restored_at ? $profile->pullout_restored_at->format('M d, Y h:i A') : 'N/A' }}</dd>
-                            </div>
-                        @endif
                     </dl>
                     @if($profile->pullout_request_remarks)
                         <p class="pullout-summary-note"><strong>Request remarks:</strong> {{ $profile->pullout_request_remarks }}</p>
                     @endif
                     @if($profile->pullout_completion_remarks)
                         <p class="pullout-summary-note"><strong>Completion remarks:</strong> {{ $profile->pullout_completion_remarks }}</p>
-                    @endif
-                    @if($isPulloutRestored && $profile->pullout_restore_reason)
-                        <p class="pullout-summary-note"><strong>Restore reason:</strong> {{ $profile->pullout_restore_reason }}</p>
                     @endif
                 </div>
             @endif
@@ -4243,11 +4231,6 @@
             @elseif($canRequestPullout)
                 <form method="POST" action="{{ route('admin.health_profile.pullout.request', $profile->id) }}" class="pullout-form" data-loader-message="Marking as Pulled Out" data-loader-detail="Archiving the health record and updating clinic access.">
                     @csrf
-                    @if($isPulloutRestored)
-                        <div class="pullout-static-note">
-                            The previous pullout was restored. A new request will begin a separate manual workflow.
-                        </div>
-                    @endif
                     <div class="correction-field">
                         <label for="pulloutReason">Pullout Reason</label>
                         <div class="correction-select-wrap correction-custom-select-wrap">
@@ -5035,7 +5018,7 @@
         if (form.id === 'cancelExistingHealthFormRequest') {
             return {
                 title: 'Cancel Health Form Request?',
-                message: 'Cancel this unsubmitted Health Form request? The student will no longer be asked to submit it. The approved record and request history will remain stored.',
+                message: 'Cancel this Health Form request and remove it from Pending Approval? The previous approved Health Form, saved documents, and request history will remain stored.',
                 confirm: 'Cancel Request',
             };
         }

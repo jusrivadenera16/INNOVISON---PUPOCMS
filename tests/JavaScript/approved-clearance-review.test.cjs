@@ -41,11 +41,11 @@ test('only students and employees expose the clearance action', async () => {
     assert.equal(h.calls.length,0);
     h.configure('student',5); assert.equal(h.root.hidden,false);
 });
-test('Continue posts once to the existing clinic-start endpoint before opening Pending Approval', async () => {
+test('Continue saves a pending request once and asks to open Final Review', async () => {
     const h = harness(); await h.enter();
     assert.equal(h.opened.length,0); assert.equal(h.submitted.length,1);
     assert.equal(h.submitted[0].method,'POST'); assert.equal(h.submitted[0].action,'/health-profile/5/request-health-form');
-    assert.deepEqual(h.submitted[0].fields,{_token:'csrf',category:'On the Job Training',clinic_action:'start'});
+    assert.deepEqual(h.submitted[0].fields,{_token:'csrf',category:'On the Job Training',review_after_start:'1',clinic_action:'start'});
     h.nodes.continue.emit('click'); assert.equal(h.submitted.length,1); assert.equal(h.nodes.continue.disabled,true);
     assert.equal(h.calls.length,1);
     assert.equal(h.calls[0][1].method,undefined);
@@ -56,6 +56,7 @@ test('employee selection posts to its existing assessment endpoint without a stu
     h.nodes['category-trigger'].emit('click'); h.nodes['category-menu'].children[1].emit('click');
     h.nodes.continue.emit('click'); assert.equal(h.submitted[0].fields.category,'On the Job Training');
     assert.equal(h.submitted[0].action,'/employee-health-profile/5/request-health-form'); assert.equal(h.submitted[0].fields.clinic_action,undefined);
+    assert.equal(h.submitted[0].fields.review_after_start,'1');
 });
 test('unavailable records cannot continue and stale category responses are ignored', async () => {
     const h=harness(()=>response({...data,can_issue:false,can_start_review:false})); h.configure('student',5); await h.nodes.open.emit('click');
@@ -70,4 +71,13 @@ test('OJT display label submits the original configured category name',async()=>
     h.configure('student',5);await h.nodes.open.emit('click');
     h.nodes['category-menu'].children[1].emit('click');h.nodes.continue.emit('click');
     assert.equal(h.submitted[0].fields.category,'OJT');
+});
+
+test('category bubble stays centered in the lookup modal when its dropdown opens',async()=>{
+    const h=harness();
+    h.nodes.open.closest=()=>({getBoundingClientRect:()=>({left:100,top:80,width:700,height:600})});
+    h.configure('student',5);await h.nodes.open.emit('click');
+    assert.equal(h.nodes.bubble.style.left,'275px');assert.equal(h.nodes.bubble.style.top,'255px');
+    h.nodes['category-trigger'].emit('click');
+    assert.equal(h.nodes.bubble.style.left,'275px');assert.equal(h.nodes.bubble.style.top,'255px');
 });

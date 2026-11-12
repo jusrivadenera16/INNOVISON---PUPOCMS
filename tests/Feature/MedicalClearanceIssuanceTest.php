@@ -16,6 +16,24 @@ use Tests\TestCase;
 
 class MedicalClearanceIssuanceTest extends TestCase
 {
+    public function test_clinic_started_review_redirect_uses_the_existing_final_review_lookup(): void
+    {
+        $actor = new User(['user_role' => User::ROLE_SUPERADMIN]);
+        $controller = app(\App\Http\Controllers\AdminController::class);
+        $redirect = new \ReflectionMethod($controller, 'clinicStartedFinalReviewRedirect');
+        foreach ([new HealthProfile(['student_number' => '2026-00000-TG-2']), new EmployeeHealthProfile(['employee_number' => 'EMP-123'])] as $profile) {
+            $profile->setRelation('user', new User());
+            $response = $redirect->invoke($controller, $profile, $actor);
+            $this->assertSame(route('walkin.index', [
+                'review_reference' => $profile instanceof HealthProfile ? '2026-00000-TG-2' : 'EMP-123',
+                'review_type' => 'employee', 'review_workflow' => 'final_review',
+            ]), $response->getTargetUrl());
+        }
+        $emptyProfile = new HealthProfile();
+        $emptyProfile->setRelation('user', new User());
+        $this->assertNull($redirect->invoke($controller, $emptyProfile, $actor));
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -142,6 +160,27 @@ class MedicalClearanceIssuanceTest extends TestCase
                 $table->json('final_review_draft_data')->nullable(); $table->json('draft_data')->nullable();
             });
         }
+    }
+
+    public function test_lookup_preview_uses_latest_request_category_instead_of_current_profile_category(): void
+    {
+        $method = new \ReflectionMethod(\App\Http\Controllers\WalkInController::class, 'clinicHealthFormPreview');
+        foreach (['student', 'employee'] as $type) {
+            $profile = $this->patient($type, $type === 'student' ? 'On the Job Training' : 'Annual Medical Clearance');
+            $profile->forceFill(['health_form_category' => 'Outdated Category'])->save();
+            $approved = $method->invoke(app(\App\Http\Controllers\WalkInController::class), $profile);
+            $this->assertSame('approved', $approved['status']);
+            $this->assertNotSame('Outdated Category', $approved['category']);
+            HealthFormSubmission::create(['user_id' => $profile->user_id,
+                $type === 'student' ? 'health_profile_id' : 'employee_health_profile_id' => $profile->id,
+                'category' => 'Ladderized', 'status' => 'submitted', 'submitted_at' => now()]);
+            $preview = $method->invoke(app(\App\Http\Controllers\WalkInController::class), $profile);
+            $this->assertSame('Ladderized', $preview['category']);
+            $this->assertSame('submitted', $preview['status']);
+            $this->assertTrue($preview['submitted']);
+            $this->assertSame('Fully Cleared', $profile->fresh()->clearance_status);
+        }
+        $this->assertNull($method->invoke(app(\App\Http\Controllers\WalkInController::class), null));
     }
 
     public function test_existing_draft_endpoints_save_repeat_review_without_changing_approval_and_clear_it_on_issue(): void
@@ -392,6 +431,33 @@ class MedicalClearanceIssuanceTest extends TestCase
     private function input(array $overrides = []): array
     {
         return array_merge(['request_key' => (string) Str::uuid(), 'issued_on' => '2026-11-11', 'purpose' => 'On the Job Training'], $overrides);
+    }
+
+    public function test_issued_documents_are_displayed_under_their_exact_student_or_employee_version(): void
+    {
+        foreach (['student', 'employee'] as $type) {
+            $actor = $this->actor();
+            $purpose = $type === 'student' ? 'On the Job Training' : 'Annual';
+            $profile = $this->patient($type, $purpose);
+            $document = $this->service()->issue($type, $profile->id, $this->input(['purpose' => $purpose]), $actor);
+            $otherVersion = $document->replicate();
+            $otherVersion->request_key = (string) Str::uuid();
+            $otherVersion->health_form_submission_id = 9999;
+            $otherVersion->save();
+            $versions = IssuedMedicalClearance::documentVersions($type, $profile->id);
+            $this->assertSame([$document->id], $versions->get($document->health_form_submission_id)->pluck('id')->all());
+            $this->assertSame([$otherVersion->id], $versions->get(9999)->pluck('id')->all());
+            $this->assertCount(0, IssuedMedicalClearance::documentVersions($type, 987654));
+            $html = view('admin.partials.issued-clearance-document-cards', ['issuedClearances' => $versions->get($document->health_form_submission_id)])->render();
+            $this->assertStringContainsString('Medical Clearance (Issued)', $html);
+            $this->assertStringContainsString('View / Print', $html);
+            $this->assertStringContainsString(e(route('admin.medical_clearances.show', [$type, $profile->id, $document])), $html);
+            $this->assertStringNotContainsString(e(route('admin.medical_clearances.show', [$type, $profile->id, $otherVersion])), $html);
+        }
+        $studentView = file_get_contents(resource_path('views/admin/show_health.blade.php'));
+        $employeeView = file_get_contents(resource_path('views/admin/show_employee_health.blade.php'));
+        $this->assertSame(2, substr_count($studentView, "@include('admin.partials.issued-clearance-document-cards'"));
+        $this->assertStringContainsString("@include('admin.partials.issued-clearance-document-cards'", $employeeView);
     }
 
     public function test_approved_student_issuance_saves_identity_private_pdf_and_audit_and_retry_is_idempotent(): void

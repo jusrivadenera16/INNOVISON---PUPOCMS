@@ -25,7 +25,7 @@
         node('other').value = ''; node('document').hidden = true; status('');
         sync();
     }
-    function populate(data, purpose) {
+    function populate(data) {
         current = { ...data, request_key: crypto.randomUUID() };
         node('purpose').replaceChildren();
         const choices = (data.purpose_options || data.purposes.map(value => ({ value, label: value })))
@@ -33,7 +33,7 @@
         for (const [value, label] of [['', 'Select a purpose'], ...choices.map(option => [option.value, option.label]), ...(data.allow_other === false ? [] : [['__other__', 'Others']])]) {
             const option = document.createElement('option'); option.value = value; option.textContent = label; node('purpose').append(option);
         }
-        node('purpose').value = choices.find(option => option.value === purpose || option.label === purpose)?.value || '';
+        node('purpose').value = '';
         sync();
         if (!choices.length && data.allow_other === false) status('No certificate purposes are configured for this patient type. Check Medical Configuration > Clearance / Certificate Types.');
     }
@@ -50,7 +50,7 @@
             sync();
         },
         configureApproved(data, category, draft = null) {
-            reset(); root.hidden = false; populate(data, category);
+            reset(); root.hidden = false; populate(data);
             this.restoreDraft(draft);
         },
         async configure(type, id, reviewable, draft = null) {
@@ -64,7 +64,7 @@
                 const data = await response.json();
                 if (token !== loading) return;
                 if (!response.ok) throw new Error(data.message || 'Unable to load Medical Clearance options.');
-                populate(data, data.default_purpose);
+                populate(data);
                 this.restoreDraft(draft);
             } catch (error) { if (token === loading) status(error.message); }
         },

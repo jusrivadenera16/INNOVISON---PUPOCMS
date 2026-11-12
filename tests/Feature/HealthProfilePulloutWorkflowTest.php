@@ -17,6 +17,36 @@ use Tests\TestCase;
 
 class HealthProfilePulloutWorkflowTest extends TestCase
 {
+    public function test_new_pullout_modal_does_not_repeat_restored_history_but_keeps_current_actions(): void
+    {
+        $source = file_get_contents(resource_path('views/admin/show_health.blade.php'));
+        $start = strpos($source, '@if($canViewPullout)' . "\n" . '<div class="correction-modal"');
+        if ($start === false) $start = strpos($source, '@if($canViewPullout)' . "\r\n" . '<div class="correction-modal"');
+        $this->assertNotFalse($start);
+        $end = strpos($source, '@if($profile->user?->clinicAccountTypeKey()', $start);
+        $template = substr($source, $start, $end - $start);
+        $profile = (new HealthProfile())->forceFill(['id' => 123, 'pullout_reason' => 'OLD PULLOUT REASON', 'pullout_request_remarks' => 'OLD REMARKS', 'pullout_restore_reason' => 'OLD RESTORE REASON']);
+        $profile->setRelation('pulloutRequestedBy', null)->setRelation('pulloutCompletedBy', null);
+        $data = ['profile' => $profile, 'canViewPullout' => true, 'isPulloutPending' => false, 'isPulledOut' => false,
+            'isPulloutRestored' => true, 'isSuperAdmin' => true, 'canRequestPullout' => true,
+            'pulloutActionLabel' => 'Mark as Pulled Out', 'pulloutValidationErrors' => new \Illuminate\Support\MessageBag()];
+        $html = \Illuminate\Support\Facades\Blade::render($template, $data);
+        $this->assertStringContainsString('id="pulloutReason"', $html);
+        $this->assertStringContainsString('id="pulloutRequestRemarks"', $html);
+        $this->assertStringNotContainsString('pullout-status-summary', $html);
+        foreach (['OLD PULLOUT REASON', 'OLD REMARKS', 'OLD RESTORE REASON', 'The previous pullout was restored'] as $oldText) $this->assertStringNotContainsString($oldText, $html);
+        $data['isPulloutRestored'] = false;
+        $data['isPulloutPending'] = true;
+        $pendingHtml = \Illuminate\Support\Facades\Blade::render($template, $data);
+        $this->assertStringContainsString('pullout-status-summary', $pendingHtml);
+        $this->assertStringContainsString(route('admin.health_profile.pullout.complete', 123), $pendingHtml);
+        $data['isPulloutPending'] = false;
+        $data['isPulledOut'] = true;
+        $pulledHtml = \Illuminate\Support\Facades\Blade::render($template, $data);
+        $this->assertStringContainsString('Restore Health Record', $pulledHtml);
+        $this->assertStringContainsString(route('admin.health_profile.pullout.restore', 123), $pulledHtml);
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

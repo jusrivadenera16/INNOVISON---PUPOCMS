@@ -79,6 +79,7 @@ html[data-theme=dark] #verifyApprovalModal .verify-content-actions #temporaryStu
 html[data-theme=dark] #verifyApprovalModal .verify-content-actions #temporaryStudentCategoryBubble button[type=submit] { background: #70131b; border-color: #a3434e; color: #fff !important; }
 html[data-theme=dark] #verifyApprovalModal .verify-content-actions #temporaryStudentCategoryBubble button[type=submit]:hover:not(:disabled) { background: #facc15; border-color: #facc15; color: #70131b !important; }
 #approvedClearanceCategoryBubble header { position: absolute; top: 12px; right: 12px; }
+#approvedClearanceCategoryBubble::after { display: none; }
 #approvedClearanceCategoryBubble > label { margin: 3px 40px 10px 0; min-height: 24px; display: flex; align-items: center; }
 #approvedClearanceCategoryBubble.temp-category-bubble header button { border-radius: 50%; background: #70131b; border-color: #70131b; color: #fff; box-shadow: 0 2px 6px #70131b12; }
 #approvedClearanceCategoryBubble.temp-category-bubble header button:hover:not(:disabled) { background: #facc15; border-color: #facc15; color: #70131b; }

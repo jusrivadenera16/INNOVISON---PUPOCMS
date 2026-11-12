@@ -137,6 +137,18 @@ class WalkInController extends Controller
             ? $submission : null;
     }
 
+    private function clinicHealthFormPreview(HealthProfile|EmployeeHealthProfile|null $profile): ?array
+    {
+        if (!$profile) return null;
+        $key = $profile instanceof EmployeeHealthProfile ? 'employee_health_profile_id' : 'health_profile_id';
+        $submission = HealthFormSubmission::query()->where($key, $profile->id)
+            ->whereNotIn('status', ['cancelled', 'canceled', 'rejected'])->latest('id')->first();
+        if (!$submission) return null;
+        return ['category' => $submission->category ? app(\App\Services\HealthRecordCategoryFilter::class)->label($submission->category) : 'Not specified',
+            'status' => strtolower((string) $submission->status), 'submitted' => (bool) $submission->submitted_at,
+            'approved_at' => $submission->approved_at?->format('M d, Y, g:i A')];
+    }
+
     private function requireReviewableClinicSubmission(HealthProfile|EmployeeHealthProfile $profile): HealthFormSubmission
     {
         $submission = $this->reviewableClinicSubmission($profile);
@@ -3253,6 +3265,7 @@ class WalkInController extends Controller
                     'health_profile_id' => optional($healthProfile)->id,
                     'has_completed_health_form' => $hasCompletedHealthForm,
                     'has_reviewable_health_form' => $isEmployeeLookupScope && (bool) $this->reviewableClinicSubmission(in_array($recordType, ['employee', 'dependent'], true) ? $employeeProfile : $healthProfile),
+                    'health_form_preview' => $isEmployeeLookupScope ? $this->clinicHealthFormPreview(in_array($recordType, ['employee', 'dependent'], true) ? $employeeProfile : $healthProfile) : null,
                     'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
                     'medical_certificate_result' => $medicalCertificateResult,
                     'medical_certificate_findings_details' => $medicalCertificateDetails,
@@ -3327,6 +3340,7 @@ class WalkInController extends Controller
                 'health_profile_id' => optional($healthProfile)->id,
                 'has_completed_health_form' => $hasCompletedHealthForm,
                 'has_reviewable_health_form' => $isEmployeeLookupScope && (bool) $this->reviewableClinicSubmission(in_array($recordType, ['employee', 'dependent'], true) ? $employeeProfile : $healthProfile),
+                'health_form_preview' => $isEmployeeLookupScope ? $this->clinicHealthFormPreview(in_array($recordType, ['employee', 'dependent'], true) ? $employeeProfile : $healthProfile) : null,
                 'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
                 'medical_certificate_result' => $medicalCertificateResult,
                 'medical_certificate_findings_details' => $medicalCertificateDetails,

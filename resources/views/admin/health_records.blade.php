@@ -8840,8 +8840,7 @@
                     );
                     $recordIsRegularStudent = !$recordIsEmployee
                         && !$recordUsesApplicantReviewWorkflow
-                        && optional($recordUser)->clinicAccountTypeKey() === 'student'
-                        && strtolower(trim((string) optional($recordUser)->student_type)) === 'regular';
+                        && app(\App\Services\HealthRecordCategoryFilter::class)->isRegularStudentReview($record);
                     $recordIdentifier = $resolveHealthRecordIdentifier($record);
                     $recordFirstName = trim((string) optional($recordUser)->first_name);
                     $recordMiddleName = trim((string) optional($recordUser)->middle_name);
@@ -9257,8 +9256,7 @@
                         );
                         $readonlyIsRegularStudent = !$readonlyIsEmployee
                             && !$readonlyUsesApplicantReviewWorkflow
-                            && optional($readonlyRecord->user)->clinicAccountTypeKey() === 'student'
-                            && strtolower(trim((string) optional($readonlyRecord->user)->student_type)) === 'regular';
+                            && app(\App\Services\HealthRecordCategoryFilter::class)->isRegularStudentReview($readonlyRecord);
                         $readonlyIdentifier = $resolveHealthRecordIdentifier($readonlyRecord);
                         $readonlyMedicalHistory = is_array($readonlyRecord->medical_history)
                             ? implode(', ', array_filter($readonlyRecord->medical_history))
@@ -9588,8 +9586,7 @@
                         $readonlyIsEmployee = in_array($readonlySource, ['employee', 'staff'], true);
                         $readonlyUser = $readonlyRecord->user;
                         $readonlyIsRegularStudent = !$readonlyIsEmployee
-                            && $readonlyUser?->clinicAccountTypeKey() === 'student'
-                            && strtolower(trim((string) $readonlyUser?->student_type)) === 'regular';
+                            && app(\App\Services\HealthRecordCategoryFilter::class)->isRegularStudentReview($readonlyRecord);
                         $pendingComplianceDocumentUrl = function ($documentKey) use ($readonlyIsEmployee, $readonlyRecord) {
                             return $readonlyIsEmployee
                                 ? route('walkin.employeeDocument', ['employeeProfile' => $readonlyRecord->id, 'document' => $documentKey])
@@ -9874,9 +9871,6 @@
             </form>
             <div class="verify-content-actions" aria-label="Additional review actions">
                 <div class="verify-content-action-group">
-                    @if(config('health_form_features.temporary_student_category_change'))
-                        @include('admin.partials.temporary-student-category-menu')
-                    @endif
                     <button type="submit" form="verifyWithdrawHealthRecordForm" class="verify-proposed-withdraw" id="verifyWithdrawHealthRecordBtn" disabled><span>Mark as Withdrawn</span></button>
                     @if($canSignHealth)
                         <button type="submit" form="verifyRegularStudentDecisionForm" class="verify-proposed-walkin" id="verifyRegularStudentApproveBtn" data-regular-decision="Fully Cleared" hidden><span>Approve</span></button>

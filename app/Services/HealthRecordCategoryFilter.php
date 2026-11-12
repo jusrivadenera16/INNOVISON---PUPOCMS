@@ -7,6 +7,22 @@ use Illuminate\Support\Collection;
 
 class HealthRecordCategoryFilter
 {
+    public function isRegularStudentReview(HealthProfile $profile): bool
+    {
+        if ($profile->user?->clinicAccountTypeKey() !== 'student'
+            || strtolower(trim((string) $profile->user?->student_type)) !== 'regular') {
+            return false;
+        }
+
+        // A new submitted OJT form must not inherit the account's regular-student shortcut.
+        $category = HealthFormSubmission::query()->where('health_profile_id', $profile->id)
+            ->whereIn('status', ['submitted', 'under_review', 'needs_correction', 'approved', 'Approved'])
+            ->latest('id')->value('category');
+        $category = trim((string) ($category ?: $profile->health_form_category));
+
+        return !preg_match('/^(?:ojt\b|on[ -]the[ -]job[ -]training\b)/i', $category);
+    }
+
     public function label(?string $category, string $fallback = 'General Health Form'): string
     {
         $category = trim((string) $category);

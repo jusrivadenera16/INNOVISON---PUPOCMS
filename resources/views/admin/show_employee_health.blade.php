@@ -2546,9 +2546,6 @@
         </section>
 
         <section class="profile-panel" id="docsPanel" role="tabpanel" hidden>
-            @if(in_array($employeeProfile->user?->clinicAccountTypeKey(), ['faculty', 'non_teaching_staff'], true))
-                @include('admin.partials.medical-clearance-panel', ['clearanceRecordUrl' => route('admin.medical_clearances.index', ['employee', $employeeProfile->id])])
-            @endif
             @php
                 $employeeVersionHistory = collect($employeeVersionHistory ?? []);
                 $employeeCurrentVersion = $employeeVersionHistory->first(fn (array $version): bool => (bool) ($version['is_current'] ?? false))
@@ -2601,6 +2598,7 @@
                             $versionSubmission = $version['submission'] ?? null;
                             $versionIsActive = $versionNumber === $employeeCurrentVersionNumber;
                             $versionDocuments = collect($version['documents'] ?? []);
+                            $versionIssuedClearances = ($issuedMedicalClearancesBySubmission ?? collect())->get($versionSubmission?->id, collect());
                         @endphp
                         <section
                             class="profile-version-pane{{ $versionIsActive ? ' is-active' : '' }}"
@@ -2616,8 +2614,9 @@
                                 </div>
                                 <span class="profile-history-badge">{{ $versionIsActive ? 'Current' : 'Archived' }}</span>
                             </div>
-                            @if($versionDocuments->isNotEmpty())
+                            @if($versionDocuments->isNotEmpty() || $versionIssuedClearances->isNotEmpty())
                                 <div class="doc-grid">
+                                    @include('admin.partials.issued-clearance-document-cards', ['issuedClearances' => $versionIssuedClearances])
                                     @foreach($versionDocuments as $document)
                                         <div class="doc-file">
                                             <h4>{{ $document['type'] }}</h4>

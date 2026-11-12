@@ -4363,6 +4363,7 @@ class AdminController extends Controller
             ->values();
 
         $healthRecordHistory = app(HealthRecordHistoryService::class)->forStudentProfile($profile);
+        $issuedMedicalClearancesBySubmission = \App\Models\IssuedMedicalClearance::documentVersions('student', $profile->id);
 
         return view('admin.show_health', compact(
             'profile',
@@ -4371,6 +4372,7 @@ class AdminController extends Controller
             'healthFormCategories',
             'healthFormSubmissions',
             'healthProfileHistory',
+            'issuedMedicalClearancesBySubmission',
             'healthRecordHistory',
             'currentHealthFormSubmission',
             'activeNewHealthFormRequest',
@@ -4604,12 +4606,14 @@ class AdminController extends Controller
         }
 
         $healthRecordHistory = app(HealthRecordHistoryService::class)->forEmployeeProfile($employeeProfile);
+        $issuedMedicalClearancesBySubmission = \App\Models\IssuedMedicalClearance::documentVersions('employee', $employeeProfile->id);
         $employeeProfile = $employeeProfileForDisplay;
 
         return view('admin.show_employee_health', compact(
             'employeeProfile',
             'employeeDocuments',
             'employeeVersionHistory',
+            'issuedMedicalClearancesBySubmission',
             'employeeHealthProfileHistory',
             'healthRecordHistory',
             'displaySubmission',
@@ -4916,6 +4920,7 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'clinic_action' => ['nullable', Rule::in(['start', 'send'])],
+            'review_after_start' => ['nullable', 'boolean'],
             'category' => [
                 'required',
                 'string',
@@ -4981,6 +4986,9 @@ class AdminController extends Controller
         }
 
         if ($startInClinic) {
+            if ($request->boolean('review_after_start') && ($reviewRedirect = $this->clinicStartedFinalReviewRedirect($profile, $adminUser))) {
+                return $reviewRedirect;
+            }
             return redirect()->route('admin.health_records', ['tab' => 'pending_approval', 'user_type' => 'student'])
                 ->with('open_student_health_form', $profile->id)
                 ->with('success', 'New Health Form started using saved student information and moved to Pending Approval. No student login or submission is needed.');
@@ -4999,6 +5007,22 @@ class AdminController extends Controller
 
         return redirect()->route('admin.show_health', $profile->id)
             ->with('success', 'New Health Form request sent to the student.');
+    }
+
+    private function clinicStartedFinalReviewRedirect(HealthProfile|EmployeeHealthProfile $profile, User $actor)
+    {
+        $reference = $profile instanceof HealthProfile
+            ? trim((string) ($profile->student_number ?: $profile->user?->student_number))
+            : trim((string) ($profile->employee_number ?: $profile->user?->employee_number ?: $profile->user?->student_number ?: $profile->user?->reference_number));
+        if ($reference === '' || !$actor->canAccessPermission('walkin.view') || !$actor->canAccessPermission('walkin.employee_lookup')) {
+            return null;
+        }
+
+        return redirect()->route($actor->user_role === User::ROLE_ADMIN ? 'assistant.walkin.index' : 'walkin.index', [
+            'review_reference' => $reference,
+            'review_type' => 'employee',
+            'review_workflow' => 'final_review',
+        ])->with('success', 'New Health Form saved in Pending Approval and ready for Final Review.');
     }
 
     private function preserveClinicStudentApprovedForm(HealthProfile $profile): void
@@ -5047,7 +5071,12 @@ class AdminController extends Controller
                 ->lockForUpdate()
                 ->find($submissionId);
 
-            if (!$submission || $submission->status !== HealthFormSubmission::STATUS_REQUESTED) {
+            if (!$submission || $submission->approved_at || !in_array($submission->status, [
+                HealthFormSubmission::STATUS_REQUESTED,
+                HealthFormSubmission::STATUS_SUBMITTED,
+                'under_review',
+                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+            ], true)) {
                 return false;
             }
 
@@ -5064,7 +5093,14 @@ class AdminController extends Controller
                 ->lockForUpdate()
                 ->first();
 
-            if ($correctionRequest && $correctionRequest->status !== HealthProfileCorrectionRequest::STATUS_PENDING) {
+            if (!$correctionRequest && $submission->status !== HealthFormSubmission::STATUS_REQUESTED) {
+                return false;
+            }
+            if ($correctionRequest && !in_array($correctionRequest->status, [
+                HealthProfileCorrectionRequest::STATUS_PENDING,
+                HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+                HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW,
+            ], true)) {
                 return false;
             }
 
@@ -5087,7 +5123,7 @@ class AdminController extends Controller
                 'action' => 'Health Form Request Cancelled',
                 'module' => 'Health Records',
                 'event_type' => 'admin_health_form_request_cancelled',
-                'description' => 'Clinic cancelled an unsubmitted Health Form request for health profile #' . $profile->id . '.',
+                'description' => 'Clinic cancelled an unapproved Health Form request for health profile #' . $profile->id . '. Saved forms and documents were retained.',
                 'route_name' => optional($request->route())->getName(),
                 'http_method' => $request->method(),
                 'request_path' => '/' . ltrim($request->path(), '/'),
@@ -5103,7 +5139,7 @@ class AdminController extends Controller
 
         if (!$cancelled) {
             return redirect()->route('admin.show_health', $profile->id)
-                ->with('error', 'This Health Form request can no longer be cancelled because it was already submitted or closed.');
+                ->with('error', 'This Health Form request can no longer be cancelled because it was already approved, closed, or replaced by a newer request.');
         }
 
         return redirect()->route('admin.show_health', $profile->id)
@@ -5129,6 +5165,7 @@ class AdminController extends Controller
 
         $employeeHealthFormAudience = $this->employeeHealthFormCategoryAudience($employeeProfile->user);
         $validated = $request->validate([
+            'review_after_start' => ['nullable', 'boolean'],
             'category' => [
                 'required',
                 'string',
@@ -5160,6 +5197,10 @@ class AdminController extends Controller
         if (!$correctionRequest) {
             return redirect()->route('admin.employee_health_profile.show', $employeeProfile->id)
                 ->with('info', 'The employee record is no longer eligible or already has an active health assessment.');
+        }
+
+        if ($request->boolean('review_after_start') && ($reviewRedirect = $this->clinicStartedFinalReviewRedirect($employeeProfile, $adminUser))) {
+            return $reviewRedirect;
         }
 
         return redirect()->route('admin.health_records', [
@@ -6948,8 +6989,7 @@ public function updateClearance(Request $request, $id)
     $record = HealthProfile::with('user')->findOrFail($id);
     $recordClinicAccountType = $record->user?->clinicAccountTypeKey();
     $recordIsLocalOnly = in_array($recordClinicAccountType, ['student', 'faculty', 'non_teaching_staff', 'dependent'], true);
-    $recordIsRegularStudent = $recordClinicAccountType === 'student'
-        && strtolower(trim((string) $record->user?->student_type)) === 'regular';
+    $recordIsRegularStudent = app(\App\Services\HealthRecordCategoryFilter::class)->isRegularStudentReview($record);
     $previousStatus = (string) $record->clearance_status;
     $requestedStatus = (string) $request->input('clearance_status');
     $isApproval = in_array($requestedStatus, ['Issued', 'Fully Cleared'], true);
@@ -7687,8 +7727,7 @@ public function updateClearance(Request $request, $id)
     {
         $record = HealthProfile::with('user')->findOrFail($id);
 
-        if ($record->user?->clinicAccountTypeKey() === 'student'
-            && strtolower(trim((string) $record->user?->student_type)) === 'regular') {
+        if (app(\App\Services\HealthRecordCategoryFilter::class)->isRegularStudentReview($record)) {
             return redirect()
                 ->route('admin.health_records', ['tab' => 'pending_compliance'])
                 ->with('error', 'Regular students cannot be moved to Applicants Final Review.');

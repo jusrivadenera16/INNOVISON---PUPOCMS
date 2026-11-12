@@ -9,10 +9,13 @@
     function message(text) { node('bubble-status').textContent = text; node('bubble-status').hidden = !text; }
     function position() {
         if (bubble.hidden) return;
-        const rect = trigger.getBoundingClientRect(), below = rect.top < bubble.offsetHeight + 22;
+        const shell = trigger.closest?.('.applicant-modal-shell');
+        const rect = shell ? shell.getBoundingClientRect() : {left: 0, top: 0, width: window.innerWidth, height: window.innerHeight};
+        const centerX = rect.left + rect.width / 2, centerY = rect.top + rect.height / 2;
+        const below = false;
         bubble.toggleAttribute('data-below', below);
-        bubble.style.left = `${Math.max(12, Math.min(rect.left, window.innerWidth - bubble.offsetWidth - 12))}px`;
-        bubble.style.top = `${Math.max(12, Math.min(below ? rect.bottom + 12 : rect.top - bubble.offsetHeight - 12, window.innerHeight - bubble.offsetHeight - 12))}px`;
+        bubble.style.left = `${Math.max(12, Math.min(centerX - bubble.offsetWidth / 2, window.innerWidth - bubble.offsetWidth - 12))}px`;
+        bubble.style.top = `${Math.max(12, Math.min(centerY - bubble.offsetHeight / 2, window.innerHeight - bubble.offsetHeight - 12))}px`;
     }
     function close() {
         token = null; categoryDropdown?.close();
@@ -58,10 +61,10 @@
         const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
         if (!options.start_review_url || !csrf) { message('Unable to start this request. Reload the page and try again.'); position(); return; }
         // Use the existing clinic-start endpoint. It persists a submitted request before
-        // redirecting into Pending Approval and opening the standard review controls.
+        // opening Final Review; the submitted request remains in Pending Approval.
         const form = document.createElement('form');
         form.method = 'POST'; form.action = options.start_review_url; form.hidden = true;
-        const fields = {_token: csrf, category};
+        const fields = {_token: csrf, category, review_after_start: '1'};
         if (record.type === 'student') fields.clinic_action = 'start';
         for (const [name, value] of Object.entries(fields)) {
             const input = document.createElement('input'); input.type = 'hidden'; input.name = name; input.value = value; form.append(input);

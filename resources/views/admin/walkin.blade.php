@@ -1250,7 +1250,7 @@
         box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
     }
 
-    #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-total-badge {
+    #applicantRefModal .applicant-modal-shell.is-final-review-workflow.is-applicant-lookup #applicantFinalReviewTotalBadge {
         display: inline-flex;
     }
 
@@ -4624,6 +4624,15 @@
         gap: 16px;
         align-items: start;
     }
+
+    #clinicLookupApprovedSlot .applicant-approved-result.is-visible { display: block; margin-top: 12px; padding: 0; border: 0; background: none; box-shadow: none; font-size: 12px; }
+    #clinicLookupApprovedSlot .applicant-approved-result-icon,
+    #clinicLookupApprovedSlot .applicant-approved-result-copy > strong,
+    #clinicLookupApprovedSlot #applicantAlreadyApprovedMessage,
+    #clinicLookupApprovedSlot .applicant-approved-result-meta { display: none; }
+    #applicantReferenceVerificationApprovedAt { display: block; margin-top: 4px; color: #52647d; font-size: 11px; line-height: 1.5; }
+    html[data-theme="dark"] #applicantReferenceVerificationApprovedAt { color: #cbd5e1; }
+    #applicantReferenceVerificationApprovedAt[hidden], .reference-form-icon[hidden] { display: none !important; }
 
     .applicant-approved-result-icon {
         display: grid;
@@ -11911,7 +11920,7 @@
                             <div class="applicant-reference-verification-item">
                                 <span class="applicant-reference-verification-item-icon"><x-outline-icon name="academic-cap" /></span>
                                 <span class="applicant-reference-verification-item-copy">
-                                    <small>Course</small>
+                                    <small id="applicantReferenceVerificationCourseLabel">Course</small>
                                     <strong id="applicantReferenceVerificationCourse">N/A</strong>
                                 </span>
                             </div>
@@ -11923,10 +11932,12 @@
                                 </span>
                             </div>
                             <div class="applicant-reference-verification-item applicant-reference-health-form-item">
-                                <span class="applicant-reference-verification-item-icon"><x-outline-icon name="medical-clearance-issued" /></span>
+                                <span class="applicant-reference-verification-item-icon reference-form-icon" id="referenceFormDocumentIcon"><x-outline-icon name="medical-clearance-issued" /></span>
+                                <span class="applicant-reference-verification-item-icon reference-form-icon" id="referenceFormApprovedIcon" hidden><x-outline-icon name="check" /></span>
                                 <span class="applicant-reference-verification-item-copy">
                                     <small>Health Information Form</small>
                                     <strong class="applicant-reference-form-status" id="applicantReferenceVerificationFormStatus">Not Yet Submitted</strong>
+                                    <span id="applicantReferenceVerificationApprovedAt" hidden></span>
                                 </span>
                             </div>
                         </div>
@@ -11935,6 +11946,7 @@
                             The Health Information Form has not been submitted yet. Lookup is available, but review and approval are unavailable until the form is submitted.
                         </p>
 
+                        <div id="clinicLookupApprovedSlot"></div>
                         <div class="applicant-reference-verification-actions">
                             <button type="button" id="btnCancelApplicantVerification">Cancel</button>
                             <button type="button" class="applicant-reference-continue" id="btnContinueApplicantVerification">
@@ -14571,8 +14583,14 @@
         const referenceVerificationApplicantType = document.getElementById('applicantReferenceVerificationApplicantType');
         const referenceVerificationRef = document.getElementById('applicantReferenceVerificationRef');
         const referenceVerificationCourse = document.getElementById('applicantReferenceVerificationCourse');
+        const referenceVerificationCourseLabel = document.getElementById('applicantReferenceVerificationCourseLabel');
+        const clinicLookupApprovedSlot = document.getElementById('clinicLookupApprovedSlot');
+        let approvedResultHome = null, approvedResultNext = null;
         const referenceVerificationEmail = document.getElementById('applicantReferenceVerificationEmail');
         const referenceVerificationFormStatus = document.getElementById('applicantReferenceVerificationFormStatus');
+        const referenceVerificationApprovedAt = document.getElementById('applicantReferenceVerificationApprovedAt');
+        const referenceFormDocumentIcon = document.getElementById('referenceFormDocumentIcon');
+        const referenceFormApprovedIcon = document.getElementById('referenceFormApprovedIcon');
         const referenceVerificationWarning = document.getElementById('applicantReferenceVerificationWarning');
         const referenceVerificationCancel = document.getElementById('btnCancelApplicantVerification');
         const referenceVerificationContinue = document.getElementById('btnContinueApplicantVerification');
@@ -15031,6 +15049,7 @@
             }
 
             if (modalShell) {
+                modalShell.classList.remove('is-clinic-final-review');
                 modalShell.classList.toggle('is-employee-lookup', isClinicLookupMode());
                 modalShell.classList.toggle('is-applicant-lookup', !isClinicLookupMode());
                 modalShell.classList.remove('is-student-lookup', 'is-dependent-lookup');
@@ -15042,9 +15061,9 @@
             syncDocumentsModalCopy();
 
             if (lookupModalBadge) lookupModalBadge.textContent = isClinicLookupMode() ? 'ID' : 'AP';
-            if (lookupModalTitle) lookupModalTitle.textContent = isClinicLookupMode() ? 'Final Review' : 'Applicants';
+            if (lookupModalTitle) lookupModalTitle.textContent = isClinicLookupMode() ? 'Record Management' : 'Applicants';
             if (lookupModalSubtitle) lookupModalSubtitle.textContent = isClinicLookupMode()
-                ? 'Enter an employee number or student number to look up local employee records.'
+                ? 'Find records or resume saved drafts.'
                 : "Enter the applicant's reference number to look up the record.";
             if (lookupModalEntryTitle) lookupModalEntryTitle.textContent = isClinicLookupMode() ? 'Record Management' : 'Reference Lookup';
             if (lookupModalEntrySubtitle) lookupModalEntrySubtitle.textContent = isClinicLookupMode()
@@ -15079,6 +15098,7 @@
             if (entryPane) entryPane.classList.toggle('is-reference-lookup', isReferenceLookup);
 
             if (modalShell) {
+                modalShell.classList.remove('is-clinic-final-review');
                 modalShell.classList.toggle('is-encode-workflow', isEncode);
                 modalShell.classList.toggle('is-final-review-workflow', isFinalReview);
             }
@@ -15140,6 +15160,9 @@
 
         function hideAlreadyApprovedResult() {
             window.ApprovedClearanceReview?.configure(null);
+            if (approvedResultHome && alreadyApprovedResult?.parentElement !== approvedResultHome) {
+                approvedResultHome.insertBefore(alreadyApprovedResult, approvedResultNext?.parentElement === approvedResultHome ? approvedResultNext : null);
+            }
             alreadyApprovedResult?.classList.remove('is-visible');
             alreadyApprovedCloseRow?.classList.remove('is-visible');
             modalShell?.classList.remove('is-approved-result-only');
@@ -15336,6 +15359,9 @@
         }
 
         function setEntryMode(isActive) {
+            if (isClinicLookupMode() && lookupModalTitle) lookupModalTitle.textContent = isActive ? 'ID Lookup' : 'Record Management';
+            if (isClinicLookupMode() && lookupModalSubtitle) lookupModalSubtitle.textContent = isActive
+                ? 'Look up a student, employee, or dependent by ID number.' : 'Find records or resume saved drafts.';
             if (defaultPane) defaultPane.style.display = isActive ? 'none' : 'flex';
             if (entryPane) entryPane.classList.toggle('is-visible', isActive);
             if (backToFinalReviewList) {
@@ -15352,7 +15378,7 @@
         }
 
         function resetLookupState() {
-            if (repeatClearanceReview) modalShell?.classList.remove('is-final-review-workflow', 'is-final-review-toolbar-stuck');
+            if (repeatClearanceReview || isClinicLookupMode()) modalShell?.classList.remove('is-final-review-workflow', 'is-final-review-toolbar-stuck', 'is-clinic-final-review');
             repeatClearanceReview = null;
             currentClinicLookupData = null;
             findBtn?.removeEventListener('click', submitRepeatMedicalClearance);
@@ -17305,7 +17331,9 @@
             showLookupDetails(data, currentLookupRef);
             repeatClearanceReview = {...context, busy: false, issued: false};
             isApprovalMode = true;
-            modalShell?.classList.add('is-final-review-workflow');
+            modalShell?.classList.remove('is-final-review-workflow', 'is-final-review-toolbar-stuck');
+            modalShell?.classList.add('is-clinic-final-review');
+            if (lookupModalTitle) lookupModalTitle.textContent = 'Final Review';
             window.ReviewMedicalClearance.configureApproved(context.options, context.category, context.draft?.medical_clearance);
             if (foundName) foundName.textContent = currentLookupName || data.student_name || '';
             if (foundCard) foundCard.style.display = 'flex';
@@ -17598,12 +17626,22 @@
         function showApplicantReferenceVerification(data, reference, applicantName, hasCompletedHealthForm) {
             const fullName = String(applicantName || reference || (isClinicLookupMode() ? 'Patient' : 'Applicant')).trim();
             const formComplete = Boolean(hasCompletedHealthForm);
+            const clinic = isClinicLookupMode();
+            const preview = data.health_form_preview;
+            const reviewable = [true, 1, '1'].includes(data.has_reviewable_health_form);
+            const cleared = [true, 1].includes(data.approved)
+                || ['fully cleared', 'issued', 'approved', 'cleared'].includes(String(data.clinic_status || data.clearance_status || '').toLowerCase());
+            const approved = clinic && formComplete && !reviewable && cleared && (!preview || preview.status === 'approved');
+            const canContinue = clinic ? formComplete && reviewable : formComplete;
+            hideAlreadyApprovedResult();
+            if (clinic && lookupModalTitle) lookupModalTitle.textContent = 'ID Lookup';
+            if (clinic && lookupModalSubtitle) lookupModalSubtitle.textContent = 'Check the record and Health Form category before continuing.';
 
             pendingReferenceLookup = {
                 data,
                 referenceNumber: isClinicLookupMode() ? reference : (data.reference_number || reference),
                 applicantName: fullName,
-                hasCompletedHealthForm: formComplete
+                hasCompletedHealthForm: canContinue
             };
 
             if (referenceVerificationInitials) referenceVerificationInitials.textContent = getApplicantInitials(fullName);
@@ -17613,7 +17651,8 @@
                 referenceVerificationPhoto.onerror = null;
 
                 try {
-                    const photoUrl = data.applicant_photo_url ? new URL(data.applicant_photo_url, window.location.href) : null;
+                    const photo = data.applicant_photo_url || (clinic && (data.photo_url || data.employee_photo_url || data.student_photo_url));
+                    const photoUrl = photo ? new URL(photo, window.location.href) : null;
                     if (photoUrl && photoUrl.origin === window.location.origin) {
                         referenceVerificationPhoto.onerror = () => {
                             referenceVerificationPhoto.hidden = true;
@@ -17627,7 +17666,9 @@
                 }
             }
             if (referenceVerificationName) referenceVerificationName.textContent = fullName;
-            const applicantStatus = String(data.applicant_status || data.clinic_status || data.clearance_status || 'Awaiting Uploads').trim();
+            const applicantStatus = approved ? 'Approved' : clinic && reviewable ? 'Pending Approval'
+                : clinic && (!formComplete || preview?.status === 'requested') ? 'Not Yet Submitted'
+                : String(data.applicant_status || data.clinic_status || data.clearance_status || 'Awaiting Uploads').trim();
             const applicantType = String(data.applicant_type || '').trim().toLowerCase();
             if (referenceVerificationApplicantStatus) {
                 referenceVerificationApplicantStatus.textContent = applicantStatus || 'Awaiting Uploads';
@@ -17640,15 +17681,40 @@
                 referenceVerificationApplicantType.setAttribute('aria-label', `Applicant type: ${referenceVerificationApplicantType.textContent}`);
             }
             if (referenceVerificationRef) referenceVerificationRef.textContent = (isClinicLookupMode() ? reference : data.reference_number || reference) || 'N/A';
-            if (referenceVerificationCourse) referenceVerificationCourse.textContent = data.course || data.course_name || 'N/A';
+            if (referenceVerificationCourseLabel) referenceVerificationCourseLabel.textContent = clinic ? 'Health Form Category' : 'Course';
+            if (referenceVerificationCourse) referenceVerificationCourse.textContent = clinic
+                ? (preview?.submitted || approved ? preview?.category || 'Not specified' : 'No submitted request')
+                : data.course || data.course_name || 'N/A';
             if (referenceVerificationEmail) referenceVerificationEmail.textContent = data.email || data.email_address || 'N/A';
             if (referenceVerificationFormStatus) {
-                referenceVerificationFormStatus.textContent = formComplete ? 'Submitted' : 'Not Yet Submitted';
-                referenceVerificationFormStatus.classList.toggle('is-ready', formComplete);
-                referenceVerificationFormStatus.classList.toggle('is-missing', !formComplete);
+                referenceVerificationFormStatus.textContent = approved ? 'Approved' : clinic && preview && !preview.submitted ? 'Not Yet Submitted' : formComplete ? 'Submitted' : 'Not Yet Submitted';
+                const submitted = clinic && preview ? preview.submitted : formComplete;
+                referenceVerificationFormStatus.classList.toggle('is-ready', approved || submitted);
+                referenceVerificationFormStatus.classList.toggle('is-missing', !approved && !submitted);
             }
-            if (referenceVerificationWarning) referenceVerificationWarning.hidden = formComplete;
-            if (referenceVerificationContinue) referenceVerificationContinue.disabled = !formComplete;
+            if (referenceVerificationApprovedAt) {
+                referenceVerificationApprovedAt.hidden = !approved;
+                referenceVerificationApprovedAt.textContent = approved ? `Approved at: ${preview?.approved_at || data.approved_at || data.verified_at || '-'}` : '';
+            }
+            if (referenceFormDocumentIcon) referenceFormDocumentIcon.hidden = approved;
+            if (referenceFormApprovedIcon) referenceFormApprovedIcon.hidden = !approved;
+            if (referenceVerificationWarning) {
+                referenceVerificationWarning.hidden = approved || canContinue;
+                referenceVerificationWarning.textContent = formComplete && clinic
+                    ? 'There is no submitted request awaiting approval. Review is unavailable until a request is submitted.'
+                    : 'The Health Information Form has not been submitted yet. Lookup is available, but review and approval are unavailable until the form is submitted.';
+            }
+            if (referenceVerificationContinue) { referenceVerificationContinue.disabled = !canContinue; referenceVerificationContinue.hidden = approved; }
+            if (approved && alreadyApprovedResult && clinicLookupApprovedSlot) {
+                if (!approvedResultHome) { approvedResultHome = alreadyApprovedResult.parentElement; approvedResultNext = alreadyApprovedResult.nextSibling; }
+                clinicLookupApprovedSlot.append(alreadyApprovedResult);
+                alreadyApprovedResult.classList.add('is-visible');
+                if (alreadyApprovedMessage) alreadyApprovedMessage.textContent = 'This Health Form has already been approved.';
+                if (alreadyApprovedMeta) alreadyApprovedMeta.textContent = `Approved at: ${preview?.approved_at || data.approved_at || data.verified_at || '-'}`;
+                const profileId = data.health_form_information?.profile_id || data.health_profile_id;
+                window.ApprovedClearanceReview?.configure(data.record_type, profileId);
+                window.ClinicMedicalClearance?.loadRecord(alreadyApprovedResult.querySelector('[data-clearance-panel]'), data.record_type, profileId);
+            }
             setStatus('', '');
             if (referenceVerification) referenceVerification.hidden = false;
             entryPane?.classList.add('is-reference-verification');
@@ -17662,12 +17728,13 @@
             }
 
             setTimeout(() => {
-                const focusTarget = formComplete ? referenceVerificationContinue : referenceVerificationCancel;
+                const focusTarget = canContinue ? referenceVerificationContinue : referenceVerificationCancel;
                 focusTarget?.focus({ preventScroll: true });
             }, 0);
         }
 
         function returnToApplicantReferenceSearch() {
+            hideAlreadyApprovedResult();
             if (referenceVerification) referenceVerification.hidden = true;
             if (entryPane) entryPane.classList.remove('is-reference-verification');
             const lookupRow = entryPane?.querySelector('.applicant-ref-lookup-row');
@@ -17697,7 +17764,7 @@
             setStatus(type, message);
         }
 
-        function doLookup(cachedLookupData = null) {
+        function doLookup(cachedLookupData = null, openSubmittedReview = false) {
             // Click handlers pass an Event, not a cached API response.
             if (!['preview', 'found'].includes(cachedLookupData?.status)) {
                 cachedLookupData = null;
@@ -17716,7 +17783,7 @@
                 return;
             }
 
-            setStatus('info', isClinicLookupMode() ? 'Looking up employee/student record...' : 'Looking up applicant...');
+            setStatus('info', 'Looking up record...');
             if (foundCard) foundCard.style.display = 'none';
             if (documentsButton) documentsButton.classList.remove('is-visible');
             if (savedAssessmentButton) savedAssessmentButton.classList.remove('is-visible');
@@ -17771,10 +17838,15 @@
                         || data.has_completed_health_form === 1
                         || data.has_completed_health_form === '1';
 
-                    if (isClinicLookupMode() && !hasCompletedHealthForm) {
+                    if (isClinicLookupMode() && (!cachedLookupData || !hasCompletedHealthForm)) {
                         isApprovalMode = false;
                         setReviewDraftButtonVisible(false);
-                        showApplicantReferenceVerification(data, ref, applicantName, false);
+                        showApplicantReferenceVerification(data, ref, applicantName, hasCompletedHealthForm);
+                        // Explicit review links reuse Continue only for a real pending submission.
+                        // Ordinary ID searches still stop at the record preview.
+                        if (openSubmittedReview === true && pendingReferenceLookup?.hasCompletedHealthForm === true) {
+                            referenceVerificationContinue?.click();
+                        }
                         return;
                     }
 
@@ -17915,8 +17987,16 @@
             if (refInput) refInput.value = pendingLookup.referenceNumber || refInput.value;
             if (referenceVerification) referenceVerification.hidden = true;
             entryPane?.classList.remove('is-reference-verification', 'is-reference-lookup');
-            setApplicantWorkflow('final_review');
-            backToFinalReviewList?.classList.add('is-visible');
+            if (isClinicLookupMode()) {
+                hideAlreadyApprovedResult();
+                if (lookupModalTitle) lookupModalTitle.textContent = 'Final Review';
+                if (lookupModalSubtitle) lookupModalSubtitle.textContent = 'Review the assessment and approve or save a draft.';
+                modalShell?.classList.remove('is-final-review-workflow', 'is-final-review-toolbar-stuck');
+                modalShell?.classList.add('is-clinic-final-review');
+            } else {
+                setApplicantWorkflow('final_review');
+                backToFinalReviewList?.classList.add('is-visible');
+            }
             doLookup(pendingLookup.data);
         });
 
@@ -19741,7 +19821,7 @@
                 applyLookupMode('clinic');
                 if (refInput) refInput.value = initialWalkinReviewReference;
                 setEntryMode(true);
-                doLookup();
+                doLookup(null, true);
             } else if (initialWalkinReviewWorkflow === 'encode' && canEncodeApplicantAssessment) {
                 backdrop.classList.add('show');
                 applyLookupMode('applicant');
