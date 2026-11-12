@@ -2717,31 +2717,19 @@ class WalkInController extends Controller
     public function markFinalReviewTimeIn(Request $request)
     {
         $validated = $request->validate([
-            'reference_number' => ['required', 'string', 'max:120'],
+            'reference_number' => ['required_without:profile_id', 'nullable', 'string', 'max:120'],
+            'record_type' => ['required_with:profile_id', 'nullable', 'in:student,employee'],
+            'profile_id' => ['required_with:record_type', 'nullable', 'integer', 'min:1'],
         ]);
-
-        $referenceNumber = trim((string) $validated['reference_number']);
-
-        $profile = HealthProfile::query()
-            ->where('reference_number', $referenceNumber)
-            ->latest()
-            ->first();
-
-        if (!$profile) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Health profile not found for final review time-in.',
-            ], 404);
-        }
-
-        $profile->review_started_at = now();
-        $profile->review_closed_at = null;
-        $profile->review_started_by_user_id = auth()->id();
-        $profile->save();
+        $profile = !empty($validated['profile_id'])
+            ? (($validated['record_type'] ?? '') === 'employee' ? EmployeeHealthProfile::query() : HealthProfile::query())->findOrFail($validated['profile_id'])
+            : $this->findHealthProfileByReference(trim((string) $validated['reference_number']));
+        abort_unless($profile, 404, 'Health profile not found for Final Review time-in.');
+        $openedAt = app(\App\Services\FinalReviewTimingService::class)->open($profile, $request->user()?->id ?: auth()->id());
 
         return response()->json([
             'success' => true,
-            'review_started_at' => optional($profile->review_started_at)->toIso8601String(),
+            'review_started_at' => $openedAt,
         ]);
     }
 
@@ -2765,12 +2753,14 @@ class WalkInController extends Controller
             ], 404);
         }
 
-        $profile->review_closed_at = now();
-        $profile->save();
+        // Compatibility endpoint: Time Out is the approval instant, never a modal-close timestamp.
+        $submission = HealthFormSubmission::query()->where('health_profile_id', $profile->id)->latest('id')->first();
+        $approvedAt = $submission ? $submission->approved_at : $profile->verified_at;
+        abort_unless($approvedAt, 422, 'Time Out is recorded only after successful approval.');
 
         return response()->json([
             'success' => true,
-            'review_closed_at' => optional($profile->review_closed_at)->toIso8601String(),
+            'review_closed_at' => \Illuminate\Support\Carbon::parse($approvedAt)->toIso8601String(),
         ]);
     }
 
@@ -3263,6 +3253,8 @@ class WalkInController extends Controller
                     'approved_at' => $resolvedApprovedAt,
                     'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
                     'health_profile_id' => optional($healthProfile)->id,
+                    'review_timing_record_type' => in_array($recordType, ['employee', 'dependent'], true) ? 'employee' : 'student',
+                    'review_timing_profile_id' => optional(in_array($recordType, ['employee', 'dependent'], true) ? $employeeProfile : $healthProfile)->id,
                     'has_completed_health_form' => $hasCompletedHealthForm,
                     'has_reviewable_health_form' => $isEmployeeLookupScope && (bool) $this->reviewableClinicSubmission(in_array($recordType, ['employee', 'dependent'], true) ? $employeeProfile : $healthProfile),
                     'health_form_preview' => $isEmployeeLookupScope ? $this->clinicHealthFormPreview(in_array($recordType, ['employee', 'dependent'], true) ? $employeeProfile : $healthProfile) : null,
@@ -3338,6 +3330,8 @@ class WalkInController extends Controller
                 'approved_at' => $resolvedApprovedAt,
                 'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
                 'health_profile_id' => optional($healthProfile)->id,
+                'review_timing_record_type' => in_array($recordType, ['employee', 'dependent'], true) ? 'employee' : 'student',
+                'review_timing_profile_id' => optional(in_array($recordType, ['employee', 'dependent'], true) ? $employeeProfile : $healthProfile)->id,
                 'has_completed_health_form' => $hasCompletedHealthForm,
                 'has_reviewable_health_form' => $isEmployeeLookupScope && (bool) $this->reviewableClinicSubmission(in_array($recordType, ['employee', 'dependent'], true) ? $employeeProfile : $healthProfile),
                 'health_form_preview' => $isEmployeeLookupScope ? $this->clinicHealthFormPreview(in_array($recordType, ['employee', 'dependent'], true) ? $employeeProfile : $healthProfile) : null,
@@ -5093,10 +5087,6 @@ PROMPT;
                 $profile->physical_assessment_status = $hasPendingFinding
                     ? 'Not Yet Conducted'
                     : 'Completed / Passed';
-                if (!$profile->review_started_at) {
-                    $profile->review_started_at = now();
-                    $profile->review_started_by_user_id = auth()->id();
-                }
                 $profile->documents_valid = !$hasPendingFinding;
                 $profile->resubmission_required_documents = $hasIncompleteRequirements
                     ? $resubmissionRequiredDocuments
@@ -5106,7 +5096,7 @@ PROMPT;
                     : null;
                 $approvalDate = $hasPendingFinding ? null : now();
                 $profile->verified_at = $approvalDate;
-                $profile->review_closed_at = now();
+                $profile->review_closed_at = $hasPendingFinding ? null : $approvalDate;
                 $profile->approved_by_user_id = $hasPendingFinding ? null : auth()->id();
                 $profile->puptas_sync_status = null;
                 $profile->puptas_synced_at = null;
@@ -5555,10 +5545,6 @@ PROMPT;
                 if ($hasAssessmentValue) {
                     $profile->assessment_date = $profile->assessment_date ?: now()->toDateString();
                     $profile->physical_assessment_status = $profile->physical_assessment_status ?: 'Patient Assessment Saved';
-                    if (!$profile->review_started_at) {
-                        $profile->review_started_at = now();
-                        $profile->review_started_by_user_id = auth()->id();
-                    }
                 }
 
                 $profile->final_review_draft_data = null;

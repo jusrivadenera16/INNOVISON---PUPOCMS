@@ -8071,6 +8071,10 @@
             overflow-wrap: anywhere;
         }
 
+        .landing-reviews-heading h2 .landing-reviews-highlight {
+            color: #facc15;
+        }
+
         .landing-reviews-section .feedback-stage {
             width: min(1060px, 100%);
             display: grid;
@@ -9477,7 +9481,7 @@
             <div class="landing-reviews-inner">
                 <header class="landing-reviews-heading">
                     <p>Clinic Reviews</p>
-                    <h2 id="landingReviewsTitle">What PUPians Are Saying</h2>
+                    <h2 id="landingReviewsTitle">What <span class="landing-reviews-highlight">PUPians</span> Are Saying...</h2>
                 </header>
                 <svg width="0" height="0" aria-hidden="true" focusable="false">
                     <defs>

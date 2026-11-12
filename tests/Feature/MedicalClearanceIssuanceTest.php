@@ -695,6 +695,8 @@ class MedicalClearanceIssuanceTest extends TestCase
     public function test_student_doctor_review_approval_issues_and_saves_the_selected_certificate_in_one_request(): void
     {
         [$profile, $submission, $actor] = $this->prepareStudentReview();
+        $openedAt = now()->subMinutes(15)->toIso8601String();
+        $submission->update(['profile_snapshot' => array_merge($submission->profile_snapshot ?: [], ['review_timing' => ['opened_at' => $openedAt]])]);
         $request = Request::create('/', 'POST', ['reference_number' => '2026-00001-TG-1', 'clearance_decision' => 'approve',
             'issue_medical_clearance' => true, 'medical_clearance' => $this->input()]);
         $request->setUserResolver(fn () => $actor);
@@ -702,6 +704,7 @@ class MedicalClearanceIssuanceTest extends TestCase
         $this->assertSame(200, $response->getStatusCode(), $response->getContent());
         $this->assertSame('Fully Cleared', $profile->fresh()->clearance_status);
         $this->assertSame('approved', $submission->fresh()->status);
+        $this->assertSame($openedAt, data_get($submission->fresh()->profile_snapshot, 'review_timing.opened_at'));
         $this->assertSame(1, IssuedMedicalClearance::count());
         $document = IssuedMedicalClearance::first();
         $this->assertSame($submission->id, $document->health_form_submission_id);
@@ -744,6 +747,8 @@ class MedicalClearanceIssuanceTest extends TestCase
         $profile->forceFill(['employee_number' => 'EMP-1', 'clearance_status' => 'For Verification'])->save();
         $submission = HealthFormSubmission::where('employee_health_profile_id', $profile->id)->first();
         $submission->forceFill(['status' => 'submitted', 'approved_at' => null])->save();
+        $openedAt = now()->subMinutes(15)->toIso8601String();
+        $submission->update(['profile_snapshot' => array_merge($submission->profile_snapshot ?: [], ['review_timing' => ['opened_at' => $openedAt]])]);
         $this->mock(\App\Services\EmployeeHealthFormPdfService::class)->shouldReceive('generate')->once()->andReturnUsing(function ($record) {
             $record->forceFill(['staff_health_form_pdf_path' => 'employee-final-form.pdf'])->save(); return 'employee-final-form.pdf';
         });
@@ -756,6 +761,7 @@ class MedicalClearanceIssuanceTest extends TestCase
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('approved', $submission->fresh()->status);
         $this->assertSame('Fully Cleared', $profile->fresh()->clearance_status);
+        $this->assertSame($openedAt, data_get($submission->fresh()->profile_snapshot, 'review_timing.opened_at'));
         $this->assertSame(1, IssuedMedicalClearance::count());
         $document = IssuedMedicalClearance::first();
         $this->assertSame('employee', $document->record_type);

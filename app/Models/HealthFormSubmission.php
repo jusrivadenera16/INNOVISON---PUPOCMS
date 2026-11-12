@@ -81,6 +81,14 @@ class HealthFormSubmission extends Model
         return is_array($profile) ? $profile : [];
     }
 
+    public function preserveReviewTiming(array $snapshot): array
+    {
+        $timing = data_get($this->profile_snapshot, 'review_timing');
+        if (is_array($timing)) $snapshot['review_timing'] = $timing;
+
+        return $snapshot;
+    }
+
     public function snapshotUser(): array
     {
         $snapshot = is_array($this->profile_snapshot) ? $this->profile_snapshot : [];

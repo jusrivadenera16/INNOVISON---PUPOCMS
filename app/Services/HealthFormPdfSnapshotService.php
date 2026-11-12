@@ -71,7 +71,7 @@ class HealthFormPdfSnapshotService
             'school_year' => trim((string) ($snapshotProfile->school_year ?? $profile->school_year ?? '')) ?: $submission->school_year,
             'status' => HealthFormSubmission::STATUS_SUBMITTED,
             'pdf_path' => $filePath,
-            'profile_snapshot' => $this->profileSnapshots->capture($snapshotProfile),
+            'profile_snapshot' => $submission->preserveReviewTiming($this->profileSnapshots->capture($snapshotProfile)),
             'snapshot_captured_at' => $timestamp,
             'submitted_at' => $timestamp,
             'approved_at' => null,
@@ -150,7 +150,7 @@ class HealthFormPdfSnapshotService
             'school_year' => trim((string) ($profile->school_year ?? '')) ?: $submission->school_year,
             'status' => HealthFormSubmission::STATUS_APPROVED,
             'pdf_path' => $filePath,
-            'profile_snapshot' => $this->profileSnapshots->capture($snapshotProfile),
+            'profile_snapshot' => $submission->preserveReviewTiming($this->profileSnapshots->capture($snapshotProfile)),
             'snapshot_captured_at' => $timestamp,
             'submitted_at' => $submittedAt,
             'approved_at' => $timestamp,
@@ -296,7 +296,7 @@ class HealthFormPdfSnapshotService
 
         try {
             $submission->pdf_path = $filePath;
-            $submission->profile_snapshot = $this->profileSnapshots->capture($snapshotProfile);
+            $submission->profile_snapshot = $submission->preserveReviewTiming($this->profileSnapshots->capture($snapshotProfile));
             $submission->snapshot_captured_at = $timestamp;
             $submission->save();
         } catch (\Throwable $exception) {

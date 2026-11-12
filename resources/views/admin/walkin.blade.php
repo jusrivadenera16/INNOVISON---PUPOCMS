@@ -14722,7 +14722,7 @@
         const finalReviewApplicantsUrl = '{{ url($basePrefix . '/walkin/final-review-applicants') }}';
         const employeeDraftsUrl = '{{ url($basePrefix . '/walkin/employee-drafts') }}';
         const finalReviewTimeInUrl = '{{ url($basePrefix . '/walkin/final-review/time-in') }}';
-        const finalReviewTimeOutUrl = '{{ url($basePrefix . '/walkin/final-review/time-out') }}';
+        let finalReviewTimeInRequest = Promise.resolve(true);
         const saveEncodingUrl = '{{ url($basePrefix . '/walkin/applicant-encoding') }}';
         const saveStudentAssessmentUrl = '{{ url($basePrefix . '/walkin/student-assessment') }}';
         const studentApprovalEvaluationUrl = '{{ url($basePrefix . '/walkin/student-approval-evaluation') }}';
@@ -14923,10 +14923,6 @@
             delete finalReviewErrorOverlay.dataset.returnToFinalReviewList;
 
             if (returnToFinalReviewList) {
-                const referenceNumber = currentLookupRef;
-                if (referenceNumber && isFinalReviewWorkflow()) {
-                    markFinalReviewTimeOut(referenceNumber);
-                }
                 resetLookupState();
                 showFinalReviewList();
             }
@@ -15344,6 +15340,7 @@
             if (repeatClearanceReview || isClinicLookupMode()) modalShell?.classList.remove('is-final-review-workflow', 'is-final-review-toolbar-stuck', 'is-clinic-final-review');
             repeatClearanceReview = null;
             currentClinicLookupData = null;
+            finalReviewTimeInRequest = Promise.resolve(true);
             findBtn?.removeEventListener('click', submitRepeatMedicalClearance);
             window.ReviewMedicalClearance?.reset();
             pendingReferenceLookup = null;
@@ -15539,9 +15536,6 @@
         }
 
         function closeApplicantsModal() {
-            if (isFinalReviewWorkflow() && currentLookupRef) {
-                markFinalReviewTimeOut(currentLookupRef);
-            }
             if (backdrop) backdrop.classList.remove('show');
             closeHealthInfoModal();
             closeMedicalConditionModal();
@@ -17413,6 +17407,9 @@
             const studentNumber = data.student_number || '';
             const yearSection = [data.year || '', data.section || ''].filter(Boolean).join(' / ') || 'N/A';
             currentRecordType = data.record_type || (isClinicLookupMode() ? 'employee' : 'applicant');
+            if (isFinalReviewWorkflow() || (isClinicLookupMode() && [true, 1, '1'].includes(data.has_reviewable_health_form))) {
+                finalReviewTimeInRequest = markFinalReviewTimeIn(referenceNumber, data);
+            }
             window.ReviewMedicalClearance?.configure(isClinicLookupMode() ? currentRecordType : null,
                 data.health_form_information?.profile_id || data.health_profile_id,
                 data.has_reviewable_health_form === true || data.has_reviewable_health_form === 1 || data.has_reviewable_health_form === '1',
@@ -18053,7 +18050,14 @@
             .catch(() => setStatus('error', 'Unable to save assessment right now. Please try again.'));
         }
 
-        function saveStudentAssessment() {
+        async function saveStudentAssessment() {
+            const openingRequest = finalReviewTimeInRequest, openingReference = currentLookupRef;
+            const timeInSaved = await openingRequest;
+            if (openingRequest !== finalReviewTimeInRequest || openingReference !== currentLookupRef) return;
+            if (timeInSaved === false) {
+                setStatus('error', 'Time In was not saved. Reopen Final Review before approving.');
+                return;
+            }
             if (repeatClearanceReview) return submitRepeatMedicalClearance();
             if (!currentLookupRef || !isStudentLookupResult()) {
                 setStatus('error', currentRecordType === 'dependent'
@@ -18240,7 +18244,14 @@
                 : 'Unable to save the student/OJT assessment right now. Please try again.'));
         }
 
-        function doApprove() {
+        async function doApprove() {
+            const openingRequest = finalReviewTimeInRequest, openingReference = currentLookupRef;
+            const timeInSaved = await openingRequest;
+            if (openingRequest !== finalReviewTimeInRequest || openingReference !== currentLookupRef) return;
+            if (timeInSaved === false) {
+                setStatus('error', 'Time In was not saved. Reopen Final Review before approving.');
+                return;
+            }
             if (!currentLookupRef) {
                 setStatus('error', 'No applicant to approve.');
                 return;
@@ -19341,10 +19352,15 @@
             doLookup();
         }
 
-        function markFinalReviewTimeIn(referenceNumber) {
-            if (!canApproveFinalReview || !referenceNumber || !finalReviewTimeInUrl) {
-                return Promise.resolve();
+        function markFinalReviewTimeIn(referenceNumber, data = null) {
+            if ((!canApproveFinalReview && !canLookupEmployeeRecords && !canReviewFinalSubmission) || !referenceNumber || !finalReviewTimeInUrl) {
+                return Promise.resolve(false);
             }
+
+            const employee = data?.review_timing_record_type === 'employee' || data?.health_form_information?.record_type === 'employee' || ['employee', 'dependent'].includes(data?.record_type);
+            const profileId = data?.review_timing_profile_id || (employee ? (data?.employee_profile_id || data?.health_form_information?.profile_id) : (data?.health_form_information?.profile_id || data?.health_profile_id));
+            const input = {reference_number: referenceNumber};
+            if (profileId) { input.profile_id = Number(profileId); input.record_type = employee ? 'employee' : 'student'; }
 
             return fetch(finalReviewTimeInUrl, {
                 method: 'POST',
@@ -19354,28 +19370,14 @@
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
-                body: JSON.stringify({ reference_number: referenceNumber })
+                body: JSON.stringify(input)
+            }).then(function (response) {
+                if (!response.ok) throw new Error('Unable to save Final Review Time In.');
+                return true;
             }).catch(function (error) {
                 console.warn('Unable to mark final review time-in.', error);
-            });
-        }
-
-        function markFinalReviewTimeOut(referenceNumber) {
-            if (!canApproveFinalReview || !referenceNumber || !finalReviewTimeOutUrl) {
-                return Promise.resolve();
-            }
-
-            return fetch(finalReviewTimeOutUrl, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({ reference_number: referenceNumber })
-            }).catch(function (error) {
-                console.warn('Unable to mark final review time-out.', error);
+                setStatus('error', 'Time In was not saved. Reopen Final Review before approving.');
+                return false;
             });
         }
 
@@ -19545,9 +19547,6 @@
 
         if (backToFinalReviewList) {
             backToFinalReviewList.addEventListener('click', function () {
-                if (isFinalReviewWorkflow() && currentLookupRef) {
-                    markFinalReviewTimeOut(currentLookupRef);
-                }
                 resetLookupState();
                 showFinalReviewList();
             });
@@ -19559,9 +19558,7 @@
                 if (!button) return;
 
                 const referenceNumber = button.getAttribute('data-final-review-reference') || '';
-                markFinalReviewTimeIn(referenceNumber).finally(function () {
-                    openFinalReviewReference(referenceNumber);
-                });
+                openFinalReviewReference(referenceNumber);
             });
         }
 
@@ -19793,9 +19790,7 @@
                 doLookup();
             } else if (canReviewFinalSubmission) {
                 backdrop.classList.add('show');
-                markFinalReviewTimeIn(initialWalkinReviewReference).finally(function () {
-                    openFinalReviewReference(initialWalkinReviewReference);
-                });
+                openFinalReviewReference(initialWalkinReviewReference);
             }
         }
 

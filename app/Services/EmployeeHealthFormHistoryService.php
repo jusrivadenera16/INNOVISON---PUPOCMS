@@ -176,7 +176,7 @@ class EmployeeHealthFormHistoryService
         }
         $submission->forceFill([
             'pdf_path' => $profile->staff_health_form_pdf_path,
-            'profile_snapshot' => $this->capture($profile),
+            'profile_snapshot' => $submission->preserveReviewTiming($this->capture($profile)),
             'snapshot_captured_at' => now(),
         ])->save();
 
@@ -191,6 +191,7 @@ class EmployeeHealthFormHistoryService
             ->whereIn('status', [
                 HealthFormSubmission::STATUS_SUBMITTED,
                 HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                'under_review',
             ])
             ->latest('submitted_at')
             ->latest('id')
@@ -206,7 +207,7 @@ class EmployeeHealthFormHistoryService
             'school_year' => trim((string) $profile->school_year) ?: null,
             'status' => HealthFormSubmission::STATUS_APPROVED,
             'pdf_path' => $profile->staff_health_form_pdf_path,
-            'profile_snapshot' => $this->capture($profile),
+            'profile_snapshot' => $submission->preserveReviewTiming($this->capture($profile)),
             'snapshot_captured_at' => now(),
             'approved_at' => $profile->verified_at ?: now(),
             'approved_by_user_id' => $profile->approved_by_user_id,

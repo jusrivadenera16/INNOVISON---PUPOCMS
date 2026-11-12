@@ -10651,6 +10651,7 @@
     let hasAvailableReviewDestination = false;
     let canDecideRegularStudentRecord = false;
     let studentHealthApprovalConfirmed = false;
+    let regularStudentTimeInRequest = Promise.resolve(true);
 
     function setApplicantAssessmentMenuOpen(isOpen) {
         if (!verifyApplicantNextStepMenu || !verifyContinueToWalkinBtn) return;
@@ -10685,6 +10686,15 @@
             && @json($canSignHealth)
             && Boolean(recordPayload.approve_url)
             && !['issued', 'fully cleared', 'withdrawn'].includes(status);
+        if (isNewRecord) {
+            regularStudentTimeInRequest = canDecideRegularStudentRecord
+                ? fetch(@json(url($basePrefix . '/walkin/final-review/time-in')), {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: {'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''},
+                    body: JSON.stringify({record_type: 'student', profile_id: Number(recordPayload.id)}),
+                }).then(response => response.ok).catch(() => false)
+                : Promise.resolve(true);
+        }
         if (verifyRegularStudentDecisionForm) {
             verifyRegularStudentDecisionForm.setAttribute('action', recordPayload.approve_url || '');
         }
@@ -11481,8 +11491,17 @@
     studentHealthApprovalConfirmModal?.addEventListener('click', function (event) {
         if (event.target === studentHealthApprovalConfirmModal) closeStudentHealthApprovalConfirm();
     });
-    studentHealthApprovalConfirmProceed?.addEventListener('click', function () {
+    studentHealthApprovalConfirmProceed?.addEventListener('click', async function () {
         if (!verifyRegularStudentDecisionForm?.getAttribute('action') || !verifyRegularStudentApproveBtn) return;
+        studentHealthApprovalConfirmProceed.disabled = true;
+        const openingRequest = regularStudentTimeInRequest;
+        const timeInSaved = await openingRequest;
+        studentHealthApprovalConfirmProceed.disabled = false;
+        if (openingRequest !== regularStudentTimeInRequest) return;
+        if (!timeInSaved) {
+            if (studentHealthApprovalConfirmCopy) studentHealthApprovalConfirmCopy.textContent = 'Time In was not saved. Close and reopen the record before approving.';
+            return;
+        }
         studentHealthApprovalConfirmed = true;
         studentHealthApprovalConfirmModal?.classList.remove('is-open');
         studentHealthApprovalConfirmModal?.setAttribute('aria-hidden', 'true');

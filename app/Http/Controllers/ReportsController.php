@@ -2068,14 +2068,10 @@ class ReportsController extends Controller
         $category = trim((string) ($submission?->category ?: $resolveProfileValue('health_form_category')));
         $studentType = strtolower(trim((string) $resolveUserValue('student_type')));
         $approvalAt = $this->healthFormsLogbookCarbon($submission?->approved_at ?: $resolveProfileValue('verified_at'));
-        $timeIn = $this->healthFormsLogbookCarbon($resolveProfileValue('review_started_at'))
-            ?: $this->healthFormsLogbookCarbon($submission?->submitted_at)
-            ?: $this->healthFormsLogbookCarbon($submission?->created_at)
-            ?: $this->healthFormsLogbookCarbon($record?->created_at);
-        $timeOut = $this->healthFormsLogbookCarbon($resolveProfileValue('review_closed_at'))
-            ?: $approvalAt
-            ?: $this->healthFormsLogbookCarbon($resolveProfileValue('verified_at'))
-            ?: $this->healthFormsLogbookCarbon($record?->updated_at);
+        // Never present submission, last edit, or modal-close timestamps as clinic review times.
+        $timeIn = $this->healthFormsLogbookCarbon(data_get($submission?->profile_snapshot, 'review_timing.opened_at'))
+            ?: $this->healthFormsLogbookCarbon($submission ? ($profileData['review_started_at'] ?? null) : $record?->review_started_at);
+        $timeOut = $approvalAt;
         $dateValue = $timeIn ?: $approvalAt ?: $this->healthFormsLogbookCarbon($record?->created_at);
         $snapshotReview = is_array($submission?->profile_snapshot)
             ? (array) data_get($submission->profile_snapshot, 'review', [])

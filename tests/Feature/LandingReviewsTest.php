@@ -168,7 +168,7 @@ class LandingReviewsTest extends TestCase
         $response = $this->get('/')
             ->assertOk()
             ->assertSee('No feedback has been shared yet.')
-            ->assertSee('What PUPians Are Saying')
+            ->assertSee('What <span class="landing-reviews-highlight">PUPians</span> Are Saying...', false)
             ->assertDontSee('What Our Clients Say');
         $html = $response->getContent();
         $this->assertMatchesRegularExpression(
