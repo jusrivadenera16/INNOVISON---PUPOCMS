@@ -138,6 +138,13 @@ trait EncryptsHealthProfileFields
         }
 
         $table = $this->getTable();
+        // Listing reads hydrate many models. Share schema metadata only within that request.
+        $requestCache = app()->bound('request')
+            ? app('request')->attributes->get(\App\Services\HealthRecordSchemaCache::REQUEST_ATTRIBUTE)
+            : null;
+        if ($requestCache instanceof \App\Services\HealthRecordSchemaCache) {
+            return $this->healthEncryptionColumnListing = $requestCache->columns($this->getConnectionName(), $table);
+        }
         if (!Schema::hasTable($table)) {
             return $this->healthEncryptionColumnListing = [];
         }

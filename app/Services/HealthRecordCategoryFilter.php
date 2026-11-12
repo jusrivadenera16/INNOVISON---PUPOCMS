@@ -15,9 +15,11 @@ class HealthRecordCategoryFilter
         }
 
         // A new submitted OJT form must not inherit the account's regular-student shortcut.
-        $category = HealthFormSubmission::query()->where('health_profile_id', $profile->id)
-            ->whereIn('status', ['submitted', 'under_review', 'needs_correction', 'approved', 'Approved'])
-            ->latest('id')->value('category');
+        $category = $profile->getAttribute('review_category_preloaded')
+            ? $profile->getAttribute('review_category_value')
+            : HealthFormSubmission::query()->where('health_profile_id', $profile->id)
+                ->whereIn('status', ['submitted', 'under_review', 'needs_correction', 'approved', 'Approved'])
+                ->latest('id')->value('category');
         $category = trim((string) ($category ?: $profile->health_form_category));
 
         return !preg_match('/^(?:ojt\b|on[ -]the[ -]job[ -]training\b)/i', $category);
@@ -43,6 +45,31 @@ class HealthRecordCategoryFilter
     public function filter(Collection $records, string $category, bool $approvedOnly = false): Collection
     {
         if (trim($category) === '') return $records;
+        $submissions = $this->latestCategorySubmissions($records, $approvedOnly);
+        $studentCategories = $submissions->whereNotNull('health_profile_id')->pluck('category', 'health_profile_id');
+        $employeeCategories = $submissions->whereNotNull('employee_health_profile_id')->pluck('category', 'employee_health_profile_id');
+        $selected = mb_strtolower($this->label($category));
+
+        return $records->filter(function ($record) use ($studentCategories, $employeeCategories, $selected) {
+            $categories = $record instanceof EmployeeHealthProfile ? $employeeCategories : $studentCategories;
+            return mb_strtolower($this->label($categories->get($record->id) ?: $record->health_form_category)) === $selected;
+        })->values();
+    }
+
+    public function preloadReviewCategories(Collection $records): void
+    {
+        $students = $records->filter(fn ($record) => $record instanceof HealthProfile);
+        if ($students->isEmpty()) return;
+        $categories = $this->latestCategorySubmissions($students)->pluck('category', 'health_profile_id');
+        foreach ($students as $profile) {
+            $profile->setAttribute('review_category_preloaded', true);
+            $profile->setAttribute('review_category_value', $categories->get($profile->id));
+        }
+    }
+
+    private function latestCategorySubmissions(Collection $records, bool $approvedOnly = false): Collection
+    {
+        if ($records->isEmpty()) return collect();
         $students = $records->reject(fn ($record) => $record instanceof EmployeeHealthProfile)->pluck('id');
         $employees = $records->filter(fn ($record) => $record instanceof EmployeeHealthProfile)->pluck('id');
         $query = HealthFormSubmission::query()->where(function ($query) use ($students, $employees) {
@@ -50,14 +77,11 @@ class HealthRecordCategoryFilter
         });
         if ($approvedOnly) $query->whereIn('status', ['approved', 'Approved'])->whereNotNull('approved_at');
         else $query->whereIn('status', ['submitted', 'under_review', 'needs_correction', 'approved', 'Approved']);
-        $submissions = $query->latest('id')->get();
-        $studentCategories = $submissions->whereNotNull('health_profile_id')->unique('health_profile_id')->pluck('category', 'health_profile_id');
-        $employeeCategories = $submissions->whereNotNull('employee_health_profile_id')->unique('employee_health_profile_id')->pluck('category', 'employee_health_profile_id');
-        $selected = mb_strtolower($this->label($category));
+        $latestStudentIds = (clone $query)->selectRaw('MAX(id)')->whereNotNull('health_profile_id')->groupBy('health_profile_id');
+        $latestEmployeeIds = (clone $query)->selectRaw('MAX(id)')->whereNotNull('employee_health_profile_id')->groupBy('employee_health_profile_id');
 
-        return $records->filter(function ($record) use ($studentCategories, $employeeCategories, $selected) {
-            $categories = $record instanceof EmployeeHealthProfile ? $employeeCategories : $studentCategories;
-            return mb_strtolower($this->label($categories->get($record->id) ?: $record->health_form_category)) === $selected;
-        })->values();
+        // The list needs category metadata, not every version's encrypted medical snapshot.
+        return $query->where(fn ($builder) => $builder->whereIn('id', $latestStudentIds)->orWhereIn('id', $latestEmployeeIds))
+            ->get(['id', 'health_profile_id', 'employee_health_profile_id', 'category']);
     }
 }

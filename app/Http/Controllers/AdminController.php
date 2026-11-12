@@ -3520,6 +3520,7 @@ class AdminController extends Controller
 
     public function viewHealth(Request $request)
     {
+        $request->attributes->set(\App\Services\HealthRecordSchemaCache::REQUEST_ATTRIBUTE, new \App\Services\HealthRecordSchemaCache());
         $formCategoryFilter = trim((string) $request->query('form_category', ''));
         $categoryFilterService = app(\App\Services\HealthRecordCategoryFilter::class);
         $formCategoryOptions = $categoryFilterService->options();
@@ -3545,6 +3546,8 @@ class AdminController extends Controller
             'user.adminHubProfile',
             'user.adminProfile',
             'user.employeeHealthProfile',
+            'user.dependentProfile',
+            'user.healthProfile:id,user_id,student_number',
             'latestApprovedHealthFormSubmission',
         ])->notPulledOut();
 
@@ -3629,6 +3632,8 @@ class AdminController extends Controller
             'user.adminHubProfile',
             'user.adminProfile',
             'user.employeeHealthProfile',
+            'user.dependentProfile',
+            'user.healthProfile:id,user_id,student_number',
         ]);
 
         if ($search !== '') {
@@ -3721,19 +3726,24 @@ class AdminController extends Controller
             ->orderByDesc('updated_at')
             ->orderByDesc('id');
 
-        $issuedRecords = $issuedQuery->get()
+        // Hydrate each filtered record graph once; independent copies keep history and queues isolated.
+        $healthRecordRows = (clone $query)->get()->keyBy('id');
+        $employeeRecordRows = (clone $employeeQuery)->get()->keyBy('id');
+        app(EmployeeHealthFormHistoryService::class)->preloadLatestApproved($employeeRecordRows);
+        $issuedRecords = $issuedQuery->whereIn('id', $healthRecordRows->keys())->withoutEagerLoads()->pluck('id')
+            ->map(fn ($id) => $this->copyHealthRecordForListing($healthRecordRows->get($id)))
             ->map(function ($record) use ($decorateHealthRecord) {
                 return $decorateHealthRecord(
                     $this->applyHistoricalApprovedHealthFormSnapshot($record),
                     'health'
                 );
             });
-        $issuedEmployeeRecords = $issuedEmployeeQuery->get()
+        $issuedEmployeeRecords = $issuedEmployeeQuery->whereIn('id', $employeeRecordRows->keys())->withoutEagerLoads()->pluck('id')
+            ->map(fn ($id) => $this->copyHealthRecordForListing($employeeRecordRows->get($id)))
             ->map(fn ($record) => $decorateHealthRecord($record, 'employee'));
         $issuedEmployeeIds = $issuedEmployeeRecords->pluck('id')->all();
-        $historicalEmployeeRecords = (clone $employeeQuery)
-            ->whereNotIn('id', $issuedEmployeeIds)
-            ->get()
+        $historicalEmployeeRecords = $employeeRecordRows->whereNotIn('id', $issuedEmployeeIds)
+            ->map(fn ($record) => $this->copyHealthRecordForListing($record))
             ->map(function (EmployeeHealthProfile $record) use ($decorateHealthRecord) {
                 $submission = app(EmployeeHealthFormHistoryService::class)->latestApproved($record);
                 if (!$submission || $submission->snapshotProfile() === []) {
@@ -3856,10 +3866,10 @@ class AdminController extends Controller
             ]
         );
 
-        $records = $query->get()
+        $records = $healthRecordRows->toBase()->map(fn ($record) => $this->copyHealthRecordForListing($record))
             ->map(fn ($record) => $decorateHealthRecord($record, 'health'))
             ->merge(
-                $employeeQuery->get()->map(fn ($record) => $decorateHealthRecord($record, 'employee'))
+                $employeeRecordRows->map(fn ($record) => $decorateHealthRecord($this->copyHealthRecordForListing($record), 'employee'))
             )
             ->sortByDesc(fn ($record) => optional($record->updated_at)->timestamp ?: 0)
             ->values();
@@ -3879,14 +3889,14 @@ class AdminController extends Controller
         $courseOptions = HealthProfile::query()
             ->notPulledOut()
             ->with('user:id,course')
-            ->get()
+            ->get(['id', 'user_id', 'course_college'])
             ->map(function (HealthProfile $profile) {
                 return trim((string) ($profile->course_college ?: optional($profile->user)->course ?: ''));
             })
             ->merge(
                 EmployeeHealthProfile::query()
                     ->with('user:id,course')
-                    ->get()
+                    ->get(['id', 'user_id', 'course_college', 'office'])
                     ->map(function (EmployeeHealthProfile $profile) {
                         return trim((string) ($profile->course_college ?: $profile->office ?: optional($profile->user)->course ?: ''));
                     })
@@ -3897,6 +3907,7 @@ class AdminController extends Controller
             ->values();
 
         $yearOptions = collect(['1', '2', '3', '4']);
+        $categoryFilterService->preloadReviewCategories($records->merge($healthProfileSummaryRecords->getCollection()));
         $userTypeOptions = collect([
             'applicant' => 'Applicants',
             'student' => 'Students',
@@ -3930,6 +3941,15 @@ class AdminController extends Controller
         ));
     }
 
+    private function copyHealthRecordForListing($record)
+    {
+        $copy = clone $record;
+        if ($record->relationLoaded('user') && $record->user) {
+            $copy->setRelation('user', clone $record->user);
+        }
+        return $copy;
+    }
+
     private function applySubmittedRenewalQueueState($records): void
     {
         $profileIds = $records->filter(fn ($record) => ($record->record_source ?? 'health') === 'health')->pluck('id');
@@ -3959,6 +3979,7 @@ class AdminController extends Controller
 
     public function healthRecordStats(Request $request)
     {
+        $request->attributes->set(\App\Services\HealthRecordSchemaCache::REQUEST_ATTRIBUTE, new \App\Services\HealthRecordSchemaCache());
         $formCategoryFilter = trim((string) $request->query('form_category', ''));
         $categoryFilterService = app(\App\Services\HealthRecordCategoryFilter::class);
         $search = trim((string) $request->query('q', ''));
@@ -3973,7 +3994,8 @@ class AdminController extends Controller
         }
 
         $query = HealthProfile::with([
-            'user',
+            'user.dependentProfile',
+            'user.healthProfile:id,user_id,student_number',
             'latestApprovedHealthFormSubmission',
         ])->notPulledOut();
 
@@ -4054,7 +4076,7 @@ class AdminController extends Controller
             });
         }
 
-        $employeeQuery = EmployeeHealthProfile::with('user');
+        $employeeQuery = EmployeeHealthProfile::with(['user.dependentProfile', 'user.healthProfile:id,user_id,student_number']);
 
         if ($search !== '') {
             $employeeQuery->where(function ($builder) use ($search) {
@@ -4118,13 +4140,17 @@ class AdminController extends Controller
         $issuedEmployeeQuery = (clone $employeeQuery)
             ->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
 
-        $issuedHealthRecords = $issuedQuery->get()
+        $healthRecordRows = (clone $query)->get()->keyBy('id');
+        $employeeRecordRows = (clone $employeeQuery)->get()->keyBy('id');
+        app(EmployeeHealthFormHistoryService::class)->preloadLatestApproved($employeeRecordRows);
+        $issuedHealthRecords = $issuedQuery->whereIn('id', $healthRecordRows->keys())->withoutEagerLoads()->pluck('id')
+            ->map(fn ($id) => $this->copyHealthRecordForListing($healthRecordRows->get($id)))
             ->map(fn ($record) => $this->applyHistoricalApprovedHealthFormSnapshot($record));
-        $issuedEmployeeRecords = $issuedEmployeeQuery->get();
+        $issuedEmployeeRecords = $issuedEmployeeQuery->whereIn('id', $employeeRecordRows->keys())->withoutEagerLoads()->pluck('id')
+            ->map(fn ($id) => $this->copyHealthRecordForListing($employeeRecordRows->get($id)));
         $issuedEmployeeIds = $issuedEmployeeRecords->pluck('id')->all();
-        $historicalEmployeeRecords = (clone $employeeQuery)
-            ->whereNotIn('id', $issuedEmployeeIds)
-            ->get()
+        $historicalEmployeeRecords = $employeeRecordRows->whereNotIn('id', $issuedEmployeeIds)
+            ->map(fn ($record) => $this->copyHealthRecordForListing($record))
             ->map(function (EmployeeHealthProfile $record) {
                 $submission = app(EmployeeHealthFormHistoryService::class)->latestApproved($record);
                 if (!$submission || $submission->snapshotProfile() === []) {
@@ -4137,12 +4163,12 @@ class AdminController extends Controller
             ->values();
         $issuedEmployeeRecords = $issuedEmployeeRecords->merge($historicalEmployeeRecords);
 
-        $records = $query->get()
+        $records = $healthRecordRows->toBase()->map(fn ($record) => $this->copyHealthRecordForListing($record))
             ->map(function ($record) {
                 $record->setAttribute('record_source', 'health');
                 return $record;
             })
-            ->merge($employeeQuery->get()->map(function ($record) {
+            ->merge($employeeRecordRows->map(fn ($record) => $this->copyHealthRecordForListing($record))->map(function ($record) {
                 $record->setAttribute('record_source', 'employee');
                 $record->setAttribute('chest_xray_result', $record->chest_xray_document);
                 $record->setAttribute('medical_history', $record->past_medical_history ?: []);

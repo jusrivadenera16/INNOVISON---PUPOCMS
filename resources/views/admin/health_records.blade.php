@@ -12131,8 +12131,11 @@
                 });
         }
 
-        pullStats();
-        healthRecordStatsTimer = window.setInterval(pullStats, 12000);
+        // Initial counts are already rendered by the server; avoid repeating that work on page load.
+        healthRecordStatsTimer = window.setInterval(pullStats, 30000);
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) pullStats();
+        });
 
         window.addEventListener('beforeunload', function () {
             if (healthRecordStatsTimer) {
@@ -12161,6 +12164,7 @@
         let knownNotificationIds = new Set();
         let healthLivePollTimer = null;
         let hasHydratedLiveFeed = false;
+        let healthLiveFeedRequest = null;
 
         const isHealthNotification = function (notification) {
             const id = (notification && notification.id ? String(notification.id) : '').trim();
@@ -12179,11 +12183,11 @@
         };
 
         const pullFeed = function () {
-            if (document.hidden) {
+            if (document.hidden || healthLiveFeedRequest) {
                 return;
             }
 
-            fetch(feedUrl, {
+            healthLiveFeedRequest = fetch(feedUrl, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'
@@ -12219,6 +12223,9 @@
                 })
                 .catch(function () {
                     // Keep the page usable if the live notification feed is temporarily unavailable.
+                })
+                .finally(function () {
+                    healthLiveFeedRequest = null;
                 });
         };
 

@@ -104,6 +104,9 @@ class EmployeeHealthFormHistoryService
 
     public function latestApproved(EmployeeHealthProfile $profile): ?HealthFormSubmission
     {
+        if ($profile->relationLoaded('healthRecordListApprovedSubmission')) {
+            return $profile->getRelation('healthRecordListApprovedSubmission');
+        }
         return HealthFormSubmission::query()
             ->where('employee_health_profile_id', $profile->id)
             ->where('status', HealthFormSubmission::STATUS_APPROVED)
@@ -111,6 +114,21 @@ class EmployeeHealthFormHistoryService
             ->latest('submitted_at')
             ->latest('id')
             ->first();
+    }
+
+    public function preloadLatestApproved(\Illuminate\Support\Collection $profiles): void
+    {
+        if ($profiles->isEmpty()) return;
+        // First choose version IDs using small metadata rows, then hydrate only those snapshots.
+        $ids = HealthFormSubmission::query()->whereIn('employee_health_profile_id', $profiles->pluck('id'))
+            ->where('status', HealthFormSubmission::STATUS_APPROVED)
+            ->latest('approved_at')->latest('submitted_at')->latest('id')
+            ->get(['id', 'employee_health_profile_id', 'approved_at', 'submitted_at'])
+            ->unique('employee_health_profile_id')->pluck('id');
+        $submissions = $ids->isEmpty() ? collect() : HealthFormSubmission::whereIn('id', $ids)->get()->keyBy('employee_health_profile_id');
+        foreach ($profiles as $profile) {
+            $profile->setRelation('healthRecordListApprovedSubmission', $submissions->get($profile->id));
+        }
     }
 
     public function ensureApprovedSnapshot(EmployeeHealthProfile $profile): ?HealthFormSubmission
