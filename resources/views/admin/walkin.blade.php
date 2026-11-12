@@ -15042,7 +15042,7 @@
             syncDocumentsModalCopy();
 
             if (lookupModalBadge) lookupModalBadge.textContent = isClinicLookupMode() ? 'ID' : 'AP';
-            if (lookupModalTitle) lookupModalTitle.textContent = isClinicLookupMode() ? "Employee's, Students and Dependents" : 'Applicants';
+            if (lookupModalTitle) lookupModalTitle.textContent = isClinicLookupMode() ? 'Final Review' : 'Applicants';
             if (lookupModalSubtitle) lookupModalSubtitle.textContent = isClinicLookupMode()
                 ? 'Enter an employee number or student number to look up local employee records.'
                 : "Enter the applicant's reference number to look up the record.";
@@ -15352,6 +15352,7 @@
         }
 
         function resetLookupState() {
+            if (repeatClearanceReview) modalShell?.classList.remove('is-final-review-workflow', 'is-final-review-toolbar-stuck');
             repeatClearanceReview = null;
             currentClinicLookupData = null;
             findBtn?.removeEventListener('click', submitRepeatMedicalClearance);
@@ -17294,39 +17295,67 @@
             const profileId = Number(data?.health_form_information?.profile_id || data?.health_profile_id);
             if (!isClinicLookupMode() || !data || context.type !== data.record_type || Number(context.id) !== profileId
                 || !['student', 'employee'].includes(context.type) || !context.options?.can_issue || !window.ReviewMedicalClearance) return false;
+            const savedDraft = context.type === 'student' ? data.student_assessment_draft_data : data.employee_draft_data;
+            if (!context.draft && savedDraft?.medical_clearance_review?.category === context.category
+                && Number(savedDraft.medical_clearance_review.submission_id) === Number(context.options.submission_id)) {
+                context = {...context, draft: savedDraft};
+            }
             resetLookupButtonToFind();
             applyLookupMode('clinic');
             showLookupDetails(data, currentLookupRef);
             repeatClearanceReview = {...context, busy: false, issued: false};
-            isApprovalMode = false;
-            window.ReviewMedicalClearance.configureApproved(context.options, context.category);
+            isApprovalMode = true;
+            modalShell?.classList.add('is-final-review-workflow');
+            window.ReviewMedicalClearance.configureApproved(context.options, context.category, context.draft?.medical_clearance);
             if (foundName) foundName.textContent = currentLookupName || data.student_name || '';
             if (foundCard) foundCard.style.display = 'flex';
             if (defaultPane) defaultPane.style.display = 'none';
             document.querySelector('.applicant-ref-lookup-row')?.style.setProperty('display', 'none');
             if (medicalConditionSection) { medicalConditionSection.classList.add('show'); medicalConditionSection.style.display = 'grid'; }
-            setFinalReviewPhysicalReadonly(false);
+            setFinalReviewPhysicalReadonly(true);
             document.querySelectorAll('input[name="applicant_clearance_decision"]').forEach(input => { input.checked = false; });
-            setReviewDraftButtonVisible(false);
+            if (context.draft) applyReviewDraftFields(context.draft);
+            setReviewDraftButtonVisible(canApproveFinalReview);
             syncFindingsReviewFields();
             if (findBtn) {
                 findBtn.removeEventListener('click', doLookup);
                 findBtn.removeEventListener('click', doApprove);
                 findBtn.removeEventListener('click', saveStudentAssessment);
-                findBtn.textContent = 'Issue Medical Clearance'; findBtn.disabled = false;
+                findBtn.textContent = 'Approve'; findBtn.disabled = false;
                 findBtn.style.opacity = ''; findBtn.style.cursor = '';
-                findBtn.addEventListener('click', submitRepeatMedicalClearance);
+                findBtn.addEventListener('click', doApprove);
             }
-            setStatus('info', 'Final Review for another Medical Clearance. The existing Health Form and approval stay unchanged.');
+            if (lookupModalSubtitle) lookupModalSubtitle.textContent = 'Review the assessment and approve or save a draft.';
+            setStatus('info', context.draft ? 'Final Review draft restored.' : 'Review the assessment and select the certificate purpose.');
             return true;
         }
 
-        async function submitRepeatMedicalClearance() {
+        async function resumeSavedClearanceReview(draft, data) {
+            const type = data.record_type;
+            const id = Number(data.health_form_information?.profile_id || data.health_profile_id);
+            const base = document.querySelector('[data-approved-clearance]')?.dataset.base;
+            if (!base) return;
+            const url = `${base}/${type}/${id}`;
+            const response = await fetch(url, {credentials: 'same-origin', headers: {Accept: 'application/json'}});
+            const options = await response.json();
+            if (currentClinicLookupData !== data) return;
+            if (!response.ok || !options.can_issue || Number(options.submission_id) !== Number(draft.medical_clearance_review.submission_id)
+                || !options.health_form_categories.includes(draft.medical_clearance_review.category)) {
+                setStatus('error', 'This draft no longer matches the current approved Health Form. Look up the record again.'); return;
+            }
+            openExistingFinalReview({type, id, url, options, category: draft.medical_clearance_review.category, draft});
+        }
+
+        async function submitRepeatMedicalClearance(confirmed = false) {
             const active = repeatClearanceReview;
             if (!active || active.busy || active.issued) return;
             const decision = document.querySelector('input[name="applicant_clearance_decision"]:checked')?.value;
             const findings = document.querySelector('input[name="applicant_findings_status"]:checked')?.value;
-            if (decision !== 'approve' || !findings) { setStatus('error', 'Select a review result and Approve / Issue before issuing the Medical Clearance.'); return; }
+            if (!['approve', 'pending'].includes(decision) || !findings) { setStatus('error', 'Select the review result and clearance decision.'); return; }
+            if (decision === 'pending') {
+                if (!confirmed) { openFinalReviewConfirmModal({repeat_clearance_review: true}, true); return; }
+                return active.type === 'student' ? saveStudentAssessmentDraft() : saveEmployeeDraft();
+            }
             let clearance;
             try {
                 clearance = window.ReviewMedicalClearance.collect(true).medical_clearance;
@@ -17341,8 +17370,11 @@
                 assessment[key] = String(field?.value || '').trim();
             }
             const remarks = document.getElementById(findings === 'With Findings' ? 'applicantFindingRemarks' : 'applicantNormalRemarks')?.value || '';
+            if (!confirmed) { openFinalReviewConfirmModal({repeat_clearance_review: true}, false); return; }
             active.busy = true; if (findBtn) findBtn.disabled = true;
-            setStatus('info', 'Issuing Medical Clearance...');
+            setFinalReviewConfirmLoading(true);
+            if (reviewDraftBtn) reviewDraftBtn.disabled = true;
+            setStatus('info', 'Approving Final Review...');
             try {
                 const response = await fetch(active.url, {method:'POST', credentials:'same-origin', headers:{Accept:'application/json', 'Content-Type':'application/json',
                     'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]')?.content || ''}, body:JSON.stringify({...clearance,
@@ -17351,13 +17383,18 @@
                 if (repeatClearanceReview !== active) return;
                 if (!response.ok) throw new Error(Object.values(data.errors || {}).flat()[0] || data.message || 'Unable to issue Medical Clearance.');
                 active.issued = true;
+                try { localStorage.removeItem(employeeDraftStorageKey(currentLookupRef)); } catch (error) { /* Saved server draft is cleared transactionally. */ }
                 const link = document.querySelector('[data-review-clearance-document]');
                 if (link) { link.href = data.document.url; link.hidden = false; }
-                if (findBtn) findBtn.textContent = 'Medical Clearance Issued';
+                if (findBtn) findBtn.textContent = 'Approved';
+                setFinalReviewConfirmLoading(false);
+                closeFinalReviewConfirmModal();
+                setReviewDraftButtonVisible(false);
                 setStatus('success', 'Medical Clearance issued and saved to Documents. The existing Health Form approval was not changed.');
                 window.MedicalClearancePrintPrompt?.show(data.document.url);
             } catch (error) { if (repeatClearanceReview === active) setStatus('error', error.message); }
-            finally { if (repeatClearanceReview === active) { active.busy = false; if (findBtn) findBtn.disabled = active.issued; } }
+            finally { if (repeatClearanceReview === active) { active.busy = false; if (findBtn) findBtn.disabled = active.issued;
+                if (reviewDraftBtn) reviewDraftBtn.disabled = false; setFinalReviewConfirmLoading(false); } }
         }
         window.ClinicExistingFinalReview = {open: openExistingFinalReview};
 
@@ -17387,7 +17424,8 @@
             currentRecordType = data.record_type || (isClinicLookupMode() ? 'employee' : 'applicant');
             window.ReviewMedicalClearance?.configure(isClinicLookupMode() ? currentRecordType : null,
                 data.health_form_information?.profile_id || data.health_profile_id,
-                data.has_reviewable_health_form === true || data.has_reviewable_health_form === 1 || data.has_reviewable_health_form === '1');
+                data.has_reviewable_health_form === true || data.has_reviewable_health_form === 1 || data.has_reviewable_health_form === '1',
+                (currentRecordType === 'student' ? data.student_assessment_draft_data : data.employee_draft_data)?.medical_clearance);
             const isStudentRecord = isStudentLookupResult();
 
             console.log('Setting lookup values:', {
@@ -17791,6 +17829,10 @@
 
                         isApprovalMode = false;
                         setReviewDraftButtonVisible(false);
+                        const reviewDraft = data.record_type === 'student' ? data.student_assessment_draft_data : data.employee_draft_data;
+                        if (isClinicLookupMode() && reviewDraft?.medical_clearance_review) {
+                            resumeSavedClearanceReview(reviewDraft, data).catch(() => setStatus('error', 'Unable to restore this Final Review draft. Please try again.'));
+                        }
                     } else {
                         setStatus(isLocalOnlyLookup ? 'info' : 'success', lookupFoundMessage);
                         if (foundCard && foundName) {
@@ -18156,7 +18198,6 @@
         }
 
         function doApprove() {
-            if (repeatClearanceReview) return submitRepeatMedicalClearance();
             if (!currentLookupRef) {
                 setStatus('error', 'No applicant to approve.');
                 return;
@@ -18350,10 +18391,12 @@
                 approvalData.condition_remarks = '';
             }
 
+            if (repeatClearanceReview) approvalData.repeat_clearance_review = true;
             openFinalReviewConfirmModal(approvalData, isPendingDecision);
         }
 
         function submitFinalReviewApproval(approvalData, isPendingDecision) {
+            if (repeatClearanceReview && approvalData.repeat_clearance_review) return submitRepeatMedicalClearance(true);
             setFinalReviewConfirmLoading(true);
             const isFacultyApproval = ['employee_local', 'clinic_local'].includes(String(approvalData?.lookup_scope || '').toLowerCase());
             setStatus('info', isPendingDecision
@@ -18464,6 +18507,12 @@
                 reference_number: currentLookupRef,
                 lookup_scope: lookupScope
             };
+            const clearanceDraft = window.ReviewMedicalClearance?.exportDraft();
+            if (clearanceDraft) draft.medical_clearance = clearanceDraft;
+            if (repeatClearanceReview) draft.medical_clearance_review = {
+                submission_id: repeatClearanceReview.options.submission_id,
+                category: repeatClearanceReview.category
+            };
 
             document.querySelectorAll('#applicantRefModal [name]').forEach(function (field) {
                 if (field.type === 'file') return;
@@ -18523,6 +18572,7 @@
             if (!currentLookupRef || !isClinicLookupMode() || currentRecordType !== 'student') return;
             setStatus('info', 'Saving student assessment draft...');
             if (reviewDraftBtn) reviewDraftBtn.disabled = true;
+            if (repeatClearanceReview) setFinalReviewConfirmLoading(true);
 
             fetch(studentAssessmentDraftUrl, {
                 method: 'POST',
@@ -18537,6 +18587,8 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    setFinalReviewConfirmLoading(false);
+                    closeFinalReviewConfirmModal();
                     setStatus('success', data.message || 'Student assessment draft saved successfully.');
                     closeApplicantsModal();
                     return;
@@ -18544,7 +18596,7 @@
                 setStatus('error', data.message || 'Unable to save student assessment draft.');
             })
             .catch(() => setStatus('error', 'Unable to save student assessment draft right now.'))
-            .finally(() => { if (reviewDraftBtn) reviewDraftBtn.disabled = false; });
+            .finally(() => { if (reviewDraftBtn) reviewDraftBtn.disabled = false; setFinalReviewConfirmLoading(false); });
         }
 
         function saveEmployeeDraft() {
@@ -18555,6 +18607,7 @@
 
             setStatus('info', 'Saving employee draft...');
             if (reviewDraftBtn) reviewDraftBtn.disabled = true;
+            if (repeatClearanceReview) setFinalReviewConfirmLoading(true);
             cacheCurrentEmployeeDraft();
 
             fetch("{{ route('admin.walkin.employee_draft') }}", {
@@ -18570,6 +18623,8 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    setFinalReviewConfirmLoading(false);
+                    closeFinalReviewConfirmModal();
                     setStatus('success', data.message || 'Employee draft saved successfully.');
                     closeApplicantsModal();
                     return;
@@ -18578,7 +18633,7 @@
                 setStatus('error', data.message || 'Unable to save employee draft.');
             })
             .catch(() => setStatus('error', 'Unable to save employee draft right now.'))
-            .finally(() => { if (reviewDraftBtn) reviewDraftBtn.disabled = false; });
+            .finally(() => { if (reviewDraftBtn) reviewDraftBtn.disabled = false; setFinalReviewConfirmLoading(false); });
         }
 
         function saveApplicantFinalReviewDraft() {
@@ -18946,7 +19001,7 @@
         const finalReviewPhysicalPanel = document.querySelector('#applicantRefModal .employee-physical-assessment-panel');
         if (finalReviewPhysicalPanel) {
             finalReviewPhysicalPanel.addEventListener('dblclick', function () {
-                if (!isFinalReviewWorkflow() || !canApproveFinalReview) return;
+                if ((!isFinalReviewWorkflow() && !repeatClearanceReview) || !canApproveFinalReview) return;
                 setFinalReviewPhysicalReadonly(false);
                 setStatus('info', 'Physical assessment fields are now editable.');
             });

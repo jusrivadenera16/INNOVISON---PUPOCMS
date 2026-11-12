@@ -14,11 +14,12 @@ use App\Models\MarClearanceSubcategory;
 use App\Models\MarClearanceSubcategorySource;
 use App\Models\MarClearanceType;
 use App\Models\User;
+use App\Models\IssuedMedicalClearance;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use InvalidArgumentException;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\{DB, Schema};
 
 class MarClearanceIssuanceService
 {
@@ -366,6 +367,19 @@ class MarClearanceIssuanceService
             ->whereBetween('approved_at', [$from, $to])
             ->get();
 
+        // Student/employee purpose mappings now count issued certificates, not the shared form approval.
+        // Retain historical rows in storage, but do not count them alongside certificate snapshots.
+        $issuances = $issuances->reject(function ($issuance) {
+            if (str_starts_with((string) $issuance->source_record_id, 'medical-clearance:')) return false;
+            return $this->activeSourceMappingsForWorkflow($issuance->source_workflow, $issuance->approved_at)
+                ->contains(function ($mapping) use ($issuance) {
+                    if (!in_array($mapping->source_key, MedicalClearancePurposeCatalog::SOURCES, true)) return false;
+                    $target = $this->configuredMappingTarget($mapping);
+                    return $target && (int) $target['clearanceType']->id === (int) $issuance->clearance_type_id
+                        && (int) $target['subcategory']?->id === (int) $issuance->clearance_subcategory_id;
+                });
+        })->values();
+
         // A consultation issuance is valid only while its consultation still
         // has an actual clearance selection.
         $consultationIssuanceIds = $issuances
@@ -611,6 +625,24 @@ class MarClearanceIssuanceService
             );
         }
 
+        // Older certificates issued before this connection can be matched by their saved purpose.
+        // Never infer a certificate from an approval, and never write a backfill during reporting.
+        if (Schema::hasTable('issued_medical_clearances')) {
+            foreach (IssuedMedicalClearance::query()->whereBetween('issued_on', [$from->toDateString(), $to->toDateString()])->get() as $document) {
+                $workflow = $document->record_type === 'student' ? MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW : MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW;
+                $sourceId = 'medical-clearance:' . $document->id;
+                if ($knownSourceKeys->has($this->reportSourceKey($workflow, $sourceId))) continue;
+                $profile = ($document->record_type === 'student' ? HealthProfile::query() : EmployeeHealthProfile::query())
+                    ->with('user')->find($document->profile_id);
+                if (!$profile?->user) continue;
+                $matches = app(MedicalClearancePurposeCatalog::class)->options($document->record_type, $profile, $document->issued_on->toDateString())
+                    ->filter(fn ($option) => mb_strtolower(trim($option['name'])) === mb_strtolower(trim($document->purpose)));
+                if ($matches->count() !== 1) continue;
+                $this->addReportIssuanceSnapshot($historical, $knownSourceKeys, $profile->user, $matches->first(), $workflow,
+                    $sourceId, $document->issued_on, $profile->user->user_type, $document->patient_name);
+            }
+        }
+
         return $issuances
             ->concat($historical)
             ->sortBy('approved_at')
@@ -828,17 +860,11 @@ class MarClearanceIssuanceService
             }
 
             if ($sourceKey === 'student_health_form_category') {
-                $category = trim((string) ($submission->category ?: $submission->healthProfile?->health_form_category));
-
-                return $sourceWorkflow === MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW
-                    && $this->matchesSourceCategory($category, $mapping->sourceCategory) ? 900 : 0;
+                return 0; // Count the selected certificate purpose, not the Health Form category.
             }
 
             if ($sourceKey === 'employee_health_form_category') {
-                $category = trim((string) ($submission->category ?: $submission->healthProfile?->health_form_category));
-
-                return $sourceWorkflow === MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW
-                    && $this->matchesSourceCategory($category, $mapping->sourceCategory) ? 900 : 0;
+                return 0;
             }
 
             if ($sourceKey === 'patient_intake' && $sourceWorkflow === MarClearanceSubcategorySource::PATIENT_INTAKE) {
@@ -879,13 +905,11 @@ class MarClearanceIssuanceService
             }
 
             if ($sourceKey === 'student_health_form_category') {
-                return $sourceWorkflow === MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW
-                    && $this->matchesSourceCategory((string) $profile->health_form_category, $mapping->sourceCategory) ? 900 : 0;
+                return 0;
             }
 
             if ($sourceKey === 'employee_health_form_category') {
-                return $sourceWorkflow === MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW
-                    && $this->matchesSourceCategory((string) $profile->health_form_category, $mapping->sourceCategory) ? 900 : 0;
+                return 0;
             }
 
             if ($sourceKey === 'patient_intake' && $sourceWorkflow === MarClearanceSubcategorySource::PATIENT_INTAKE) {
@@ -911,8 +935,7 @@ class MarClearanceIssuanceService
             }
 
             if ($sourceKey === 'employee_health_form_category') {
-                return $sourceWorkflow === MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW
-                    && $this->matchesSourceCategory((string) $profile->health_form_category, $mapping->sourceCategory) ? 900 : 0;
+                return 0;
             }
 
             return 0;

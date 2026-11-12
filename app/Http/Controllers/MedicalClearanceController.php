@@ -20,6 +20,8 @@ class MedicalClearanceController extends Controller
         return response()->json([
             'identity' => $service->identity($record, now()->toDateString()), 'today' => now()->toDateString(),
             'purposes' => $purposes, 'default_purpose' => in_array($default, $purposes, true) ? $default : '',
+            'purpose_options' => $service->purposeOptions($type, $record),
+            'allow_other' => collect($purposes)->contains(fn ($purpose) => mb_strtolower($purpose) === 'others'),
         ])->withHeaders(HealthFileStorage::NO_STORE_HEADERS);
     }
 
@@ -33,9 +35,16 @@ class MedicalClearanceController extends Controller
 
         return response()->json([
             'can_issue' => (bool) $submission && app(ModulePermissionService::class)->can($request->user(), 'health_records.update_assessment'),
+            'can_start_review' => (bool) $submission && app(ModulePermissionService::class)->can($request->user(), 'health_records.request_health_form'),
+            'start_review_url' => $type === 'student'
+                ? route('admin.health_profile.request_health_form', $profile)
+                : route('admin.employee_health_profile.request_health_form', $profile),
             'identity' => $service->identity($record, now()->toDateString()), 'today' => now()->toDateString(),
             'purposes' => $purposes, 'default_purpose' => in_array($defaultPurpose, $purposes, true) ? $defaultPurpose : '',
+            'purpose_options' => $service->purposeOptions($type, $record),
+            'allow_other' => collect($purposes)->contains(fn ($purpose) => mb_strtolower($purpose) === 'others'),
             'health_form_categories' => $service->healthFormCategories($type, $record),
+            'health_form_category_options' => $service->healthFormCategoryOptions($type, $record),
             'submission_id' => $submission?->id,
             'documents' => IssuedMedicalClearance::where('record_type', $type)->where('profile_id', $profile)->latest('id')->get()->map(fn ($document) => $this->documentPayload($document)),
         ])->withHeaders(HealthFileStorage::NO_STORE_HEADERS);

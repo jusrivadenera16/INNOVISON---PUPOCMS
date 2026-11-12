@@ -87,13 +87,15 @@
         field('issued_on').value = state.data.today;
         syncPatient();
         field('purpose').replaceChildren();
-        for (const [value, label] of [['', 'Select a purpose'], ...state.data.purposes.map(value => [value, value]), ['__other__', 'Others']]) {
+        const choices = (state.data.purpose_options || state.data.purposes.map(value => ({ value, label: value })))
+            .filter(option => option.label.toLowerCase() !== 'others');
+        for (const [value, label] of [['', 'Select a purpose'], ...choices.map(option => [option.value, option.label]), ...(state.data.allow_other === false ? [] : [['__other__', 'Others']])]) {
             const option = document.createElement('option');
             option.value = value;
             option.textContent = label;
             field('purpose').append(option);
         }
-        field('purpose').value = state.data.default_purpose;
+        field('purpose').value = choices.find(option => option.value === state.data.default_purpose || option.label === state.data.default_purpose)?.value || '';
         syncOther();
         modal.showModal();
     }

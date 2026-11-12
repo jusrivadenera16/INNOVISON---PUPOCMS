@@ -1077,7 +1077,7 @@
 
                 <fieldset class="clearance-source-fields clearance-data-source-fields clearance-parent-data-source" data-parent-data-source>
                     <legend>MAR data source</legend>
-                    <p class="clearance-data-source-question">Health-form counts include approved records in the selected category. Consultation counts require a matching Completed appointment.</p>
+                    <p class="clearance-data-source-question">Student/employee entries appear as certificate purposes. Counts follow the purpose successfully issued in Final Review, not the shared Health Form category. Consultation counts require a matching Completed appointment.</p>
                     @foreach($dataSourceLabels as $sourceKey => $sourceLabel)
                         <label class="clearance-source-option">
                             <input type="radio" name="source_key" value="{{ $sourceKey }}" data-data-source-key {{ old('_clearance_form') === 'add' && old('source_key') === $sourceKey ? 'checked' : '' }}>
@@ -1148,7 +1148,7 @@
 
                 <fieldset class="clearance-source-fields clearance-data-source-fields clearance-parent-data-source" data-parent-data-source>
                     <legend>MAR data source</legend>
-                    <p class="clearance-data-source-question">Health-form counts include approved records in the selected category. Consultation counts require a matching Completed appointment.</p>
+                    <p class="clearance-data-source-question">Student/employee entries appear as certificate purposes. Counts follow the purpose successfully issued in Final Review, not the shared Health Form category. Consultation counts require a matching Completed appointment.</p>
                     @foreach($dataSourceLabels as $sourceKey => $sourceLabel)
                         <label class="clearance-source-option">
                             <input type="radio" name="source_key" value="{{ $sourceKey }}" data-data-source-key>
@@ -1205,7 +1205,7 @@
 
                 <fieldset class="clearance-source-fields clearance-data-source-fields">
                     <legend>MAR data source</legend>
-                    <p class="clearance-data-source-question">Health-form counts use approved records in the selected category; consultation counts require a matching Completed appointment.</p>
+                    <p class="clearance-data-source-question">Student/employee certificate counts follow the issued purpose; the Health Form category controls audience availability. Consultation counts require a matching Completed appointment.</p>
                     @foreach($dataSourceLabels as $sourceKey => $sourceLabel)
                         <label class="clearance-source-option">
                             <input type="radio" name="source_key" value="{{ $sourceKey }}" data-data-source-key {{ old('_clearance_form') === 'add_subcategory' && old('source_key') === $sourceKey ? 'checked' : '' }}>
@@ -1214,7 +1214,7 @@
                     @endforeach
                     @include('admin.reports.partials.applicant-clearance-filters')
                     @include('admin.reports.partials.clearance-health-category-select', ['selectedCategoryId' => old('_clearance_form') === 'add_subcategory' ? old('source_category_id') : null])
-                    <p class="clearance-data-source-help">This source determines which approved records are counted for this subcategory.</p>
+                    <p class="clearance-data-source-help">This source makes the subcategory available as a purpose and counts certificates issued for it.</p>
                 </fieldset>
 
                 <div class="clearance-modal-actions">
@@ -1263,7 +1263,7 @@
 
                 <fieldset class="clearance-source-fields clearance-data-source-fields">
                     <legend>MAR data source</legend>
-                    <p class="clearance-data-source-question">Health-form counts use approved records in the selected category; consultation counts require a matching Completed appointment.</p>
+                    <p class="clearance-data-source-question">Student/employee certificate counts follow the issued purpose; the Health Form category controls audience availability. Consultation counts require a matching Completed appointment.</p>
                     @foreach($dataSourceLabels as $sourceKey => $sourceLabel)
                         <label class="clearance-source-option">
                             <input type="radio" name="source_key" value="{{ $sourceKey }}" data-data-source-key>
@@ -1272,7 +1272,7 @@
                     @endforeach
                     @include('admin.reports.partials.applicant-clearance-filters')
                     @include('admin.reports.partials.clearance-health-category-select', ['selectedCategoryId' => old('_clearance_form') === 'edit_subcategory' ? old('source_category_id') : null])
-                    <p class="clearance-data-source-help">This source determines which approved records are counted for this subcategory.</p>
+                    <p class="clearance-data-source-help">This source makes the subcategory available as a purpose and counts certificates issued for it.</p>
                 </fieldset>
 
                 <div class="clearance-modal-actions">

@@ -89,3 +89,39 @@ test('custom purpose menu selects Others, enforces details and disables for Pend
     h.nodes['purpose-trigger'].emit('click'); h.api.reset();
     assert.equal(h.nodes['purpose-menu'].hidden, true);
 });
+
+test('configured purpose IDs are displayed by label and submitted without reverting to form category', () => {
+    const h = harness();
+    h.api.configureApproved({ ...info, allow_other: false, purpose_options: [
+        { value: 'mapping:12', label: 'On the Job Training' },
+        { value: 'mapping:13', label: 'Practice Teaching / Internship' },
+    ] }, 'On the Job Training');
+    assert.equal(h.nodes.purpose.value, 'mapping:12');
+    assert.equal(h.nodes.purposeValue.textContent, 'On the Job Training');
+    assert.equal(h.nodes['purpose-menu'].children.some(button => button.dataset.value === '__other__'), false);
+    h.nodes['purpose-menu'].children.find(button => button.dataset.value === 'mapping:13').emit('click');
+    assert.equal(h.nodes.purposeValue.textContent, 'Practice Teaching / Internship');
+    assert.equal(h.api.collect(true).medical_clearance.purpose, 'mapping:13');
+});
+
+test('missing configuration gives an actionable message and still blocks approval', () => {
+    const h = harness();
+    h.api.configureApproved({ ...info, purposes: [], purpose_options: [], allow_other: false }, '');
+    assert.match(h.nodes.status.textContent, /Medical Configuration/);
+    assert.throws(() => h.api.collect(true), /required/);
+});
+
+test('draft restores configured purpose, custom text and request identity without issuing', () => {
+    const h = harness();
+    const key = 'a0a0a0a0-1234-4321-8123-123456789abc';
+    h.api.configureApproved({...info, purpose_options:[{value:'mapping:12',label:'On the Job Training'}]}, 'On the Job Training',
+        {request_key:key,purpose:'__other__',other_purpose:'School requirements'});
+    assert.equal(h.nodes.purpose.value,'__other__');
+    assert.equal(h.nodes.other.value,'School requirements');
+    assert.equal(h.api.exportDraft().request_key,key);
+    assert.equal(h.api.collect(true).medical_clearance.request_key,key);
+    assert.equal(h.calls.length,0);
+    h.api.restoreDraft({request_key:key,purpose:'mapping:deleted'});
+    assert.equal(h.nodes.purpose.value,'');
+    assert.throws(()=>h.api.collect(true),/required/);
+});

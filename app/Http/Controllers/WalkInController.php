@@ -2501,6 +2501,7 @@ class WalkInController extends Controller
 
     private function studentDraftCategory(HealthProfile $profile): string
     {
+        if ($category = data_get($profile->final_review_draft_data, 'medical_clearance_review.category')) return (string) $category;
         $submission = $this->studentDraftSubmission($profile);
         return $this->studentDraftTypeLabel($submission?->category ?: $profile->health_form_category, $profile->user?->student_type);
     }
@@ -4459,9 +4460,13 @@ PROMPT;
             return response()->json(['success' => false, 'message' => 'Student health profile was not found.'], 404);
         }
 
-        // Store unfinished inputs only; do not change the actual assessment or approval status.
-        $profile->final_review_draft_data = $request->except(['_token', 'reference_number']);
-        $profile->save();
+        DB::transaction(function () use ($request, $profile) {
+            $locked = HealthProfile::with('user')->lockForUpdate()->findOrFail($profile->id);
+            app(\App\Services\MedicalClearanceService::class)->validateReviewDraft($request, $locked);
+            // Store unfinished inputs only; do not change the actual assessment or approval status.
+            $locked->final_review_draft_data = $request->except(['_token', 'reference_number']);
+            $locked->save();
+        });
 
         return response()->json([
             'success' => true,
@@ -4485,13 +4490,16 @@ PROMPT;
             ], 404);
         }
 
-        $draftData = $request->except(['_token', 'reference_number', 'lookup_scope']);
-        $employeeProfile->draft_data = $draftData;
-        if (!in_array(strtolower(trim((string) $employeeProfile->submission_status)), ['approved', 'completed'], true)) {
-            $employeeProfile->submission_status = 'draft';
-            $employeeProfile->clearance_status = 'Draft';
-        }
-        $employeeProfile->save();
+        DB::transaction(function () use ($request, $employeeProfile) {
+            $locked = EmployeeHealthProfile::with('user')->lockForUpdate()->findOrFail($employeeProfile->id);
+            app(\App\Services\MedicalClearanceService::class)->validateReviewDraft($request, $locked);
+            $locked->draft_data = $request->except(['_token', 'reference_number', 'lookup_scope']);
+            if (!$request->has('medical_clearance_review') && !in_array(strtolower(trim((string) $locked->submission_status)), ['approved', 'completed'], true)) {
+                $locked->submission_status = 'draft';
+                $locked->clearance_status = 'Draft';
+            }
+            $locked->save();
+        });
 
         return response()->json([
             'success' => true,

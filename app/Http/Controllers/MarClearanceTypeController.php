@@ -107,8 +107,8 @@ class MarClearanceTypeController extends Controller
         return [
             'freshmen_applicants' => 'New Applicant Records (filtered)',
             'transferee_applicants' => 'Transferee Applicant Records',
-            'student_health_form_category' => 'Student Health Form Category',
-            'employee_health_form_category' => 'Faculty / Admin Health Form Category',
+            'student_health_form_category' => 'Student Certificate Purpose (Health Form Category)',
+            'employee_health_form_category' => 'Faculty / Admin Certificate Purpose (Health Form Category)',
             'consultation' => 'Completed Consultation Records',
             'patient_intake' => 'Patient Intake Records',
         ];

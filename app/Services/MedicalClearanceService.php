@@ -64,26 +64,27 @@ class MedicalClearanceService
 
     public function healthFormCategories(string $type, HealthProfile|EmployeeHealthProfile $profile): array
     {
+        return array_values(array_unique(array_column($this->healthFormCategoryOptions($type, $profile), 'label')));
+    }
+
+    public function healthFormCategoryOptions(string $type, HealthProfile|EmployeeHealthProfile $profile): array
+    {
         $audience = $type === 'student' ? 'student' : ($profile->user?->clinicAccountTypeKey() === 'faculty' ? 'faculty' : 'admin');
         $categories = HealthFormCategory::query()->where('is_active', true)->availableFor($audience)->orderBy('name')->pluck('name')->all();
         if ($type === 'employee') $categories = array_filter($categories, fn ($category) => !preg_match('/\b(ojt|on[ -]the[ -]job)\b/i', $category));
-        return array_values(array_unique(array_map(fn ($category) => app(HealthRecordCategoryFilter::class)->label($category), $categories)));
+        return array_values(array_map(fn ($category) => ['value' => $category, 'label' => app(HealthRecordCategoryFilter::class)->label($category)], $categories));
     }
 
     public function purposes(string $type, HealthProfile|EmployeeHealthProfile $profile, ?string $formCategory = null): array
     {
-        $audience = $type === 'student' ? 'student' : ($profile->user?->clinicAccountTypeKey() === 'faculty' ? 'faculty' : 'admin');
-        $purposes = HealthFormCategory::query()->where('is_active', true)->availableFor($audience)->orderBy('name')->pluck('name')->all();
-        $category = trim((string) ($formCategory ?? ($this->approvedSubmission($profile)?->category ?: $profile->health_form_category)));
-        if ($type === 'student') {
-            $purposes = array_merge(['On the Job Training', 'Practice Teaching / Internship'], $purposes);
-        }
-        if ($category !== '' && ($type === 'student' || !preg_match('/\b(ojt|on[ -]the[ -]job)\b/i', $category))) $purposes[] = $category;
-        // OJT is a student purpose, never an employee option.
-        if ($type === 'employee') $purposes = array_filter($purposes, fn ($purpose) => !preg_match('/\b(ojt|on[ -]the[ -]job)\b/i', $purpose));
+        return app(MedicalClearancePurposeCatalog::class)->options($type, $profile)->pluck('name')->unique()->values()->all();
+    }
 
-        $purposes = array_filter(array_map('trim', $purposes), fn ($purpose) => $purpose !== '' && strtolower($purpose) !== 'others');
-        return array_values(array_unique(array_map(fn ($purpose) => app(HealthRecordCategoryFilter::class)->label($purpose), $purposes)));
+    public function purposeOptions(string $type, HealthProfile|EmployeeHealthProfile $profile): array
+    {
+        return app(MedicalClearancePurposeCatalog::class)->options($type, $profile)
+            ->reject(fn ($option) => mb_strtolower($option['name']) === 'others')
+            ->map(fn ($option) => ['value' => $option['value'], 'label' => $option['label']])->values()->all();
     }
 
     public function issue(string $type, int $id, array $input, User $actor): IssuedMedicalClearance
@@ -114,9 +115,10 @@ class MedicalClearanceService
                 if ($identity['name'] === '' || $identity['sex'] === '' || $identity['age'] === null || $identity['age'] > 120) {
                     throw ValidationException::withMessages(['record' => 'Complete the patient name, birthday/age, and sex in the health record before issuing the clearance.']);
                 }
-                $purpose = $input['purpose'] === '__other__' ? trim((string) ($input['other_purpose'] ?? '')) : $input['purpose'];
-                if ($purpose === '' || ($input['purpose'] !== '__other__' && !in_array($purpose, $this->purposes($type, $profile), true))) {
-                    throw ValidationException::withMessages(['purpose' => 'Select an available purpose or enter a purpose under Others.']);
+                $target = app(MedicalClearancePurposeCatalog::class)->resolve($type, $profile, $input['purpose'] === '__other__' ? 'Others' : $input['purpose']);
+                $purpose = $input['purpose'] === '__other__' ? trim((string) ($input['other_purpose'] ?? '')) : ($target['name'] ?? '');
+                if (!$target || $purpose === '') {
+                    throw ValidationException::withMessages(['purpose' => 'Select an active configured Clearance / Certificate purpose. Configure an Others entry before using a custom purpose.']);
                 }
                 if ($type === 'employee' && preg_match('/\b(ojt|on[ -]the[ -]job)\b/i', $purpose)) {
                     throw ValidationException::withMessages(['purpose' => 'On the Job Training is available for students only.']);
@@ -135,6 +137,18 @@ class MedicalClearanceService
                     throw new \RuntimeException('Unable to save the Medical Clearance PDF.');
                 }
                 $document->save();
+                // Same transaction as the PDF and certificate record; retries return above without counting again.
+                app(MarClearanceIssuanceService::class)->recordApprovedClearanceTarget(
+                    $profile->user, $target['clearanceType'], $target['subcategory'], $target['workflow'],
+                    'medical-clearance:' . $document->id, $document->issued_on
+                );
+                $draftField = $type === 'student' ? 'final_review_draft_data' : 'draft_data';
+                $draft = $profile->{$draftField};
+                if (data_get($draft, 'medical_clearance_review.submission_id') == $submission->id
+                    && data_get($draft, 'medical_clearance.request_key') === $input['request_key']) {
+                    $profile->{$draftField} = null;
+                    $profile->save();
+                }
                 ActivityLog::create([
                     'user_id' => $actor->id, 'user_name' => $actor->name ?: $actor->email,
                     'user_role' => $actor->user_role, 'action' => 'Medical Clearance Issued', 'module' => 'Patient Intake',
@@ -159,6 +173,29 @@ class MedicalClearanceService
             'name' => $document->patient_name, 'age' => $document->patient_age, 'sex' => $document->patient_sex,
             'purpose' => $document->purpose,
         ]])->setPaper('letter')->output();
+    }
+
+    public function validateReviewDraft(Request $request, HealthProfile|EmployeeHealthProfile $profile): void
+    {
+        if (!$request->has('medical_clearance_review')) return;
+        abort_unless(app(ModulePermissionService::class)->can($request->user(), 'health_records.update_assessment'), 403);
+        $data = $request->validate([
+            'medical_clearance_review' => ['required', 'array:submission_id,category'],
+            'medical_clearance_review.submission_id' => ['required', 'integer', 'min:1'],
+            'medical_clearance_review.category' => ['required', 'string', 'max:180'],
+            'medical_clearance.request_key' => ['required', 'uuid'],
+            'medical_clearance.purpose' => ['nullable', 'string', 'max:180'],
+            'medical_clearance.other_purpose' => ['nullable', 'string', 'max:180'],
+        ]);
+        $submission = $this->approvedSubmission($profile);
+        $type = $profile instanceof EmployeeHealthProfile ? 'employee' : 'student';
+        if (!$submission || (int) $data['medical_clearance_review']['submission_id'] !== (int) $submission->id
+            || !in_array($data['medical_clearance_review']['category'], $this->healthFormCategories($type, $profile), true)) {
+            throw ValidationException::withMessages(['record' => 'This Final Review draft no longer matches the current approved Health Form. Look up the record again.']);
+        }
+        if (IssuedMedicalClearance::where('request_key', $data['medical_clearance']['request_key'])->exists()) {
+            throw ValidationException::withMessages(['record' => 'This review has already issued a certificate. Start another review instead.']);
+        }
     }
 
     public function approvalInput(Request $request, bool $approved, bool $allowed): ?array

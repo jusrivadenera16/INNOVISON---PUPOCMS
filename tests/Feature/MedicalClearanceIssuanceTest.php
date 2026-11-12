@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\MedicalClearanceController;
-use App\Models\{EmployeeHealthProfile, HealthFormCategory, HealthFormSubmission, HealthProfile, IssuedMedicalClearance, User};
+use App\Models\{EmployeeHealthProfile, HealthFormCategory, HealthFormSubmission, HealthProfile, IssuedMedicalClearance, User, MarClearanceType, MarClearanceSubcategory, MarClearanceSourceMapping, MarClearanceIssuance};
 use App\Services\{HealthFileEncryption, MedicalClearanceService};
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Schema\Blueprint;
@@ -62,6 +62,245 @@ class MedicalClearanceIssuanceTest extends TestCase
         });
         (require base_path('database/migrations/2026_11_11_190000_create_issued_medical_clearances_table.php'))->up();
         (require base_path('database/migrations/2026_11_11_210000_add_doctor_review_to_issued_medical_clearances.php'))->up();
+        Schema::create('mar_clearance_types', function (Blueprint $table) {
+            $table->id(); $table->string('code'); $table->string('name');
+            $table->boolean('is_active')->default(true); $table->boolean('allow_direct_use')->default(true);
+            $table->integer('sort_order')->default(0); $table->timestamps();
+        });
+        Schema::create('mar_clearance_subcategories', function (Blueprint $table) {
+            $table->id(); $table->unsignedBigInteger('mar_clearance_type_id'); $table->string('code');
+            $table->string('name'); $table->integer('sort_order')->default(0); $table->timestamps();
+        });
+        foreach (['mar_clearance_type_sources' => 'mar_clearance_type_id', 'mar_clearance_subcategory_sources' => 'mar_clearance_subcategory_id'] as $tableName => $key) {
+            Schema::create($tableName, function (Blueprint $table) use ($key) {
+                $table->id(); $table->unsignedBigInteger($key); $table->string('source'); $table->timestamps();
+            });
+        }
+        Schema::create('mar_mc_source', function (Blueprint $table) {
+            $table->id();
+            foreach (['mar_clearance_type_id', 'mar_clearance_subcategory_id', 'source_category_id'] as $key) $table->unsignedBigInteger($key)->nullable();
+            $table->string('source_key'); $table->json('source_config')->nullable();
+            $table->date('effective_from')->nullable(); $table->date('effective_until')->nullable();
+            $table->boolean('is_active')->default(true); $table->timestamps();
+        });
+        Schema::create('mar_clearance_issuances', function (Blueprint $table) {
+            $table->id();
+            foreach (['user_id', 'clearance_type_id', 'clearance_subcategory_id'] as $key) $table->unsignedBigInteger($key)->nullable();
+            foreach (['source_workflow', 'source_record_id', 'user_type', 'user_name_snapshot', 'clearance_name_snapshot'] as $key) $table->string($key)->nullable();
+            $table->dateTime('approved_at'); $table->timestamps();
+            $table->unique(['source_workflow', 'source_record_id']);
+        });
+    }
+
+    protected function configurePurpose(string $name, string $type = 'student', string $categoryName = 'On the Job Training', ?MarClearanceType $parent = null): array
+    {
+        $category = HealthFormCategory::firstOrCreate(['name' => $categoryName], ['is_active' => true,
+            'available_for' => $type === 'student' ? ['student'] : ['faculty', 'admin']]);
+        $workflow = $type === 'student' ? 'student_nurse_review' : 'employee_nurse_review';
+        $subcategory = null;
+        if ($parent) {
+            $subcategory = $parent->subcategories()->create(['name' => $name, 'code' => (string) Str::uuid()]);
+            $subcategory->sources()->create(['source' => $workflow]);
+        } else {
+            $parent = MarClearanceType::firstOrCreate(['name' => $name], ['code' => (string) Str::uuid(), 'is_active' => true, 'allow_direct_use' => true]);
+            $parent->sources()->firstOrCreate(['source' => $workflow]);
+        }
+        $mapping = MarClearanceSourceMapping::firstOrCreate(['mar_clearance_type_id' => $subcategory ? null : $parent->id,
+            'mar_clearance_subcategory_id' => $subcategory?->id, 'source_key' => $type === 'student' ? 'student_health_form_category' : 'employee_health_form_category'],
+            ['source_category_id' => $category->id, 'is_active' => true]);
+        return compact('parent', 'subcategory', 'mapping');
+    }
+
+    private function prepareReportSchema(): void
+    {
+        foreach (['health_profiles', 'health_profile_emp'] as $name) {
+            Schema::table($name, function (Blueprint $table) {
+                foreach (['verified_at', 'certified_at', 'form_date'] as $column) $table->dateTime($column)->nullable();
+                $table->string('submission_status')->nullable();
+            });
+        }
+        Schema::create('consultations', function (Blueprint $table) {
+            $table->id(); $table->unsignedBigInteger('user_id')->nullable();
+            $table->string('certificate_type')->nullable(); $table->string('service')->nullable();
+            $table->date('consultation_date')->nullable(); $table->softDeletes(); $table->timestamps();
+        });
+        Schema::create('appointments', function (Blueprint $table) {
+            $table->id(); $table->unsignedBigInteger('user_id');
+            $table->date('date'); $table->string('status')->nullable(); $table->string('service')->nullable();
+        });
+    }
+
+    private function prepareRepeatDraftColumns(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('student_id')->nullable(); $table->string('barcode')->nullable();
+        });
+        foreach (['health_profiles', 'health_profile_emp'] as $name) {
+            Schema::table($name, function (Blueprint $table) {
+                $table->string('reference_number')->nullable(); $table->string('student_id')->nullable();
+                $table->string('employee_number')->nullable(); $table->string('submission_status')->nullable();
+                $table->json('final_review_draft_data')->nullable(); $table->json('draft_data')->nullable();
+            });
+        }
+    }
+
+    public function test_existing_draft_endpoints_save_repeat_review_without_changing_approval_and_clear_it_on_issue(): void
+    {
+        $this->prepareRepeatDraftColumns();
+        foreach (['student', 'employee'] as $type) {
+            $category = $type === 'student' ? 'On the Job Training' : 'Annual Medical Clearance';
+            $profile = $this->patient($type, $category); $actor = $this->actor();
+            $reference = $type === 'student' ? '2026-00001-TG-1' : 'EMP-1';
+            $profile->forceFill(['student_number' => $reference, 'employee_number' => $reference])->save();
+            $submission = $this->service()->approvedSubmission($profile);
+            $original = $submission->getRawOriginal();
+            $clearance = $this->input(['purpose' => $this->service()->purposeOptions($type, $profile)[0]['value']]);
+            $draft = ['reference_number' => $reference, 'lookup_scope' => $type === 'student' ? 'student_local' : 'employee_local',
+                'applicant_findings_status' => 'With Findings', 'applicant_height' => "5'8\"", 'medical_clearance' => $clearance,
+                'medical_clearance_review' => ['submission_id' => $submission->id, 'category' => $category]];
+            $request = Request::create('/', 'POST', $draft); $request->setUserResolver(fn () => $actor);
+            $controller = app(\App\Http\Controllers\WalkInController::class);
+            $response = $type === 'student' ? $controller->saveStudentAssessmentDraft($request) : $controller->saveEmployeeDraft($request);
+            $this->assertSame(200, $response->getStatusCode(), $response->getContent());
+            $saved = $profile->fresh();
+            $draftField = $type === 'student' ? 'final_review_draft_data' : 'draft_data';
+            $this->assertSame($clearance['request_key'], data_get($saved->{$draftField}, 'medical_clearance.request_key'));
+            $this->assertSame('Fully Cleared', $saved->clearance_status);
+            $this->assertNull($saved->submission_status);
+            $this->assertSame($original, $submission->fresh()->getRawOriginal());
+            $this->assertSame($type === 'student' ? 0 : 1, IssuedMedicalClearance::count());
+            $this->service()->issue($type, $profile->id, $clearance, $actor);
+            $this->assertNull($profile->fresh()->{$draftField});
+            $this->assertSame($original, $submission->fresh()->getRawOriginal());
+        }
+        $this->assertSame(2, HealthFormSubmission::count());
+        $this->assertSame(2, MarClearanceIssuance::count());
+    }
+
+    public function test_stale_or_already_issued_repeat_draft_is_rejected_without_changing_approved_form(): void
+    {
+        $this->prepareRepeatDraftColumns();
+        $profile = $this->patient(); $actor = $this->actor();
+        $clearance = $this->input();
+        $request = Request::create('/', 'POST', ['medical_clearance' => $clearance,
+            'medical_clearance_review' => ['submission_id' => 9999, 'category' => 'On the Job Training']]);
+        $request->setUserResolver(fn () => $actor);
+        try { $this->service()->validateReviewDraft($request, $profile); $this->fail('Stale submission must not save a review draft.'); }
+        catch (ValidationException $exception) { $this->assertArrayHasKey('record', $exception->errors()); }
+        $document = $this->service()->issue('student', $profile->id, $clearance, $actor);
+        $request->merge(['medical_clearance_review' => ['submission_id' => $document->health_form_submission_id, 'category' => 'On the Job Training']]);
+        try { $this->service()->validateReviewDraft($request, $profile); $this->fail('Already-issued request must not be saved again as a draft.'); }
+        catch (ValidationException $exception) { $this->assertArrayHasKey('record', $exception->errors()); }
+        $this->assertSame('Fully Cleared', $profile->fresh()->clearance_status);
+        $this->assertSame(1, HealthFormSubmission::count());
+    }
+
+    public function test_same_ojt_form_has_separate_configured_parent_and_subcategory_purpose_counts(): void
+    {
+        $profile = $this->patient(); $actor = $this->actor();
+        $parent = MarClearanceType::create(['name' => 'Teaching Certificates', 'code' => 'teaching', 'allow_direct_use' => false, 'is_active' => true]);
+        $practice = $this->configurePurpose('Practice Teaching / Internship', 'student', 'On the Job Training', $parent);
+        HealthFormCategory::create(['name' => 'Unconfigured Health Form', 'available_for' => ['student'], 'is_active' => true]);
+        $request = Request::create('/'); $request->setUserResolver(fn () => $actor);
+        $options = app(MedicalClearanceController::class)->index($request, 'student', $profile->id, $this->service())->getData(true);
+        $this->assertContains('Practice Teaching / Internship', $options['purposes']);
+        $this->assertNotContains('Teaching Certificates', $options['purposes']);
+        $this->assertNotContains('Unconfigured Health Form', $options['purposes']);
+        $value = 'mapping:' . $practice['mapping']->id;
+        $this->assertContains(['value' => $value, 'label' => 'Practice Teaching / Internship'], $options['purpose_options']);
+        $input = $this->input(['purpose' => $value]);
+        $document = $this->service()->issue('student', $profile->id, $input, $actor);
+        $this->assertSame('Practice Teaching / Internship', $document->purpose);
+        $snapshot = MarClearanceIssuance::first();
+        $this->assertSame($parent->id, $snapshot->clearance_type_id);
+        $this->assertSame($practice['subcategory']->id, $snapshot->clearance_subcategory_id);
+        $this->assertSame('medical-clearance:' . $document->id, $snapshot->source_record_id);
+        $this->service()->issue('student', $profile->id, $input, $actor);
+        app(MedicalClearanceController::class)->show('student', $profile->id, $document, $this->service());
+        $this->assertSame(1, MarClearanceIssuance::count());
+        $this->service()->issue('student', $profile->id, $this->input(), $actor);
+        $this->assertSame(2, MarClearanceIssuance::count());
+        $this->assertSame(1, HealthFormSubmission::count());
+        $this->prepareReportSchema();
+        $report = app(\App\Services\MarClearanceIssuanceService::class)->issuancesForReportPeriod('2026-11-01', '2026-11-30');
+        $this->assertCount(2, $report);
+        $this->assertSame(['On the Job Training', 'Practice Teaching / Internship'], $report->pluck('clearance_name_snapshot')->sort()->values()->all());
+    }
+
+    public function test_inactive_or_changed_mapping_is_rejected_without_issuance_or_count(): void
+    {
+        $profile = $this->patient();
+        $option = $this->service()->purposeOptions('student', $profile)[0];
+        MarClearanceSourceMapping::query()->update(['is_active' => false]);
+        $this->assertSame([], $this->service()->purposeOptions('student', $profile));
+        try {
+            $this->service()->issue('student', $profile->id, $this->input(['purpose' => $option['value']]), $this->actor());
+            $this->fail('A stale mapping must not issue.');
+        } catch (ValidationException $exception) { $this->assertArrayHasKey('purpose', $exception->errors()); }
+        $this->assertSame(0, IssuedMedicalClearance::count());
+        $this->assertSame(0, MarClearanceIssuance::count());
+    }
+
+    public function test_employee_cannot_forge_a_student_purpose_mapping_and_only_sees_employee_configuration(): void
+    {
+        $this->patient();
+        $studentMapping = MarClearanceSourceMapping::first();
+        $profile = $this->patient('employee', 'Annual Medical Clearance');
+        $this->assertSame(['Annual Medical Clearance'], $this->service()->purposes('employee', $profile));
+        try {
+            $this->service()->issue('employee', $profile->id, $this->input(['purpose' => 'mapping:' . $studentMapping->id]), $this->actor());
+            $this->fail('An employee must not use a student mapping.');
+        } catch (ValidationException $exception) { $this->assertArrayHasKey('purpose', $exception->errors()); }
+        $this->assertSame(0, MarClearanceIssuance::count());
+    }
+
+    public function test_counting_failure_rolls_back_pdf_certificate_and_audit_together(): void
+    {
+        $profile = $this->patient();
+        $this->mock(\App\Services\MarClearanceIssuanceService::class)
+            ->shouldReceive('recordApprovedClearanceTarget')->once()->andThrow(new \RuntimeException('Count save failed'));
+        try {
+            $this->service()->issue('student', $profile->id, $this->input(), $this->actor());
+            $this->fail('A certificate must not succeed without its count snapshot.');
+        } catch (\RuntimeException $exception) { $this->assertSame('Count save failed', $exception->getMessage()); }
+        $this->assertSame(0, IssuedMedicalClearance::count());
+        $this->assertSame(0, MarClearanceIssuance::count());
+        $this->assertSame(0, DB::table('activity_logs')->count());
+        $this->assertSame([], Storage::disk('health_private')->allFiles());
+    }
+
+    public function test_saved_purpose_count_keeps_its_target_and_label_after_configuration_is_renamed(): void
+    {
+        $profile = $this->patient();
+        $document = $this->service()->issue('student', $profile->id, $this->input(), $this->actor());
+        $snapshot = MarClearanceIssuance::first();
+        MarClearanceType::first()->update(['name' => 'Renamed OJT Purpose']);
+        $this->prepareReportSchema();
+        $report = app(\App\Services\MarClearanceIssuanceService::class)->issuancesForReportPeriod('2026-11-01', '2026-11-30');
+        $this->assertCount(1, $report);
+        $this->assertSame($snapshot->clearance_type_id, $report->first()->clearance_type_id);
+        $this->assertSame('On the Job Training', $report->first()->clearance_name_snapshot);
+        $this->assertSame('On the Job Training', $document->fresh()->purpose);
+        $this->assertSame(['Renamed OJT Purpose'], $this->service()->purposes('student', $profile));
+    }
+
+    public function test_report_uses_certificates_not_old_form_approval_rows_and_legacy_pdf_is_counted_once(): void
+    {
+        $profile = $this->patient(); $actor = $this->actor();
+        $this->prepareReportSchema();
+        $service = app(\App\Services\MarClearanceIssuanceService::class);
+        $target = MarClearanceType::first();
+        $submission = HealthFormSubmission::first();
+        $service->recordApprovedClearanceTarget($profile->user, $target, null, 'student_nurse_review', 'health_form_submission:' . $submission->id, '2026-11-11');
+        $this->assertCount(0, $service->issuancesForReportPeriod('2026-11-01', '2026-11-30'));
+        $document = $this->service()->issue('student', $profile->id, $this->input(), $actor);
+        $this->assertCount(1, $service->issuancesForReportPeriod('2026-11-01', '2026-11-30'));
+        // Simulate an existing certificate from before purpose-count snapshots were introduced.
+        DB::table('mar_clearance_issuances')->where('source_record_id', 'medical-clearance:' . $document->id)->delete();
+        $before = MarClearanceIssuance::count();
+        $this->assertCount(1, $service->issuancesForReportPeriod('2026-11-01', '2026-11-30'));
+        $this->assertCount(0, $service->issuancesForReportPeriod('2026-12-01', '2026-12-31'));
+        $this->assertSame($before, MarClearanceIssuance::count());
     }
 
     public function test_another_clearance_for_student_and_employee_saves_review_without_mutating_approved_form(): void
@@ -142,6 +381,7 @@ class MedicalClearanceIssuanceTest extends TestCase
     private function actor(): User { return User::forceCreate(['name' => 'Clinic Staff', 'user_role' => 'superadmin']); }
     private function patient(string $type = 'student', string $category = 'On the Job Training')
     {
+        $this->configurePurpose($category, $type, $category);
         $user = User::forceCreate(['name' => 'Juan Dela Cruz', 'user_type' => $type === 'student' ? 'Student' : 'Faculty', 'gender' => 'Male', 'DOB' => '2004-01-15']);
         $class = $type === 'student' ? HealthProfile::class : EmployeeHealthProfile::class;
         $profile = $class::forceCreate(['user_id' => $user->id, 'clearance_status' => 'Fully Cleared', 'health_form_category' => $category]);
@@ -174,6 +414,7 @@ class MedicalClearanceIssuanceTest extends TestCase
         $this->assertSame($document->id, $retry->id);
         $this->assertSame(1, IssuedMedicalClearance::count());
         $this->assertSame(1, DB::table('activity_logs')->count());
+        $this->assertSame(1, MarClearanceIssuance::count());
     }
 
     public function test_reprint_refreshes_template_using_saved_details_without_reissuing_or_overwriting_archive(): void
@@ -219,13 +460,18 @@ class MedicalClearanceIssuanceTest extends TestCase
     {
         $profile = $this->patient('employee', 'Annual Medical Clearance');
         $category = HealthFormCategory::create(['name' => 'Employment', 'is_active' => true, 'available_for' => ['faculty']]);
+        $this->assertNotContains($category->name, $this->service()->purposes('employee', $profile));
+        $this->configurePurpose('Employment', 'employee', 'Employment');
+        $this->configurePurpose('Others', 'employee', 'Annual Medical Clearance');
+        $categoryCount = HealthFormCategory::count();
         $purposes = $this->service()->purposes('employee', $profile);
         $this->assertContains('Annual Medical Clearance', $purposes);
         $this->assertContains($category->name, $purposes);
         $this->assertNotContains('On the Job Training', $purposes);
         $document = $this->service()->issue('employee', $profile->id, $this->input(['purpose' => '__other__', 'other_purpose' => 'Return to Work']), $this->actor());
         $this->assertSame('Return to Work', $document->purpose);
-        $this->assertSame(1, HealthFormCategory::count());
+        $this->assertSame($categoryCount, HealthFormCategory::count());
+        $this->assertSame('Others', MarClearanceIssuance::first()->clearance_name_snapshot);
     }
 
     public function test_employee_cannot_receive_ojt_even_through_others(): void
@@ -272,6 +518,7 @@ class MedicalClearanceIssuanceTest extends TestCase
             $this->assertSame('PDF failure', $exception->getMessage());
             $this->assertSame(0, IssuedMedicalClearance::count());
             $this->assertSame(0, DB::table('activity_logs')->count());
+            $this->assertSame(0, MarClearanceIssuance::count());
             $this->assertSame([], Storage::disk('health_private')->allFiles());
         }
     }
@@ -427,7 +674,7 @@ class MedicalClearanceIssuanceTest extends TestCase
         $this->mock(\App\Services\EmployeeHealthFormPdfService::class)->shouldReceive('generate')->once()->andReturnUsing(function ($record) {
             $record->forceFill(['staff_health_form_pdf_path' => 'employee-final-form.pdf'])->save(); return 'employee-final-form.pdf';
         });
-        $this->mock(\App\Services\MarClearanceIssuanceService::class)->shouldReceive('syncApprovedEmployeeHealthProfile')->once();
+        $this->mock(\App\Services\MarClearanceIssuanceService::class)->makePartial()->shouldReceive('syncApprovedEmployeeHealthProfile')->once();
         $this->mock(\App\Services\StudentNotificationMailer::class)->shouldReceive('sendHealthRecordNotice')->once()->andReturn(['status' => 'skipped']);
         $request = Request::create('/', 'POST', ['issue_medical_clearance' => true, 'medical_clearance' => $this->input(['purpose' => 'Annual Medical Clearance'])]);
         $request->setUserResolver(fn () => $actor);
