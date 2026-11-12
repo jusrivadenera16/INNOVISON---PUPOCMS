@@ -1087,18 +1087,8 @@
                                                         <div class="medical-document-file-head">
                                                             <x-outline-icon name="document-text" /><span>{{ $medicalDocument['label'] }}</span>
                                                         </div>
-                                                        @if($medicalDocument['uploaded'] && filled($medicalDocument['url']) && ($medicalDocument['preview'] ?? true))
-                                                            <div class="medical-document-preview">
-                                                                @if($medicalDocumentIsImage)
-                                                                    <a href="{{ $medicalDocument['url'] }}" target="_blank" rel="noopener" aria-label="Open {{ $medicalDocument['label'] }}">
-                                                                        <img src="{{ $medicalDocument['url'] }}" alt="{{ $medicalDocument['label'] }} preview" loading="lazy">
-                                                                    </a>
-                                                                @elseif($medicalDocumentExtension === 'pdf')
-                                                                    <iframe src="{{ $medicalDocument['url'] }}" title="{{ $medicalDocument['label'] }} preview" loading="lazy"></iframe>
-                                                                @else
-                                                                    <a href="{{ $medicalDocument['url'] }}" target="_blank" rel="noopener">Open uploaded document</a>
-                                                                @endif
-                                                            </div>
+                                                        @if($medicalDocument['uploaded'] && filled($medicalDocument['url']))
+                                                            @include('admin.partials.private-document-thumbnail', ['documentLabel' => $medicalDocument['label']])
                                                         @elseif(!$medicalDocument['uploaded'] || blank($medicalDocument['url']))
                                                             <div class="medical-document-preview">No file uploaded</div>
                                                         @endif

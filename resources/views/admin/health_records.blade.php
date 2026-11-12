@@ -9487,25 +9487,9 @@
                                     >
                                         <strong>{{ $docLabel }}</strong>
                                         <span class="verification-doc-status verification-doc-status-spacer" aria-hidden="true"></span>
-                                        @if($isHealthForm)
-                                            <span class="verification-doc-preview health-form-doc-preview" aria-hidden="true">
-                                                <span class="health-form-doc-title">
-                                                    <span>Health</span>
-                                                    <span>Information</span>
-                                                    <span>Form</span>
-                                                </span>
-                                            </span>
-                                        @else
-                                            <span class="verification-doc-preview">
-                                                @if($isPreviewImage)
-                                                    <img src="{{ $documentUrl }}" alt="{{ $docLabel }} preview" loading="lazy">
-                                                @else
-                                                    <iframe src="{{ $documentUrl }}#toolbar=0&navpanes=0" title="{{ $docLabel }} preview" loading="lazy" tabindex="-1"></iframe>
-                                                @endif
-                                            </span>
-                                        @endif
+                                        <span class="verification-doc-preview health-form-doc-preview" aria-hidden="true"><span class="health-form-doc-title">{{ $docLabel }}</span></span>
                                         <span class="verification-doc-meta">{{ $documentFormat }}</span>
-                                        <span class="verification-doc-open"><x-outline-icon name="eye" /><span>View Document</span></span>
+                                        <span class="verification-doc-open"><x-outline-icon name="eye" /><span>Open</span></span>
                                     </a>
                                 @else
                                     <div class="verification-doc-card is-missing">
@@ -9669,14 +9653,10 @@
                                                     class="readonly-doc-preview-btn"
                                                 >
                                                     <span class="readonly-doc-preview-thumb">
-                                                        @if($isImagePreview)
-                                                            <img src="{{ $documentUrl }}" alt="{{ $docLabel }} preview">
-                                                        @else
-                                                            <x-outline-icon name="document-text" />
-                                                        @endif
+                                                        <img src="{{ asset('images/pup_logo.png') }}" alt="" aria-hidden="true">
                                                     </span>
                                                     <span>{{ $docLabel }}</span>
-                                                    <small>Open in new tab</small>
+                                                    <small>Open</small>
                                                 </a>
                                             @empty
                                                 <div class="readonly-doc-preview-empty">No uploaded documents are available.</div>
@@ -10489,13 +10469,9 @@
                             var docTitle = doc.title || 'Requirement';
                             var isPhoto = /photo/i.test(docTitle);
                             var isHealthForm = String(docTitle).toLowerCase() === 'health information form';
-                            var preview = isHealthForm
-                                ? '<span class="verification-doc-preview health-form-doc-preview" aria-hidden="true"><span class="health-form-doc-title"><span>Health</span><span>Information</span><span>Form</span></span></span>'
-                                : (isPhoto
-                                    ? '<span class="verification-doc-preview"><img src="' + escapeValue(doc.url) + '" alt="' + escapeValue(docTitle) + ' preview" loading="lazy"></span>'
-                                    : '<span class="verification-doc-preview"><iframe src="' + escapeValue(doc.url) + '#toolbar=0&navpanes=0" title="' + escapeValue(docTitle) + ' preview" loading="lazy" tabindex="-1"></iframe></span>');
+                            var preview = '<span class="verification-doc-preview health-form-doc-preview" aria-hidden="true"><span class="health-form-doc-title">' + escapeValue(docTitle) + '</span></span>';
                             var format = isPhoto ? 'Image file' : (isHealthForm ? 'PDF document' : 'Uploaded file');
-                            return '<a class="verification-doc-card" href="' + escapeValue(doc.url) + '" target="_blank" rel="noopener noreferrer"><strong>' + escapeValue(docTitle) + '</strong><span class="verification-doc-status verification-doc-status-spacer" aria-hidden="true"></span>' + preview + '<span class="verification-doc-meta">' + format + '</span><span class="verification-doc-open"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.644C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.437 0 .644C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg><span>View Document</span></span></a>';
+                            return '<a class="verification-doc-card" href="' + escapeValue(doc.url) + '" target="_blank" rel="noopener noreferrer"><strong>' + escapeValue(docTitle) + '</strong><span class="verification-doc-status verification-doc-status-spacer" aria-hidden="true"></span>' + preview + '<span class="verification-doc-meta">' + format + '</span><span class="verification-doc-open"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.644C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.437 0 .644C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg><span>Open</span></span></a>';
                         }
 
                         return '<div class="verification-doc-card is-missing"><strong>' + escapeValue(doc && doc.title ? doc.title : 'Requirement') + '</strong><span class="verification-doc-status">Missing upload</span></div>';
@@ -11785,11 +11761,7 @@
                 const docTitle = doc.title || 'Requirement';
                 const isPhoto = /photo/i.test(docTitle);
                 const isHealthForm = String(docTitle).toLowerCase() === 'health information form';
-                const preview = isHealthForm
-                    ? '<span class="verification-doc-preview health-form-doc-preview" aria-hidden="true"><span class="health-form-doc-title"><span>Health</span><span>Information</span><span>Form</span></span></span>'
-                    : (isPhoto
-                        ? `<span class="verification-doc-preview"><img src="${escapeHtml(doc.url)}" alt="${escapeHtml(docTitle)} preview" loading="lazy"></span>`
-                        : `<span class="verification-doc-preview"><iframe src="${escapeHtml(doc.url)}#toolbar=0&navpanes=0" title="${escapeHtml(docTitle)} preview" loading="lazy" tabindex="-1"></iframe></span>`);
+                const preview = `<span class="verification-doc-preview health-form-doc-preview" aria-hidden="true"><span class="health-form-doc-title">${escapeHtml(docTitle)}</span></span>`;
                 const format = isPhoto ? 'Image file' : (isHealthForm ? 'PDF document' : 'Uploaded file');
                 return `
                     <a class="verification-doc-card" href="${escapeHtml(doc.url)}" target="_blank" rel="noopener noreferrer">
@@ -11798,7 +11770,7 @@
                         ${preview}
                         <span class="verification-doc-meta">${format}</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5A3.375 3.375 0 0 0 10.125 2.25H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
-                        <span class="verification-doc-open"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.644C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.437 0 .644C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg><span>View Document</span></span>
+                        <span class="verification-doc-open"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.644C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.437 0 .644C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg><span>Open</span></span>
                     </a>
                 `;
             }

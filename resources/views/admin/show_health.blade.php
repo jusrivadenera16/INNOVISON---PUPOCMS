@@ -3813,15 +3813,10 @@
                         <x-outline-icon name="document-text" /> Open
                     </a>
                 </div>
-                <div class="doc-preview doc-preview-health-form">
-                    <div class="health-form-thumb">
-                        <span>Health</span>
-                        <span>Information</span>
-                        <span>Form</span>
-                    </div>
-                </div>
+                @include('admin.partials.private-document-thumbnail', ['documentLabel' => 'Health Information Form'])
             </div>
 
+            @if(filled($profile->medical_certificate))
             <div class="doc-file">
                 <h4>Medical Certificate (PDF)</h4>
                 @if(!empty($profile->medical_certificate))
@@ -3833,18 +3828,14 @@
                             <x-outline-icon name="document-text" /> Open
                         </a>
                     </div>
-                    <div class="doc-preview">
-                        @if($isImageDocument($profile->medical_certificate))
-                            <img src="{{ $medicalCertificateUrl }}" alt="Medical Certificate">
-                        @else
-                            <iframe src="{{ $medicalCertificateUrl }}" title="Medical Certificate preview"></iframe>
-                        @endif
-                    </div>
+                    @include('admin.partials.private-document-thumbnail', ['documentLabel' => 'Medical Certificate'])
                 @else
                     <div class="doc-missing">No medical certificate uploaded.</div>
                 @endif
             </div>
 
+            @endif
+            @if(filled($profile->medical_assessment_upload))
             <div class="doc-file">
                 <h4>Medical Assessment Copy</h4>
                 @if(!empty($profile->medical_assessment_upload))
@@ -3856,18 +3847,14 @@
                             <x-outline-icon name="document-text" /> Open
                         </a>
                     </div>
-                    <div class="doc-preview">
-                        @if($isImageDocument($profile->medical_assessment_upload))
-                            <img src="{{ $medicalAssessmentUrl }}" alt="Medical Assessment Copy">
-                        @else
-                            <iframe src="{{ $medicalAssessmentUrl }}" title="Medical Assessment Copy preview"></iframe>
-                        @endif
-                    </div>
+                    @include('admin.partials.private-document-thumbnail', ['documentLabel' => 'Medical Assessment Copy'])
                 @else
                     <div class="doc-missing">No medical assessment copy uploaded.</div>
                 @endif
             </div>
 
+            @endif
+            @if(filled($profile->health_declaration))
             <div class="doc-file">
                 <h4>Health Declaration</h4>
                 @if(!empty($profile->health_declaration))
@@ -3879,18 +3866,14 @@
                             <x-outline-icon name="document-text" /> Open
                         </a>
                     </div>
-                    <div class="doc-preview">
-                        @if($isImageDocument($profile->health_declaration))
-                            <img src="{{ $healthDeclarationUrl }}" alt="Health Declaration">
-                        @else
-                            <iframe src="{{ $healthDeclarationUrl }}" title="Health Declaration preview"></iframe>
-                        @endif
-                    </div>
+                    @include('admin.partials.private-document-thumbnail', ['documentLabel' => 'Health Declaration'])
                 @else
                     <div class="doc-missing">No health declaration uploaded.</div>
                 @endif
             </div>
 
+            @endif
+            @if(filled($profile->chest_xray_result))
             <div class="doc-file">
                 <h4>Chest X-ray Result (PDF)</h4>
                 @if(!empty($profile->chest_xray_result))
@@ -3902,19 +3885,14 @@
                             <x-outline-icon name="document-text" /> Open
                         </a>
                     </div>
-                    <div class="doc-preview">
-                        @if($isImageDocument($profile->chest_xray_result))
-                            <img src="{{ $chestXrayUrl }}" alt="Chest X-ray Result">
-                        @else
-                            <iframe src="{{ $chestXrayUrl }}" title="Chest X-ray Result preview"></iframe>
-                        @endif
-                    </div>
+                    @include('admin.partials.private-document-thumbnail', ['documentLabel' => 'Chest X-ray Result'])
                 @else
                     <div class="doc-missing">No chest X-ray result uploaded.</div>
                 @endif
             </div>
 
-            @if(($profile->has_disability ?? 'No') === 'Yes' || !empty($profile->pwd_id_proof))
+            @endif
+            @if(filled($profile->pwd_id_proof))
                 <div class="doc-file">
                     <h4>PWD ID Proof (PDF)</h4>
                     @if(!empty($profile->pwd_id_proof))
@@ -3926,13 +3904,14 @@
                                 <x-outline-icon name="document-text" /> Open
                             </a>
                         </div>
-                        <div class="doc-preview"><iframe src="{{ $pwdIdProofUrl }}"></iframe></div>
+                        @include('admin.partials.private-document-thumbnail', ['documentLabel' => 'PWD ID Proof'])
                     @else
                         <div class="doc-missing">PWD is Yes but no proof uploaded.</div>
                     @endif
                 </div>
             @endif
 
+            @if(filled($profile->student_photo))
             <div class="doc-file">
                 <h4>2x2 Student Photo</h4>
                 @if(!empty($profile->student_photo))
@@ -3944,11 +3923,12 @@
                             <x-outline-icon name="eye" /> Open
                         </a>
                     </div>
-                    <div class="doc-preview"><img src="{{ $studentPhotoUrl }}" alt="2x2 Student Photo"></div>
+                    @include('admin.partials.private-document-thumbnail', ['documentLabel' => '2x2 Student Photo'])
                 @else
                     <div class="doc-missing">No 2x2 student photo uploaded.</div>
                 @endif
             </div>
+            @endif
                     </div>
                 </section>
 
@@ -3996,6 +3976,7 @@
                         @if($history['has_snapshot'] || filled($historySubmission->pdf_path) || $historyIssuedClearances->isNotEmpty())
                             <div class="doc-grid">
                                 @include('admin.partials.issued-clearance-document-cards', ['issuedClearances' => $historyIssuedClearances])
+                                @if(filled($historySubmission->pdf_path))
                                 <div class="doc-file">
                                     <h4>Health Information Form PDF</h4>
                                     @if(filled($historySubmission->pdf_path))
@@ -4007,13 +3988,15 @@
                                                 <x-outline-icon name="document-text" /> Open
                                             </a>
                                         </div>
-                                        <div class="doc-preview"><iframe src="{{ $historyHealthFormPdfUrl }}" title="Saved Health Information Form"></iframe></div>
+                                        @include('admin.partials.private-document-thumbnail', ['documentLabel' => 'Health Information Form'])
                                     @else
                                         <div class="doc-missing">No saved Health Information Form PDF.</div>
                                     @endif
                                 </div>
 
+                                @endif
                                 @foreach($historicalDocumentDefinitions as $documentKey => $documentLabel)
+                                    @continue(blank($historyProfileData[$documentKey] ?? null))
                                     <div class="doc-file">
                                         <h4>{{ $documentLabel }}</h4>
                                         @if(filled($historyProfileData[$documentKey] ?? null))
@@ -4028,13 +4011,7 @@
                                                     <x-outline-icon name="document-text" /> Open
                                                 </a>
                                             </div>
-                                            <div class="doc-preview">
-                                                @if($isImageDocument($historyProfileData[$documentKey]))
-                                                    <img src="{{ $historyDocumentUrl }}" alt="{{ $documentLabel }}">
-                                                @else
-                                                    <iframe src="{{ $historyDocumentUrl }}" title="{{ $documentLabel }}"></iframe>
-                                                @endif
-                                            </div>
+                                            @include('admin.partials.private-document-thumbnail', ['documentLabel' => $documentLabel])
                                         @else
                                             <div class="doc-missing">No {{ strtolower($documentLabel) }} saved for this version.</div>
                                         @endif

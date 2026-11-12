@@ -449,8 +449,15 @@ class MedicalClearanceIssuanceTest extends TestCase
             $this->assertSame([$otherVersion->id], $versions->get(9999)->pluck('id')->all());
             $this->assertCount(0, IssuedMedicalClearance::documentVersions($type, 987654));
             $html = view('admin.partials.issued-clearance-document-cards', ['issuedClearances' => $versions->get($document->health_form_submission_id)])->render();
-            $this->assertStringContainsString('Medical Clearance (Issued)', $html);
-            $this->assertStringContainsString('View / Print', $html);
+            $this->assertStringContainsString('Medical Certificate (Issued)', $html);
+            $this->assertStringContainsString(' Open</a>', $html);
+            $this->assertStringNotContainsString('View / Print', $html);
+            $this->assertStringNotContainsString('<iframe', $html);
+            $this->assertStringContainsString('private-document-thumbnail', $html);
+            $this->assertStringContainsString('private-document-thumbnail-title', $html);
+            $this->assertStringContainsString('private-document-thumbnail-subtitle', $html);
+            $this->assertStringNotContainsString('issued-clearance-document-meta', $html);
+            $this->assertLessThan(strpos($html, 'private-document-thumbnail-subtitle'), strpos($html, 'private-document-thumbnail-title'));
             $this->assertStringContainsString(e(route('admin.medical_clearances.show', [$type, $profile->id, $document])), $html);
             $this->assertStringNotContainsString(e(route('admin.medical_clearances.show', [$type, $profile->id, $otherVersion])), $html);
         }

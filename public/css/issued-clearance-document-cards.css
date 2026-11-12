@@ -1,0 +1,47 @@
+.doc-file.issued-clearance-document-card .issued-clearance-document-meta,
+.doc-file.issued-clearance-document-card .doc-link {
+    font-size: 12px;
+    line-height: 1.5;
+}
+.doc-file.issued-clearance-document-card .issued-clearance-document-meta {
+    margin: 0;
+    color: #64748b;
+    overflow-wrap: anywhere;
+}
+.doc-file.issued-clearance-document-card .doc-link { white-space: nowrap; }
+.doc-file.issued-clearance-document-card .doc-link svg { width: 16px; height: 16px; flex: 0 0 16px; }
+.issued-clearance-document-preview {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    min-height: 210px;
+    border: 1px solid #f3d0d0;
+    border-radius: 9px;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 45%, #8000001a, transparent 48%), linear-gradient(180deg, #fffafa, #fff);
+}
+.issued-clearance-document-thumb {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    min-height: 160px;
+    text-align: center;
+}
+.issued-clearance-document-thumb img {
+    position: absolute;
+    width: min(160px, 82%);
+    height: auto;
+    opacity: .09;
+    object-fit: contain;
+}
+.issued-clearance-document-thumb span {
+    position: relative;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1.15;
+    text-transform: uppercase;
+}
+html[data-theme="dark"] .doc-file.issued-clearance-document-card .issued-clearance-document-meta { color: #cbd5e1; }

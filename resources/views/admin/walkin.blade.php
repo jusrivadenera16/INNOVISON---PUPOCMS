@@ -2,6 +2,7 @@
 @section('title', 'Patient Intake')
 
 @push('styles')
+<link rel="stylesheet" href="{{ asset('css/private-document-thumbnail.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     .notification-toast {
@@ -12746,21 +12747,12 @@
                 </button>
             </div>
             <div class="applicant-modal-body">
-                <div class="applicant-documents-workspace">
+                <div class="applicant-documents-workspace is-private-document-grid">
                     <aside class="applicant-documents-sidebar" aria-label="Uploaded document list">
                         <div class="applicant-documents-grid" id="applicantDocumentsGrid">
                             <div class="applicant-documents-empty" id="applicantDocumentsInitialEmpty">No uploaded documents are available for this applicant.</div>
                         </div>
                     </aside>
-                    <section class="applicant-document-preview-panel" id="applicantDocumentPreviewPanel" aria-live="polite">
-                        <div class="applicant-document-preview-head">
-                            <strong id="applicantDocumentPreviewTitle">Document Preview</strong>
-                            <a class="applicant-document-preview-close" id="applicantDocumentPreviewOpen" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">Open in New Tab</a>
-                        </div>
-                        <div class="applicant-document-preview-empty" id="applicantDocumentPreviewEmpty">Select a file from the left to display its full-page preview.</div>
-                        <iframe class="applicant-document-preview-frame" id="applicantDocumentPreviewFrame" title="Clinic document preview" style="display:none;"></iframe>
-                        <img class="applicant-document-preview-image" id="applicantDocumentPreviewImage" src="" alt="">
-                    </section>
                 </div>
             </div>
         </div>
@@ -15256,30 +15248,6 @@
             }
         }
 
-        function previewDocument(documentItem, activeCard) {
-            if (!documentItem || !documentItem.url || !previewPanel) return;
-
-            closeDocumentPreview();
-            if (previewTitle) previewTitle.textContent = documentItem.label || 'Document Preview';
-            if (previewEmpty) previewEmpty.style.display = 'none';
-            if (previewOpen) {
-                previewOpen.href = documentItem.url;
-                previewOpen.style.display = 'inline-flex';
-            }
-            if (activeCard) activeCard.classList.add('is-active');
-
-            if (documentItem.type === 'image' && previewImage) {
-                previewImage.src = documentItem.url;
-                previewImage.alt = (documentItem.label || 'Applicant document') + ' preview';
-                previewImage.style.display = 'block';
-            } else if (previewFrame) {
-                previewFrame.src = documentItem.url;
-                previewFrame.style.display = 'block';
-            }
-
-            previewPanel.classList.add('is-visible');
-        }
-
         function closeDocumentsModal() {
             if (documentsModal) documentsModal.classList.remove('show');
             closeDocumentPreview();
@@ -15324,6 +15292,12 @@
 
                 const actions = document.createElement('div');
                 actions.className = 'applicant-document-actions';
+                const thumbnail = document.createElement('div');
+                thumbnail.className = 'private-document-thumbnail';
+                thumbnail.setAttribute('aria-hidden', 'true');
+                const thumbnailLabel = document.createElement('span');
+                thumbnailLabel.textContent = documentItem.label || 'Clinic Document';
+                thumbnail.append(thumbnailLabel);
 
                 if (documentItem.missing || !documentItem.url) {
                     const missingBadge = document.createElement('span');
@@ -15332,30 +15306,19 @@
                     actions.append(missingBadge);
                     card.classList.add('is-missing');
                 } else {
-                    const previewButton = document.createElement('button');
-                    previewButton.type = 'button';
-                    previewButton.className = 'applicant-document-view';
-                    previewButton.textContent = 'Preview';
-                    previewButton.addEventListener('click', function () {
-                        previewDocument(documentItem, card);
-                    });
-
                     const openLink = document.createElement('a');
                     openLink.className = 'applicant-document-view';
                     openLink.href = documentItem.url || '#';
                     openLink.target = '_blank';
                     openLink.rel = 'noopener noreferrer';
-                    openLink.textContent = 'Open in New Tab';
+                    openLink.textContent = 'Open';
 
-                    actions.append(previewButton, openLink);
+                    actions.append(openLink);
                 }
-                card.append(icon, copy, actions);
+                card.append(icon, copy, thumbnail, actions);
                 documentsGrid.appendChild(card);
             });
 
-            const firstPreviewableIndex = currentDocuments.findIndex((documentItem) => documentItem.url && !documentItem.missing);
-            const firstCard = documentsGrid.querySelectorAll('.applicant-document-card')[firstPreviewableIndex];
-            if (firstCard && currentDocuments[firstPreviewableIndex]) previewDocument(currentDocuments[firstPreviewableIndex], firstCard);
         }
 
         function setEntryMode(isActive) {

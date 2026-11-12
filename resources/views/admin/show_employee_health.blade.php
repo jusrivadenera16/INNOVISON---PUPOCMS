@@ -2597,7 +2597,7 @@
                             $versionNumber = (int) ($version['version'] ?? 1);
                             $versionSubmission = $version['submission'] ?? null;
                             $versionIsActive = $versionNumber === $employeeCurrentVersionNumber;
-                            $versionDocuments = collect($version['documents'] ?? []);
+                            $versionDocuments = collect($version['documents'] ?? [])->filter(fn ($document) => ($document['uploaded'] ?? false) && filled($document['view_url'] ?? null));
                             $versionIssuedClearances = ($issuedMedicalClearancesBySubmission ?? collect())->get($versionSubmission?->id, collect());
                         @endphp
                         <section
@@ -2622,7 +2622,8 @@
                                             <h4>{{ $document['type'] }}</h4>
                                             @if(($document['uploaded'] ?? false) && filled($document['view_url']))
                                                 <p>{{ $document['name'] }} - Uploaded {{ $document['uploaded_at'] }}</p>
-                                                <div class="doc-actions"><a class="doc-link" href="{{ $document['view_url'] }}" target="_blank" rel="noopener"><x-outline-icon name="eye" />View</a></div>
+                                                <div class="doc-actions"><a class="doc-link" href="{{ $document['view_url'] }}" target="_blank" rel="noopener"><x-outline-icon name="document-text" />Open</a></div>
+                                                @include('admin.partials.private-document-thumbnail', ['documentLabel' => $document['type']])
                                             @else
                                                 <p>Missing</p>
                                                 <div class="doc-missing">No file uploaded for this document.</div>
