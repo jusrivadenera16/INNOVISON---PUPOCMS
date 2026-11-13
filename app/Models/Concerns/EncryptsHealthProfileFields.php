@@ -10,13 +10,21 @@ use Illuminate\Support\Facades\Schema;
 trait EncryptsHealthProfileFields
 {
     private ?array $healthEncryptionColumnListing = null;
+    private ?array $healthRecordCastCache = null;
+    private array $healthRecordReadCache = [];
 
     public function getCasts()
     {
         $casts = parent::getCasts();
         $columns = $this->healthEncryptionColumnListing();
+        $fieldMap = $this->encryptedHealthFieldMap();
+        $cacheKey = [$casts, $fieldMap, config('health_data_encryption.enabled', false), app()->bound('request') ? app('request')->attributes->get(\App\Services\HealthRecordSchemaCache::REQUEST_ATTRIBUTE) : null];
+        $cacheReads = $this->usesHealthRecordReadCache();
+        if ($cacheReads && ($this->healthRecordCastCache['key'] ?? null) === $cacheKey) {
+            return $this->healthRecordCastCache['casts'];
+        }
 
-        foreach ($this->encryptedHealthFieldMap() as $sourceColumn => $encryptedColumn) {
+        foreach ($fieldMap as $sourceColumn => $encryptedColumn) {
             if (!in_array($sourceColumn, $columns, true)) {
                 continue;
             }
@@ -41,6 +49,7 @@ trait EncryptsHealthProfileFields
             }
         }
 
+        if ($cacheReads) $this->healthRecordCastCache = ['key' => $cacheKey, 'casts' => $casts];
         return $casts;
     }
 
@@ -59,6 +68,14 @@ trait EncryptsHealthProfileFields
             return parent::getAttribute($key);
         }
 
+        // Private, model-local read cache only during Health Records requests. Comparing
+        // raw values also invalidates it after forceFill, refresh, or setRawAttributes.
+        $raw = [$this->attributes[$encryptedColumn] ?? null, $this->attributes[$key] ?? null, parent::getCasts()[$key] ?? null,
+            app()->bound('request') ? app('request')->attributes->get(\App\Services\HealthRecordSchemaCache::REQUEST_ATTRIBUTE) : null];
+        $cacheReads = $this->usesHealthRecordReadCache();
+        if ($cacheReads && ($this->healthRecordReadCache[$key]['raw'] ?? null) === $raw) {
+            return $this->healthRecordReadCache[$key]['value'];
+        }
         $encryptedValue = parent::getAttribute($encryptedColumn);
         if ($encryptedValue === null) {
             return parent::getAttribute($key);
@@ -67,10 +84,13 @@ trait EncryptsHealthProfileFields
         $sourceCast = strtolower((string) (parent::getCasts()[$key] ?? ''));
         if (in_array($sourceCast, ['array', 'json', 'object', 'collection'], true)
             && !is_string($encryptedValue)) {
+            if ($cacheReads && !is_object($encryptedValue)) $this->healthRecordReadCache[$key] = ['raw' => $raw, 'value' => $encryptedValue];
             return $encryptedValue;
         }
 
-        return $sourceCast !== '' ? $this->castAttribute($key, $encryptedValue) : $encryptedValue;
+        $value = $sourceCast !== '' ? $this->castAttribute($key, $encryptedValue) : $encryptedValue;
+        if ($cacheReads && !is_object($value)) $this->healthRecordReadCache[$key] = ['raw' => $raw, 'value' => $value];
+        return $value;
     }
 
     public function attributesToArray()
@@ -129,6 +149,12 @@ trait EncryptsHealthProfileFields
     protected function encryptedHealthFieldMap(): array
     {
         return (array) config('health_data_encryption.fields.' . $this->getTable(), []);
+    }
+
+    private function usesHealthRecordReadCache(): bool
+    {
+        return app()->bound('request') && app('request')->attributes->get(\App\Services\HealthRecordSchemaCache::REQUEST_ATTRIBUTE)
+            instanceof \App\Services\HealthRecordSchemaCache;
     }
 
     private function healthEncryptionColumnListing(): array

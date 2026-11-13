@@ -82,7 +82,9 @@ test('clinic Continue stays in clinic review and the applicants total is applica
         setApplicantWorkflow(){throw new Error('Must not switch clinic record into applicant review');},
         doLookup:payload=>continued.push(payload),
     });
-    vm.runInContext(blade.slice(start,end),context);click();
+    const helperStart = blade.indexOf('        function enterClinicFinalReview()');
+    const helperEnd = blade.indexOf('        referenceVerificationCancel?', helperStart);
+    vm.runInContext(blade.slice(helperStart,helperEnd) + blade.slice(start,end),context);click();
     assert.equal(continued[0],data);
     assert.equal(context.lookupModalTitle.textContent,'Final Review');
     assert.deepEqual(classes,['is-clinic-final-review']);
@@ -196,20 +198,22 @@ test('clinic ID lookup with an approved form stops at preview instead of opening
 });
 
 test('explicit clinic review links continue automatically only for a reviewable submission', async () => {
+    const gateStart = blade.indexOf('                    // Resume and explicit review links');
+    const gateEnd = blade.indexOf("                    if (currentApplicantWorkflow === 'reference_lookup')", gateStart);
     for (const reviewable of [true, false]) {
         const response = {status:'preview', record_type:'student', has_completed_health_form:true, has_reviewable_health_form:reviewable};
-        const {context,calls} = harness(response);
         let continued = 0;
-        Object.assign(context, {
+        let previewed = 0;
+        const context = vm.createContext({
+            data:response, cachedLookupData:null, openSubmittedReview:true, hasCompletedHealthForm:true, isAlreadyApproved:false,
             isClinicLookupMode:()=>true, currentApplicantWorkflow:'review',
-            referenceVerificationContinue:{click:()=>continued++},
-            showApplicantReferenceVerification:()=>{ context.pendingReferenceLookup={hasCompletedHealthForm:reviewable}; },
+            ref:'STUDENT-1', applicantName:'Student', setReviewDraftButtonVisible(){},
+            enterClinicFinalReview:()=>continued++,
+            showApplicantReferenceVerification:()=>previewed++,
         });
-        context.doLookup(null,true);
-        await settle();
+        vm.runInContext(`(function () { ${blade.slice(gateStart,gateEnd)} })()`,context);
         assert.equal(continued,reviewable?1:0);
-        assert.equal(calls.requests.length,1);
-        assert.equal(calls.errors.length,0);
+        assert.equal(previewed,reviewable?0:1);
     }
     assert.match(blade,/setEntryMode\(true\);\s*doLookup\(null, true\);/);
 });

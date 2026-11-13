@@ -10,11 +10,13 @@ class HealthRecordCategoryFilter
     public function isRegularStudentReview(HealthProfile $profile): bool
     {
         if ($profile->user?->clinicAccountTypeKey() !== 'student'
-            || strtolower(trim((string) $profile->user?->student_type)) !== 'regular') {
+            || !in_array(strtolower(trim((string) $profile->user?->student_type)), ['regular', 'shiftee', 'returnee'], true)) {
             return false;
         }
 
-        // A new submitted OJT form must not inherit the account's regular-student shortcut.
+        // Regular, Shiftee and Returnee forms use direct approval, except when
+        // their active submission is OJT. Keep the existing method/payload names
+        // so UI routing and server-side approval use the same decision.
         $category = $profile->getAttribute('review_category_preloaded')
             ? $profile->getAttribute('review_category_value')
             : HealthFormSubmission::query()->where('health_profile_id', $profile->id)

@@ -3521,6 +3521,8 @@ class AdminController extends Controller
     public function viewHealth(Request $request)
     {
         $request->attributes->set(\App\Services\HealthRecordSchemaCache::REQUEST_ATTRIBUTE, new \App\Services\HealthRecordSchemaCache());
+        $statsCache = app(\App\Services\HealthRecordStatsCache::class);
+        $statsCacheKey = $statsCache->key($request);
         $formCategoryFilter = trim((string) $request->query('form_category', ''));
         $categoryFilterService = app(\App\Services\HealthRecordCategoryFilter::class);
         $formCategoryOptions = $categoryFilterService->options();
@@ -3545,10 +3547,10 @@ class AdminController extends Controller
         $query = HealthProfile::with([
             'user.adminHubProfile',
             'user.adminProfile',
-            'user.employeeHealthProfile',
+            'user.employeeHealthProfile:id,user_id,employee_number',
             'user.dependentProfile',
             'user.healthProfile:id,user_id,student_number',
-            'latestApprovedHealthFormSubmission',
+            'latestApprovedHealthFormSubmission' => fn ($query) => $query->select('health_form_submissions.id', 'health_form_submissions.health_profile_id', 'health_form_submissions.approved_at'),
         ])->notPulledOut();
 
         if ($search !== '') {
@@ -3631,7 +3633,7 @@ class AdminController extends Controller
         $employeeQuery = EmployeeHealthProfile::with([
             'user.adminHubProfile',
             'user.adminProfile',
-            'user.employeeHealthProfile',
+            'user.employeeHealthProfile:id,user_id,employee_number',
             'user.dependentProfile',
             'user.healthProfile:id,user_id,student_number',
         ]);
@@ -3727,9 +3729,9 @@ class AdminController extends Controller
             ->orderByDesc('id');
 
         // Hydrate each filtered record graph once; independent copies keep history and queues isolated.
-        $healthRecordRows = (clone $query)->get()->keyBy('id');
-        $employeeRecordRows = (clone $employeeQuery)->get()->keyBy('id');
-        app(EmployeeHealthFormHistoryService::class)->preloadLatestApproved($employeeRecordRows);
+        $healthRecordRows = $this->healthRecordListingRows($query, true);
+        $employeeRecordRows = $this->healthRecordListingRows($employeeQuery, true);
+        $this->preloadHistoricalHealthRecordSnapshots($healthRecordRows, $employeeRecordRows);
         $issuedRecords = $issuedQuery->whereIn('id', $healthRecordRows->keys())->withoutEagerLoads()->pluck('id')
             ->map(fn ($id) => $this->copyHealthRecordForListing($healthRecordRows->get($id)))
             ->map(function ($record) use ($decorateHealthRecord) {
@@ -3768,7 +3770,7 @@ class AdminController extends Controller
                 ->orderBy('id');
 
             $this->applyStaffHealthProfileUserTypeFilter($bulkEmployeeQuery, $userTypeFilter);
-            $bulkHealthFormRequestRecords = $bulkEmployeeQuery->get();
+            $bulkHealthFormRequestRecords = $this->healthRecordBulkIdentityRows($bulkEmployeeQuery);
             $bulkHealthFormRequestCategories = HealthFormCategory::query()
                 ->where('is_active', true)
                 ->availableFor($userTypeFilter)
@@ -3787,7 +3789,7 @@ class AdminController extends Controller
                     $userQuery->whereRaw('LOWER(student_type) = ?', [$studentTypeFilter]);
                 });
             }
-            $bulkHealthFormRequestRecords = $this->issuedHealthProfilesQuery($bulkStudentQuery)->get();
+            $bulkHealthFormRequestRecords = $this->healthRecordBulkIdentityRows($this->issuedHealthProfilesQuery($bulkStudentQuery));
             $bulkHealthFormRequestCategories = HealthFormCategory::query()
                 ->where('is_active', true)
                 ->availableFor('student')
@@ -3865,6 +3867,22 @@ class AdminController extends Controller
                 'query' => $request->query(),
             ]
         );
+        $pageRecords = $healthProfileSummaryRecords->getCollection();
+        $pageHealthRows = (clone $query)->whereIn('id', $pageRecords->where('record_source', 'health')->pluck('id'))->get()->keyBy('id');
+        $pageEmployeeRows = (clone $employeeQuery)->whereIn('id', $pageRecords->where('record_source', 'employee')->pluck('id'))->get()->keyBy('id');
+        $this->preloadHistoricalHealthRecordSnapshots($pageHealthRows, $pageEmployeeRows);
+        $healthProfileSummaryRecords->setCollection($pageRecords->map(function ($record) use ($pageHealthRows, $pageEmployeeRows, $decorateHealthRecord) {
+            if ($record->record_source === 'health') {
+                return $decorateHealthRecord($this->applyHistoricalApprovedHealthFormSnapshot($pageHealthRows->get($record->id)), 'health');
+            }
+            $full = $pageEmployeeRows->get($record->id);
+            if (!in_array($full->clearance_status, ['Issued', 'Fully Cleared'], true)) {
+                $submission = app(EmployeeHealthFormHistoryService::class)->latestApproved($full);
+                if ($submission && $submission->snapshotProfile() !== []) $full = $this->employeeProfileFromSubmission($full, $submission);
+            }
+            return $decorateHealthRecord($full, 'employee');
+        }));
+        $this->attachAdminHubProfilesByEmail($healthProfileSummaryRecords->getCollection());
 
         $records = $healthRecordRows->toBase()->map(fn ($record) => $this->copyHealthRecordForListing($record))
             ->map(fn ($record) => $decorateHealthRecord($record, 'health'))
@@ -3876,6 +3894,8 @@ class AdminController extends Controller
         $this->attachAdminHubProfilesByEmail($records);
 
         $this->applySubmittedRenewalQueueState($records);
+
+        app(\App\Services\HealthRecordApprovalQueue::class)->markEligibility($records);
 
         $records = $categoryFilterService->filter($records, $formCategoryFilter);
 
@@ -3916,6 +3936,10 @@ class AdminController extends Controller
             'dependent' => 'Dependents',
         ]);
 
+        $statsCache->put($statsCacheKey, $this->healthRecordSummaryStats(
+            $records, $healthProfileSummaryRecords->total(), $issuedWithConditions
+        ));
+
         return view('admin.health_records', compact(
             'formCategoryFilter',
             'formCategoryOptions',
@@ -3950,6 +3974,71 @@ class AdminController extends Controller
         return $copy;
     }
 
+    private function preloadHistoricalHealthRecordSnapshots($healthRecords, $employeeRecords): void
+    {
+        // Already-issued rows display current data. Only previous-cycle rows need
+        // full encrypted snapshots; queues need only the approval metadata.
+        $historical = $healthRecords->reject(fn ($record) => in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true));
+        $ids = $historical->map(fn ($record) => $record->latestApprovedHealthFormSubmission?->id)->filter();
+        $submissions = $ids->isEmpty() ? collect() : HealthFormSubmission::whereIn('id', $ids)->get()->keyBy('id');
+        foreach ($historical as $record) {
+            $id = $record->latestApprovedHealthFormSubmission?->id;
+            $record->setRelation('latestApprovedHealthFormSubmission', $submissions->get($id));
+        }
+        app(EmployeeHealthFormHistoryService::class)->preloadLatestApproved(
+            $employeeRecords->reject(fn ($record) => in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true))
+        );
+    }
+
+    private function healthRecordBulkIdentityRows($query)
+    {
+        $model = $query->getModel();
+        $columns = app('request')->attributes->get(\App\Services\HealthRecordSchemaCache::REQUEST_ATTRIBUTE)
+            ->columns($model->getConnectionName(), $model->getTable());
+        return $query->get(array_values(array_intersect([
+            'id', 'user_id', 'name', 'first_name', 'middle_name', 'last_name', 'employee_number', 'student_number',
+        ], $columns)));
+    }
+
+    private function healthRecordListingRows($query, bool $hydratePending = false)
+    {
+        $model = $query->getModel();
+        $columns = app('request')->attributes->get(\App\Services\HealthRecordSchemaCache::REQUEST_ATTRIBUTE)
+            ->columns($model->getConnectionName(), $model->getTable());
+        // Keep identity, filtering, historical ordering and condition-count semantics.
+        // Assessment fields, draft JSON and document metadata are not needed for every
+        // approved row. Full detail is hydrated only for the displayed page/queues.
+        $fields = [
+            'id', 'user_id', 'name', 'reference_number', 'student_number', 'student_id', 'employee_number',
+            'health_form_category', 'course_college', 'course_code', 'office', 'school_year',
+            'clearance_status', 'pullout_status', 'clearance_revoked_at', 'verified_at', 'updated_at',
+            'pending_reason', 'medical_condition_remarks', 'has_disability', 'has_illness', 'medical_history',
+            'other_illness', 'food_allergies', 'medicine_allergies', 'other_med_allergies',
+            'past_medical_history', 'family_history', 'previous_hospitalization', 'operation_surgery',
+            'cigarette_smoking', 'alcohol_drinking', 'traveled_abroad', 'past_medical_history_others',
+            'family_history_others', 'current_medications', 'allergies', 'disability_type',
+            'student_photo', 'employee_photo', 'health_declaration', 'medical_certificate', 'chest_xray_result',
+            'chest_xray_document', 'medical_assessment_upload', 'pwd_id_proof', 'staff_health_form_pdf_path',
+        ];
+        $mirrors = (array) config('health_data_encryption.fields.' . $model->getTable(), []);
+        $fields = array_merge($fields, array_values(array_intersect_key($mirrors, array_flip($fields))));
+        $rows = (clone $query)->get(array_values(array_intersect($fields, $columns)))->keyBy('id');
+        if (!$hydratePending) return $rows;
+        $detailIds = $rows->reject(fn ($record) => in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true))->pluck('id');
+        if ($model instanceof HealthProfile) {
+            $renewalIds = HealthProfileCorrectionRequest::query()->whereIn('health_profile_id', $rows->keys())
+                ->where('type', HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM)
+                ->whereIn('status', [HealthProfileCorrectionRequest::STATUS_SUBMITTED, HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW])
+                ->whereHas('healthFormSubmission', fn ($query) => $query->where('status', HealthFormSubmission::STATUS_SUBMITTED))
+                ->pluck('health_profile_id');
+            $detailIds = $detailIds->merge($renewalIds)->unique();
+        }
+        if ($detailIds->isNotEmpty()) {
+            foreach ((clone $query)->whereIn('id', $detailIds)->get() as $record) $rows->put($record->id, $record);
+        }
+        return $rows;
+    }
+
     private function applySubmittedRenewalQueueState($records): void
     {
         $profileIds = $records->filter(fn ($record) => ($record->record_source ?? 'health') === 'health')->pluck('id');
@@ -3980,6 +4069,11 @@ class AdminController extends Controller
     public function healthRecordStats(Request $request)
     {
         $request->attributes->set(\App\Services\HealthRecordSchemaCache::REQUEST_ATTRIBUTE, new \App\Services\HealthRecordSchemaCache());
+        $statsCache = app(\App\Services\HealthRecordStatsCache::class);
+        $statsCacheKey = $statsCache->key($request);
+        if (($cachedStats = $statsCache->get($statsCacheKey)) !== null) {
+            return response()->json(['stats' => $cachedStats])->header('Cache-Control', 'private, no-store');
+        }
         $formCategoryFilter = trim((string) $request->query('form_category', ''));
         $categoryFilterService = app(\App\Services\HealthRecordCategoryFilter::class);
         $search = trim((string) $request->query('q', ''));
@@ -3996,7 +4090,7 @@ class AdminController extends Controller
         $query = HealthProfile::with([
             'user.dependentProfile',
             'user.healthProfile:id,user_id,student_number',
-            'latestApprovedHealthFormSubmission',
+            'latestApprovedHealthFormSubmission' => fn ($query) => $query->select('health_form_submissions.id', 'health_form_submissions.health_profile_id', 'health_form_submissions.approved_at'),
         ])->notPulledOut();
 
         if ($search !== '') {
@@ -4140,9 +4234,9 @@ class AdminController extends Controller
         $issuedEmployeeQuery = (clone $employeeQuery)
             ->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
 
-        $healthRecordRows = (clone $query)->get()->keyBy('id');
-        $employeeRecordRows = (clone $employeeQuery)->get()->keyBy('id');
-        app(EmployeeHealthFormHistoryService::class)->preloadLatestApproved($employeeRecordRows);
+        $healthRecordRows = $this->healthRecordListingRows($query);
+        $employeeRecordRows = $this->healthRecordListingRows($employeeQuery);
+        $this->preloadHistoricalHealthRecordSnapshots($healthRecordRows, $employeeRecordRows);
         $issuedHealthRecords = $issuedQuery->whereIn('id', $healthRecordRows->keys())->withoutEagerLoads()->pluck('id')
             ->map(fn ($id) => $this->copyHealthRecordForListing($healthRecordRows->get($id)))
             ->map(fn ($record) => $this->applyHistoricalApprovedHealthFormSnapshot($record));
@@ -4176,13 +4270,24 @@ class AdminController extends Controller
                 return $record;
             }));
         $this->applySubmittedRenewalQueueState($records);
+        app(\App\Services\HealthRecordApprovalQueue::class)->markEligibility($records);
         $records = $categoryFilterService->filter($records, $formCategoryFilter);
         $issuedHealthRecords = $categoryFilterService->filter($issuedHealthRecords, $formCategoryFilter, true);
         $issuedEmployeeRecords = $categoryFilterService->filter($issuedEmployeeRecords, $formCategoryFilter, true);
+        $stats = $this->healthRecordSummaryStats(
+            $records, $issuedHealthRecords->count() + $issuedEmployeeRecords->count(),
+            $issuedHealthRecords->filter(fn ($record) => $record->hasMedicalCondition())->count()
+                + $issuedEmployeeRecords->filter(fn ($record) => $record->hasMedicalCondition())->count()
+        );
+        $statsCache->put($statsCacheKey, $stats);
+        return response()->json(['stats' => $stats])->header('Cache-Control', 'private, no-store');
+    }
+
+    private function healthRecordSummaryStats($records, int $approvedCount, int $conditionCount): array
+    {
         $stats = [
-            'total_approved' => $issuedHealthRecords->count() + $issuedEmployeeRecords->count(),
-            'with_conditions' => $issuedHealthRecords->filter(fn ($record) => $record->hasMedicalCondition())->count()
-                + $issuedEmployeeRecords->filter(fn ($record) => $record->hasMedicalCondition())->count(),
+            'total_approved' => $approvedCount,
+            'with_conditions' => $conditionCount,
             'pending_approval' => 0,
             'pending_conditional' => 0,
         ];
@@ -4207,7 +4312,8 @@ class AdminController extends Controller
                 || trim((string) ($summaryRecord->medical_condition_remarks ?? '')) !== ''
             );
 
-            if (!$summaryIsApproved && !$summaryIsConditional && in_array($summaryStatus, ['Pending', 'For Verification', ''], true)) {
+            if (!$summaryIsApproved && !$summaryIsConditional && in_array($summaryStatus, ['Pending', 'For Verification', ''], true)
+                && $summaryRecord->pending_approval_eligible === true) {
                 $stats['pending_approval']++;
             }
 
@@ -4216,7 +4322,7 @@ class AdminController extends Controller
             }
         }
 
-        return response()->json(['stats' => $stats]);
+        return $stats;
     }
 
     public function showHealth($id)
@@ -7033,7 +7139,7 @@ public function updateClearance(Request $request, $id)
         && $request->input('physical_assessment_status') !== 'Completed / Passed';
     if ($isApproval && (!$documentsValid || $assessmentIncomplete)) {
         $approvalError = $recordIsRegularStudent
-            ? 'A regular student health record can only be approved after documents are marked valid.'
+            ? 'This student health record can only be approved after documents are marked valid.'
             : 'Medical clearance can only be issued after documents are marked valid and physical assessment is Completed / Passed.';
 
         return back()->withInput()->with('error', $approvalError);
@@ -7756,7 +7862,7 @@ public function updateClearance(Request $request, $id)
         if (app(\App\Services\HealthRecordCategoryFilter::class)->isRegularStudentReview($record)) {
             return redirect()
                 ->route('admin.health_records', ['tab' => 'pending_compliance'])
-                ->with('error', 'Regular students cannot be moved to Applicants Final Review.');
+                ->with('error', 'Regular, Shiftee and Returnee student forms use direct approval, not Applicants Final Review.');
         }
 
         $record->clearance_status = 'For Final Review';

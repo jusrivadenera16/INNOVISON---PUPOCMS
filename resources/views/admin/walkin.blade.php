@@ -17798,15 +17798,18 @@
                         || data.has_completed_health_form === 1
                         || data.has_completed_health_form === '1';
 
+                    // Resume and explicit review links already identify a submitted record.
+                    // Reuse the normal Final Review, but do not stop at the ID Lookup preview.
+                    if (isClinicLookupMode() && openSubmittedReview === true && hasCompletedHealthForm
+                        && [true, 1, '1'].includes(data.has_reviewable_health_form) && !isAlreadyApproved) {
+                        cachedLookupData = data;
+                        enterClinicFinalReview();
+                    }
+
                     if (isClinicLookupMode() && (!cachedLookupData || !hasCompletedHealthForm)) {
                         isApprovalMode = false;
                         setReviewDraftButtonVisible(false);
                         showApplicantReferenceVerification(data, ref, applicantName, hasCompletedHealthForm);
-                        // Explicit review links reuse Continue only for a real pending submission.
-                        // Ordinary ID searches still stop at the record preview.
-                        if (openSubmittedReview === true && pendingReferenceLookup?.hasCompletedHealthForm === true) {
-                            referenceVerificationContinue?.click();
-                        }
                         return;
                     }
 
@@ -17936,6 +17939,17 @@
             .catch(() => setReferenceLookupMessage('error', 'Unable to look up right now. Please try again.'));
         }
 
+        function enterClinicFinalReview() {
+            pendingReferenceLookup = null;
+            if (referenceVerification) referenceVerification.hidden = true;
+            entryPane?.classList.remove('is-reference-verification', 'is-reference-lookup');
+            hideAlreadyApprovedResult();
+            if (lookupModalTitle) lookupModalTitle.textContent = 'Final Review';
+            if (lookupModalSubtitle) lookupModalSubtitle.textContent = 'Review the assessment and approve or save a draft.';
+            modalShell?.classList.remove('is-final-review-workflow', 'is-final-review-toolbar-stuck');
+            modalShell?.classList.add('is-clinic-final-review');
+        }
+
         referenceVerificationCancel?.addEventListener('click', returnToApplicantReferenceSearch);
         referenceVerificationContinue?.addEventListener('click', () => {
             const pendingLookup = pendingReferenceLookup;
@@ -17948,11 +17962,7 @@
             if (referenceVerification) referenceVerification.hidden = true;
             entryPane?.classList.remove('is-reference-verification', 'is-reference-lookup');
             if (isClinicLookupMode()) {
-                hideAlreadyApprovedResult();
-                if (lookupModalTitle) lookupModalTitle.textContent = 'Final Review';
-                if (lookupModalSubtitle) lookupModalSubtitle.textContent = 'Review the assessment and approve or save a draft.';
-                modalShell?.classList.remove('is-final-review-workflow', 'is-final-review-toolbar-stuck');
-                modalShell?.classList.add('is-clinic-final-review');
+                enterClinicFinalReview();
             } else {
                 setApplicantWorkflow('final_review');
                 backToFinalReviewList?.classList.add('is-visible');
@@ -19324,7 +19334,7 @@
             applyLookupMode('clinic');
             if (refInput) refInput.value = reference;
             setEntryMode(true);
-            doLookup();
+            doLookup(null, true);
         }
 
         function showFinalReviewList() {

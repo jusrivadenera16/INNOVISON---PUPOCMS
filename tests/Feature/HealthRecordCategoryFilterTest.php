@@ -93,4 +93,39 @@ class HealthRecordCategoryFilterTest extends TestCase
         $this->assertStringNotContainsString("@include('admin.partials.temporary-student-category-menu')", $source);
         $this->assertSame(3, substr_count($source, '->isRegularStudentReview('));
     }
+
+    public function test_regular_shiftee_and_returnee_use_direct_approval_but_active_ojt_always_uses_review(): void
+    {
+        $filter = app(HealthRecordCategoryFilter::class);
+        foreach (['regular', 'shiftee', 'returnee'] as $index => $studentType) {
+            $user = new \App\Models\User(['user_type' => 'student', 'student_type' => $studentType]);
+            $user->setRelation('healthProfile', null);
+            $profile = (new HealthProfile)->forceFill(['id' => 100 + $index, 'health_form_category' => ucfirst($studentType)]);
+            $profile->setRelation('user', $user);
+            $this->assertTrue($filter->isRegularStudentReview($profile));
+            $filter->preloadReviewCategories(collect([$profile]));
+            $this->assertTrue($filter->isRegularStudentReview($profile));
+            foreach (['OJT', 'On the Job Training', 'On-the-job Training'] as $category) {
+                $submission = HealthFormSubmission::create(['health_profile_id' => $profile->id, 'category' => $category, 'status' => 'submitted']);
+                $profile->setAttribute('review_category_preloaded', false);
+                $this->assertFalse($filter->isRegularStudentReview($profile));
+                $filter->preloadReviewCategories(collect([$profile]));
+                $this->assertFalse($filter->isRegularStudentReview($profile));
+                $submission->update(['status' => 'cancelled']);
+            }
+            $filter->preloadReviewCategories(collect([$profile]));
+            $this->assertTrue($filter->isRegularStudentReview($profile));
+        }
+    }
+
+    public function test_applicants_and_employees_do_not_gain_direct_student_approval(): void
+    {
+        foreach ([['applicant', 'new'], ['applicant', 'transferee'], ['faculty', null], ['employee', null], ['student', 'ojt'], ['student', 'ladderized']] as [$type, $studentType]) {
+            $user = new \App\Models\User(['user_type' => $type, 'student_type' => $studentType]);
+            $user->setRelation('healthProfile', null);
+            $profile = (new HealthProfile)->forceFill(['id' => 999, 'health_form_category' => 'Student']);
+            $profile->setRelation('user', $user);
+            $this->assertFalse(app(HealthRecordCategoryFilter::class)->isRegularStudentReview($profile));
+        }
+    }
 }

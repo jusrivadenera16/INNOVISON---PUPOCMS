@@ -1,0 +1,21 @@
+const {test} = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const path = require('node:path');
+const source = fs.readFileSync(path.join(__dirname, '../../resources/views/admin/health_records.blade.php'), 'utf8');
+test('condition details are built on open without losing or interpreting medical text', () => {
+    const start = source.indexOf('    window.healthRecordConditionMarkup =');
+    const end = source.indexOf('    (function () {', start);
+    const context = vm.createContext({window: {}});
+    vm.runInContext(source.slice(start, end), context);
+    const markup = context.window.healthRecordConditionMarkup({has_medical_condition: true, condition_items: {'Medical History': 'Asthma', 'Remarks': '<img src=x onerror=alert(1)>'}});
+    assert.match(markup, /is-with-condition/);
+    assert.match(markup, /Asthma/);
+    assert.ok(!markup.includes('<img'));
+    assert.match(markup, /&lt;img/);
+    assert.match(context.window.healthRecordConditionMarkup({}), /No Medical Condition/);
+    assert.ok(!source.includes('<template data-review-documents-template>'));
+    assert.ok(!source.includes('<template data-review-condition-template>'));
+    assert.ok(source.includes("collect($readonlyUploadDocs)->map"));
+});

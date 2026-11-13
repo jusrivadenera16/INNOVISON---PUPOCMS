@@ -8584,7 +8584,8 @@
                 || trim((string) ($summaryRecord->medical_condition_remarks ?? '')) !== ''
             );
 
-            if (!$summaryIsApproved && !$summaryIsConditional && in_array($summaryStatus, ['Pending', 'For Verification', ''], true)) {
+            if (!$summaryIsApproved && !$summaryIsConditional && in_array($summaryStatus, ['Pending', 'For Verification', ''], true)
+                && $summaryRecord->pending_approval_eligible === true) {
                 $healthSummaryStats['pending_approval']++;
                 $pendingApprovalRecordIds[] = $summaryRecordKey;
             }
@@ -9315,6 +9316,8 @@
                             'record_type' => $readonlyIsEmployee ? 'employee' : strtolower((string) $readonlyUserType),
                             'applicant_review_workflow' => $readonlyUsesApplicantReviewWorkflow,
                             'is_regular_student' => $readonlyIsRegularStudent,
+                            'condition_items' => $readonlyConditionItems,
+                            'has_medical_condition' => $readonlyHasCondition,
                             'name' => optional($readonlyRecord->user)->name ?: '-',
                             'email' => optional($readonlyRecord->user)->email ?: '-',
                             'reference_number' => $readonlyReference,
@@ -9345,46 +9348,12 @@
                             'walkin_encode_url' => $readonlyUsesApplicantReviewWorkflow
                                 ? $walkinReviewUrlFor($readonlyIdentifier['value'] ?? '', false, 'encode')
                                 : '',
-                            'documents' => [
-                            [
-                                'title' => '2x2 Photo',
-                                'url' => $readonlyRecord->student_photo ? $readonlyDocumentUrl('student_photo') : '',
-                                    'meta' => [
-                                    'Guideline' => 'Formal white-background photo.',
-                                ],
-                            ],
-                            [
-                                'title' => 'Health Information Form',
-                                'url' => $readonlyHealthFormUrl,
-                                'meta' => [
-                                    'Type' => 'Official health form layout',
-                                ],
-                            ],
-                            [
-                                'title' => 'Medical Certificate',
-                                'url' => $readonlyRecord->medical_certificate ? $readonlyDocumentUrl('medical_certificate') : '',
-                                'meta' => [
-                                    'Doctor' => $readonlyRecord->doctor_name ?: '-',
-                                    'Certificate Date' => optional($readonlyRecord->med_cert_date)->format('M d, Y') ?: '-',
-                                    'Findings' => $readonlyRecord->med_cert_findings ?: '-',
-                                ],
-                            ],
-                            [
-                                'title' => 'Chest X-ray Result',
-                                'url' => $readonlyRecord->chest_xray_result ? $readonlyDocumentUrl('chest_xray_result') : '',
-                                'meta' => [
-                                    'Exam Date' => optional($readonlyRecord->xray_date)->format('M d, Y') ?: '-',
-                                    'Findings' => $readonlyRecord->xray_findings ?: '-',
-                                ],
-                            ],
-                            [
-                                'title' => 'Health Declaration',
-                                'url' => $readonlyRecord->health_declaration ? $readonlyDocumentUrl('health_declaration') : '',
-                                    'meta' => [
-                                        'Status' => $readonlyRecord->health_declaration ? 'Uploaded' : 'Missing / Not yet uploaded',
-                                    ],
-                                ],
-                            ],
+                            'documents' => collect($readonlyUploadDocs)->map(fn ($document, $title) => [
+                                'title' => $title,
+                                'url' => $document['path'] ? $document['url'] : '',
+                                'format' => ($document['key'] ?? '') === 'health_form' ? 'PDF document'
+                                    : (in_array(strtolower(pathinfo((string) $document['path'], PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp'], true) ? 'Image file' : 'PDF document'),
+                            ])->values()->all(),
                         ];
                     @endphp
                     <article
@@ -9440,77 +9409,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="readonly-record-details">
-                            <h5 class="readonly-docs-title">Uploaded Files Checklist</h5>
-                            <ul class="readonly-doc-list">
-                                @foreach($readonlyDocs as $docLabel => $document)
-                                    <li>
-                                        @if($document['path'])
-                                            <a
-                                                class="readonly-doc-link"
-                                                href="{{ $document['url'] }}"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                <span>{{ $docLabel }}</span>
-                                                <span>Open</span>
-                                            </a>
-                                        @else
-                                            <span class="readonly-doc-missing">
-                                                <span>{{ $docLabel }}</span>
-                                                <span>No document uploaded</span>
-                                            </span>
-                                        @endif
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                        <template data-review-documents-template>
-                            @foreach($readonlyUploadDocs as $docLabel => $document)
-                                @if($document['path'])
-                                    @php
-                                        $documentUrl = $document['url'];
-                                        $documentExtension = ($document['key'] ?? '') === 'health_form'
-                                            ? 'pdf'
-                                            : strtolower(pathinfo((string) $document['path'], PATHINFO_EXTENSION));
-                                        $isHealthForm = ($document['key'] ?? '') === 'health_form';
-                                        $isPreviewImage = in_array($documentExtension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true);
-                                        $documentFormat = $isPreviewImage
-                                            ? strtoupper($documentExtension) . ' image'
-                                            : ($documentExtension === 'pdf' ? 'PDF document' : strtoupper($documentExtension) . ' file');
-                                    @endphp
-                                    <a
-                                        class="verification-doc-card"
-                                        href="{{ $documentUrl }}"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        <strong>{{ $docLabel }}</strong>
-                                        <span class="verification-doc-status verification-doc-status-spacer" aria-hidden="true"></span>
-                                        <span class="verification-doc-preview health-form-doc-preview" aria-hidden="true"><span class="health-form-doc-title">{{ $docLabel }}</span></span>
-                                        <span class="verification-doc-meta">{{ $documentFormat }}</span>
-                                        <span class="verification-doc-open"><x-outline-icon name="eye" /><span>Open</span></span>
-                                    </a>
-                                @else
-                                    <div class="verification-doc-card is-missing">
-                                        <x-outline-icon name="x-mark" />
-                                        <strong>{{ $docLabel }}</strong>
-                                        <span class="verification-doc-status">Missing upload</span>
-                                    </div>
-                                @endif
-                            @endforeach
-                        </template>
-                        <template data-review-condition-template>
-                            @foreach($readonlyConditionItems as $conditionLabel => $conditionValue)
-                                <div class="verify-condition-item {{ $readonlyHasCondition ? 'is-with-condition' : 'is-no-condition' }}">
-                                    @if(!$readonlyHasCondition)
-                                        <span class="verify-condition-status-icon" aria-hidden="true"><x-outline-icon name="check" /></span>
-                                    @endif
-                                    <span>{{ $conditionLabel }}</span>
-                                    <strong>{{ $conditionValue }}</strong>
-                                </div>
-                            @endforeach
-                        </template>
                     </article>
                 @empty
                     <div class="pending-approval-empty">No students are currently waiting for approval.</div>
@@ -10190,6 +10088,15 @@
 
 @push('scripts')
 <script>
+    // Build condition detail only when View Info is opened, not once per hidden card.
+    window.healthRecordConditionMarkup = function (payload) {
+        const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;'}[char]));
+        const hasCondition = payload.has_medical_condition === true;
+        const items = payload.condition_items || {'Condition': 'No Medical Condition'};
+        return Object.entries(items).map(([label, value]) =>
+            `<div class="verify-condition-item ${hasCondition ? 'is-with-condition' : 'is-no-condition'}">${hasCondition ? '' : '<span class="verify-condition-status-icon" aria-hidden="true">✓</span>'}<span>${escape(label)}</span><strong>${escape(value)}</strong></div>`
+        ).join('');
+    };
     (function () {
         function closestMatch(element, selector) {
             while (element && element !== document) {
@@ -10481,10 +10388,7 @@
             }
 
             if (conditionGrid) {
-                var conditionTemplate = row.querySelector('[data-review-condition-template]');
-                conditionGrid.innerHTML = conditionTemplate
-                    ? conditionTemplate.innerHTML.trim()
-                    : '<div class="verify-condition-item is-no-condition"><span class="verify-condition-status-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg></span><span>Condition</span><strong>No Medical Condition</strong></div>';
+                conditionGrid.innerHTML = window.healthRecordConditionMarkup(payload);
             }
 
             if (approveBtn && assessmentStatus && docsValid) {
@@ -11781,7 +11685,7 @@
                 const isPhoto = /photo/i.test(docTitle);
                 const isHealthForm = String(docTitle).toLowerCase() === 'health information form';
                 const preview = `<span class="verification-doc-preview health-form-doc-preview" aria-hidden="true"><span class="health-form-doc-title">${escapeHtml(docTitle)}</span></span>`;
-                const format = isPhoto ? 'Image file' : (isHealthForm ? 'PDF document' : 'Uploaded file');
+                const format = doc.format || (isPhoto ? 'Image file' : (isHealthForm ? 'PDF document' : 'Uploaded file'));
                 return `
                     <a class="verification-doc-card" href="${escapeHtml(doc.url)}" target="_blank" rel="noopener noreferrer">
                         <strong>${escapeHtml(docTitle)}</strong>
@@ -11956,10 +11860,7 @@
             }
         }
         if (verificationConditionGrid) {
-            const conditionTemplate = row.querySelector('[data-review-condition-template]');
-            verificationConditionGrid.innerHTML = conditionTemplate
-                ? conditionTemplate.innerHTML.trim()
-                    : '<div class="verify-condition-item is-no-condition"><span class="verify-condition-status-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg></span><span>Condition</span><strong>No Medical Condition</strong></div>';
+            verificationConditionGrid.innerHTML = window.healthRecordConditionMarkup(payload);
         }
         if (!row.querySelector('[data-review-documents-template]')) {
             renderVerificationDocuments(payload.documents || []);

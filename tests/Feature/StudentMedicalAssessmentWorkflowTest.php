@@ -909,9 +909,15 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
         $this->assertCount(1, $history->first()['events']);
     }
 
-    public function test_regular_student_can_be_approved_without_a_physical_assessment(): void
+    public static function directApprovalStudentTypes(): array
     {
-        $student = $this->makeStudent(['student_type' => 'regular']);
+        return [['regular'], ['shiftee'], ['returnee']];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('directApprovalStudentTypes')]
+    public function test_student_form_can_be_approved_without_a_physical_assessment_or_certificate_purpose(string $studentType): void
+    {
+        $student = $this->makeStudent(['student_type' => $studentType]);
         $superadmin = $this->makeStaff();
         $superadmin->user_role = User::ROLE_SUPERADMIN;
         $superadmin->save();
@@ -1075,9 +1081,10 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
         $this->assertNull($profile->fresh()->physical_assessment_status);
     }
 
-    public function test_regular_student_cannot_be_moved_to_applicants_final_review(): void
+    #[\PHPUnit\Framework\Attributes\DataProvider('directApprovalStudentTypes')]
+    public function test_direct_approval_student_cannot_be_moved_to_applicants_final_review(string $studentType): void
     {
-        $student = $this->makeStudent(['student_type' => 'regular']);
+        $student = $this->makeStudent(['student_type' => $studentType]);
         $profile = $this->makeProfileFor($student, 'Pending/Conditional');
 
         $response = app(AdminController::class)->markHealthProfileForFinalReview(
