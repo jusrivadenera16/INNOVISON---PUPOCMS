@@ -1,6 +1,8 @@
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('css/medical-clearance.css') }}">
-@endpush
+@once('medical-clearance-styles')
+    @push('styles')
+        <link rel="stylesheet" href="{{ asset('css/medical-clearance.css') }}?v={{ filemtime(public_path('css/medical-clearance.css')) }}">
+    @endpush
+@endonce
 <dialog class="medical-clearance-modal" id="medicalClearanceModal" aria-labelledby="medicalClearanceTitle" data-clearance-base="{{ url('/admin/medical-clearances') }}">
     <header class="medical-clearance-header">
         <span class="medical-clearance-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span>

@@ -16,21 +16,51 @@ function element() {
 }
 const info = { today: '2026-11-11', purposes: ['On the Job Training'], default_purpose: 'On the Job Training',
     identity: { name: 'Juan Dela Cruz', age: 22, sex: 'M', birth_date: '2004-01-15' } };
-function harness(fetcher = () => ({ ok: true, json: async () => info })) {
+function harness(fetcher = () => ({ ok: true, json: async () => info }), loadSelect = true) {
     const nodes = Object.fromEntries(['enable', 'date', 'purpose', 'purpose-trigger', 'purpose-menu', 'other', 'fields', 'other-label', 'patient', 'status', 'document'].map(key => [key, element()]));
     nodes['purpose-trigger'].querySelector = () => nodes.purposeValue;
     nodes.purposeValue = element();
+    nodes['purpose-trigger'].hidden = true;
+    nodes['purpose-menu'].hidden = true;
     const root = element(); root.dataset = { optionsBase: '/admin/medical-clearances' };
     root.querySelector = selector => nodes[selector.slice('[data-review-clearance-'.length, -1)];
     const document = element(); let decision = 'approve';
     document.querySelector = selector => selector === '[data-review-clearance]' ? root : { value: decision };
     document.createElement = () => element();
     const calls = [], window = {};
-    vm.runInNewContext(selectSource, { window, document });
+    const loadSelectHelper = () => vm.runInNewContext(selectSource, { window, document });
+    if (loadSelect) loadSelectHelper();
     vm.runInNewContext(source, { window, document, crypto: { randomUUID: () => 'review-key' },
         fetch: async (...args) => { calls.push(args); return fetcher(...args); } });
-    return { root, nodes, document, calls, api: window.ReviewMedicalClearance, setDecision(value) { decision = value; document.emit('change', { target: { name: 'applicant_clearance_decision' } }); } };
+    return { root, nodes, document, calls, loadSelectHelper, api: window.ReviewMedicalClearance, setDecision(value) { decision = value; document.emit('change', { target: { name: 'applicant_clearance_decision' } }); } };
 }
+
+test('a delayed dropdown helper recovers the custom purpose UI instead of staying native', async () => {
+    const h = harness(undefined, false);
+    await h.api.configure('employee', 1, true);
+    assert.equal(h.nodes.purpose.hidden, false);
+    assert.equal(h.nodes['purpose-trigger'].hidden, true);
+    h.loadSelectHelper();
+    await h.api.configure('employee', 1, true);
+    assert.equal(h.nodes.purpose.hidden, true);
+    assert.equal(h.nodes['purpose-trigger'].hidden, false);
+    assert.equal(h.nodes.purposeValue.textContent, 'Select a purpose');
+    h.nodes['purpose-trigger'].emit('click');
+    assert.equal(h.nodes['purpose-menu'].hidden, false);
+    h.nodes['purpose-menu'].children.find(option => option.dataset.value === 'On the Job Training').emit('click');
+    assert.equal(h.api.collect(true).medical_clearance.purpose, 'On the Job Training');
+    assert.equal(h.nodes['purpose-menu'].hidden, true);
+});
+
+test('the purpose component supplies its own versioned stylesheet and dropdown scripts', () => {
+    const partial = fs.readFileSync(path.join(__dirname, '../../resources/views/admin/partials/review-medical-clearance.blade.php'), 'utf8');
+    const dependency = fs.readFileSync(path.join(__dirname, '../../resources/views/admin/partials/category-bubble-select-assets.blade.php'), 'utf8');
+    for (const asset of ['css/medical-clearance.css', 'js/review-medical-clearance.js']) {
+        assert.ok(partial.includes(`filemtime(public_path('${asset}'))`));
+    }
+    assert.ok(dependency.includes("filemtime(public_path('js/category-bubble-select.js'))"));
+    assert.ok(partial.includes("@once('medical-clearance-styles')"));
+});
 test('purpose is required for pending student and employee approval only', async () => {
     const h=harness();
     for(const type of ['applicant','dependent','guest']) {await h.api.configure(type,1,true); assert.equal(h.root.hidden,true);}

@@ -16,6 +16,11 @@
 </section>
 @endif
 @include('admin.partials.category-bubble-select-assets')
+@once('medical-clearance-styles')
+    @push('styles')
+        <link rel="stylesheet" href="{{ asset('css/medical-clearance.css') }}?v={{ filemtime(public_path('css/medical-clearance.css')) }}">
+    @endpush
+@endonce
 @push('scripts')
-    <script src="{{ asset('js/review-medical-clearance.js') }}" defer></script>
+    <script src="{{ asset('js/review-medical-clearance.js') }}?v={{ filemtime(public_path('js/review-medical-clearance.js')) }}" defer></script>
 @endpush

@@ -4,9 +4,15 @@
     if (!root) return;
     const node = key => root.querySelector(`[data-review-clearance-${key}]`);
     let current = null, token = null;
-    const purposeSelect = window.CategoryBubbleSelect?.create({
-        select: node('purpose'), trigger: node('purpose-trigger'), menu: node('purpose-menu'), onChange: sync,
-    });
+    let purposeSelect = null;
+    function enhancePurposeSelect() {
+        // Keep a usable native fallback if the shared helper has not loaded yet.
+        // Retry on configuration instead of permanently losing the custom UI.
+        purposeSelect ||= window.CategoryBubbleSelect?.create({
+            select: node('purpose'), trigger: node('purpose-trigger'), menu: node('purpose-menu'), onChange: sync,
+        });
+        purposeSelect?.refresh();
+    }
     function status(message) { node('status').textContent = message; node('status').hidden = !message; }
     function sync() {
         const pending = document.querySelector('[name="applicant_clearance_decision"]:checked')?.value === 'pending';
@@ -18,7 +24,7 @@
         }
         if (pending) status('Pending decision selected. No Medical Clearance will be issued.');
         else if (current) status('');
-        purposeSelect?.refresh();
+        enhancePurposeSelect();
     }
     function reset() {
         token = null; current = null; root.hidden = true;
