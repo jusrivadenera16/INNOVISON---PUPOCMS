@@ -26,6 +26,7 @@ class HealthRecordApprovalQueue
             if (!in_array(trim((string) $record->clearance_status), ['', 'Pending', 'For Verification'], true)) continue;
             $employee = $record instanceof EmployeeHealthProfile;
             $submission = ($employee ? $employeeSubmissions : $healthSubmissions)->get($record->id);
+            $record->setAttribute('pending_approval_submission_id', $submission?->id);
             if ($submission) {
                 $activeSubmission = in_array($submission->status, ['submitted', 'under_review', 'needs_correction'], true)
                     && $submission->submitted_at && !$submission->approved_at;

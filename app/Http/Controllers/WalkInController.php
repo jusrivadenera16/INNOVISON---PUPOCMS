@@ -2229,10 +2229,7 @@ class WalkInController extends Controller
             return response()->json(['success' => false, 'message' => 'Student health profile was not found.'], 404);
         }
 
-        $isApproved = $sourceType === 'employee_approval'
-            ? strtolower(trim((string) $profile->submission_status)) === 'approved'
-                && in_array(trim((string) $profile->clearance_status), ['Fully Cleared', 'Issued'], true)
-            : in_array(trim((string) $profile->clearance_status), ['Fully Cleared', 'Issued'], true);
+        $isApproved = in_array(trim((string) $profile->clearance_status), ['Fully Cleared', 'Issued'], true);
 
         if (!$isApproved) {
             return response()->json([
@@ -2910,6 +2907,14 @@ class WalkInController extends Controller
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
+        $selectedConsultationService = '';
+        if ($user_source !== 'online') {
+            $selectedConsultationService = $request->validate([
+                'service' => ['sometimes', 'string', \Illuminate\Validation\Rule::in(
+                    app(\App\Services\ConsultationServiceOptions::class)->labels($otherServiceOptions)
+                )],
+            ])['service'] ?? '';
+        }
         $studentDocuments = $this->healthProfileDocuments($request, $student->healthProfile);
         $studentDocumentVersions = $this->healthProfileDocumentVersions($request, $student->healthProfile);
         $studentRecentRecords = Consultation::query()
@@ -2955,7 +2960,8 @@ class WalkInController extends Controller
             'studentDocumentVersions',
             'studentRecentRecords',
             'consultationStartedAt',
-            'consultationDraftData'
+            'consultationDraftData',
+            'selectedConsultationService'
         ));
     }
 
@@ -4685,7 +4691,7 @@ PROMPT;
             }
 
             if ($clearanceInput) {
-                $issuedMedicalClearance = app(\App\Services\MedicalClearanceService::class)->issue('employee', $employeeProfile->id, $clearanceInput, auth()->user());
+                $issuedMedicalClearance = app(\App\Services\MedicalClearanceService::class)->issueForApproval('employee', $employeeProfile->id, $clearanceInput, auth()->user());
             }
 
             return $employeeProfile->fresh('user');
@@ -5600,7 +5606,7 @@ PROMPT;
                 }
 
                 if ($clearanceInput) {
-                    $issuedMedicalClearance = app(\App\Services\MedicalClearanceService::class)->issue('student', $profile->id, $clearanceInput, auth()->user());
+                    $issuedMedicalClearance = app(\App\Services\MedicalClearanceService::class)->issueForApproval('student', $profile->id, $clearanceInput, auth()->user());
                 }
 
                 return $profile;

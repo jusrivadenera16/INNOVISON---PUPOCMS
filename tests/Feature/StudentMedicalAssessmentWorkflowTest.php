@@ -334,6 +334,21 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
         ]);
         $this->actingAs($staff, 'admin');
 
+        // Deliberately use later timestamps on the older ID: version order wins.
+        $older = $submission;
+        $older->update(['submitted_at' => now()->addDay(), 'approved_at' => now()->addDay()]);
+        $submission = HealthFormSubmission::create([
+            'user_id' => $student->id, 'health_profile_id' => $profile->id,
+            'status' => HealthFormSubmission::STATUS_APPROVED,
+            'submitted_at' => now()->subDays(2), 'approved_at' => now()->subDay(),
+        ]);
+        $otherProfile = HealthProfile::forceCreate(['user_id' => $student->id, 'clearance_status' => 'Fully Cleared']);
+        $otherForm = HealthFormSubmission::create([
+            'user_id' => $student->id, 'health_profile_id' => $otherProfile->id,
+            'status' => HealthFormSubmission::STATUS_APPROVED,
+            'submitted_at' => now()->addDays(2), 'approved_at' => now()->addDays(2),
+        ]);
+
         $issuanceService = \Mockery::mock(MarClearanceIssuanceService::class);
         $issuanceService->shouldReceive('syncApprovedHealthProfileForWorkflow')
             ->once()
@@ -362,6 +377,11 @@ class StudentMedicalAssessmentWorkflowTest extends TestCase
         $this->assertSame('synced', $profile->puptas_sync_status);
         $this->assertFalse((bool) $student->fresh()->is_health_profile_completed);
         $this->assertSame(HealthFormSubmission::STATUS_SUBMITTED, $submission->fresh()->status);
+        $this->assertNull($submission->fresh()->approved_at);
+        $this->assertSame(HealthFormSubmission::STATUS_APPROVED, $older->fresh()->status);
+        $this->assertNotNull($older->fresh()->approved_at);
+        $this->assertSame(HealthFormSubmission::STATUS_APPROVED, $otherForm->fresh()->status);
+        $this->assertSame('Fully Cleared', $otherProfile->fresh()->clearance_status);
         $this->assertSame('student_health_clearance_revoked', ActivityLog::query()->value('event_type'));
     }
 

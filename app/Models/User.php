@@ -140,7 +140,7 @@ class User extends Authenticatable
             return 'student';
         }
 
-        return match ($userType) {
+        $accountType = match ($userType) {
             'applicant' => 'applicant',
             'student', 'ojt', 'student / ojt' => 'student',
             'faculty' => 'faculty',
@@ -148,6 +148,26 @@ class User extends Authenticatable
             'dependent' => 'dependent',
             default => null,
         };
+
+        if ($accountType !== null) return $accountType;
+
+        // Legacy employee imports used employment status as user_type. Resolve
+        // those only with an employee profile AND an authoritative staff marker.
+        // A local admin permission/role alone must never reclassify a student.
+        if (!in_array($userType, ['regular', 'permanent', 'contractual', 'temporary', 'casual', 'job order', 'part-time'], true)
+            || $this->isStudentIdentityRole()) return null;
+        $employee = $this->relationLoaded('employeeHealthProfile') ? $this->employeeHealthProfile
+            : (Schema::hasTable('health_profile_emp') ? $this->employeeHealthProfile()->first() : null);
+        if (!$employee || strtolower(trim((string) $employee->health_form_category)) === 'dependent') return null;
+
+        $identityRole = str_replace(['-', ' '], '_', strtolower(trim((string) $this->idp_role)));
+        if ($identityRole === 'faculty') return 'faculty';
+        if (in_array($identityRole, ['admin', 'staff', 'employee', 'admin_designee', 'designee', 'non_teaching_staff'], true)) return 'non_teaching_staff';
+        $hub = $this->relationLoaded('adminHubProfile') ? $this->adminHubProfile
+            : (Schema::hasTable('admin_hub') ? $this->adminHubProfile()->first() : null);
+
+        return in_array(strtolower(trim((string) $hub?->role)), ['admin_designee', 'designee'], true)
+            ? 'non_teaching_staff' : null;
     }
 
     public function hasOfficialStudentHealthIdentity(): bool

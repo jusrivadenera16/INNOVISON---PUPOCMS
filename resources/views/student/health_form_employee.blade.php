@@ -3133,6 +3133,12 @@
             </div>
             <div class="stepper-spacer"></div>
 
+            @if($isReturnedForCorrection ?? false)
+                <div class="correction-mode-note">
+                    <strong>Update your submitted Health Form</strong>
+                    <p>{{ $correctionNote }} Saved documents will be kept. Submit the corrected details for clinic review.</p>
+                </div>
+            @endif
             <form
                 action="{{ ($adminForm ?? false) ? route('admin.settings.health-profile.form.store') : route('store.health.form.employee') }}"
                 method="POST"
@@ -3740,7 +3746,10 @@
                                 <span class="requirement-badge is-required">Required</span>
                             </div>
                             <p class="requirement-guideline">{{ $isDependentAccount ? 'Upload a clear, front-facing photo. It does not need to be 2x2, and the background does not need to be plain white.' : 'Upload a clear, formal, front-facing employee photo. It does not need to be 2x2, and the background does not need to be plain white.' }}</p>
-                            <input id="employee_student_photo" type="file" name="student_photo" class="form-control requirement-file-input" accept=".jpg,.jpeg,.png,image/jpeg,image/png" aria-labelledby="employeePhotoTitle" aria-describedby="employeePhotoFileMeta" data-upload-input data-preview-kind="image" required>
+                            @if(($isReturnedForCorrection ?? false) && $employeeProfile?->student_photo)
+                                <p class="requirement-guideline">Your saved photo will be kept. Upload a file only if it needs to be replaced.</p>
+                            @endif
+                            <input id="employee_student_photo" type="file" name="student_photo" class="form-control requirement-file-input" accept=".jpg,.jpeg,.png,image/jpeg,image/png" aria-labelledby="employeePhotoTitle" aria-describedby="employeePhotoFileMeta" data-upload-input data-preview-kind="image" @required(!(($isReturnedForCorrection ?? false) && $employeeProfile?->student_photo))>
                             <div class="requirement-dropzone" data-upload-dropzone data-input-id="employee_student_photo">
                                 <svg class="requirement-dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
                                 <strong>Drag and drop your file here</strong><span class="requirement-or">or</span>

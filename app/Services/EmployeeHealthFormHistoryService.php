@@ -166,6 +166,20 @@ class EmployeeHealthFormHistoryService
     ): HealthFormSubmission {
         $profile->loadMissing(['user', 'approvedBy']);
 
+        if (data_get($request?->metadata, 'return_for_correction')) {
+            return \Illuminate\Support\Facades\DB::transaction(function () use ($profile, $request) {
+                EmployeeHealthProfile::query()->whereKey($profile->id)->lockForUpdate()->firstOrFail();
+                $submission = app(HealthRecordCorrectionService::class)->resubmissionTarget($profile, $request);
+                $submission->forceFill([
+                    'status' => HealthFormSubmission::STATUS_SUBMITTED, 'submitted_at' => now(),
+                    'pdf_path' => $profile->staff_health_form_pdf_path,
+                    'profile_snapshot' => $submission->preserveReviewTiming($this->capture($profile)),
+                    'snapshot_captured_at' => now(), 'approved_at' => null,
+                ])->save();
+                return $submission->fresh();
+            });
+        }
+
         return HealthFormSubmission::query()->create([
             'user_id' => $profile->user_id,
             'employee_health_profile_id' => $profile->id,
@@ -211,7 +225,6 @@ class EmployeeHealthFormHistoryService
                 HealthFormSubmission::STATUS_NEEDS_CORRECTION,
                 'under_review',
             ])
-            ->latest('submitted_at')
             ->latest('id')
             ->first();
 

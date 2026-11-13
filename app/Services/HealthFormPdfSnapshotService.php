@@ -25,21 +25,26 @@ class HealthFormPdfSnapshotService
         ?string $remarks = null,
         bool $createNewSubmission = false,
         ?HealthProfile $snapshotProfile = null,
-        bool $refreshDeclaration = false
+        bool $refreshDeclaration = false,
+        ?HealthFormSubmission $targetSubmission = null
     ): HealthFormSubmission
     {
-        return DB::transaction(function () use ($profile, $user, $category, $remarks, $createNewSubmission, $snapshotProfile, $refreshDeclaration) {
+        return DB::transaction(function () use ($profile, $user, $category, $remarks, $createNewSubmission, $snapshotProfile, $refreshDeclaration, $targetSubmission) {
             HealthProfile::query()->whereKey($profile->id)->lockForUpdate()->firstOrFail();
-            return $this->writeSubmittedSnapshot($profile, $user, $category, $remarks, $createNewSubmission, $snapshotProfile, $refreshDeclaration);
+            return $this->writeSubmittedSnapshot($profile, $user, $category, $remarks, $createNewSubmission, $snapshotProfile, $refreshDeclaration, $targetSubmission);
         });
     }
 
     private function writeSubmittedSnapshot(
         HealthProfile $profile, User $user, ?string $category, ?string $remarks,
-        bool $createNewSubmission, ?HealthProfile $snapshotProfile, bool $refreshDeclaration
+        bool $createNewSubmission, ?HealthProfile $snapshotProfile, bool $refreshDeclaration, ?HealthFormSubmission $targetSubmission = null
     ): HealthFormSubmission {
         $profile->loadMissing('user');
-        $submission = $this->submissionForUpdate($profile, $user, $createNewSubmission);
+        if ($targetSubmission && ((int) $targetSubmission->health_profile_id !== (int) $profile->id
+            || (int) $targetSubmission->user_id !== (int) $user->id || $targetSubmission->approved_at)) {
+            throw new \RuntimeException('The correction submission does not belong to this pending Health Form.');
+        }
+        $submission = $targetSubmission ?: $this->submissionForUpdate($profile, $user, $createNewSubmission);
         $resolvedCategory = trim((string) ($submission->category ?: $category)) ?: 'General';
         $timestamp = now();
         $filePath = $this->buildSnapshotPath($profile, $user, $resolvedCategory, $timestamp);
@@ -79,7 +84,7 @@ class HealthFormPdfSnapshotService
         ]);
         $submission->save();
 
-        $this->deleteReplacedDraftPdf($oldPath, $filePath);
+        if (!$targetSubmission) $this->deleteReplacedDraftPdf($oldPath, $filePath);
 
         return $submission;
     }
@@ -173,10 +178,7 @@ class HealthFormPdfSnapshotService
         }
 
         $approved = HealthFormSubmission::query()
-            ->where(function ($query) use ($profile, $user) {
-                $query->where('health_profile_id', $profile->id)
-                    ->orWhere('user_id', $user->id);
-            })
+            ->where('health_profile_id', $profile->id)
             ->whereIn('status', [HealthFormSubmission::STATUS_APPROVED, 'Approved'])
             ->orderByDesc('approved_at')
             ->orderByDesc('id')
@@ -248,18 +250,13 @@ class HealthFormPdfSnapshotService
         }
 
         $submission = HealthFormSubmission::query()
-            ->where(function ($query) use ($profile, $user) {
-                $query->where('health_profile_id', $profile->id)
-                    ->orWhere('user_id', $user->id);
-            })
+            ->where('health_profile_id', $profile->id)
             ->whereNull('approved_at')
             ->whereIn('status', [
                 HealthFormSubmission::STATUS_SUBMITTED,
                 HealthFormSubmission::STATUS_NEEDS_CORRECTION,
                 'under_review',
             ])
-            ->latest('submitted_at')
-            ->latest('approved_at')
             ->latest('id')
             ->first();
 
@@ -353,18 +350,13 @@ class HealthFormPdfSnapshotService
         }
 
         $existing = HealthFormSubmission::query()
-            ->where(function ($query) use ($profile, $user) {
-                $query->where('health_profile_id', $profile->id)
-                    ->orWhere('user_id', $user->id);
-            })
+            ->where('health_profile_id', $profile->id)
             ->whereNull('approved_at')
             ->whereIn('status', [
                 HealthFormSubmission::STATUS_SUBMITTED,
                 HealthFormSubmission::STATUS_NEEDS_CORRECTION,
                 'under_review',
             ])
-            ->latest('submitted_at')
-            ->latest('approved_at')
             ->latest('id')
             ->first();
 

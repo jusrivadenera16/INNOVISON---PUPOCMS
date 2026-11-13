@@ -162,8 +162,28 @@ class StudentApprovalEvaluationTest extends TestCase
         $this->assertSame(1, DB::table('eval_form')->count());
         $this->assertSame('employee_approval', DB::table('eval_form')->value('source_type'));
         $profile->submission_status = 'pending';
+        $profile->clearance_status = 'For Verification';
         $profile->save();
         $this->assertSame(409, $controller->sendEmployeeRecordEvaluation(Request::create('/', 'POST'), $profile)->getStatusCode());
+    }
+
+    public function test_issued_employee_evaluation_does_not_require_matching_submission_status(): void
+    {
+        $user = User::forceCreate(['name' => 'Issued Employee', 'user_type' => 'Admin', 'email' => 'issued@example.com']);
+        $this->mock(StudentNotificationMailer::class)->shouldReceive('sendServiceEvaluationNotice')->times(8)->andReturn(['status' => 'sent']);
+        $controller = app(WalkInController::class);
+        foreach (['Issued', 'Fully Cleared'] as $clearance) {
+            foreach (['', 'submitted', 'pending', 'approved'] as $submissionStatus) {
+                $profile = EmployeeHealthProfile::forceCreate([
+                    'user_id' => $user->id, 'submission_status' => $submissionStatus, 'clearance_status' => $clearance,
+                ]);
+                $response = $controller->sendEmployeeRecordEvaluation(Request::create('/', 'POST'), $profile);
+                $this->assertSame(200, $response->getStatusCode(), $response->getContent());
+                $this->assertTrue($response->getData(true)['success']);
+                $this->assertSame($submissionStatus, $profile->fresh()->submission_status);
+                $this->assertSame($clearance, $profile->fresh()->clearance_status);
+            }
+        }
     }
 
     public function test_manual_send_routes_require_record_management_permission(): void

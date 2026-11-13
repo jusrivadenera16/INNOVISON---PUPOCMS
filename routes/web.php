@@ -349,6 +349,10 @@ Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->gr
     Route::post('/health-profile/{id}/request-resubmission', [AdminController::class, 'requestHealthProfileResubmission'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
         ->name('admin.health_profile.request_resubmission');
+    Route::post('/health-records/{type}/{profile}/return-for-correction', [\App\Http\Controllers\HealthRecordCorrectionController::class, 'store'])
+        ->whereIn('type', ['student', 'employee'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
+        ->name('admin.health_records.return_for_correction');
     Route::post('/health-profile/{id}/withdraw', [AdminController::class, 'withdrawHealthProfile'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
         ->name('admin.health_profile.withdraw');

@@ -92,18 +92,14 @@ class AdminController extends Controller
     private function updateCurrentHealthFormSubmissionStatus(HealthProfile $profile, string $status): ?HealthFormSubmission
     {
         $submission = HealthFormSubmission::query()
-            ->where(function ($query) use ($profile) {
-                $query->where('health_profile_id', $profile->id)
-                    ->orWhere('user_id', $profile->user_id);
-            })
+            ->where('health_profile_id', $profile->id)
             ->whereIn('status', [
                 HealthFormSubmission::STATUS_SUBMITTED,
                 HealthFormSubmission::STATUS_APPROVED,
                 HealthFormSubmission::STATUS_NEEDS_CORRECTION,
             ])
-            ->latest('submitted_at')
-            ->latest('approved_at')
             ->latest('id')
+            ->lockForUpdate()
             ->first();
 
         if (!$submission) {
@@ -5641,6 +5637,14 @@ class AdminController extends Controller
             $profile = HealthProfile::with('user')->lockForUpdate()->findOrFail($id);
             abort_unless($this->isStudentHealthProfile($profile), 404);
 
+            $latestForm = HealthFormSubmission::query()->where('health_profile_id', $profile->id)
+                ->latest('id')->lockForUpdate()->first();
+            if ($latestForm && $latestForm->status !== HealthFormSubmission::STATUS_APPROVED) {
+                throw ValidationException::withMessages([
+                    'revoke_reason' => 'Only the latest approved Health Form can be returned to pending. Refresh the record and try again.',
+                ]);
+            }
+
             if (!in_array(trim((string) $profile->clearance_status), ['Issued', 'Fully Cleared'], true)
                 || in_array($profile->pullout_status, [HealthProfile::PULLOUT_PENDING, HealthProfile::PULLOUT_COMPLETED], true)) {
                 throw ValidationException::withMessages([
@@ -7122,6 +7126,13 @@ public function updateClearance(Request $request, $id)
     $recordClinicAccountType = $record->user?->clinicAccountTypeKey();
     $recordIsLocalOnly = in_array($recordClinicAccountType, ['student', 'faculty', 'non_teaching_staff', 'dependent'], true);
     $recordIsRegularStudent = app(\App\Services\HealthRecordCategoryFilter::class)->isRegularStudentReview($record);
+
+    if (in_array($request->input('clearance_status'), ['Issued', 'Fully Cleared'], true)
+        && HealthProfileCorrectionRequest::query()->where('health_profile_id', $record->id)
+            ->where('type', HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION)->active()->get()
+            ->contains(fn ($correction) => data_get($correction->metadata, 'return_for_correction'))) {
+        return back()->withInput()->with('error', 'This Health Form was returned for correction. Wait for the record owner to resubmit it before approval.');
+    }
     $previousStatus = (string) $record->clearance_status;
     $requestedStatus = (string) $request->input('clearance_status');
     $isApproval = in_array($requestedStatus, ['Issued', 'Fully Cleared'], true);
@@ -7247,6 +7258,9 @@ public function updateClearance(Request $request, $id)
         if ($recordSaved && $isApproval && !$newHealthFormRequest && $record->user) {
             app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($record->fresh('user'));
         }
+        if ($recordSaved && $isApproval && $record->user && $this->isStudentHealthProfile($record)) {
+            app(\App\Services\MedicalClearanceService::class)->refreshAfterApproval($record->fresh('user'), auth()->user());
+        }
         DB::commit();
     } catch (\Throwable $exception) {
         if (DB::transactionLevel() > $approvalTransactionLevel) DB::rollBack();
@@ -7333,11 +7347,10 @@ public function updateClearance(Request $request, $id)
                     ]);
 
                 if (!$newHealthFormRequest) {
+                    $currentSubmission = HealthFormSubmission::query()
+                        ->where('health_profile_id', $record->id)->latest('id')->first();
                     HealthFormSubmission::query()
-                        ->where(function ($query) use ($record) {
-                            $query->where('health_profile_id', $record->id)
-                                ->orWhere('user_id', $record->user_id);
-                        })
+                        ->whereKey($currentSubmission?->id)
                         ->whereIn('status', [
                             HealthFormSubmission::STATUS_SUBMITTED,
                             HealthFormSubmission::STATUS_NEEDS_CORRECTION,

@@ -404,6 +404,8 @@
         gap: 8px;
     }
     .profile-actions-menu button {
+        position: relative;
+        overflow: hidden;
         width: 100%;
         display: flex;
         align-items: center;
@@ -419,7 +421,7 @@
         font-weight: 900;
         text-align: left;
         cursor: pointer;
-        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+        transition: background .22s ease, border-color .22s ease, color .22s ease, transform .2s ease, box-shadow .22s ease;
     }
     .profile-actions-menu button:hover,
     .profile-actions-menu button:focus {
@@ -428,6 +430,61 @@
         border-color: #facc15;
         color: #70131B;
         outline: none;
+    }
+    #profileActionsMenu button.profile-action-critical {
+        position: relative;
+        overflow: hidden;
+        justify-content: flex-start;
+        background: #8B0000;
+        border-color: rgba(139, 0, 0, 0.22);
+        color: #ffffff;
+        min-height: 40px;
+        font-size: 12px;
+        box-shadow: 0 4px 10px rgba(139, 0, 0, 0.12);
+        transition: background .22s ease, border-color .22s ease, color .22s ease, transform .2s ease, box-shadow .22s ease;
+    }
+    #profileActionsMenu button::before {
+        content: "";
+        position: absolute;
+        inset: -45% auto -45% -68%;
+        width: 58%;
+        background: linear-gradient(115deg, transparent 0%, rgba(255, 247, 194, 0.12) 35%, rgba(255, 247, 194, 0.76) 50%, rgba(255, 247, 194, 0.14) 65%, transparent 100%);
+        transform: skewX(-18deg);
+        transition: left .5s ease;
+        pointer-events: none;
+    }
+    #profileActionsMenu button > * {
+        position: relative;
+        z-index: 1;
+    }
+    #profileActionsMenu button.profile-action-critical:hover,
+    #profileActionsMenu button.profile-action-critical:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #8B0000;
+        transform: translateX(1px);
+        box-shadow: 0 16px 30px rgba(250, 204, 21, 0.22);
+    }
+    #profileActionsMenu button.profile-action-critical:focus-visible {
+        outline: 2px solid rgba(250, 204, 21, 0.34);
+        outline-offset: 2px;
+    }
+    #profileActionsMenu button:hover::before,
+    #profileActionsMenu button:focus-visible::before {
+        left: 112%;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        #profileActionsMenu button,
+        #profileActionsMenu button::before {
+            transition: none;
+        }
+        #profileActionsMenu button::before {
+            display: none;
+        }
+        #profileActionsMenu button:hover,
+        #profileActionsMenu button:focus-visible {
+            transform: none;
+        }
     }
     .profile-tab {
         display: inline-flex;
@@ -3243,6 +3300,10 @@
     $canSendRecordEvaluation = $profileIsLocalStudent && !$isPulloutPending && !$isPulledOut
         && in_array($profileStatusRaw, ['Issued', 'Fully Cleared'], true)
         && (optional(auth()->user())->canAccessPermission('health_records.update_assessment') ?? false);
+    $consultPatientIdentifier = trim((string) ($profile->user?->student_id ?: $profile->student_id
+        ?: $profile->student_number ?: $profile->reference_number));
+    $canStartConsultation = $consultPatientIdentifier !== '' && !$isPulloutPending && !$isPulledOut
+        && (optional(auth()->user())->canAccessPermission('walkin.encode_assessment') ?? false);
     $canRequestPullout = !$profileIsDependent && in_array($profileStatusRaw, ['Issued', 'Fully Cleared'], true)
         && !$isPulloutPending
         && !$isPulledOut
@@ -3402,12 +3463,6 @@
                             <span aria-hidden="true">&rarr;</span>
                         </button>
                     @endif
-                    @if($canViewPullout)
-                        <button type="button" id="openPulloutRequestModal">
-                            {{ $pulloutActionLabel }}
-                            <span aria-hidden="true">&minus;</span>
-                        </button>
-                    @endif
                     @if($canUpdateMedicalAssessment)
                         <button type="button" data-medical-assessment-trigger>
                             Update Health Information
@@ -3420,16 +3475,25 @@
                             <span aria-hidden="true"><x-outline-icon name="envelope" /></span>
                         </button>
                     @endif
-                    @if($canRevokeClearance)
-                        <button type="button" id="openReturnToPendingModal">
-                            Revoke Clearance
-                            <span aria-hidden="true">&crarr;</span>
+                    @if($canStartConsultation)
+                        <button type="button" data-record-consult-open aria-haspopup="dialog" aria-controls="recordConsultDialog">
+                            Consult
                         </button>
                     @endif
                     <button type="button" data-health-record-history-open aria-haspopup="dialog" aria-controls="healthRecordHistoryModal">
                         History
                         <span aria-hidden="true"><x-outline-icon name="clock" /></span>
                     </button>
+                    @if($canViewPullout)
+                        <button type="button" id="openPulloutRequestModal" class="profile-action-critical">
+                            <span>{{ $pulloutActionLabel }}</span>
+                        </button>
+                    @endif
+                    @if($canRevokeClearance)
+                        <button type="button" id="openReturnToPendingModal" class="profile-action-critical">
+                            <span>Return to Pending</span>
+                        </button>
+                    @endif
                 </div>
             </div>
         </div>
@@ -4271,11 +4335,11 @@
                 <div class="correction-head-title">
                     <span class="correction-head-icon"><x-outline-icon name="clock" /></span>
                     <div>
-                        <h3 id="returnPendingTitle">Revoke Clearance</h3>
-                        <p>Revoke this student clearance and send the record back for clinic review.</p>
+                        <h3 id="returnPendingTitle">Return to Pending</h3>
+                        <p>Remove this student clearance approval and return the record for clinic review.</p>
                     </div>
                 </div>
-                <button type="button" class="correction-close" id="closeReturnToPendingModal" aria-label="Close revoke clearance confirmation">
+                <button type="button" class="correction-close" id="closeReturnToPendingModal" aria-label="Close return to pending confirmation">
                     <x-outline-icon name="x-mark" />
                 </button>
             </div>
@@ -4303,13 +4367,13 @@
                     </div>
                 </div>
                 <div class="correction-field">
-                    <label for="revokeClearanceReason">Reason for revocation</label>
-                    <textarea id="revokeClearanceReason" name="revoke_reason" required maxlength="1000" placeholder="Explain why this clearance is being revoked.">{{ old('revoke_reason') }}</textarea>
+                    <label for="revokeClearanceReason">Reason for returning to pending</label>
+                    <textarea id="revokeClearanceReason" name="revoke_reason" required maxlength="1000" placeholder="Explain why this record is being returned to pending.">{{ old('revoke_reason') }}</textarea>
                     @error('revoke_reason')<small class="field-error">{{ $message }}</small>@enderror
                 </div>
                 <div class="correction-actions">
                     <button type="button" class="correction-cancel" id="cancelReturnToPendingModal">Cancel</button>
-                    <button type="submit" class="correction-submit">Confirm Revocation</button>
+                    <button type="submit" class="correction-submit">Return to Pending</button>
                 </div>
             </form>
         </div>
@@ -4453,6 +4517,9 @@
     </div>
 @endif
 @include('admin.partials.health-record-history-modal')
+@if($canStartConsultation)
+    @include('admin.partials.record-consult-modal', ['consultPatientIdentifier' => $consultPatientIdentifier])
+@endif
 @endsection
 
 @push('scripts')
@@ -5047,9 +5114,9 @@
         }
         if (form.closest('#returnToPendingModal')) {
             return {
-                title: 'Revoke Clearance?',
-                message: 'Revoke this clearance and return the record to Pending Approval? The submitted information and documents will stay saved.',
-                confirm: 'Revoke Clearance',
+                title: 'Return to Pending?',
+                message: 'Remove this clearance approval and return the record to Pending Approval? The submitted information and documents will stay saved.',
+                confirm: 'Return to Pending',
             };
         }
 

@@ -91,7 +91,7 @@ class StudentNotificationMailer
                 'title' => 'Health Information Form correction requested',
                 'message' => 'The clinic requested corrections to your Health Information Form. You may now edit and resubmit it.',
                 'action_label' => 'Open Health Information Form',
-                'action_url' => route('health.form'),
+                'action_url' => $details['action_url'] ?? route('health.form'),
             ],
             'pending_compliance_reminder' => [
                 'subject' => 'Reminder: Complete your pending health record requirements',

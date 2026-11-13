@@ -87,11 +87,17 @@ class MedicalClearanceService
             ->map(fn ($option) => ['value' => $option['value'], 'label' => $option['label']])->values()->all();
     }
 
-    public function issue(string $type, int $id, array $input, User $actor): IssuedMedicalClearance
+    /** Normal form approval replaces only the latest certificate on that exact form. */
+    public function issueForApproval(string $type, int $id, array $input, User $actor): IssuedMedicalClearance
+    {
+        return $this->issue($type, $id, $input, $actor, true);
+    }
+
+    public function issue(string $type, int $id, array $input, User $actor, bool $forApproval = false): IssuedMedicalClearance
     {
         $writtenPath = null;
         try {
-            return DB::transaction(function () use ($type, $id, $input, $actor, &$writtenPath) {
+            return DB::transaction(function () use ($type, $id, $input, $actor, $forApproval, &$writtenPath) {
                 $profile = $this->profile($type, $id, true);
                 $existing = IssuedMedicalClearance::where('request_key', $input['request_key'])->first();
                 if ($existing) {
@@ -123,20 +129,30 @@ class MedicalClearanceService
                 if ($type === 'employee' && preg_match('/\b(ojt|on[ -]the[ -]job)\b/i', $purpose)) {
                     throw ValidationException::withMessages(['purpose' => 'On the Job Training is available for students only.']);
                 }
-                $document = IssuedMedicalClearance::create([
-                    'record_type' => $type, 'profile_id' => $id, 'user_id' => $profile->user_id,
-                    'health_form_submission_id' => $submission->id, 'request_key' => $input['request_key'],
-                    'patient_name' => $identity['name'], 'patient_age' => $identity['age'], 'patient_sex' => $identity['sex'],
-                    'issued_on' => $input['issued_on'], 'purpose' => $purpose, 'issued_by_user_id' => $actor->id,
-                    'doctor_review' => isset($input['doctor_review']) ? array_merge($input['doctor_review'], ['reviewed_at' => now()->toIso8601String(), 'reviewed_by_user_id' => $actor->id]) : null,
-                ]);
-                // Numbering is deferred until manual and system issuances are reconciled.
-                $document->pdf_path = 'issued_medical_clearances/' . $profile->user_id . '/' . $input['request_key'] . '.pdf';
-                $writtenPath = $document->pdf_path;
-                if (!Storage::disk('health_private')->put($writtenPath, app(HealthFileEncryption::class)->encrypt($this->renderPdf($document)))) {
-                    throw new \RuntimeException('Unable to save the Medical Clearance PDF.');
+                $document = $forApproval ? $this->latestCertificate($type, $profile, $submission) : null;
+                if ($document && in_array($input['request_key'], data_get($document->doctor_review, 'approval_request_keys', []), true)) {
+                    return $document;
                 }
-                $document->save();
+                $isRefresh = (bool) $document;
+                if ($document) {
+                    $document = $this->refreshCertificate($document, $profile, $submission, $actor, $input['issued_on'], $purpose, $input['request_key']);
+                    $writtenPath = $document->pdf_path;
+                } else {
+                    $document = IssuedMedicalClearance::create([
+                        'record_type' => $type, 'profile_id' => $id, 'user_id' => $profile->user_id,
+                        'health_form_submission_id' => $submission->id, 'request_key' => $input['request_key'],
+                        'patient_name' => $identity['name'], 'patient_age' => $identity['age'], 'patient_sex' => $identity['sex'],
+                        'issued_on' => $input['issued_on'], 'purpose' => $purpose, 'issued_by_user_id' => $actor->id,
+                        'doctor_review' => isset($input['doctor_review']) ? array_merge($input['doctor_review'], ['reviewed_at' => now()->toIso8601String(), 'reviewed_by_user_id' => $actor->id]) : null,
+                    ]);
+                    // Numbering is deferred until manual and system issuances are reconciled.
+                    $document->pdf_path = 'issued_medical_clearances/' . $profile->user_id . '/' . $input['request_key'] . '.pdf';
+                    $writtenPath = $document->pdf_path;
+                    if (!Storage::disk('health_private')->put($writtenPath, app(HealthFileEncryption::class)->encrypt($this->renderPdf($document)))) {
+                        throw new \RuntimeException('Unable to save the Medical Clearance PDF.');
+                    }
+                    $document->save();
+                }
                 // Same transaction as the PDF and certificate record; retries return above without counting again.
                 app(MarClearanceIssuanceService::class)->recordApprovedClearanceTarget(
                     $profile->user, $target['clearanceType'], $target['subcategory'], $target['workflow'],
@@ -149,13 +165,15 @@ class MedicalClearanceService
                     $profile->{$draftField} = null;
                     $profile->save();
                 }
-                ActivityLog::create([
+                if (!$isRefresh) {
+                    ActivityLog::create([
                     'user_id' => $actor->id, 'user_name' => $actor->name ?: $actor->email,
                     'user_role' => $actor->user_role, 'action' => 'Medical Clearance Issued', 'module' => 'Patient Intake',
                     'event_type' => 'medical_clearance_issued', 'description' => 'Medical Clearance generated and saved.',
                     'subject_type' => IssuedMedicalClearance::class, 'subject_id' => (string) $document->id,
                     'metadata' => ['control_number' => $document->control_number, 'record_type' => $type, 'profile_id' => $id],
-                ]);
+                    ]);
+                }
 
                 return $document;
             });
@@ -163,6 +181,75 @@ class MedicalClearanceService
             if ($writtenPath) Storage::disk('health_private')->delete($writtenPath);
             throw $exception;
         }
+    }
+
+    /** Direct student approval has no purpose picker: retain the saved purpose. */
+    public function refreshAfterApproval(HealthProfile|EmployeeHealthProfile $profile, User $actor): ?IssuedMedicalClearance
+    {
+        if (!\Illuminate\Support\Facades\Schema::hasTable('issued_medical_clearances')) return null;
+        return DB::transaction(function () use ($profile, $actor) {
+            $profile = $profile->newQuery()->with('user')->lockForUpdate()->findOrFail($profile->id);
+            $submission = $this->approvedSubmission($profile);
+            if (!$submission) return null;
+            $type = $profile instanceof EmployeeHealthProfile ? 'employee' : 'student';
+            $document = $this->latestCertificate($type, $profile, $submission);
+            if (!$document) return null;
+            if (data_get($document->doctor_review, 'last_form_approval_at') === $submission->approved_at->toIso8601String()) return $document;
+
+            return $this->refreshCertificate($document, $profile, $submission, $actor, now()->toDateString(), $document->purpose);
+        });
+    }
+
+    private function latestCertificate(string $type, HealthProfile|EmployeeHealthProfile $profile, HealthFormSubmission $submission): ?IssuedMedicalClearance
+    {
+        return IssuedMedicalClearance::query()->where('record_type', $type)->where('profile_id', $profile->id)
+            ->where('health_form_submission_id', $submission->id)->latest('id')->lockForUpdate()->first();
+    }
+
+    private function refreshCertificate(IssuedMedicalClearance $document, HealthProfile|EmployeeHealthProfile $profile,
+        HealthFormSubmission $submission, User $actor, string $date, string $purpose, ?string $requestKey = null): IssuedMedicalClearance
+    {
+        $identity = $this->identity($profile, $date);
+        if ($identity['name'] === '' || $identity['sex'] === '' || $identity['age'] === null || $identity['age'] > 120) {
+            throw ValidationException::withMessages(['record' => 'Complete the patient name, birthday/age, and sex before updating the clearance.']);
+        }
+        // Keep prior details encrypted and retain the old PDF as revision history.
+        $review = $document->doctor_review ?? [];
+        $review['issuance_revisions'][] = [
+            'patient_name' => $document->patient_name, 'patient_age' => $document->patient_age,
+            'patient_sex' => $document->patient_sex, 'purpose' => $document->purpose,
+            'issued_on' => $document->issued_on->toDateString(), 'pdf_path' => $document->pdf_path,
+            'issued_by_user_id' => $document->issued_by_user_id, 'replaced_at' => now()->toIso8601String(),
+        ];
+        if ($requestKey) $review['approval_request_keys'][] = $requestKey;
+        $review['last_form_approval_at'] = $submission->approved_at->toIso8601String();
+        $path = 'issued_medical_clearances/' . $profile->user_id . '/' . \Illuminate\Support\Str::uuid() . '.pdf';
+        $document->fill(['patient_name' => $identity['name'], 'patient_age' => $identity['age'],
+            'patient_sex' => $identity['sex'], 'issued_on' => $date, 'purpose' => $purpose,
+            'issued_by_user_id' => $actor->id, 'doctor_review' => $review, 'pdf_path' => $path]);
+        try {
+            if (!Storage::disk('health_private')->put($path, app(HealthFileEncryption::class)->encrypt($this->renderPdf($document)))) {
+                throw new \RuntimeException('Unable to save the updated Medical Clearance PDF.');
+            }
+            $document->save();
+            // Retain the original report target and count; only refresh its date and identity.
+            \App\Models\MarClearanceIssuance::query()->where('source_record_id', 'medical-clearance:' . $document->id)
+                ->where('source_workflow', $document->record_type === 'student' ? 'student_nurse_review' : 'employee_nurse_review')
+                ->update(['approved_at' => $document->issued_on, 'user_name_snapshot' => $document->patient_name]);
+            ActivityLog::create([
+                'user_id' => $actor->id, 'user_name' => $actor->name ?: $actor->email, 'user_role' => $actor->user_role,
+                'action' => 'Medical Clearance Updated', 'module' => 'Patient Intake',
+                'event_type' => 'medical_clearance_updated', 'description' => 'Existing certificate updated after Health Form reapproval.',
+                'subject_type' => IssuedMedicalClearance::class, 'subject_id' => (string) $document->id,
+                'metadata' => ['record_type' => $document->record_type, 'profile_id' => $profile->id,
+                    'health_form_submission_id' => $submission->id],
+            ]);
+        } catch (\Throwable $exception) {
+            Storage::disk('health_private')->delete($path);
+            throw $exception;
+        }
+
+        return $document;
     }
 
     /** Refresh presentation only; never read current patient data or re-issue the record. */

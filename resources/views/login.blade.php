@@ -259,6 +259,28 @@
         .input-wrap input {
             padding-left: 44px;
         }
+        .input-wrap input.has-password-toggle { padding-right: 52px; }
+        .local-password-toggle {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 38px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: #8b0000;
+            cursor: pointer;
+        }
+        .local-password-toggle:hover { background: rgba(139, 0, 0, .08); }
+        .local-password-toggle:focus-visible { outline: 2px solid #8b0000; outline-offset: 1px; }
+        .input-wrap .local-password-toggle svg { position: static; width: 20px; height: 20px; transform: none; stroke: currentColor; }
+        .local-password-toggle[hidden], .local-password-toggle [hidden] { display: none !important; }
         .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: var(--accent);
@@ -965,12 +987,12 @@
                     </div>
 
                     <div class="form-group">
-                        <label>PASSWORD</label>
+                        <label for="localLoginPassword">PASSWORD</label>
                         <div class="input-wrap">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V7.875a4.5 4.5 0 0 0-9 0V10.5m-.75 0A2.25 2.25 0 0 0 4.5 12.75v5.25A2.25 2.25 0 0 0 6.75 20.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-5.25A2.25 2.25 0 0 0 17.25 10.5h-10.5Z" />
                             </svg>
-                            <input type="password" name="password" placeholder="Enter your password" required>
+                            @include('partials.local-login-password')
                         </div>
                     </div>
 
@@ -992,12 +1014,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label>PASSWORD</label>
+                    <label for="localLoginPassword">PASSWORD</label>
                     <div class="input-wrap">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V7.875a4.5 4.5 0 0 0-9 0V10.5m-.75 0A2.25 2.25 0 0 0 4.5 12.75v5.25A2.25 2.25 0 0 0 6.75 20.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-5.25A2.25 2.25 0 0 0 17.25 10.5h-10.5Z" />
                         </svg>
-                        <input type="password" name="password" placeholder="Enter your password" required>
+                        @include('partials.local-login-password')
                     </div>
                 </div>
 
@@ -1022,6 +1044,27 @@
   </div>
 
   <script>
+      (function initLocalLoginPasswordToggle() {
+          const password = document.getElementById('localLoginPassword');
+          const toggle = document.getElementById('localLoginPasswordToggle');
+          if (!password || !toggle) return;
+          const showIcon = toggle.querySelector('[data-password-show]');
+          const hideIcon = toggle.querySelector('[data-password-hide]');
+          function setVisible(visible) {
+              password.type = visible ? 'text' : 'password';
+              showIcon.hidden = visible;
+              hideIcon.hidden = !visible;
+              toggle.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
+              toggle.setAttribute('title', visible ? 'Hide password' : 'Show password');
+              toggle.setAttribute('aria-pressed', String(visible));
+          }
+          setVisible(false);
+          toggle.hidden = false;
+          toggle.addEventListener('click', () => setVisible(password.type === 'password'));
+          password.form?.addEventListener('submit', () => setVisible(false));
+          document.getElementById('loginSubmitBtn')?.addEventListener('click', () => setVisible(false));
+          window.addEventListener('pageshow', () => setVisible(false));
+      })();
       (function () {
           const loginForm = document.getElementById('loginForm');
           const loginSubmitBtn = document.getElementById('loginSubmitBtn');

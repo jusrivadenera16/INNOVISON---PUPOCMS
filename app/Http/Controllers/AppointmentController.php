@@ -141,6 +141,23 @@ class AppointmentController extends Controller
             ->get();
 
         $notifications = [];
+        if (Schema::hasTable('health_profile_correction_requests')) {
+            $returnedForms = HealthProfileCorrectionRequest::query()->where('user_id', $user->id)
+                ->where('type', HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION)->active()->get();
+            foreach ($returnedForms as $returned) {
+                if (!data_get($returned->metadata, 'return_for_correction')) continue;
+                $formRoute = $returned->employee_health_profile_id ? 'health.form.employee'
+                    : ($user->clinicAccountTypeKey() === 'student' ? 'health.form.student'
+                        : ($user->applicant_type === 'transferee' ? 'health.form.transferee' : 'health.form'));
+                $notifications[] = [
+                    'id' => $this->buildNotificationId('returned-health-form', [$returned->id, $returned->updated_at?->timestamp]),
+                    'type' => 'warning', 'icon' => '!', 'title' => 'Health Form returned for correction',
+                    'message' => 'Edit and resubmit your existing Health Form. Clinic remarks: ' . $returned->admin_note,
+                    'time' => $returned->requested_at?->diffForHumans() ?? 'Correction requested',
+                    'link' => route($formRoute),
+                ];
+            }
+        }
         foreach ($appointments as $appt) {
             $timeAgo = $appt->updated_at ? $appt->updated_at->diffForHumans() : 'Just now';
             $dateStr = $appt->date ? date('M d', strtotime($appt->date)) : 'N/A';
@@ -5290,7 +5307,8 @@ public function showHealthForm()
     }
 
     $existingHealthProfile = $user
-        ? HealthProfile::query()->where('user_id', $user->id)->first()
+        ? (app(\App\Services\HealthRecordCorrectionService::class)->returnedProfile($user, 'student')
+            ?: HealthProfile::query()->where('user_id', $user->id)->first())
         : null;
     $isHealthFormCorrectionMode = $this->healthProfileNeedsFormCorrection($existingHealthProfile);
     $pendingHealthFormRequest = $user
@@ -5337,7 +5355,11 @@ public function showHealthForm()
 
     // Resolve the linked admin profile (Required by your view to avoid Undefined Variable error)
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
-    $healthFormPrefill = $this->buildHealthFormPrefill($user, $linkedAdminProfile, $existingHealthProfile);
+    $profileForPrefill = $existingHealthProfile
+        ? app(\App\Services\HealthRecordCorrectionService::class)->prefill($existingHealthProfile,
+            $this->activeHealthProfileCorrectionRequest($existingHealthProfile, HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION))
+        : null;
+    $healthFormPrefill = $this->buildHealthFormPrefill($user, $linkedAdminProfile, $profileForPrefill);
     $healthFormPrefill['pending_health_form_request'] = $pendingHealthFormRequest;
     if ($isDedicatedTransfereeForm && $user?->applicant_type !== 'transferee') {
         return redirect()->route($user->clinicHealthFormRoute());
@@ -5685,7 +5707,8 @@ private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
         return redirect()->route('health.form');
     }
 
-    $employeeProfile = $user->employeeHealthProfile;
+    $employeeProfile = app(\App\Services\HealthRecordCorrectionService::class)->returnedProfile($user, 'employee')
+        ?: $user->employeeHealthProfile;
     $isDependentAccount = $user->clinicAccountTypeKey() === 'dependent';
     $activeEmployeeHealthFormRequest = $employeeProfile
         ? HealthProfileCorrectionRequest::query()
@@ -5706,7 +5729,12 @@ private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
             ->with('info', 'Your health examination record has already been submitted for clinic review.');
     }
 
+    $isReturnedForCorrection = (bool) data_get($activeEmployeeHealthFormRequest?->metadata, 'return_for_correction');
+    if ($employeeProfile && $isReturnedForCorrection) {
+        $employeeProfile = app(\App\Services\HealthRecordCorrectionService::class)->prefill($employeeProfile, $activeEmployeeHealthFormRequest);
+    }
     $employeePrefill = $this->buildEmployeeHealthFormPrefill($user, $employeeProfile);
+    $correctionNote = $isReturnedForCorrection ? $activeEmployeeHealthFormRequest->admin_note : '';
     $configuredSchoolYear = $this->configuredCurrentSchoolYear();
     $employeePrefill['school_year'] = $configuredSchoolYear;
     $employeePrefill['school_year_from_preferences'] = true;
@@ -5725,6 +5753,8 @@ private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
         'employeeHealthFormCategory',
         'employeeConsentPurpose',
         'isDependentAccount',
+        'isReturnedForCorrection',
+        'correctionNote',
         'adminForm'
     ), ['currentSchoolYear' => $configuredSchoolYear]));
 }
@@ -6035,7 +6065,8 @@ private function processEmployeeHealthForm(Request $request, bool $adminForm = f
             ->with('info', 'Please use the student/applicant Health Information Form.');
     }
 
-    $existingEmployeeProfile = $user->employeeHealthProfile;
+    $existingEmployeeProfile = app(\App\Services\HealthRecordCorrectionService::class)->returnedProfile($user, 'employee')
+        ?: $user->employeeHealthProfile;
     $employeeHistory = app(EmployeeHealthFormHistoryService::class);
     $activeEmployeeHealthFormRequest = $existingEmployeeProfile
         ? HealthProfileCorrectionRequest::query()
@@ -6056,6 +6087,16 @@ private function processEmployeeHealthForm(Request $request, bool $adminForm = f
             ->with('info', 'Your health examination record has already been submitted for clinic review.');
     }
 
+    $isReturnedForCorrection = (bool) data_get($activeEmployeeHealthFormRequest?->metadata, 'return_for_correction');
+    if ($isReturnedForCorrection && !$request->attributes->get('returned_form_transaction')) {
+        $request->attributes->set('returned_form_transaction', true);
+        return DB::transaction(function () use ($request, $adminForm, $existingEmployeeProfile, $activeEmployeeHealthFormRequest) {
+            EmployeeHealthProfile::query()->whereKey($existingEmployeeProfile->id)->lockForUpdate()->firstOrFail();
+            app(\App\Services\HealthRecordCorrectionService::class)->resubmissionTarget($existingEmployeeProfile, $activeEmployeeHealthFormRequest);
+            return $this->processEmployeeHealthForm($request, $adminForm);
+        });
+    }
+
     if ($existingEmployeeProfile && (
         in_array($existingEmployeeProfile->clearance_status, ['Approved', 'Issued', 'Fully Cleared', 'Cleared'], true)
         || $existingEmployeeProfile->verified_at
@@ -6070,7 +6111,7 @@ private function processEmployeeHealthForm(Request $request, bool $adminForm = f
 
     $employeeNumberRule = Rule::unique('health_profile_emp', 'employee_number')
         ->where(fn ($query) => $query->whereNull('deleted_at'));
-    if ($adminForm && $existingEmployeeProfile) {
+    if (($adminForm || $isReturnedForCorrection) && $existingEmployeeProfile) {
         $employeeNumberRule->ignore($existingEmployeeProfile->id);
     }
 
@@ -6128,7 +6169,7 @@ private function processEmployeeHealthForm(Request $request, bool $adminForm = f
         'traveled_abroad' => ['nullable', 'boolean'],
         'has_disability' => ['nullable', 'boolean'],
         'disability_type' => ['required_if:has_disability,1', 'nullable', 'string', 'max:255'],
-        'student_photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'extensions:jpg,jpeg,png', 'max:1024'],
+        'student_photo' => [($isReturnedForCorrection && $existingEmployeeProfile?->student_photo) ? 'nullable' : 'required', 'image', 'mimes:jpg,jpeg,png', 'extensions:jpg,jpeg,png', 'max:1024'],
         'health_declaration' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'extensions:pdf,jpg,jpeg,png', 'max:1024'],
         'medical_certificate' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'extensions:pdf,jpg,jpeg,png', 'max:1024'],
         'chest_xray_document' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'extensions:pdf,jpg,jpeg,png', 'max:1024'],
@@ -6860,14 +6901,31 @@ public function storeHealthForm(Request $request)
     if ($isDedicatedTransfereeForm && $user?->applicant_type !== 'transferee') {
         return redirect()->route($user->clinicHealthFormRoute());
     }
-    $existingHealthProfile = $user?->relationLoaded('healthProfile') && $user?->healthProfile
-        ? $user->healthProfile
-        : \App\Models\HealthProfile::where('user_id', $user?->id)->first();
+    $existingHealthProfile = ($user ? app(\App\Services\HealthRecordCorrectionService::class)->returnedProfile($user, 'student') : null)
+        ?: ($user?->relationLoaded('healthProfile') && $user?->healthProfile
+            ? $user->healthProfile
+            : \App\Models\HealthProfile::where('user_id', $user?->id)->first());
     $isHealthFormCorrectionMode = $this->healthProfileNeedsFormCorrection($existingHealthProfile);
     $activeHealthFormCorrectionRequest = $this->activeHealthProfileCorrectionRequest(
         $existingHealthProfile,
         HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION
     );
+    if (data_get($activeHealthFormCorrectionRequest?->metadata, 'return_for_correction')
+        && !$request->attributes->get('returned_form_transaction')) {
+        $request->attributes->set('returned_form_transaction', true);
+        try {
+            return DB::transaction(function () use ($request, $existingHealthProfile, $activeHealthFormCorrectionRequest) {
+                HealthProfile::query()->whereKey($existingHealthProfile->id)->lockForUpdate()->firstOrFail();
+                app(\App\Services\HealthRecordCorrectionService::class)->resubmissionTarget($existingHealthProfile, $activeHealthFormCorrectionRequest);
+                return $this->storeHealthForm($request);
+            });
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (\Throwable $exception) {
+            return back()->withInput(HealthFormRecoveryInput::fromRequest($request))
+                ->with('error', 'The corrected form could not be saved. Your existing submission was kept. Please try again.');
+        }
+    }
     $requestedCorrectionDocuments = $this->requestedHealthProfileDocuments($existingHealthProfile);
     $pendingHealthFormRequest = $user
         ? HealthFormSubmission::query()
@@ -7554,16 +7612,21 @@ public function storeHealthForm(Request $request)
             $healthProfile = $existingHealthProfile;
             $studentHealthInformationChanges = [];
         } else {
-            $healthProfile = \App\Models\HealthProfile::updateOrCreate(
-                ['user_id' => $user->id],
-                $healthProfileData
-            );
+            if (data_get($activeHealthFormCorrectionRequest?->metadata, 'return_for_correction')) {
+                $healthProfile = $existingHealthProfile;
+                $healthProfile->fill($healthProfileData)->save();
+            } else {
+                $healthProfile = \App\Models\HealthProfile::updateOrCreate(
+                    ['user_id' => $user->id],
+                    $healthProfileData
+                );
+            }
             $studentHealthInformationChanges = $existingHealthProfile
                 ? $this->studentHealthInformationChangeMetadata($existingHealthProfile, $healthProfile)
                 : [];
         }
 
-        if (!$pendingHealthFormRequest) {
+        if (!$pendingHealthFormRequest && !data_get($activeHealthFormCorrectionRequest?->metadata, 'return_for_correction')) {
             foreach ($oldPaths as $oldPath) {
                 $this->deleteHealthFileIfUnreferenced($oldPath);
             }
@@ -7574,13 +7637,16 @@ public function storeHealthForm(Request $request)
             $user->save();
         }
 
+        $correctionTarget = app(\App\Services\HealthRecordCorrectionService::class)->resubmissionTarget($healthProfile, $activeHealthFormCorrectionRequest);
         $healthFormSubmission = app(HealthFormPdfSnapshotService::class)->recordSubmittedWithoutPdf(
             $healthProfile->fresh('user'),
             $user,
             $submittedHealthFormCategory,
             trim((string) $request->input('health_form_request_remarks')),
-            $isHealthFormCorrectionMode && !$pendingHealthFormRequest,
-            $isStagedNewHealthForm ? $submittedHealthProfile : null
+            $isHealthFormCorrectionMode && !$pendingHealthFormRequest && !$correctionTarget,
+            $isStagedNewHealthForm ? $submittedHealthProfile : null,
+            false,
+            $correctionTarget
         );
 
         if ($activeHealthFormCorrectionRequest) {
@@ -7668,6 +7734,8 @@ public function storeHealthForm(Request $request)
         Log::error('Health form save failed', array_merge([
             'user_id' => $user?->id,
         ], SensitiveLogRedactor::exceptionContext($e)));
+
+        if ($request->attributes->get('returned_form_transaction')) throw $e;
 
         return back()
             ->withInput(HealthFormRecoveryInput::fromRequest($request))

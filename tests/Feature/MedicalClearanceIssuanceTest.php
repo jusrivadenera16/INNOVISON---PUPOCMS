@@ -417,6 +417,102 @@ class MedicalClearanceIssuanceTest extends TestCase
     }
 
     private function service(): MedicalClearanceService { return app(MedicalClearanceService::class); }
+
+    public function test_legacy_regular_employee_with_designee_link_loads_purposes_without_changing_account_fields(): void
+    {
+        Schema::create('admin_hub', function (Blueprint $table) {
+            $table->id(); $table->unsignedBigInteger('user_id'); $table->string('role');
+        });
+        $profile = $this->patient('employee', 'Annual Medical Clearance');
+        $profile->user->forceFill(['user_type' => 'Regular', 'user_role' => 'admin'])->save();
+        DB::table('admin_hub')->insert(['user_id' => $profile->user_id, 'role' => 'admin_designee']);
+        $submission = HealthFormSubmission::where('employee_health_profile_id', $profile->id)->first();
+        $submission->update(['status' => 'submitted', 'approved_at' => null]);
+        $response = app(MedicalClearanceController::class)->reviewOptions('employee', $profile->id, $this->service());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('Annual Medical Clearance', $response->getData(true)['purpose_options'][0]['label']);
+        $this->assertSame('Regular', $profile->user->fresh()->user_type);
+        $this->assertSame('admin', $profile->user->fresh()->user_role);
+        $this->assertSame(0, IssuedMedicalClearance::count());
+        DB::table('admin_hub')->delete();
+        $this->assertNull($profile->user->fresh()->clinicAccountTypeKey(), 'Admin permissions alone are not employee identity.');
+        $profile->user->forceFill(['idp_role' => 'student', 'student_number' => '2026-00001-TG-0'])->save();
+        DB::table('admin_hub')->insert(['user_id' => $profile->user_id, 'role' => 'admin_designee']);
+        $this->assertSame('student', $profile->user->fresh()->clinicAccountTypeKey());
+    }
+
+    public function test_reapproval_updates_only_latest_certificate_of_same_form_for_students_and_employees(): void
+    {
+        foreach (['student' => 'On the Job Training', 'employee' => 'Annual Medical Clearance'] as $type => $purpose) {
+            $profile = $this->patient($type, $purpose);
+            $actor = $this->actor();
+            $oldForm = $this->service()->approvedSubmission($profile);
+            $old = $this->service()->issue($type, $profile->id, $this->input(['purpose' => $purpose]), $actor);
+            $key = $type === 'student' ? 'health_profile_id' : 'employee_health_profile_id';
+            $latest = HealthFormSubmission::create(['user_id' => $profile->user_id, $key => $profile->id,
+                'category' => $purpose, 'status' => 'approved', 'submitted_at' => now(), 'approved_at' => now()]);
+            $first = $this->service()->issue($type, $profile->id, $this->input(['purpose' => $purpose]), $actor);
+            $current = $this->service()->issue($type, $profile->id, $this->input(['purpose' => $purpose]), $actor);
+            $oldPath = $current->pdf_path;
+            $before = IssuedMedicalClearance::count();
+            $counts = MarClearanceIssuance::count();
+            $profile->user->update(['first_name' => 'Updated', 'middle_name' => 'Patient', 'last_name' => 'Name']);
+            $latest->update(['approved_at' => now()->addHour()]);
+            $input = $this->input(['purpose' => $purpose, 'issued_on' => '2026-11-13']);
+            $updated = $this->service()->issueForApproval($type, $profile->id, $input, $actor);
+            $this->assertSame($current->id, $updated->id);
+            $this->assertSame($latest->id, $updated->health_form_submission_id);
+            $this->assertSame('Updated Patient Name', $updated->patient_name);
+            $this->assertSame('2026-11-13', $updated->issued_on->toDateString());
+            $this->assertNotSame($oldPath, $updated->pdf_path);
+            Storage::disk('health_private')->assertExists([$oldPath, $updated->pdf_path]);
+            $this->assertSame($oldPath, data_get($updated->doctor_review, 'issuance_revisions.0.pdf_path'));
+            $this->assertSame($before, IssuedMedicalClearance::count());
+            $this->assertSame($counts, MarClearanceIssuance::count());
+            $this->assertSame('Juan Dela Cruz', $old->fresh()->patient_name);
+            $this->assertSame($oldForm->id, $old->fresh()->health_form_submission_id);
+            $this->assertSame('Juan Dela Cruz', $first->fresh()->patient_name);
+            $retry = $this->service()->issueForApproval($type, $profile->id, $input, $actor);
+            $this->assertSame($updated->pdf_path, $retry->pdf_path);
+            $this->assertCount(1, $retry->doctor_review['issuance_revisions']);
+        }
+    }
+
+    public function test_direct_reapproval_retains_purpose_and_is_idempotent(): void
+    {
+        $profile = $this->patient();
+        $actor = $this->actor();
+        $document = $this->service()->issue('student', $profile->id, $this->input(), $actor);
+        $profile->user->update(['first_name' => 'Corrected', 'middle_name' => null, 'last_name' => 'Student']);
+        $updated = $this->service()->refreshAfterApproval($profile->fresh('user'), $actor);
+        $this->assertSame($document->id, $updated->id);
+        $this->assertSame('Corrected Student', $updated->patient_name);
+        $this->assertSame($document->purpose, $updated->purpose);
+        $retry = $this->service()->refreshAfterApproval($profile->fresh('user'), $actor);
+        $this->assertSame($updated->pdf_path, $retry->pdf_path);
+        $this->assertSame(1, IssuedMedicalClearance::count());
+        $this->assertSame(1, MarClearanceIssuance::count());
+    }
+
+    public function test_failed_reapproval_preserves_existing_certificate_pdf_and_count(): void
+    {
+        $profile = $this->patient();
+        $actor = $this->actor();
+        $document = $this->service()->issue('student', $profile->id, $this->input(), $actor);
+        $files = Storage::disk('health_private')->allFiles();
+        Pdf::shouldReceive('loadView')->once()->andThrow(new \RuntimeException('PDF failed'));
+        try {
+            $this->service()->issueForApproval('student', $profile->id, $this->input(), $actor);
+            $this->fail('PDF failure should abort reapproval.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('PDF failed', $exception->getMessage());
+        }
+        $this->assertSame($document->pdf_path, $document->fresh()->pdf_path);
+        $this->assertNull($document->fresh()->doctor_review);
+        $this->assertSame($files, Storage::disk('health_private')->allFiles());
+        $this->assertSame(1, IssuedMedicalClearance::count());
+        $this->assertSame(1, MarClearanceIssuance::count());
+    }
     private function actor(): User { return User::forceCreate(['name' => 'Clinic Staff', 'user_role' => 'superadmin']); }
     private function patient(string $type = 'student', string $category = 'On the Job Training')
     {
@@ -710,6 +806,21 @@ class MedicalClearanceIssuanceTest extends TestCase
         $this->assertSame($submission->id, $document->health_form_submission_id);
         $this->assertSame('On the Job Training', $document->purpose);
         $this->assertStringContainsString('/student/'.$profile->id.'/', $response->getData(true)['medical_clearance_url']);
+
+        // Reopen the same form, then exercise the real approval endpoint again.
+        $originalPath = $document->pdf_path;
+        $profile->refresh()->forceFill(['clearance_status' => 'For Verification'])->save();
+        $submission->refresh()->forceFill(['status' => 'submitted', 'approved_at' => null])->save();
+        $profile->user->update(['first_name' => 'Updated', 'middle_name' => null, 'last_name' => 'Student']);
+        $retry = Request::create('/', 'POST', ['reference_number' => '2026-00001-TG-1', 'clearance_decision' => 'approve',
+            'medical_clearance' => $this->input()]);
+        $retry->setUserResolver(fn () => $actor);
+        $reapproved = app(\App\Http\Controllers\WalkInController::class)->saveStudentAssessment($retry);
+        $this->assertSame(200, $reapproved->getStatusCode(), $reapproved->getContent());
+        $this->assertSame(1, IssuedMedicalClearance::count());
+        $this->assertSame('Updated Student', $document->fresh()->patient_name);
+        $this->assertNotSame($originalPath, $document->fresh()->pdf_path);
+        $this->assertSame($submission->id, $document->fresh()->health_form_submission_id);
     }
 
     public function test_certificate_failure_during_student_review_rolls_back_the_approval_and_submission(): void

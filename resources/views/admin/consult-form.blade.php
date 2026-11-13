@@ -5121,7 +5121,9 @@
     $draftValue = static function (string $key, $default = '') use ($consultationDraftData) {
         return old($key, array_key_exists($key, $consultationDraftData) ? $consultationDraftData[$key] : $default);
     };
-    $currentConsultService = trim((string) $draftValue('service', optional($latestAppointment)->service));
+    $consultServiceLocked = ($user_source ?? '') === 'online' || !empty($selectedConsultationService);
+    $currentConsultService = trim((string) (($user_source ?? '') !== 'online' && !empty($selectedConsultationService)
+        ? $selectedConsultationService : $draftValue('service', optional($latestAppointment)->service)));
     $hasConfiguredClinicDocumentService = collect($otherServiceOptions ?? [])->contains(function ($serviceOption) {
         return trim((string) $serviceOption->serviceLabel()) === 'Clinic Document Services';
     });
@@ -5425,11 +5427,11 @@
                                 return strtolower(trim((string) $serviceOption->serviceLabel())) === 'bp monitoring';
                             });
                         @endphp
-                        <select id="consultService" class="form-control" data-clinic-select @if(($user_source ?? '') === 'online') disabled @else name="service" @endif required>
+                        <select id="consultService" class="form-control" data-clinic-select @if($consultServiceLocked) disabled @else name="service" @endif required>
                             <option value="" disabled {{ !$currentConsultService ? 'selected' : '' }}>Select clinic service</option>
                             <option value="General Consultation" {{ $currentConsultService === 'General Consultation' ? 'selected' : '' }}>General Consultation</option>
-                            @if($currentConsultService === 'Clinic Document Services' && !$hasConfiguredClinicDocumentService)
-                                <option value="Clinic Document Services" selected>Clinic Document Services</option>
+                            @if(!$hasConfiguredClinicDocumentService)
+                                <option value="Clinic Document Services" {{ $currentConsultService === 'Clinic Document Services' ? 'selected' : '' }}>Clinic Document Services</option>
                             @endif
                             @if(!$hasConfiguredBpMonitoring)
                                 <option value="BP Monitoring" {{ $currentConsultService === 'BP Monitoring' ? 'selected' : '' }}>BP Monitoring</option>
@@ -5438,8 +5440,8 @@
                                 <option value="{{ $serviceOption->serviceLabel() }}" {{ $currentConsultService === $serviceOption->serviceLabel() ? 'selected' : '' }}>{{ $serviceOption->serviceLabel() }}</option>
                             @endforeach
                         </select>
-                        @if(($user_source ?? '') === 'online')
-                            <input type="hidden" name="service" value="{{ $draftValue('service', optional($latestAppointment)->service) }}">
+                        @if($consultServiceLocked)
+                            <input type="hidden" name="service" value="{{ $currentConsultService }}">
                         @endif
                     </div>
                 </div>

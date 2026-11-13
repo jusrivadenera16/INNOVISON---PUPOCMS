@@ -60,10 +60,14 @@
         : null;
     $employeeDocuments = collect($employeeDocuments ?? []);
     $canManageNewEmployeeHealthForm = (bool) ($canRequestNewEmployeeHealthForm ?? false);
-    $canSendRecordEvaluation = !$isDependentRecord
-        && in_array($status, ['Issued', 'Fully Cleared'], true)
-        && strtolower(trim((string) $employeeProfile?->submission_status)) === 'approved'
+    $consultPatientIdentifier = trim((string) ($employeeUser?->student_id ?: $employeeProfile?->employee_number
+        ?: $employeeUser?->employee_number ?: $employeeProfile?->student_number));
+    $canViewConsultation = (optional(auth()->user())->canAccessPermission('walkin.encode_assessment') ?? false);
+    $canStartConsultation = $consultPatientIdentifier !== '' && $canViewConsultation;
+    $canViewRecordEvaluation = !$isDependentRecord
         && (optional(auth()->user())->canAccessPermission('health_records.update_assessment') ?? false);
+    $canSendRecordEvaluation = $canViewRecordEvaluation
+        && in_array($status, ['Issued', 'Fully Cleared'], true);
     $canRequestNewEmployeeHealthForm = $canManageNewEmployeeHealthForm && !$activeNewHealthFormRequest;
     $canViewExistingNewEmployeeHealthFormRequest = $canManageNewEmployeeHealthForm && (bool) $activeNewHealthFormRequest;
     $existingNewHealthFormCategory = data_get($activeNewHealthFormRequest?->metadata, 'category')
@@ -1382,6 +1386,14 @@
         outline: none;
     }
 
+    .health-profile-wrap .employee-profile-actions-menu button:disabled {
+        opacity: .55;
+        cursor: not-allowed;
+        transform: none;
+        background: #f1f5f9;
+        color: #64748b;
+        border-color: #dbe2ea;
+    }
     .employee-action-modal {
         display: none;
         position: fixed;
@@ -2082,10 +2094,15 @@
                                 <span aria-hidden="true">+</span>
                             </button>
                         @endif
-                        @if($canSendRecordEvaluation)
-                            <button type="button" data-record-evaluation-open role="menuitem" aria-haspopup="dialog" aria-controls="recordEvaluationModal">
+                        @if($canViewRecordEvaluation)
+                            <button type="button" data-record-evaluation-open role="menuitem" aria-haspopup="dialog" aria-controls="recordEvaluationModal" @if(!$canSendRecordEvaluation) disabled title="Available after the current health record is approved." @endif>
                                 <span>Send Evaluation</span>
                                 <span aria-hidden="true"><x-outline-icon name="envelope" /></span>
+                            </button>
+                        @endif
+                        @if($canViewConsultation)
+                            <button type="button" data-record-consult-open aria-haspopup="dialog" aria-controls="recordConsultDialog" role="menuitem" @if(!$canStartConsultation) disabled title="Add the patient's ID number before starting a consultation." @endif>
+                                <span>Consult</span>
                             </button>
                         @endif
                         <button type="button" data-health-record-history-open aria-haspopup="dialog" aria-controls="healthRecordHistoryModal" role="menuitem">
@@ -2797,6 +2814,9 @@
     ])
 @endif
 @include('admin.partials.health-record-history-modal')
+@if($canStartConsultation)
+    @include('admin.partials.record-consult-modal', ['consultPatientIdentifier' => $consultPatientIdentifier])
+@endif
 @endsection
 
 @push('scripts')

@@ -2923,6 +2923,7 @@
         object-fit: cover;
         background: #ffffff;
     }
+    #verifyApprovalModal .pending-document-preview img { object-fit: contain; }
     .verification-doc-card:not(a) {
         justify-content: center;
     }
@@ -8909,6 +8910,9 @@
                         'physical_assessment_status' => $record->physical_assessment_status ?: 'Not Yet Conducted',
                         'documents_valid' => (bool) $record->documents_valid,
                         'approve_url' => $recordIsEmployee ? '' : route('admin.update_clearance', $record->id),
+                        'correction_submission_id' => (int) $record->pending_approval_submission_id,
+                        'correction_url' => optional(auth()->user())->canAccessPermission('health_records.request_resubmission')
+                            ? route('admin.health_records.return_for_correction', ['type' => $recordIsEmployee ? 'employee' : 'student', 'profile' => $record->id]) : '',
                         'resubmission_url' => $recordIsEmployee
                             ? route('admin.employee_health_profile.request_resubmission', $record->id)
                             : route('admin.health_profile.request_resubmission', $record->id),
@@ -9318,6 +9322,7 @@
                             'is_regular_student' => $readonlyIsRegularStudent,
                             'condition_items' => $readonlyConditionItems,
                             'has_medical_condition' => $readonlyHasCondition,
+                            'preview_documents' => true,
                             'name' => optional($readonlyRecord->user)->name ?: '-',
                             'email' => optional($readonlyRecord->user)->email ?: '-',
                             'reference_number' => $readonlyReference,
@@ -9338,6 +9343,9 @@
                             'physical_assessment_status' => $readonlyRecord->physical_assessment_status ?: 'Not Yet Conducted',
                             'documents_valid' => (bool) $readonlyRecord->documents_valid,
                             'approve_url' => $readonlyIsEmployee ? '' : route('admin.update_clearance', $readonlyRecord->id),
+                            'correction_submission_id' => (int) $readonlyRecord->pending_approval_submission_id,
+                            'correction_url' => optional(auth()->user())->canAccessPermission('health_records.request_resubmission')
+                                ? route('admin.health_records.return_for_correction', ['type' => $readonlyIsEmployee ? 'employee' : 'student', 'profile' => $readonlyRecord->id]) : '',
                             'resubmission_url' => $readonlyIsEmployee
                                 ? route('admin.employee_health_profile.request_resubmission', $readonlyRecord->id)
                                 : route('admin.health_profile.request_resubmission', $readonlyRecord->id),
@@ -9351,6 +9359,9 @@
                             'documents' => collect($readonlyUploadDocs)->map(fn ($document, $title) => [
                                 'title' => $title,
                                 'url' => $document['path'] ? $document['url'] : '',
+                                'preview_type' => ($document['key'] ?? '') === 'health_form' ? 'pdf'
+                                    : (in_array(strtolower(pathinfo((string) $document['path'], PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp'], true) ? 'image'
+                                        : (strtolower(pathinfo((string) $document['path'], PATHINFO_EXTENSION)) === 'pdf' ? 'pdf' : 'file')),
                                 'format' => ($document['key'] ?? '') === 'health_form' ? 'PDF document'
                                     : (in_array(strtolower(pathinfo((string) $document['path'], PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp'], true) ? 'Image file' : 'PDF document'),
                             ])->values()->all(),
@@ -9750,6 +9761,9 @@
             <div class="verify-content-actions" aria-label="Additional review actions">
                 <div class="verify-content-action-group">
                     <button type="submit" form="verifyWithdrawHealthRecordForm" class="verify-proposed-withdraw" id="verifyWithdrawHealthRecordBtn" disabled><span>Mark as Withdrawn</span></button>
+                    @if(optional(auth()->user())->canAccessPermission('health_records.request_resubmission'))
+                        <button type="button" class="verify-proposed-walkin" id="verifyReturnForCorrectionBtn" disabled><span>Return for Correction</span></button>
+                    @endif
                     @if($canSignHealth)
                         <button type="submit" form="verifyRegularStudentDecisionForm" class="verify-proposed-walkin" id="verifyRegularStudentApproveBtn" data-regular-decision="Fully Cleared" hidden><span>Approve</span></button>
                     @endif
@@ -10084,9 +10098,14 @@
 @if(config('health_form_features.temporary_student_category_change'))
     @include('admin.partials.temporary-student-category-assets')
 @endif
+@if(optional(auth()->user())->canAccessPermission('health_records.request_resubmission'))
+    @include('admin.partials.return-for-correction-modal')
+@endif
+@include('admin.partials.withdraw-confirmation-modal')
 @endsection
 
 @push('scripts')
+<script src="{{ asset('js/pending-approval-document-preview.js') }}?v={{ filemtime(public_path('js/pending-approval-document-preview.js')) }}"></script>
 <script>
     // Build condition detail only when View Info is opened, not once per hidden card.
     window.healthRecordConditionMarkup = function (payload) {
@@ -10311,6 +10330,7 @@
             if (documentResubmissionForm) {
                 documentResubmissionForm.setAttribute('action', payload.resubmission_url || '');
             }
+            if (window.configureHealthRecordCorrection) window.configureHealthRecordCorrection(payload);
             if (documentResubmissionToggle) {
                 documentResubmissionToggle.checked = false;
             }
@@ -10376,7 +10396,8 @@
                             var docTitle = doc.title || 'Requirement';
                             var isPhoto = /photo/i.test(docTitle);
                             var isHealthForm = String(docTitle).toLowerCase() === 'health information form';
-                            var preview = '<span class="verification-doc-preview health-form-doc-preview" aria-hidden="true"><span class="health-form-doc-title">' + escapeValue(docTitle) + '</span></span>';
+                            var preview = window.PendingApprovalDocumentPreview?.render(doc, payload.preview_documents === true)
+                                || '<span class="verification-doc-preview health-form-doc-preview" aria-hidden="true"><span class="health-form-doc-title">' + escapeValue(docTitle) + '</span></span>';
                             var format = isPhoto ? 'Image file' : (isHealthForm ? 'PDF document' : 'Uploaded file');
                             return '<a class="verification-doc-card" href="' + escapeValue(doc.url) + '" target="_blank" rel="noopener noreferrer"><strong>' + escapeValue(docTitle) + '</strong><span class="verification-doc-status verification-doc-status-spacer" aria-hidden="true"></span>' + preview + '<span class="verification-doc-meta">' + format + '</span><span class="verification-doc-open"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.644C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.437 0 .644C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg><span>Open</span></span></a>';
                         }
@@ -10997,6 +11018,7 @@
 
     function resetDocumentResubmissionForm(payload) {
         const recordPayload = payload || {};
+        if (window.configureHealthRecordCorrection) window.configureHealthRecordCorrection(recordPayload);
         if (verifyDocumentResubmissionForm) {
             verifyDocumentResubmissionForm.setAttribute('action', recordPayload.resubmission_url || '');
         }
@@ -11333,17 +11355,32 @@
     });
 
     if (verifyWithdrawHealthRecordForm) {
+        const withdrawDialog = document.getElementById('withdrawHealthRecordDialog');
+        let confirmedWithdrawAction = null;
+        withdrawDialog?.querySelector('[data-withdraw-cancel]').addEventListener('click', () => withdrawDialog.close());
+        withdrawDialog?.querySelector('[data-withdraw-confirm]').addEventListener('click', () => {
+            if (!verifyWithdrawHealthRecordBtn || verifyWithdrawHealthRecordBtn.disabled) return;
+            confirmedWithdrawAction = verifyWithdrawHealthRecordForm.getAttribute('action');
+            verifyWithdrawHealthRecordForm.requestSubmit();
+        });
         verifyWithdrawHealthRecordForm.addEventListener('submit', function (event) {
             if (!verifyWithdrawHealthRecordForm.getAttribute('action')) {
                 event.preventDefault();
                 return;
             }
 
-            if (!window.confirm('Mark this health record as withdrawn? The saved health information, documents, and user account will be kept.')) {
+            if (!confirmedWithdrawAction || confirmedWithdrawAction !== verifyWithdrawHealthRecordForm.getAttribute('action')) {
                 event.preventDefault();
+                confirmedWithdrawAction = null;
+                if (withdrawDialog && !verifyWithdrawHealthRecordBtn?.disabled) {
+                    withdrawDialog.showModal();
+                    withdrawDialog.querySelector('[data-withdraw-cancel]').focus();
+                }
                 return;
             }
 
+            confirmedWithdrawAction = null;
+            document.querySelectorAll('dialog[open]').forEach(dialog => dialog.close());
             if (verifyWithdrawHealthRecordBtn) {
                 verifyWithdrawHealthRecordBtn.disabled = true;
             }
@@ -11676,7 +11713,7 @@
         count.textContent = uploaded.length + ' of ' + documents.length + ' documents uploaded';
     }
 
-    function renderVerificationDocuments(documents) {
+    function renderVerificationDocuments(documents, allowPreviews = false) {
         if (!verificationDocsGrid) return;
         const docs = Array.isArray(documents) ? documents : [];
         verificationDocsGrid.innerHTML = docs.map(function (doc) {
@@ -11684,7 +11721,8 @@
                 const docTitle = doc.title || 'Requirement';
                 const isPhoto = /photo/i.test(docTitle);
                 const isHealthForm = String(docTitle).toLowerCase() === 'health information form';
-                const preview = `<span class="verification-doc-preview health-form-doc-preview" aria-hidden="true"><span class="health-form-doc-title">${escapeHtml(docTitle)}</span></span>`;
+                const preview = window.PendingApprovalDocumentPreview?.render(doc, allowPreviews)
+                    || `<span class="verification-doc-preview health-form-doc-preview" aria-hidden="true"><span class="health-form-doc-title">${escapeHtml(docTitle)}</span></span>`;
                 const format = doc.format || (isPhoto ? 'Image file' : (isHealthForm ? 'PDF document' : 'Uploaded file'));
                 return `
                     <a class="verification-doc-card" href="${escapeHtml(doc.url)}" target="_blank" rel="noopener noreferrer">
@@ -11863,7 +11901,7 @@
             verificationConditionGrid.innerHTML = window.healthRecordConditionMarkup(payload);
         }
         if (!row.querySelector('[data-review-documents-template]')) {
-            renderVerificationDocuments(payload.documents || []);
+            renderVerificationDocuments(payload.documents || [], payload.preview_documents === true);
         } else {
             updateVerificationDocumentCount();
         }
