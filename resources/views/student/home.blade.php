@@ -3494,7 +3494,7 @@
   top: 52%;
   width: 400px;
   height: 400px;
-  background: url('{{ asset("images/stagingphonebg.png") }}') center / contain no-repeat;
+  background: url('{{ asset("images/homephonebg.png") }}') center / contain no-repeat;
   opacity: 0.18;
   transform: translate(-50%, -50%);
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.12));
