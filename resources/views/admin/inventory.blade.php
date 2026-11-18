@@ -6737,8 +6737,10 @@
         $canImportInventory = optional(auth()->user())->canAccessPermission('inventory.import') ?? false;
         $canAddInventoryStock = optional(auth()->user())->canAccessPermission('inventory.add_stock') ?? false;
         $canManageInventoryItems = optional(auth()->user())->canAccessPermission('inventory.manage') ?? false;
-        $canChangeInventory = $canAddInventoryStock || $canManageInventoryItems;
+        $canIssueInventoryStock = optional(auth()->user())->canAccessPermission('inventory.issue_stock') ?? false;
+        $canChangeInventory = $canAddInventoryStock || $canManageInventoryItems || $canIssueInventoryStock;
         $canManageInventory = $canImportInventory || $canAddInventoryStock || $canManageInventoryItems;
+        $canRenderInventoryActionModals = $canManageInventory || $canIssueInventoryStock;
         $highlightItemId = (string) request()->query('highlight_item', '');
         $inventoryImportPreview = session('inventory_import_preview');
         $inventoryImportFeedback = session('inventory_import_feedback');
@@ -7044,7 +7046,7 @@
                                             <span>Restock</span>
                                         </button>
                                         @endif
-                                        @if($canManageInventoryItems)
+                                        @if($canIssueInventoryStock)
                                         <button type="button" class="inventory-actions-menu-item" onclick='closeInventoryActionMenus(); openIssueModal(@json($editItemPayload));'>
                                             <span>Issue Stock</span>
                                         </button>
@@ -7087,7 +7089,7 @@
         </div>
     </div>
 
-    @if($canManageInventory)
+    @if($canRenderInventoryActionModals)
         <div id="inventoryImportModal" class="modal-overlay" data-open-on-load="{{ ((is_array($inventoryImportFeedback ?? null) || $inventoryImportValidationError) && empty($inventoryImportPreview['rows'] ?? [])) ? 'true' : 'false' }}">
             <div class="modal-box">
                 <div class="inventory-modal-head">

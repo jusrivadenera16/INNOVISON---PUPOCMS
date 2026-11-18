@@ -182,12 +182,12 @@
                         <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="health_records.review_documents" data-module-action>
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
-                            <span><strong>Review documents</strong><small>Review submitted health requirements</small></span>
+                            <span><strong>Review Documents &amp; Route Records</strong><small>Review submitted requirements and move records between review stages</small></span>
                         </label>
                         <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="health_records.request_resubmission" data-module-action>
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
-                            <span><strong>Request resubmission</strong><small>Return incomplete or invalid documents</small></span>
+                            <span><strong>Corrections &amp; Withdrawals</strong><small>Return incomplete records for correction or withdraw a pending submission</small></span>
                         </label>
                         <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="health_records.request_health_form" data-module-action>
@@ -197,7 +197,7 @@
                         <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="health_records.update_assessment" data-module-action>
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
-                            <span><strong>Update assessment</strong><small>Edit final review and assessment details</small></span>
+                            <span><strong>Edit Health Information &amp; Assessment</strong><small>Edit saved profile details and assessment data. View access alone does not allow changes.</small></span>
                         </label>
                         <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="health_records.revoke_clearance" data-module-action>
@@ -243,6 +243,11 @@
                             <input type="checkbox" name="module_permissions[]" value="inventory.manage" data-module-action>
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
                             <span><strong>Manage inventory</strong><small>Create, edit, or remove inventory items</small></span>
+                        </label>
+                        <label class="um-action-permission">
+                            <input type="checkbox" name="module_permissions[]" value="inventory.issue_stock" data-module-action>
+                            <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
+                            <span><strong>Issue stock</strong><small>Record consumed or dispensed stock</small></span>
                         </label>
                     </div>
                 </div>

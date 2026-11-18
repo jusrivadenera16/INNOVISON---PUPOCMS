@@ -4302,9 +4302,21 @@ PROMPT;
         $healthProfile->save();
         $healthProfile->refresh()->loadMissing('user');
 
+        $pendingHealthFormPdfWarning = null;
+        try {
+            app(HealthFormPdfSnapshotService::class)->refreshExistingSnapshot($healthProfile);
+        } catch (\Throwable $exception) {
+            Log::warning('Walk-in health information was saved, but its pending Health Form PDF could not be refreshed.', [
+                'health_profile_id' => $healthProfile->id,
+                'exception_type' => get_class($exception),
+            ]);
+            $pendingHealthFormPdfWarning = 'Health information was saved, but the pending Health Form PDF could not be refreshed. Please retry before approval.';
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Health form information updated.',
+            'message' => $pendingHealthFormPdfWarning ?: 'Health form information updated.',
+            'pdf_refresh_warning' => $pendingHealthFormPdfWarning,
             'health_form_information' => $this->healthProfileInformationPayload($healthProfile),
         ]);
     }

@@ -3307,7 +3307,8 @@ public function account(Request $request)
     $pendingCount   = $appointments->where('status', 'Pending')->count();
     $approvedCount  = $appointments->where('status', 'Approved')->count();
     $completedCount = $appointments->where('status', 'Completed')->count();
-    $cancelledCount = $appointments->whereIn('status', ['Cancelled', 'Rejected'])->count();
+    $cancelledCount = $appointments->where('status', 'Cancelled')->count();
+    $rejectedCount = $appointments->where('status', 'Rejected')->count();
 
     // 4. Notification Logic
     $notifications = collect($this->getStudentNotifications($user))->values();
@@ -3546,6 +3547,7 @@ public function account(Request $request)
         'approvedCount', 
         'completedCount', 
         'cancelledCount', 
+        'rejectedCount',
         'notifications',
         'notificationFilter',
         'notificationCounts',
@@ -4937,18 +4939,20 @@ public function account(Request $request)
         $upcomingCount = 0;
         $completedCount = 0;
         $cancelledCount = 0;
+        $rejectedCount = 0;
 
         if ($user) {
             $appointments = Appointment::where('user_id', $user->id)->get();
             $pendingCount = $appointments->where('status', 'Pending')->count();
             $upcomingCount = $appointments->where('status', 'Approved')->count();
             $completedCount = $appointments->where('status', 'Completed')->count();
-            $cancelledCount = $appointments->whereIn('status', ['Cancelled', 'Rejected'])->count();
+            $cancelledCount = $appointments->where('status', 'Cancelled')->count();
+            $rejectedCount = $appointments->where('status', 'Rejected')->count();
         }
 
         $faqs = Faq::query()->where('is_active', true)->latest()->get();
 
-        return view('student.faq', compact('user', 'pendingCount', 'upcomingCount', 'completedCount', 'cancelledCount', 'faqs'));
+        return view('student.faq', compact('user', 'pendingCount', 'upcomingCount', 'completedCount', 'cancelledCount', 'rejectedCount', 'faqs'));
     }
 
     //-------------------------------

@@ -426,7 +426,7 @@ class ReportsController extends Controller
             'month_from' => $monthFrom,
             'month_to' => $monthTo,
             'patient_type' => $this->normalizeAppointmentStatsFilter((string) $request->query('patient_type', ''), ['student', 'faculty', 'admin', 'dependent']),
-            'status' => $this->normalizeAppointmentStatsFilter((string) $request->query('status', ''), ['pending', 'approved', 'completed', 'cancelled', 'expired', 'missed']),
+            'status' => $this->normalizeAppointmentStatsFilter((string) $request->query('status', ''), ['pending', 'approved', 'completed', 'cancelled', 'rejected', 'expired', 'missed']),
             'service' => $this->normalizeAppointmentStatsFilter((string) $request->query('service', ''), ['general_consultation', 'blood_pressure_monitoring']),
             'source' => $this->normalizeAppointmentStatsFilter((string) $request->query('source', ''), ['online', 'walk-in']),
         ];
@@ -471,7 +471,7 @@ class ReportsController extends Controller
         ];
 
         $statusBreakdown = $this->appointmentStatsBreakdown($rows, 'status', [
-            'pending', 'approved', 'completed', 'cancelled', 'expired', 'missed',
+            'pending', 'approved', 'completed', 'cancelled', 'rejected', 'expired', 'missed',
         ]);
         $patientTypeBreakdown = $this->appointmentStatsBreakdown($rows, 'patient_type', [
             'student', 'faculty', 'admin', 'dependent',
@@ -585,6 +585,7 @@ class ReportsController extends Controller
             'approved' => 'approved',
             'completed', 'complete' => 'completed',
             'cancelled', 'canceled' => 'cancelled',
+            'rejected' => 'rejected',
             'expired' => 'expired',
             'missed' => 'missed',
             default => 'pending',

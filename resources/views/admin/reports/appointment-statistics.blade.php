@@ -863,7 +863,7 @@
                             <label for="status">Status</label>
                             <select class="appointment-stats-control" id="status" name="status">
                                 <option value="">All Statuses</option>
-                                @foreach(['pending' => 'Pending', 'approved' => 'Approved', 'completed' => 'Completed', 'cancelled' => 'Cancelled', 'expired' => 'Expired', 'missed' => 'Missed'] as $value => $label)
+                                @foreach(['pending' => 'Pending', 'approved' => 'Approved', 'completed' => 'Completed', 'cancelled' => 'Cancelled', 'rejected' => 'Rejected', 'expired' => 'Expired', 'missed' => 'Missed'] as $value => $label)
                                     <option value="{{ $value }}" {{ $filters['status'] === $value ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
                             </select>

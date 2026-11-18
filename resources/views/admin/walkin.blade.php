@@ -6059,8 +6059,21 @@
 
     .health-info-vaccine-dose {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: 8px;
+        min-width: 0;
+    }
+
+    .health-info-vaccine-dose .health-info-input {
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .health-info-vaccine-label {
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 800;
     }
 
     .health-info-vaccine-dose strong {
@@ -10371,6 +10384,10 @@
 
     html[data-theme="dark"] #applicantHealthInfoModal .health-info-vaccine-dose strong {
         color: #fde68a !important;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-vaccine-label {
+        color: #94a3b8 !important;
     }
 
     html[data-theme="dark"] #applicantMedicalConditionModal .applicant-medical-condition-details {
@@ -16977,8 +16994,10 @@
                                 return `
                                     <div class="health-info-vaccine-dose">
                                         <strong>${escapeApplicantHtml(doseLabel)}</strong>
+                                        <span class="health-info-vaccine-label">Date</span>
                                         <input class="health-info-input" type="date" data-health-vaccine-dose="${escapeApplicantHtml(doseKey)}" data-health-vaccine-field="date" value="${escapeApplicantHtml(dose.date || '')}">
-                                        <input class="health-info-input" type="text" data-health-vaccine-dose="${escapeApplicantHtml(doseKey)}" data-health-vaccine-field="brand" value="${escapeApplicantHtml(dose.brand || '')}" placeholder="Brand">
+                                        <span class="health-info-vaccine-label">Vaccine Brand</span>
+                                        <input class="health-info-input" type="text" data-health-vaccine-dose="${escapeApplicantHtml(doseKey)}" data-health-vaccine-field="brand" value="${escapeApplicantHtml(dose.brand || '')}" maxlength="100" placeholder="Enter vaccine brand" aria-label="${escapeApplicantHtml(doseLabel)} vaccine brand">
                                     </div>
                                 `;
                             }).join('')}
@@ -17263,7 +17282,7 @@
                     });
                 }
                 setHealthInfoEditing(false);
-                setStatus('success', data.message || 'Health form information updated.');
+                setStatus(data.pdf_refresh_warning ? 'error' : 'success', data.message || 'Health form information updated.');
             })
             .catch(error => {
                 setStatus('error', error.message || 'Unable to update health form information.');

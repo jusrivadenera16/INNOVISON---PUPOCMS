@@ -6092,14 +6092,14 @@ class AdminController extends Controller
             $brand = trim((string) ($dose['brand'] ?? ''));
             $date = trim((string) ($dose['date'] ?? ''));
             if (($brand === '') !== ($date === '')) {
-                $errors["medical_information.vaccine_history.{$key}.date"] = "Enter both the brand and date for {$label}, or leave both blank.";
+                $errors["medical_information.vaccine_history.{$key}.date"] = "Enter both the vaccine brand and date for {$label}, or leave both blank.";
                 continue;
             }
             if ($brand === '') {
                 continue;
             }
             if (mb_strlen($brand) > 100) {
-                $errors["medical_information.vaccine_history.{$key}.brand"] = "The {$label} brand must be 100 characters or fewer.";
+                $errors["medical_information.vaccine_history.{$key}.brand"] = "The {$label} vaccine brand must be 100 characters or fewer.";
             }
 
             try {
@@ -6299,19 +6299,40 @@ class AdminController extends Controller
             return $changedFields;
         });
 
+        $pendingHealthFormPdfRefreshed = false;
+        $pendingHealthFormPdfWarning = null;
+        if ($updatedFields !== [] && $profileClass === HealthProfile::class) {
+            try {
+                $refreshedSubmission = app(HealthFormPdfSnapshotService::class)
+                    ->refreshExistingSnapshot(HealthProfile::with('user')->findOrFail($profileId));
+                $pendingHealthFormPdfRefreshed = $refreshedSubmission !== null;
+            } catch (\Throwable $exception) {
+                logger()->warning('Student health information was saved, but its pending Health Form PDF could not be refreshed.', [
+                    'health_profile_id' => $profileId,
+                    'exception_type' => get_class($exception),
+                ]);
+                $pendingHealthFormPdfWarning = 'Your changes were saved, but the pending Health Form PDF could not be refreshed. Please retry before approval.';
+            }
+        }
+
         $message = $updatedFields === []
             ? 'No medical information changes to save.'
-            : 'Medical information updated successfully.';
+            : ($pendingHealthFormPdfRefreshed
+                ? 'Medical information and the pending Health Form PDF updated successfully.'
+                : 'Medical information updated successfully.');
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => $message,
+                'message' => $pendingHealthFormPdfWarning ?: $message,
                 'updated_fields' => $updatedFields,
+                'pending_health_form_pdf_refreshed' => $pendingHealthFormPdfRefreshed,
+                'warning' => $pendingHealthFormPdfWarning,
             ]);
         }
 
-        return redirect()->route($redirectRoute, $routeParameters)->with('success', $message);
+        return redirect()->route($redirectRoute, $routeParameters)
+            ->with($pendingHealthFormPdfWarning ? 'error' : 'success', $pendingHealthFormPdfWarning ?: $message);
     }
 
     private function medicalInformationValuesAreEquivalent(string $field, mixed $current, mixed $next): bool
@@ -8871,6 +8892,9 @@ public function updateClearance(Request $request, $id)
         $previousStatus = '';
         $statusError = null;
         $actionMessage = trim((string) request()->query('message', ''));
+        if (!in_array($status, ['Approved', 'Rejected'], true)) {
+            return redirect()->back()->with('error', 'Appointments can only be approved or rejected by clinic staff.');
+        }
         if ($status === 'Rejected' && $actionMessage === '') {
             return redirect()->back()->with('error', 'Please provide a reason for rejecting this appointment.');
         }

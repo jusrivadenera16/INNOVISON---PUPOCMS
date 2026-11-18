@@ -1368,7 +1368,8 @@
       .history-entry-status.status-pending,
       .history-entry-status.status-approved { background: #fff7da; color: #a75b00; }
       .history-entry-status.status-missed,
-      .history-entry-status.status-expired { background: #fff0f2; color: #bd1734; }
+      .history-entry-status.status-expired,
+      .history-entry-status.status-rejected { background: #fff0f2; color: #bd1734; }
       .history-entry-status.status-cancelled { background: #eef2f5; color: #596575; }
       .history-view-btn {
           min-height: 32px;
@@ -1458,6 +1459,7 @@
       .history-summary-list dt i.is-upcoming { background: #e59600; }
       .history-summary-list dt i.is-completed { background: #16a34a; }
       .history-summary-list dt i.is-missed { background: #ef4760; }
+      .history-summary-list dt i.is-rejected { background: #bd1734; }
       .history-summary-list dd { margin: 0; color: #182033; font-size: 13px; font-weight: 900; }
       .history-summary-total {
           display: flex;
@@ -1747,6 +1749,7 @@
                         'completed' => 'status-completed',
                         'missed' => 'status-missed',
                         'cancelled' => 'status-cancelled',
+                        'rejected' => 'status-rejected',
                         'expired' => 'status-expired',
                         default => 'status-default',
                     };

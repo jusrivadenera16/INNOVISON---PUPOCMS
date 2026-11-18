@@ -627,7 +627,7 @@
     .profile-dashboard .hero-stats {
         grid-column: 1 / -1;
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         width: 100%;
         box-sizing: border-box;
         gap: 0;
@@ -2283,7 +2283,7 @@
         .profile-dashboard .hero-stats {
             display: grid;
             grid-row: 2;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 0;
             margin-top: 14px;
             padding: 12px 0;
@@ -8255,7 +8255,12 @@
                 <div class="stat-item">
                     <span class="stat-icon"><x-outline-icon name="x-mark" /></span>
                     <span class="stat-val">{{ $cancelledCount ?? 0 }}</span>
-                    <span class="stat-label">Unsuccessful</span>
+                    <span class="stat-label">Cancelled</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon"><x-outline-icon name="x-mark" /></span>
+                    <span class="stat-val">{{ $rejectedCount ?? 0 }}</span>
+                    <span class="stat-label">Rejected</span>
                 </div>
             </div>
         </div>

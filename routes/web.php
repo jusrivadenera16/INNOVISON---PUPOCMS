@@ -617,10 +617,12 @@ Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->gr
     });
     Route::middleware('module.permission:inventory.manage')->group(function () {
         Route::post('/admin/inventory/store', [AdminController::class, 'storeItem'])->name('admin.inventory.store');
-        Route::post('/admin/inventory/{id}/issue', [AdminController::class, 'issueStock'])->name('admin.inventory.issue');
         Route::put('/admin/inventory/{id}', [AdminController::class, 'updateItem'])->name('admin.inventory.update');
         Route::delete('/admin/inventory/{id}', [AdminController::class, 'deleteItem'])->name('admin.inventory.delete');
     });
+    Route::post('/admin/inventory/{id}/issue', [AdminController::class, 'issueStock'])
+        ->middleware('module.permission:inventory.issue_stock')
+        ->name('admin.inventory.issue');
 
     Route::middleware('module.permission:settings.medical')->group(function () {
         Route::get('/admin/reports/manage-mar', [ReportsController::class, 'manageMar'])->name('admin.reports.manage-mar');

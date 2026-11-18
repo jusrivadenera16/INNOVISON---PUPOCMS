@@ -481,6 +481,7 @@
 @section('content')
 @php
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
+    $isSuperAdmin = $role === \App\Models\User::ROLE_SUPERADMIN;
     $reportsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
 
     $displayValue = fn ($value, $fallback = 'Not available') => trim((string) $value) !== '' ? $value : $fallback;
@@ -575,7 +576,7 @@
                         <span>ID: {{ $displayValue($selectedIdentifier, 'N/A') }}</span>
                     </div>
                 </div>
-                @if($consultations->count() > 0)
+                @if($consultations->count() > 0 && $isSuperAdmin)
                     <a href="{{ route('reports.appointment-history-print', ['user_id' => $selectedUser->id]) }}" target="_blank" class="appt-print-btn">
                         Print
                     </a>

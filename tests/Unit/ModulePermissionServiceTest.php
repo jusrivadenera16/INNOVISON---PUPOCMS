@@ -30,6 +30,21 @@ class ModulePermissionServiceTest extends TestCase
         $this->assertFalse($service->can($user, 'appointments.reject'));
     }
 
+    public function test_inventory_issue_stock_is_separate_from_inventory_management(): void
+    {
+        $service = new ModulePermissionService();
+        $user = new User();
+        $user->user_role = User::ROLE_ADMIN;
+        $user->module_permissions = ['inventory.view', 'inventory.manage'];
+
+        $this->assertTrue($service->can($user, 'inventory.manage'));
+        $this->assertFalse($service->can($user, 'inventory.issue_stock'));
+
+        $user->module_permissions = ['inventory.view', 'inventory.issue_stock'];
+        $this->assertTrue($service->can($user, 'inventory.issue_stock'));
+        $this->assertFalse($service->can($user, 'inventory.manage'));
+    }
+
     public function test_super_admin_has_full_module_access(): void
     {
         $service = new ModulePermissionService();
@@ -50,10 +65,16 @@ class ModulePermissionServiceTest extends TestCase
             $user->user_role = $role;
             $user->module_permissions = ['health_records.view'];
 
+            $this->assertTrue($service->can($user, 'health_records.view'));
             $this->assertFalse($service->can($user, 'health_records.update_assessment'));
+            $this->assertFalse($service->can($user, 'health_records.review_documents'));
+            $this->assertFalse($service->can($user, 'health_records.request_resubmission'));
+            $this->assertFalse($service->can($user, 'health_records.request_health_form'));
+            $this->assertFalse($service->can($user, 'health_records.revoke_clearance'));
 
             $user->module_permissions = ['health_records.view', 'health_records.update_assessment'];
             $this->assertTrue($service->can($user, 'health_records.update_assessment'));
+            $this->assertFalse($service->can($user, 'health_records.review_documents'));
         }
 
         $superadmin = new User();

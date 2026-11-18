@@ -8437,6 +8437,8 @@
         $basePrefix = $role === \App\Models\User::ROLE_ADMIN ? '/assistant' : '/admin';
         $canSignHealth = $role === \App\Models\User::ROLE_SUPERADMIN;
         $canRequestNewHealthForm = optional(auth()->user())->canAccessPermission('health_records.request_health_form') ?? false;
+        $canReviewHealthDocuments = optional(auth()->user())->canAccessPermission('health_records.review_documents') ?? false;
+        $canRequestHealthResubmission = optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false;
         $highlightHealthId = trim((string) request()->query('highlight_health', ''));
         $walkinReviewRouteName = $role === \App\Models\User::ROLE_ADMIN ? 'assistant.walkin.index' : 'walkin.index';
         $canViewWalkin = optional(auth()->user())->canAccessPermission('walkin.view') ?? false;
@@ -8654,6 +8656,9 @@
             }
 
             $code = $formatHealthCourseCode($courseName, $courseCode);
+            if (preg_replace('/[^A-Z0-9]/', '', strtoupper($code)) === 'BSEDENGLISH') {
+                $code = 'BSED-ENG';
+            }
             $suffix = trim($year . ($section !== '' ? ' - ' . $section : ''));
             $display = trim($code . ($suffix !== '' ? ' ' . $suffix : ''));
 
@@ -8911,14 +8916,16 @@
                         'documents_valid' => (bool) $record->documents_valid,
                         'approve_url' => $recordIsEmployee ? '' : route('admin.update_clearance', $record->id),
                         'correction_submission_id' => (int) $record->pending_approval_submission_id,
-                        'correction_url' => optional(auth()->user())->canAccessPermission('health_records.request_resubmission')
+                        'correction_url' => $canRequestHealthResubmission
                             ? route('admin.health_records.return_for_correction', ['type' => $recordIsEmployee ? 'employee' : 'student', 'profile' => $record->id]) : '',
                         'resubmission_url' => $recordIsEmployee
                             ? route('admin.employee_health_profile.request_resubmission', $record->id)
                             : route('admin.health_profile.request_resubmission', $record->id),
-                        'withdraw_url' => $recordIsEmployee
-                            ? route('admin.employee_health_profile.withdraw', $record->id)
-                            : route('admin.health_profile.withdraw', $record->id),
+                        'withdraw_url' => $canRequestHealthResubmission
+                            ? ($recordIsEmployee
+                                ? route('admin.employee_health_profile.withdraw', $record->id)
+                                : route('admin.health_profile.withdraw', $record->id))
+                            : '',
                         'walkin_url' => $walkinReviewUrlFor($recordIdentifier['value'] ?? '', !$recordUsesApplicantReviewWorkflow),
                         'walkin_encode_url' => $recordUsesApplicantReviewWorkflow
                             ? $walkinReviewUrlFor($recordIdentifier['value'] ?? '', false, 'encode')
@@ -9344,14 +9351,16 @@
                             'documents_valid' => (bool) $readonlyRecord->documents_valid,
                             'approve_url' => $readonlyIsEmployee ? '' : route('admin.update_clearance', $readonlyRecord->id),
                             'correction_submission_id' => (int) $readonlyRecord->pending_approval_submission_id,
-                            'correction_url' => optional(auth()->user())->canAccessPermission('health_records.request_resubmission')
+                            'correction_url' => $canRequestHealthResubmission
                                 ? route('admin.health_records.return_for_correction', ['type' => $readonlyIsEmployee ? 'employee' : 'student', 'profile' => $readonlyRecord->id]) : '',
                             'resubmission_url' => $readonlyIsEmployee
                                 ? route('admin.employee_health_profile.request_resubmission', $readonlyRecord->id)
                                 : route('admin.health_profile.request_resubmission', $readonlyRecord->id),
-                            'withdraw_url' => $readonlyIsEmployee
-                                ? route('admin.employee_health_profile.withdraw', $readonlyRecord->id)
-                                : route('admin.health_profile.withdraw', $readonlyRecord->id),
+                            'withdraw_url' => $canRequestHealthResubmission
+                                ? ($readonlyIsEmployee
+                                    ? route('admin.employee_health_profile.withdraw', $readonlyRecord->id)
+                                    : route('admin.health_profile.withdraw', $readonlyRecord->id))
+                                : '',
                             'walkin_url' => $walkinReviewUrlFor($readonlyIdentifier['value'] ?? '', !$readonlyUsesApplicantReviewWorkflow),
                             'walkin_encode_url' => $readonlyUsesApplicantReviewWorkflow
                                 ? $walkinReviewUrlFor($readonlyIdentifier['value'] ?? '', false, 'encode')
@@ -9573,27 +9582,29 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="readonly-field readonly-final-review-field">
-                                    <span>Move Record</span>
-                                    <div class="readonly-review-routing-actions">
-                                        @unless($readonlyIsRegularStudent)
-                                            <form method="POST" action="{{ route('admin.health_profile.for_final_review', $readonlyRecord->id) }}">
+                                @if($canReviewHealthDocuments)
+                                    <div class="readonly-field readonly-final-review-field">
+                                        <span>Move Record</span>
+                                        <div class="readonly-review-routing-actions">
+                                            @unless($readonlyIsRegularStudent)
+                                                <form method="POST" action="{{ route('admin.health_profile.for_final_review', $readonlyRecord->id) }}">
+                                                    @csrf
+                                                    <button type="submit" class="readonly-final-review-btn">
+                                                        <x-outline-icon name="check" />
+                                                        For Final Review
+                                                    </button>
+                                                </form>
+                                            @endunless
+                                            <form method="POST" action="{{ route('admin.health_profile.for_approval', $readonlyRecord->id) }}">
                                                 @csrf
                                                 <button type="submit" class="readonly-final-review-btn">
-                                                    <x-outline-icon name="check" />
-                                                    For Final Review
+                                                    <x-outline-icon name="clipboard-document-list" />
+                                                    For Approval
                                                 </button>
                                             </form>
-                                        @endunless
-                                        <form method="POST" action="{{ route('admin.health_profile.for_approval', $readonlyRecord->id) }}">
-                                            @csrf
-                                            <button type="submit" class="readonly-final-review-btn">
-                                                <x-outline-icon name="clipboard-document-list" />
-                                                For Approval
-                                            </button>
-                                        </form>
+                                        </div>
                                     </div>
-                                </div>
+                                @endif
                             </div>
                         </div>
                     </article>
@@ -9695,6 +9706,7 @@
                 <div class="verify-condition-grid" id="verificationConditionGrid"></div>
             </section>
 
+            @if($canRequestHealthResubmission)
             <form method="POST" class="verify-approval-review-form verify-resubmission-only-form" id="verifyDocumentResubmissionForm">
                 @csrf
                 <input type="hidden" name="pending_reason" id="verifyDocumentResubmissionReason" value="Document Resubmission">
@@ -9747,6 +9759,7 @@
                 </div>
 
             </form>
+            @endif
 
             <form method="POST" class="is-hidden" id="verifyWithdrawHealthRecordForm">
                 @csrf
@@ -9760,14 +9773,16 @@
             </form>
             <div class="verify-content-actions" aria-label="Additional review actions">
                 <div class="verify-content-action-group">
-                    <button type="submit" form="verifyWithdrawHealthRecordForm" class="verify-proposed-withdraw" id="verifyWithdrawHealthRecordBtn" disabled><span>Mark as Withdrawn</span></button>
-                    @if(optional(auth()->user())->canAccessPermission('health_records.request_resubmission'))
+                    @if($canRequestHealthResubmission)
+                        <button type="submit" form="verifyWithdrawHealthRecordForm" class="verify-proposed-withdraw" id="verifyWithdrawHealthRecordBtn" disabled><span>Mark as Withdrawn</span></button>
                         <button type="button" class="verify-proposed-walkin" id="verifyReturnForCorrectionBtn" disabled><span>Return for Correction</span></button>
                     @endif
                     @if($canSignHealth)
                         <button type="submit" form="verifyRegularStudentDecisionForm" class="verify-proposed-walkin" id="verifyRegularStudentApproveBtn" data-regular-decision="Fully Cleared" hidden><span>Approve</span></button>
                     @endif
-                    <button type="submit" form="verifyDocumentResubmissionForm" class="verify-proposed-walkin is-hidden" id="verifyDocumentResubmissionSubmit" disabled hidden><span>Request Resubmission</span></button>
+                    @if($canRequestHealthResubmission)
+                        <button type="submit" form="verifyDocumentResubmissionForm" class="verify-proposed-walkin is-hidden" id="verifyDocumentResubmissionSubmit" disabled hidden><span>Request Resubmission</span></button>
+                    @endif
                     <div class="verify-assessment-dropdown" id="verifyApplicantNextStepWrap" hidden>
                         <select id="verifyApplicantNextStep" aria-label="Applicant assessment route" hidden>
                             @if($canEncodeApplicantInWalkin)

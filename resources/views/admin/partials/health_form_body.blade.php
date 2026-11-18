@@ -280,7 +280,7 @@
             <td>
         <table class="vax-table">
             @php $vax = is_array($profile->vaccine_history) ? $profile->vaccine_history : json_decode($profile->vaccine_history ?? '[]', true); @endphp
-            <thead><tr><th>If Yes (Vaccinated)</th><th>Date Received</th><th>Brand</th></tr></thead>
+            <thead><tr><th>If Yes (Vaccinated)</th><th>Date Received</th><th>Vaccine Brand</th></tr></thead>
             <tbody>
                 <tr><td>1st Dose</td><td>{{ $vax['first_dose']['date'] ?? '' }}</td><td>{{ $vax['first_dose']['brand'] ?? '' }}</td></tr>
                 <tr><td>2nd Dose</td><td>{{ $vax['second_dose']['date'] ?? '' }}</td><td>{{ $vax['second_dose']['brand'] ?? '' }}</td></tr>

@@ -502,6 +502,7 @@
 @section('content')
 @php
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
+    $isSuperAdmin = $role === \App\Models\User::ROLE_SUPERADMIN;
     $reportsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/digital-logbook') : url('/admin/reports/digital-logbook');
     $logbookRouteName = request()->routeIs('assistant.*') ? 'assistant.reports.health-forms-logbook' : 'reports.health-forms-logbook';
     $logbookExportRouteName = request()->routeIs('assistant.*') ? 'assistant.reports.health-forms-logbook.export' : 'reports.health-forms-logbook.export';
@@ -525,7 +526,9 @@
         </div>
         <div class="logbook-toolbar-actions">
             <div class="logbook-total-card">Total:<span>{{ number_format($logbookRecords->total()) }}</span></div>
-            <a href="{{ route($logbookExportRouteName, request()->query()) }}" class="logbook-export-btn">Export</a>
+            @if($isSuperAdmin)
+                <a href="{{ route($logbookExportRouteName, request()->query()) }}" class="logbook-export-btn">Export</a>
+            @endif
         </div>
     </div>
 
