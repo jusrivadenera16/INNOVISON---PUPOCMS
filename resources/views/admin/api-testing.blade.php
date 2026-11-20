@@ -3358,6 +3358,7 @@ Request: ${escapeApiLogValue(err.request_payload || 'N/A')}</pre>
                         { value: '', label: 'Select student type' },
                         { value: 'regular', label: 'Regular' },
                         { value: 'ladderized', label: 'Ladderized' },
+                        { value: 'transferee', label: 'Transferee' },
                         { value: 'returnee', label: 'Returnee' },
                         { value: 'shiftee', label: 'Shiftee' },
                         { value: 'ojt', label: 'OJT' },

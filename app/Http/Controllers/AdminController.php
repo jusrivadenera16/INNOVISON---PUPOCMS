@@ -2255,7 +2255,7 @@ class AdminController extends Controller
                 'student_type' => [
                     'nullable',
                     Rule::requiredIf(fn () => $request->input('clinic_account_type') === 'student'),
-                    Rule::in(array_values(array_diff(User::STUDENT_TYPES, ['transferee']))),
+                    Rule::in(User::STUDENT_TYPES),
                 ],
                 'applicant_type' => [
                     'nullable',
@@ -2268,7 +2268,14 @@ class AdminController extends Controller
 
             $user = User::findOrFail($id);
             $previousClinicAccountType = $user->clinicAccountTypeKey();
+            $previousStudentType = trim((string) $user->student_type) ?: null;
+            $previousApplicantType = trim((string) $user->applicant_type) ?: null;
             $targetClinicAccountType = $request->input('clinic_account_type');
+            $targetStudentType = $targetClinicAccountType === 'student' ? $request->input('student_type') : null;
+            $targetApplicantType = $targetClinicAccountType === 'applicant' ? $request->input('applicant_type') : null;
+            $accountTypeCorrectionChanged = $previousClinicAccountType !== $targetClinicAccountType
+                || ($targetClinicAccountType === 'student' && $previousStudentType !== $targetStudentType)
+                || ($targetClinicAccountType === 'applicant' && $previousApplicantType !== $targetApplicantType);
             $user->first_name = $request->input('first_name');
             $user->last_name = $request->input('last_name');
             $user->name = trim(implode(' ', array_filter([$request->input('first_name'), $request->input('last_name')]))) ?: $user->name;
@@ -2303,15 +2310,31 @@ class AdminController extends Controller
             if (Schema::hasColumn('users', 'status')) {
                 $user->status = $request->input('status', 'active');
             }
-            DB::transaction(function () use ($user, $previousClinicAccountType, $targetClinicAccountType) {
+            DB::transaction(function () use (
+                $user,
+                $accountTypeCorrectionChanged,
+                $previousClinicAccountType,
+                $targetClinicAccountType,
+                $previousStudentType,
+                $targetStudentType,
+                $previousApplicantType,
+                $targetApplicantType
+            ) {
                 $user->save();
 
-                if ($previousClinicAccountType === 'applicant'
-                    && $targetClinicAccountType === 'student'
-                    && Schema::hasTable('health_profiles')
+                if ($accountTypeCorrectionChanged
+                    && (Schema::hasTable('health_profiles') || Schema::hasTable('health_profile_emp'))
                     && Schema::hasTable('health_form_submissions')) {
                     app(HealthFormPdfSnapshotService::class)
-                        ->refreshPendingDeclarationAfterApplicantToStudent($user);
+                        ->refreshLatestDeclarationAfterAccountTypeCorrection(
+                            $user,
+                            $previousClinicAccountType ?: 'unknown',
+                            $targetClinicAccountType,
+                            $previousStudentType,
+                            $targetStudentType,
+                            $previousApplicantType,
+                            $targetApplicantType
+                        );
                 }
             });
 

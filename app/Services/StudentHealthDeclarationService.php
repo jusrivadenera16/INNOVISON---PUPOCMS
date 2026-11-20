@@ -33,6 +33,53 @@ class StudentHealthDeclarationService
     public function generate(HealthProfile $profile, User $user, string $category, CarbonInterface $submittedAt, ?string $remarks = null): string
     {
         $purpose = $this->purpose($category, $user->student_type);
+        return $this->writeDeclaration($profile, $user, $category, $submittedAt, $remarks, $purpose);
+    }
+
+    public function generateForCorrectedAccountType(
+        HealthProfile $profile,
+        User $user,
+        string $accountType,
+        ?string $studentType,
+        ?string $applicantType,
+        CarbonInterface $submittedAt,
+        ?string $remarks = null
+    ): string {
+        $category = match ($accountType) {
+            'student' => 'Student',
+            'applicant' => 'Applicant',
+            'faculty' => 'Faculty',
+            'non_teaching_staff' => 'Employee',
+            'dependent' => 'Dependent',
+            default => 'Student',
+        };
+
+        $purpose = $this->purposeForAccountType($accountType, $studentType, $applicantType);
+
+        return $this->writeDeclaration($profile, $user, $category, $submittedAt, $remarks, $purpose);
+    }
+
+    public function purposeForAccountType(string $accountType, ?string $studentType = null, ?string $applicantType = null): array
+    {
+        return match ($accountType) {
+            'applicant' => strtolower(trim((string) $applicantType)) === 'transferee'
+                ? ['purpose' => 'transferee admission', 'endorsement' => 'transfer as a student']
+                : ['purpose' => 'incoming freshman admission', 'endorsement' => 'admission as an incoming freshman'],
+            'faculty' => ['purpose' => 'Faculty member', 'endorsement' => 'fitness for faculty duties'],
+            'non_teaching_staff' => ['purpose' => 'Administrative personnel', 'endorsement' => 'fitness for administrative duties'],
+            'dependent' => ['purpose' => 'Dependent of a PUP employee', 'endorsement' => 'eligibility for clinic services'],
+            default => $this->purpose('Student', $studentType),
+        };
+    }
+
+    private function writeDeclaration(
+        HealthProfile $profile,
+        User $user,
+        string $category,
+        CarbonInterface $submittedAt,
+        ?string $remarks,
+        array $purpose
+    ): string {
         $images = app(StoredImageDataUri::class);
         $age = (int) $profile->age;
         $fullName = trim(implode(' ', array_filter([$user->first_name, $user->middle_name, $user->last_name, $user->suffix_name]))) ?: $user->name;

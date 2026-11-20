@@ -29,6 +29,17 @@ class StudentHealthDeclarationServiceTest extends TestCase
         $this->assertSame('currently enrolled student', $service->purpose('General', 'regular')['purpose']);
     }
 
+    public function test_corrected_account_type_uses_the_selected_applicant_or_student_subtype(): void
+    {
+        $service = app(StudentHealthDeclarationService::class);
+
+        $this->assertSame('currently enrolled student', $service->purposeForAccountType('student', 'regular')['purpose']);
+        $this->assertSame('shifting academic program', $service->purposeForAccountType('student', 'shiftee')['purpose']);
+        $this->assertSame('currently enrolled transferee student', $service->purposeForAccountType('student', 'transferee')['purpose']);
+        $this->assertSame('incoming freshman admission', $service->purposeForAccountType('applicant', null, 'new')['purpose']);
+        $this->assertSame('transferee admission', $service->purposeForAccountType('applicant', null, 'transferee')['purpose']);
+    }
+
     public function test_declaration_generation_is_unique_and_uses_new_purpose_and_submission_date(): void
     {
         Storage::fake('health_private');
