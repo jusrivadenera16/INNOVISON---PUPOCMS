@@ -9,6 +9,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class HealthFormPdfSnapshotService
 {
@@ -238,6 +239,143 @@ class HealthFormPdfSnapshotService
             HealthProfile::query()->whereKey($profile->id)->lockForUpdate()->firstOrFail();
             return $this->refreshPendingSnapshot($profile, $updatedFields);
         });
+    }
+
+    /**
+     * Refresh only the latest pending Health Form when an applicant becomes a student.
+     * Uploaded declarations and every approved snapshot remain untouched.
+     */
+    public function refreshPendingDeclarationAfterApplicantToStudent(User $user): bool
+    {
+        $newFiles = [];
+
+        try {
+            return DB::transaction(function () use ($user, &$newFiles) {
+                $profile = HealthProfile::query()
+                    ->where('user_id', $user->id)
+                    ->lockForUpdate()
+                    ->latest('id')
+                    ->first();
+
+                if (!$profile) {
+                    return false;
+                }
+
+                $profile->load('user');
+                if (!$profile->user || $profile->user->clinicAccountTypeKey() !== 'student') {
+                    return false;
+                }
+
+                $submission = HealthFormSubmission::query()
+                    ->where('health_profile_id', $profile->id)
+                    ->whereNull('approved_at')
+                    ->whereNull('approved_by_user_id')
+                    ->whereIn('status', [
+                        HealthFormSubmission::STATUS_SUBMITTED,
+                        HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                        'under_review',
+                    ])
+                    ->latest('id')
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$submission) {
+                    return false;
+                }
+
+                $snapshotProfile = $profile->fresh('user') ?: $profile;
+                $snapshotUser = $snapshotProfile->user;
+                if (!$snapshotUser) {
+                    return false;
+                }
+                $snapshotProfile->setRelation('user', clone $snapshotUser);
+                $snapshotUser = $snapshotProfile->user;
+
+                if ($submission->snapshotProfile() !== []) {
+                    $this->profileSnapshots->applySubmissionSnapshot($snapshotProfile, $submission, $snapshotUser);
+                }
+
+                $declarationPath = $this->healthFiles->normalizePath((string) $snapshotProfile->health_declaration);
+                $generatedDeclarationPattern = '#^health_profiles/health_declarations/declaration-'
+                    . preg_quote((string) $snapshotUser->id, '#') . '-[A-Za-z0-9-]+\\.pdf$#i';
+                if ($declarationPath === '' || !preg_match($generatedDeclarationPattern, $declarationPath)) {
+                    return false;
+                }
+
+                if (app(StoredImageDataUri::class)->fromStorage($snapshotProfile->digital_signature) === '') {
+                    throw ValidationException::withMessages([
+                        'clinic_account_type' => 'The saved signature could not be loaded, so the pending Health Declaration was not changed. Please re-upload the signature and try again.',
+                    ]);
+                }
+
+                $category = trim((string) ($submission->category ?: $snapshotProfile->health_form_category)) ?: 'General';
+                $submittedAt = $submission->submitted_at
+                    ?: $profile->resubmitted_at
+                    ?: $profile->created_at
+                    ?: now();
+                $newDeclarationPath = app(StudentHealthDeclarationService::class)->generate(
+                    $snapshotProfile,
+                    $snapshotUser,
+                    $category,
+                    $submittedAt,
+                    $submission->remarks
+                );
+                $newFiles[] = $newDeclarationPath;
+                $snapshotProfile->health_declaration = $newDeclarationPath;
+
+                $newPdfPath = $this->buildSnapshotPath($profile, $snapshotUser, $category, now());
+                $newFiles[] = $newPdfPath;
+                $pdf = Pdf::loadView('student.print_health_form', [
+                    'profile' => $snapshotProfile,
+                    'pdfMode' => true,
+                    'healthFormIdentity' => [],
+                    'healthFormSubmittedAt' => $submittedAt,
+                ]);
+                $pdf->setPaper([0, 0, 612, 936]);
+                if (!$this->healthFiles->put($newPdfPath, $pdf->output())) {
+                    throw new \RuntimeException('Unable to save the updated pending Health Form PDF.');
+                }
+
+                $snapshot = is_array($submission->profile_snapshot) ? $submission->profile_snapshot : [];
+                if ($submission->snapshotProfile() === []) {
+                    $snapshot = $this->profileSnapshots->capture($snapshotProfile);
+                }
+                if (array_key_exists('profile', $snapshot) && is_array($snapshot['profile'])) {
+                    $snapshot['profile']['health_declaration'] = $newDeclarationPath;
+                    $snapshot['captured_at'] = now()->toIso8601String();
+                } else {
+                    $snapshot['health_declaration'] = $newDeclarationPath;
+                }
+                if (isset($snapshot['user']) && is_array($snapshot['user'])) {
+                    $snapshot['user']['user_type'] = $snapshotUser->user_type;
+                    $snapshot['user']['student_type'] = $snapshotUser->student_type;
+                }
+                $submission->forceFill([
+                    'pdf_path' => $newPdfPath,
+                    'profile_snapshot' => $submission->preserveReviewTiming($snapshot),
+                    'snapshot_captured_at' => now(),
+                ])->save();
+
+                $hasApprovedHistory = HealthFormSubmission::query()
+                    ->where('health_profile_id', $profile->id)
+                    ->where('id', '!=', $submission->id)
+                    ->where(function ($query) {
+                        $query->whereNotNull('approved_at')->orWhereIn('status', [HealthFormSubmission::STATUS_APPROVED, 'Approved']);
+                    })
+                    ->exists();
+                if (!$hasApprovedHistory) {
+                    $profile->forceFill(['health_declaration' => $newDeclarationPath])->save();
+                }
+
+                return true;
+            });
+        } catch (\Throwable $exception) {
+            foreach ($newFiles as $path) {
+                $this->healthFiles->delete($path);
+            }
+
+            throw $exception;
+        }
     }
 
     private function refreshPendingSnapshot(HealthProfile $profile, ?array $updatedFields): ?HealthFormSubmission

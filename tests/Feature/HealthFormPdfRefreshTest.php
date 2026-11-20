@@ -7,6 +7,7 @@ use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
 use App\Models\User;
 use App\Services\EmployeeHealthFormPdfService;
+use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
 use App\Services\HealthProfileSnapshotService;
 use App\Services\StoredImageDataUri;
@@ -45,6 +46,8 @@ class HealthFormPdfRefreshTest extends TestCase
             $table->string('last_name')->nullable();
             $table->string('email')->nullable();
             $table->string('user_type')->nullable();
+            $table->string('student_type')->nullable();
+            $table->string('applicant_type')->nullable();
             $table->string('user_role')->nullable();
             $table->string('student_id')->nullable();
             $table->string('student_number')->nullable();
@@ -70,8 +73,12 @@ class HealthFormPdfRefreshTest extends TestCase
             $table->string('reference_number')->nullable();
             $table->string('school_year')->nullable();
             $table->string('health_form_category')->nullable();
+            $table->string('health_declaration')->nullable();
             $table->string('home_address')->nullable();
             $table->string('digital_signature')->nullable();
+            $table->string('guardian_signature')->nullable();
+            $table->string('guardian_name')->nullable();
+            $table->unsignedInteger('age')->nullable();
             $table->string('student_photo')->nullable();
             $table->string('medical_condition_remarks')->nullable();
             $table->boolean('documents_valid')->default(false);
@@ -205,6 +212,149 @@ class HealthFormPdfRefreshTest extends TestCase
         $this->assertNotSame($oldPath, $refreshed->pdf_path);
         Storage::disk('health_private')->assertMissing($oldPath);
         $this->assertSame('new-pdf', Storage::disk('health_private')->get($refreshed->pdf_path));
+    }
+
+    public function test_applicant_to_student_refreshes_only_the_latest_pending_health_declaration_and_pdf(): void
+    {
+        $user = User::forceCreate([
+            'name' => 'Converted Student', 'user_type' => 'Applicant', 'applicant_type' => 'new',
+        ]);
+        $profile = HealthProfile::forceCreate([
+            'user_id' => $user->id, 'health_form_category' => 'General', 'age' => 24,
+            'digital_signature' => 'health_profiles/signatures/current.png',
+        ]);
+        $oldDeclaration = 'health_profiles/health_declarations/declaration-' . $user->id . '-20261101-090000.pdf';
+        $olderDeclaration = 'health_profiles/health_declarations/declaration-' . $user->id . '-20261025-090000.pdf';
+        $olderPdf = 'health_form_submissions/' . $user->id . '/older-pending.pdf';
+        $oldPdf = 'health_form_submissions/' . $user->id . '/applicant-pending.pdf';
+        app(HealthFileStorage::class)->put($oldDeclaration, 'old applicant declaration');
+        app(HealthFileStorage::class)->put($olderDeclaration, 'older applicant declaration');
+        app(HealthFileStorage::class)->put($olderPdf, 'older applicant health form');
+        app(HealthFileStorage::class)->put($oldPdf, 'old applicant health form');
+        $submittedAt = Carbon::parse('2026-11-01 09:00:00');
+        $olderPending = HealthFormSubmission::create([
+            'user_id' => $user->id, 'health_profile_id' => $profile->id,
+            'category' => 'General', 'status' => HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+            'pdf_path' => $olderPdf, 'submitted_at' => $submittedAt->copy()->subWeek(),
+            'profile_snapshot' => ['profile' => [
+                'health_form_category' => 'General', 'health_declaration' => $olderDeclaration,
+                'digital_signature' => 'health_profiles/signatures/current.png', 'age' => 24,
+            ]],
+        ]);
+        $pending = HealthFormSubmission::create([
+            'user_id' => $user->id, 'health_profile_id' => $profile->id,
+            'category' => 'General', 'status' => HealthFormSubmission::STATUS_SUBMITTED,
+            'pdf_path' => $oldPdf, 'submitted_at' => $submittedAt, 'remarks' => 'Keep this note.',
+            'profile_snapshot' => [
+                'profile' => [
+                    'health_form_category' => 'General', 'health_declaration' => $oldDeclaration,
+                    'digital_signature' => 'health_profiles/signatures/current.png', 'age' => 24,
+                ],
+                'user' => ['user_type' => 'Applicant', 'student_type' => null, 'applicant_type' => 'new'],
+                'review_timing' => ['opened_at' => '2026-11-02T09:00:00+00:00'],
+            ],
+        ]);
+        $user->forceFill(['user_type' => 'Student', 'student_type' => 'regular', 'applicant_type' => null])->save();
+
+        $signatureSource = 'data:image/png;base64,c2lnbmF0dXJl';
+        $images = Mockery::mock(StoredImageDataUri::class);
+        $images->shouldReceive('fromStorage')->twice()->with('health_profiles/signatures/current.png')->andReturn($signatureSource);
+        $this->app->instance(StoredImageDataUri::class, $images);
+        $pdf = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+        $pdf->shouldReceive('setPaper')->twice()->andReturnSelf();
+        $pdf->shouldReceive('output')->twice()->andReturn('new student declaration', 'new student health form');
+        Pdf::shouldReceive('loadView')->once()
+            ->with('student.print_declaration_form', Mockery::on(function (array $data) use ($signatureSource, $submittedAt) {
+                return $data['studentSignatureSrc'] === $signatureSource
+                    && $data['purposeUnderline1'] === 'currently enrolled student'
+                    && $data['signatureDate'] === $submittedAt->format('m/d/Y');
+            }))
+            ->andReturn($pdf);
+        Pdf::shouldReceive('loadView')->once()
+            ->with('student.print_health_form', Mockery::on(function (array $data) {
+                return str_contains((string) $data['profile']->health_declaration, 'declaration-')
+                    && $data['profile']->user->user_type === 'Student'
+                    && $data['profile']->user->student_type === 'regular';
+            }))
+            ->andReturn($pdf);
+
+        $this->assertTrue(app(HealthFormPdfSnapshotService::class)->refreshPendingDeclarationAfterApplicantToStudent($user));
+
+        $pending->refresh();
+        $newDeclaration = data_get($pending->profile_snapshot, 'profile.health_declaration');
+        $this->assertNotSame($oldDeclaration, $newDeclaration);
+        $this->assertNotSame($oldPdf, $pending->pdf_path);
+        $this->assertSame(HealthFormSubmission::STATUS_SUBMITTED, $pending->status);
+        $this->assertTrue($submittedAt->equalTo($pending->submitted_at));
+        $this->assertSame('Keep this note.', $pending->remarks);
+        $this->assertSame('Student', data_get($pending->profile_snapshot, 'user.user_type'));
+        $this->assertSame('regular', data_get($pending->profile_snapshot, 'user.student_type'));
+        $this->assertSame($newDeclaration, $profile->fresh()->health_declaration);
+        $this->assertSame('old applicant declaration', app(HealthFileStorage::class)->get($oldDeclaration));
+        $this->assertSame('old applicant health form', app(HealthFileStorage::class)->get($oldPdf));
+        $this->assertSame('new student declaration', app(HealthFileStorage::class)->get($newDeclaration));
+        $this->assertSame('new student health form', app(HealthFileStorage::class)->get($pending->pdf_path));
+        $this->assertSame($olderDeclaration, data_get($olderPending->fresh()->profile_snapshot, 'profile.health_declaration'));
+        $this->assertSame($olderPdf, $olderPending->fresh()->pdf_path);
+        $this->assertSame('older applicant declaration', app(HealthFileStorage::class)->get($olderDeclaration));
+        $this->assertSame('older applicant health form', app(HealthFileStorage::class)->get($olderPdf));
+    }
+
+    public function test_applicant_to_student_does_not_change_the_live_or_approved_declaration(): void
+    {
+        $user = User::forceCreate([
+            'name' => 'Converted Student', 'user_type' => 'Applicant', 'applicant_type' => 'new',
+        ]);
+        $approvedDeclaration = 'health_profiles/health_declarations/declaration-' . $user->id . '-approved.pdf';
+        $pendingDeclaration = 'health_profiles/health_declarations/declaration-' . $user->id . '-pending.pdf';
+        $approvedPdf = 'health_form_submissions/' . $user->id . '/approved.pdf';
+        $pendingPdf = 'health_form_submissions/' . $user->id . '/pending.pdf';
+        foreach ([$approvedDeclaration => 'approved declaration', $pendingDeclaration => 'pending applicant declaration', $approvedPdf => 'approved pdf', $pendingPdf => 'pending pdf'] as $path => $contents) {
+            app(HealthFileStorage::class)->put($path, $contents);
+        }
+        $profile = HealthProfile::forceCreate([
+            'user_id' => $user->id, 'health_form_category' => 'General', 'health_declaration' => $approvedDeclaration,
+            'age' => 24, 'digital_signature' => 'health_profiles/signatures/current.png',
+        ]);
+        $approved = HealthFormSubmission::create([
+            'user_id' => $user->id, 'health_profile_id' => $profile->id, 'category' => 'General',
+            'status' => HealthFormSubmission::STATUS_APPROVED, 'pdf_path' => $approvedPdf,
+            'approved_at' => now()->subMonth(), 'submitted_at' => now()->subMonth(),
+            'profile_snapshot' => ['profile' => ['health_declaration' => $approvedDeclaration]],
+        ]);
+        $pending = HealthFormSubmission::create([
+            'user_id' => $user->id, 'health_profile_id' => $profile->id, 'category' => 'General',
+            'status' => HealthFormSubmission::STATUS_SUBMITTED, 'pdf_path' => $pendingPdf, 'submitted_at' => now(),
+            'profile_snapshot' => [
+                'profile' => [
+                    'health_form_category' => 'General', 'health_declaration' => $pendingDeclaration,
+                    'digital_signature' => 'health_profiles/signatures/current.png', 'age' => 24,
+                ],
+                'user' => ['user_type' => 'Applicant', 'student_type' => null, 'applicant_type' => 'new'],
+            ],
+        ]);
+        $user->forceFill(['user_type' => 'Student', 'student_type' => 'regular', 'applicant_type' => null])->save();
+        $images = Mockery::mock(StoredImageDataUri::class);
+        $images->shouldReceive('fromStorage')->twice()->andReturn('data:image/png;base64,c2lnbmF0dXJl');
+        $this->app->instance(StoredImageDataUri::class, $images);
+        $pdf = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+        $pdf->shouldReceive('setPaper')->twice()->andReturnSelf();
+        $pdf->shouldReceive('output')->twice()->andReturn('new pending declaration', 'new pending pdf');
+        Pdf::shouldReceive('loadView')->twice()->andReturn($pdf);
+
+        app(HealthFormPdfSnapshotService::class)->refreshPendingDeclarationAfterApplicantToStudent($user);
+
+        $approved->refresh();
+        $pending->refresh();
+        $this->assertSame($approvedDeclaration, $profile->fresh()->health_declaration);
+        $this->assertSame($approvedPdf, $approved->pdf_path);
+        $this->assertSame($approvedDeclaration, data_get($approved->profile_snapshot, 'profile.health_declaration'));
+        $this->assertSame('approved declaration', app(HealthFileStorage::class)->get($approvedDeclaration));
+        $this->assertSame('approved pdf', app(HealthFileStorage::class)->get($approvedPdf));
+        $this->assertNotSame($pendingPdf, $pending->pdf_path);
+        $this->assertNotSame($pendingDeclaration, data_get($pending->profile_snapshot, 'profile.health_declaration'));
+        $this->assertSame('pending applicant declaration', app(HealthFileStorage::class)->get($pendingDeclaration));
+        $this->assertSame('pending pdf', app(HealthFileStorage::class)->get($pendingPdf));
     }
 
     public function test_corrected_photo_refreshes_pending_pdf_and_snapshot_then_freezes_on_approval(): void

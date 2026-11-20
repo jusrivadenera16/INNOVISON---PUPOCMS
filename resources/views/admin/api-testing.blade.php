@@ -1238,6 +1238,10 @@
         margin-top: 16px;
     }
 
+    .api-edit-field[hidden] {
+        display: none !important;
+    }
+
     .api-edit-field label {
         display: block;
         margin-bottom: 6px;
@@ -2542,7 +2546,7 @@
                     placeholder="{{ $apiTestingSearchPlaceholder ?? 'Try a name, email address, or identifier' }}"
                 >
             </div>
-            <button type="submit">Run Test</button>
+            <button type="submit">Run</button>
         </form>
 
         @if(($source ?? '') === 'database_info')
@@ -2890,11 +2894,6 @@
                                 >
                                     <x-outline-icon name="pencil-square" /> Edit
                                 </button>
-                                <form method="POST" action="{{ route('admin.api-testing.database.delete', ['table' => $dbTable ?? 'users', 'id' => $record['id']]) }}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="api-db-action-btn delete" onclick="return confirm('Delete this database record?')"><x-outline-icon name="trash" /> Delete</button>
-                                </form>
                             </div>
                         @endif
                     </div>
@@ -3336,6 +3335,45 @@ Request: ${escapeApiLogValue(err.request_payload || 'N/A')}</pre>
                 { name: 'reference_number', label: 'Reference Number', type: 'text' },
                 { name: 'employee_number', label: 'Employee Number', type: 'text' },
                 { name: 'gender', label: 'Gender', type: 'text' },
+                {
+                    name: 'clinic_account_type',
+                    label: 'Account Type',
+                    type: 'select',
+                    required: true,
+                    options: [
+                        { value: '', label: 'Select account type' },
+                        { value: 'applicant', label: 'Applicant' },
+                        { value: 'student', label: 'Student' },
+                        { value: 'faculty', label: 'Faculty' },
+                        { value: 'non_teaching_staff', label: 'Non-teaching Staff / Admins' },
+                        { value: 'dependent', label: 'Dependent' },
+                    ]
+                },
+                {
+                    name: 'student_type',
+                    label: 'Student Type',
+                    type: 'select',
+                    visibleWhenAccountType: 'student',
+                    options: [
+                        { value: '', label: 'Select student type' },
+                        { value: 'regular', label: 'Regular' },
+                        { value: 'ladderized', label: 'Ladderized' },
+                        { value: 'returnee', label: 'Returnee' },
+                        { value: 'shiftee', label: 'Shiftee' },
+                        { value: 'ojt', label: 'OJT' },
+                    ]
+                },
+                {
+                    name: 'applicant_type',
+                    label: 'Applicant Type',
+                    type: 'select',
+                    visibleWhenAccountType: 'applicant',
+                    options: [
+                        { value: '', label: 'Select applicant type' },
+                        { value: 'new', label: 'Incoming Freshman (ARN)' },
+                        { value: 'transferee', label: 'Transferee' },
+                    ]
+                },
                 { name: 'user_role', label: 'Role', type: 'select', options: ['student', 'student_assistant', 'admin', 'superadmin'] },
                 { name: 'status', label: 'Status', type: 'select', options: ['active', 'inactive'] },
             ],
@@ -3372,17 +3410,21 @@ Request: ${escapeApiLogValue(err.request_payload || 'N/A')}</pre>
                     }
 
                     const label = document.createElement('label');
-                    label.textContent = field.label;
+                    label.textContent = (field.required || field.visibleWhenAccountType) ? `${field.label} *` : field.label;
                     wrap.appendChild(label);
+                    if (field.visibleWhenAccountType) {
+                        wrap.dataset.visibleAccountType = field.visibleWhenAccountType;
+                    }
 
                     let control;
                     if (field.type === 'select') {
                         control = document.createElement('select');
-                        field.options.forEach((optionValue) => {
+                        field.options.forEach((optionDefinition) => {
+                            const optionValue = typeof optionDefinition === 'object' ? optionDefinition.value : optionDefinition;
                             const option = document.createElement('option');
                             option.value = optionValue;
-                            option.textContent = optionValue;
-                            if ((raw[field.name] || '') === optionValue) {
+                            option.textContent = typeof optionDefinition === 'object' ? optionDefinition.label : optionValue;
+                            if (String(raw[field.name] ?? '') === optionValue) {
                                 option.selected = true;
                             }
                             control.appendChild(option);
@@ -3393,9 +3435,26 @@ Request: ${escapeApiLogValue(err.request_payload || 'N/A')}</pre>
                         control.value = raw[field.name] || '';
                     }
                     control.name = field.name;
+                    control.required = Boolean(field.required);
                     wrap.appendChild(control);
                     dbEditFields.appendChild(wrap);
                 });
+
+                const accountTypeField = dbEditFields.querySelector('[name="clinic_account_type"]');
+                const updateAccountSubtypeFields = () => {
+                    const accountType = accountTypeField?.value || '';
+                    dbEditFields.querySelectorAll('[data-visible-account-type]').forEach((wrap) => {
+                        const isVisible = wrap.dataset.visibleAccountType === accountType;
+                        wrap.hidden = !isVisible;
+                        const control = wrap.querySelector('select, input');
+                        if (control) {
+                            control.disabled = !isVisible;
+                            control.required = isVisible;
+                        }
+                    });
+                };
+                accountTypeField?.addEventListener('change', updateAccountSubtypeFields);
+                updateAccountSubtypeFields();
 
                 dbEditModal.classList.add('show');
             });

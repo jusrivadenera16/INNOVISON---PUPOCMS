@@ -398,6 +398,9 @@
         border: 1px solid rgba(112, 19, 27, 0.16);
         background: #ffffff;
         box-shadow: 0 20px 42px rgba(15, 23, 42, 0.16);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
     }
     .profile-actions-menu.is-open {
         display: grid;
@@ -3375,7 +3378,7 @@
                     </div>
                     <div class="profile-quick-item">
                         <span class="profile-quick-icon"><x-outline-icon name="calendar-days" /></span>
-                        <span>Age<strong>{{ $profile->age ?: ($calculatedAge ?: 'N/A') }}</strong></span>
+                        <span>Age<strong>{{ $calculatedAge ?? ($profile->age ?: 'N/A') }}</strong></span>
                     </div>
                     <div class="profile-quick-item">
                         <span class="profile-quick-icon"><x-outline-icon name="envelope" /></span>
@@ -3510,7 +3513,7 @@
                     <div class="profile-meta"><div class="profile-meta-k">Student Number</div><div class="profile-meta-v">{{ $displayStudentNumber }}</div></div>
                     <div class="profile-meta"><div class="profile-meta-k">Gender</div><div class="profile-meta-v">{{ $profile->sex ?: 'N/A' }}</div></div>
                     <div class="profile-meta"><div class="profile-meta-k">Civil Status</div><div class="profile-meta-v">{{ $profile->civil_status ?: 'N/A' }}</div></div>
-                    <div class="profile-meta"><div class="profile-meta-k">Age</div><div class="profile-meta-v">{{ $profile->age ?: ($calculatedAge ?: 'N/A') }}</div></div>
+                    <div class="profile-meta"><div class="profile-meta-k">Age</div><div class="profile-meta-v">{{ $calculatedAge ?? ($profile->age ?: 'N/A') }}</div></div>
                     <div class="profile-meta"><div class="profile-meta-k">Blood Type</div><div class="profile-meta-v">{{ $profile->blood_type ?: 'N/A' }}</div></div>
                 </div>
             </section>
@@ -4724,7 +4727,20 @@
         if (!profileActionsMenu || !profileActionsToggle) return;
         profileActionsMenu.classList.toggle('is-open', open);
         profileActionsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+        profileActionsMenu.style.maxHeight = '';
+        if (open) {
+            const menuRect = profileActionsMenu.getBoundingClientRect();
+            const availableHeight = Math.max(120, window.innerHeight - menuRect.top - 12);
+            if (profileActionsMenu.scrollHeight > availableHeight) {
+                profileActionsMenu.style.maxHeight = `${availableHeight}px`;
+            }
+        }
     }
+
+    window.addEventListener('resize', function () {
+        if (profileActionsMenu?.classList.contains('is-open')) setProfileActionsMenu(true);
+    });
 
     profileActionsToggle?.addEventListener('click', function (event) {
         event.stopPropagation();

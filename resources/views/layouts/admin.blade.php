@@ -6929,9 +6929,31 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             ->whereRaw('UPPER(reference_number) NOT LIKE ?', ['TEST-LOCAL%'])
             ->whereRaw('reference_number NOT REGEXP ?', [$healthRecordsStudentNumberPattern]);
     };
-    $healthRecordsCountRealStudents = function () use ($healthRecordsHasHealthProfiles, $healthRecordsStudentNumberPattern, $healthRecordsIssuedStatuses) {
-        if (!$healthRecordsHasHealthProfiles) {
+    $healthRecordsCountUniquePeople = function (array $recordQueries) {
+        $peopleQuery = null;
+
+        foreach ($recordQueries as $recordQuery) {
+            if (!$recordQuery) {
+                continue;
+            }
+
+            $recordQuery = clone $recordQuery;
+            $recordQuery->whereNotNull('user_id')->select('user_id');
+            $recordQuery = $recordQuery->toBase();
+            $peopleQuery = $peopleQuery ? $peopleQuery->union($recordQuery) : $recordQuery;
+        }
+
+        if (!$peopleQuery) {
             return 0;
+        }
+
+        return \Illuminate\Support\Facades\DB::query()
+            ->fromSub($peopleQuery, 'health_record_people')
+            ->count();
+    };
+    $healthRecordsRealStudentsQuery = function () use ($healthRecordsHasHealthProfiles, $healthRecordsStudentNumberPattern, $healthRecordsIssuedStatuses) {
+        if (!$healthRecordsHasHealthProfiles) {
+            return null;
         }
 
         return \App\Models\HealthProfile::query()
@@ -6960,12 +6982,11 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                     ->orWhereRaw('UPPER(reference_number) LIKE ?', ['LOC-%'])
                     ->orWhereRaw('UPPER(reference_number) LIKE ?', ['TEST-LOCAL%'])
                     ->orWhereRaw('reference_number REGEXP ?', [$healthRecordsStudentNumberPattern]);
-            })
-            ->count();
+            });
     };
-    $healthRecordsCountApplicants = function () use ($healthRecordsHasHealthProfiles, $healthRecordsPendingAdmissionReferenceQuery) {
+    $healthRecordsApplicantsQuery = function () use ($healthRecordsHasHealthProfiles, $healthRecordsPendingAdmissionReferenceQuery) {
         if (!$healthRecordsHasHealthProfiles) {
-            return 0;
+            return null;
         }
 
         return \App\Models\HealthProfile::query()
@@ -6996,10 +7017,9 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                             }
                         });
                     });
-            })
-            ->count();
+            });
     };
-    $healthRecordsCountRole = function (array $aliases) use ($healthRecordsHasHealthProfiles, $healthRecordsHasStaffProfiles) {
+    $healthRecordsRoleQueries = function (array $aliases) use ($healthRecordsHasHealthProfiles, $healthRecordsHasStaffProfiles) {
         $applyRoleAliases = function ($query) use ($aliases) {
             $query->whereHas('user', function ($userQuery) use ($aliases) {
                 $userQuery->where(function ($builder) use ($aliases) {
@@ -7012,28 +7032,38 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             });
         };
 
-        $count = 0;
+        $queries = [];
         if ($healthRecordsHasHealthProfiles) {
             $query = \App\Models\HealthProfile::query()->notPulledOut();
             $applyRoleAliases($query);
-            $count += $query->count();
+            $queries[] = $query;
         }
         if ($healthRecordsHasStaffProfiles) {
             $query = \App\Models\HealthProfileStaff::query();
             $applyRoleAliases($query);
-            $count += $query->count();
+            $queries[] = $query;
         }
 
-        return $count;
+        return $queries;
     };
+    $healthRecordsApplicantQuery = $healthRecordsApplicantsQuery();
+    $healthRecordsStudentQuery = $healthRecordsRealStudentsQuery();
+    $healthRecordsFacultyQueries = $healthRecordsRoleQueries(['faculty']);
+    $healthRecordsAdminQueries = $healthRecordsRoleQueries(['admin', 'superadmin', 'super_admin', 'clinic_staff', 'clinic staff', 'nurse']);
+    $healthRecordsDependentQueries = $healthRecordsRoleQueries(['dependent', 'dependents']);
     $healthRecordsTypeCounts = [
-        'applicant' => $healthRecordsCountApplicants(),
-        'student' => $healthRecordsCountRealStudents(),
-        'faculty' => $healthRecordsCountRole(['faculty']),
-        'admin' => $healthRecordsCountRole(['admin', 'superadmin', 'super_admin', 'clinic_staff', 'clinic staff', 'nurse']),
-        'dependent' => $healthRecordsCountRole(['dependent', 'dependents']),
+        'applicant' => $healthRecordsCountUniquePeople([$healthRecordsApplicantQuery]),
+        'student' => $healthRecordsCountUniquePeople([$healthRecordsStudentQuery]),
+        'faculty' => $healthRecordsCountUniquePeople($healthRecordsFacultyQueries),
+        'admin' => $healthRecordsCountUniquePeople($healthRecordsAdminQueries),
+        'dependent' => $healthRecordsCountUniquePeople($healthRecordsDependentQueries),
     ];
-    $healthRecordsTypeCounts[''] = array_sum($healthRecordsTypeCounts);
+    $healthRecordsTypeCounts[''] = $healthRecordsCountUniquePeople(array_merge(
+        [$healthRecordsApplicantQuery, $healthRecordsStudentQuery],
+        $healthRecordsFacultyQueries,
+        $healthRecordsAdminQueries,
+        $healthRecordsDependentQueries
+    ));
     $healthRecordsTypeLinks = [
         '' => ['label' => 'All', 'icon' => 'M4 6.75h16M4 12h16M4 17.25h16'],
         'applicant' => ['label' => 'Applicants', 'icon' => 'M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.118a7.5 7.5 0 0 1 15 0'],

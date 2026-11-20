@@ -3474,12 +3474,10 @@ public function account(Request $request)
         : ($studentUsesDependentProfile ? $user->dependentProfile : $user->healthProfile);
     $profileBirthday = trim((string) (optional($profileSource)->birthday ?: $user->DOB));
     $profileAge = optional($profileSource)->age;
-    if ($profileAge === null && $profileBirthday !== '') {
+    if ($profileBirthday !== '') {
         try {
             $profileAge = Carbon::parse($profileBirthday)->age;
-        } catch (\Throwable $exception) {
-            $profileAge = null;
-        }
+        } catch (\Throwable $exception) { /* Keep the saved age if the birthday is invalid. */ }
     }
     $accountProfileData['birthday'] = $profileBirthday;
     $accountProfileData['age'] = $profileAge;

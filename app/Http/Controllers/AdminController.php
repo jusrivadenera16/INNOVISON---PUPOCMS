@@ -2251,11 +2251,24 @@ class AdminController extends Controller
                 'reference_number' => 'nullable|string|max:255',
                 'employee_number' => 'nullable|string|max:255',
                 'gender' => 'nullable|string|max:255',
+                'clinic_account_type' => ['required', Rule::in(array_keys(User::CLINIC_ACCOUNT_TYPES))],
+                'student_type' => [
+                    'nullable',
+                    Rule::requiredIf(fn () => $request->input('clinic_account_type') === 'student'),
+                    Rule::in(array_values(array_diff(User::STUDENT_TYPES, ['transferee']))),
+                ],
+                'applicant_type' => [
+                    'nullable',
+                    Rule::requiredIf(fn () => $request->input('clinic_account_type') === 'applicant'),
+                    Rule::in(User::APPLICANT_TYPES),
+                ],
                 'user_role' => ['required', Rule::in(['student', 'student_assistant', 'admin', 'superadmin', 'super_admin'])],
                 'status' => ['nullable', Rule::in(['active', 'inactive'])],
             ]);
 
             $user = User::findOrFail($id);
+            $previousClinicAccountType = $user->clinicAccountTypeKey();
+            $targetClinicAccountType = $request->input('clinic_account_type');
             $user->first_name = $request->input('first_name');
             $user->last_name = $request->input('last_name');
             $user->name = trim(implode(' ', array_filter([$request->input('first_name'), $request->input('last_name')]))) ?: $user->name;
@@ -2274,10 +2287,33 @@ class AdminController extends Controller
                 $user->gender = $request->input('gender');
             }
             $user->user_role = User::normalizeRole($request->input('user_role'));
+            if (Schema::hasColumn('users', 'user_type')) {
+                $user->user_type = User::userTypeForClinicAccountType($request->input('clinic_account_type'));
+            }
+            if (Schema::hasColumn('users', 'student_type')) {
+                $user->student_type = $request->input('clinic_account_type') === 'student'
+                    ? $request->input('student_type')
+                    : null;
+            }
+            if (Schema::hasColumn('users', 'applicant_type')) {
+                $user->applicant_type = $request->input('clinic_account_type') === 'applicant'
+                    ? $request->input('applicant_type')
+                    : null;
+            }
             if (Schema::hasColumn('users', 'status')) {
                 $user->status = $request->input('status', 'active');
             }
-            $user->save();
+            DB::transaction(function () use ($user, $previousClinicAccountType, $targetClinicAccountType) {
+                $user->save();
+
+                if ($previousClinicAccountType === 'applicant'
+                    && $targetClinicAccountType === 'student'
+                    && Schema::hasTable('health_profiles')
+                    && Schema::hasTable('health_form_submissions')) {
+                    app(HealthFormPdfSnapshotService::class)
+                        ->refreshPendingDeclarationAfterApplicantToStudent($user);
+                }
+            });
 
             return redirect()->route('admin.api-testing', ['source' => 'database_info', 'db_table' => 'users'])->with('success', 'User record updated.');
         }
@@ -2321,21 +2357,6 @@ class AdminController extends Controller
         $admin->save();
 
         return redirect()->route('admin.api-testing', ['source' => 'database_info', 'db_table' => 'admins'])->with('success', 'Admin record updated.');
-    }
-
-    public function deleteApiTestingDatabaseRecord(string $table, int $id)
-    {
-        $user = Auth::user();
-        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
-
-        if ($table === 'users') {
-            User::findOrFail($id)->delete();
-            return redirect()->route('admin.api-testing', ['source' => 'database_info', 'db_table' => 'users'])->with('success', 'User record deleted.');
-        }
-
-        abort_unless($table === 'admins', 404);
-        Admin::findOrFail($id)->delete();
-        return redirect()->route('admin.api-testing', ['source' => 'database_info', 'db_table' => 'admins'])->with('success', 'Admin record deleted.');
     }
 
     private function externalApiTestingSystems(): array
@@ -2448,6 +2469,15 @@ class AdminController extends Controller
         }
 
         $query = User::query();
+        foreach ([
+            'health_profiles' => 'healthProfile',
+            'health_profile_emp' => 'employeeHealthProfile',
+            'admin_hub' => 'adminHubProfile',
+        ] as $tableName => $relationName) {
+            if (Schema::hasTable($tableName)) {
+                $query->with($relationName);
+            }
+        }
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
@@ -2463,6 +2493,9 @@ class AdminController extends Controller
             ->limit(100)
             ->get()
             ->map(function (User $user) {
+                $raw = $user->toArray();
+                $raw['clinic_account_type'] = $user->clinicAccountTypeKey();
+
                 return [
                     'id' => $user->id,
                     'name' => $user->name ?: trim(implode(' ', array_filter([$user->first_name, $user->last_name]))),
@@ -2481,7 +2514,7 @@ class AdminController extends Controller
                         'Status' => $user->status ?? 'N/A',
                         'Updated At' => optional($user->updated_at)->toIso8601String() ?? 'N/A',
                     ],
-                    'raw' => $user->toArray(),
+                    'raw' => $raw,
                 ];
             })
             ->values()
@@ -4351,7 +4384,13 @@ class AdminController extends Controller
         }
 
 
-        $calculatedAge = Carbon::parse($profile->user->DOB)->age;
+        $profileBirthday = trim((string) ($profile->birthday ?: $profile->user?->DOB));
+        $calculatedAge = null;
+        if ($profileBirthday !== '') {
+            try {
+                $calculatedAge = Carbon::parse($profileBirthday)->age;
+            } catch (\Throwable $exception) { /* Fall back to the saved age if the birthday is invalid. */ }
+        }
         $pendingHealthFormRequest = HealthFormSubmission::query()
             ->where('user_id', $profile->user_id)
             ->where('status', HealthFormSubmission::STATUS_REQUESTED)
