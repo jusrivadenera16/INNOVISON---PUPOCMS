@@ -12166,7 +12166,6 @@
                                     </label>
                                 </div>
                             </div>
-                            @include('admin.partials.review-medical-clearance')
                             <div id="applicantNormalRemarksFields" class="applicant-condition-fields" style="display: none;">
                                 <div class="applicant-condition-field">
                                     <label for="applicantNormalRemarks">Remarks <span style="color: #94a3b8;">(Optional)</span></label>
@@ -12262,6 +12261,7 @@
                                     </div>
                                 </div>
                             </div>
+                            @include('admin.partials.review-medical-clearance')
                         </section>
 
                         <div class="applicant-physical-stack">

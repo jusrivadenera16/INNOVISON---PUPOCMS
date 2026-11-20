@@ -270,7 +270,9 @@ class MedicalClearanceService
             'medical_clearance_review' => ['required', 'array:submission_id,category'],
             'medical_clearance_review.submission_id' => ['required', 'integer', 'min:1'],
             'medical_clearance_review.category' => ['required', 'string', 'max:180'],
-            'medical_clearance.request_key' => ['required', 'uuid'],
+            'medical_clearance' => ['nullable', 'array'],
+            'medical_clearance.request_key' => ['nullable', 'uuid'],
+            'medical_clearance.issue_medical_clearance' => ['nullable', 'boolean'],
             'medical_clearance.purpose' => ['nullable', 'string', 'max:180'],
             'medical_clearance.other_purpose' => ['nullable', 'string', 'max:180'],
         ]);
@@ -280,7 +282,17 @@ class MedicalClearanceService
             || !in_array($data['medical_clearance_review']['category'], $this->healthFormCategories($type, $profile), true)) {
             throw ValidationException::withMessages(['record' => 'This Final Review draft no longer matches the current approved Health Form. Look up the record again.']);
         }
-        if (IssuedMedicalClearance::where('request_key', $data['medical_clearance']['request_key'])->exists()) {
+        $requestKey = trim((string) data_get($data, 'medical_clearance.request_key', ''));
+        $issueChoice = data_get($data, 'medical_clearance.issue_medical_clearance');
+        // Existing saved drafts predate the explicit toggle; a request key means
+        // they were preparing to issue and must still be checked for reuse.
+        $issueMedicalClearance = $issueChoice === null
+            ? $requestKey !== ''
+            : in_array($issueChoice, [true, 1, '1', 'true'], true);
+        if ($issueMedicalClearance && $requestKey === '') {
+            throw ValidationException::withMessages(['medical_clearance.request_key' => 'A Medical Clearance request is required when issuing a certificate.']);
+        }
+        if ($issueMedicalClearance && $requestKey !== '' && IssuedMedicalClearance::where('request_key', $requestKey)->exists()) {
             throw ValidationException::withMessages(['record' => 'This review has already issued a certificate. Start another review instead.']);
         }
     }
@@ -289,10 +301,19 @@ class MedicalClearanceService
     {
         if (!$approved) return null;
         if (!$allowed) {
-            if ($request->boolean('issue_medical_clearance')) throw ValidationException::withMessages(['issue_medical_clearance' => 'Medical Clearances are available for student and employee reviews only.']);
+            $issueRequested = $request->has('issue_medical_clearance')
+                ? (bool) $request->validate(['issue_medical_clearance' => ['required', 'boolean']])['issue_medical_clearance']
+                : false;
+            if ($issueRequested) throw ValidationException::withMessages(['issue_medical_clearance' => 'Medical Clearances are available for student and employee reviews only.']);
             return null;
         }
         abort_unless(app(ModulePermissionService::class)->can($request->user(), 'health_records.update_assessment'), 403);
+        // Existing integrations without the toggle retain the prior issue-by-default behavior.
+        $issueRequested = $request->has('issue_medical_clearance')
+            ? (bool) $request->validate(['issue_medical_clearance' => ['required', 'boolean']])['issue_medical_clearance']
+            : true;
+        if (!$issueRequested) return null;
+
         $validated = $request->validate([
             'medical_clearance.request_key' => ['required', 'uuid'],
             'medical_clearance.purpose' => ['required', 'string', 'max:180'],

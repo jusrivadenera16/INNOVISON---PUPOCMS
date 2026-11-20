@@ -10711,6 +10711,19 @@
 
     window.syncVerificationResubmissionActionState = syncDocumentResubmissionActionState;
 
+    function navigateToHealthReview(url, step) {
+        const targetUrl = String(url || '').trim();
+        if (!targetUrl) return;
+
+        if (verifyContinueToWalkinBtn) verifyContinueToWalkinBtn.disabled = true;
+        window.AdminLoading?.showAction(
+            step === 'encode' ? 'Opening Assessment' : 'Opening Final Review',
+            'Preparing the selected review page.',
+            'generic'
+        );
+        window.location.assign(targetUrl);
+    }
+
     healthRecordsSearchShell?.addEventListener('submit', function (event) {
         event.preventDefault();
     });
@@ -11333,9 +11346,8 @@
             }
 
             const targetUrl = verifyContinueToWalkinBtn.dataset.walkinUrl || '';
-            if (targetUrl) {
-                window.location.assign(targetUrl);
-            }
+            const selectedStep = verifyApplicantNextStep?.value || 'final_review';
+            navigateToHealthReview(targetUrl, selectedStep);
         });
     }
 
@@ -11352,7 +11364,7 @@
         verifyApplicantNextStep.value = selectedStep;
         window.configureHealthRecordReviewDestination();
         const targetUrl = verifyContinueToWalkinBtn?.dataset.walkinUrl || '';
-        if (targetUrl) window.location.assign(targetUrl);
+        navigateToHealthReview(targetUrl, selectedStep);
     });
 
     document.addEventListener('click', function (event) {

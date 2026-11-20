@@ -4981,16 +4981,20 @@ public function updateContact(Request $request)
         ]);
     }
 
-    // 2. Save only clinic-controlled personal information from the student profile page.
+    // Faculty and Admin employee accounts may use either a mobile number or a landline.
+    $allowEmployeeLandline = in_array($user->clinicAccountTypeKey(), ['faculty', 'non_teaching_staff'], true);
+    $employeePhoneRules = ['nullable', 'string', 'max:24', new \App\Rules\PhilippinePhoneNumber()];
+
+    // 2. Save only clinic-controlled personal information from the account profile page.
     $validationRules = [
-        'contact_no' => ['nullable', 'string', 'max:50'],
+        'contact_no' => $allowEmployeeLandline ? $employeePhoneRules : ['nullable', 'string', 'max:50'],
         'address' => ['nullable', 'string', 'max:255'],
         'address_street' => ['nullable', 'string', 'max:255', 'required_with:address_barangay,address_city_municipality,address_province'],
         'address_barangay' => ['nullable', 'string', 'max:120', 'required_with:address_street,address_city_municipality,address_province'],
         'address_city_municipality' => ['nullable', 'string', 'max:120', 'required_with:address_street,address_barangay,address_province'],
         'address_province' => ['nullable', 'string', 'max:120', 'required_with:address_street,address_barangay,address_city_municipality'],
         'emergency_contact_person' => ['nullable', 'string', 'max:255'],
-        'emergency_contact_no' => ['nullable', 'string', 'max:50'],
+        'emergency_contact_no' => $allowEmployeeLandline ? $employeePhoneRules : ['nullable', 'string', 'max:50'],
         'civil_status' => ['nullable', 'string', 'max:80'],
         'height' => ['nullable', 'numeric', 'between:1,8'],
         'weight' => ['nullable', 'numeric', 'between:1,1500'],
@@ -6143,7 +6147,9 @@ private function processEmployeeHealthForm(Request $request, bool $adminForm = f
         'province' => ['required', 'string', 'max:120'],
         'contact_no' => ['required', 'string', 'size:11', 'regex:/^09\d{9}$/'],
         'emergency_contact_person' => ['required', 'string', 'max:255'],
-        'emergency_contact_no' => ['required', 'string', 'size:11', 'regex:/^09\d{9}$/'],
+        'emergency_contact_no' => $isDependentAccount
+            ? ['required', 'string', 'size:11', 'regex:/^09\d{9}$/']
+            : ['required', 'string', 'max:24', new \App\Rules\PhilippinePhoneNumber()],
         'form_date' => ['required', 'date'],
         'office' => $isDependentAccount
             ? ['nullable', 'string', 'max:255']

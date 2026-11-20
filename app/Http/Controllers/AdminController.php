@@ -3727,6 +3727,16 @@ class AdminController extends Controller
         // Hydrate each filtered record graph once; independent copies keep history and queues isolated.
         $healthRecordRows = $this->healthRecordListingRows($query, true);
         $employeeRecordRows = $this->healthRecordListingRows($employeeQuery, true);
+        if ($userTypeFilter === 'admin') {
+            // Keep the Admin tab aligned with the same identity resolver used for
+            // the row badge. An Admin Hub email match alone must not pull a true
+            // Student health record into this category.
+            $this->attachAdminHubProfilesByEmail($healthRecordRows->concat($employeeRecordRows));
+            $isAdminIdentity = static fn ($record): bool =>
+                \App\Support\HealthRecordIdentityResolver::userType($record) === 'Admin';
+            $healthRecordRows = $healthRecordRows->filter($isAdminIdentity);
+            $employeeRecordRows = $employeeRecordRows->filter($isAdminIdentity);
+        }
         $this->preloadHistoricalHealthRecordSnapshots($healthRecordRows, $employeeRecordRows);
         $issuedRecords = $issuedQuery->whereIn('id', $healthRecordRows->keys())->withoutEagerLoads()->pluck('id')
             ->map(fn ($id) => $this->copyHealthRecordForListing($healthRecordRows->get($id)))

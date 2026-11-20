@@ -3544,10 +3544,10 @@
                                     <span class="address-field-icon" aria-hidden="true">
                                         <svg viewBox="0 0 24 24"><path d="M6 3h4l2 5-2.5 1.5a13 13 0 0 0 5 5L16 12l5 2v4c0 1.1-.9 2-2 2C10.7 20 4 13.3 4 5a2 2 0 0 1 2-2Z"></path></svg>
                                     </span>
-                                    <input id="emergency_contact_no" type="text" name="emergency_contact_no" class="form-control" value="{{ $employeeValue('emergency_contact_no') }}" maxlength="11" minlength="11" inputmode="numeric" pattern="09[0-9]{9}" data-mobile-contact data-validation-message="Use an 11-digit mobile number starting with 09." required>
+                                    <input id="emergency_contact_no" type="text" name="emergency_contact_no" class="form-control" value="{{ $employeeValue('emergency_contact_no') }}" @if($isDependentAccount) maxlength="11" minlength="11" inputmode="numeric" pattern="09[0-9]{9}" data-mobile-contact data-validation-message="Use an 11-digit mobile number starting with 09." @else maxlength="24" inputmode="tel" data-landline-contact data-validation-message="Use an 11-digit mobile number or a Philippine landline, such as 02-8123-4567." @endif required>
                                 </div>
-                                <small class="field-hint">Example: 09123456789</small>
-                                <small class="field-hint mobile-contact-error" data-mobile-contact-error>Please put an 11-digit mobile number starting with 09.</small>
+                                <small class="field-hint">{{ $isDependentAccount ? 'Example: 09123456789' : 'Example: 09123456789 or 02-8123-4567' }}</small>
+                                <small class="field-hint mobile-contact-error" data-mobile-contact-error>{{ $isDependentAccount ? 'Please put an 11-digit mobile number starting with 09.' : 'Enter an 11-digit mobile number or a valid Philippine landline.' }}</small>
                             </div>
                         </div>
                         </div>
@@ -4004,7 +4004,7 @@
             const employeeDisabilityTypeInput = document.getElementById('disability_type');
             const employeePwdRequirementCard = document.getElementById('employeePwdRequirementCard');
             const uploadInputs = Array.from(document.querySelectorAll('[data-upload-input]'));
-            const mobileContactInputs = Array.from(document.querySelectorAll('[data-mobile-contact]'));
+            const mobileContactInputs = Array.from(document.querySelectorAll('[data-mobile-contact], [data-landline-contact]'));
             const submitButton = document.getElementById('employeeHealthSubmit');
             const submitButtonLabel = submitButton?.querySelector('[data-submit-label]');
             const stepButtons = Array.from(document.querySelectorAll('[data-step-next], [data-step-back]'));
@@ -4413,11 +4413,19 @@
             function syncMobileContactValidity(input) {
                 if (!input) return;
 
-                const digits = input.value.replace(/\D/g, '').slice(0, 11);
-                if (input.value !== digits) input.value = digits;
+                const allowsLandline = input.hasAttribute('data-landline-contact');
+                const raw = input.value.trim();
+                const digits = raw.replace(/\D/g, '');
+                if (!allowsLandline) {
+                    const mobileDigits = digits.slice(0, 11);
+                    if (input.value !== mobileDigits) input.value = mobileDigits;
+                }
 
-                const valid = /^09\d{9}$/.test(digits);
-                const message = digits === '' || valid
+                const validCharacters = !allowsLandline || /^[0-9+().\s-]*$/.test(raw);
+                const validMobile = /^09\d{9}$/.test(digits);
+                const validLandline = allowsLandline && /^0[2-8]\d{7,9}$/.test(digits);
+                const valid = validCharacters && (validMobile || validLandline);
+                const message = raw === '' || valid
                     ? ''
                     : (input.dataset.validationMessage || 'Use an 11-digit mobile number starting with 09.');
 

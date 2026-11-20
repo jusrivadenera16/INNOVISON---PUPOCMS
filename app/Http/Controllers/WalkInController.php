@@ -4784,8 +4784,11 @@ PROMPT;
             'status' => $clearanceStatus,
             'message' => $hasPendingFinding
                 ? 'Employee saved under Pending Compliance.'
-                : 'Employee approved and Health Examination Record PDF saved.',
+                : ($issuedMedicalClearance
+                    ? 'Employee approved, Medical Certificate issued, and Health Examination Record PDF saved.'
+                    : 'Employee approved and Health Examination Record PDF saved. No Medical Certificate was issued.'),
             'lookup_source' => 'local_employee_reference',
+            'medical_clearance_issued' => (bool) $issuedMedicalClearance,
             'medical_clearance_url' => $issuedMedicalClearance ? route('admin.medical_clearances.show', ['employee', $employeeProfile->id, $issuedMedicalClearance->id]) : null,
             'pdf_path' => $employeeProfile->staff_health_form_pdf_path,
             'evaluation_source_type' => $hasPendingFinding ? null : 'employee_approval',
@@ -5669,7 +5672,14 @@ PROMPT;
 
             return response()->json([
                 'success' => true,
-                'message' => $isDependentAssessment ? 'Dependent assessment saved.' : 'Student/OJT assessment saved.',
+                'message' => $isDependentAssessment
+                    ? 'Dependent assessment saved.'
+                    : ($clearanceDecision === 'approve'
+                        ? ($issuedMedicalClearance
+                            ? 'Student/OJT Health Form approved and Medical Certificate issued.'
+                            : 'Student/OJT Health Form approved. No Medical Certificate was issued.')
+                        : 'Student/OJT assessment saved.'),
+                'medical_clearance_issued' => (bool) $issuedMedicalClearance,
                 'medical_clearance_url' => $issuedMedicalClearance ? route('admin.medical_clearances.show', ['student', $profile->id, $issuedMedicalClearance->id]) : null,
                 'status' => $profile->clearance_status,
                 'health_profile_id' => $profile->id,

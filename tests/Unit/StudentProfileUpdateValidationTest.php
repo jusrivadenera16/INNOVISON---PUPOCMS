@@ -32,6 +32,21 @@ class StudentProfileUpdateValidationTest extends TestCase
         ], [], 'address_province');
     }
 
+    public function test_faculty_account_contact_fields_reject_invalid_phone_numbers(): void
+    {
+        foreach (['contact_no', 'emergency_contact_no'] as $field) {
+            Auth::shouldReceive('user')->once()->andReturn(new User(['user_type' => 'faculty']));
+            $request = Request::create('/student/update-contact', 'POST', [$field => 'not-a-phone']);
+
+            try {
+                (new AppointmentController())->updateContact($request);
+                $this->fail("The {$field} phone validation should reject an invalid employee number.");
+            } catch (ValidationException $exception) {
+                $this->assertArrayHasKey($field, $exception->errors());
+            }
+        }
+    }
+
     private function assertProfileUpdateError(array $input, array $files, string $field): void
     {
         Auth::shouldReceive('user')->once()->andReturn(new User());

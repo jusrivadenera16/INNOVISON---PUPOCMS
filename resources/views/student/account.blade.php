@@ -7993,6 +7993,7 @@
     $isEnrolled = (bool) ($isEnrolled ?? false);
     $accountView = in_array(($accountView ?? 'profile'), ['profile', 'health-record', 'notifications'], true) ? $accountView : 'profile';
     $usesEmployeeHealthForm = $studentUsesEmployeeHealthForm ?? false;
+    $allowEmployeeLandline = in_array($user->clinicAccountTypeKey(), ['faculty', 'non_teaching_staff'], true);
     $isDependentAccount = $user->clinicAccountTypeKey() === 'dependent';
     $canUpdateLadderizedStudentNumber = (bool) ($canUpdateLadderizedStudentNumber ?? false);
     $isLadderizedStudent = !$usesEmployeeHealthForm
@@ -8741,7 +8742,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </label>
                                 <label class="profile-edit-field">
                                     <span>Contact Number</span>
-                                    <input type="text" name="contact_no" inputmode="tel" value="{{ $profileEditContactNo }}" placeholder="{{ $guisisPendingText }}" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
+                                    <input type="{{ $allowEmployeeLandline ? 'tel' : 'text' }}" name="contact_no" inputmode="tel" maxlength="{{ $allowEmployeeLandline ? 24 : 50 }}" value="{{ $profileEditContactNo }}" placeholder="{{ $allowEmployeeLandline ? 'Mobile or landline (e.g. 02-8123-4567)' : $guisisPendingText }}" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
+                                    @if($allowEmployeeLandline)<small class="profile-edit-help">Mobile numbers and Philippine landlines are accepted.</small>@endif
                                     @error('contact_no')<em>{{ $message }}</em>@enderror
                                 </label>
                                 <div class="profile-edit-field profile-edit-field-wide">
@@ -8792,7 +8794,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </label>
                                 <label class="profile-edit-field">
                                     <span>Emergency Contact Number</span>
-                                    <input type="text" name="emergency_contact_no" inputmode="tel" value="{{ $profileEditEmergencyNo }}" placeholder="{{ $guisisPendingText }}" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
+                                    <input type="{{ $allowEmployeeLandline ? 'tel' : 'text' }}" name="emergency_contact_no" inputmode="tel" maxlength="{{ $allowEmployeeLandline ? 24 : 50 }}" value="{{ $profileEditEmergencyNo }}" placeholder="{{ $allowEmployeeLandline ? 'Mobile or landline (e.g. 02-8123-4567)' : $guisisPendingText }}" {{ $canEditClinicProfileInfo ? '' : 'disabled' }}>
+                                    @if($allowEmployeeLandline)<small class="profile-edit-help">Mobile numbers and Philippine landlines are accepted.</small>@endif
                                     @error('emergency_contact_no')<em>{{ $message }}</em>@enderror
                                 </label>
                                 @if($showOfficeField)
@@ -10692,6 +10695,24 @@ document.addEventListener('DOMContentLoaded', function () {
     loadProfileAddressOptions();
 
     profileEditForm?.addEventListener('submit', function (event) {
+        const allowEmployeeLandline = @json($allowEmployeeLandline);
+        if (allowEmployeeLandline) {
+            for (const fieldName of ['contact_no', 'emergency_contact_no']) {
+                const field = profileEditForm.elements.namedItem(fieldName);
+                const value = String(field?.value || '').trim();
+                if (!field || field.disabled || value === '') continue;
+                const digits = value.replace(/\D/g, '');
+                const validCharacters = /^[0-9+().\s-]+$/.test(value);
+                const valid = validCharacters && (/^09\d{9}$/.test(digits) || /^0[2-8]\d{7,9}$/.test(digits));
+                if (!valid) {
+                    event.preventDefault();
+                    showProfileEditToast('Enter an 11-digit mobile number or a valid Philippine landline, such as 02-8123-4567.');
+                    field.focus();
+                    return;
+                }
+            }
+        }
+
         const heightField = profileEditForm.elements.namedItem('height');
         const weightField = profileEditForm.elements.namedItem('weight');
         const measurements = [

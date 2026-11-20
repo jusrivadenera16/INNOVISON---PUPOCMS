@@ -39,3 +39,11 @@ test('live feed still checks for changes but does not overlap or poll hidden pag
     h.document.hidden=true;h.intervals[0].fn();assert.equal(h.calls.length,1);
     h.document.hidden=false;h.intervals[0].fn();assert.equal(h.calls.length,2);
 });
+test('health record review navigation shows the action loader before leaving the page',()=>{
+    const start=blade.indexOf('function navigateToHealthReview(url, step)');
+    const end=blade.indexOf('healthRecordsSearchShell?.addEventListener',start);
+    const navigation=blade.slice(start,end);
+    assert.ok(start >= 0);
+    assert.ok(navigation.indexOf('window.AdminLoading?.showAction') < navigation.indexOf('window.location.assign(targetUrl)'));
+    assert.match(blade, /navigateToHealthReview\(targetUrl, selectedStep\)/);
+});

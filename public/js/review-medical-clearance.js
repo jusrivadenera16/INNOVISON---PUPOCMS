@@ -4,7 +4,9 @@
     if (!root) return;
     const node = key => root.querySelector(`[data-review-clearance-${key}]`);
     let current = null, token = null;
+    let issueChoiceRequired = true, forcedIssueChoice = false;
     let purposeSelect = null;
+    const selectedIssueChoice = () => root.querySelector('[name="issue_medical_clearance"]:checked')?.value || '';
     function enhancePurposeSelect() {
         // Keep a usable native fallback if the shared helper has not loaded yet.
         // Retry on configuration instead of permanently losing the custom UI.
@@ -16,18 +18,23 @@
     function status(message) { node('status').textContent = message; node('status').hidden = !message; }
     function sync() {
         const pending = document.querySelector('[name="applicant_clearance_decision"]:checked')?.value === 'pending';
+        const issueChoice = selectedIssueChoice();
+        const shouldIssue = !pending && (forcedIssueChoice || (issueChoiceRequired && issueChoice === '1'));
         const other = node('purpose').value === '__other__';
-        node('other-label').hidden = !other;
-        for (const key of ['purpose', 'other']) {
-            node(key).disabled = pending || !current || (key === 'other' && !other);
-            node(key).required = !root.hidden && !pending && (key !== 'other' || other);
-        }
+        node('issue-choice').hidden = pending || !issueChoiceRequired;
+        node('purpose-fields').hidden = !shouldIssue;
+        node('other-label').hidden = !shouldIssue || !other;
+        node('purpose').disabled = !shouldIssue || !current;
+        node('purpose').required = shouldIssue;
+        node('other').disabled = !shouldIssue || !current || !other;
+        node('other').required = shouldIssue && other;
         if (pending) status('Pending decision selected. No Medical Clearance will be issued.');
         else if (current) status('');
         enhancePurposeSelect();
     }
     function reset() {
-        token = null; current = null; root.hidden = true;
+        token = null; current = null; issueChoiceRequired = true; forcedIssueChoice = false; root.hidden = true;
+        node('issue-yes').checked = false; node('issue-no').checked = false;
         node('other').value = ''; node('document').hidden = true; status('');
         sync();
     }
@@ -46,17 +53,30 @@
     window.ReviewMedicalClearance = {
         reset,
         exportDraft() {
-            return root.hidden || !current ? null : {request_key: current.request_key, purpose: node('purpose').value, other_purpose: node('other').value};
+            if (root.hidden) return null;
+            return {
+                request_key: current?.request_key || null,
+                issue_medical_clearance: forcedIssueChoice ? true : (issueChoiceRequired && selectedIssueChoice() !== '' ? selectedIssueChoice() === '1' : null),
+                purpose: selectedIssueChoice() === '1' || forcedIssueChoice ? node('purpose').value : '',
+                other_purpose: selectedIssueChoice() === '1' || forcedIssueChoice ? node('other').value : '',
+            };
         },
         restoreDraft(draft) {
             if (!current || !draft || typeof draft !== 'object') return;
             if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(draft.request_key || '')) current.request_key = draft.request_key;
+            if (issueChoiceRequired) {
+                const choice = draft.issue_medical_clearance;
+                const shouldIssue = choice === true || choice === 1 || choice === '1' || choice === 'yes'
+                    || (choice === undefined && Boolean(draft.purpose));
+                const shouldSkip = choice === false || choice === 0 || choice === '0' || choice === 'no';
+                node(shouldIssue ? 'issue-yes' : 'issue-no').checked = shouldIssue || shouldSkip;
+            }
             node('purpose').value = [...node('purpose').children].some(option => option.value === draft.purpose) ? draft.purpose : '';
             node('other').value = String(draft.other_purpose || '').slice(0, 180);
             sync();
         },
         configureApproved(data, category, draft = null) {
-            reset(); root.hidden = false; populate(data);
+            reset(); issueChoiceRequired = false; forcedIssueChoice = true; root.hidden = false; populate(data);
             this.restoreDraft(draft);
         },
         async configure(type, id, reviewable, draft = null) {
@@ -76,6 +96,12 @@
         },
         collect(approved) {
             if (root.hidden || !approved) return { issue_medical_clearance: false };
+            if (issueChoiceRequired && selectedIssueChoice() === '') {
+                throw new Error('Choose Yes or No for issuing a Medical Clearance.');
+            }
+            if (issueChoiceRequired && selectedIssueChoice() === '0') {
+                return { issue_medical_clearance: false };
+            }
             if (!current) throw new Error('Medical Clearance purposes are not ready. Please wait or try again.');
             for (const key of ['purpose', 'other']) {
                 const field = node(key);
@@ -90,6 +116,8 @@
         },
     };
     node('purpose').addEventListener('change', sync);
+    node('issue-yes').addEventListener('change', sync);
+    node('issue-no').addEventListener('change', sync);
     document.addEventListener('change', event => { if (event.target.name === 'applicant_clearance_decision') sync(); });
     reset();
 })();

@@ -17,13 +17,16 @@ function element() {
 const info = { today: '2026-11-11', purposes: ['On the Job Training'], default_purpose: 'On the Job Training',
     identity: { name: 'Juan Dela Cruz', age: 22, sex: 'M', birth_date: '2004-01-15' } };
 function harness(fetcher = () => ({ ok: true, json: async () => info }), loadSelect = true) {
-    const nodes = Object.fromEntries(['enable', 'date', 'purpose', 'purpose-trigger', 'purpose-menu', 'other', 'fields', 'other-label', 'patient', 'status', 'document'].map(key => [key, element()]));
+    const nodes = Object.fromEntries(['issue-choice', 'issue-yes', 'issue-no', 'purpose-fields', 'purpose', 'purpose-trigger', 'purpose-menu', 'other', 'other-label', 'status', 'document'].map(key => [key, element()]));
+    nodes['issue-yes'].value = '1'; nodes['issue-no'].value = '0';
     nodes['purpose-trigger'].querySelector = () => nodes.purposeValue;
     nodes.purposeValue = element();
     nodes['purpose-trigger'].hidden = true;
     nodes['purpose-menu'].hidden = true;
     const root = element(); root.dataset = { optionsBase: '/admin/medical-clearances' };
-    root.querySelector = selector => nodes[selector.slice('[data-review-clearance-'.length, -1)];
+    root.querySelector = selector => selector === '[name="issue_medical_clearance"]:checked'
+        ? (nodes['issue-yes'].checked ? nodes['issue-yes'] : nodes['issue-no'].checked ? nodes['issue-no'] : null)
+        : nodes[selector.slice('[data-review-clearance-'.length, -1)];
     const document = element(); let decision = 'approve';
     document.querySelector = selector => selector === '[data-review-clearance]' ? root : { value: decision };
     document.createElement = () => element();
@@ -32,16 +35,20 @@ function harness(fetcher = () => ({ ok: true, json: async () => info }), loadSel
     if (loadSelect) loadSelectHelper();
     vm.runInNewContext(source, { window, document, crypto: { randomUUID: () => 'review-key' },
         fetch: async (...args) => { calls.push(args); return fetcher(...args); } });
-    return { root, nodes, document, calls, loadSelectHelper, api: window.ReviewMedicalClearance, setDecision(value) { decision = value; document.emit('change', { target: { name: 'applicant_clearance_decision' } }); } };
+    return { root, nodes, document, calls, loadSelectHelper, api: window.ReviewMedicalClearance,
+        chooseIssue(yes) { nodes['issue-yes'].checked = yes; nodes['issue-no'].checked = !yes; (yes ? nodes['issue-yes'] : nodes['issue-no']).emit('change'); },
+        setDecision(value) { decision = value; document.emit('change', { target: { name: 'applicant_clearance_decision' } }); } };
 }
 
 test('a delayed dropdown helper recovers the custom purpose UI instead of staying native', async () => {
     const h = harness(undefined, false);
     await h.api.configure('employee', 1, true);
+    h.chooseIssue(true);
     assert.equal(h.nodes.purpose.hidden, false);
     assert.equal(h.nodes['purpose-trigger'].hidden, true);
     h.loadSelectHelper();
     await h.api.configure('employee', 1, true);
+    h.chooseIssue(true);
     assert.equal(h.nodes.purpose.hidden, true);
     assert.equal(h.nodes['purpose-trigger'].hidden, false);
     assert.equal(h.nodes.purposeValue.textContent, 'Select a purpose');
@@ -60,12 +67,16 @@ test('the purpose component supplies its own versioned stylesheet and dropdown s
     }
     assert.ok(dependency.includes("filemtime(public_path('js/category-bubble-select.js'))"));
     assert.ok(partial.includes("@once('medical-clearance-styles')"));
+    assert.match(partial, /data-review-clearance-issue-yes><span>Yes<\/span>/);
+    assert.match(partial, /data-review-clearance-issue-no><span>No<\/span>/);
 });
 test('purpose is required for pending student and employee approval only', async () => {
     const h=harness();
     for(const type of ['applicant','dependent','guest']) {await h.api.configure(type,1,true); assert.equal(h.root.hidden,true);}
     await h.api.configure('student',1,false); assert.equal(h.calls.length,0);
-    await h.api.configure('student',1,true); assert.equal(h.nodes.purpose.required,true);
+    await h.api.configure('student',1,true); assert.equal(h.nodes.purpose.required,false);
+    assert.equal(h.nodes['purpose-fields'].hidden,true);
+    h.chooseIssue(true); assert.equal(h.nodes.purpose.required,true);
     assert.equal(h.nodes.purpose.value,'');
     assert.equal(h.nodes.purposeValue.textContent,'Select a purpose');
     assert.throws(()=>h.api.collect(true),/required/);
@@ -77,8 +88,19 @@ test('purpose is required for pending student and employee approval only', async
     assert.equal(input.medical_clearance.name,undefined);
     assert.doesNotMatch(source,/node\('enable'\)|node\('patient'\)|node\('date'\)/);
 });
+test('No skips purpose selection and certificate issuance; a choice is required for approval', async () => {
+    const h = harness();
+    await h.api.configure('employee', 1, true);
+    assert.throws(() => h.api.collect(true), /Choose Yes or No/);
+    h.chooseIssue(false);
+    assert.equal(h.nodes['purpose-fields'].hidden, true);
+    assert.equal(h.nodes.purpose.disabled, true);
+    assert.deepEqual(JSON.parse(JSON.stringify(h.api.collect(true))), { issue_medical_clearance: false });
+    assert.equal(h.api.exportDraft().issue_medical_clearance, false);
+    assert.equal(h.api.exportDraft().purpose, '');
+});
 test('empty purpose blocks approval; Pending never issues', async () => {
-    const h=harness(); await h.api.configure('employee',1,true);
+    const h=harness(); await h.api.configure('employee',1,true); h.chooseIssue(true);
     h.nodes.purpose.value=''; assert.throws(()=>h.api.collect(true),/required/);
     h.setDecision('pending'); assert.equal(h.api.collect(false).issue_medical_clearance,false);
     assert.equal(h.nodes.purpose.disabled,true);
@@ -102,6 +124,7 @@ test('changing records ignores stale option responses', async () => {
 
 test('custom purpose menu selects Others, enforces details and disables for Pending', async () => {
     const h = harness(); await h.api.configure('student', 1, true);
+    h.chooseIssue(true);
     assert.equal(h.nodes.purpose.hidden, true);
     assert.equal(h.nodes['purpose-trigger'].hidden, false);
     assert.equal(h.nodes.purposeValue.textContent, 'Select a purpose');
@@ -169,8 +192,10 @@ test('fresh student and employee reviews start blank but resume a saved purpose 
         await h.api.configure(type,1,true);
         assert.equal(h.nodes.purpose.value,'');
         assert.equal(h.nodes.purposeValue.textContent,'Select a purpose');
-        assert.throws(()=>h.api.collect(true),/required/);
+        assert.throws(()=>h.api.collect(true),/Choose Yes or No/);
+        h.chooseIssue(true);
         await h.api.configure(type,1,true,{purpose:'mapping:12'});
+        h.chooseIssue(true);
         assert.equal(h.nodes.purpose.value,'mapping:12');
         assert.equal(h.nodes.purposeValue.textContent,'On the Job Training');
         assert.equal(h.api.collect(true).medical_clearance.purpose,'mapping:12');

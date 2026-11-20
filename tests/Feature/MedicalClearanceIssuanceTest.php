@@ -234,6 +234,37 @@ class MedicalClearanceIssuanceTest extends TestCase
         $this->assertSame(1, HealthFormSubmission::count());
     }
 
+    public function test_repeat_review_draft_can_skip_certificate_without_a_request_key(): void
+    {
+        $profile = $this->patient(); $actor = $this->actor();
+        $submission = $this->service()->approvedSubmission($profile);
+        $request = Request::create('/', 'POST', [
+            'medical_clearance' => [
+                'request_key' => null,
+                'issue_medical_clearance' => false,
+                'purpose' => '',
+                'other_purpose' => '',
+            ],
+            'medical_clearance_review' => ['submission_id' => $submission->id, 'category' => 'On the Job Training'],
+        ]);
+        $request->setUserResolver(fn () => $actor);
+
+        $this->service()->validateReviewDraft($request, $profile);
+        $this->assertSame(0, IssuedMedicalClearance::count());
+
+        $request = Request::create('/', 'POST', [
+            'medical_clearance' => ['request_key' => null, 'issue_medical_clearance' => true],
+            'medical_clearance_review' => ['submission_id' => $submission->id, 'category' => 'On the Job Training'],
+        ]);
+        $request->setUserResolver(fn () => $actor);
+        try {
+            $this->service()->validateReviewDraft($request, $profile);
+            $this->fail('An issuing draft must include a request key.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('medical_clearance.request_key', $exception->errors());
+        }
+    }
+
     public function test_same_ojt_form_has_separate_configured_parent_and_subcategory_purpose_counts(): void
     {
         $profile = $this->patient(); $actor = $this->actor();
@@ -740,6 +771,10 @@ class MedicalClearanceIssuanceTest extends TestCase
     {
         $request = Request::create('/', 'POST', ['issue_medical_clearance' => true]);
         $this->assertNull($this->service()->approvalInput($request, false, true));
+        $request = Request::create('/', 'POST', ['issue_medical_clearance' => '0']);
+        $actor = $this->actor(); $request->setUserResolver(fn () => $actor);
+        $this->assertNull($this->service()->approvalInput($request, true, true));
+        $this->assertSame(0, IssuedMedicalClearance::count());
         $request = Request::create('/', 'POST');
         $actor = $this->actor(); $request->setUserResolver(fn () => $actor);
         $this->expectException(ValidationException::class);
@@ -821,6 +856,32 @@ class MedicalClearanceIssuanceTest extends TestCase
         $this->assertSame('Updated Student', $document->fresh()->patient_name);
         $this->assertNotSame($originalPath, $document->fresh()->pdf_path);
         $this->assertSame($submission->id, $document->fresh()->health_form_submission_id);
+    }
+
+    public function test_student_health_form_can_be_approved_without_issuing_a_medical_certificate(): void
+    {
+        [$profile, $submission, $actor] = $this->prepareStudentReview();
+        $formPdf = \Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+        $formPdf->shouldReceive('setPaper')->once()->andReturnSelf();
+        $formPdf->shouldReceive('output')->once()->andReturn('approved Health Form PDF');
+        Pdf::shouldReceive('loadView')->with('student.print_health_form', \Mockery::any())->once()->andReturn($formPdf);
+
+        $request = Request::create('/', 'POST', [
+            'reference_number' => '2026-00001-TG-1',
+            'clearance_decision' => 'approve',
+            'issue_medical_clearance' => '0',
+        ]);
+        $request->setUserResolver(fn () => $actor);
+        $response = app(\App\Http\Controllers\WalkInController::class)->saveStudentAssessment($request);
+
+        $payload = $response->getData(true);
+        $this->assertSame(200, $response->getStatusCode(), $response->getContent());
+        $this->assertSame('Fully Cleared', $profile->fresh()->clearance_status);
+        $this->assertSame('approved', $submission->fresh()->status);
+        $this->assertSame(0, IssuedMedicalClearance::count());
+        $this->assertFalse($payload['medical_clearance_issued']);
+        $this->assertNull($payload['medical_clearance_url']);
+        $this->assertStringContainsString('No Medical Certificate was issued', $payload['message']);
     }
 
     public function test_certificate_failure_during_student_review_rolls_back_the_approval_and_submission(): void

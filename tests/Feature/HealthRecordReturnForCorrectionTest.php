@@ -220,11 +220,14 @@ class HealthRecordReturnForCorrectionTest extends TestCase
             $correction = app(HealthRecordCorrectionService::class)->request('employee', $profile->id, $latest->id, 'Correct street.', $actor);
             $this->actingAs($profile->user, 'student');
             $count = HealthFormSubmission::count();
-            $response = app(\App\Http\Controllers\AppointmentController::class)->storeEmployeeHealthForm($this->employeeCorrectionPayload($profile, $account));
+            $payload = $this->employeeCorrectionPayload($profile, $account);
+            if ($account !== 'Dependent') $payload->merge(['emergency_contact_no' => '02-8123-4567']);
+            $response = app(\App\Http\Controllers\AppointmentController::class)->storeEmployeeHealthForm($payload);
             $this->assertSame(302, $response->getStatusCode());
             $this->assertFalse(session()->has('error'), (string) session('error'));
             $this->assertSame($count, HealthFormSubmission::count());
             $this->assertSame('submitted', $latest->fresh()->status);
+            $this->assertSame($account === 'Dependent' ? '09123456789' : '02-8123-4567', $profile->fresh()->emergency_contact_no);
             $this->assertSame('For Verification', $profile->fresh()->clearance_status);
             $this->assertSame('submitted', $correction->fresh()->status);
             $this->assertSame($latest->id, $correction->fresh()->health_form_submission_id);
