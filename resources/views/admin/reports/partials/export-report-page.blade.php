@@ -1233,7 +1233,7 @@
                 <div class="export-action-card">
                     <span class="export-card-icon"><x-outline-icon name="check" /></span>
                     <span>
-                        <span class="export-card-label">Total Issued</span>
+                        <span class="export-card-label">Total Records</span>
                         <span class="export-card-value">{{ number_format($previewMetrics['total_issued'] ?? $previewCount) }}</span>
                     </span>
                 </div>
