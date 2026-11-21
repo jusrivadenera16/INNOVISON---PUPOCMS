@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ReportsController;
 use App\Models\{EmployeeHealthProfile, HealthFormSubmission, HealthProfile, HealthProfileCorrectionRequest, User};
 use App\Services\{EmployeeHealthFormHistoryService, HealthRecordCategoryFilter, HealthRecordSchemaCache};
 use Illuminate\Database\Schema\Blueprint;
@@ -117,6 +118,40 @@ class HealthRecordLoadingPerformanceTest extends TestCase
         $this->assertNotSame($cache->key($request), $cache->key($other));
         $other = Request::create('/health-records'); $other->setUserResolver(fn () => (new User)->forceFill(['id' => 99, 'user_role' => 'admin']));
         $this->assertNotSame($cache->key($request), $cache->key($other));
+    }
+
+    public function test_health_records_and_health_forms_issued_totals_count_unique_approved_users(): void
+    {
+        $sharedUser = User::forceCreate(['name' => 'Shared Student', 'user_type' => 'student']);
+        HealthProfile::create(['user_id' => $sharedUser->id, 'clearance_status' => 'Fully Cleared', 'verified_at' => now()]);
+        EmployeeHealthProfile::create(['user_id' => $sharedUser->id, 'clearance_status' => 'Issued', 'verified_at' => now()]);
+
+        $historicalUser = User::forceCreate(['name' => 'Historical Approval', 'user_type' => 'student']);
+        $historicalProfile = HealthProfile::create([
+            'user_id' => $historicalUser->id,
+            'clearance_status' => 'For Verification',
+        ]);
+        HealthFormSubmission::create([
+            'user_id' => $historicalUser->id,
+            'health_profile_id' => $historicalProfile->id,
+            'status' => HealthFormSubmission::STATUS_APPROVED,
+            'approved_at' => now()->subDay(),
+            'profile_snapshot' => ['profile' => ['clearance_status' => 'Fully Cleared']],
+        ]);
+
+        $request = Request::create('/health-records');
+        app()->instance('request', $request);
+        $pageData = app(AdminController::class)->viewHealth($request)->getData();
+        $this->assertSame(2, $pageData['issuedUserCount']);
+
+        Cache::flush();
+        $stats = app(AdminController::class)->healthRecordStats($request)->getData(true)['stats'];
+        $this->assertSame(2, $stats['total_approved']);
+
+        $reportData = app(ReportsController::class)->healthFormsReport(Request::create('/admin/reports/health-forms'))->getData();
+        $this->assertSame(2, $reportData['totalIssued']);
+        $studentRow = $reportData['userTypeRows']->firstWhere('user_type', 'Student');
+        $this->assertSame(2, $studentRow->issued_count);
     }
 
     public function test_pending_list_and_uncached_stats_exclude_the_blank_employee_shadow_without_deleting_either_profile(): void

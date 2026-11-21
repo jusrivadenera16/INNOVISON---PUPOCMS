@@ -19,7 +19,7 @@ class HealthRecordStatsCache
             $revision = $revisionQuery->get()->map(fn ($row) => (array) $row)->all();
             $filters = $request->only(['q', 'course', 'date', 'year', 'user_type', 'student_type', 'form_category']);
             ksort($filters);
-            return 'health-record-stats:v3:' . hash('sha256', json_encode([
+            return 'health-record-stats:v4:' . hash('sha256', json_encode([
                 config('database.default'), config('database.connections.' . config('database.default') . '.database'),
                 $request->user()?->getAuthIdentifier(), $request->user()?->user_role, $filters, $revision,
             ]));

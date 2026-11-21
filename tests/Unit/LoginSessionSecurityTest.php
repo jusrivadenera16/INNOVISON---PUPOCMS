@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
@@ -66,5 +67,40 @@ class LoginSessionSecurityTest extends TestCase
         $this->assertFalse($request->session()->has('logout-test-sentinel'));
         $this->assertGuest('admin');
         $this->assertGuest('student');
+    }
+
+    public function test_authentication_switch_clears_other_guards_when_they_hold_a_different_user(): void
+    {
+        $activeUser = (new User())->forceFill(['id' => 63]);
+        $staleUser = (new User())->forceFill(['id' => 651]);
+
+        Auth::guard('admin')->setUser($activeUser);
+        Auth::guard('student')->setUser($staleUser);
+        Auth::guard('web')->setUser($staleUser);
+
+        $method = new ReflectionMethod(LoginController::class, 'clearConflictingGuardSessions');
+        $method->setAccessible(true);
+        $method->invoke(new LoginController(), $activeUser, 'admin');
+
+        $this->assertSame('63', (string) Auth::guard('admin')->id());
+        $this->assertGuest('student');
+        $this->assertGuest('web');
+    }
+
+    public function test_authentication_switch_keeps_same_user_in_multiple_intentional_portal_guards(): void
+    {
+        $activeUser = (new User())->forceFill(['id' => 63]);
+        $otherUser = (new User())->forceFill(['id' => 651]);
+
+        Auth::guard('admin')->setUser($activeUser);
+        Auth::guard('student')->setUser($activeUser);
+        Auth::guard('web')->setUser($otherUser);
+
+        $method = new ReflectionMethod(LoginController::class, 'clearConflictingGuardSessions');
+        $method->setAccessible(true);
+        $method->invoke(new LoginController(), $activeUser, 'admin');
+
+        $this->assertSame('63', (string) Auth::guard('student')->id());
+        $this->assertGuest('web');
     }
 }

@@ -3910,6 +3910,7 @@ class AdminController extends Controller
             }),
         };
         $issuedCombinedRecords = $issuedCombinedRecords->values();
+        $issuedUserCount = $this->uniqueHealthRecordUserCount($issuedCombinedRecords);
         $issuedWithConditions = $issuedCombinedRecords
             ->filter(fn ($record) => $record->hasMedicalCondition())
             ->count();
@@ -3999,7 +4000,7 @@ class AdminController extends Controller
         ]);
 
         $statsCache->put($statsCacheKey, $this->healthRecordSummaryStats(
-            $records, $healthProfileSummaryRecords->total(), $issuedWithConditions
+            $records, $issuedUserCount, $issuedWithConditions
         ));
 
         return view('admin.health_records', compact(
@@ -4019,6 +4020,7 @@ class AdminController extends Controller
             'yearOptions',
             'userTypeOptions',
             'issuedPerPage',
+            'issuedUserCount',
             'issuedWithConditions',
             'issuedLatestApprovedAt',
             'bulkHealthFormRequestRecords',
@@ -4337,7 +4339,7 @@ class AdminController extends Controller
         $issuedHealthRecords = $categoryFilterService->filter($issuedHealthRecords, $formCategoryFilter, true);
         $issuedEmployeeRecords = $categoryFilterService->filter($issuedEmployeeRecords, $formCategoryFilter, true);
         $stats = $this->healthRecordSummaryStats(
-            $records, $issuedHealthRecords->count() + $issuedEmployeeRecords->count(),
+            $records, $this->uniqueHealthRecordUserCount($issuedHealthRecords->concat($issuedEmployeeRecords)),
             $issuedHealthRecords->filter(fn ($record) => $record->hasMedicalCondition())->count()
                 + $issuedEmployeeRecords->filter(fn ($record) => $record->hasMedicalCondition())->count()
         );
@@ -4385,6 +4387,18 @@ class AdminController extends Controller
         }
 
         return $stats;
+    }
+
+    private function uniqueHealthRecordUserCount($records): int
+    {
+        return collect($records)->unique(function ($record): string {
+            $userId = trim((string) ($record->user_id ?? ''));
+            if ($userId !== '') {
+                return 'user:' . $userId;
+            }
+
+            return 'record:' . ($record->record_source ?? 'health') . ':' . ($record->id ?? spl_object_id($record));
+        })->count();
     }
 
     public function showHealth($id)

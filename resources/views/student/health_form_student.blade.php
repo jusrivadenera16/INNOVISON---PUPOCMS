@@ -2939,7 +2939,7 @@
             @php
                 $isHealthFormCorrectionMode = (bool) ($prefill['health_form_correction_mode'] ?? false);
                 $selectedPwd = old('has_disability', $isHealthFormCorrectionMode ? ($prefill['has_disability'] ?? '') : '');
-                $personalErrorFields = ['school_year', 'year', 'section', 'course_code', 'course_college', 'home_address', 'zipcode', 'birthday', 'age', 'sex', 'civil_status', 'blood_type', 'contact_no', 'guardian_name', 'landline', 'cellphone'];
+                $personalErrorFields = ['reference_number', 'school_year', 'year', 'section', 'course_code', 'course_college', 'home_address', 'zipcode', 'birthday', 'age', 'sex', 'civil_status', 'blood_type', 'contact_no', 'guardian_name', 'landline', 'cellphone'];
                 $medicalErrorFields = ['has_illness', 'medical_history', 'other_illness', 'has_disability', 'disability_type', 'food_allergies', 'no_allergies', 'medicine_allergies', 'other_med_allergies', 'is_smoker', 'is_drinker'];
                 $covidErrorFields = ['covid_vaccinated', 'vaccine_history'];
                 $uploadErrorFields = ['medical_certificate', 'doctor_name', 'med_cert_date', 'med_cert_findings', 'med_cert_findings_details', 'chest_xray_result', 'xray_date', 'xray_findings', 'xray_findings_details', 'pwd_id_proof', 'student_photo', 'health_declaration'];
@@ -2973,6 +2973,8 @@
                     : $displayMiddleName;
 
                 $displayReferenceNumber = trim((string) ($prefill['reference_number'] ?? ''));
+                $studentNumberConflict = (bool) ($prefill['student_number_conflict'] ?? false);
+                $studentNumberConflictMessage = 'This Student ID is already linked to another account. Please contact the clinic to verify your record.';
                 $referenceMode = 'student_number';
                 $manualStudentNumberAllowed = (bool) ($prefill['manual_student_number_allowed'] ?? true);
                 $selectedReferenceMode = 'student_number';
@@ -2983,13 +2985,15 @@
                 $stepOneDescription = 'Enter your Student ID, then complete your health information.';
                 $referenceLabel = 'Student ID Number';
                 $referenceDisplayFallback = 'Enter Student ID Number';
-                $referenceStatusDefault = $manualStudentNumberAllowed
+                $referenceStatusDefault = $studentNumberConflict
+                    ? $studentNumberConflictMessage
+                    : ($manualStudentNumberAllowed
                     ? ($displayReferenceNumber !== ''
                         ? 'Review your Student ID, then click the check icon.'
                         : 'Enter your Student ID, then click the check icon.')
                     : ($displayReferenceNumber !== ''
                         ? 'Student ID is ready for use inside the clinic system.'
-                        : 'Enter your Student ID, then click the check icon.');
+                        : 'Enter your Student ID, then click the check icon.'));
                 $courseOptions = $prefill['course_options'] ?? [];
                 $courseApplicable = (bool) ($prefill['course_applicable'] ?? false);
                 $selectedCourseCode = old('course_code', $prefill['course_code'] ?? '');
@@ -3123,7 +3127,7 @@
                                     </div>
                                 </div>
                             @endif
-                            <p class="reference-verify-status {{ $displayReferenceNumber === '' ? '' : 'is-success' }}" id="referenceVerifyStatus" aria-live="polite">
+                            <p class="reference-verify-status {{ $studentNumberConflict ? 'is-error' : ($displayReferenceNumber !== '' ? 'is-success' : '') }}" id="referenceVerifyStatus" aria-live="polite">
                                 {{ $referenceStatusDefault }}
                             </p>
                             @error('reference_number')
@@ -3167,7 +3171,7 @@
                                 <span>Skip Step 1</span>
                             </button>
                         @endenv
-                        <button type="button" class="btn btn-health btn-health-next" id="nextToStep2" {{ $referenceVerificationUnavailable ? 'disabled' : '' }}>
+                        <button type="button" class="btn btn-health btn-health-next" id="nextToStep2" {{ $studentNumberConflict || $referenceVerificationUnavailable ? 'disabled' : '' }}>
                             <span>Next</span>
                             <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="m9 18 6-6-6-6"></path>
@@ -4650,6 +4654,8 @@
             const referenceRequiresValidation = referencePanel?.dataset.referenceRequiresValidation === 'true';
             const manualStudentNumberAllowed = referencePanel?.dataset.manualStudentModeAllowed === 'true';
             const referenceVerificationUnavailable = @json($referenceVerificationUnavailable);
+            let studentNumberConflict = @json($studentNumberConflict);
+            const studentNumberConflictMessage = @json($studentNumberConflictMessage);
 
             function selectedReferenceMode() {
                 return 'student_number';
@@ -4665,7 +4671,7 @@
                 }
 
                 if (nextToStep2Btn) {
-                    nextToStep2Btn.disabled = referenceVerificationUnavailable && !isStudentMode;
+                    nextToStep2Btn.disabled = studentNumberConflict || (referenceVerificationUnavailable && !isStudentMode);
                 }
 
                 if (!isReferenceLocked()) {
@@ -4673,7 +4679,10 @@
                         referenceDisplayValue.textContent = isStudentMode ? 'Enter Student ID' : 'No Reference Received';
                     }
                     referencePanel?.classList.add('is-missing');
-                    setReferenceStatus('Enter your Student ID, then click the check icon.', '');
+                    setReferenceStatus(
+                        studentNumberConflict ? studentNumberConflictMessage : 'Enter your Student ID, then click the check icon.',
+                        studentNumberConflict ? 'is-error' : ''
+                    );
                 }
             }
 
@@ -5145,6 +5154,10 @@
                     const payload = await response.json().catch(() => ({}));
                     if (!response.ok || !payload.success) {
                         const message = payload.message || 'Reference number could not be verified right now.';
+                        if (payload.code === 'duplicate_student_number') {
+                            studentNumberConflict = true;
+                            if (nextToStep2Btn) nextToStep2Btn.disabled = true;
+                        }
                         if (payload.rate_limited) {
                             editReferenceBtn?.setAttribute('disabled', 'disabled');
                             referenceEditorInput.setAttribute('disabled', 'disabled');
@@ -5162,6 +5175,10 @@
                     referenceEditorInput.value = referenceInput.value;
                     referenceDisplayValue.textContent = referenceInput.value;
                     referencePanel?.classList.remove('is-missing');
+                    studentNumberConflict = false;
+                    if (nextToStep2Btn) {
+                        nextToStep2Btn.disabled = referenceVerificationUnavailable && !isStudentMode;
+                    }
                     setReferenceLocked(true);
                     setReferenceStatus(payload.message || (isStudentMode ? 'Student ID accepted.' : 'Reference number verified successfully.'), 'is-success');
                     referenceEditorInput.setCustomValidity('');

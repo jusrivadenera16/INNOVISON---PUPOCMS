@@ -62,6 +62,29 @@ class LoginController extends Controller
         return $this->studentGuardName();
     }
 
+    private function clearConflictingGuardSessions(User $user, string $activeGuard): void
+    {
+        $activeUserId = (string) $user->getAuthIdentifier();
+
+        foreach ([$this->adminGuardName(), $this->studentGuardName(), 'web'] as $guardName) {
+            if ($guardName === $activeGuard) {
+                continue;
+            }
+
+            $guardUser = Auth::guard($guardName)->user();
+            if (!$guardUser instanceof User) {
+                continue;
+            }
+
+            // Keep intentional multi-portal access when both guards represent the same account.
+            if ((string) $guardUser->getAuthIdentifier() === $activeUserId) {
+                continue;
+            }
+
+            Auth::guard($guardName)->logout();
+        }
+    }
+
     private function authenticatedUser(): ?User
     {
         foreach ([$this->adminGuardName(), $this->studentGuardName(), 'web'] as $guard) {
@@ -2266,6 +2289,8 @@ class LoginController extends Controller
                 ])->withInput();
             }
 
+            $this->clearConflictingGuardSessions($authenticatedUser, $guard);
+
             $normalizedRole = User::normalizeRole($authenticatedUser->user_role);
 
             if ($normalizedRole !== strtolower((string) ($authenticatedUser->user_role ?? ''))) {
@@ -2474,6 +2499,7 @@ class LoginController extends Controller
         ]);
 
         $guard = $this->guardForUser($user);
+        $this->clearConflictingGuardSessions($user, $guard);
         Auth::guard($guard)->login($user);
         Auth::shouldUse($guard);
         $request->session()->regenerate();

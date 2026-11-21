@@ -4109,12 +4109,10 @@
             'health.form.staff',
             'dependent.profile.form'
         );
+        $studentHasExistingClinicHealthRecord = $studentUser?->hasExistingClinicHealthRecord() ?? false;
         $showHealthFormModal = $studentUser
             && !$studentIsClinicHealthFormRoute
-            && ($studentNeedsAccountType || (!(bool) ($studentUser->is_health_profile_completed ?? false)
-            && ($studentUsesEmployeeHealthForm
-                ? !$studentUser->employeeHealthProfile
-                : ($studentUsesDependentProfile ? !$studentUser->dependentProfile : !$studentUser->healthProfile))));
+            && !$studentHasExistingClinicHealthRecord;
         $studentActiveCorrectionRequest = $studentUser?->healthProfile
             ? \App\Models\HealthProfileCorrectionRequest::query()
                 ->where('health_profile_id', $studentUser->healthProfile->id)

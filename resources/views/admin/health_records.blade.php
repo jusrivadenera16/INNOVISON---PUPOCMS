@@ -8599,7 +8599,7 @@
             }
         }
 
-        $healthSummaryStats['total_approved'] = $healthProfileSummaryRecords->total();
+        $healthSummaryStats['total_approved'] = $issuedUserCount ?? $healthProfileSummaryRecords->total();
         $latestApprovedAt = $issuedLatestApprovedAt ?? $records
             ->filter(function ($summaryRecord) {
                 return in_array(trim((string) ($summaryRecord->clearance_status ?? '')), ['Issued', 'Fully Cleared'], true)

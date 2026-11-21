@@ -925,6 +925,27 @@ class AppointmentController extends Controller
         );
     }
 
+    private function studentNumberBelongsToAnotherUser(User $user, ?string $studentNumber): bool
+    {
+        $studentNumber = trim((string) $studentNumber);
+        if (
+            !$this->looksLikeStudentNumberValue($studentNumber)
+            || !\Schema::hasColumn('users', 'student_number')
+        ) {
+            return false;
+        }
+
+        return User::query()
+            ->where('student_number', $studentNumber)
+            ->where($user->getKeyName(), '<>', $user->getKey())
+            ->exists();
+    }
+
+    private function duplicateStudentNumberMessage(): string
+    {
+        return 'This Student ID is already linked to another account. Please contact the clinic to verify your record.';
+    }
+
     private function hasAdmissionReferenceIdentity(User $user, ?HealthProfile $healthProfile = null): bool
     {
         foreach ([
@@ -1061,6 +1082,12 @@ class AppointmentController extends Controller
             ($replaceExisting || trim((string) $user->student_number) === '')
             && trim((string) $user->student_number) !== $studentNumber
         ) {
+            if ($this->studentNumberBelongsToAnotherUser($user, $studentNumber)) {
+                throw ValidationException::withMessages([
+                    'reference_number' => $this->duplicateStudentNumberMessage(),
+                ]);
+            }
+
             $user->student_number = $studentNumber;
             $user->save();
         }
@@ -1125,6 +1152,7 @@ class AppointmentController extends Controller
             $resolvedStudentNumber !== ''
             && !$this->looksLikeIdpIdentifier($resolvedStudentNumber, $user)
             && !$this->looksLikeReferenceIdentifier($resolvedStudentNumber)
+            && !$this->studentNumberBelongsToAnotherUser($user, $resolvedStudentNumber)
             && trim((string) $user->student_number) === ''
         ) {
             $user->student_number = $resolvedStudentNumber;
@@ -1549,6 +1577,9 @@ class AppointmentController extends Controller
             $lookupOutcome = (string) ($applicantLookup['outcome'] ?? 'not_found');
             $referenceMode = $this->resolveHealthReferenceMode($user, $linkedAdminProfile, $applicantData, $lookupOutcome);
         }
+        $studentNumberConflict = $referenceMode === 'student_number'
+            && (!empty($guisisAccountData['student_number_conflict'])
+                || $this->studentNumberBelongsToAnotherUser($user, $studentNumberReference));
         $applicantIdentity = $this->normalizePuptasApplicantIdentity($applicantData);
         $manualStudentNumberAllowed = !$isTransfereeApplicant && $this->canUseManualStudentNumberMode(
             $user,
@@ -1719,6 +1750,7 @@ class AppointmentController extends Controller
             'student_id' => (string) (optional($healthProfile)->student_id ?? $user->student_id ?? ''),
             'reference_number' => $resolvedReferenceNumber,
             'student_number' => $this->resolveStudentNumber($user, $healthProfile, $applicantData),
+            'student_number_conflict' => $studentNumberConflict,
             'school_year_from_puptas' => trim((string) $applicantIdentity['school_year']) !== '',
             'school_year_from_preferences' => true,
             'email' => (string) (
@@ -2197,6 +2229,8 @@ class AppointmentController extends Controller
                     'emergencyContactNumber',
                 ]),
             ];
+            $studentNumberConflict = $this->studentNumberBelongsToAnotherUser($user, $data['student_number'] ?? null);
+            $data['student_number_conflict'] = $studentNumberConflict;
 
             if ($addressInfo !== [] && trim((string) ($data['zipcode'] ?? '')) === '') {
                 $cityPayload = data_get($addressInfo, 'city');
@@ -2227,6 +2261,10 @@ class AppointmentController extends Controller
                 $incomingValue = trim((string) ($data[$sourceKey] ?? ''));
                 $currentValue = trim((string) ($user->{$userColumn} ?? ''));
                 $isOfficialAcademicField = in_array($sourceKey, ['year', 'section'], true);
+
+                if ($sourceKey === 'student_number' && $studentNumberConflict) {
+                    continue;
+                }
 
                 if ($incomingValue !== '' && ($currentValue === '' || ($isOfficialAcademicField && $currentValue !== $incomingValue))) {
                     $user->{$userColumn} = $incomingValue;
@@ -5424,7 +5462,7 @@ public function showHealthForm()
     }
     if (!$isStagedNewHealthForm) {
         $this->persistResolvedUserProfileFields($user, $healthFormPrefill);
-        if (!$isDedicatedTransfereeForm) {
+        if (!$isDedicatedTransfereeForm && empty($healthFormPrefill['student_number_conflict'])) {
             $this->persistResolvedReferenceNumber($user, $healthFormPrefill['reference_number'] ?? '');
         }
     }
@@ -6650,6 +6688,14 @@ public function validateHealthFormReference(Request $request)
         ]);
 
         $studentNumberReference = $this->normalizeManualStudentNumber($validated['reference_number']);
+        if ($this->studentNumberBelongsToAnotherUser($user, $studentNumberReference)) {
+            return response()->json([
+                'success' => false,
+                'code' => 'duplicate_student_number',
+                'message' => $this->duplicateStudentNumberMessage(),
+            ], 422);
+        }
+
         $replaceInitialLadderizedNumber = $this->canEnterInitialDirectLadderizedStudentNumber(
             $user,
             $existingHealthProfile
@@ -7330,6 +7376,12 @@ public function storeHealthForm(Request $request)
                 'reference_number' => $manualStudentDocumentsRequired
                     ? 'Enter your Student ID before submitting the Health Profile.'
                     : 'Student Number must come from your official GUISIS account before submitting the Health Profile.',
+            ]);
+        }
+
+        if ($this->studentNumberBelongsToAnotherUser($user, $officialReference)) {
+            throw ValidationException::withMessages([
+                'reference_number' => $this->duplicateStudentNumberMessage(),
             ]);
         }
 

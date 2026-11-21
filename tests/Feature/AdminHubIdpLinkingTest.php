@@ -9,6 +9,7 @@ use App\Http\Middleware\RoleMiddleware;
 use App\Models\Admin;
 use App\Models\AdminHub;
 use App\Models\User;
+use App\Services\GuisisApiService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
@@ -48,6 +49,12 @@ class AdminHubIdpLinkingTest extends TestCase
             $table->string('user_type')->nullable();
             $table->string('student_type')->nullable();
             $table->string('applicant_type')->nullable();
+            $table->date('DOB')->nullable();
+            $table->string('gender')->nullable();
+            $table->string('course')->nullable();
+            $table->string('year')->nullable();
+            $table->string('section')->nullable();
+            $table->string('contact_no')->nullable();
             $table->string('status')->default('active');
             $table->string('password');
             $table->rememberToken();
@@ -908,6 +915,90 @@ class AdminHubIdpLinkingTest extends TestCase
         $this->assertSame('0123-4567-8901', $user->fresh()->sis_reference_number);
         $this->assertSame('0123-4567-8901', $response->getData(true)['reference_number']);
         Http::assertNothingSent();
+    }
+
+    public function test_manual_student_id_duplicate_is_reported_before_it_is_saved(): void
+    {
+        $studentNumber = '2023-00289-TG-0';
+        $existingOwner = $this->upsertFromIdp([
+            'id' => 'duplicate-student-number-owner',
+            'email' => 'duplicate-owner@example.test',
+            'roles' => 'student',
+        ]);
+        $existingOwner->user_type = 'Student';
+        $existingOwner->student_type = 'regular';
+        $existingOwner->student_number = $studentNumber;
+        $existingOwner->save();
+
+        $submittingStudent = $this->upsertFromIdp([
+            'id' => 'duplicate-student-number-submitter',
+            'email' => 'duplicate-submitter@example.test',
+            'roles' => 'student',
+        ]);
+        $submittingStudent->user_type = 'Student';
+        $submittingStudent->student_type = 'regular';
+        $submittingStudent->save();
+
+        \Illuminate\Support\Facades\Auth::guard('student')->setUser($submittingStudent);
+        $request = \Illuminate\Http\Request::create('/student/health-form/reference/validate', 'GET', [
+            'reference_number' => $studentNumber,
+            'reference_mode_selected' => 'student_number',
+            'form_mode' => 'student',
+        ]);
+
+        $response = (new AppointmentController())->validateHealthFormReference($request);
+
+        $this->assertSame(422, $response->getStatusCode());
+        $this->assertSame('duplicate_student_number', $response->getData(true)['code']);
+        $this->assertStringContainsString('already linked to another account', $response->getData(true)['message']);
+        $this->assertNull($submittingStudent->fresh()->student_number);
+        $this->assertSame($studentNumber, $existingOwner->fresh()->student_number);
+    }
+
+    public function test_guisis_prefill_flags_duplicate_student_number_without_saving_it(): void
+    {
+        $studentNumber = '2023-00289-TG-0';
+        $existingOwner = $this->upsertFromIdp([
+            'id' => 'guisis-duplicate-student-number-owner',
+            'email' => 'guisis-duplicate-owner@example.test',
+            'roles' => 'student',
+        ]);
+        $existingOwner->student_number = $studentNumber;
+        $existingOwner->save();
+
+        $student = $this->upsertFromIdp([
+            'id' => 'guisis-duplicate-student-number-prefill',
+            'email' => 'guisis-duplicate-prefill@example.test',
+            'roles' => 'student',
+        ]);
+        $service = \Mockery::mock(GuisisApiService::class);
+        $service->shouldReceive('getStudentByEmailDetailed')->once()->andReturn([
+            'ok' => true,
+            'data' => ['studentNumber' => $studentNumber],
+        ]);
+        $service->shouldReceive('getStudentByStudentNumberDetailed')->once()->andReturn([
+            'ok' => true,
+            'data' => ['studentNumber' => $studentNumber, 'course' => ['code' => 'BSBA-MM'], 'yearLevel' => '4', 'section' => '1'],
+        ]);
+        $service->shouldReceive('getStudentPersonalInfoDetailed')->once()->andReturn([
+            'ok' => true,
+            'data' => ['dateOfBirth' => '2005-07-24', 'sex' => 'Male', 'contactNumber' => '09123456789'],
+        ]);
+        $service->shouldReceive('getStudentAddressesDetailed')->once()->andReturn([
+            'ok' => true,
+            'data' => [],
+        ]);
+        $this->app->instance(GuisisApiService::class, $service);
+
+        $controller = new AppointmentController();
+        $method = new ReflectionMethod($controller, 'buildGuisisAccountData');
+        $method->setAccessible(true);
+        $prefill = $method->invoke($controller, $student);
+
+        $this->assertTrue($prefill['student_number_conflict']);
+        $this->assertSame($studentNumber, $prefill['student_number']);
+        $this->assertNull($student->fresh()->student_number);
+        $this->assertSame($studentNumber, $existingOwner->fresh()->student_number);
     }
 
     public function test_existing_student_without_student_type_does_not_require_selector(): void

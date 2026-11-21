@@ -21,6 +21,7 @@ use App\Models\MarClearanceType;
 use App\Models\User;
 use App\Services\MarClearanceIssuanceService;
 use App\Services\HealthRecordHistoryService;
+use App\Services\EmployeeHealthFormHistoryService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -1461,7 +1462,7 @@ class ReportsController extends Controller
                     'user_type' => $type,
                     'user_type_label' => $label,
                     'total_count' => $typeRecords->count(),
-                    'issued_count' => $typeRecords->where('report_is_approved', true)->count(),
+                    'issued_count' => $this->healthFormsUniqueApprovedUserCount($typeRecords),
                     'pending_count' => $typeRecords->where('report_status', 'Pending')->count(),
                     'with_condition_count' => $typeRecords->where('report_has_condition', true)->count(),
                 ];
@@ -1469,7 +1470,7 @@ class ReportsController extends Controller
             ->values();
 
         $totalList = $records->count();
-        $totalIssued = $records->where('report_is_approved', true)->count();
+        $totalIssued = $this->healthFormsUniqueApprovedUserCount($records);
         $totalPending = $records->where('report_status', 'Pending')->count();
         $withConditions = $records->where('report_has_condition', true)->count();
         $allUserTypes = array_keys($userTypeLabels);
@@ -1534,17 +1535,28 @@ class ReportsController extends Controller
     private function healthFormsApplicantsListRecords(): Collection
     {
         $records = HealthProfile::query()
-            ->with(['user', 'approvedBy', 'reviewStartedBy'])
+            ->with([
+                'user',
+                'approvedBy',
+                'reviewStartedBy',
+                'latestApprovedHealthFormSubmission' => fn ($query) => $query->select(
+                    'health_form_submissions.id',
+                    'health_form_submissions.health_profile_id',
+                    'health_form_submissions.approved_at'
+                ),
+            ])
             ->get()
             ->map(fn (HealthProfile $record) => $this->decorateHealthFormsApplicantsListRecord($record, 'health'));
 
         if (\Schema::hasTable('health_profile_emp')) {
-            $records = $records->merge(
-                EmployeeHealthProfile::query()
-                    ->with(['user', 'approvedBy'])
-                    ->get()
-                    ->map(fn (EmployeeHealthProfile $record) => $this->decorateHealthFormsApplicantsListRecord($record, 'employee'))
+            $employeeProfiles = EmployeeHealthProfile::query()
+                ->with(['user', 'approvedBy'])
+                ->get();
+            app(EmployeeHealthFormHistoryService::class)->preloadLatestApproved(
+                $employeeProfiles->reject(fn (EmployeeHealthProfile $record) => in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true))
             );
+            $records = $records->merge($employeeProfiles
+                ->map(fn (EmployeeHealthProfile $record) => $this->decorateHealthFormsApplicantsListRecord($record, 'employee')));
         }
 
         if (\Schema::hasTable('dependents_profiles')) {
@@ -1645,7 +1657,14 @@ class ReportsController extends Controller
             default => $record->created_at,
         };
         $clearanceStatus = trim((string) ($record->clearance_status ?? ''));
-        $isApproved = in_array($clearanceStatus, ['Approved', 'Issued', 'Fully Cleared', 'Cleared'], true);
+        $approvedSubmission = match ($source) {
+            'health' => $record->latestApprovedHealthFormSubmission,
+            'employee' => in_array($clearanceStatus, ['Issued', 'Fully Cleared'], true)
+                ? null
+                : app(EmployeeHealthFormHistoryService::class)->latestApproved($record),
+            default => null,
+        };
+        $isApproved = $this->healthFormsRecordHasIssuedClearance($record, $source, $clearanceStatus, $approvedSubmission);
         $isRejected = strcasecmp($clearanceStatus, 'Rejected') === 0;
         $statusLabel = $isApproved ? 'Approved' : ($isRejected ? 'Rejected' : 'Pending');
         $hasCondition = method_exists($record, 'hasMedicalCondition') && $record->hasMedicalCondition();
@@ -1668,7 +1687,9 @@ class ReportsController extends Controller
         $record->setAttribute('report_has_condition', $hasCondition);
         $record->setAttribute('report_condition_details', $conditionDetails);
         $record->setAttribute('report_reviewed_at', $record->review_started_at ?? null);
-        $record->setAttribute('report_approved_at', $isApproved ? ($record->verified_at ?? null) : null);
+        $record->setAttribute('report_approved_at', $isApproved
+            ? ($record->verified_at ?? $approvedSubmission?->approved_at ?? null)
+            : null);
         $record->setAttribute('report_search', strtolower(implode(' ', array_filter([
             $patientName,
             $reportEmail,
@@ -1683,6 +1704,41 @@ class ReportsController extends Controller
         ]))));
 
         return $record;
+    }
+
+    private function healthFormsRecordHasIssuedClearance($record, string $source, string $clearanceStatus, $approvedSubmission): bool
+    {
+        if ($source === 'health') {
+            if (filled($record->clearance_revoked_at ?? null)
+                || in_array($record->pullout_status ?? null, [HealthProfile::PULLOUT_PENDING, HealthProfile::PULLOUT_COMPLETED], true)
+                || strcasecmp($clearanceStatus, 'Withdrawn') === 0) {
+                return false;
+            }
+
+            return in_array($clearanceStatus, ['Issued', 'Fully Cleared'], true)
+                || filled($approvedSubmission?->approved_at);
+        }
+
+        if ($source === 'employee') {
+            return in_array($clearanceStatus, ['Issued', 'Fully Cleared'], true)
+                || ($approvedSubmission !== null && $approvedSubmission->snapshotProfile() !== []);
+        }
+
+        return false;
+    }
+
+    private function healthFormsUniqueApprovedUserCount(Collection $records): int
+    {
+        return $records->where('report_is_approved', true)
+            ->unique(function ($record): string {
+                $userId = trim((string) ($record->user_id ?? ''));
+                if ($userId !== '') {
+                    return 'user:' . $userId;
+                }
+
+                return 'record:' . ($record->report_source ?? 'health') . ':' . ($record->id ?? spl_object_id($record));
+            })
+            ->count();
     }
 
     private function healthFormsApplicantsListPatientName($record, string $source): string
