@@ -2908,7 +2908,7 @@ private function exportPreviewMetrics(Request $request, string $reportType, Carb
         $records = $this->exportHealthFormsPreviewRecords($request, $dateFrom, $dateTo);
 
         return [
-            'total_issued' => $records->count(),
+            'total_issued' => $this->uniqueHealthFormsUserCount($records),
             'with_condition' => $records->filter(fn (HealthProfile $record) => $record->hasMedicalCondition())->count(),
         ];
     }
@@ -2931,6 +2931,20 @@ private function exportPreviewMetrics(Request $request, string $reportType, Carb
         'total_appointments' => $previewCount,
         'common_service' => $commonService ?: 'N/A',
     ];
+}
+
+private function uniqueHealthFormsUserCount(Collection $records): int
+{
+    return $records->unique(function (HealthProfile $record): string {
+        $attributes = $record->getAttributes();
+        $userId = trim((string) ($attributes['user_id'] ?? ''));
+
+        if ($userId !== '') {
+            return 'user:' . $userId;
+        }
+
+        return 'record:' . ($attributes['record_source'] ?? 'health') . ':' . ($attributes['id'] ?? spl_object_id($record));
+    })->count();
 }
 
 private function exportPreviewDate($value, Carbon $fallback): Carbon
