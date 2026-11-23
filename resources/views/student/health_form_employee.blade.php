@@ -3892,6 +3892,7 @@
         </div>
     </div>
 
+    <script src="{{ asset('js/clinic-address-lookup.js') }}"></script>
     <script>
         (function () {
             document.querySelectorAll('[data-student-toast]').forEach((toast) => {
@@ -4087,7 +4088,10 @@
             }
 
             const employeeAddressLookupStatus = document.getElementById('employeeAddressLookupStatus');
-            const addressLocationApiBase = 'https://psgc.gitlab.io/api';
+            const addressLocationDataUrl = @json(asset('data/philippines-addresses-psgc-2026-10-12-flat.json'));
+            const postalCodeDataUrl = @json(asset('data/philippines-postal-codes.json'));
+            const postalCityDataUrl = @json(asset('data/philippines-postal-cities.json'));
+            let employeePostalCodeIndex = new Map();
             const addressDraftStorageKey = 'clinic-health-address:' + String(@json($user->id ?? auth()->id())) + ':' + window.location.pathname;
             const addressStreetInput = document.getElementById('street_address');
             function readAddressDraft() {
@@ -4156,6 +4160,53 @@
                     .replace(/^(brgy\.?|barangay)\s+/, '')
                     .replace(/[^a-z0-9]+/g, ' ')
                     .trim();
+            }
+
+            function postalCodeKey(city, barangay = '') {
+                const cityKey = normalizeLocationName(city);
+                const barangayKey = normalizeLocationName(barangay);
+                return barangayKey ? `${cityKey}|${barangayKey}` : cityKey;
+            }
+
+            async function loadEmployeePostalCodes() {
+                const [postalResponse, cityResponse] = await Promise.all([
+                    fetch(postalCodeDataUrl, { headers: { Accept: 'application/json' }, credentials: 'omit' }),
+                    fetch(postalCityDataUrl, { headers: { Accept: 'application/json' }, credentials: 'omit' }),
+                ]);
+                if (!postalResponse.ok || !cityResponse.ok) throw new Error('Postal code lookup failed.');
+
+                const postalGroups = await postalResponse.json();
+                const cityRecords = await cityResponse.json();
+                const cityNamesById = new Map(
+                    (Array.isArray(cityRecords) ? cityRecords : [])
+                        .map((city) => [String(city.id || ''), city.name || ''])
+                        .filter(([id, name]) => id && name)
+                );
+                const index = new Map();
+
+                (Array.isArray(postalGroups) ? postalGroups : []).forEach((group) => {
+                    (Array.isArray(group?.data) ? group.data : []).forEach((record) => {
+                        const cityName = cityNamesById.get(String(record?.citymun_id || '')) || '';
+                        const locationName = record?.location || '';
+                        const zipcode = String(record?.zip_code ?? record?.zipcode ?? record?.postal_code ?? record?.postalCode ?? '').trim();
+                        if (!cityName || !zipcode) return;
+
+                        const cityKey = postalCodeKey(cityName);
+                        if (!index.has(cityKey)) index.set(cityKey, zipcode);
+                        if (locationName) index.set(postalCodeKey(cityName, locationName), zipcode);
+                    });
+                });
+
+                employeePostalCodeIndex = index;
+            }
+
+            function syncEmployeeZipcodeFromAddress() {
+                if (!addressZipcodeInput || employeePostalCodeIndex.size === 0) return;
+                const zipcode = employeePostalCodeIndex.get(postalCodeKey(addressLocationValues.city, addressLocationValues.barangay))
+                    || employeePostalCodeIndex.get(postalCodeKey(addressLocationValues.city));
+                if (!zipcode) return;
+                addressZipcodeInput.value = zipcode;
+                addressZipcodeInput.dispatchEvent(new Event('input', { bubbles: true }));
             }
 
             function findLocationMatch(items, selectedValue) {
@@ -4264,20 +4315,7 @@
             }
 
             async function fetchLocationCollection(path) {
-                const controller = new AbortController();
-                const timeout = window.setTimeout(() => controller.abort(), 10000);
-                try {
-                    const response = await fetch(`${addressLocationApiBase}${path}`, {
-                        headers: { Accept: 'application/json' },
-                        credentials: 'omit',
-                        signal: controller.signal,
-                    });
-                    if (!response.ok) throw new Error(`Location lookup failed with ${response.status}.`);
-                    const payload = await response.json();
-                    return Array.isArray(payload) ? payload : (Array.isArray(payload.value) ? payload.value : []);
-                } finally {
-                    window.clearTimeout(timeout);
-                }
+                return window.ClinicAddressLookup.fetchCollection(path, addressLocationDataUrl);
             }
 
             async function loadBarangays(cityCode, selectedValue = '') {
@@ -4335,6 +4373,12 @@
                         addressLocationValues.city,
                         addressLocationValues.barangay
                     );
+                    try {
+                        await loadEmployeePostalCodes();
+                        syncEmployeeZipcodeFromAddress();
+                    } catch (postalError) {
+                        // Preserve the existing ZIP value if the optional postal lookup cannot be read.
+                    }
                     setAddressLookupStatus('Select a province, then a city/municipality and barangay.');
                 } catch (error) {
                     populateLocationSelect(addressLocationWraps.province, [], addressLocationValues.province);
@@ -4945,6 +4989,7 @@
                 addressLocationValues.province = event.target.value;
                 addressLocationValues.city = '';
                 addressLocationValues.barangay = '';
+                if (addressZipcodeInput) addressZipcodeInput.value = '';
                 saveAddressDraft();
                 try {
                     setAddressLookupStatus('Loading cities and municipalities...');
@@ -4960,10 +5005,12 @@
             addressLocationWraps.city?.querySelector('select')?.addEventListener('change', async (event) => {
                 addressLocationValues.city = event.target.value;
                 addressLocationValues.barangay = '';
+                if (addressZipcodeInput) addressZipcodeInput.value = '';
                 saveAddressDraft();
                 try {
                     setAddressLookupStatus('Loading barangay options...');
                     await loadBarangays(selectedLocationCode('city'));
+                    syncEmployeeZipcodeFromAddress();
                     setAddressLookupStatus('Address options loaded.');
                 } catch (error) {
                     setAddressLookupStatus('Barangay options are unavailable. Please refresh and try again.', true);
@@ -4972,6 +5019,7 @@
             });
             addressLocationWraps.barangay?.querySelector('select')?.addEventListener('change', (event) => {
                 addressLocationValues.barangay = event.target.value;
+                syncEmployeeZipcodeFromAddress();
                 saveAddressDraft();
             });
 

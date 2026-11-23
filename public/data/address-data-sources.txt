@@ -1,0 +1,15 @@
+Address lookup data bundled for local use
+
+Philippine administrative areas
+- Dataset snapshot: PSGC Third Quarter 2026, dated 2026-10-12.
+- Official source: https://psa.gov.ph/classification/psgc
+- Normalized source snapshot: https://github.com/bendlikeabamboo/barangay-data-repository/tree/main/2026-10-12
+- The bundled flat JSON preserves PSGC codes and parent codes. It contains 42,010 barangay records.
+
+Postal codes
+- The two postal JSON files are local copies of the datasets the Health Forms previously fetched at runtime:
+  https://github.com/maikkoko/postal-ph/blob/master/data/postal_codes/_all.json
+  https://github.com/maikkoko/postal-ph/blob/master/data/cities/cities_with_id.json
+- These files are bundled to keep the existing ZIP autofill lookup available without a browser-to-GitHub request.
+- ZIP lookup coverage should be checked against PHLPost's locator when refreshing the files:
+  https://phlpost.gov.ph/zip-code-locator/

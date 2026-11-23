@@ -240,10 +240,6 @@
             display: table-header-group;
         }
 
-        .health-export-table tr {
-            page-break-inside: avoid;
-        }
-
         .health-export-table th,
         .health-export-table td {
             border: 1px solid #000;

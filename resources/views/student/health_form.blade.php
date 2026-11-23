@@ -4569,6 +4569,7 @@
         </div>
     </div>
 
+    <script src="{{ asset('js/clinic-address-lookup.js') }}"></script>
     <script>
         (function () {
             document.querySelectorAll('[data-student-toast]').forEach((toast) => {
@@ -4642,9 +4643,9 @@
             const zipcodeInput = document.getElementById('zipcode');
             const numericZipcodeInputs = Array.from(document.querySelectorAll('[data-numeric-zipcode]'));
             const applicantAddressLookupStatus = document.getElementById('applicantAddressLookupStatus');
-            const addressLocationApiBase = 'https://psgc.gitlab.io/api';
-            const postalCodeDataUrl = 'https://raw.githubusercontent.com/maikkoko/postal-ph/master/data/postal_codes/_all.json';
-            const postalCityDataUrl = 'https://raw.githubusercontent.com/maikkoko/postal-ph/master/data/cities/cities_with_id.json';
+            const addressLocationDataUrl = @json(asset('data/philippines-addresses-psgc-2026-10-12-flat.json'));
+            const postalCodeDataUrl = @json(asset('data/philippines-postal-codes.json'));
+            const postalCityDataUrl = @json(asset('data/philippines-postal-cities.json'));
             const addressDraftStorageKey = 'clinic-health-address:' + String(@json(auth()->id())) + ':' + window.location.pathname;
             const addressStreetInput = document.getElementById('home_address_street');
             function readAddressDraft() {
@@ -5725,20 +5726,7 @@
             }
 
             async function fetchApplicantLocationCollection(path) {
-                const controller = new AbortController();
-                const timeout = window.setTimeout(() => controller.abort(), 10000);
-                try {
-                    const response = await fetch(`${addressLocationApiBase}${path}`, {
-                        headers: { Accept: 'application/json' },
-                        credentials: 'omit',
-                        signal: controller.signal,
-                    });
-                    if (!response.ok) throw new Error(`Location lookup failed with ${response.status}.`);
-                    const payload = await response.json();
-                    return Array.isArray(payload) ? payload : (Array.isArray(payload.value) ? payload.value : []);
-                } finally {
-                    window.clearTimeout(timeout);
-                }
+                return window.ClinicAddressLookup.fetchCollection(path, addressLocationDataUrl);
             }
 
             async function loadApplicantBarangays(cityCode, selectedValue = '') {
