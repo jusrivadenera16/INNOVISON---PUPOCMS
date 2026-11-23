@@ -14739,7 +14739,7 @@
         const finalReviewApplicantsUrl = '{{ url($basePrefix . '/walkin/final-review-applicants') }}';
         const employeeDraftsUrl = '{{ url($basePrefix . '/walkin/employee-drafts') }}';
         const finalReviewTimeInUrl = '{{ url($basePrefix . '/walkin/final-review/time-in') }}';
-        let finalReviewTimeInRequest = Promise.resolve(true);
+        let finalReviewTimeInRequest = Promise.resolve({ok: true});
         const saveEncodingUrl = '{{ url($basePrefix . '/walkin/applicant-encoding') }}';
         const saveStudentAssessmentUrl = '{{ url($basePrefix . '/walkin/student-assessment') }}';
         const studentApprovalEvaluationUrl = '{{ url($basePrefix . '/walkin/student-approval-evaluation') }}';
@@ -15357,7 +15357,7 @@
             if (repeatClearanceReview || isClinicLookupMode()) modalShell?.classList.remove('is-final-review-workflow', 'is-final-review-toolbar-stuck', 'is-clinic-final-review');
             repeatClearanceReview = null;
             currentClinicLookupData = null;
-            finalReviewTimeInRequest = Promise.resolve(true);
+            finalReviewTimeInRequest = Promise.resolve({ok: true});
             findBtn?.removeEventListener('click', submitRepeatMedicalClearance);
             window.ReviewMedicalClearance?.reset();
             pendingReferenceLookup = null;
@@ -18081,10 +18081,10 @@
 
         async function saveStudentAssessment() {
             const openingRequest = finalReviewTimeInRequest, openingReference = currentLookupRef;
-            const timeInSaved = await openingRequest;
+            const timeInResult = await openingRequest;
             if (openingRequest !== finalReviewTimeInRequest || openingReference !== currentLookupRef) return;
-            if (timeInSaved === false) {
-                setStatus('error', 'Time In was not saved. Reopen Final Review before approving.');
+            if (!timeInResult?.ok) {
+                setStatus('error', timeInResult?.message || 'Final Review Time In was not saved. Reopen Final Review before approving.');
                 return;
             }
             if (repeatClearanceReview) return submitRepeatMedicalClearance();
@@ -18275,10 +18275,10 @@
 
         async function doApprove() {
             const openingRequest = finalReviewTimeInRequest, openingReference = currentLookupRef;
-            const timeInSaved = await openingRequest;
+            const timeInResult = await openingRequest;
             if (openingRequest !== finalReviewTimeInRequest || openingReference !== currentLookupRef) return;
-            if (timeInSaved === false) {
-                setStatus('error', 'Time In was not saved. Reopen Final Review before approving.');
+            if (!timeInResult?.ok) {
+                setStatus('error', timeInResult?.message || 'Final Review Time In was not saved. Reopen Final Review before approving.');
                 return;
             }
             if (!currentLookupRef) {
@@ -19383,7 +19383,13 @@
 
         function markFinalReviewTimeIn(referenceNumber, data = null) {
             if ((!canApproveFinalReview && !canLookupEmployeeRecords && !canReviewFinalSubmission) || !referenceNumber || !finalReviewTimeInUrl) {
-                return Promise.resolve(false);
+                const message = !referenceNumber
+                    ? 'The record has no reference number, so its review time cannot be recorded.'
+                    : ((!canApproveFinalReview && !canLookupEmployeeRecords && !canReviewFinalSubmission)
+                        ? 'You do not have permission to record Final Review Time In.'
+                        : 'The Final Review Time In endpoint is unavailable. Refresh the page and try again.');
+                setStatus('error', message);
+                return Promise.resolve({ok: false, message});
             }
 
             const employee = data?.review_timing_record_type === 'employee' || data?.health_form_information?.record_type === 'employee' || ['employee', 'dependent'].includes(data?.record_type);
@@ -19400,13 +19406,34 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify(input)
-            }).then(function (response) {
-                if (!response.ok) throw new Error('Unable to save Final Review Time In.');
-                return true;
+            }).then(async function (response) {
+                const payload = await response.json().catch(() => null);
+                if (response.ok && payload?.success === true) return {ok: true};
+
+                const validationMessage = Object.values(payload?.errors || {}).flat().find((message) => typeof message === 'string' && message.trim());
+                let message = '';
+                if (response.status === 403) {
+                    message = 'You do not have permission to record Final Review Time In.';
+                } else if (response.status === 419 || response.redirected) {
+                    message = 'Your session may have expired. Refresh the page, reopen Final Review, and try again.';
+                } else if (response.status === 404) {
+                    message = 'The Health Form record for this reference could not be found. Refresh the record and try again.';
+                } else if (response.status === 422) {
+                    message = payload?.message || validationMessage || 'This Health Form is not currently eligible for Final Review.';
+                } else if (response.status >= 500) {
+                    message = 'The server could not save Final Review Time In. Please try again; if it continues, the clinic administrator should check the server log.';
+                } else {
+                    message = payload?.message || 'The server did not confirm that Final Review Time In was saved.';
+                }
+
+                throw new Error(message);
             }).catch(function (error) {
+                const message = error instanceof TypeError
+                    ? 'Could not reach the server to save Final Review Time In. Check the connection, refresh the page, and reopen the record.'
+                    : (error.message || 'Final Review Time In could not be saved.');
                 console.warn('Unable to mark final review time-in.', error);
-                setStatus('error', 'Time In was not saved. Reopen Final Review before approving.');
-                return false;
+                setStatus('error', message);
+                return {ok: false, message};
             });
         }
 
