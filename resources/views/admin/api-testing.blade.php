@@ -593,13 +593,26 @@
 
     .guisis-sync-result-table-row {
         display: grid;
-        grid-template-columns: 32px minmax(180px, 1.1fr) minmax(100px, .75fr) minmax(260px, 1.5fr) 84px;
+        grid-template-columns: 32px minmax(170px, 1.1fr) minmax(90px, .7fr) minmax(230px, 1.5fr) 80px 82px;
         gap: 8px;
         align-items: center;
         padding: 8px 9px;
         border-top: 1px solid rgba(127, 29, 45, .08);
         color: #334155;
         font-size: 11px;
+    }
+
+    .guisis-sync-result-action form {
+        margin: 0;
+    }
+
+    .guisis-sync-row-action {
+        width: 100%;
+        min-height: 30px;
+        gap: 5px;
+        padding: 5px 7px;
+        border-radius: 7px;
+        font-size: 10px;
     }
 
     .guisis-sync-result-table-row.is-header {
@@ -2323,7 +2336,7 @@
                         <span class="guisis-sync-title-icon"><x-outline-icon name="arrow-path" /></span>
                         <div>
                             <h3 id="guisisStudentNumberSyncTitle">GuiSIS Applicants Sync</h3>
-                            <p>Match and sync health-record users with GuiSIS in batches.</p>
+                            <p>Match pending applicants with reference numbers to GuiSIS.</p>
                         </div>
                     </div>
                     <button type="button" class="guisis-sync-close" id="closeGuisisStudentNumberSyncModal" aria-label="Close GuiSIS Sync modal">
@@ -2336,9 +2349,9 @@
                     <div class="guisis-sync-overview-item">
                         <span class="guisis-sync-info-icon"><x-outline-icon name="users" /></span>
                         <span>
-                            <span class="guisis-sync-overview-label">Users to check</span>
+                            <span class="guisis-sync-overview-label">Applicants to check</span>
                             <strong class="guisis-sync-overview-value">{{ number_format((int) ($studentNumberSyncPendingCount ?? 0)) }}</strong>
-                            <span class="guisis-sync-overview-note">local health-record users</span>
+                            <span class="guisis-sync-overview-note">pending applicants with reference numbers</span>
                         </span>
                     </div>
                     <div class="guisis-sync-overview-item">
@@ -2346,7 +2359,7 @@
                         <span>
                             <span class="guisis-sync-overview-label">Batch size</span>
                             <strong class="guisis-sync-overview-value">25</strong>
-                            <span class="guisis-sync-overview-note">users per batch</span>
+                            <span class="guisis-sync-overview-note">applicants per batch</span>
                         </span>
                     </div>
                     </div>
@@ -2372,11 +2385,11 @@
                         <input type="hidden" name="batch_size" value="25">
                         <button type="submit" class="guisis-sync-button"><x-outline-icon name="eye" /> Preview Batch</button>
                     </form>
-                    <form method="POST" action="{{ route('admin.api-testing.sync-student-numbers') }}" onsubmit="return confirm('Sync the next 25 matched student records from GuiSIS?');">
+                    <form method="POST" action="{{ route('admin.api-testing.sync-student-numbers') }}" onsubmit="return confirm('Sync the next 25 matched applicant records from GuiSIS?');">
                         @csrf
                         <input type="hidden" name="mode" value="apply">
                         <input type="hidden" name="batch_size" value="25">
-                        <button type="submit" class="guisis-sync-button is-primary"><x-outline-icon name="arrow-path" /> Sync 25 Users</button>
+                        <button type="submit" class="guisis-sync-button is-primary"><x-outline-icon name="arrow-path" /> Sync 25 Applicants</button>
                     </form>
                 </div>
 
@@ -2430,6 +2443,7 @@
                                     <span>Matched by</span>
                                     <span>Result / Message</span>
                                     <span>Status</span>
+                                    <span>Action</span>
                                 </div>
                                 @foreach($studentNumberSyncSummary['details'] as $index => $detail)
                                     @php
@@ -2450,6 +2464,20 @@
                                             <span>{{ $detail['message'] ?? 'No additional message.' }}</span>
                                         </span>
                                         <span class="guisis-sync-status-badge {{ $detailStatusClass }}">{{ $detailStatus === 'already_complete' ? 'Complete' : ($detailStatus === 'manual_review' ? 'Review' : ($detailStatus === 'no_match' || $detailStatus === 'no_student_number' || $detailStatus === 'missing_email' ? 'Failed' : $detailStatus)) }}</span>
+                                        <span class="guisis-sync-result-action">
+                                            @if($studentNumberSyncMode === 'preview' && !empty($detail['user_id']))
+                                                <form method="POST" action="{{ route('admin.api-testing.sync-student-numbers') }}" onsubmit="return confirm('Sync only this record? It will be updated only if GuiSIS returns a verified match with no identity conflict.');">
+                                                    @csrf
+                                                    <input type="hidden" name="mode" value="apply">
+                                                    <input type="hidden" name="user_id" value="{{ $detail['user_id'] }}">
+                                                    <button type="submit" class="guisis-sync-button is-primary guisis-sync-row-action" title="Sync this record only">
+                                                        <x-outline-icon name="arrow-path" /> Sync
+                                                    </button>
+                                                </form>
+                                            @else
+                                                —
+                                            @endif
+                                        </span>
                                     </div>
                                 @endforeach
                             </div>

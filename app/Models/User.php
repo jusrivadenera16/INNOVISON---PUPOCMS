@@ -548,6 +548,11 @@ class User extends Authenticatable
         return $this->hasOne(HealthProfile::class);
     }
 
+    public function healthFormSubmissions(): HasMany
+    {
+        return $this->hasMany(HealthFormSubmission::class);
+    }
+
     public function healthProfileStaff()
     {
         return $this->hasOne(HealthProfileStaff::class);

@@ -76,18 +76,10 @@ class WalkInController extends Controller
             return false;
         }
 
-        return HealthFormSubmission::query()
-            ->whereIn('status', [
-                HealthFormSubmission::STATUS_SUBMITTED,
-                HealthFormSubmission::STATUS_APPROVED,
-                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
-                'Approved',
-            ])
-            ->where(function ($query) {
-                $query->whereNotNull('submitted_at')
-                    ->orWhereNotNull('approved_at');
-            })
-            ->where(function ($query) use ($healthProfile, $user) {
+        $submissions = HealthFormSubmission::query();
+        $this->applyCompletedHealthFormSubmissionRule($submissions);
+
+        return $submissions->where(function ($query) use ($healthProfile, $user) {
                 if ($healthProfile) {
                     $query->where('health_profile_id', $healthProfile->id);
                 }
@@ -101,6 +93,20 @@ class WalkInController extends Controller
                 }
             })
             ->exists();
+    }
+
+    private function applyCompletedHealthFormSubmissionRule($query): void
+    {
+        $query->whereIn('status', [
+            HealthFormSubmission::STATUS_SUBMITTED,
+            'under_review',
+            HealthFormSubmission::STATUS_APPROVED,
+            HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+            'Approved',
+        ])->where(function ($timestampQuery) {
+            $timestampQuery->whereNotNull('submitted_at')
+                ->orWhereNotNull('approved_at');
+        });
     }
 
     private function hasSubmittedClinicHealthForm(HealthProfile|EmployeeHealthProfile|null $profile): bool
@@ -2331,6 +2337,13 @@ class WalkInController extends Controller
     {
         return HealthProfile::with('user')
             ->where('clearance_status', 'For Final Review')
+            ->where(function ($query) {
+                $query->whereHas('healthFormSubmissions', function ($submissionQuery) {
+                    $this->applyCompletedHealthFormSubmissionRule($submissionQuery);
+                })->orWhereHas('user.healthFormSubmissions', function ($submissionQuery) {
+                    $this->applyCompletedHealthFormSubmissionRule($submissionQuery);
+                });
+            })
             ->whereDoesntHave('user', function ($query) {
                 $query->whereRaw("LOWER(TRIM(COALESCE(user_type, ''))) IN ('student', 'ojt', 'student / ojt')")
                     ->whereRaw("LOWER(TRIM(COALESCE(student_type, ''))) = 'regular'");

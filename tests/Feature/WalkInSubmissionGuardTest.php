@@ -58,6 +58,75 @@ class WalkInSubmissionGuardTest extends TestCase
         return (new ReflectionMethod(WalkInController::class, 'hasSubmittedClinicHealthForm'))->invoke(app(WalkInController::class), $profile);
     }
 
+    private function applicantFormCompleted(HealthProfile $profile, ?User $user): bool
+    {
+        return (new ReflectionMethod(WalkInController::class, 'hasCompletedHealthForm'))
+            ->invoke(app(WalkInController::class), $profile, $user);
+    }
+
+    public function test_applicant_under_review_submission_counts_as_completed_and_stays_in_final_review_queue(): void
+    {
+        $user = User::forceCreate(['name' => 'Applicant', 'user_type' => 'Applicant']);
+        $profile = HealthProfile::forceCreate([
+            'user_id' => $user->id,
+            'reference_number' => 'APP-UNDER-REVIEW',
+            'clearance_status' => 'For Final Review',
+        ]);
+        HealthFormSubmission::create([
+            'user_id' => $user->id,
+            'health_profile_id' => $profile->id,
+            'status' => 'under_review',
+            'submitted_at' => now(),
+        ]);
+
+        $this->assertTrue($this->applicantFormCompleted($profile, $user));
+
+        $response = app(WalkInController::class)->finalReviewApplicants(
+            Request::create('/walkin/final-review-applicants', 'GET')
+        );
+
+        $this->assertSame(['APP-UNDER-REVIEW'], array_column($response->getData(true)['applicants'], 'reference_number'));
+    }
+
+    public function test_applicant_final_review_queue_hides_profiles_without_a_submitted_health_form(): void
+    {
+        $user = User::forceCreate(['name' => 'Applicant Without Submission', 'user_type' => 'Applicant']);
+        HealthProfile::forceCreate([
+            'user_id' => $user->id,
+            'reference_number' => 'APP-NO-SUBMISSION',
+            'clearance_status' => 'For Final Review',
+        ]);
+
+        $response = app(WalkInController::class)->finalReviewApplicants(
+            Request::create('/walkin/final-review-applicants', 'GET')
+        );
+
+        $this->assertSame([], $response->getData(true)['applicants']);
+    }
+
+    public function test_applicant_submission_linked_by_user_id_is_recognized_by_final_review_queue(): void
+    {
+        $user = User::forceCreate(['name' => 'Applicant', 'user_type' => 'Applicant']);
+        $profile = HealthProfile::forceCreate([
+            'user_id' => $user->id,
+            'reference_number' => 'APP-USER-LINK',
+            'clearance_status' => 'For Final Review',
+        ]);
+        HealthFormSubmission::create([
+            'user_id' => $user->id,
+            'status' => 'submitted',
+            'submitted_at' => now(),
+        ]);
+
+        $this->assertTrue($this->applicantFormCompleted($profile, $user));
+
+        $response = app(WalkInController::class)->finalReviewApplicants(
+            Request::create('/walkin/final-review-applicants', 'GET')
+        );
+
+        $this->assertSame(['APP-USER-LINK'], array_column($response->getData(true)['applicants'], 'reference_number'));
+    }
+
     public function test_id_or_approved_record_without_submission_is_not_eligible(): void
     {
         $profile = HealthProfile::forceCreate(['clearance_status' => 'Fully Cleared']);

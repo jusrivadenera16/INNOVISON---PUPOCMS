@@ -1838,16 +1838,19 @@ class AdminController extends Controller
         $admin = $this->currentAdminUser();
         abort_unless($admin instanceof User && $this->canAccessApiTesting($admin), 403);
 
-        $mode = $request->input('mode') === 'apply' ? 'apply' : 'preview';
-        $batchSize = min(max((int) $request->input('batch_size', 25), 1), 25);
+        $singleUserId = max(0, (int) $request->input('user_id', 0));
+        $mode = $singleUserId > 0 || $request->input('mode') === 'apply' ? 'apply' : 'preview';
+        $batchSize = $singleUserId > 0 ? 1 : min(max((int) $request->input('batch_size', 25), 1), 25);
         $syncCursorKey = 'guisis_student_number_sync_cursor';
         $syncCursor = max(0, (int) SystemSetting::getValue($syncCursorKey, 0));
-        $candidates = $this->studentNumberSyncCandidateQuery()
-            ->with('healthProfile')
-            ->where('users.id', '>', $syncCursor)
-            ->orderBy('id')
-            ->limit($batchSize)
-            ->get();
+        $candidateQuery = $this->studentNumberSyncCandidateQuery()
+            ->with('healthProfile');
+        $candidates = $singleUserId > 0
+            ? $candidateQuery->where('users.id', $singleUserId)->get()
+            : $candidateQuery->where('users.id', '>', $syncCursor)
+                ->orderBy('id')
+                ->limit($batchSize)
+                ->get();
 
         $summary = [
             'mode' => $mode,
@@ -1864,7 +1867,23 @@ class AdminController extends Controller
             'details' => [],
         ];
 
-        if ($candidates->isEmpty() && $syncCursor > 0) {
+        if ($singleUserId > 0 && $candidates->isEmpty()) {
+            $summary['failed']++;
+            $summary['details'][] = [
+                'user_id' => $singleUserId,
+                'name' => 'Selected record',
+                'email' => '',
+                'status' => 'failed',
+                'message' => 'This record no longer meets the current sync eligibility rules. No changes were made.',
+            ];
+            $summary['remaining'] = $this->studentNumberSyncCandidateQuery()->count();
+
+            return redirect()
+                ->route('admin.api-testing')
+                ->with('student_number_sync_summary', $summary);
+        }
+
+        if ($singleUserId === 0 && $candidates->isEmpty() && $syncCursor > 0) {
             SystemSetting::putValue($syncCursorKey, '0');
             $summary['cycle_completed'] = true;
             $summary['remaining'] = $this->studentNumberSyncCandidateQuery()->count();
@@ -1885,6 +1904,7 @@ class AdminController extends Controller
             if ($email === '') {
                 $summary['missing_email']++;
                 $summary['details'][] = [
+                    'user_id' => $user->id,
                     'name' => trim((string) ($user->name ?: implode(' ', array_filter([$user->first_name, $user->last_name])))) ?: 'Unnamed user',
                     'email' => '',
                     'status' => 'missing_email',
@@ -1900,6 +1920,7 @@ class AdminController extends Controller
             if ($duplicateLocalEmailCount > 0) {
                 $summary['manual_review']++;
                 $summary['details'][] = [
+                    'user_id' => $user->id,
                     'name' => trim((string) ($user->name ?: implode(' ', array_filter([$user->first_name, $user->last_name])))) ?: 'Unnamed user',
                     'email' => $email,
                     'status' => 'manual_review',
@@ -1952,6 +1973,7 @@ class AdminController extends Controller
                 if ($studentsByKey === [] && $failedLookups !== []) {
                     $summary['failed']++;
                     $summary['details'][] = [
+                        'user_id' => $user->id,
                         'name' => trim((string) ($user->name ?: implode(' ', array_filter([$user->first_name, $user->last_name])))) ?: 'Unnamed user',
                         'email' => $email,
                         'status' => 'failed',
@@ -1975,6 +1997,7 @@ class AdminController extends Controller
                 if ($emailMatches->count() > 1 || $idpMatches->count() > 1) {
                     $summary['manual_review']++;
                     $summary['details'][] = [
+                        'user_id' => $user->id,
                         'name' => $emailMatch['name'] ?? 'Unnamed user',
                         'email' => $email,
                         'status' => 'manual_review',
@@ -1986,6 +2009,7 @@ class AdminController extends Controller
                 if ($localIdpUuid !== '' && !$idpMatch && $emailMatch) {
                     $summary['manual_review']++;
                     $summary['details'][] = [
+                        'user_id' => $user->id,
                         'name' => $emailMatch['name'] ?? 'Unnamed user',
                         'email' => $email,
                         'status' => 'manual_review',
@@ -2000,6 +2024,7 @@ class AdminController extends Controller
                 if (!$student) {
                     $summary['no_match']++;
                     $summary['details'][] = [
+                        'user_id' => $user->id,
                         'name' => trim((string) ($user->name ?: implode(' ', array_filter([$user->first_name, $user->last_name])))) ?: 'Unnamed user',
                         'email' => $email,
                         'status' => 'no_match',
@@ -2020,6 +2045,7 @@ class AdminController extends Controller
                 if (!$this->isOfficialStudentNumber($studentNumber)) {
                     $summary['no_match']++;
                     $summary['details'][] = [
+                        'user_id' => $user->id,
                         'name' => $student['name'] ?? 'Unnamed user',
                         'email' => $email,
                         'matched_by' => $matchedBy,
@@ -2036,6 +2062,7 @@ class AdminController extends Controller
                 if ($idpUuid !== '' && $localProfileIdpUuid !== '' && $localProfileIdpUuid !== $idpUuid) {
                     $summary['manual_review']++;
                     $summary['details'][] = [
+                        'user_id' => $user->id,
                         'name' => $student['name'] ?? 'Unnamed user',
                         'email' => $email,
                         'matched_by' => $matchedBy,
@@ -2048,6 +2075,7 @@ class AdminController extends Controller
                     || ($this->isOfficialStudentNumber($localProfileStudentNumber) && strtoupper($localProfileStudentNumber) !== strtoupper($studentNumber))) {
                     $summary['manual_review']++;
                     $summary['details'][] = [
+                        'user_id' => $user->id,
                         'name' => $student['name'] ?? 'Unnamed user',
                         'email' => $email,
                         'matched_by' => $matchedBy,
@@ -2070,6 +2098,7 @@ class AdminController extends Controller
                 if (!$hasChanges) {
                     $summary['already_complete']++;
                     $summary['details'][] = [
+                        'user_id' => $user->id,
                         'name' => $student['name'] ?? 'Unnamed user',
                         'email' => $email,
                         'matched_by' => $matchedBy,
@@ -2082,6 +2111,7 @@ class AdminController extends Controller
                 if ($mode === 'preview') {
                     $summary['synced']++;
                     $summary['details'][] = [
+                        'user_id' => $user->id,
                         'name' => $student['name'] ?? 'Unnamed user',
                         'email' => $email,
                         'matched_by' => $matchedBy,
@@ -2144,6 +2174,7 @@ class AdminController extends Controller
                 $summary['synced']++;
                 $summary['appointment_records_updated'] += $appointmentsUpdated;
                 $summary['details'][] = [
+                    'user_id' => $user->id,
                     'name' => $student['name'] ?? 'Unnamed user',
                     'email' => $email,
                     'matched_by' => $matchedBy,
@@ -2158,6 +2189,7 @@ class AdminController extends Controller
                 ]);
                 $summary['failed']++;
                 $summary['details'][] = [
+                    'user_id' => $user->id,
                     'name' => trim((string) ($user->name ?: implode(' ', array_filter([$user->first_name, $user->last_name])))) ?: 'Unnamed user',
                     'email' => $email,
                     'status' => 'failed',
@@ -2166,7 +2198,7 @@ class AdminController extends Controller
             }
         }
 
-        if ($mode === 'apply' && $candidates->isNotEmpty()) {
+        if ($singleUserId === 0 && $mode === 'apply' && $candidates->isNotEmpty()) {
             SystemSetting::putValue($syncCursorKey, (string) $candidates->max('id'));
         }
 
@@ -2179,10 +2211,25 @@ class AdminController extends Controller
 
     private function studentNumberSyncCandidateQuery()
     {
-        $idpUuidPattern = '^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[1-5][0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$';
+        $officialStudentNumberPattern = '^[0-9]{4}-[0-9]{5}-[A-Z]{2}-[0-9]+$';
+        $wherePendingReferenceNumber = static function ($query, string $referenceColumn) use ($officialStudentNumberPattern): void {
+            $query->whereNotNull($referenceColumn)
+                ->whereRaw("TRIM({$referenceColumn}) != ''")
+                ->whereRaw("UPPER(TRIM({$referenceColumn})) NOT REGEXP ?", ['^(CLN-|LOC-|TEST-LOCAL)'])
+                ->whereRaw("UPPER(TRIM({$referenceColumn})) NOT IN (?, ?, ?, ?, ?)", ['N/A', 'NA', 'NULL', 'NONE', 'UNKNOWN'])
+                ->whereRaw("UPPER(TRIM({$referenceColumn})) NOT REGEXP ?", [$officialStudentNumberPattern])
+                ->whereRaw("UPPER(TRIM({$referenceColumn})) != UPPER(TRIM(COALESCE(users.student_id, '')))");
+        };
+        $whereMissingOfficialStudentNumber = static function ($query, string $studentNumberColumn) use ($officialStudentNumberPattern): void {
+            $query->where(function ($studentNumberQuery) use ($studentNumberColumn, $officialStudentNumberPattern): void {
+                $studentNumberQuery->whereNull($studentNumberColumn)
+                    ->orWhereRaw("TRIM({$studentNumberColumn}) = ''")
+                    ->orWhereRaw("UPPER(TRIM({$studentNumberColumn})) NOT REGEXP ?", [$officialStudentNumberPattern]);
+            });
+        };
 
         return User::query()
-            ->where(function ($query) use ($idpUuidPattern): void {
+            ->where(function ($query): void {
                 $query->whereRaw("LOWER(COALESCE(idp_role, '')) = ?", ['student'])
                     ->orWhereRaw("LOWER(COALESCE(user_type, '')) = ?", ['student'])
                     ->orWhere(function ($fallbackQuery): void {
@@ -2192,27 +2239,18 @@ class AdminController extends Controller
                     });
             })
             ->whereHas('healthProfile')
-            ->where(function ($query) use ($idpUuidPattern): void {
-                $query->whereNull('student_number')
-                    ->orWhere('student_number', '')
-                    ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
-                    ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
-                    ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
-                    ->orWhereRaw('UPPER(student_number) IN (?, ?, ?, ?)', ['N/A', 'NA', 'NULL', 'UNKNOWN'])
-                    ->orWhereRaw('student_number REGEXP ?', [$idpUuidPattern])
-                    ->orWhereNull('year')
-                    ->orWhere('year', '')
-                    ->orWhereNull('section')
-                    ->orWhere('section', '')
-                    ->orWhereHas('healthProfile', function ($profileQuery) use ($idpUuidPattern): void {
-                        $profileQuery->whereNull('student_number')
-                            ->orWhere('student_number', '')
-                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
-                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
-                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
-                            ->orWhereRaw('UPPER(student_number) IN (?, ?, ?, ?)', ['N/A', 'NA', 'NULL', 'UNKNOWN'])
-                            ->orWhereRaw('student_number REGEXP ?', [$idpUuidPattern]);
-                    });
+            ->where(function ($query) use ($wherePendingReferenceNumber): void {
+                $query->where(function ($userReferenceQuery) use ($wherePendingReferenceNumber): void {
+                    $wherePendingReferenceNumber($userReferenceQuery, 'users.reference_number');
+                })->orWhereHas('healthProfile', function ($profileReferenceQuery) use ($wherePendingReferenceNumber): void {
+                    $wherePendingReferenceNumber($profileReferenceQuery, 'health_profiles.reference_number');
+                });
+            })
+            ->where(function ($userStudentNumberQuery) use ($whereMissingOfficialStudentNumber): void {
+                $whereMissingOfficialStudentNumber($userStudentNumberQuery, 'users.student_number');
+            })
+            ->whereHas('healthProfile', function ($profileStudentNumberQuery) use ($whereMissingOfficialStudentNumber): void {
+                $whereMissingOfficialStudentNumber($profileStudentNumberQuery, 'health_profiles.student_number');
             });
     }
 
