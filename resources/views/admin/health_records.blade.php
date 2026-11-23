@@ -11635,7 +11635,8 @@
                     && (category === ''
                         || (category === 'ladderized'
                             ? card.dataset.studentType === 'ladderized'
-                            : card.dataset.userCategory === category));
+                            : card.dataset.userCategory === category
+                                && (category !== 'student' || card.dataset.studentType !== 'ladderized'));
                 card.dataset.searchVisible = isVisible ? '1' : '0';
                 if (isVisible) {
                     visibleCount += 1;
