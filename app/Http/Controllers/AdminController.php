@@ -2085,6 +2085,24 @@ class AdminController extends Controller
                     continue;
                 }
 
+                $studentNumberAlreadyAssigned = User::query()
+                    ->where('id', '!=', $user->id)
+                    ->whereNotNull('student_number')
+                    ->whereRaw('UPPER(TRIM(student_number)) = ?', [strtoupper($studentNumber)])
+                    ->exists();
+                if ($studentNumberAlreadyAssigned) {
+                    $summary['manual_review']++;
+                    $summary['details'][] = [
+                        'user_id' => $user->id,
+                        'name' => $student['name'] ?? 'Unnamed user',
+                        'email' => $email,
+                        'matched_by' => $matchedBy,
+                        'status' => 'manual_review',
+                        'message' => 'The GuiSIS student number is already assigned to another local user. Verify the existing record before syncing; no changes were made.',
+                    ];
+                    continue;
+                }
+
                 $changes = [
                     'student_number' => !$this->isOfficialStudentNumber($localUserStudentNumber) ? $studentNumber : null,
                     'student_id' => $idpUuid !== '' && ($user->student_id === null || trim((string) $user->student_id) === '') ? $idpUuid : null,
@@ -2122,54 +2140,76 @@ class AdminController extends Controller
                 }
 
                 $appointmentsUpdated = 0;
-                DB::transaction(function () use ($user, $profile, $changes, $studentNumber, $idpUuid, &$appointmentsUpdated): void {
-                    if ($changes['student_number'] !== null) {
-                        $user->student_number = $changes['student_number'];
-                    }
-                    if ($changes['student_id'] !== null) {
-                        $user->student_id = $changes['student_id'];
-                    }
-                    if ($changes['year'] !== null) {
-                        $user->year = $changes['year'];
-                    }
-                    if ($changes['section'] !== null) {
-                        $user->section = $changes['section'];
-                    }
-                    $user->save();
+                try {
+                    DB::transaction(function () use ($user, $profile, $changes, $studentNumber, $idpUuid, &$appointmentsUpdated): void {
+                        if ($changes['student_number'] !== null) {
+                            $user->student_number = $changes['student_number'];
+                        }
+                        if ($changes['student_id'] !== null) {
+                            $user->student_id = $changes['student_id'];
+                        }
+                        if ($changes['year'] !== null) {
+                            $user->year = $changes['year'];
+                        }
+                        if ($changes['section'] !== null) {
+                            $user->section = $changes['section'];
+                        }
+                        $user->save();
 
-                    if ($profile && $changes['health_profile_student_number'] !== null) {
-                        $profile->student_number = $studentNumber;
-                    }
-                    if ($profile && $changes['health_profile_student_id'] !== null) {
-                        $profile->student_id = $changes['health_profile_student_id'];
-                    }
-                    if ($profile && ($changes['health_profile_student_number'] !== null || $changes['health_profile_student_id'] !== null)) {
-                        $profile->save();
+                        if ($profile && $changes['health_profile_student_number'] !== null) {
+                            $profile->student_number = $studentNumber;
+                        }
+                        if ($profile && $changes['health_profile_student_id'] !== null) {
+                            $profile->student_id = $changes['health_profile_student_id'];
+                        }
+                        if ($profile && ($changes['health_profile_student_number'] !== null || $changes['health_profile_student_id'] !== null)) {
+                            $profile->save();
+                        }
+
+                        if ($changes['student_number'] !== null) {
+                            $appointmentsUpdated += Appointment::query()
+                                ->where('user_id', $user->id)
+                                ->where(function ($query): void {
+                                    $query->whereNull('student_number')
+                                        ->orWhere('student_number', '')
+                                        ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
+                                        ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
+                                        ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
+                                        ->orWhereRaw('UPPER(student_number) IN (?, ?, ?, ?)', ['N/A', 'NA', 'NULL', 'UNKNOWN']);
+                                })
+                                ->update(['student_number' => $studentNumber]);
+                        }
+
+                        if ($idpUuid !== '') {
+                            $appointmentsUpdated += Appointment::query()
+                                ->where('user_id', $user->id)
+                                ->where(function ($query) use ($idpUuid): void {
+                                    $query->whereNull('student_id')->orWhere('student_id', '')->orWhere('student_id', '!=', $idpUuid);
+                                })
+                                ->update(['student_id' => $idpUuid]);
+                        }
+                    });
+                } catch (\Illuminate\Database\UniqueConstraintViolationException $exception) {
+                    $studentNumberConflict = User::query()
+                        ->where('id', '!=', $user->id)
+                        ->whereNotNull('student_number')
+                        ->whereRaw('UPPER(TRIM(student_number)) = ?', [strtoupper($studentNumber)])
+                        ->exists();
+                    if (!$studentNumberConflict) {
+                        throw $exception;
                     }
 
-                    if ($changes['student_number'] !== null) {
-                        $appointmentsUpdated += Appointment::query()
-                        ->where('user_id', $user->id)
-                        ->where(function ($query): void {
-                            $query->whereNull('student_number')
-                                ->orWhere('student_number', '')
-                                ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
-                                ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
-                                ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
-                                ->orWhereRaw('UPPER(student_number) IN (?, ?, ?, ?)', ['N/A', 'NA', 'NULL', 'UNKNOWN']);
-                        })
-                        ->update(['student_number' => $studentNumber]);
-                    }
-
-                    if ($idpUuid !== '') {
-                        $appointmentsUpdated += Appointment::query()
-                            ->where('user_id', $user->id)
-                            ->where(function ($query) use ($idpUuid): void {
-                                $query->whereNull('student_id')->orWhere('student_id', '')->orWhere('student_id', '!=', $idpUuid);
-                            })
-                            ->update(['student_id' => $idpUuid]);
-                    }
-                });
+                    $summary['manual_review']++;
+                    $summary['details'][] = [
+                        'user_id' => $user->id,
+                        'name' => $student['name'] ?? 'Unnamed user',
+                        'email' => $email,
+                        'matched_by' => $matchedBy,
+                        'status' => 'manual_review',
+                        'message' => 'The GuiSIS student number is already assigned to another local user. Verify the existing record before syncing; no changes were made.',
+                    ];
+                    continue;
+                }
 
                 $summary['synced']++;
                 $summary['appointment_records_updated'] += $appointmentsUpdated;

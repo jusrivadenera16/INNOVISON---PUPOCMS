@@ -72,27 +72,41 @@ class WalkInController extends Controller
 
     private function hasCompletedHealthForm(?HealthProfile $healthProfile, ?User $user): bool
     {
+        if (!$healthProfile && $user) {
+            $user->loadMissing('healthProfile');
+            $healthProfile = $user->healthProfile;
+        }
+
         if (!$healthProfile && !$user) {
             return false;
+        }
+
+        // Applicant records already placed in this queue have a saved Health Form
+        // and an encoded assessment. Older records may not have a linked submission
+        // row, so the queue state remains authoritative for those applicants.
+        if ($healthProfile
+            && $user
+            && strcasecmp(trim((string) $healthProfile->clearance_status), 'For Final Review') === 0
+            && !$this->isStudentOjtHealthProfileUser($user)) {
+            return true;
         }
 
         $submissions = HealthFormSubmission::query();
         $this->applyCompletedHealthFormSubmissionRule($submissions);
 
         return $submissions->where(function ($query) use ($healthProfile, $user) {
-                if ($healthProfile) {
-                    $query->where('health_profile_id', $healthProfile->id);
-                }
+            if ($healthProfile) {
+                $query->where('health_profile_id', $healthProfile->id);
+            }
 
-                if ($user) {
-                    if ($healthProfile) {
-                        $query->orWhere('user_id', $user->id);
-                    } else {
-                        $query->where('user_id', $user->id);
-                    }
+            if ($user) {
+                if ($healthProfile) {
+                    $query->orWhere('user_id', $user->id);
+                } else {
+                    $query->where('user_id', $user->id);
                 }
-            })
-            ->exists();
+            }
+        })->exists();
     }
 
     private function applyCompletedHealthFormSubmissionRule($query): void
@@ -107,6 +121,32 @@ class WalkInController extends Controller
             $timestampQuery->whereNotNull('submitted_at')
                 ->orWhereNotNull('approved_at');
         });
+    }
+
+    private function healthProfileMatchesResolvedApplicant(HealthProfile $profile, User $resolvedUser): bool
+    {
+        $profileUser = $profile->user;
+        if (!$profileUser) {
+            return false;
+        }
+
+        if ((int) $profileUser->id === (int) $resolvedUser->id) {
+            return true;
+        }
+
+        $profileEmail = strtolower(trim((string) $profileUser->email));
+        $resolvedEmail = strtolower(trim((string) $resolvedUser->email));
+        if ($profileEmail !== '' && $resolvedEmail !== '') {
+            return hash_equals($profileEmail, $resolvedEmail);
+        }
+
+        $resolvedName = trim((string) ($resolvedUser->name ?: implode(' ', array_filter([
+            $resolvedUser->first_name,
+            $resolvedUser->middle_name,
+            $resolvedUser->last_name,
+        ]))));
+
+        return $this->namesRoughlyMatch($resolvedName, $profileUser);
     }
 
     private function hasSubmittedClinicHealthForm(HealthProfile|EmployeeHealthProfile|null $profile): bool
@@ -2337,13 +2377,6 @@ class WalkInController extends Controller
     {
         return HealthProfile::with('user')
             ->where('clearance_status', 'For Final Review')
-            ->where(function ($query) {
-                $query->whereHas('healthFormSubmissions', function ($submissionQuery) {
-                    $this->applyCompletedHealthFormSubmissionRule($submissionQuery);
-                })->orWhereHas('user.healthFormSubmissions', function ($submissionQuery) {
-                    $this->applyCompletedHealthFormSubmissionRule($submissionQuery);
-                });
-            })
             ->whereDoesntHave('user', function ($query) {
                 $query->whereRaw("LOWER(TRIM(COALESCE(user_type, ''))) IN ('student', 'ojt', 'student / ojt')")
                     ->whereRaw("LOWER(TRIM(COALESCE(student_type, ''))) = 'regular'");
@@ -3130,8 +3163,13 @@ class WalkInController extends Controller
             $healthProfile = null;
             if ($lookup !== '') {
                 $matchedHealthProfile = $this->findHealthProfileByReference($lookup);
-                if ($matchedHealthProfile && (int) $matchedHealthProfile->user_id === (int) $student->id) {
+                if ($matchedHealthProfile && $this->healthProfileMatchesResolvedApplicant($matchedHealthProfile, $student)) {
                     $healthProfile = $matchedHealthProfile;
+                    if ($matchedHealthProfile->user && (int) $matchedHealthProfile->user_id !== (int) $student->id) {
+                        $student = $matchedHealthProfile->user;
+                        $student->loadMissing('dependentProfile');
+                    }
+                    $student->setRelation('healthProfile', $matchedHealthProfile);
                 }
             }
             $healthProfile = $healthProfile
@@ -5008,6 +5046,17 @@ PROMPT;
                         'message' => 'This patient account is inactive and cannot be approved in clinic records.',
                     ], 404);
                 }
+
+                $matchedHealthProfile = $this->findHealthProfileByReference($referenceNumber);
+                if ($matchedHealthProfile
+                    && $matchedHealthProfile->user
+                    && $this->healthProfileMatchesResolvedApplicant($matchedHealthProfile, $student)) {
+                    $localOnlyProfile = $matchedHealthProfile;
+                    if ((int) $matchedHealthProfile->user_id !== (int) $student->id) {
+                        $student = $matchedHealthProfile->user;
+                    }
+                    $student->setRelation('healthProfile', $matchedHealthProfile);
+                }
             } else {
                 $idpStudentId = trim((string) ($student->student_id ?? $localOnlyProfile?->student_id ?? ''));
                 $studentId = $idpStudentId !== '' ? $idpStudentId : $referenceNumber;
@@ -5052,6 +5101,7 @@ PROMPT;
                 $findingsStatus,
                 $height,
                 $weight,
+                $localOnlyProfile,
                 $resubmissionRequiredDocuments,
                 $bloodPressure,
                 $pulseRate,
@@ -5074,7 +5124,7 @@ PROMPT;
                     $pendingAssessment->save();
                 }
 
-                $profile = HealthProfile::firstOrNew(['user_id' => $student->id]);
+                $profile = $localOnlyProfile ?: HealthProfile::firstOrNew(['user_id' => $student->id]);
                 $profile->student_id = (string) ($student->student_id ?: $studentId);
                 $profile->student_number = (string) ($student->student_number ?: '');
                 $profile->reference_number = $referenceNumber;

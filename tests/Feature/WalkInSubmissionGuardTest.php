@@ -88,20 +88,46 @@ class WalkInSubmissionGuardTest extends TestCase
         $this->assertSame(['APP-UNDER-REVIEW'], array_column($response->getData(true)['applicants'], 'reference_number'));
     }
 
-    public function test_applicant_final_review_queue_hides_profiles_without_a_submitted_health_form(): void
+    public function test_applicant_in_final_review_remains_eligible_without_a_submission_row(): void
     {
-        $user = User::forceCreate(['name' => 'Applicant Without Submission', 'user_type' => 'Applicant']);
-        HealthProfile::forceCreate([
+        $user = User::forceCreate(['name' => 'Applicant', 'user_type' => 'Applicant']);
+        $profile = HealthProfile::forceCreate([
             'user_id' => $user->id,
             'reference_number' => 'APP-NO-SUBMISSION',
             'clearance_status' => 'For Final Review',
         ]);
 
+        $this->assertTrue($this->applicantFormCompleted($profile, $user));
+
         $response = app(WalkInController::class)->finalReviewApplicants(
             Request::create('/walkin/final-review-applicants', 'GET')
         );
 
-        $this->assertSame([], $response->getData(true)['applicants']);
+        $this->assertSame(['APP-NO-SUBMISSION'], array_column($response->getData(true)['applicants'], 'reference_number'));
+    }
+
+    public function test_applicant_final_review_fallback_does_not_apply_to_student_records(): void
+    {
+        $user = User::forceCreate(['name' => 'Student', 'user_type' => 'Student', 'student_type' => 'regular']);
+        $profile = HealthProfile::forceCreate([
+            'user_id' => $user->id,
+            'reference_number' => 'STUDENT-FINAL-REVIEW',
+            'clearance_status' => 'For Final Review',
+        ]);
+
+        $this->assertFalse($this->applicantFormCompleted($profile, $user));
+    }
+
+    public function test_exact_reference_profile_can_match_the_resolved_applicant_by_email(): void
+    {
+        $profileUser = User::forceCreate(['name' => 'Michaela Miguello Cabilic', 'email' => 'michaela@example.test']);
+        $resolvedUser = User::forceCreate(['name' => 'Michaela Miguello Cabilic', 'email' => 'michaela@example.test']);
+        $profile = HealthProfile::forceCreate(['user_id' => $profileUser->id, 'reference_number' => 'APP-IDENTITY']);
+
+        $matches = (new ReflectionMethod(WalkInController::class, 'healthProfileMatchesResolvedApplicant'))
+            ->invoke(app(WalkInController::class), $profile, $resolvedUser);
+
+        $this->assertTrue($matches);
     }
 
     public function test_applicant_submission_linked_by_user_id_is_recognized_by_final_review_queue(): void

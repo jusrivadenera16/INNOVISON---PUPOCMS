@@ -101,6 +101,57 @@ class GuisisApplicantSyncTest extends TestCase
         $this->assertContains((int) $otherApplicant->id, $candidateIds);
     }
 
+    public function test_sync_requires_manual_review_when_guisis_number_belongs_to_another_local_user(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'guisis-sync-developer@example.test',
+            'user_role' => User::ROLE_SUPERADMIN,
+            'status' => 'active',
+        ]);
+        Admin::query()->create([
+            'user_id' => $admin->id,
+            'email' => $admin->email,
+            'access_level' => 'superadmin',
+        ]);
+
+        $studentNumber = '2026-00987-TG-0';
+        $existingOwner = $this->pendingApplicant('existing-number-owner@example.test', 'APP-2025-98765', $studentNumber);
+        $applicant = $this->pendingApplicant('duplicate-number-applicant@example.test', 'APP-2026-56789');
+        $studentUuid = (string) $applicant->student_id;
+        $remoteStudent = [
+            'idpUuid' => $studentUuid,
+            'email' => $applicant->email,
+            'studentNumber' => $studentNumber,
+            'yearLevel' => '1',
+            'section' => '1',
+        ];
+
+        $guisis = Mockery::mock(GuisisApiService::class);
+        $guisis->shouldReceive('listStudentsDetailed')
+            ->once()
+            ->with(['search' => $studentUuid, 'page' => 1, 'page_size' => 25])
+            ->andReturn(['ok' => true, 'data' => ['data' => [$remoteStudent]]]);
+        $guisis->shouldReceive('getStudentByEmailDetailed')
+            ->once()
+            ->with($applicant->email)
+            ->andReturn(['ok' => true, 'data' => ['data' => [$remoteStudent]]]);
+        $this->instance(GuisisApiService::class, $guisis);
+
+        $response = $this->actingAs($admin, 'admin')->post(route('admin.api-testing.sync-student-numbers'), [
+            'mode' => 'apply',
+            'user_id' => $applicant->id,
+        ]);
+
+        $response->assertRedirect(route('admin.api-testing'));
+        $response->assertSessionHas('student_number_sync_summary.manual_review', 1);
+        $response->assertSessionHas('student_number_sync_summary.failed', 0);
+        $response->assertSessionHas('student_number_sync_summary.details.0.status', 'manual_review');
+        $response->assertSessionHas('student_number_sync_summary.details.0.message', 'The GuiSIS student number is already assigned to another local user. Verify the existing record before syncing; no changes were made.');
+        $this->assertSame($studentNumber, $existingOwner->fresh()->student_number);
+        $this->assertNull($applicant->fresh()->student_number);
+        $this->assertNull($applicant->healthProfile->fresh()->student_number);
+    }
+
     private function pendingApplicant(string $email, ?string $referenceNumber, ?string $studentNumber = null): User
     {
         $user = User::factory()->create([
