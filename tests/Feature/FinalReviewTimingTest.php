@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\{ReportsController, WalkInController};
 use App\Models\{EmployeeHealthProfile, HealthFormSubmission, HealthProfile, User};
-use App\Services\FinalReviewTimingService;
+use App\Services\{FinalReviewTimingService, HealthProfileSnapshotService};
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{DB, Schema};
@@ -28,6 +28,7 @@ class FinalReviewTimingTest extends TestCase
                 $table->id(); $table->unsignedBigInteger('user_id');
                 foreach (['clearance_status', 'health_form_category', 'reference_number'] as $column) $table->string($column)->nullable();
                 foreach (['verified_at', 'review_started_at', 'review_closed_at'] as $column) $table->timestamp($column)->nullable();
+                $table->unsignedBigInteger('review_started_by_user_id')->nullable();
                 $table->softDeletes(); $table->timestamps();
             });
         }
@@ -55,6 +56,10 @@ class FinalReviewTimingTest extends TestCase
             $pending = HealthFormSubmission::create(['user_id' => $user->id, $key => $profile->id, 'status' => 'submitted', 'submitted_at' => '2026-11-12 08:00:00', 'profile_snapshot' => ['profile' => []]]);
             $this->travelTo(now()->setDate(2026, 11, 12)->setTime(10, 0));
             app(FinalReviewTimingService::class)->open($profile, $user->id);
+            if (!$employee) {
+                $this->assertSame('10:00', $profile->fresh()->review_started_at->format('H:i'));
+                $this->assertSame($user->id, $profile->fresh()->review_started_by_user_id);
+            }
             $this->assertSame('10:00', \Carbon\Carbon::parse(data_get($pending->fresh()->profile_snapshot, 'review_timing.opened_at'))->format('H:i'));
             $this->travelTo(now()->setTime(10, 15));
             app(FinalReviewTimingService::class)->open($profile, $user->id);
@@ -77,6 +82,45 @@ class FinalReviewTimingTest extends TestCase
         $this->travelBack();
     }
 
+    public function test_legacy_applicant_time_in_is_saved_before_legacy_history_snapshot(): void
+    {
+        $user = User::forceCreate(['name' => 'Legacy Applicant', 'user_type' => 'applicant']);
+        $profile = HealthProfile::forceCreate([
+            'user_id' => $user->id,
+            'reference_number' => 'APP-REF-1',
+            'clearance_status' => 'For Final Review',
+        ]);
+
+        $openedAt = app(FinalReviewTimingService::class)->open($profile, $user->id);
+
+        $this->assertSame(1, HealthFormSubmission::query()->count());
+        $this->assertSame(\Carbon\Carbon::parse($openedAt)->format('H:i'), $profile->fresh()->review_started_at->format('H:i'));
+        $this->assertSame($user->id, $profile->fresh()->review_started_by_user_id);
+        $this->assertSame(
+            \Carbon\Carbon::parse($openedAt)->format('H:i'),
+            \Carbon\Carbon::parse(data_get(HealthFormSubmission::query()->first()->profile_snapshot, 'review_timing.opened_at'))->format('H:i')
+        );
+    }
+
+    public function test_legacy_snapshot_failure_does_not_undo_time_in(): void
+    {
+        $user = User::forceCreate(['name' => 'Legacy Applicant', 'user_type' => 'applicant']);
+        $profile = HealthProfile::forceCreate([
+            'user_id' => $user->id,
+            'reference_number' => 'APP-REF-2',
+            'clearance_status' => 'For Final Review',
+        ]);
+        $this->mock(HealthProfileSnapshotService::class)
+            ->shouldReceive('capture')
+            ->once()
+            ->andThrow(new \RuntimeException('Simulated snapshot failure'));
+
+        $openedAt = app(FinalReviewTimingService::class)->open($profile, $user->id);
+
+        $this->assertSame(\Carbon\Carbon::parse($openedAt)->format('H:i'), $profile->fresh()->review_started_at->format('H:i'));
+        $this->assertSame(0, HealthFormSubmission::query()->count());
+    }
+
     public function test_logbook_does_not_invent_time_in_from_submission_or_time_out_from_last_edit(): void
     {
         $user = new User(['name' => 'Legacy Student', 'user_type' => 'student']); $user->setRelation('dependentProfile', null);
@@ -86,6 +130,40 @@ class FinalReviewTimingTest extends TestCase
         $entry = (new \ReflectionMethod(ReportsController::class, 'healthFormsLogbookEntry'))->invoke(app(ReportsController::class), $profile, 'health', $submission);
         $this->assertNull($entry['time_in']);
         $this->assertSame('09:00', $entry['time_out']->format('H:i'));
+    }
+
+    public function test_logbook_uses_profile_time_in_only_for_the_matching_submission_window(): void
+    {
+        $user = User::forceCreate(['name' => 'Timed Applicant', 'user_type' => 'applicant']);
+        $user->setRelation('dependentProfile', null);
+        $profile = HealthProfile::forceCreate([
+            'user_id' => $user->id,
+            'clearance_status' => 'Fully Cleared',
+            'review_started_at' => '2026-11-12 08:30:00',
+        ]);
+        $profile->setRelation('user', $user)->setRelation('approvedBy', null);
+        $matching = new HealthFormSubmission([
+            'status' => 'approved',
+            'submitted_at' => '2026-11-12 08:00:00',
+            'approved_at' => '2026-11-12 09:00:00',
+            'profile_snapshot' => ['profile' => []],
+        ]);
+        $matching->setRelation('user', $user);
+
+        $entry = (new \ReflectionMethod(ReportsController::class, 'healthFormsLogbookEntry'))
+            ->invoke(app(ReportsController::class), $profile, 'health', $matching);
+        $this->assertSame('08:30', $entry['time_in']->format('H:i'));
+
+        $older = new HealthFormSubmission([
+            'status' => 'approved',
+            'submitted_at' => '2026-11-01 08:00:00',
+            'approved_at' => '2026-11-02 09:00:00',
+            'profile_snapshot' => ['profile' => []],
+        ]);
+        $older->setRelation('user', $user);
+        $olderEntry = (new \ReflectionMethod(ReportsController::class, 'healthFormsLogbookEntry'))
+            ->invoke(app(ReportsController::class), $profile, 'health', $older);
+        $this->assertNull($olderEntry['time_in']);
     }
 
     public function test_modal_close_endpoint_cannot_record_time_out_before_approval(): void
