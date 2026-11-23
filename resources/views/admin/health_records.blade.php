@@ -9261,6 +9261,11 @@
                         $readonlyUserType = $resolveHealthRecordUserType($readonlyRecord);
                         $readonlyUserTypeClass = strtolower($readonlyUserType);
                         $readonlyUserTypeKey = strtolower(trim((string) $readonlyUserType));
+                        $readonlyIsLadderized = $readonlyUserTypeKey === 'student'
+                            && (
+                                strtolower(trim((string) optional($readonlyRecord->user)->student_type)) === 'ladderized'
+                                || str_contains(strtolower(trim((string) $readonlyRecord->health_form_category)), 'ladderized')
+                            );
                         $readonlyUsesApplicantReviewWorkflow = !$readonlyIsEmployee && (
                             in_array($readonlyUserTypeKey, ['applicant', 'transferee'], true)
                             || strtolower(trim((string) optional($readonlyRecord->user)->account_type)) === 'applicant'
@@ -9385,6 +9390,7 @@
                         data-record-payload="{{ json_encode($readonlyRecordPayload) }}"
                         data-search-text="{{ strtolower(trim((string) (optional($readonlyRecord->user)->name . ' ' . optional($readonlyRecord->user)->email . ' ' . $readonlyReference))) }}"
                         data-user-category="{{ strtolower(trim((string) $readonlyUserType)) }}"
+                        data-student-type="{{ $readonlyIsLadderized ? 'ladderized' : '' }}"
                     >
                         <div class="readonly-record-head">
                             <div class="readonly-record-identity">
@@ -9487,6 +9493,13 @@
                         $readonlySource = (string) ($readonlyRecord->record_source ?? 'health');
                         $readonlyIsEmployee = in_array($readonlySource, ['employee', 'staff'], true);
                         $readonlyUser = $readonlyRecord->user;
+                        $readonlyUserType = $resolveHealthRecordUserType($readonlyRecord);
+                        $readonlyUserTypeKey = strtolower(trim((string) $readonlyUserType));
+                        $readonlyIsLadderized = $readonlyUserTypeKey === 'student'
+                            && (
+                                strtolower(trim((string) optional($readonlyRecord->user)->student_type)) === 'ladderized'
+                                || str_contains(strtolower(trim((string) $readonlyRecord->health_form_category)), 'ladderized')
+                            );
                         $readonlyIsRegularStudent = !$readonlyIsEmployee
                             && app(\App\Services\HealthRecordCategoryFilter::class)->isRegularStudentReview($readonlyRecord);
                         $pendingComplianceDocumentUrl = function ($documentKey) use ($readonlyIsEmployee, $readonlyRecord) {
@@ -9510,7 +9523,7 @@
                             ->all();
                         $imagePreviewExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
                     @endphp
-                    <article class="readonly-record-card" data-user-category="{{ strtolower(trim((string) $resolveHealthRecordUserType($readonlyRecord))) }}" data-search-text="{{ strtolower(trim((string) (optional($readonlyRecord->user)->name . ' ' . optional($readonlyRecord->user)->email . ' ' . $readonlyReference))) }}">
+                    <article class="readonly-record-card" data-user-category="{{ $readonlyUserTypeKey }}" data-student-type="{{ $readonlyIsLadderized ? 'ladderized' : '' }}" data-search-text="{{ strtolower(trim((string) (optional($readonlyRecord->user)->name . ' ' . optional($readonlyRecord->user)->email . ' ' . $readonlyReference))) }}">
                         <div class="readonly-record-head">
                             <div>
                                 <div class="readonly-record-name-line">
@@ -11619,7 +11632,10 @@
             cards.forEach(function (card) {
                 const searchText = (card.getAttribute('data-search-text') || card.innerText || '').toLowerCase();
                 const isVisible = (query === '' || searchText.includes(query))
-                    && (category === '' || card.dataset.userCategory === category);
+                    && (category === ''
+                        || (category === 'ladderized'
+                            ? card.dataset.studentType === 'ladderized'
+                            : card.dataset.userCategory === category));
                 card.dataset.searchVisible = isVisible ? '1' : '0';
                 if (isVisible) {
                     visibleCount += 1;
