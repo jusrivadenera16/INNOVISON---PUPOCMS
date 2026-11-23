@@ -4738,6 +4738,36 @@
             #fff1f2;
     }
 
+    .readonly-doc-preview-thumb.is-document-placeholder {
+        position: relative;
+        isolation: isolate;
+        border: 1px solid #f3d0d0;
+        background: linear-gradient(180deg, #fffafa, #ffffff);
+    }
+
+    .readonly-doc-preview-thumb.is-document-placeholder::before {
+        content: '';
+        position: absolute;
+        inset: 5px;
+        background: url('{{ asset('images/pup_logo.png') }}') center / contain no-repeat;
+        opacity: .09;
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    .readonly-doc-preview-placeholder-title {
+        position: relative;
+        z-index: 1;
+        max-width: 95%;
+        color: #475569;
+        font-size: 10px;
+        font-weight: 900;
+        line-height: 1.15;
+        text-align: center;
+        text-transform: uppercase;
+        overflow-wrap: anywhere;
+    }
+
     .readonly-doc-preview-thumb img {
         width: 100%;
         height: 100%;
@@ -5552,6 +5582,14 @@
         background: #0f172a !important;
         border-color: rgba(250, 204, 21, .16) !important;
         color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .readonly-doc-preview-thumb.is-document-placeholder {
+        background: linear-gradient(180deg, #fffafa, #ffffff) !important;
+        border-color: #f3d0d0 !important;
+    }
+    html[data-theme="dark"] .readonly-doc-preview-placeholder-title {
+        color: #475569 !important;
+        -webkit-text-fill-color: #475569 !important;
     }
     html[data-theme="dark"] .readonly-record-pill.condition-pill,
     html[data-theme="dark"] .readonly-record-pill.condition-pill.has-condition {
@@ -9370,15 +9408,17 @@
                             'walkin_encode_url' => $readonlyUsesApplicantReviewWorkflow
                                 ? $walkinReviewUrlFor($readonlyIdentifier['value'] ?? '', false, 'encode')
                                 : '',
-                            'documents' => collect($readonlyUploadDocs)->map(fn ($document, $title) => [
+                            'documents' => collect($readonlyUploadDocs)
+                                ->filter(fn ($document) => filled($document['url'] ?? null))
+                                ->map(fn ($document, $title) => [
                                 'title' => $title,
                                 'url' => $document['path'] ? $document['url'] : '',
-                                'preview_type' => ($document['key'] ?? '') === 'health_form' ? 'pdf'
+                                'preview_type' => in_array(($document['key'] ?? ''), ['health_form', 'health_declaration'], true) ? 'placeholder'
                                     : (in_array(strtolower(pathinfo((string) $document['path'], PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp'], true) ? 'image'
                                         : (strtolower(pathinfo((string) $document['path'], PATHINFO_EXTENSION)) === 'pdf' ? 'pdf' : 'file')),
-                                'format' => ($document['key'] ?? '') === 'health_form' ? 'PDF document'
+                                'format' => in_array(($document['key'] ?? ''), ['health_form', 'health_declaration'], true) ? 'PDF document'
                                     : (in_array(strtolower(pathinfo((string) $document['path'], PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp'], true) ? 'Image file' : 'PDF document'),
-                            ])->values()->all(),
+                                ])->values()->all(),
                         ];
                     @endphp
                     <article
@@ -9576,6 +9616,7 @@
                                                     $documentUrl = $pendingComplianceDocumentUrl($document['key']);
                                                     $documentExtension = strtolower(pathinfo((string) $document['path'], PATHINFO_EXTENSION));
                                                     $isImagePreview = in_array($documentExtension, $imagePreviewExtensions, true);
+                                                    $isHealthDeclaration = ($document['key'] ?? '') === 'health_declaration';
                                                 @endphp
                                                 <a
                                                     href="{{ $documentUrl }}"
@@ -9583,8 +9624,14 @@
                                                     rel="noopener noreferrer"
                                                     class="readonly-doc-preview-btn"
                                                 >
-                                                    <span class="readonly-doc-preview-thumb">
-                                                        <img src="{{ asset('images/pup_logo.png') }}" alt="" aria-hidden="true">
+                                                    <span class="readonly-doc-preview-thumb {{ $isHealthDeclaration ? 'is-document-placeholder' : '' }}">
+                                                        @if($isHealthDeclaration)
+                                                            <span class="readonly-doc-preview-placeholder-title">{{ $docLabel }}</span>
+                                                        @elseif($isImagePreview)
+                                                            <img src="{{ $documentUrl }}" alt="{{ $docLabel }} preview" loading="lazy" decoding="async">
+                                                        @else
+                                                            <x-outline-icon name="document-text" />
+                                                        @endif
                                                     </span>
                                                     <span>{{ $docLabel }}</span>
                                                     <small>Open</small>
@@ -11636,7 +11683,7 @@
                         || (category === 'ladderized'
                             ? card.dataset.studentType === 'ladderized'
                             : card.dataset.userCategory === category
-                                && (category !== 'student' || card.dataset.studentType !== 'ladderized'));
+                                && (category !== 'student' || card.dataset.studentType !== 'ladderized')));
                 card.dataset.searchVisible = isVisible ? '1' : '0';
                 if (isVisible) {
                     visibleCount += 1;
