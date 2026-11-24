@@ -757,8 +757,12 @@ class ReportsController extends Controller
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
+        $clinicDocumentServices = $countsFor($consultations->filter(
+            fn ($consultation) => strcasecmp(trim((string) $consultation->service), 'Clinic Document Services') === 0
+        ));
         $otherServiceNames = $otherOptions
             ->map(fn (ClinicServiceOption $option) => $option->serviceLabel())
+            ->reject(fn ($name) => strcasecmp(trim((string) $name), 'Clinic Document Services') === 0)
             ->toBase()
             ->unique()
             ->values();
@@ -802,6 +806,7 @@ class ReportsController extends Controller
 
         return [
             'referrals' => $referrals,
+            'clinic_document_services' => $clinicDocumentServices,
             'other_services' => $otherServices,
             'online_consultations' => $onlineRows,
         ];

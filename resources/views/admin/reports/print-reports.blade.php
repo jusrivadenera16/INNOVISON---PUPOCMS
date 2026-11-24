@@ -2078,6 +2078,7 @@
                     });
                     $marServiceSummary = $marServiceSummary ?? [
                         'referrals' => [],
+                        'clinic_document_services' => ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0],
                         'other_services' => ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0],
                         'online_consultations' => [],
                     ];
@@ -2185,7 +2186,8 @@
                     <tr><td class="text-left" style="padding-left: 15px;">{{ chr(65 + $referralIndex) }}. {{ $referralRow['label'] }}</td><td>{{ $displayCount($referralRow['counts']['student']) }}</td><td>{{ $displayCount($referralRow['counts']['faculty']) }}</td><td>{{ $displayCount($referralRow['counts']['admin']) }}</td><td>{{ $displayCount($referralRow['counts']['dependent']) }}</td><td>{{ $displayCount(array_sum($referralRow['counts'])) }}</td></tr>
                 @endforeach
                 <tr class="bg-category"><td colspan="6">{{ $roman(5) }}. OTHERS</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">A. Other Services</td><td>{{ $displayCount($marServiceSummary['other_services']['student']) }}</td><td>{{ $displayCount($marServiceSummary['other_services']['faculty']) }}</td><td>{{ $displayCount($marServiceSummary['other_services']['admin']) }}</td><td>{{ $displayCount($marServiceSummary['other_services']['dependent']) }}</td><td>{{ $displayCount(array_sum($marServiceSummary['other_services'])) }}</td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">A. Clinic Document Services</td><td>{{ $displayCount($marServiceSummary['clinic_document_services']['student']) }}</td><td>{{ $displayCount($marServiceSummary['clinic_document_services']['faculty']) }}</td><td>{{ $displayCount($marServiceSummary['clinic_document_services']['admin']) }}</td><td>{{ $displayCount($marServiceSummary['clinic_document_services']['dependent']) }}</td><td>{{ $displayCount(array_sum($marServiceSummary['clinic_document_services'])) }}</td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">B. Other Services</td><td>{{ $displayCount($marServiceSummary['other_services']['student']) }}</td><td>{{ $displayCount($marServiceSummary['other_services']['faculty']) }}</td><td>{{ $displayCount($marServiceSummary['other_services']['admin']) }}</td><td>{{ $displayCount($marServiceSummary['other_services']['dependent']) }}</td><td>{{ $displayCount(array_sum($marServiceSummary['other_services'])) }}</td></tr>
                 <tr class="bg-category"><td colspan="6">{{ $roman(6) }}. ON-LINE CONSULTATION</td></tr>
                 @foreach($marServiceSummary['online_consultations'] as $onlineIndex => $onlineRow)
                     <tr><td class="text-left" style="padding-left: 15px;">{{ chr(65 + $onlineIndex) }}. {{ $onlineRow['label'] }}</td><td>{{ $displayCount($onlineRow['counts']['student']) }}</td><td>{{ $displayCount($onlineRow['counts']['faculty']) }}</td><td>{{ $displayCount($onlineRow['counts']['admin']) }}</td><td>{{ $displayCount($onlineRow['counts']['dependent']) }}</td><td>{{ $displayCount(array_sum($onlineRow['counts'])) }}</td></tr>

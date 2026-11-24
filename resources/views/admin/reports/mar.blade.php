@@ -633,6 +633,7 @@
 
         $marServiceSummary = $marServiceSummary ?? [
             'referrals' => [],
+            'clinic_document_services' => ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0],
             'other_services' => ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0],
             'online_consultations' => [],
         ];
@@ -748,6 +749,8 @@
             @endforeach
 
             <tr class="section-row"><td colspan="6">v. Others</td></tr>
+            @php $clinicDocumentServicesTotal = array_sum($marServiceSummary['clinic_document_services']); @endphp
+            <tr><td class="nested-row">Clinic Document Services</td><td class="text-center">{{ $displayServiceCount($marServiceSummary['clinic_document_services']['student']) }}</td><td class="text-center">{{ $displayServiceCount($marServiceSummary['clinic_document_services']['faculty']) }}</td><td class="text-center">{{ $displayServiceCount($marServiceSummary['clinic_document_services']['admin']) }}</td><td class="text-center">{{ $displayServiceCount($marServiceSummary['clinic_document_services']['dependent']) }}</td><td class="text-center">{{ $displayServiceCount($clinicDocumentServicesTotal) }}</td></tr>
             @php $otherServicesTotal = array_sum($marServiceSummary['other_services']); @endphp
             <tr><td class="nested-row">Other Services</td><td class="text-center">{{ $displayServiceCount($marServiceSummary['other_services']['student']) }}</td><td class="text-center">{{ $displayServiceCount($marServiceSummary['other_services']['faculty']) }}</td><td class="text-center">{{ $displayServiceCount($marServiceSummary['other_services']['admin']) }}</td><td class="text-center">{{ $displayServiceCount($marServiceSummary['other_services']['dependent']) }}</td><td class="text-center">{{ $displayServiceCount($otherServicesTotal) }}</td></tr>
 
