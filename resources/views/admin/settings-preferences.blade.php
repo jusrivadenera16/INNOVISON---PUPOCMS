@@ -1222,6 +1222,145 @@
     }
 </style>
 @include('admin.partials.preferences-card-styles')
+<style>
+    .preferences-settings-page .preferences-settings-shell-card,
+    .preferences-settings-page .preferences-category--alerts,
+    .preferences-settings-page .preferences-category--student-reminders,
+    .preferences-settings-page .preferences-action-grid > .settings-panel {
+        border: 1px solid rgba(127, 0, 16, .18);
+        border-radius: 16px;
+        background: linear-gradient(145deg, #ffffff, #fffafa);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, .06);
+    }
+    .preferences-settings-page .preferences-workflow-content > .preferences-category--school-year {
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+    .preferences-settings-page .preferences-settings-shell-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 0 14px;
+        border-bottom: 1px solid var(--preferences-line);
+    }
+    .preferences-settings-page .preferences-settings-shell-icon {
+        display: grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        flex: 0 0 48px;
+        border-radius: 12px;
+        background: #7f0010;
+        color: #facc15;
+    }
+    .preferences-settings-page .preferences-settings-shell-icon svg { width: 25px; height: 25px; }
+    .preferences-settings-page .preferences-settings-shell-title {
+        min-width: 0;
+        padding-left: 12px;
+        border-left: 2px solid #eab308;
+    }
+    .preferences-settings-page .preferences-settings-shell-title h3 {
+        margin: 0;
+        color: var(--preferences-text);
+        font-size: 19px;
+        font-weight: 900;
+        line-height: 1.2;
+    }
+    .preferences-settings-page .preferences-settings-shell-title p {
+        margin: 4px 0 0;
+        color: var(--preferences-muted);
+        font-size: 12px;
+        line-height: 1.4;
+    }
+    .preferences-settings-page .preferences-settings-shell-badge:not(.school-year-config-status):not(.preferences-closure-status):not(.preferences-card-status) {
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+        margin-left: auto;
+        padding: 5px 9px;
+        border: 1px solid rgba(148, 163, 184, .32);
+        border-radius: 999px;
+        background: rgba(148, 163, 184, .1);
+        color: var(--preferences-muted);
+        font-size: 11px;
+        font-weight: 850;
+        white-space: nowrap;
+    }
+    .preferences-settings-page .preferences-settings-shell-body { padding-top: 14px; }
+    .preferences-settings-page .preferences-admin-shell-body .settings-field {
+        min-height: 0;
+        padding: 0;
+        border: 0;
+    }
+    .preferences-settings-page .preferences-admin-shell-body .preferences-switch-row { margin: 0; }
+    .preferences-settings-page .preferences-category--student-reminders .preferences-general-grid { margin: 0; }
+    .preferences-settings-page .preferences-action-grid .preferences-settings-shell-header {
+        min-height: 0;
+        padding: 16px 18px 14px;
+    }
+    .preferences-settings-page .preferences-action-grid .preferences-settings-shell-title h3 {
+        display: block;
+        margin: 0;
+        color: var(--preferences-text);
+        font-size: 19px;
+        font-weight: 900;
+    }
+    .preferences-settings-page .preferences-action-grid .preferences-settings-shell-title p {
+        display: block;
+        margin: 4px 0 0;
+        color: var(--preferences-muted);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.4;
+    }
+    .preferences-settings-page .preferences-action-grid .preferences-settings-shell-body {
+        padding: 14px 18px 18px;
+    }
+    .preferences-settings-page .preferences-action-grid .student-request-settings .preferences-settings-shell-badge.is-enabled {
+        border-color: rgba(22, 163, 74, .28);
+    }
+    .preferences-settings-page .preferences-settings-shell-badge.preferences-card-status.is-enabled {
+        border-color: rgba(22, 163, 74, .28);
+        background: #dcfce7;
+        color: #166534;
+    }
+    html[data-theme="dark"] .preferences-settings-page .preferences-settings-shell-card,
+    html[data-theme="dark"] .preferences-settings-page .preferences-category--alerts,
+    html[data-theme="dark"] .preferences-settings-page .preferences-category--student-reminders,
+    html[data-theme="dark"] .preferences-settings-page .preferences-action-grid > .settings-panel {
+        border-color: rgba(148, 163, 184, .28);
+        background: linear-gradient(145deg, #111827, #0b1020);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, .18);
+    }
+    html[data-theme="dark"] .preferences-settings-page .preferences-workflow-content > .preferences-category--school-year {
+        background: transparent;
+        box-shadow: none;
+    }
+    html[data-theme="dark"] .preferences-settings-page .preferences-settings-shell-title h3,
+    html[data-theme="dark"] .preferences-settings-page .preferences-action-grid .preferences-settings-shell-title h3 {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .preferences-settings-page .preferences-settings-shell-badge:not(.school-year-config-status):not(.preferences-closure-status):not(.preferences-card-status) {
+        border-color: rgba(148, 163, 184, .25);
+        background: rgba(148, 163, 184, .12);
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .preferences-settings-page .preferences-settings-shell-badge.preferences-card-status.is-enabled {
+        border-color: rgba(22, 163, 74, .34);
+        background: #133c2c;
+        color: #86efac;
+    }
+    @media (max-width: 640px) {
+        .preferences-settings-page .preferences-settings-shell-header { flex-wrap: wrap; gap: 9px; }
+        .preferences-settings-page .preferences-settings-shell-title { flex: 1 1 180px; }
+        .preferences-settings-page .preferences-settings-shell-badge { margin-left: auto; }
+        .preferences-settings-page .preferences-action-grid .preferences-settings-shell-header { padding: 13px 14px 12px; }
+        .preferences-settings-page .preferences-action-grid .preferences-settings-shell-body { padding: 12px 14px 14px; }
+    }
+</style>
 @endpush
 
 @section('content')
@@ -1290,9 +1429,15 @@
 
                 <div class="preferences-workflow-content">
                     <section class="preferences-category preferences-category--alerts" aria-labelledby="adminEmailAlertsHeading">
-                        <div class="preferences-subheading" id="adminEmailAlertsHeading"><x-outline-icon name="bell" /> Admin Email Alerts</div>
-                        <p class="settings-field-note preferences-card-description">Email me when a new online appointment is submitted. Applies to this account only.</p>
-                        <div class="settings-form-grid preferences-general-grid preferences-admin-grid">
+                        <div class="preferences-settings-shell-header">
+                            <span class="preferences-settings-shell-icon" aria-hidden="true"><x-outline-icon name="bell" /></span>
+                            <div class="preferences-settings-shell-title">
+                                <h3 id="adminEmailAlertsHeading">Admin Email Alerts</h3>
+                                <p>Email me when a new online appointment is submitted.</p>
+                            </div>
+                            <span class="preferences-settings-shell-badge">Account Only</span>
+                        </div>
+                        <div class="preferences-settings-shell-body preferences-admin-shell-body">
                             <div class="settings-field">
                                 <input type="hidden" name="admin_appointment_email_alerts" value="0">
                                 <label class="switch preferences-switch-row" for="admin_appointment_email_alerts">
@@ -1304,17 +1449,17 @@
                             </div>
                         </div>
                     </section>
-                    <section class="preferences-category" aria-labelledby="currentSchoolYearHeading">
-                        <div class="school-year-config-card">
-                            <div class="school-year-config-header">
-                                <span class="school-year-config-icon" aria-hidden="true"><x-outline-icon name="calendar-days" /></span>
-                                <div class="school-year-config-title">
+                    <section class="preferences-category preferences-category--school-year" aria-labelledby="currentSchoolYearHeading">
+                        <div class="school-year-config-card preferences-settings-shell-card">
+                            <div class="school-year-config-header preferences-settings-shell-header">
+                                <span class="school-year-config-icon preferences-settings-shell-icon" aria-hidden="true"><x-outline-icon name="calendar-days" /></span>
+                                <div class="school-year-config-title preferences-settings-shell-title">
                                     <h3 id="currentSchoolYearHeading">Current School Year</h3>
                                     <p>Manage academic year and health form reminders.</p>
                                 </div>
-                                <span class="school-year-config-status">Active</span>
+                                <span class="school-year-config-status preferences-settings-shell-badge">Active</span>
                             </div>
-                            <div class="school-year-config-body">
+                            <div class="school-year-config-body preferences-settings-shell-body">
                                 <h4 class="school-year-config-section-title">Academic Year Configuration</h4>
                                 <div class="school-year-config-years">
                                     <div class="settings-field">
@@ -1365,9 +1510,16 @@
                             </div>
                         </div>
                     </section>
-                    <section class="preferences-category" aria-labelledby="studentReminderHeading">
-                        <div class="preferences-subheading" id="studentReminderHeading"><x-outline-icon name="clock" /> Student Reminders</div>
-                        <p class="settings-field-note preferences-card-description">Set clinic-wide reminder timing. Students manage their own email preferences.</p>
+                    <section class="preferences-category preferences-category--student-reminders" aria-labelledby="studentReminderHeading">
+                        <div class="preferences-settings-shell-header">
+                            <span class="preferences-settings-shell-icon" aria-hidden="true"><x-outline-icon name="clock" /></span>
+                            <div class="preferences-settings-shell-title">
+                                <h3 id="studentReminderHeading">Student Reminders</h3>
+                                <p>Set clinic-wide reminder timing. Students manage their own email preferences.</p>
+                            </div>
+                            <span class="preferences-settings-shell-badge">Clinic-wide</span>
+                        </div>
+                        <div class="preferences-settings-shell-body">
                         <div class="settings-form-grid preferences-general-grid preferences-student-grid">
                         <div class="settings-field">
                             <label for="appointment_reminder_hours">Appointment Reminder</label>
@@ -1412,6 +1564,7 @@
                             <input id="notification_quiet_hours_end" name="notification_quiet_hours_end" type="time" value="{{ $quietHoursEnd }}" required>
                         </div>
                         </div>
+                        </div>
                     </section>
 
                 </div>
@@ -1423,11 +1576,15 @@
     @include('admin.partials.student-health-request-settings')
 
     <section class="settings-panel preferences-closure-card">
-        <div class="settings-panel-head">
-            <div><h3><x-outline-icon name="calendar" />Temporary Clinic Closure</h3></div>
+        <div class="settings-panel-head preferences-settings-shell-header">
+            <span class="preferences-settings-shell-icon" aria-hidden="true"><x-outline-icon name="calendar" /></span>
+            <div class="preferences-settings-shell-title">
+                <h3>Temporary Clinic Closure</h3>
+                <p>Manage clinic availability during temporary closures.</p>
+            </div>
+            <span class="preferences-settings-shell-badge preferences-closure-status {{ $closureEnabled ? 'is-closed' : '' }}">{{ $closureEnabled ? 'Temporarily Closed' : 'Available' }}</span>
         </div>
-        <div class="preferences-closure-body">
-            <span class="preferences-closure-status {{ $closureEnabled ? 'is-closed' : '' }}">{{ $closureEnabled ? 'Temporarily Closed' : 'Available' }}</span>
+        <div class="preferences-closure-body preferences-settings-shell-body">
             <div class="preferences-closure-message {{ $closureEnabled ? 'is-closed' : '' }}">
                 <x-outline-icon name="check" />
                 <span>{{ $closureEnabled ? ($settings->clinic_closure_message ?: 'A temporary clinic closure is scheduled.') : 'The clinic is currently operating normally. No temporary closure is scheduled.' }}</span>

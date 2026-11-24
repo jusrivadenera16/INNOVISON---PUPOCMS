@@ -7,10 +7,16 @@
         ? old('student_request_courses', [])
         : ($requestSettings['eligible_courses'] ?? array_keys($requestSettings['eligible_years']));
 @endphp
-<section class="settings-panel student-request-settings">
-    <div class="settings-panel-head"><h3><x-outline-icon name="document-text" /> Health Form Requests</h3><span class="preferences-card-status {{ $requestSettings['enabled'] ? 'is-enabled' : '' }}">{{ $requestSettings['enabled'] ? 'Enabled' : 'Disabled' }}</span></div>
-    <div class="settings-panel-body">
-        <p class="preferences-card-description">Choose which students can request a new Health Form and when.</p>
+<section class="settings-panel student-request-settings" aria-labelledby="healthFormRequestsHeading">
+    <div class="settings-panel-head preferences-settings-shell-header">
+        <span class="preferences-settings-shell-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span>
+        <div class="preferences-settings-shell-title">
+            <h3 id="healthFormRequestsHeading">Health Form Requests</h3>
+            <p>Choose which students can request a new Health Form and when.</p>
+        </div>
+        <span class="preferences-settings-shell-badge preferences-card-status {{ $requestSettings['enabled'] ? 'is-enabled' : '' }}">{{ $requestSettings['enabled'] ? 'Enabled' : 'Disabled' }}</span>
+    </div>
+    <div class="settings-panel-body preferences-settings-shell-body">
         <button type="button" class="preferences-closure-open" data-preferences-modal-open="#studentRequestRulesModal"><x-outline-icon name="document-text" /> Configure Request Rules</button>
     </div>
 </section>
