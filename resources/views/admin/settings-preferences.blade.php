@@ -890,6 +890,231 @@
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
     .preferences-settings-page .preferences-school-year-grid .settings-field::after { display: none !important; }
+    .preferences-settings-page .school-year-config-card {
+        padding: 16px 18px;
+        border: 1px solid rgba(127, 0, 16, .18);
+        border-radius: 16px;
+        background: linear-gradient(145deg, #ffffff, #fffafa);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, .06);
+    }
+    .preferences-settings-page .school-year-config-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 0 14px;
+        border-bottom: 1px solid var(--preferences-line);
+    }
+    .preferences-settings-page .school-year-config-icon {
+        display: grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        flex: 0 0 48px;
+        border-radius: 12px;
+        background: #7f0010;
+        color: #facc15;
+    }
+    .preferences-settings-page .school-year-config-icon svg { width: 25px; height: 25px; }
+    .preferences-settings-page .school-year-config-title { min-width: 0; }
+    .preferences-settings-page .school-year-config-title {
+        padding-left: 12px;
+        border-left: 2px solid #eab308;
+    }
+    .preferences-settings-page .school-year-config-title h3 {
+        margin: 0;
+        color: var(--preferences-text);
+        font-size: 19px;
+        font-weight: 900;
+        line-height: 1.2;
+    }
+    .preferences-settings-page .school-year-config-title p {
+        margin: 4px 0 0;
+        color: var(--preferences-muted);
+        font-size: 12px;
+        line-height: 1.4;
+    }
+    .preferences-settings-page .school-year-config-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex: 0 0 auto;
+        margin-left: auto;
+        padding: 5px 9px;
+        border: 1px solid rgba(22, 163, 74, .28);
+        border-radius: 999px;
+        background: rgba(22, 163, 74, .08);
+        color: #166534;
+        font-size: 11px;
+        font-weight: 850;
+    }
+    .preferences-settings-page .school-year-config-status::before {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #22c55e;
+        content: "";
+    }
+    .preferences-settings-page .school-year-config-body { padding-top: 14px; }
+    .preferences-settings-page .school-year-config-section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 9px;
+        color: var(--preferences-text);
+        font-size: 13px;
+        font-weight: 900;
+    }
+    .preferences-settings-page .school-year-config-section-title::before {
+        width: 4px;
+        height: 16px;
+        flex: 0 0 4px;
+        border-radius: 999px;
+        background: #eab308;
+        content: "";
+    }
+    .preferences-settings-page .school-year-config-years {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin: 0 0 14px;
+    }
+    .preferences-settings-page .school-year-config-years .settings-field {
+        min-width: 0;
+        min-height: 0;
+        padding: 0;
+        border: 0;
+    }
+    .preferences-settings-page .school-year-config-years .settings-field label {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin: 0 0 5px;
+        color: var(--preferences-muted);
+        font-size: 12px;
+        font-weight: 800;
+    }
+    .preferences-settings-page .school-year-config-years .settings-field label svg,
+    .preferences-settings-page .school-year-reminder-date-label svg { width: 15px; height: 15px; }
+    .preferences-settings-page .school-year-config-years .academic-year-picker {
+        min-height: 40px;
+        border: 1px solid rgba(148, 163, 184, .38);
+        border-radius: 9px;
+        background: #f8fafc;
+    }
+    .preferences-settings-page .school-year-config-years .academic-year-picker input {
+        min-width: 0;
+        min-height: 38px;
+        padding: 0 10px !important;
+        color: var(--preferences-text);
+        font-size: 14px;
+        font-weight: 700;
+    }
+    .preferences-settings-page .school-year-config-years .academic-year-picker-open {
+        flex-basis: 36px;
+        width: 36px;
+        height: 36px;
+    }
+    .preferences-settings-page .school-year-reminder-card {
+        padding: 12px 13px 10px;
+        border: 1px solid rgba(127, 0, 16, .42);
+        border-radius: 12px;
+        background: rgba(127, 0, 16, .035);
+    }
+    .preferences-settings-page .school-year-reminder-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--preferences-line);
+    }
+    .preferences-settings-page .school-year-reminder-icon {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+        color: #b77900;
+    }
+    .preferences-settings-page .school-year-reminder-icon svg { width: 23px; height: 23px; }
+    .preferences-settings-page .school-year-reminder-divider {
+        align-self: stretch;
+        width: 1px;
+        min-height: 30px;
+        background: rgba(127, 0, 16, .25);
+    }
+    .preferences-settings-page .school-year-reminder-copy { min-width: 0; }
+    .preferences-settings-page .school-year-reminder-copy strong,
+    .preferences-settings-page .school-year-reminder-copy span { display: block; }
+    .preferences-settings-page .school-year-reminder-copy strong { color: var(--preferences-text); font-size: 12px; font-weight: 900; }
+    .preferences-settings-page .school-year-reminder-copy span { margin-top: 2px; color: var(--preferences-muted); font-size: 10px; line-height: 1.4; }
+    .preferences-settings-page .school-year-reminder-toggle {
+        margin-left: auto;
+        padding: 4px 7px;
+        border: 1px solid rgba(148, 163, 184, .2);
+        border-radius: 999px;
+        background: rgba(148, 163, 184, .12);
+    }
+    .preferences-settings-page .school-year-reminder-toggle .switch { gap: 7px; }
+    .preferences-settings-page .school-year-reminder-toggle .switch .slider { --button-width: 2.8em; --button-height: 1.6em; --toggle-diameter: 1.2em; }
+    .preferences-settings-page .school-year-reminder-toggle .preferences-switch-label { color: var(--preferences-muted) !important; font-size: 10px !important; font-weight: 800 !important; }
+    .preferences-settings-page .school-year-reminder-date { padding-top: 9px; }
+    .preferences-settings-page .school-year-reminder-date-label {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 5px;
+        color: var(--preferences-text);
+        font-size: 11px;
+        font-weight: 850;
+    }
+    .preferences-settings-page .school-year-reminder-date input[type="date"] {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 36px;
+        padding: 6px 9px;
+        border: 1px solid rgba(148, 163, 184, .34);
+        border-radius: 8px;
+        color: var(--preferences-text);
+        background: #fff;
+        font: inherit;
+        font-size: 12px;
+    }
+    .preferences-settings-page .school-year-reminder-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 7px;
+        margin: 7px 0 0;
+        color: var(--preferences-muted);
+        font-size: 10px;
+        line-height: 1.4;
+    }
+    .preferences-settings-page .school-year-reminder-note svg { width: 14px; height: 14px; flex: 0 0 14px; margin-top: 1px; }
+    html[data-theme="dark"] .preferences-settings-page .school-year-config-card {
+        border-color: rgba(148, 163, 184, .28);
+        background: linear-gradient(145deg, #111827, #0b1020);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, .18);
+    }
+    html[data-theme="dark"] .preferences-settings-page .school-year-config-title h3,
+    html[data-theme="dark"] .preferences-settings-page .school-year-config-section-title,
+    html[data-theme="dark"] .preferences-settings-page .school-year-reminder-copy strong,
+    html[data-theme="dark"] .preferences-settings-page .school-year-reminder-date-label { color: #f8fafc; }
+    html[data-theme="dark"] .preferences-settings-page .school-year-config-years .academic-year-picker {
+        border-color: rgba(148, 163, 184, .28);
+        background: #1b2235;
+    }
+    html[data-theme="dark"] .preferences-settings-page .school-year-config-years .academic-year-picker input { color: #f8fafc; }
+    html[data-theme="dark"] .preferences-settings-page .school-year-reminder-card {
+        border-color: rgba(190, 24, 55, .66);
+        background: linear-gradient(120deg, rgba(127, 0, 16, .22), rgba(15, 23, 42, .7));
+    }
+    html[data-theme="dark"] .preferences-settings-page .school-year-reminder-divider { background: rgba(250, 204, 21, .35); }
+    html[data-theme="dark"] .preferences-settings-page .school-year-reminder-toggle { background: rgba(148, 163, 184, .12); }
+    html[data-theme="dark"] .preferences-settings-page .school-year-reminder-date input[type="date"] {
+        border-color: rgba(148, 163, 184, .3);
+        color: #f8fafc;
+        background: #1b2235;
+        color-scheme: dark;
+    }
     .preferences-settings-page .preferences-student-grid .settings-field:nth-child(3n + 1)::after,
     .preferences-settings-page .preferences-student-grid .settings-field:nth-child(3n + 2)::after { display: block !important; }
     .preferences-settings-page .preferences-student-grid .settings-field:nth-child(n + 4) {
@@ -981,6 +1206,13 @@
         .preferences-settings-page .preferences-workflow-content { padding-right: 12px; padding-left: 12px; }
         .preferences-settings-page .preferences-category { padding: 12px 0 16px; }
         .preferences-settings-page .preferences-subheading { align-items: flex-start; }
+        .preferences-settings-page .school-year-config-card { padding: 13px 12px; }
+        .preferences-settings-page .school-year-config-header { flex-wrap: wrap; gap: 9px; }
+        .preferences-settings-page .school-year-config-status { margin-left: auto; }
+        .preferences-settings-page .school-year-config-years { grid-template-columns: 1fr; gap: 10px; }
+        .preferences-settings-page .school-year-reminder-top { flex-wrap: wrap; }
+        .preferences-settings-page .school-year-reminder-copy { flex: 1 1 180px; }
+        .preferences-settings-page .school-year-reminder-toggle { margin-left: auto; }
         .preferences-settings-page .preferences-admin-grid,
         .preferences-settings-page .preferences-school-year-grid,
         .preferences-settings-page .preferences-student-grid { grid-template-columns: 1fr !important; }
@@ -1073,46 +1305,63 @@
                         </div>
                     </section>
                     <section class="preferences-category" aria-labelledby="currentSchoolYearHeading">
-                        <div class="preferences-subheading" id="currentSchoolYearHeading"><x-outline-icon name="calendar-days" /> Current School Year</div>
-                        <p class="settings-field-note preferences-card-description">Used for new Health Forms. The ending year adjusts automatically.</p>
-                        <div class="settings-form-grid preferences-general-grid preferences-school-year-grid">
-                            <div class="settings-field">
-                                <label for="academic_year_from">From Year</label>
-                                <div class="academic-year-picker" data-year-picker>
-                                    <input id="academic_year_from" name="academic_year_from" type="text" value="{{ old('academic_year_from', $academicYearFrom) }}" data-year-picker-input data-year-picker-role="from" readonly required autocomplete="off">
-                                    <button type="button" class="academic-year-picker-open" data-year-picker-open aria-label="Choose starting year" aria-haspopup="dialog" aria-expanded="false"><x-outline-icon name="calendar" /></button>
-                                    <div class="academic-year-picker-popover" data-year-picker-popover role="dialog" aria-label="Choose starting year" hidden>
-                                        <div class="academic-year-picker-head"><button type="button" class="academic-year-picker-nav" data-year-picker-prev aria-label="Previous decade">&lt;</button><strong data-year-picker-period></strong><button type="button" class="academic-year-picker-nav" data-year-picker-next aria-label="Next decade">&gt;</button></div>
-                                        <div class="academic-year-picker-grid" data-year-picker-grid></div>
+                        <div class="school-year-config-card">
+                            <div class="school-year-config-header">
+                                <span class="school-year-config-icon" aria-hidden="true"><x-outline-icon name="calendar-days" /></span>
+                                <div class="school-year-config-title">
+                                    <h3 id="currentSchoolYearHeading">Current School Year</h3>
+                                    <p>Manage academic year and health form reminders.</p>
+                                </div>
+                                <span class="school-year-config-status">Active</span>
+                            </div>
+                            <div class="school-year-config-body">
+                                <h4 class="school-year-config-section-title">Academic Year Configuration</h4>
+                                <div class="school-year-config-years">
+                                    <div class="settings-field">
+                                        <label for="academic_year_from"><x-outline-icon name="calendar" /> From Year</label>
+                                        <div class="academic-year-picker" data-year-picker>
+                                            <input id="academic_year_from" name="academic_year_from" type="text" value="{{ old('academic_year_from', $academicYearFrom) }}" data-year-picker-input data-year-picker-role="from" readonly required autocomplete="off">
+                                            <button type="button" class="academic-year-picker-open" data-year-picker-open aria-label="Choose starting year" aria-haspopup="dialog" aria-expanded="false"><x-outline-icon name="calendar" /></button>
+                                            <div class="academic-year-picker-popover" data-year-picker-popover role="dialog" aria-label="Choose starting year" hidden>
+                                                <div class="academic-year-picker-head"><button type="button" class="academic-year-picker-nav" data-year-picker-prev aria-label="Previous decade">&lt;</button><strong data-year-picker-period></strong><button type="button" class="academic-year-picker-nav" data-year-picker-next aria-label="Next decade">&gt;</button></div>
+                                                <div class="academic-year-picker-grid" data-year-picker-grid></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="settings-field">
+                                        <label for="academic_year_to"><x-outline-icon name="calendar" /> To Year</label>
+                                        <div class="academic-year-picker" data-year-picker>
+                                            <input id="academic_year_to" name="academic_year_to" type="text" value="{{ old('academic_year_to', $academicYearTo) }}" data-year-picker-input data-year-picker-role="to" readonly required autocomplete="off">
+                                            <button type="button" class="academic-year-picker-open" data-year-picker-open aria-label="Choose ending year" aria-haspopup="dialog" aria-expanded="false"><x-outline-icon name="calendar" /></button>
+                                            <div class="academic-year-picker-popover" data-year-picker-popover role="dialog" aria-label="Choose ending year" hidden>
+                                                <div class="academic-year-picker-head"><button type="button" class="academic-year-picker-nav" data-year-picker-prev aria-label="Previous decade">&lt;</button><strong data-year-picker-period></strong><button type="button" class="academic-year-picker-nav" data-year-picker-next aria-label="Next decade">&gt;</button></div>
+                                                <div class="academic-year-picker-grid" data-year-picker-grid></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="settings-field">
-                                <label for="academic_year_to">To Year</label>
-                                <div class="academic-year-picker" data-year-picker>
-                                    <input id="academic_year_to" name="academic_year_to" type="text" value="{{ old('academic_year_to', $academicYearTo) }}" data-year-picker-input data-year-picker-role="to" readonly required autocomplete="off">
-                                    <button type="button" class="academic-year-picker-open" data-year-picker-open aria-label="Choose ending year" aria-haspopup="dialog" aria-expanded="false"><x-outline-icon name="calendar" /></button>
-                                    <div class="academic-year-picker-popover" data-year-picker-popover role="dialog" aria-label="Choose ending year" hidden>
-                                        <div class="academic-year-picker-head"><button type="button" class="academic-year-picker-nav" data-year-picker-prev aria-label="Previous decade">&lt;</button><strong data-year-picker-period></strong><button type="button" class="academic-year-picker-nav" data-year-picker-next aria-label="Next decade">&gt;</button></div>
-                                        <div class="academic-year-picker-grid" data-year-picker-grid></div>
+                                <div class="school-year-reminder-card">
+                                    <div class="school-year-reminder-top">
+                                        <span class="school-year-reminder-icon" aria-hidden="true"><x-outline-icon name="bell" /></span>
+                                        <span class="school-year-reminder-divider" aria-hidden="true"></span>
+                                        <div class="school-year-reminder-copy">
+                                            <strong>Automatic Admin Reminder</strong>
+                                            <span>Notify the admin when the reminder date arrives.</span>
+                                        </div>
+                                        <input type="hidden" name="school_year_reminder_enabled" value="0">
+                                        <label class="switch preferences-switch-row school-year-reminder-toggle" for="school_year_reminder_enabled">
+                                            <input type="checkbox" id="school_year_reminder_enabled" name="school_year_reminder_enabled" value="1" {{ (bool) old('school_year_reminder_enabled', $schoolYearReminderEnabled) ? 'checked' : '' }}>
+                                            <span class="slider" aria-hidden="true"></span>
+                                            <span class="preferences-switch-label is-on">Enabled</span>
+                                            <span class="preferences-switch-label is-off">Disabled</span>
+                                        </label>
                                     </div>
+                                    <div class="school-year-reminder-date">
+                                        <label class="school-year-reminder-date-label" for="school_year_reminder_date"><x-outline-icon name="calendar" /> Reminder Date</label>
+                                        <input id="school_year_reminder_date" name="school_year_reminder_date" type="date" value="{{ old('school_year_reminder_date', $schoolYearReminderDate) }}" {{ $schoolYearReminderEnabled ? 'required' : 'disabled' }}>
+                                    </div>
+                                    <p class="school-year-reminder-note"><x-outline-icon name="information-circle" /> The next reminder is automatically scheduled 10 months after confirming or updating the current school year.</p>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="settings-form-grid preferences-general-grid preferences-school-year-grid school-year-reminder-settings">
-                            <div class="settings-field">
-                                <input type="hidden" name="school_year_reminder_enabled" value="0">
-                                <label class="switch preferences-switch-row" for="school_year_reminder_enabled">
-                                    <input type="checkbox" id="school_year_reminder_enabled" name="school_year_reminder_enabled" value="1" {{ (bool) old('school_year_reminder_enabled', $schoolYearReminderEnabled) ? 'checked' : '' }}>
-                                    <span class="slider" aria-hidden="true"></span>
-                                    <span class="preferences-switch-label is-on">Reminder enabled</span>
-                                    <span class="preferences-switch-label is-off">Reminder disabled</span>
-                                </label>
-                            </div>
-                            <div class="settings-field">
-                                <label for="school_year_reminder_date">Reminder Date</label>
-                                <input id="school_year_reminder_date" name="school_year_reminder_date" type="date" value="{{ old('school_year_reminder_date', $schoolYearReminderDate) }}" {{ $schoolYearReminderEnabled ? 'required' : 'disabled' }}>
-                                <p class="settings-field-note">The admin reminder appears on or after this date. After confirming the current year or updating it, the next reminder is set 10 months later.</p>
                             </div>
                         </div>
                     </section>
