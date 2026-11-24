@@ -1099,6 +1099,22 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="settings-form-grid preferences-general-grid preferences-school-year-grid school-year-reminder-settings">
+                            <div class="settings-field">
+                                <input type="hidden" name="school_year_reminder_enabled" value="0">
+                                <label class="switch preferences-switch-row" for="school_year_reminder_enabled">
+                                    <input type="checkbox" id="school_year_reminder_enabled" name="school_year_reminder_enabled" value="1" {{ (bool) old('school_year_reminder_enabled', $schoolYearReminderEnabled) ? 'checked' : '' }}>
+                                    <span class="slider" aria-hidden="true"></span>
+                                    <span class="preferences-switch-label is-on">Reminder enabled</span>
+                                    <span class="preferences-switch-label is-off">Reminder disabled</span>
+                                </label>
+                            </div>
+                            <div class="settings-field">
+                                <label for="school_year_reminder_date">Reminder Date</label>
+                                <input id="school_year_reminder_date" name="school_year_reminder_date" type="date" value="{{ old('school_year_reminder_date', $schoolYearReminderDate) }}" {{ $schoolYearReminderEnabled ? 'required' : 'disabled' }}>
+                                <p class="settings-field-note">The admin reminder appears on or after this date. After confirming the current year or updating it, the next reminder is set 10 months later.</p>
+                            </div>
+                        </div>
                     </section>
                     <section class="preferences-category" aria-labelledby="studentReminderHeading">
                         <div class="preferences-subheading" id="studentReminderHeading"><x-outline-icon name="clock" /> Student Reminders</div>
@@ -1246,6 +1262,8 @@
 document.addEventListener('DOMContentLoaded', function () {
     const generalPreferencesForm = document.querySelector('#systemPreferencesForm');
     const closurePreferencesForm = document.querySelector('#temporaryClosureForm');
+    const schoolYearReminderEnabledInput = generalPreferencesForm?.querySelector('#school_year_reminder_enabled');
+    const schoolYearReminderDateInput = generalPreferencesForm?.querySelector('#school_year_reminder_date');
     const autosaveStatus = document.querySelector('[data-preferences-autosave-status]');
     const lastSaved = document.querySelector('[data-preferences-last-saved]');
     const pendingStorageKey = 'pup-clinic-workflow-preferences-pending-{{ auth()->id() }}';
@@ -1281,7 +1299,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function preferenceSnapshot() {
         const snapshot = {};
         if (!generalPreferencesForm) return snapshot;
-        generalPreferencesForm.querySelectorAll('input[type="checkbox"], select, input[type="time"], input[data-year-picker-input]').forEach(function (field) {
+        generalPreferencesForm.querySelectorAll('input[type="checkbox"], select, input[type="time"], input[type="date"], input[data-year-picker-input]').forEach(function (field) {
             snapshot[field.name] = field.type === 'checkbox' ? field.checked : field.value;
         });
         return snapshot;
@@ -1313,6 +1331,14 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         return true;
     }
+
+    function syncSchoolYearReminderControls() {
+        if (!schoolYearReminderEnabledInput || !schoolYearReminderDateInput) return;
+        schoolYearReminderDateInput.disabled = !schoolYearReminderEnabledInput.checked;
+        schoolYearReminderDateInput.required = schoolYearReminderEnabledInput.checked;
+    }
+
+    syncSchoolYearReminderControls();
 
 
     const academicYearFromInput = generalPreferencesForm?.querySelector('[data-year-picker-role="from"]');
@@ -1533,6 +1559,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (lastSaved && result.saved_at_label) {
                     lastSaved.textContent = `Last saved ${result.saved_at_label} by ${result.saved_by || 'Administrator'}`;
                 }
+                if (schoolYearReminderDateInput && result.school_year_reminder_date) {
+                    schoolYearReminderDateInput.value = result.school_year_reminder_date;
+                }
                 if (!autosaveQueued) showAutosaveStatus('Saved', 'saved');
             } catch (error) {
                 autosaveQueued = false;
@@ -1544,7 +1573,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     generalPreferencesForm?.addEventListener('change', function (event) {
-        if (!event.target.matches('input[type="checkbox"], select, input[data-year-picker-input]')) return;
+        if (!event.target.matches('input[type="checkbox"], select, input[type="date"], input[data-year-picker-input]')) return;
+
+        if (event.target === schoolYearReminderEnabledInput) syncSchoolYearReminderControls();
 
         if (event.target.id === 'admin_appointment_email_alerts') {
             window.clearTimeout(autosaveTimer);
@@ -1573,6 +1604,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (restorePendingPreferences()) {
         syncAcademicYearPair(academicYearFromInput);
+        syncSchoolYearReminderControls();
         syncClosurePreferences();
         window.setTimeout(saveGeneralPreferences, 250);
     }

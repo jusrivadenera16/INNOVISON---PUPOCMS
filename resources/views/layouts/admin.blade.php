@@ -10321,6 +10321,20 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     })();
 </script>
 
+@php
+    $schoolYearReminderRange = null;
+    $showSchoolYearReminder = $authUser
+        && !request()->boolean('embed')
+        && $canAccessModule('settings.preferences')
+        && app(\App\Services\AcademicYearReminderService::class)->shouldPrompt();
+    if ($showSchoolYearReminder) {
+        $schoolYearReminderRange = app(\App\Services\AcademicYearService::class)->configuredRange();
+    }
+@endphp
+@if($showSchoolYearReminder)
+    @include('admin.partials.school-year-reminder-modal')
+@endif
+
 @include('partials.system_footer')
 </body>
 </html>

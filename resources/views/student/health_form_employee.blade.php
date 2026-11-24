@@ -3149,6 +3149,7 @@
                 @endif
             >
                 @csrf
+                <input type="hidden" name="school_year_snapshot" value="{{ old('school_year_snapshot', $schoolYearSnapshotToken ?? '') }}">
                 <input type="hidden" name="employee_consent_acknowledged" id="employeeConsentAcknowledged" value="{{ old('employee_consent_acknowledged') ? '1' : '' }}">
                 <input type="hidden" id="employeeConsentPurpose" name="employee_health_form_category" value="{{ $employeeHealthFormCategory ?? 'Employee' }}">
 

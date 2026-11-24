@@ -8789,11 +8789,95 @@ public function updateClearance(Request $request, $id)
         if(!$settings) { $settings = new Setting(); }
         $cmsProfile = $admin ? $this->buildCmsAdminProfile($admin) : [];
         $academicYearRange = app(\App\Services\AcademicYearService::class)->configuredRange();
+        $schoolYearReminder = app(\App\Services\AcademicYearReminderService::class)->initializeDefaults();
         $academicYearFrom = $academicYearRange['from'];
         $academicYearTo = $academicYearRange['to'];
         $currentSchoolYear = $academicYearFrom . '-' . $academicYearTo;
+        $schoolYearReminderEnabled = $schoolYearReminder['enabled'];
+        $schoolYearReminderDate = $schoolYearReminder['reminder_date'];
 
-        return view('admin.settings-preferences', compact('admin', 'settings', 'cmsProfile', 'currentSchoolYear', 'academicYearFrom', 'academicYearTo'));
+        return view('admin.settings-preferences', compact(
+            'admin',
+            'settings',
+            'cmsProfile',
+            'currentSchoolYear',
+            'academicYearFrom',
+            'academicYearTo',
+            'schoolYearReminderEnabled',
+            'schoolYearReminderDate'
+        ));
+    }
+
+    public function handleSchoolYearReminder(Request $request)
+    {
+        abort_unless(optional($request->user())->canAccessPermission('settings.preferences'), 403);
+
+        $action = $request->validate([
+            'action' => ['required', Rule::in(['remind_later', 'confirm_current', 'update_year'])],
+        ])['action'];
+        $reminder = app(\App\Services\AcademicYearReminderService::class);
+
+        if ($action === 'remind_later') {
+            $reminder->snooze();
+
+            return back()->with('success', 'School year reminder postponed for 7 days.');
+        }
+
+        if ($action === 'confirm_current') {
+            $reminder->confirmCurrentYear();
+
+            return back()->with('success', 'School year confirmed. We will remind you again in 10 months.');
+        }
+
+        $academicYearData = $request->validate([
+            'academic_year_from' => ['required', 'integer', 'digits:4', 'between:1950,2099'],
+            'academic_year_to' => ['required', 'integer', 'digits:4', 'between:1951,2100'],
+        ]);
+        if ((int) $academicYearData['academic_year_to'] !== (int) $academicYearData['academic_year_from'] + 1) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'academic_year_to' => 'The ending year must be one year after the starting year.',
+            ]);
+        }
+
+        $currentYear = app(\App\Services\AcademicYearService::class)->configuredRange();
+        if ((string) $academicYearData['academic_year_from'] === $currentYear['from']
+            && (string) $academicYearData['academic_year_to'] === $currentYear['to']) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'academic_year_from' => 'Choose a different school year, or select “This school year is still current.”',
+            ]);
+        }
+
+        DB::transaction(function () use ($academicYearData, $reminder): void {
+            SystemSetting::putValue('academic_year_from', (string) $academicYearData['academic_year_from']);
+            SystemSetting::putValue('academic_year_to', (string) $academicYearData['academic_year_to']);
+            $reminder->scheduleAfterYearUpdate();
+        });
+
+        $updatedSchoolYear = $academicYearData['academic_year_from'] . '-' . $academicYearData['academic_year_to'];
+        ActivityLog::create([
+            'user_id' => $request->user()->id,
+            'user_name' => $request->user()->name,
+            'user_role' => strtolower((string) ($request->user()->user_role ?? '')),
+            'action' => 'Academic Year Updated',
+            'module' => 'Settings',
+            'event_type' => 'update',
+            'description' => 'Updated the school year to ' . $updatedSchoolYear . ' from the school year reminder.',
+            'route_name' => optional($request->route())->getName(),
+            'http_method' => $request->method(),
+            'request_path' => '/' . ltrim($request->path(), '/'),
+            'status_code' => 200,
+            'subject_type' => 'settings',
+            'subject_id' => 'academic_year',
+            'metadata' => [
+                'academic_year_from' => (string) $academicYearData['academic_year_from'],
+                'academic_year_to' => (string) $academicYearData['academic_year_to'],
+                'school_year_reminder_date' => $reminder->configuration()['reminder_date'],
+            ],
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        return back()->with('success', 'School year updated to ' . $updatedSchoolYear . '. Existing health forms and records were not changed.');
     }
 
     public function settingsMedicalConfiguration()
@@ -10136,6 +10220,12 @@ public function deleteItem($id)
             $academicYearData = $request->validate([
                 'academic_year_from' => ['required', 'integer', 'digits:4', 'between:1950,2099'],
                 'academic_year_to' => ['required', 'integer', 'digits:4', 'between:1951,2100'],
+                'school_year_reminder_enabled' => ['required', 'boolean'],
+                'school_year_reminder_date' => [
+                    Rule::requiredIf($request->boolean('school_year_reminder_enabled')),
+                    'nullable',
+                    'date_format:Y-m-d',
+                ],
             ]);
             if ((int) $academicYearData['academic_year_to'] !== (int) $academicYearData['academic_year_from'] + 1) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
@@ -10173,6 +10263,23 @@ public function deleteItem($id)
         $schoolYearBefore = $request->boolean('school_year_settings_form')
             ? app(\App\Services\AcademicYearService::class)->configuredRange()
             : null;
+        $schoolYearReminderService = app(\App\Services\AcademicYearReminderService::class);
+        $schoolYearReminderBefore = $request->boolean('school_year_settings_form')
+            ? $schoolYearReminderService->configuration()
+            : null;
+        $schoolYearChanged = $schoolYearBefore !== null
+            && ((string) $request->input('academic_year_from') !== $schoolYearBefore['from']
+                || (string) $request->input('academic_year_to') !== $schoolYearBefore['to']);
+        $schoolYearReminderEnabledAfter = $request->boolean('school_year_reminder_enabled');
+        $schoolYearReminderDateAfter = trim((string) $request->input('school_year_reminder_date'));
+        $schoolYearReminderChanged = $schoolYearReminderBefore !== null
+            && ($schoolYearReminderEnabledAfter !== $schoolYearReminderBefore['enabled']
+                || ($schoolYearReminderDateAfter !== ''
+                    && $schoolYearReminderDateAfter !== $schoolYearReminderBefore['reminder_date']));
+        if ($schoolYearReminderBefore !== null) {
+            $settingsBefore['school_year_reminder_enabled'] = $schoolYearReminderBefore['enabled'];
+            $settingsBefore['school_year_reminder_date'] = $schoolYearReminderBefore['reminder_date'];
+        }
 
         $settings->clinic_name = $request->input('clinic_name', $settings->clinic_name ?: 'PUP Taguig Clinic');
         $settings->clinic_location = $request->input('clinic_location', $settings->clinic_location ?: 'Santos Ave, Lower Bicutan, Taguig');
@@ -10204,12 +10311,35 @@ public function deleteItem($id)
             $settings->clinic_closure_message = $request->input('clinic_closure_message') ?: null;
         }
 
-        $cancelledAppointmentIds = DB::transaction(function () use ($settings, $request, $currentAdmin, $adminAlertAfter) {
+        $cancelledAppointmentIds = DB::transaction(function () use (
+            $settings,
+            $request,
+            $currentAdmin,
+            $adminAlertAfter,
+            $schoolYearReminderService,
+            $schoolYearChanged,
+            $schoolYearReminderBefore,
+            $schoolYearReminderEnabledAfter,
+            $schoolYearReminderDateAfter,
+            $schoolYearReminderChanged
+        ) {
             $settings->save();
 
             if ($request->boolean('school_year_settings_form')) {
                 SystemSetting::putValue('academic_year_from', (string) $request->input('academic_year_from'));
                 SystemSetting::putValue('academic_year_to', (string) $request->input('academic_year_to'));
+
+                $reminderDate = $schoolYearReminderDateAfter !== '' ? $schoolYearReminderDateAfter : null;
+                $shouldResetReminder = $schoolYearReminderEnabledAfter
+                    && $schoolYearChanged
+                    && $reminderDate === $schoolYearReminderBefore['reminder_date'];
+
+                if ($schoolYearReminderChanged || $shouldResetReminder) {
+                    $schoolYearReminderService->savePreferences(
+                        $schoolYearReminderEnabledAfter,
+                        $shouldResetReminder ? $schoolYearReminderService->nextReminderDate() : $reminderDate
+                    );
+                }
             }
 
             if (!$request->boolean('preferences_form')) {
@@ -10266,10 +10396,13 @@ public function deleteItem($id)
             : [];
         if ($request->boolean('school_year_settings_form')) {
             $schoolYearAfter = app(\App\Services\AcademicYearService::class)->configuredRange();
+            $schoolYearReminderAfter = $schoolYearReminderService->configuration();
             $settingsBefore['academic_year_from'] = $schoolYearBefore['from'];
             $settingsBefore['academic_year_to'] = $schoolYearBefore['to'];
             $settingsAfter['academic_year_from'] = $schoolYearAfter['from'];
             $settingsAfter['academic_year_to'] = $schoolYearAfter['to'];
+            $settingsAfter['school_year_reminder_enabled'] = $schoolYearReminderAfter['enabled'];
+            $settingsAfter['school_year_reminder_date'] = $schoolYearReminderAfter['reminder_date'];
         }
         $changedSettings = collect($settingsAfter)
             ->filter(fn ($value, $field) => (string) ($settingsBefore[$field] ?? '') !== (string) $value)
@@ -10319,11 +10452,16 @@ public function deleteItem($id)
         }
 
         if ($request->expectsJson()) {
+            $schoolYearReminderAfter = $request->boolean('school_year_settings_form')
+                ? $schoolYearReminderService->configuration()
+                : null;
+
             return response()->json([
                 'message' => $successMessage,
                 'saved_at' => optional($settings->workflow_preferences_saved_at)->toIso8601String(),
                 'saved_at_label' => optional($settings->workflow_preferences_saved_at)->format('M d, Y g:i:s A'),
                 'saved_by' => $settings->workflow_preferences_saved_by,
+                'school_year_reminder_date' => $schoolYearReminderAfter['reminder_date'] ?? null,
             ]);
         }
 

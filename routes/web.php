@@ -596,6 +596,9 @@ Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->gr
         Route::get('/admin/settings/personal-information', [AdminController::class, 'settingsPersonal'])->middleware('module.permission:settings.personal')->name('admin.settings.personal');
         Route::get('/admin/settings/clinic-information', [AdminController::class, 'settingsClinic'])->middleware('module.permission:settings.clinic')->name('admin.settings.clinic');
         Route::get('/admin/settings/system-preferences', [AdminController::class, 'settingsPreferences'])->middleware('module.permission:settings.preferences')->name('admin.settings.preferences');
+        Route::post('/admin/settings/system-preferences/school-year-reminder', [AdminController::class, 'handleSchoolYearReminder'])
+            ->middleware('module.permission:settings.preferences')
+            ->name('admin.settings.school-year-reminder');
         Route::get('/admin/settings/medical-configuration', [AdminController::class, 'settingsMedicalConfiguration'])->middleware('module.permission:settings.medical')->name('admin.settings.medical');
         Route::get('/admin/settings/faqs', [AdminController::class, 'settingsFaqs'])->middleware('module.permission:settings.faqs')->name('admin.settings.faqs');
         Route::post('/admin/settings/faqs', [AdminController::class, 'storeFaq'])->middleware('module.permission:settings.faqs')->name('admin.settings.faqs.store');

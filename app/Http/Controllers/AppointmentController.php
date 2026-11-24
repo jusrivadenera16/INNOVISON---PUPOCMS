@@ -5404,6 +5404,9 @@ public function showHealthForm()
             $this->activeHealthProfileCorrectionRequest($existingHealthProfile, HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION))
         : null;
     $healthFormPrefill = $this->buildHealthFormPrefill($user, $linkedAdminProfile, $profileForPrefill);
+    if ($isHealthFormCorrectionMode && trim((string) ($existingHealthProfile?->school_year ?? '')) !== '') {
+        $healthFormPrefill['school_year'] = trim((string) $existingHealthProfile->school_year);
+    }
     $healthFormPrefill['pending_health_form_request'] = $pendingHealthFormRequest;
     if ($isDedicatedTransfereeForm && $user?->applicant_type !== 'transferee') {
         return redirect()->route($user->clinicHealthFormRoute());
@@ -5474,6 +5477,10 @@ public function showHealthForm()
     $displayLastName = $healthFormPrefill['last_name'] ?? '';
     $displayReferenceNumber = $healthFormPrefill['reference_number'] ?? '';
     $prefill = $healthFormPrefill;
+    $schoolYearSnapshotToken = app(\App\Services\HealthFormSchoolYearSnapshotService::class)->issue(
+        (int) $user->id,
+        trim((string) ($prefill['school_year'] ?? $this->configuredCurrentSchoolYear()))
+    );
     $studentHealthFormCategory = $isDedicatedStudentWorkflow
         ? $this->resolvedHealthFormCategory(
             $user,
@@ -5507,7 +5514,7 @@ public function showHealthForm()
         $isDedicatedTransfereeForm
             ? 'student.health_form_transferee'
             : ($isDedicatedStudentForm ? 'student.health_form_student' : 'student.health_form'),
-        compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill', 'pendingHealthFormRequest', 'studentHealthFormCategory', 'studentDeclarationPurpose', 'transfereeDocumentDateMin', 'transfereeDocumentDateMax')
+        compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill', 'pendingHealthFormRequest', 'studentHealthFormCategory', 'studentDeclarationPurpose', 'transfereeDocumentDateMin', 'transfereeDocumentDateMax', 'schoolYearSnapshotToken')
     );
 }
 
@@ -5780,8 +5787,15 @@ private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
     $employeePrefill = $this->buildEmployeeHealthFormPrefill($user, $employeeProfile);
     $correctionNote = $isReturnedForCorrection ? $activeEmployeeHealthFormRequest->admin_note : '';
     $configuredSchoolYear = $this->configuredCurrentSchoolYear();
+    if ($isReturnedForCorrection && trim((string) ($employeeProfile?->school_year ?? '')) !== '') {
+        $configuredSchoolYear = trim((string) $employeeProfile->school_year);
+    }
     $employeePrefill['school_year'] = $configuredSchoolYear;
     $employeePrefill['school_year_from_preferences'] = true;
+    $schoolYearSnapshotToken = app(\App\Services\HealthFormSchoolYearSnapshotService::class)->issue(
+        (int) $user->id,
+        $configuredSchoolYear
+    );
     $displayName = trim((string) ($user->name ?? ''));
 
     $employeeHealthFormCategory = trim((string) data_get($activeEmployeeHealthFormRequest?->metadata, 'category'))
@@ -5799,7 +5813,8 @@ private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
         'isDependentAccount',
         'isReturnedForCorrection',
         'correctionNote',
-        'adminForm'
+        'adminForm',
+        'schoolYearSnapshotToken'
     ), ['currentSchoolYear' => $configuredSchoolYear]));
 }
 
@@ -6161,7 +6176,11 @@ private function processEmployeeHealthForm(Request $request, bool $adminForm = f
 
     $employeeBirthdayMin = '1950-01-01';
     $employeeBirthdayMax = Carbon::today()->subYears(15)->toDateString();
-    $configuredSchoolYear = $this->configuredCurrentSchoolYear();
+    $schoolYearSnapshot = app(\App\Services\HealthFormSchoolYearSnapshotService::class)->resolve(
+        $request->input('school_year_snapshot'),
+        (int) ($user?->id ?? 0)
+    );
+    $configuredSchoolYear = $schoolYearSnapshot ?: $this->configuredCurrentSchoolYear();
 
     $validated = $request->validate([
         'employee_number' => $isDependentAccount ? ['prohibited'] : [
@@ -7087,7 +7106,11 @@ public function storeHealthForm(Request $request)
     $resolvedCourseCode = $resolvedCourse['code'];
     $resolvedCourseCollege = $resolvedCourse['name'];
 
-    $resolvedSchoolYear = $this->configuredCurrentSchoolYear()
+    $schoolYearSnapshot = app(\App\Services\HealthFormSchoolYearSnapshotService::class)->resolve(
+        $request->input('school_year_snapshot'),
+        (int) ($user?->id ?? 0)
+    );
+    $resolvedSchoolYear = $schoolYearSnapshot ?: $this->configuredCurrentSchoolYear()
         ?: trim((string) $request->input('school_year'));
     if ($resolvedSchoolYear === '') {
         $resolvedSchoolYear = trim((string) (

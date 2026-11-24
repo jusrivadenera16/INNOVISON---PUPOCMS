@@ -3293,6 +3293,7 @@
 
             <form action="{{ route('store.health.form') }}" method="POST" enctype="multipart/form-data" novalidate>
                 @csrf
+                <input type="hidden" name="school_year_snapshot" value="{{ old('school_year_snapshot', $schoolYearSnapshotToken ?? '') }}">
                 <input type="hidden" name="reference_mode_selected" value="{{ $selectedReferenceMode }}">
                 <input type="hidden" name="form_mode" value="applicant">
                 <input type="hidden" id="course_college" name="course_college" value="{{ $courseApplicable ? $selectedCourseName : '' }}">

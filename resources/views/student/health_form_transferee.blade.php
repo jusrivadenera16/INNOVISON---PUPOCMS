@@ -3010,6 +3010,7 @@
 
             <form action="{{ route('store.health.form.transferee') }}" method="POST" enctype="multipart/form-data" novalidate>
                 @csrf
+                <input type="hidden" name="school_year_snapshot" value="{{ old('school_year_snapshot', $schoolYearSnapshotToken ?? '') }}">
                 <input type="hidden" name="reference_mode_selected" value="sis_reference">
                 <input type="hidden" id="course_college" name="course_college" value="{{ $courseApplicable ? $selectedCourseName : '' }}">
                 <input type="hidden" name="health_form_category" value="{{ $studentHealthFormCategory }}">
