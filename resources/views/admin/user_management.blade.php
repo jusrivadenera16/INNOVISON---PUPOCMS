@@ -3,7 +3,7 @@
 @section('title', 'User Management')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .user-management-shell {
         max-width: 1024px;
         margin: 0 auto;

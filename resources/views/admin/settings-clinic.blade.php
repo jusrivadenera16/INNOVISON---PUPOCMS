@@ -4,7 +4,7 @@
 
 @push('styles')
 @include('admin.partials.settings-section-style')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .settings-days-field {
         grid-column: 1 / -1;
         display: grid;
@@ -338,6 +338,7 @@
         .clinic-settings-page .settings-field.full + .settings-field.full::before,
         .clinic-settings-page .settings-days-field::before { left: 10px; right: 10px; }
     }
+    .csp-settings-clinic-1.csp-settings-clinic-1.csp-settings-clinic-1 { margin:0; padding-left:18px; }
 </style>
 @endpush
 
@@ -353,7 +354,7 @@
 
     @if ($errors->any())
         <div class="alert alert-error">
-            <ul style="margin:0; padding-left:18px;">
+            <ul class="csp-settings-clinic-1">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach

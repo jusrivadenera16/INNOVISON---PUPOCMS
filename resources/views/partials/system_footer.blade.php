@@ -1,5 +1,5 @@
 @once
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         :root {
             --system-footer-bg: #23272b;
             --system-footer-border: #7a0c10;

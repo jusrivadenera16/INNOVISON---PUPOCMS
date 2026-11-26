@@ -3,7 +3,7 @@
 @section('title', 'Announcement')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     body:has(.announcement-page) .main {
         background:
             linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.84)),
@@ -2235,7 +2235,7 @@
                                     </form>
                                 @endif
                                 @if($canArchiveAnnouncements)
-                                <form method="POST" action="{{ route('admin.announcements.destroy', $announcement) }}" onsubmit="return confirm('Delete this announcement?');">
+                                <form method="POST" action="{{ route('admin.announcements.destroy', $announcement) }}" data-confirm-submit="Delete this announcement?">
                                     @csrf
                                     @method('DELETE')
                                     <button class="announcement-delete" type="submit" aria-label="Delete announcement">
@@ -2481,7 +2481,7 @@
                                             <x-outline-icon name="eye" />
                                         </button>
                                         @if($canArchiveAnnouncements)
-                                            <form method="POST" action="{{ route('admin.announcements.restore', $announcement) }}" onsubmit="return confirm('Restore this announcement?');">
+                                            <form method="POST" action="{{ route('admin.announcements.restore', $announcement) }}" data-confirm-submit="Restore this announcement?">
                                                 @csrf
                                                 @method('PATCH')
                                                 <button class="announcement-restore" type="submit" aria-label="Restore announcement" title="Restore announcement">
@@ -2524,7 +2524,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     document.addEventListener('DOMContentLoaded', function () {
         const message = document.querySelector('[data-announcement-message]');
         const messageInput = document.querySelector('[data-announcement-message-input]');

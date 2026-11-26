@@ -3,7 +3,7 @@
 @section('title', 'Settings')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     body:has(.settings-page) .main {
         background:
             linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.84)),
@@ -2210,6 +2210,8 @@
         box-shadow: 0 14px 28px rgba(112, 19, 27, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06) !important;
     }
 
+    .csp-settings-1.csp-settings-1.csp-settings-1 { margin-top:16px; }
+    .csp-settings-2.csp-settings-2.csp-settings-2 { margin:0; padding-left:18px; }
 </style>
 @endpush
 
@@ -2228,7 +2230,7 @@
 
     @if ($errors->any())
         <div class="alert alert-error">
-            <ul style="margin:0; padding-left:18px;">
+            <ul class="csp-settings-2">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -2331,7 +2333,7 @@
                         <p>Manage appointment behavior, access hours, reminders, and temporary clinic availability.</p>
                     </div>
                 </div>
-                <button type="button" class="modal-head-close" onclick="closeSettingsModal('workflowSettingsModal')" aria-label="Close">
+                <button type="button" class="modal-head-close" data-close-settings="workflowSettingsModal" aria-label="Close">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -2413,7 +2415,7 @@
                     </div>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeSettingsModal('workflowSettingsModal')">Cancel</button>
+                    <button type="button" class="btn-cancel" data-close-settings="workflowSettingsModal">Cancel</button>
                     <button type="submit" class="btn-save">Save System Settings</button>
                 </div>
             </form>
@@ -2432,7 +2434,7 @@
                         <p>Update the clinic identity details shown across the system.</p>
                     </div>
                 </div>
-                <button type="button" class="modal-head-close" onclick="closeSettingsModal('clinicInfoModal')" aria-label="Close">
+                <button type="button" class="modal-head-close" data-close-settings="clinicInfoModal" aria-label="Close">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -2451,7 +2453,7 @@
                     </div>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeSettingsModal('clinicInfoModal')">Cancel</button>
+                    <button type="button" class="btn-cancel" data-close-settings="clinicInfoModal">Cancel</button>
                     <button type="submit" class="btn-save">Save Clinic Information</button>
                 </div>
             </form>
@@ -2468,7 +2470,7 @@
                         <p>Update the daily opening and closing schedule for the clinic.</p>
                     </div>
                 </div>
-                <button type="button" class="modal-head-close" onclick="closeSettingsModal('clinicHoursModal')" aria-label="Close">
+                <button type="button" class="modal-head-close" data-close-settings="clinicHoursModal" aria-label="Close">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -2487,7 +2489,7 @@
                     </div>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeSettingsModal('clinicHoursModal')">Cancel</button>
+                    <button type="button" class="btn-cancel" data-close-settings="clinicHoursModal">Cancel</button>
                     <button type="submit" class="btn-save">Save Clinic Hours</button>
                 </div>
             </form>
@@ -2506,7 +2508,7 @@
                         <p>Keep your admin identity and clinic contact details aligned with the hub record.</p>
                     </div>
                 </div>
-                <button type="button" class="modal-head-close" onclick="closeProfileModal()" aria-label="Close">
+                <button type="button" class="modal-head-close" data-close-profile aria-label="Close">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -2546,7 +2548,7 @@
                             </div>
                         </div>
 
-                        <div class="field-grid two" style="margin-top:16px;">
+                        <div class="field-grid two csp-settings-1">
                             <div class="field">
                                 <label>Birthday</label>
                                 <input type="date" id="cmsBirthdayInput" name="birthday" value="{{ old('birthday', $cmsProfile['birthday'] ?? '') }}">
@@ -2615,7 +2617,7 @@
                 </div>
 
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeProfileModal()">Cancel</button>
+                    <button type="button" class="btn-cancel" data-close-profile>Cancel</button>
                     <button type="submit" class="btn-save">Save Profile</button>
                 </div>
             </form>
@@ -2626,7 +2628,13 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
+    document.querySelectorAll('[data-close-settings]').forEach(function (button) {
+        button.addEventListener('click', function () { closeSettingsModal(button.dataset.closeSettings); });
+    });
+    document.querySelectorAll('[data-close-profile]').forEach(function (button) {
+        button.addEventListener('click', closeProfileModal);
+    });
     function openSettingsModal(id) {
         const modal = document.getElementById(id);
         if (modal) {

@@ -23,6 +23,11 @@ class StudentRequestedHealthFormReuseTest extends TestCase
     {
         $student = User::factory()->create(['user_role' => User::ROLE_STUDENT, 'user_type' => 'student']);
         $profile = HealthProfile::create(['user_id' => $student->id, 'clearance_status' => 'Issued', 'home_address' => 'Saved address']);
+        $approved = HealthFormSubmission::create([
+            'user_id' => $student->id, 'health_profile_id' => $profile->id,
+            'status' => 'approved', 'category' => 'Previous',
+            'approved_at' => now()->subYear(), 'submitted_at' => now()->subYear(),
+        ]);
         $pending = HealthFormSubmission::create([
             'user_id' => $student->id, 'health_profile_id' => $profile->id,
             'status' => 'requested', 'category' => 'OJT', 'requested_at' => now(),
@@ -32,7 +37,7 @@ class StudentRequestedHealthFormReuseTest extends TestCase
             'health_form_submission_id' => $pending->id, 'type' => 'new_health_form',
             'status' => 'pending', 'requested_at' => now(),
         ]);
-        return [$student, $profile, $pending, $correction];
+        return [$student, $profile, $pending, $correction, $approved];
     }
 
     public function test_existing_information_submits_the_requested_cycle_and_preserves_the_issued_profile(): void
@@ -42,12 +47,8 @@ class StudentRequestedHealthFormReuseTest extends TestCase
         $pdf->shouldReceive('setPaper')->twice();
         $pdf->shouldReceive('output')->twice()->andReturn('%PDF-1.4 test');
         Pdf::shouldReceive('loadView')->twice()->andReturn($pdf);
-        [$student, $profile, $pending, $correction] = $this->pendingCycle();
-        $approved = HealthFormSubmission::create([
-            'user_id' => $student->id, 'health_profile_id' => $profile->id,
-            'status' => 'approved', 'category' => 'Previous',
-            'approved_at' => now()->subYear(), 'submitted_at' => now()->subYear(),
-        ]);
+        [$student, $profile, $pending, $correction, $approved] = $this->pendingCycle();
+        $this->assertGreaterThan($approved->id, $pending->id);
         $this->actingAs($student, 'student');
         $response = app(AppointmentController::class)->submitExistingHealthForm(
             Request::create('/student/health-form/use-existing', 'POST', ['submission_id' => $pending->id])
@@ -62,9 +63,9 @@ class StudentRequestedHealthFormReuseTest extends TestCase
         $this->assertSame('submitted', $correction->fresh()->status);
         $this->assertSame(2, HealthFormSubmission::where('user_id', $student->id)->count());
         $this->assertSame('approved', $approved->fresh()->status);
-        $stats = app(AdminController::class)->healthRecordStats(
-            Request::create('/admin/health-records/stats', 'GET', ['q' => $student->email])
-        )->getData(true)['stats'];
+        $statsRequest = Request::create('/admin/health-records/stats', 'GET', ['q' => $student->email]);
+        app()->instance('request', $statsRequest);
+        $stats = app(AdminController::class)->healthRecordStats($statsRequest)->getData(true)['stats'];
         $this->assertSame(1, $stats['pending_approval']);
         $this->assertSame(1, $stats['total_approved']);
 

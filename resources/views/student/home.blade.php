@@ -3,7 +3,7 @@
 @section('title', 'Home')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     /* --- CRITICAL FIX: REMOVE TOP PADDING FOR HOME PAGE ONLY --- */
     main {
         padding-top: 0 !important;
@@ -4406,11 +4406,15 @@ html.home-reveal-enabled .home-announcement-card.home-scroll-reveal.is-next-far 
     max-height: 273px;
   }
 }
+
+    .student-home-csp-1 { display: none; }
+    .student-home-csp-2 { scroll-margin-top: 86px; }
+    .student-home-csp-3 { scroll-margin-top: 100px; }
 </style>
 @endpush
 
 @section('content')
-    <svg style="display: none;">
+    <svg class="student-home-csp-1">
       <symbol id="avatar-placeholder" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="12" fill="#e2e8f0"/>
         <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z" fill="#cbd5e0"/>
@@ -4455,7 +4459,7 @@ html.home-reveal-enabled .home-announcement-card.home-scroll-reveal.is-next-far 
         </div>
 
         @if(!($clinicHoursStatus['is_open'] ?? false) && !empty($clinicHoursStatus['next_open_at']))
-          <script>
+          <script nonce="{{ request()->attributes->get('csp_nonce') }}">
             (() => {
               const countdown = document.querySelector('[data-clinic-countdown]');
               const value = countdown?.querySelector('[data-countdown-value]');
@@ -4632,7 +4636,7 @@ html.home-reveal-enabled .home-announcement-card.home-scroll-reveal.is-next-far 
         $announcementCount = $announcementSlides->count();
         @endphp
 
-      <div id="announcements" class="home-announcement-band" aria-label="Clinic announcements" style="scroll-margin-top: 86px;">
+      <div id="announcements" class="home-announcement-band student-home-csp-2" aria-label="Clinic announcements">
         <header class="home-announcement-heading">
           <span class="home-announcement-kicker">Latest Updates</span>
           <h2>Announcements &amp; Advisories</h2>
@@ -4745,7 +4749,7 @@ html.home-reveal-enabled .home-announcement-card.home-scroll-reveal.is-next-far 
         </div>
       </div>
 
-      <div id="about" class="about-experience" style="scroll-margin-top: 100px;">
+      <div id="about" class="about-experience student-home-csp-3">
         <div class="about-decor" aria-hidden="true">
           <span class="about-decor__word">CARE</span>
           <span class="about-decor__arc about-decor__arc--left"></span>
@@ -4924,7 +4928,7 @@ html.home-reveal-enabled .home-announcement-card.home-scroll-reveal.is-next-far 
       </section>
     </div>
 
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
       document.addEventListener('DOMContentLoaded', function () {
         const learnMoreBtn = document.getElementById('learnMoreBtn');
         const announcementDetailModal = document.getElementById('announcementDetailModal');

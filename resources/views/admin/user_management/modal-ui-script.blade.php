@@ -1,4 +1,4 @@
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     const umEnhancedSelects = [];
 
     function closeUmCustomSelects(except = null) {

@@ -8,7 +8,7 @@
 @endphp
 
 @if($hasEvaluationPrompt && $isConsultationForm)
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         .consultation-evaluation-prompt {
             position: fixed;
             inset: 0;
@@ -333,7 +333,7 @@
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         document.addEventListener('DOMContentLoaded', function () {
             const prompt = document.querySelector('.consultation-evaluation-prompt');
             if (!prompt) return;

@@ -1,4 +1,4 @@
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .voice-field-wrap {
         position: relative;
         display: block;
@@ -65,7 +65,7 @@
     }
 </style>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     (function () {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {

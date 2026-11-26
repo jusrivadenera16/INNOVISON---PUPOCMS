@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Choose Your Workspace | PUP Taguig Medical Clinic</title>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         :root {
             --maroon: #70131b;
             --maroon-2: #8f2230;
@@ -794,7 +794,9 @@
                 content: none;
             }
         }
-    </style>
+
+    .auth-student-assistant-portal-csp-1 { margin:14px 0 0;color:#fecaca;font-size:13px;font-weight:700; }
+</style>
 </head>
 <body>
 @php
@@ -842,7 +844,7 @@
     </section>
 
     @error('workspace')
-        <p role="alert" style="margin:14px 0 0;color:#fecaca;font-size:13px;font-weight:700;">{{ $message }}</p>
+        <p class="auth-student-assistant-portal-csp-1" role="alert">{{ $message }}</p>
     @enderror
 
     <section class="workspace-shell" aria-label="Workspace options">
@@ -948,7 +950,7 @@
     </footer>
 </main>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     (function () {
         const body = document.body;
         const toggle = document.getElementById('themeToggle');

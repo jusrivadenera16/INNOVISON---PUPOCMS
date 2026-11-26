@@ -3,7 +3,7 @@
 @section('title', 'Dashboard')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     /* --- DASHBOARD CONTAINER --- */
     .dashboard-container {
         max-width: 1400px;
@@ -114,6 +114,18 @@
         transition: transform 0.2s ease, box-shadow 0.2s ease;
         z-index: 0;
     }
+
+    .stat-card.wave-level-0 { --wave-offset: 52px; }
+    .stat-card.wave-level-1 { --wave-offset: 47px; }
+    .stat-card.wave-level-2 { --wave-offset: 42px; }
+    .stat-card.wave-level-3 { --wave-offset: 36px; }
+    .stat-card.wave-level-4 { --wave-offset: 31px; }
+    .stat-card.wave-level-5 { --wave-offset: 26px; }
+    .stat-card.wave-level-6 { --wave-offset: 21px; }
+    .stat-card.wave-level-7 { --wave-offset: 16px; }
+    .stat-card.wave-level-8 { --wave-offset: 10px; }
+    .stat-card.wave-level-9 { --wave-offset: 5px; }
+    .stat-card.wave-level-10 { --wave-offset: 0px; }
 
     .stat-card::before {
         content: "";
@@ -700,11 +712,22 @@
     .clinic-activity-fill {
         display: block;
         height: 100%;
-        width: var(--activity-progress, 0%);
         min-width: 5px;
         border-radius: inherit;
         background: var(--activity-color, #94a3b8);
     }
+
+    .clinic-activity-fill.progress-level-0 { width: 0%; }
+    .clinic-activity-fill.progress-level-1 { width: 10%; }
+    .clinic-activity-fill.progress-level-2 { width: 20%; }
+    .clinic-activity-fill.progress-level-3 { width: 30%; }
+    .clinic-activity-fill.progress-level-4 { width: 40%; }
+    .clinic-activity-fill.progress-level-5 { width: 50%; }
+    .clinic-activity-fill.progress-level-6 { width: 60%; }
+    .clinic-activity-fill.progress-level-7 { width: 70%; }
+    .clinic-activity-fill.progress-level-8 { width: 80%; }
+    .clinic-activity-fill.progress-level-9 { width: 90%; }
+    .clinic-activity-fill.progress-level-10 { width: 100%; }
 
     .clinic-activity-row.tone-rose { --activity-color: #e11d48; }
     .clinic-activity-row.tone-violet { --activity-color: #9333ea; }
@@ -738,6 +761,12 @@
     .clinic-activity-trend.is-flat {
         color: #64748b;
     }
+
+    .recent-activity-person-cell { font-weight: 600; }
+    .recent-activity-person-link { color: inherit; text-decoration: none; }
+    .recent-activity-identifier { color: #94a3b8; font-size: 11px; font-weight: 400; }
+    .recent-activity-description { display: block; margin-top: 6px; }
+    .recent-activity-empty { padding: 30px; color: #94a3b8; text-align: center; }
 
     .needs-attention-row {
         display: grid;
@@ -910,10 +939,8 @@
     $pendingRate = $dashboardPercent($pending, $total);
     $todayRate = $dashboardPercent($upcoming, $total);
     $stockHealthRate = $dashboardPercent($inventoryInStock, $inventoryTotal);
-    $dashboardWaveOffset = function ($rate) {
-        $rate = max(0, min(100, (int) $rate));
-        return (int) round((100 - $rate) * 0.52);
-    };
+    $dashboardWaveLevel = fn ($rate) => (int) round(max(0, min(100, (int) $rate)) / 10);
+    $dashboardActivityLevel = fn ($progress) => (int) round(max(0, min(100, (float) $progress)) / 10);
     $dashboardDisplayName = trim((string) (optional(auth()->user())->name ?? 'Clinic User'));
     $dashboardNameParts = preg_split('/\s+/', $dashboardDisplayName, -1, PREG_SPLIT_NO_EMPTY) ?: [];
     $dashboardFirstName = $dashboardNameParts[0] ?? 'Clinic User';
@@ -941,7 +968,7 @@
     </section>
     <div class="stats-grid">
         
-        <div class="stat-card" style="--wave-offset: {{ $dashboardWaveOffset($completionRate) }}px;">
+        <div class="stat-card wave-level-{{ $dashboardWaveLevel($completionRate) }}">
             <div class="stat-card-top">
                 <div class="stat-label">Total Appointments</div>
                 <span class="stat-percent"><span class="sr-only">Completion rate </span>{{ $completionRate }}%</span>
@@ -952,7 +979,7 @@
             <div class="stat-badge badge-neutral">Completion Rate</div>
         </div>
 
-        <div class="stat-card" style="--wave-offset: {{ $dashboardWaveOffset($pendingRate) }}px;">
+        <div class="stat-card wave-level-{{ $dashboardWaveLevel($pendingRate) }}">
             <div class="stat-card-top">
                 <div class="stat-label">Pending Requests</div>
                 <span class="stat-percent"><span class="sr-only">Pending rate </span>{{ $pendingRate }}%</span>
@@ -963,7 +990,7 @@
             <div class="stat-badge badge-warning">Action Needed</div>
         </div>
 
-        <div class="stat-card" style="--wave-offset: {{ $dashboardWaveOffset($todayRate) }}px;">
+        <div class="stat-card wave-level-{{ $dashboardWaveLevel($todayRate) }}">
             <div class="stat-card-top">
                 <div class="stat-label">Scheduled Today</div>
                 <span class="stat-percent"><span class="sr-only">Scheduled today rate </span>{{ $todayRate }}%</span>
@@ -974,7 +1001,7 @@
             <div class="stat-badge badge-success">Scheduled</div>
         </div>
 
-        <div class="stat-card" style="--wave-offset: {{ $dashboardWaveOffset($stockHealthRate) }}px;">
+        <div class="stat-card wave-level-{{ $dashboardWaveLevel($stockHealthRate) }}">
             <div class="stat-card-top">
                 <div class="stat-label">Inventory Items</div>
                 <span class="stat-percent"><span class="sr-only">Stock health rate </span>{{ $stockHealthRate }}%</span>
@@ -1025,7 +1052,7 @@
                         </div>
                         <div class="clinic-activity-meter">
                             <div class="clinic-activity-track" aria-hidden="true">
-                                <span class="clinic-activity-fill" style="--activity-progress: {{ $activityItem['progress'] }}%;"></span>
+                                <span class="clinic-activity-fill progress-level-{{ $dashboardActivityLevel($activityItem['progress']) }}"></span>
                             </div>
                             <div>
                                 <div class="clinic-activity-value">{{ number_format($activityItem['value']) }}</div>
@@ -1096,21 +1123,21 @@
                 <tbody>
                     @forelse($recentActivities as $activity)
                         <tr class="{{ $loop->iteration > 5 ? 'recent-activity-extra' : '' }}">
-                            <td style="font-weight: 600;">
-                                <a href="{{ $activity->url }}" style="color: inherit; text-decoration: none;">
+                            <td class="recent-activity-person-cell">
+                                <a href="{{ $activity->url }}" class="recent-activity-person-link">
                                     {{ $activity->name }}
                                 </a><br>
-                                <span style="font-size:11px; color:#94a3b8; font-weight:400;">{{ $activity->identifier ?: ucfirst($activity->kind) }}</span>
+                                <span class="recent-activity-identifier">{{ $activity->identifier ?: ucfirst($activity->kind) }}</span>
                             </td>
                             <td>
                                 <span class="recent-activity-kind">{{ $activity->kind === 'health' ? 'Health Record' : ucfirst($activity->kind) }}</span>
-                                <span style="display:block; margin-top:6px;">{{ $activity->activity }}</span>
+                                <span class="recent-activity-description">{{ $activity->activity }}</span>
                             </td>
                             <td>{{ $activity->date_label }}</td>
                             <td><span class="status-pill {{ $activity->status_class }}">{{ $activity->status }}</span></td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" style="text-align: center; padding: 30px; color: #94a3b8;">No recent activity.</td></tr>
+                        <tr><td colspan="4" class="recent-activity-empty">No recent activity.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -1121,7 +1148,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     (function () {
         const greetingElement = document.getElementById('dashboardTimeGreeting');
         if (!greetingElement) {

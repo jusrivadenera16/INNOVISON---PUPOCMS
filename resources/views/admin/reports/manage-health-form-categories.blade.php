@@ -3,7 +3,7 @@
 @section('title', 'Manage Health Form Categories')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .health-categories-page,
     .health-category-modal-overlay {
         --clinic-maroon: #8f1024;
@@ -906,7 +906,7 @@
             <input type="search" id="healthCategorySearch" placeholder="Search health form categories..." autocomplete="off">
         </label>
 
-        <button type="button" class="health-categories-action" onclick="openAddHealthCategoryModal()">
+        <button type="button" class="health-categories-action" data-add-health-category>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
             <span>Add Category</span>
         </button>
@@ -950,7 +950,7 @@
                     >
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16 9.5-9.5a2.12 2.12 0 0 1 3 3L7 19H4v-3Z"></path><path d="m13.5 6.5 3 3"></path></svg>
                     </button>
-                    <form class="health-category-remove-form" action="{{ route('health-form-categories.destroy', $category->id) }}" method="POST" onsubmit="return confirmHealthCategoryDelete(event)">
+                    <form class="health-category-remove-form" action="{{ route('health-form-categories.destroy', $category->id) }}" method="POST" data-delete-health-category>
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="health-category-btn health-category-btn--delete health-category-btn--icon" title="{{ $linkedRecordsCount > 0 ? 'Archive category' : 'Remove category' }}" aria-label="{{ $linkedRecordsCount > 0 ? 'Archive category' : 'Remove category' }}">
@@ -1013,7 +1013,7 @@
                     <p>Create a health form category.</p>
                 </div>
             </div>
-            <button type="button" class="standard-modal-close" onclick="closeAddHealthCategoryModal()" aria-label="Close add health form category modal">
+            <button type="button" class="standard-modal-close" data-close-add-health-category aria-label="Close add health form category modal">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
             </button>
         </div>
@@ -1042,7 +1042,7 @@
                 </fieldset>
 
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeAddHealthCategoryModal()"><span>Cancel</span></button>
+                    <button type="button" class="btn-cancel" data-close-add-health-category><span>Cancel</span></button>
                     <button type="submit" class="btn-save"><span>Save Category</span></button>
                 </div>
             </form>
@@ -1062,7 +1062,7 @@
                     <p>Update the category name and where it can appear.</p>
                 </div>
             </div>
-            <button type="button" class="standard-modal-close" onclick="closeEditHealthCategoryModal()" aria-label="Close edit health form category modal">
+            <button type="button" class="standard-modal-close" data-close-edit-health-category aria-label="Close edit health form category modal">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
             </button>
         </div>
@@ -1092,7 +1092,7 @@
                 </fieldset>
 
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeEditHealthCategoryModal()"><span>Cancel</span></button>
+                    <button type="button" class="btn-cancel" data-close-edit-health-category><span>Cancel</span></button>
                     <button type="submit" class="btn-save"><span>Save Changes</span></button>
                 </div>
             </form>
@@ -1102,7 +1102,18 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
+document.querySelector('[data-add-health-category]')?.addEventListener('click', openAddHealthCategoryModal);
+document.querySelectorAll('[data-close-add-health-category]').forEach(function(button) {
+    button.addEventListener('click', closeAddHealthCategoryModal);
+});
+document.querySelectorAll('[data-close-edit-health-category]').forEach(function(button) {
+    button.addEventListener('click', closeEditHealthCategoryModal);
+});
+document.querySelectorAll('[data-delete-health-category]').forEach(function(form) {
+    form.addEventListener('submit', confirmHealthCategoryDelete);
+});
+
 const healthCategorySearch = document.getElementById('healthCategorySearch');
 const healthCategoriesCount = document.getElementById('healthCategoriesCount');
 const healthCategoriesEmpty = document.getElementById('healthCategoriesEmpty');

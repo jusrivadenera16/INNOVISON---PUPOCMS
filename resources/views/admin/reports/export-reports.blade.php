@@ -3,7 +3,7 @@
 @section('title', 'Export Reports Hub')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .export-hub-shell {
         width: min(1180px, calc(100% - 32px));
         margin: 24px auto;

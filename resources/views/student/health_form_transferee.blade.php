@@ -6,13 +6,14 @@
     <title>Fill Up - Health Profile</title>
     <script
         src="{{ asset('js/sienna-accessibility-custom.umd.js') }}?v={{ filemtime(public_path('js/sienna-accessibility-custom.umd.js')) }}"
+        nonce="{{ request()->attributes->get('csp_nonce') }}"
         data-asw-position="bottom-right"
         data-asw-offset="24,12"
         data-asw-size="small"
         defer
     ></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         :root {
             --clinic-maroon: #7f1d2d;
             --clinic-maroon-dark: #5f0012;
@@ -2904,7 +2905,16 @@
         }
 
         @include('student.partials.health_form_upload_ui_styles')
-    </style>
+
+    .form-intro p.student-health-form-transferee-csp-1 { margin-top:10px;color:#7f1d2d;font-weight:900; }
+    .student-health-form-transferee-csp-2 { background-color: #ffc107; color: #000; }
+    .student-health-form-transferee-csp-3 { font-weight: 700; }
+    .student-health-form-transferee-csp-4 { margin-top: 24px; padding-top: 20px; border-top: 1px dashed #d1d5db; }
+    .student-health-form-transferee-csp-5 { font-size: 15px; font-weight: 800; color: #7f1d2d; margin-bottom: 4px; }
+    .student-health-form-transferee-csp-6 { color: #dc2626; }
+    .student-health-form-transferee-csp-7 { margin-bottom: 12px; }
+    .student-health-form-transferee-csp-8 { margin-bottom: 14px; }
+</style>
 </head>
 <body class="health-form-page">
     @php
@@ -2997,7 +3007,8 @@
                             <span id="currentStepName">{{ $healthFormSteps[$startStep] ?? 'Clinic Reference' }}</span>
                         </div>
                         <div class="step-progress-track" aria-hidden="true">
-                            <div class="step-progress-fill" id="stepProgressFill" style="width: {{ round(($startStep / count($healthFormSteps)) * 100) }}%;"></div>
+                            <style nonce="{{ request()->attributes->get('csp_nonce') }}">#stepProgressFill { width: {{ round(($startStep / count($healthFormSteps)) * 100) }}%; }</style>
+                            <div class="step-progress-fill" id="stepProgressFill"></div>
                         </div>
                         <div class="step-progress-percent" id="stepProgressPercent">{{ round(($startStep / count($healthFormSteps)) * 100) }}% Complete</div>
                     </div>
@@ -3022,7 +3033,7 @@
                         <h1 data-title-letter="C">{{ $stepOneTitle }}</h1>
                         <p>{{ $stepOneDescription }}</p>
                         @if(!empty($pendingHealthFormRequest))
-                            <p style="margin-top:10px;color:#7f1d2d;font-weight:900;">
+                            <p class="student-health-form-transferee-csp-1">
                                 New Health Form Request: {{ $pendingHealthFormRequest->category }}{{ $pendingHealthFormRequest->remarks ? ' - ' . $pendingHealthFormRequest->remarks : '' }}
                             </p>
                         @endif
@@ -3136,7 +3147,7 @@
                             >
                                 Skip to Print (Testing)
                             </button>
-                            <button type="button" class="btn btn-health" data-step-next="2" style="background-color: #ffc107; color: #000;">
+                            <button type="button" class="btn btn-health student-health-form-transferee-csp-2" data-step-next="2">
                                 <span>Skip Step 1</span>
                             </button>
                         @endenv
@@ -3147,7 +3158,7 @@
                             </svg>
                         </button>
                         @if($referenceVerificationUnavailable)
-                            <button type="button" class="btn btn-health btn-health-next" onclick="window.location.reload()">
+                            <button type="button" class="btn btn-health btn-health-next" data-student-action="reload">
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M20 11a8 8 0 1 0-2.34 5.66"></path>
                                     <path d="M20 4v7h-7"></path>
@@ -3684,7 +3695,7 @@
 
                         <div class="student-consent-copy">
                             <p id="studentConsentCertParagraph">
-                                I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my on-site consultation for the issuance of medical clearance for <u id="consentDynamicPurpose" style="font-weight: 700;">{{ $initialConsentPurpose }}</u> are true, correct and complete to the best of my knowledge. I have fully disclosed all the medical condition that may affect in the assessment to endorse my <u id="consentDynamicEndorsement" style="font-weight: 700;">{{ $initialConsentEndorsement }}</u> of PUP Taguig Campus
+                                I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my on-site consultation for the issuance of medical clearance for <u class="student-health-form-transferee-csp-3" id="consentDynamicPurpose">{{ $initialConsentPurpose }}</u> are true, correct and complete to the best of my knowledge. I have fully disclosed all the medical condition that may affect in the assessment to endorse my <u class="student-health-form-transferee-csp-3" id="consentDynamicEndorsement">{{ $initialConsentEndorsement }}</u> of PUP Taguig Campus
                             </p>
                             <p>I also understand that the PUP Medical Services and University will not be liable for any untoward incident that may arise due to my failure to disclose accurate information or intentionally providing false and deceptive information.</p>
                             <p>{{ config('health_form_privacy.consent_statement') }}</p>
@@ -4338,11 +4349,11 @@
                         </div>
                     </div>
 
-                    <div class="guardian-signature-section" id="guardianSignatureSection" style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed #d1d5db;" hidden>
-                        <h3 style="font-size: 15px; font-weight: 800; color: #7f1d2d; margin-bottom: 4px;">Parent / Guardian's Signature <span class="required" style="color: #dc2626;">*</span></h3>
-                        <p class="step-fill-note" style="margin-bottom: 12px;">Because you are 17 years old or below, your parent or legal guardian must also affix their signature for the Declaration and Consent Form.</p>
+                    <div class="guardian-signature-section student-health-form-transferee-csp-4" id="guardianSignatureSection" hidden>
+                        <h3 class="student-health-form-transferee-csp-5">Parent / Guardian's Signature <span class="required student-health-form-transferee-csp-6">*</span></h3>
+                        <p class="step-fill-note student-health-form-transferee-csp-7">Because you are 17 years old or below, your parent or legal guardian must also affix their signature for the Declaration and Consent Form.</p>
                         <input type="text" id="guardian_signature_data" name="guardian_signature_data" value="{{ old('guardian_signature_data') }}" class="visually-hidden" data-guardian-signature-field>
-                        <div class="esign-method-grid" aria-label="Choose guardian signature method" style="margin-bottom: 14px;">
+                        <div class="esign-method-grid student-health-form-transferee-csp-8" aria-label="Choose guardian signature method">
                             <input class="esign-method-radio" type="radio" name="guardian_signature_method" id="guardian_signature_method_draw" value="draw" checked>
                             <label class="esign-method-card" for="guardian_signature_method_draw">
                                 <span class="esign-method-dot" aria-hidden="true"></span>
@@ -4462,8 +4473,9 @@
         </div>
     </div>
 
+    <script src="{{ asset('js/student-csp-controls.js') }}?v={{ filemtime(public_path('js/student-csp-controls.js')) }}" defer></script>
     <script src="{{ asset('js/clinic-address-lookup.js') }}"></script>
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         (function () {
             document.querySelectorAll('[data-student-toast]').forEach((toast) => {
                 const closeButton = toast.querySelector('[data-student-toast-close]');

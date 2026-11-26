@@ -87,7 +87,7 @@
 @endphp
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     body:has(.health-profile-wrap) .main {
         padding: 10px;
         background:
@@ -2704,7 +2704,7 @@
                     </div>
                     <div class="employee-action-actions">
                         @if($canCancelEmployeeAssessment)
-                            <form method="POST" action="{{ route('admin.employee_health_profile.assessment.cancel', [$employeeProfile->id, $activeNewHealthFormRequest->health_form_submission_id]) }}" data-loader-message="Cancelling request" data-loader-detail="Cancelling the health assessment and restoring the previous approved record." onsubmit="if (!window.confirm('Cancel this health assessment and restore the previous approved record? Assessment history will be retained.')) return false; this.querySelector('button').disabled = true;">
+                            <form method="POST" action="{{ route('admin.employee_health_profile.assessment.cancel', [$employeeProfile->id, $activeNewHealthFormRequest->health_form_submission_id]) }}" data-loader-message="Cancelling request" data-loader-detail="Cancelling the health assessment and restoring the previous approved record." data-confirm-assessment-cancel>
                                 @csrf
                                 <button type="submit" class="employee-action-cancel">Cancel Assessment</button>
                             </form>
@@ -2820,7 +2820,17 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
+    document.querySelectorAll('[data-confirm-assessment-cancel]').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!window.confirm('Cancel this health assessment and restore the previous approved record? Assessment history will be retained.')) {
+                event.preventDefault();
+                return;
+            }
+            form.querySelector('button').disabled = true;
+        });
+    });
+
     const employeeProfileActions = document.getElementById('employeeProfileActions');
     const employeeProfileActionsToggle = document.getElementById('employeeProfileActionsToggle');
     const employeeProfileActionsMenu = document.getElementById('employeeProfileActionsMenu');

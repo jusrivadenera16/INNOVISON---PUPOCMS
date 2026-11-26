@@ -3,7 +3,7 @@
 @section('title', 'Appointment Statistics')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .appointment-stats-shell {
         max-width: 1500px;
         margin: 0 auto;
@@ -44,7 +44,7 @@
         flex-wrap: nowrap;
     }
 
-    .appointment-stats-header-actions > a[style*="background"] {
+    .appointment-stats-header-actions > a.appointment-stats-history-link {
         display: none !important;
     }
 
@@ -792,6 +792,9 @@
             grid-template-columns: 96px 1fr 42px;
         }
     }
+
+    /* Outrank page ID rules without blocking inline CSSOM updates. */
+    :is(#reports-csp-priority#reports-csp-priority, .appointment-stats-history-link) { background: #7f1d2d; color: #ffffff; border-color: #7f1d2d; }
 </style>
 @endpush
 
@@ -829,7 +832,7 @@
             <p class="appointment-stats-subtitle">Clinic activity analytics for online appointments and walk-in consultations, filtered by date range, patient type, status, service, and source.</p>
         </div>
         <div class="appointment-stats-header-actions">
-            {{-- <a href="{{ route('reports.appointment-history') }}" class="appointment-stats-back" style="background: #7f1d2d; color: #ffffff; border-color: #7f1d2d;">
+            {{-- <a href="{{ route('reports.appointment-history') }}" class="appointment-stats-back appointment-stats-history-link">
                 📋 Appointment History
             </a> --}}
             <div class="appointment-stats-filter-shell" id="appointmentStatsFilterShell">
@@ -1007,7 +1010,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     document.addEventListener('DOMContentLoaded', function () {
         const filterShell = document.getElementById('appointmentStatsFilterShell');
         const filterToggle = document.getElementById('appointmentStatsFilterToggle');

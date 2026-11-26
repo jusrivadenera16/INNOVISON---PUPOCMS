@@ -3,7 +3,7 @@
 @section('title', 'Appointment Feedback')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .feedback-shell {
         max-width: 1040px;
         margin: 0 auto;
@@ -417,7 +417,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     document.addEventListener('DOMContentLoaded', function () {
         const ratingGroup = document.getElementById('feedbackRatingGroup');
         if (!ratingGroup) return;

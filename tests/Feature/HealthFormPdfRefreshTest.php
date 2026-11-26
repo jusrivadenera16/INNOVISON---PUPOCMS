@@ -1159,6 +1159,8 @@ class HealthFormPdfRefreshTest extends TestCase
 
     public function test_long_student_signature_uses_middle_initial_and_wraps_without_clipping(): void
     {
+        $nonce = base64_encode('health-signature-style-test');
+        request()->attributes->set('csp_nonce', $nonce);
         $user = User::forceCreate([
             'name' => 'Alexandria Cassandra Maximiliana De Los Santos Evangelista',
             'first_name' => 'Alexandria',
@@ -1179,10 +1181,25 @@ class HealthFormPdfRefreshTest extends TestCase
             'healthFormSubmittedAt' => Carbon::parse('2026-07-20 09:00:00'),
         ])->render();
 
-        $this->assertStringContainsString(
-            'student-signature-name" style="font-size: 7px !important;">ALEXANDRIA C. MAXIMILIANA DE LOS SANTOS EVANGELISTA, JR.',
-            $html
-        );
+        $document = new \DOMDocument();
+        @$document->loadHTML($html, LIBXML_NONET);
+        $xpath = new \DOMXPath($document);
+        $signatures = $xpath->query('//div[contains(concat(" ", normalize-space(@class), " "), " student-signature-name ")]');
+        $this->assertCount(1, $signatures);
+        $signature = $signatures->item(0);
+        $this->assertSame('ALEXANDRIA C. MAXIMILIANA DE LOS SANTOS EVANGELISTA, JR.', $signature->textContent);
+        $this->assertFalse($signature->hasAttribute('style'));
+        $this->assertSame(1, preg_match('/\b(health-form-signature-size-\d+(?:-\d+)?)\b/', $signature->getAttribute('class'), $sizeClass));
+        $styles = $xpath->query('//style[contains(., ".student-signature-name.' . $sizeClass[1] . '")]');
+        $this->assertCount(1, $styles);
+        $style = $styles->item(0);
+        $this->assertSame($nonce, $style->getAttribute('nonce'));
+        $this->assertSame(1, preg_match(
+            '/\.print-container\s+\.student-signature-name\.' . preg_quote($sizeClass[1], '/') . '\s*\{\s*font-size:\s*(\d+(?:\.\d+)?)px\s*!important;\s*\}/',
+            $style->textContent,
+            $fontSize
+        ));
+        $this->assertSame(7.0, (float) $fontSize[1]);
         $this->assertStringContainsString('Alexandria Cassandra Maximiliana De Los Santos Evangelista', $html);
         $this->assertStringContainsString('white-space: normal', $html);
         $this->assertStringContainsString('overflow-wrap: break-word', $html);

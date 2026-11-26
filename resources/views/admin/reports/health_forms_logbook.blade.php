@@ -3,7 +3,7 @@
 @section('title', 'Health Forms Logs')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .hf-logbook-shell {
         max-width: 1380px;
         margin: 0 auto;
@@ -544,7 +544,7 @@
     </section>
 </div>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 const healthFormsLogbookSearch = document.getElementById('healthFormsLogbookSearch');
 const healthFormsLogbookRows = Array.from(document.querySelectorAll('.hf-logbook-row'));
 const healthFormsLogbookVisibleCount = document.getElementById('healthFormsLogbookVisibleCount');

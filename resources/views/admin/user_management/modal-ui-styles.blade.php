@@ -1,4 +1,4 @@
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .um-action-confirm-dialog {
         position: fixed;
         inset: 0;

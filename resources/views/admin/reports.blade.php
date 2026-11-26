@@ -3,7 +3,7 @@
 @section('title', 'Reports')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     body:has(.reports-frame) .main {
         background:
             linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.84)),

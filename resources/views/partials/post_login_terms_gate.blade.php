@@ -1,4 +1,4 @@
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .post-login-loader {
         position: fixed;
         inset: 0;
@@ -828,17 +828,11 @@
         }
         72% {
             opacity: 0.82;
-            transform: translate(
-                calc(-50% + var(--welcome-target-x, 0px)),
-                calc(-50% + var(--welcome-target-y, 0px))
-            ) scale(0.42);
+            transform: translate(-50%, -50%) scale(0.42);
         }
         100% {
             opacity: 0;
-            transform: translate(
-                calc(-50% + var(--welcome-target-x, 0px)),
-                calc(-50% + var(--welcome-target-y, 0px))
-            ) scale(0.12);
+            transform: translate(-50%, -50%) scale(0.12);
         }
     }
 
@@ -1016,17 +1010,16 @@
         </div>
     </div>
 
-    <form id="termsGateLogoutForm" method="POST" action="{{ route('logout') }}" style="display:none;">
+    <form id="termsGateLogoutForm" method="POST" action="{{ route('logout') }}" hidden>
         @csrf
         <input type="hidden" name="portal_guard" value="{{ request()->is('admin/*') || request()->is('assistant/*') || request()->is('health-records') || request()->is('health-profile/*') ? 'admin' : 'student' }}">
     </form>
 
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         (function () {
             const loader = document.getElementById('postLoginLoader');
             const overlay = document.getElementById('termsGateOverlay');
             const welcome = document.getElementById('postLoginWelcome');
-            const welcomeCard = welcome ? welcome.querySelector('.post-login-welcome-card') : null;
             const agreeInput = document.getElementById('termsGateAgree');
             const continueBtn = document.getElementById('termsGateContinueBtn');
             const cancelBtn = document.getElementById('termsGateCancelBtn');
@@ -1083,25 +1076,12 @@
             agreeInput.addEventListener('change', syncContinueState);
 
             function prepareWelcomeTarget() {
-                if (!welcomeCard) {
-                    return;
-                }
-
                 const target = document.getElementById('dashboardTimeGreeting')
                     || document.querySelector('.dashboard-welcome-copy h1');
                 if (!target) {
                     return;
                 }
 
-                const targetRect = target.getBoundingClientRect();
-                welcomeCard.style.setProperty(
-                    '--welcome-target-x',
-                    `${targetRect.left + (targetRect.width / 2) - (window.innerWidth / 2)}px`
-                );
-                welcomeCard.style.setProperty(
-                    '--welcome-target-y',
-                    `${targetRect.top + (targetRect.height / 2) - (window.innerHeight / 2)}px`
-                );
                 target.dataset.postLoginGreetingTarget = 'true';
             }
 

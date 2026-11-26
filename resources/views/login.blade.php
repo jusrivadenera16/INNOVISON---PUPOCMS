@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>PUP Taguig - Online Clinic</title>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         /* --- 1. GLOBAL RESET & VARIABLES --- */
         :root {
             --accent: #8B0000;      /* PUP Maroon */
@@ -1043,7 +1043,7 @@
       </div>
   </div>
 
-  <script>
+  <script nonce="{{ request()->attributes->get('csp_nonce') }}">
       (function initLocalLoginPasswordToggle() {
           const password = document.getElementById('localLoginPassword');
           const toggle = document.getElementById('localLoginPasswordToggle');

@@ -4,7 +4,7 @@
 
 @once
     @push('styles')
-        <style>
+        <style nonce="{{ request()->attributes->get('csp_nonce') }}">
             .report-breadcrumb {
                 display: flex;
                 align-items: center;

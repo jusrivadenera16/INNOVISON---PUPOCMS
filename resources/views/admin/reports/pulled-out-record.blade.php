@@ -3,7 +3,7 @@
 @section('title', 'Pulled Out Record')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .pulled-record-page {
         --pr-maroon: #8f1422;
         --pr-yellow: #facc15;
@@ -616,7 +616,7 @@
         </div>
     </section>
 </div>
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     (() => {
         const form = document.querySelector('.pulled-record-restore');
         const reasonWrap = document.getElementById('pulloutRestoreReasonWrap');

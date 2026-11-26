@@ -4,7 +4,7 @@
 @section('disable_voice_inputs', 'true')
 
 @section('content')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .api-testing-shell {
         display: grid;
         gap: 20px;
@@ -2232,6 +2232,28 @@
             grid-template-columns: 1fr;
         }
     }
+    .csp-api-testing-1.csp-api-testing-1.csp-api-testing-1 { margin-top: 6px; }
+    .csp-api-testing-2.csp-api-testing-2.csp-api-testing-2 { font-size: 10px; }
+    .csp-api-testing-3.csp-api-testing-3.csp-api-testing-3 { font-size: 10px; word-break: break-all; }
+    .csp-api-testing-4.csp-api-testing-4.csp-api-testing-4 { font-size: 11px; background: #f3f4f6; padding: 8px; border-radius: 6px; overflow: auto; max-height: 150px; }
+    .csp-api-testing-5.csp-api-testing-5.csp-api-testing-5 { cursor: pointer; color: #7f1d2d; font-size: 12px; }
+    .csp-api-testing-6.csp-api-testing-6.csp-api-testing-6 { font-size: 11px; }
+    .csp-api-testing-7.csp-api-testing-7.csp-api-testing-7 { font-size: 11px; color: #7f1d2d; }
+    .csp-api-testing-8.csp-api-testing-8.csp-api-testing-8 { text-align: center; color: #6b7280; }
+    .csp-api-testing-9.csp-api-testing-9.csp-api-testing-9 { margin-top: 4px; color: #9ca3af; }
+    .csp-api-testing-10.csp-api-testing-10.csp-api-testing-10 { margin-top: 8px; color: #9ca3af; }
+    .csp-api-testing-11.csp-api-testing-11.csp-api-testing-11 { background:linear-gradient(135deg,#7f1d2d,#5b0c0e);color:#fff; }
+    .csp-api-testing-12.csp-api-testing-12.csp-api-testing-12 { text-align: right; color: #6b7280; font-size: 13px; }
+    .csp-api-testing-13.csp-api-testing-13.csp-api-testing-13 { border-radius: 12px; border: 1px solid rgba(127, 29, 45, 0.16); padding: 8px 12px; }
+    .csp-api-testing-14.csp-api-testing-14.csp-api-testing-14 { display: block; margin-bottom: 6px; font-weight: 700; color: #374151; }
+    .csp-api-testing-15.csp-api-testing-15.csp-api-testing-15 { display: grid; grid-template-columns: auto auto auto 1fr auto; gap: 12px; margin-bottom: 20px; align-items: end; }
+    .csp-api-testing-16.csp-api-testing-16.csp-api-testing-16 { margin-bottom: 20px; }
+    .csp-api-testing-17.csp-api-testing-17.csp-api-testing-17 { margin: 0; color: #7f1d2d; }
+    .csp-api-testing-18.csp-api-testing-18.csp-api-testing-18 { margin-top: 10px; }
+    .csp-api-testing-19.csp-api-testing-19.csp-api-testing-19 { margin-top: 8px; }
+    .csp-api-testing-20.csp-api-testing-20.csp-api-testing-20 { font-size: 12px; color: #7f1d2d; word-break: break-all; }
+    .csp-api-testing-21.csp-api-testing-21.csp-api-testing-21 { margin-top: 16px; }
+    .csp-api-testing-22.csp-api-testing-22.csp-api-testing-22 { text-decoration: none; display: flex; align-items: center; justify-content: center; }
 </style>
 
 <div class="api-testing-shell">
@@ -2266,7 +2288,7 @@
             </div>
             <div class="api-refresh-chip">
                 <span>Last updated: {{ now()->format('g:i A') }}</span>
-                <button type="button" onclick="window.location.reload()" aria-label="Refresh API dashboard">
+                <button type="button" data-admin-reload aria-label="Refresh API dashboard">
                     <x-outline-icon name="clock" />
                 </button>
             </div>
@@ -2385,7 +2407,7 @@
                         <input type="hidden" name="batch_size" value="25">
                         <button type="submit" class="guisis-sync-button"><x-outline-icon name="eye" /> Preview Batch</button>
                     </form>
-                    <form method="POST" action="{{ route('admin.api-testing.sync-student-numbers') }}" onsubmit="return confirm('Sync the next 25 matched applicant records from GuiSIS?');">
+                    <form method="POST" action="{{ route('admin.api-testing.sync-student-numbers') }}" data-confirm-submit="Sync the next 25 matched applicant records from GuiSIS?">
                         @csrf
                         <input type="hidden" name="mode" value="apply">
                         <input type="hidden" name="batch_size" value="25">
@@ -2431,7 +2453,7 @@
                     </div>
 
                     @if(!empty($studentNumberSyncSummary['cycle_completed']))
-                        <p class="guisis-sync-note" style="margin-top: 10px;">Sync cycle complete. The next sync starts again from the first candidate.</p>
+                        <p class="guisis-sync-note csp-api-testing-18">Sync cycle complete. The next sync starts again from the first candidate.</p>
                     @endif
 
                     @if(!empty($studentNumberSyncSummary['details']))
@@ -2466,7 +2488,7 @@
                                         <span class="guisis-sync-status-badge {{ $detailStatusClass }}">{{ $detailStatus === 'already_complete' ? 'Complete' : ($detailStatus === 'manual_review' ? 'Review' : ($detailStatus === 'no_match' || $detailStatus === 'no_student_number' || $detailStatus === 'missing_email' ? 'Failed' : $detailStatus)) }}</span>
                                         <span class="guisis-sync-result-action">
                                             @if($studentNumberSyncMode === 'preview' && !empty($detail['user_id']))
-                                                <form method="POST" action="{{ route('admin.api-testing.sync-student-numbers') }}" onsubmit="return confirm('Sync only this record? It will be updated only if GuiSIS returns a verified match with no identity conflict.');">
+                                                <form method="POST" action="{{ route('admin.api-testing.sync-student-numbers') }}" data-confirm-submit="Sync only this record? It will be updated only if GuiSIS returns a verified match with no identity conflict.">
                                                     @csrf
                                                     <input type="hidden" name="mode" value="apply">
                                                     <input type="hidden" name="user_id" value="{{ $detail['user_id'] }}">
@@ -2485,7 +2507,7 @@
                     @endif
 
                     @if($studentNumberSyncMode === 'apply')
-                        <p class="guisis-sync-note" style="margin-top: 10px;">Appointment records updated: {{ $studentNumberSyncSummary['appointment_records_updated'] ?? 0 }}.</p>
+                        <p class="guisis-sync-note csp-api-testing-18">Appointment records updated: {{ $studentNumberSyncSummary['appointment_records_updated'] ?? 0 }}.</p>
                     @endif
                 </div>
             @endif
@@ -2509,7 +2531,7 @@
                 <x-outline-icon name="arrow-path" /> GuiSIS Sync
                 <span class="guisis-sync-tab-count">{{ number_format((int) ($studentNumberSyncPendingCount ?? 0)) }}</span>
             </button>
-            <a href="{{ route('admin.integration-tokens') }}" class="api-tab-button" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+            <a href="{{ route('admin.integration-tokens') }}" class="api-tab-button csp-api-testing-22">
                 <x-outline-icon name="identification" /> Integration Tokens
             </a>
         </div>
@@ -2524,8 +2546,8 @@
             </div>
             <div class="api-builder-actions">
                 <a href="{{ route('admin.integration-tokens.docs') }}">View Docs</a>
-                <button type="button" onclick="navigator.clipboard?.writeText(document.querySelector('#source')?.value || '')">Copy Source</button>
-                <button type="button" onclick="window.location.reload()">Refresh Status</button>
+                <button type="button" data-admin-copy-source>Copy Source</button>
+                <button type="button" data-admin-reload>Refresh Status</button>
             </div>
         </div>
 
@@ -2585,8 +2607,8 @@
         @endif
 
         @if($apiResponseMeta)
-            <p class="api-testing-meta" style="margin-top: 16px;">
-                Endpoint: <strong><code style="font-size: 12px; color: #7f1d2d; word-break: break-all;">{{ htmlspecialchars($apiResponseMeta['endpoint'], ENT_QUOTES, 'UTF-8') }}</code></strong>
+            <p class="api-testing-meta csp-api-testing-21">
+                Endpoint: <strong><code class="csp-api-testing-20">{{ htmlspecialchars($apiResponseMeta['endpoint'], ENT_QUOTES, 'UTF-8') }}</code></strong>
                 | Status: <strong>{{ $apiResponseMeta['status'] }}</strong>
                 | Matches: <strong>{{ $apiResponseMeta['result_count'] }}</strong>
                 @if(!empty($apiResponseMeta['auth_mode']))
@@ -2600,7 +2622,7 @@
                 @endif
             </p>
             @if(!empty($apiResponseMeta['header_name']) || !empty($apiResponseMeta['system_header_name']) || !empty($apiResponseMeta['api_key_preview']))
-                <p class="api-testing-meta" style="margin-top: 8px;">
+                <p class="api-testing-meta csp-api-testing-19">
                     @if(!empty($apiResponseMeta['system_header_name']))
                     {{ $apiResponseMeta['system_header_name'] }}: <strong>{{ $apiResponseMeta['system'] ?? 'N/A' }}</strong>
                     @endif
@@ -2613,7 +2635,7 @@
                 <div class="api-connection-note">{{ $apiResponseMeta['auth_note'] }}</div>
             @endif
             @if(!empty($apiResponseMeta['auth_status']) || !empty($apiResponseMeta['auth_token_source']) || !empty($apiResponseMeta['auth_endpoint']))
-                <p class="api-testing-meta" style="margin-top: 8px;">
+                <p class="api-testing-meta csp-api-testing-19">
                     @if(!empty($apiResponseMeta['auth_status']))
                     Token Status: <strong>{{ $apiResponseMeta['auth_status'] }}</strong>
                     @endif
@@ -2666,8 +2688,8 @@
                         </div>
 
                         {{-- Raw Response para sa Admin Options --}}
-                        <details class="api-raw-toggle" style="margin-top: 10px;">
-                            <summary onclick="event.stopPropagation()">Show raw response</summary>
+                        <details class="api-raw-toggle csp-api-testing-18">
+                            <summary data-stop-click-propagation>Show raw response</summary>
                             <div class="api-json">{{ json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</div>
                         </details>
                     </button>
@@ -2721,8 +2743,8 @@
                     <span class="faculty-option-chip">Status: {{ $facultyStatus }}</span>
                 </div>
 
-                <details class="api-raw-toggle" style="margin-top: 10px;">
-                    <summary onclick="event.stopPropagation()">Show raw response</summary>
+                <details class="api-raw-toggle csp-api-testing-18">
+                    <summary data-stop-click-propagation>Show raw response</summary>
                     <div class="api-json">{{ json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</div>
                 </details>
             </button>
@@ -2749,7 +2771,7 @@
                         $guisisFields = $result['fields'] ?? [];
                     @endphp
                     <article class="api-result-card">
-                        <h3 style="margin: 0; color: #7f1d2d;">{{ $result['name'] ?? 'GuiSIS Student' }}</h3>
+                        <h3 class="csp-api-testing-17">{{ $result['name'] ?? 'GuiSIS Student' }}</h3>
                         <div class="api-result-grid">
                             <div class="api-field">
                                 <small>Student Number</small>
@@ -2800,7 +2822,7 @@
             <div class="api-results">
                 @foreach($results as $result)
                     <article class="api-result-card">
-                        <h3 style="margin: 0; color: #7f1d2d;">
+                        <h3 class="csp-api-testing-17">
                             {{ ($source ?? '') === 'guisis_addresses' ? 'GuiSIS Address Response' : 'GuiSIS Personal Info Response' }}
                         </h3>
                         <details class="api-raw-toggle" open>
@@ -2827,7 +2849,7 @@
                         ])));
                     @endphp
                     <article class="api-result-card">
-                        <h3 style="margin: 0; color: #7f1d2d;">{{ $applicantDisplayName ?: 'PUPTAS Applicant' }}</h3>
+                        <h3 class="csp-api-testing-17">{{ $applicantDisplayName ?: 'PUPTAS Applicant' }}</h3>
                         <div class="api-result-grid">
                             <div class="api-field">
                                 <small>Student Number</small>
@@ -2887,7 +2909,7 @@
             <div class="api-results">
                 @foreach($results as $result)
                     <article class="api-result-card">
-                        <h3 style="margin: 0; color: #7f1d2d;">{{ $result['name'] ?? 'N/A' }}</h3>
+                        <h3 class="csp-api-testing-17">{{ $result['name'] ?? 'N/A' }}</h3>
                         <div class="api-result-grid">
                             {{-- ... existing fields (ID, Name, Email, etc.) ... --}}
                             {{-- Siguraduhin lang na $result gamit mo dito, hindi $result['fields'] kung hindi consistent ang API --}}
@@ -2950,7 +2972,7 @@
 
         <!-- TAB 2: Health Monitor -->
         <div class="api-tab-content" id="tab-health">
-            <button type="button" class="api-db-action-btn" id="refreshHealthBtn" style="margin-bottom: 20px;">
+            <button type="button" class="api-db-action-btn csp-api-testing-16" id="refreshHealthBtn">
                 🔄 Refresh Health Status
             </button>
             <div class="api-health-grid" id="healthGrid">
@@ -2964,10 +2986,10 @@
 
         <!-- TAB 3: Error Log -->
         <div class="api-tab-content" id="tab-errors">
-            <div style="display: grid; grid-template-columns: auto auto auto 1fr auto; gap: 12px; margin-bottom: 20px; align-items: end;">
+            <div class="csp-api-testing-15">
                 <div>
-                    <label for="errorHours" style="display: block; margin-bottom: 6px; font-weight: 700; color: #374151;">Hours</label>
-                    <select id="errorHours" style="border-radius: 12px; border: 1px solid rgba(127, 29, 45, 0.16); padding: 8px 12px;">
+                    <label for="errorHours" class="csp-api-testing-14">Hours</label>
+                    <select id="errorHours" class="csp-api-testing-13">
                         <option value="1">Last 1 Hour</option>
                         <option value="6">Last 6 Hours</option>
                         <option value="24" selected>Last 24 Hours</option>
@@ -2975,8 +2997,8 @@
                     </select>
                 </div>
                 <div>
-                    <label for="errorSystem" style="display: block; margin-bottom: 6px; font-weight: 700; color: #374151;">System</label>
-                    <select id="errorSystem" style="border-radius: 12px; border: 1px solid rgba(127, 29, 45, 0.16); padding: 8px 12px;">
+                    <label for="errorSystem" class="csp-api-testing-14">System</label>
+                    <select id="errorSystem" class="csp-api-testing-13">
                         <option value="">All Systems</option>
                         <option value="pupt">PUPT</option>
                         <option value="dental">Dental</option>
@@ -2989,7 +3011,7 @@
                 <button type="button" class="api-db-action-btn" id="loadErrorsBtn">
                     Load Errors
                 </button>
-                <div id="errorStats" style="text-align: right; color: #6b7280; font-size: 13px;"></div>
+                <div id="errorStats" class="csp-api-testing-12"></div>
             </div>
             <table class="api-error-log-table" id="errorTable">
                 <thead>
@@ -3005,7 +3027,7 @@
                     </tr>
                 </thead>
                 <tbody id="errorBody">
-                    <tr><td colspan="8" style="text-align: center; color: #6b7280;">Click "Load Errors" to fetch error logs</td></tr>
+                    <tr><td colspan="8" class="csp-api-testing-8">Click "Load Errors" to fetch error logs</td></tr>
                 </tbody>
             </table>
         </div>
@@ -3036,7 +3058,7 @@
             <div class="api-edit-grid" id="databaseEditFields"></div>
             <div class="api-edit-actions">
                 <button type="button" class="api-db-action-btn" id="closeDatabaseEditModal">Cancel</button>
-                <button type="submit" class="api-db-action-btn" style="background:linear-gradient(135deg,#7f1d2d,#5b0c0e);color:#fff;">Save</button>
+                <button type="submit" class="api-db-action-btn csp-api-testing-11">Save</button>
             </div>
         </form>
     </div>
@@ -3044,7 +3066,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     document.addEventListener('DOMContentLoaded', function () {
         // ===== TAB SWITCHING =====
         const tabButtons = document.querySelectorAll('.api-tab-button');
@@ -3130,8 +3152,8 @@
                                 <span class="api-health-badge ${statusClass}">${statusEmoji} ${status.status}</span>
                             </div>
                             <small>${status.message}</small>
-                            <small style="margin-top: 8px; color: #9ca3af;">Response: ${status.response_time}ms</small>
-                            <small style="margin-top: 4px; color: #9ca3af;">Last check: ${status.last_check || 'N/A'}</small>
+                            <small class="csp-api-testing-10">Response: ${status.response_time}ms</small>
+                            <small class="csp-api-testing-9">Last check: ${status.last_check || 'N/A'}</small>
                         `;
                         grid.appendChild(card);
                     });
@@ -3169,7 +3191,7 @@
                     const puptasSummary = data.puptas_summary || {};
 
                     if (errors.length === 0) {
-                        body.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #6b7280;">No errors found</td></tr>';
+                        body.innerHTML = '<tr><td colspan="8" class="csp-api-testing-8">No errors found</td></tr>';
                         stats.innerHTML = '';
                         return;
                     }
@@ -3187,15 +3209,15 @@
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td><strong>${escapeApiLogValue(err.system_name)}</strong></td>
-                            <td><code style="font-size: 11px; color: #7f1d2d;">${escapeApiLogValue(err.endpoint || 'N/A')}</code></td>
-                            <td><code style="font-size: 11px;">${escapeApiLogValue(err.error_code || 'N/A')}</code></td>
+                            <td><code class="csp-api-testing-7">${escapeApiLogValue(err.endpoint || 'N/A')}</code></td>
+                            <td><code class="csp-api-testing-6">${escapeApiLogValue(err.error_code || 'N/A')}</code></td>
                             <td>${escapeApiLogValue(affectedAccount)}</td>
                             <td>${escapeApiLogValue(attempts)}</td>
                             <td>
                                 ${escapeApiLogValue(err.error_message)}
-                                <details style="margin-top: 6px;">
-                                    <summary style="cursor: pointer; color: #7f1d2d; font-size: 12px;">Details</summary>
-                                    <pre style="font-size: 11px; background: #f3f4f6; padding: 8px; border-radius: 6px; overflow: auto; max-height: 150px;">Error Type: ${escapeApiLogValue(err.error_type || 'N/A')}
+                                <details class="csp-api-testing-1">
+                                    <summary class="csp-api-testing-5">Details</summary>
+                                    <pre class="csp-api-testing-4">Error Type: ${escapeApiLogValue(err.error_type || 'N/A')}
 HTTP Status: ${escapeApiLogValue(err.http_status || 'N/A')}
 Request: ${escapeApiLogValue(err.request_payload || 'N/A')}</pre>
                                 </details>
@@ -3248,31 +3270,31 @@ Request: ${escapeApiLogValue(err.request_payload || 'N/A')}</pre>
                         `;
 
                         if (sys.endpoint) {
-                            content += `<small><strong>Endpoint:</strong><br><code style="font-size: 10px; word-break: break-all;">${sys.endpoint}</code></small>`;
+                            content += `<small><strong>Endpoint:</strong><br><code class="csp-api-testing-3">${sys.endpoint}</code></small>`;
                         }
 
                         if (sys.timeout) {
-                            content += `<small style="margin-top: 6px;"><strong>Timeout:</strong> ${sys.timeout}s</small>`;
+                            content += `<small class="csp-api-testing-1"><strong>Timeout:</strong> ${sys.timeout}s</small>`;
                         }
 
                         if (sys.system_id) {
-                            content += `<small style="margin-top: 6px;"><strong>System ID:</strong> ${sys.system_id}</small>`;
+                            content += `<small class="csp-api-testing-1"><strong>System ID:</strong> ${sys.system_id}</small>`;
                         }
 
                         if (sys.client_id) {
-                            content += `<small style="margin-top: 6px;"><strong>Client ID:</strong> <code style="font-size: 10px;">${sys.client_id}</code></small>`;
+                            content += `<small class="csp-api-testing-1"><strong>Client ID:</strong> <code class="csp-api-testing-2">${sys.client_id}</code></small>`;
                         }
 
                         if (sys.auth_method) {
-                            content += `<small style="margin-top: 6px;"><strong>Auth:</strong> ${sys.auth_method}</small>`;
+                            content += `<small class="csp-api-testing-1"><strong>Auth:</strong> ${sys.auth_method}</small>`;
                         }
 
                         if (sys.systems && sys.systems.length > 0) {
-                            content += `<small style="margin-top: 6px;"><strong>External Systems:</strong> ${sys.systems.join(', ')}</small>`;
+                            content += `<small class="csp-api-testing-1"><strong>External Systems:</strong> ${sys.systems.join(', ')}</small>`;
                         }
 
                         if (sys.header) {
-                            content += `<small style="margin-top: 6px;"><strong>Header:</strong> ${sys.header}</small>`;
+                            content += `<small class="csp-api-testing-1"><strong>Header:</strong> ${sys.header}</small>`;
                         }
 
                         card.innerHTML = content;

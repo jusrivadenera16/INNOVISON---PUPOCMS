@@ -3,7 +3,7 @@
 @section('title', 'Appointment History')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .appt-history-shell {
         max-width: 1480px;
         margin: 0 auto;
@@ -475,6 +475,10 @@
             grid-template-columns: 1fr;
         }
     }
+
+    /* Outrank page ID rules without blocking inline CSSOM updates. */
+    :is(#reports-csp-priority#reports-csp-priority, .appt-selected-record-note) { margin-top: 14px; }
+    :is(#reports-csp-priority#reports-csp-priority, .appt-selected-record-table) { margin-top: 18px; }
 </style>
 @endpush
 
@@ -556,7 +560,7 @@
                 @endforeach
             </div>
         @elseif($selectedUser)
-            <p class="appt-results-count" style="margin-top: 14px;">Showing selected patient record. Search again to view another patient.</p>
+            <p class="appt-results-count appt-selected-record-note">Showing selected patient record. Search again to view another patient.</p>
         @endif
     </section>
 
@@ -613,7 +617,7 @@
                 </div>
             </div>
 
-            <div class="appt-table-wrap" style="margin-top: 18px;">
+            <div class="appt-table-wrap appt-selected-record-table">
                 <table class="appt-table">
                     <thead>
                         <tr>

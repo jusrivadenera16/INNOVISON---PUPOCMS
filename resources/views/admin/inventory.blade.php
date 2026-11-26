@@ -3,7 +3,7 @@
 @section('title', 'Inventory')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     body:has(.inventory-summary-card) .main {
         background:
             linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.84)),
@@ -5598,7 +5598,7 @@
 @endpush
 
 @push('late-styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     body.admin-inventory-page .inventory-summary-head,
     body.admin-inventory-page .inventory-summary-tools {
         position: static !important;
@@ -6729,6 +6729,65 @@
     html[data-theme="dark"] .inventory-post-confirm-actions button:last-child { border-color: #9f1239; background: #9f1239; color: #ffffff; }
     html[data-theme="dark"] .inventory-post-confirm-actions button:hover,
     html[data-theme="dark"] .inventory-post-confirm-actions button:focus-visible { border-color: #facc15; background: #facc15; color: #70131b; }
+
+    body.admin-inventory-page #inventoryTable .inventory-cell-strong { font-weight: 700; }
+    body.admin-inventory-page #inventoryTable .inventory-cell-note { display: block; color: #64748b; margin-top: 4px; }
+    body.admin-inventory-page .inventory-text-italic { font-style: italic; }
+    body.admin-inventory-page #inventoryTable .inventory-expiry-date { display: block; font-weight: 600; }
+    body.admin-inventory-page #inventoryTable .inventory-expiry-date.is-expired { color: #b91c1c; }
+    body.admin-inventory-page #inventoryTable .inventory-expiry-date.is-upcoming { color: #c2410c; }
+    body.admin-inventory-page #inventoryTable .inventory-expiry-unset { display: block; color: #94a3b8; }
+    body.admin-inventory-page #inventoryTable .inventory-empty-cell { text-align: center; padding: 30px; color: #888; }
+
+    body.admin-inventory-page :is(#inventoryImportModal, #inventoryImportReviewModal, #itemModal) .inventory-modal-title-sized {
+        font-size: clamp(17px, 1.6vw, 22px);
+        margin: 0;
+        font-weight: 900;
+    }
+    body.admin-inventory-page #itemModal .inventory-modal-copy-sized { margin: 5px 0 0; font-size: 13.5px; line-height: 1.5; }
+    body.admin-inventory-page #inventoryImportModal .inventory-import-file-label { font-size: 15px; font-weight: 900; color: #70131B; }
+    body.admin-inventory-page #inventoryImportReviewModal .inventory-import-table-scroll-top {
+        position: sticky;
+        top: -2px;
+        z-index: 20;
+        overflow-x: auto;
+        overflow-y: hidden;
+        width: 100%;
+        height: 8px;
+        margin-bottom: 0;
+        border-radius: 16px 16px 0 0;
+        border: 1px solid rgba(112, 19, 27, 0.12);
+        border-bottom: none;
+        background: #ffffff;
+        scrollbar-width: thin;
+        scrollbar-color: #8b0000 transparent;
+    }
+    body.admin-inventory-page #inventoryImportReviewModal .inventory-import-scroll-spacer { width: 1800px; height: 1px; }
+    body.admin-inventory-page #inventoryImportReviewModal .inventory-import-actions-inline {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 12px;
+        overflow-x: auto;
+    }
+    body.admin-inventory-page #inventoryImportReviewModal .inventory-import-action-fit { white-space: nowrap; min-width: fit-content; }
+    body.admin-inventory-page #inventoryImportCategoryOptions.inventory-import-category-options {
+        display: none;
+        flex-wrap: nowrap;
+        gap: 6px;
+        animation: slideInFromLeft 0.3s ease-out;
+    }
+    body.admin-inventory-page #inventoryImportCategoryOptions .inventory-import-category-medicine { background: #e8f5e9; border-color: #4caf50; }
+    body.admin-inventory-page #inventoryImportCategoryOptions .inventory-import-category-supplies { background: #e3f2fd; border-color: #2196f3; }
+    body.admin-inventory-page #inventoryImportCategoryOptions .inventory-import-category-equipment { background: #fff3e0; border-color: #ff9800; }
+    body.admin-inventory-page #inventoryImportReviewModal .inventory-import-action-divider { color: #ccc; margin-left: auto; }
+    body.admin-inventory-page #itemModal .inventory-initially-hidden { display: none; }
+    body.admin-inventory-page :is(#itemModal, #issueModal) .inventory-stock-unit-label { font-weight: 800; color: #70131B; text-transform: none; }
+    body.admin-inventory-page #historyModal .inventory-history-movement-count { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.22); color: #ffffff; }
+    body.admin-inventory-page #historyModal .inventory-history-empty { border-left-color: #cbd5e1 !important; }
+    body.admin-inventory-page #historyModal .inventory-history-empty-copy { color: #64748b; font-weight: 700; }
+    body.admin-inventory-page #historyModal .inventory-history-timestamp { font-size: 12px; font-weight: 700; color: #64748b; }
 </style>
 @endpush
 
@@ -6809,7 +6868,7 @@
                 </span>
             </div>
             @if($canImportInventory)
-                <button type="button" class="inventory-modern-card inventory-action-card is-clickable" onclick="openInventoryImportModal()">
+                <button type="button" class="inventory-modern-card inventory-action-card is-clickable" data-inventory-action="open-import">
                     <span class="inventory-action-icon"><x-outline-icon name="clipboard-document-list" /></span>
                     <span class="inventory-action-copy">
                         <span class="inventory-action-label">Inventory File</span>
@@ -6820,7 +6879,7 @@
                 </button>
             @endif
             @if($canManageInventoryItems)
-                <button type="button" class="inventory-modern-card inventory-action-card is-clickable" onclick="openModal()">
+                <button type="button" class="inventory-modern-card inventory-action-card is-clickable" data-inventory-action="open-item">
                     <span class="inventory-action-icon"><x-outline-icon name="plus-circle" /></span>
                     <span class="inventory-action-copy">
                         <span class="inventory-action-label">Stock Record</span>
@@ -6931,14 +6990,14 @@
                         data-minimum-stock="{{ (float) ($item->minimum_stock ?: 10) }}"
                         class="{{ $highlightClass }}"
                     >
-                        <td style="font-weight: 700;">{{ $item->date_added ? \Carbon\Carbon::parse($item->date_added)->format('M d, Y') : 'N/A' }}</td>
-                        <td style="font-weight: 700;">{{ $item->stock_number ?: 'N/A' }}</td>
+                        <td class="inventory-cell-strong">{{ $item->date_added ? \Carbon\Carbon::parse($item->date_added)->format('M d, Y') : 'N/A' }}</td>
+                        <td class="inventory-cell-strong">{{ $item->stock_number ?: 'N/A' }}</td>
                         <td>
-                            <div style="font-weight: 700;">{{ $item->name }}</div>
-                            <small style="display:block; color:#64748b; margin-top:4px;">
+                            <div class="inventory-cell-strong">{{ $item->name }}</div>
+                            <small class="inventory-cell-note">
                                 {{ $item->category }}
                                 @if($item->category == 'Medicine' && $item->medicine_type)
-                                    <span style="font-style: italic;">({{ $item->medicine_type }})</span>
+                                    <span class="inventory-text-italic">({{ $item->medicine_type }})</span>
                                 @endif
                             </small>
                         </td>
@@ -6954,8 +7013,8 @@
                             @php
                                 $consumedDisplay = (float) ($item->consumed ?? 0);
                             @endphp
-                            <div style="font-weight: 700;">{{ rtrim(rtrim(number_format($consumedDisplay, 2, '.', ''), '0'), '.') }}</div>
-                            <small style="display:block; color:#64748b; margin-top:4px;">Consumed</small>
+                            <div class="inventory-cell-strong">{{ rtrim(rtrim(number_format($consumedDisplay, 2, '.', ''), '0'), '.') }}</div>
+                            <small class="inventory-cell-note">Consumed</small>
                         </td>
                         <td>
                             @php
@@ -6964,12 +7023,12 @@
                                     ? rtrim(rtrim(number_format($item->availableDispensingQuantity(), 2, '.', ''), '0'), '.')
                                     : null;
                             @endphp
-                            <div style="font-weight: 700;">{{ $stockDisplay }} {{ $item->unit ?: 'pcs' }}</div>
-                            <small style="display:block; color:#64748b; margin-top:4px;">
+                            <div class="inventory-cell-strong">{{ $stockDisplay }} {{ $item->unit ?: 'pcs' }}</div>
+                            <small class="inventory-cell-note">
                                 Minimum stock: {{ rtrim(rtrim(number_format((float) ($item->minimum_stock ?: 10), 2, '.', ''), '0'), '.') }} {{ $effectiveMinUnit }}
                             </small>
                             @if($item->category == 'Medicine' && $item->hasDispensingConversion())
-                                <small style="display:block; color:#64748b; margin-top:4px;">
+                                <small class="inventory-cell-note">
                                     Available to dispense: {{ $availableDispensing }} {{ $item->dispensing_unit }}
                                 </small>
                             @endif
@@ -6979,20 +7038,19 @@
                                 @php
                                     $expDate = \Carbon\Carbon::parse($item->expiration_date);
                                     $isPast = $expDate->copy()->endOfDay()->isPast();
-                                    $dateColor = $isPast ? '#b91c1c' : '#c2410c';
                                     $expiryLabel = $expDate->day === $expDate->daysInMonth
                                         ? $expDate->format('M Y')
                                         : $expDate->format('M d, Y');
                                 @endphp
-                                <small style="display:block; color: {{ $dateColor }}; font-weight:600;">
+                                <small class="inventory-expiry-date {{ $isPast ? 'is-expired' : 'is-upcoming' }}">
                                     {{ $expiryLabel }}
                                 </small>
                             @elseif(in_array($item->category, ['Medicine', 'Supplies'], true))
-                                <small style="display:block; color: #94a3b8; font-style: italic;">
+                                <small class="inventory-expiry-unset inventory-text-italic">
                                     Not set
                                 </small>
                             @else
-                                <small style="display:block; color: #94a3b8;">
+                                <small class="inventory-expiry-unset">
                                     —
                                 </small>
                             @endif
@@ -7031,28 +7089,28 @@
                                     'expiration_date' => optional($item->expiration_date)->format('Y-m-d'),
                                 ];
                             @endphp
-                            <div class="inventory-actions">
+                            <div class="inventory-actions" data-inventory-item="{{ json_encode($editItemPayload) }}">
                                 <div class="inventory-actions-dropdown">
-                                    <button type="button" class="btn-icon btn-edit inventory-actions-toggle" onclick="toggleInventoryActionMenu(event)">
+                                    <button type="button" class="btn-icon btn-edit inventory-actions-toggle" data-inventory-action="toggle-actions">
                                         <x-outline-icon name="bars-3" />
                                         <span>Actions</span>
                                     </button>
                                     <div class="inventory-actions-menu" role="menu">
-                                        <button type="button" class="inventory-actions-menu-item" onclick='closeInventoryActionMenus(); openViewItemModal(@json($editItemPayload));'>
+                                        <button type="button" class="inventory-actions-menu-item" data-inventory-action="view-item">
                                             <span>View</span>
                                         </button>
                                         @if($canAddInventoryStock)
-                                        <button type="button" class="inventory-actions-menu-item" onclick='closeInventoryActionMenus(); openRestockModal(@json($editItemPayload));'>
+                                        <button type="button" class="inventory-actions-menu-item" data-inventory-action="restock-item">
                                             <span>Restock</span>
                                         </button>
                                         @endif
                                         @if($canIssueInventoryStock)
-                                        <button type="button" class="inventory-actions-menu-item" onclick='closeInventoryActionMenus(); openIssueModal(@json($editItemPayload));'>
+                                        <button type="button" class="inventory-actions-menu-item" data-inventory-action="issue-item">
                                             <span>Issue Stock</span>
                                         </button>
                                         @endif
                                         @if($canManageInventoryItems)
-                                        <button type="button" class="inventory-actions-menu-item" onclick='closeInventoryActionMenus(); editItem(@json($editItemPayload));'>
+                                        <button type="button" class="inventory-actions-menu-item" data-inventory-action="edit-item">
                                             <span>Edit</span>
                                         </button>
                                         @endif
@@ -7062,7 +7120,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="9" style="text-align: center; padding: 30px; color: #888;">No items in inventory.</td></tr>
+                    <tr><td colspan="9" class="inventory-empty-cell">No items in inventory.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -7102,11 +7160,11 @@
                                     <path d="M5 21h14" />
                                 </svg>
                             </span>
-                            <h3 class="inventory-modal-title" style="font-size:clamp(17px,1.6vw,22px); margin:0; font-weight:900;">Import Latest Inventory</h3>
+                            <h3 class="inventory-modal-title inventory-modal-title-sized">Import Latest Inventory</h3>
                         </div>
                         <p class="inventory-modal-copy">Upload a clear inventory photo or structured file. The system analyzes it first and waits for your confirmation.</p>
                     </div>
-                    <button type="button" class="inventory-btn-cancel inventory-modal-close" onclick="closeInventoryImportModal()" aria-label="Close import modal">
+                    <button type="button" class="inventory-btn-cancel inventory-modal-close" data-inventory-action="close-import" aria-label="Close import modal">
                         <x-outline-icon name="x-mark" />
                     </button>
                 </div>
@@ -7126,7 +7184,7 @@
                             </div>
                         @endif
                         <div class="inventory-import-drop">
-                            <label for="inventoryImportFile" style="font-size:15px;font-weight:900;color:#70131B;">Inventory photo or file</label>
+                            <label for="inventoryImportFile" class="inventory-import-file-label">Inventory photo or file</label>
                             <input type="file" name="inventory_import_file" id="inventoryImportFile" accept=".jpg,.jpeg,.png,.webp,.csv,.tsv,.txt,.json,image/jpeg,image/png,image/webp,text/csv,text/plain,application/json" required>
                             <div class="inventory-import-note">
                                 Image uploads are checked for corruption, low resolution, and blur before AI extraction. CSV, TSV, and JSON files are parsed directly for higher reliability.
@@ -7134,7 +7192,7 @@
                         </div>
                     </div>
                     <div class="modal-actions-row">
-                        <button type="button" class="inventory-btn-cancel" onclick="closeInventoryImportModal()">Cancel</button>
+                        <button type="button" class="inventory-btn-cancel" data-inventory-action="close-import">Cancel</button>
                         <button type="submit" class="btn-add" id="inventoryImportAnalyzeBtn">Analyze Upload</button>
                     </div>
                 </form>
@@ -7161,11 +7219,11 @@
                                         <path d="M8 17h8" />
                                     </svg>
                                 </span>
-                                <h3 class="inventory-modal-title" style="font-size:clamp(17px,1.6vw,22px); margin:0; font-weight:900;">Review Inventory Import</h3>
+                                <h3 class="inventory-modal-title inventory-modal-title-sized">Review Inventory Import</h3>
                             </div>
                             <p class="inventory-modal-copy">Check each extracted row before committing it to clinic inventory.</p>
                         </div>
-                        <button type="button" class="inventory-btn-cancel inventory-modal-close" onclick="closeInventoryImportReviewModal()" aria-label="Close review modal">
+                        <button type="button" class="inventory-btn-cancel inventory-modal-close" data-inventory-action="close-import-review" aria-label="Close review modal">
                             <x-outline-icon name="x-mark" />
                         </button>
                     </div>
@@ -7194,8 +7252,8 @@
                             <p class="inventory-import-help">
                                 Only checked rows will be imported. Rows marked <strong>Needs Review</strong> must have an item name before they can be selected. Existing matches will update the current inventory item; new rows will create a new item.
                             </p>
-                            <div class="inventory-import-table-scroll-top" id="inventoryImportTableScrollTop" style="position: sticky; top: -2px; z-index: 20; overflow-x: auto; overflow-y: hidden; width: 100%; height: 8px; margin-bottom: 0; border-radius: 16px 16px 0 0; border: 1px solid rgba(112, 19, 27, 0.12); border-bottom: none; background: #ffffff; scrollbar-width: thin; scrollbar-color: #8b0000 transparent;">
-                                <div style="width: 1800px; height: 1px;"></div>
+                            <div class="inventory-import-table-scroll-top" id="inventoryImportTableScrollTop">
+                                <div class="inventory-import-scroll-spacer"></div>
                             </div>
                             <div class="inventory-import-table-wrap" id="inventoryImportTableWrap">
                                 <table class="inventory-import-table">
@@ -7303,27 +7361,27 @@
                                 </table>
                             </div>
                         </div>
-                        <div class="modal-actions-row inventory-import-sticky-actions" style="display: flex; justify-content: flex-start; align-items: center; flex-wrap: nowrap; gap: 12px; overflow-x: auto;">
+                        <div class="modal-actions-row inventory-import-sticky-actions inventory-import-actions-inline">
                             <!-- Toggle Select Button -->
-                            <button type="button" class="inventory-btn-cancel" id="inventoryImportToggleSelectBtn" style="white-space: nowrap; min-width: fit-content;">↑ Select All</button>
+                            <button type="button" class="inventory-btn-cancel inventory-import-action-fit" id="inventoryImportToggleSelectBtn">↑ Select All</button>
 
                             <!-- Category Button -->
-                            <button type="button" class="inventory-btn-cancel" id="inventoryImportCategoryBtn" style="white-space: nowrap; min-width: fit-content;">Category▼</button>
+                            <button type="button" class="inventory-btn-cancel inventory-import-action-fit" id="inventoryImportCategoryBtn">Category▼</button>
 
                             <!-- Category Options (Hidden by default, slides in) -->
-                            <div id="inventoryImportCategoryOptions" style="display: none; flex-wrap: nowrap; gap: 6px; animation: slideInFromLeft 0.3s ease-out;">
-                                <button type="button" class="inventory-btn-cancel inventory-category-option" data-category="Medicine" style="white-space: nowrap; min-width: fit-content; background: #e8f5e9; border-color: #4caf50;">Medicine</button>
-                                <button type="button" class="inventory-btn-cancel inventory-category-option" data-category="Supplies" style="white-space: nowrap; min-width: fit-content; background: #e3f2fd; border-color: #2196f3;">Supplies</button>
-                                <button type="button" class="inventory-btn-cancel inventory-category-option" data-category="Equipment" style="white-space: nowrap; min-width: fit-content; background: #fff3e0; border-color: #ff9800;">Equipment</button>
+                            <div id="inventoryImportCategoryOptions" class="inventory-import-category-options">
+                                <button type="button" class="inventory-btn-cancel inventory-category-option inventory-import-action-fit inventory-import-category-medicine" data-category="Medicine">Medicine</button>
+                                <button type="button" class="inventory-btn-cancel inventory-category-option inventory-import-action-fit inventory-import-category-supplies" data-category="Supplies">Supplies</button>
+                                <button type="button" class="inventory-btn-cancel inventory-category-option inventory-import-action-fit inventory-import-category-equipment" data-category="Equipment">Equipment</button>
                             </div>
 
                             <!-- Separator -->
-                            <span style="color: #ccc; margin-left: auto;">|</span>
+                            <span class="inventory-import-action-divider">|</span>
 
                             <!-- Main Actions (Right side) -->
-                            <button type="submit" class="inventory-btn-cancel" formaction="{{ route('admin.inventory.import.clear') }}" formnovalidate style="white-space: nowrap; min-width: fit-content;">Clear</button>
-                            <button type="button" class="inventory-btn-cancel" onclick="closeInventoryImportReviewModal()" style="white-space: nowrap; min-width: fit-content;">Review</button>
-                            <button type="submit" class="btn-add" id="inventoryImportCommitBtn" style="white-space: nowrap; min-width: fit-content;">✓ Import</button>
+                            <button type="submit" class="inventory-btn-cancel inventory-import-action-fit" formaction="{{ route('admin.inventory.import.clear') }}" formnovalidate>Clear</button>
+                            <button type="button" class="inventory-btn-cancel inventory-import-action-fit" data-inventory-action="close-import-review">Review</button>
+                            <button type="submit" class="btn-add inventory-import-action-fit" id="inventoryImportCommitBtn">✓ Import</button>
                         </div>
                     </form>
                 </div>
@@ -7342,11 +7400,11 @@
                                     <path d="M12 22V12" />
                                 </svg>
                             </span>
-                            <h3 id="modalTitle" class="inventory-modal-title" style="font-size:clamp(17px,1.6vw,22px); margin:0; font-weight:900;">Add New Item</h3>
+                            <h3 id="modalTitle" class="inventory-modal-title inventory-modal-title-sized">Add New Item</h3>
                         </div>
-                        <p class="inventory-modal-copy" style="margin:5px 0 0; font-size:13.5px; line-height:1.5;">Provide inventory details and save to update clinic stock records.</p>
+                        <p class="inventory-modal-copy inventory-modal-copy-sized">Provide inventory details and save to update clinic stock records.</p>
                     </div>
-                    <button type="button" class="inventory-btn-cancel inventory-modal-close" onclick="closeModal()" aria-label="Close modal">
+                    <button type="button" class="inventory-btn-cancel inventory-modal-close" data-inventory-action="close-item" aria-label="Close modal">
                         <x-outline-icon name="x-mark" />
                     </button>
                 </div>
@@ -7373,7 +7431,7 @@
                                 <div class="form-group">
                                     <label>Category</label>
                                     <div class="inventory-category-wrap" id="inventoryCategoryWrap">
-                                        <select name="category" id="iCategory" class="form-control inventory-category-select" onchange="toggleMedicineFields()">
+                                        <select name="category" id="iCategory" class="form-control inventory-category-select" data-inventory-change="medicine-fields">
                                             <option value="Medicine">Medicine</option>
                                             <option value="Equipment">Equipment</option>
                                             <option value="Supplies">Supplies</option>
@@ -7389,7 +7447,7 @@
                                     </div>
                                 </div>
 
-                                <div class="form-group" id="supplyUsageField" style="display:none;">
+                                <div class="form-group inventory-initially-hidden" id="supplyUsageField">
                                     <label for="iConsultationIssuable">Supply Usage</label>
                                     <div class="inventory-category-wrap" id="inventorySupplyUsageWrap">
                                         <select name="consultation_issuable" id="iConsultationIssuable" class="form-control inventory-category-select">
@@ -7431,7 +7489,7 @@
                                             <div class="inventory-medicine-type-empty" id="inventoryMedicineTypeEmpty">No medicine type found.</div>
                                         </div>
                                     </div>
-                                    <div class="form-group" id="medicineTypeCustomWrap" style="display:none;">
+                                    <div class="form-group inventory-initially-hidden" id="medicineTypeCustomWrap">
                                         <label>New Medicine Type</label>
                                         <input type="text" name="medicine_type_custom" id="iMedicineTypeCustom" class="form-control" placeholder="Type a new medicine type">
                                     </div>
@@ -7457,7 +7515,7 @@
 
                                 <div class="inventory-inline-grid">
                                     <div class="form-group">
-                                        <label>Minimum Stock &mdash; <span id="iMinStockUnitLabel" style="font-weight:800; color:#70131B; text-transform:none;">pcs</span></label>
+                                        <label>Minimum Stock &mdash; <span id="iMinStockUnitLabel" class="inventory-stock-unit-label">pcs</span></label>
                                         <input type="number" name="minimum_stock" id="iMinimumStock" class="form-control" min="0" step="1" placeholder="e.g. 10">
                                         <span class="form-note" id="iMinStockNote">Value is in the stock unit shown above.</span>
                                     </div>
@@ -7603,7 +7661,7 @@
                                             </div>
                                         </div>
 
-                                        <div id="itemsPerUnitField" class="form-group" style="display:none;">
+                                        <div id="itemsPerUnitField" class="form-group inventory-initially-hidden">
                                             <label>Items Per Unit</label>
                                             <input type="number" name="units_per_stock_unit" id="iUnitsPerStockUnit" class="form-control" min="1" step="1" placeholder="e.g. 10 tablets in 1 box">
                                         </div>
@@ -7647,7 +7705,7 @@
                         <p class="inventory-modal-copy" id="restockItemName">Add stock without overwriting the item record.</p>
                     </div>
                     <div class="restock-head-right">
-                        <button type="button" class="inventory-btn-cancel inventory-modal-close" onclick="closeRestockModal()" aria-label="Close restock modal">
+                        <button type="button" class="inventory-btn-cancel inventory-modal-close" data-inventory-action="close-restock" aria-label="Close restock modal">
                             <x-outline-icon name="x-mark" />
                         </button>
                         <div class="restock-stock-frames">
@@ -7711,7 +7769,7 @@
                         <p class="inventory-modal-copy" id="issueItemName">Record consumed or dispensed stock without editing the item record.</p>
                     </div>
                     <div class="restock-head-right">
-                        <button type="button" class="inventory-btn-cancel inventory-modal-close" onclick="closeIssueModal()" aria-label="Close issue stock modal">
+                        <button type="button" class="inventory-btn-cancel inventory-modal-close" data-inventory-action="close-issue" aria-label="Close issue stock modal">
                             <x-outline-icon name="x-mark" />
                         </button>
                         <div class="restock-stock-frames">
@@ -7736,7 +7794,7 @@
                         </div>
                         <div class="inventory-inline-grid">
                             <div class="form-group">
-                                <label>Quantity to Issue &mdash; <span id="issueUnitLabel" style="font-weight:800;color:#70131B;text-transform:none;">pcs</span></label>
+                                <label>Quantity to Issue &mdash; <span id="issueUnitLabel" class="inventory-stock-unit-label">pcs</span></label>
                                 <input type="number" name="issue_quantity" id="issueQuantity" class="form-control" min="0.01" step="0.01" required placeholder="e.g. 1">
                                 <small class="form-note" id="issueQuantityNote">Cannot exceed available stock.</small>
                             </div>
@@ -7792,7 +7850,7 @@
                         </div>
                         <p class="inventory-modal-copy">Inventory record and current stock details.</p>
                     </div>
-                    <button type="button" class="inventory-btn-cancel inventory-modal-close" onclick="closeViewItemModal()" aria-label="Close item details">
+                    <button type="button" class="inventory-btn-cancel inventory-modal-close" data-inventory-action="close-view-item" aria-label="Close item details">
                         <x-outline-icon name="x-mark" />
                     </button>
                 </div>
@@ -7924,7 +7982,7 @@
                         </div>
                         <p class="inventory-modal-copy">Review item movement activity, stock changes, and related notes.</p>
                     </div>
-                    <button type="button" class="inventory-btn-cancel inventory-modal-close" onclick="closeHistoryModal()" aria-label="Close history modal">
+                    <button type="button" class="inventory-btn-cancel inventory-modal-close" data-inventory-action="close-history" aria-label="Close history modal">
                         <x-outline-icon name="x-mark" />
                     </button>
                 </div>
@@ -7945,7 +8003,7 @@
                                 <span class="history-stat-chip-label">Net Change</span>
                                 <span class="history-stat-chip-value" id="historyNetChange">0</span>
                             </div>
-                            <div class="history-stat-chip chip-in" style="background:rgba(255,255,255,0.18);border-color:rgba(255,255,255,0.22);color:#ffffff;">
+                            <div class="history-stat-chip chip-in inventory-history-movement-count">
                                 <span class="history-stat-chip-label">Movements</span>
                                 <span class="history-stat-chip-value" id="historyMovementCount">0</span>
                             </div>
@@ -7970,7 +8028,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     const itemModal = document.getElementById('itemModal');
     const inventoryImportModal = document.getElementById('inventoryImportModal');
     const inventoryImportReviewModal = document.getElementById('inventoryImportReviewModal');
@@ -9392,7 +9450,7 @@
         }
 
         if (!movements.length) {
-            historyList.innerHTML = '<div class="history-card" data-movement-type="default" style="border-left-color:#cbd5e1!important;"><div style="color:#64748b;font-weight:700;">No movement history yet. This item has not been restocked or used.</div></div>';
+            historyList.innerHTML = '<div class="history-card inventory-history-empty" data-movement-type="default"><div class="inventory-history-empty-copy">No movement history yet. This item has not been restocked or used.</div></div>';
             return;
         }
 
@@ -9412,7 +9470,7 @@
                             ${typeMeta.icon}
                             ${movement.type || 'Movement'}
                         </span>
-                        <span style="font-size:12px;font-weight:700;color:#64748b;">${movement.created_at || ''}</span>
+                        <span class="inventory-history-timestamp">${movement.created_at || ''}</span>
                     </div>
                     <div class="history-card-body">
                         <div class="history-card-quantity">${signedQuantity} ${unitLabel}</div>
@@ -9445,6 +9503,40 @@
         closeInventoryActionMenus();
         dropdown.classList.toggle('is-open', !isOpen);
     }
+
+    const inventoryClickActions = new Map([
+        ['open-import', openInventoryImportModal],
+        ['open-item', openModal],
+        ['close-import', closeInventoryImportModal],
+        ['close-import-review', closeInventoryImportReviewModal],
+        ['close-item', closeModal],
+        ['close-restock', closeRestockModal],
+        ['close-issue', closeIssueModal],
+        ['close-view-item', closeViewItemModal],
+        ['close-history', closeHistoryModal],
+        ['toggle-actions', toggleInventoryActionMenu],
+    ]);
+    const inventoryItemActions = new Map([
+        ['view-item', openViewItemModal],
+        ['restock-item', openRestockModal],
+        ['issue-item', openIssueModal],
+        ['edit-item', editItem],
+    ]);
+    document.querySelectorAll('[data-inventory-action]').forEach(function(button) {
+        button.addEventListener('click', function(event) {
+            const action = button.dataset.inventoryAction;
+            const itemHandler = inventoryItemActions.get(action);
+            if (itemHandler) {
+                closeInventoryActionMenus();
+                const item = JSON.parse(button.closest('[data-inventory-item]').dataset.inventoryItem);
+                itemHandler(item);
+                return;
+            }
+            const handler = inventoryClickActions.get(action);
+            if (handler) handler(event);
+        });
+    });
+    document.querySelector('[data-inventory-change="medicine-fields"]')?.addEventListener('change', toggleMedicineFields);
 
     document.addEventListener('click', function(event) {
         if (!event.target.closest('.inventory-actions-dropdown')) {

@@ -4,7 +4,7 @@
 @section('disable_voice_inputs', 'true')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .test-account-page { max-width: 1120px; margin: 0 auto; padding: 20px 22px 38px; color: #111827; }
     .test-account-card { overflow: hidden; border: 1px solid rgba(112,19,27,.16); border-radius: 18px; background: #fff; box-shadow: 0 16px 38px rgba(15,23,42,.09); }
     .test-account-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 22px 26px; }
@@ -180,7 +180,7 @@
                                             data-account-type="{{ $accountRole }}">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
                                         </button>
-                                        <form method="POST" action="{{ route('admin.developer-tools.test-accounts.destroy', $testAccount->id) }}" onsubmit="return confirm('Are you sure you want to delete this test account? Accounts with linked clinic records cannot be deleted.');">
+                                        <form method="POST" action="{{ route('admin.developer-tools.test-accounts.destroy', $testAccount->id) }}" data-confirm-submit="Are you sure you want to delete this test account? Accounts with linked clinic records cannot be deleted.">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="test-account-row-button delete" aria-label="Delete test account" title="Delete test account">
@@ -291,7 +291,7 @@
     </section>
 </div>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 (() => {
     const modal = document.getElementById('testAccountModal');
     const form = document.getElementById('testAccountForm');

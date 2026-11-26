@@ -3,7 +3,7 @@
 @section('title', 'Student Assistants')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .card {
         background: #fff;
         border-radius: 12px;
@@ -136,6 +136,14 @@
         color: #b91c1c;
         border: 1px solid #fecaca;
     }
+    .csp-student-assistants-1.csp-student-assistants-1.csp-student-assistants-1 { padding:9px 14px; border:none; border-radius:6px; cursor:pointer; }
+    .csp-student-assistants-2.csp-student-assistants-2.csp-student-assistants-2 { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+    .csp-student-assistants-3.csp-student-assistants-3.csp-student-assistants-3 { margin-top:0; color:#8B0000; }
+    .csp-student-assistants-4.csp-student-assistants-4.csp-student-assistants-4 { text-align:center; padding:28px; color:#94a3b8; }
+    .csp-student-assistants-5.csp-student-assistants-5.csp-student-assistants-5 { display:inline; }
+    .csp-student-assistants-6.csp-student-assistants-6.csp-student-assistants-6 { font-weight:700; }
+    .csp-student-assistants-7.csp-student-assistants-7.csp-student-assistants-7 { margin:0; color:#ffffff; }
+    .csp-student-assistants-8.csp-student-assistants-8.csp-student-assistants-8 { margin:0; padding-left:18px; }
 </style>
 @endpush
 
@@ -146,7 +154,7 @@
 
 @if (isset($errors) && $errors->any())
     <div class="alert alert-error">
-        <ul style="margin:0; padding-left:18px;">
+        <ul class="csp-student-assistants-8">
             @foreach ($errors->all() as $error)
                 <li>{{ $error }}</li>
             @endforeach
@@ -155,8 +163,8 @@
 @endif
 
 <div class="controls">
-    <h2 style="margin:0; color:#ffffff;">Student Assistant Accounts</h2>
-    <button type="button" class="btn-add" onclick="openCreateAssistantModal()">+ Add Assistant</button>
+    <h2 class="csp-student-assistants-7">Student Assistant Accounts</h2>
+    <button type="button" class="btn-add" data-create-assistant>+ Add Assistant</button>
 </div>
 
 <div class="card">
@@ -173,7 +181,7 @@
         <tbody>
             @forelse($assistants as $assistant)
                 <tr>
-                    <td style="font-weight:700;">{{ $assistant->name }}</td>
+                    <td class="csp-student-assistants-6">{{ $assistant->name }}</td>
                     <td>{{ $assistant->student_id }}</td>
                     <td>{{ $assistant->email }}</td>
                     <td>{{ optional($assistant->created_at)->format('M d, Y') }}</td>
@@ -181,27 +189,26 @@
                         <button
                             type="button"
                             class="btn-action btn-edit"
-                            onclick="openEditAssistantModal(
-                                '{{ $assistant->id }}',
-                                @json($assistant->student_id),
-                                @json($assistant->first_name),
-                                @json($assistant->last_name),
-                                @json($assistant->email)
-                            )"
+                            data-edit-assistant
+                            data-assistant-id="{{ $assistant->id }}"
+                            data-student-id="{{ $assistant->student_id }}"
+                            data-first-name="{{ $assistant->first_name }}"
+                            data-last-name="{{ $assistant->last_name }}"
+                            data-email="{{ $assistant->email }}"
                         >
                             Edit
                         </button>
 
-                        <form action="{{ route('admin.student-assistants.destroy', $assistant) }}" method="POST" style="display:inline;">
+                        <form action="{{ route('admin.student-assistants.destroy', $assistant) }}" method="POST" class="csp-student-assistants-5" data-confirm-submit="Delete this student assistant account?">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn-action btn-delete" onclick="return confirm('Delete this student assistant account?')">Delete</button>
+                            <button type="submit" class="btn-action btn-delete">Delete</button>
                         </form>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" style="text-align:center; padding:28px; color:#94a3b8;">No student assistant accounts yet.</td>
+                    <td colspan="5" class="csp-student-assistants-4">No student assistant accounts yet.</td>
                 </tr>
             @endforelse
         </tbody>
@@ -210,7 +217,7 @@
 
 <div id="assistantCreateModal" class="modal-overlay">
     <div class="modal-box">
-        <h3 style="margin-top:0; color:#8B0000;">Create Student Assistant</h3>
+        <h3 class="csp-student-assistants-3">Create Student Assistant</h3>
         <form method="POST" action="{{ route('admin.student-assistants.store') }}">
             @csrf
             <div class="form-group">
@@ -238,8 +245,8 @@
                 <input type="password" name="password_confirmation" class="form-control" required>
             </div>
 
-            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
-                <button type="button" onclick="closeCreateAssistantModal()" style="padding:9px 14px; border:none; border-radius:6px; cursor:pointer;">Cancel</button>
+            <div class="csp-student-assistants-2">
+                <button type="button" data-close-create-assistant class="csp-student-assistants-1">Cancel</button>
                 <button type="submit" class="btn-add">Create Account</button>
             </div>
         </form>
@@ -248,7 +255,7 @@
 
 <div id="assistantEditModal" class="modal-overlay">
     <div class="modal-box">
-        <h3 style="margin-top:0; color:#8B0000;">Edit Student Assistant</h3>
+        <h3 class="csp-student-assistants-3">Edit Student Assistant</h3>
         <form method="POST" id="assistantEditForm">
             @csrf
             @method('PUT')
@@ -277,8 +284,8 @@
                 <input type="password" name="password_confirmation" class="form-control">
             </div>
 
-            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
-                <button type="button" onclick="closeEditAssistantModal()" style="padding:9px 14px; border:none; border-radius:6px; cursor:pointer;">Cancel</button>
+            <div class="csp-student-assistants-2">
+                <button type="button" data-close-edit-assistant class="csp-student-assistants-1">Cancel</button>
                 <button type="submit" class="btn-add">Save Changes</button>
             </div>
         </form>
@@ -287,7 +294,16 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
+    document.querySelector('[data-create-assistant]')?.addEventListener('click', openCreateAssistantModal);
+    document.querySelector('[data-close-create-assistant]')?.addEventListener('click', closeCreateAssistantModal);
+    document.querySelector('[data-close-edit-assistant]')?.addEventListener('click', closeEditAssistantModal);
+    document.querySelectorAll('[data-edit-assistant]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const data = button.dataset;
+            openEditAssistantModal(data.assistantId, data.studentId, data.firstName, data.lastName, data.email);
+        });
+    });
     function openCreateAssistantModal() {
         document.getElementById('assistantCreateModal').style.display = 'flex';
     }

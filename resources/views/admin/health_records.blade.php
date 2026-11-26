@@ -3,7 +3,7 @@
 @section('title', 'Health Records')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     body:has(.health-records-overview) .main {
         background:
             linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.84)),
@@ -6885,7 +6885,7 @@
 @endpush
 
 @push('late-styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .main .health-summary-card {
         width: 100%;
         max-width: 100%;
@@ -8466,6 +8466,30 @@
     html[data-theme="dark"] .health-record-confirm-actions button:hover,
     html[data-theme="dark"] .health-record-confirm-actions button:focus-visible { border-color: #facc15; background: #facc15; color: #70131b; }
 
+    .main .health-summary-card #healthTable .health-record-actions-cell { text-align: center; }
+    .main .health-summary-card #healthTable .health-record-verified-date { color: #94a3b8; font-size: 12px; }
+    .main .health-summary-card #healthTable .health-record-empty-cell { text-align: center; padding: 40px; color: #94a3b8; }
+    .main .health-summary-card > .readonly-modal-pagination a.readonly-pagination-btn.readonly-pagination-link {
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    #pendingApprovalInfoModal.health-record-status-modal,
+    #pendingConditionalInfoModal.health-record-status-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    #pendingApprovalInfoModal .awaiting-links-modal-shell.health-record-status-modal-shell,
+    #pendingConditionalInfoModal .awaiting-links-modal-shell.health-record-status-modal-shell { max-width: 980px; }
+    .main #healthFilterModal .health-filter-btn.health-filter-apply { color: #ffffff !important; }
+
 </style>
 @endpush
 
@@ -8749,7 +8773,7 @@
                     <span class="health-summary-modern-note">Approved records</span>
                 </div>
             </div>
-            <button type="button" class="health-summary-modern-card health-summary-info-btn is-pending is-clickable" id="pendingApprovalInfoBtn" onclick="document.getElementById('pendingApprovalInfoModal').style.display='flex';">
+            <button type="button" class="health-summary-modern-card health-summary-info-btn is-pending is-clickable" id="pendingApprovalInfoBtn">
                 <span class="health-summary-modern-icon-wrap">
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M7 4h7l4 4v12H7V4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
@@ -8764,7 +8788,7 @@
                 </div>
                 <span class="health-summary-modern-arrow">&rarr;</span>
             </button>
-            <button type="button" class="health-summary-modern-card health-summary-info-btn is-compliance is-clickable" id="pendingConditionalInfoBtn" onclick="document.getElementById('pendingConditionalInfoModal').style.display='flex';">
+            <button type="button" class="health-summary-modern-card health-summary-info-btn is-compliance is-clickable" id="pendingConditionalInfoBtn">
                 <span class="health-summary-modern-icon-wrap"><x-outline-icon name="exclamation-triangle" /></span>
                 <div class="health-summary-modern-copy">
                     <span class="health-summary-modern-label">Pending Compliance</span>
@@ -8838,7 +8862,7 @@
                 <th>Medical Condition</th>
                 <th>Clearance Status</th>
                 <th>Approved At</th>
-                <th style="text-align: center;">Actions</th>
+                <th class="health-record-actions-cell">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -9097,11 +9121,11 @@
                         @endif
                     </td>
 
-                    <td style="color: #94a3b8; font-size: 12px;">
+                    <td class="health-record-verified-date">
                         {{ $record->verified_at ? \Carbon\Carbon::parse($record->verified_at)->format('M d, Y g:i A') : '-' }}
                     </td>
 
-                            <td style="text-align: center;">
+                            <td class="health-record-actions-cell">
                                 <div class="d-flex justify-content-center">
                                     @if($recordIsEmployee)
                                 <a href="{{ route('admin.employee_health_profile.show', $record->id) }}" class="btn-action btn-view">
@@ -9119,7 +9143,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">No issued health profiles found.</td>
+                    <td colspan="7" class="health-record-empty-cell">No issued health profiles found.</td>
                 </tr>
             @endforelse
         </tbody>
@@ -9148,14 +9172,14 @@
                 @if($healthProfileSummaryRecords->onFirstPage())
                     <button type="button" class="readonly-pagination-btn" disabled aria-label="Previous page">&larr;</button>
                 @else
-                    <a class="readonly-pagination-btn" href="{{ $healthProfileSummaryRecords->previousPageUrl() }}" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;" aria-label="Previous page">&larr;</a>
+                    <a class="readonly-pagination-btn readonly-pagination-link" href="{{ $healthProfileSummaryRecords->previousPageUrl() }}" aria-label="Previous page">&larr;</a>
                 @endif
 
                 @foreach($issuedPages as $page)
                     @if($page === $issuedCurrentPage)
                         <button type="button" class="readonly-pagination-btn is-active" disabled>{{ $page }}</button>
                     @else
-                        <a class="readonly-pagination-btn" href="{{ $healthProfileSummaryRecords->url($page) }}" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">{{ $page }}</a>
+                        <a class="readonly-pagination-btn readonly-pagination-link" href="{{ $healthProfileSummaryRecords->url($page) }}">{{ $page }}</a>
                     @endif
                 @endforeach
 
@@ -9175,7 +9199,7 @@
                         <input type="hidden" name="{{ $queryKey }}" value="{{ $queryValue }}">
                     @endif
                 @endforeach
-                <select name="per_page" class="readonly-pagination-per-page-select" onchange="this.form.submit()" aria-label="Issued medical clearance records per page">
+                <select name="per_page" class="readonly-pagination-per-page-select" data-submit-page-size aria-label="Issued medical clearance records per page">
                     @foreach($issuedPerPageOptions as $optionValue => $optionLabel)
                         <option value="{{ $optionValue }}" @selected(($issuedPerPage ?? '20') === $optionValue)>{{ $optionLabel }}</option>
                     @endforeach
@@ -9185,8 +9209,8 @@
     @endif
 </div>
 
-<div id="pendingApprovalInfoModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px;" onclick="if(event.target.id==='pendingApprovalInfoModal') document.getElementById('pendingApprovalInfoModal').style.display='none';">
-    <div class="awaiting-links-modal-shell" style="max-width: 980px;">
+<div id="pendingApprovalInfoModal" class="health-record-status-modal">
+    <div class="awaiting-links-modal-shell health-record-status-modal-shell">
         <div class="awaiting-links-modal-head">
             <div class="awaiting-links-modal-head-main">
                 <div class="awaiting-links-modal-badge">PA</div>
@@ -9195,7 +9219,7 @@
                     <p>Users in this state have uploaded clinic requirements and are waiting for final review.</p>
                 </div>
             </div>
-            <button type="button" class="awaiting-links-modal-close" id="closePendingApprovalInfoModal" aria-label="Close pending approval modal" onclick="document.getElementById('pendingApprovalInfoModal').style.display='none';">
+            <button type="button" class="awaiting-links-modal-close" id="closePendingApprovalInfoModal" aria-label="Close pending approval modal">
                 <x-outline-icon name="x-mark" />
             </button>
         </div>
@@ -9505,8 +9529,8 @@
     </div>
 </div>
 
-<div id="pendingConditionalInfoModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px;" onclick="if(event.target.id==='pendingConditionalInfoModal') document.getElementById('pendingConditionalInfoModal').style.display='none';">
-    <div class="awaiting-links-modal-shell" style="max-width: 980px;">
+<div id="pendingConditionalInfoModal" class="health-record-status-modal">
+    <div class="awaiting-links-modal-shell health-record-status-modal-shell">
         <div class="awaiting-links-modal-head">
             <div class="awaiting-links-modal-head-main">
                 <div class="awaiting-links-modal-badge">PC</div>
@@ -9515,7 +9539,7 @@
                     <p>Read-only view of students needing correction, compliance, or further medical assessment.</p>
                 </div>
             </div>
-            <button type="button" class="awaiting-links-modal-close" id="closePendingConditionalInfoModal" aria-label="Close pending compliance modal" onclick="document.getElementById('pendingConditionalInfoModal').style.display='none';">
+            <button type="button" class="awaiting-links-modal-close" id="closePendingConditionalInfoModal" aria-label="Close pending compliance modal">
                 <x-outline-icon name="x-mark" />
             </button>
         </div>
@@ -9593,7 +9617,7 @@
                                         type="button"
                                         class="readonly-expand-btn"
                                         aria-expanded="false"
-                                        onclick="event.stopPropagation(); const card = this.closest('.readonly-record-card'); if (card) { const expanded = !card.classList.contains('is-expanded'); card.classList.toggle('is-expanded', expanded); this.setAttribute('aria-expanded', expanded ? 'true' : 'false'); const label = this.querySelector('span'); if (label) label.textContent = expanded ? 'Hide' : 'View'; }"
+                                        data-readonly-expand
                                     >
                                         <span>View</span>
                                     </button>
@@ -9988,7 +10012,7 @@
             </div>
             <div class="health-filter-actions">
                 <a href="{{ route('admin.health_records') }}" class="health-filter-btn health-filter-btn-reset">Reset</a>
-                <button type="submit" class="health-filter-btn" style="color: #ffffff !important;">Apply</button>
+                <button type="submit" class="health-filter-btn health-filter-apply">Apply</button>
             </div>
         </form>
     </div>
@@ -10181,7 +10205,7 @@
 
 @push('scripts')
 <script src="{{ asset('js/pending-approval-document-preview.js') }}?v={{ filemtime(public_path('js/pending-approval-document-preview.js')) }}"></script>
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     // Build condition detail only when View Info is opened, not once per hidden card.
     window.healthRecordConditionMarkup = function (payload) {
         const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;'}[char]));
@@ -11549,6 +11573,28 @@
         const pendingConditionalInfoBtn = document.getElementById('pendingConditionalInfoBtn');
         const pendingConditionalInfoModal = document.getElementById('pendingConditionalInfoModal');
         const closePendingConditionalInfoModal = document.getElementById('closePendingConditionalInfoModal');
+        document.querySelectorAll('[data-submit-page-size]').forEach(function (select) {
+            select.addEventListener('change', function () {
+                this.form.submit();
+            });
+        });
+        document.querySelectorAll('[data-readonly-expand]').forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                event.stopPropagation();
+                const card = this.closest('.readonly-record-card');
+                if (!card) return;
+                const expanded = !card.classList.contains('is-expanded');
+                card.classList.toggle('is-expanded', expanded);
+                this.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+                const label = this.querySelector('span');
+                if (label) label.textContent = expanded ? 'Hide' : 'View';
+            });
+        });
+        [pendingApprovalInfoModal, pendingConditionalInfoModal].forEach(function (modal) {
+            modal?.addEventListener('click', function (event) {
+                if (event.target === modal) modal.style.display = 'none';
+            });
+        });
         const copyReferenceValue = function (value, button) {
             const text = (value || '').trim();
             if (!text) return;

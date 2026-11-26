@@ -1,4 +1,4 @@
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     :root {
         --stg-maroon: #7f0000;
         --stg-maroon-deep: #4f0000;

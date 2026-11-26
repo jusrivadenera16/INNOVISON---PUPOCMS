@@ -96,7 +96,7 @@
 @endphp
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     body.evaluation-page {
         position: relative;
         isolation: isolate;
@@ -1391,6 +1391,9 @@
             width: 100%;
         }
     }
+
+    .student-evaluation-form-csp-1 { margin-top:0; }
+    .student-evaluation-form-csp-2 { font-weight:500; color:#667085; }
 </style>
 @endpush
 
@@ -1441,7 +1444,8 @@
                         <span id="surveyProgressCount">{{ $isSubmitted ? '100% completed' : '0% completed' }}</span>
                     </div>
                     <div class="survey-progress-track" aria-hidden="true">
-                        <div class="survey-progress-bar" id="surveyProgressBar" style="width: {{ $isSubmitted ? '100%' : '0%' }}"></div>
+                        <style nonce="{{ request()->attributes->get('csp_nonce') }}">#surveyProgressBar { width: {{ $isSubmitted ? '100%' : '0%' }}; }</style>
+                        <div class="survey-progress-bar" id="surveyProgressBar"></div>
                     </div>
                 </div>
                 <div class="survey-body">
@@ -1455,7 +1459,7 @@
                     <a href="{{ url('/') }}" class="survey-button primary survey-return-link">Back to CareSync</a>
                 </div>
             @else
-                <form method="POST" action="{{ $isPreview ? '#' : route('student.evaluation.store', ['evaluation' => $evaluation->id]) }}" id="clientSatisfactionSurvey" data-initial-step="{{ $initialStep }}" novalidate @if($isPreview) onsubmit="return false;" @endif>
+                <form method="POST" action="{{ $isPreview ? '#' : route('student.evaluation.store', ['evaluation' => $evaluation->id]) }}" id="clientSatisfactionSurvey" data-initial-step="{{ $initialStep }}" novalidate @if($isPreview) data-student-prevent-submit @endif>
                     @if(!$isPreview)
                         @csrf
                     @endif
@@ -1566,7 +1570,7 @@
 
                         <div class="survey-cc-list">
                             @foreach($ccQuestions as $name => [$question, $choices])
-                                <fieldset class="survey-cc-question survey-fieldset" style="margin-top:0;">
+                                <fieldset class="survey-cc-question survey-fieldset student-evaluation-form-csp-1">
                                     <p>{{ strtoupper($name) }}. {{ $question }} <span class="survey-required">*</span></p>
                                     <div class="survey-cc-options">
                                         @foreach($choices as $value => $choice)
@@ -1610,7 +1614,7 @@
                                 @php
                                     $selectedSqdAnswer = old('sqd_answers.' . $question['code'], data_get($evaluation->sqd_answers, $question['code']));
                                 @endphp
-                                <fieldset class="survey-sqd-question survey-fieldset" style="margin-top:0;">
+                                <fieldset class="survey-sqd-question survey-fieldset student-evaluation-form-csp-1">
                                     <legend class="survey-sqd-title">{{ $question['code'] }}. {{ $question['title'] }} <span class="survey-required">*</span></legend>
                                     <p class="survey-sqd-text">{{ $question['text'] }}</p>
                                     <div class="survey-sqd-options" role="radiogroup" aria-label="{{ $question['code'] }} rating">
@@ -1637,7 +1641,7 @@
                             <p>Mga suhestiyon kung paano pa mapapabuti pa ang aming mga serbisyo (opsyonal).</p>
                         </div>
 
-                        <label class="survey-suggestion-label" for="surveySuggestions">Suggestions and Recommendations <span style="font-weight:500; color:#667085;">(optional)</span></label>
+                        <label class="survey-suggestion-label" for="surveySuggestions">Suggestions and Recommendations <span class="student-evaluation-form-csp-2">(optional)</span></label>
                         <textarea class="survey-suggestion" id="surveySuggestions" name="suggestions" maxlength="1500" placeholder="Share your suggestions here.">{{ old('suggestions', $evaluation->suggestions ?? $evaluation->feedback) }}</textarea>
                         <div class="survey-suggestion-meta">
                             <span>Long text response</span>
@@ -1659,7 +1663,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('clientSatisfactionSurvey');
         if (!form) return;

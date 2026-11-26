@@ -38,7 +38,7 @@
         </div>
     </div>
 </dialog>
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     (function () {
         const sampleGuideDialog = document.getElementById('requirementSampleDialog');
         let activeSampleGuideButton = null;

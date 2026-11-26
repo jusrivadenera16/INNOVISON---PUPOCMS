@@ -33,7 +33,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Health Forms Export</title>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         @page {
             size: A4 portrait;
             margin: 150px 36px 88px;
@@ -306,7 +306,22 @@
             margin-top: 2px;
             text-align: center;
         }
-    </style>
+
+    /* Dompdf fallback for the extracted declarations. */
+    .health-export-column-16.health-export-column-16.health-export-column-16.health-export-column-16 { width: 16%; }
+    .health-export-column-15.health-export-column-15.health-export-column-15.health-export-column-15 { width: 15%; }
+    .health-export-column-10.health-export-column-10.health-export-column-10.health-export-column-10 { width: 10%; }
+    .health-export-column-17.health-export-column-17.health-export-column-17.health-export-column-17 { width: 17%; }
+    .health-export-column-14.health-export-column-14.health-export-column-14.health-export-column-14 { width: 14%; }
+    .health-export-column-11.health-export-column-11.health-export-column-11.health-export-column-11 { width: 11%; }
+    /* Outrank page ID rules without blocking inline CSSOM updates. */
+    :is(#reports-csp-priority#reports-csp-priority, .health-export-column-16) { width: 16%; }
+    :is(#reports-csp-priority#reports-csp-priority, .health-export-column-15) { width: 15%; }
+    :is(#reports-csp-priority#reports-csp-priority, .health-export-column-10) { width: 10%; }
+    :is(#reports-csp-priority#reports-csp-priority, .health-export-column-17) { width: 17%; }
+    :is(#reports-csp-priority#reports-csp-priority, .health-export-column-14) { width: 14%; }
+    :is(#reports-csp-priority#reports-csp-priority, .health-export-column-11) { width: 11%; }
+</style>
 </head>
 <body>
     <header class="official-header">
@@ -385,13 +400,13 @@
 
         <table class="health-export-table">
             <colgroup>
-                <col style="width: 16%;">
-                <col style="width: 15%;">
-                <col style="width: 10%;">
-                <col style="width: 17%;">
-                <col style="width: 17%;">
-                <col style="width: 14%;">
-                <col style="width: 11%;">
+                <col class="health-export-column-16">
+                <col class="health-export-column-15">
+                <col class="health-export-column-10">
+                <col class="health-export-column-17">
+                <col class="health-export-column-17">
+                <col class="health-export-column-14">
+                <col class="health-export-column-11">
             </colgroup>
             <thead>
                 <tr>

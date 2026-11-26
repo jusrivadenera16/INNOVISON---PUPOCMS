@@ -4,7 +4,7 @@
 
 @push('styles')
 @include('admin.partials.settings-section-style')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .medical-config-list {
         display: grid;
         grid-template-columns: 1fr;

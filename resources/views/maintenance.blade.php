@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#3b0711">
     <title>Under Maintenance | PUP Taguig Medical Clinic</title>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         :root {
             --maroon: #8d1425;
             --maroon-deep: #31050d;

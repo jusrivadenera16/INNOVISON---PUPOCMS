@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Access Restricted</title>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px; background:#f8fafc; color:#172033; font-family:Arial,sans-serif; }
         main { width:min(460px,100%); padding:32px; border:1px solid #ead7d9; border-radius:10px; background:#fff; box-shadow:0 18px 40px rgba(15,23,42,.1); text-align:center; }
         .mark { display:inline-grid; width:48px; height:48px; place-items:center; border-radius:50%; background:#70131b; color:#fff; font-weight:800; }

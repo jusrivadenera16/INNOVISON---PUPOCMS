@@ -4,7 +4,7 @@
 @section('disable_voice_inputs', 'true')
 
 @section('content')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .activity-container {
         max-width: 1000px;
         margin: 0 auto;
@@ -298,6 +298,7 @@
     html[data-theme="dark"] .stat-value {
         color: #f3d6da;
     }
+    .csp-integration-tokens-activity-1.csp-integration-tokens-activity-1.csp-integration-tokens-activity-1 { margin-top: 16px; }
 </style>
 
 <div class="activity-container">
@@ -393,7 +394,7 @@
         <div class="empty-state">
             <h3>No Integration Activity Yet</h3>
             <p>Token generation, API requests, and access errors will appear here.</p>
-            <a href="{{ route('admin.integration-tokens') }}" class="back-link" style="margin-top: 16px;">
+            <a href="{{ route('admin.integration-tokens') }}" class="back-link csp-integration-tokens-activity-1">
                 ← Go Back
             </a>
         </div>

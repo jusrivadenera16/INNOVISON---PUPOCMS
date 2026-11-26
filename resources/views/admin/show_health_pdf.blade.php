@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Health Information Form</title>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         @page {
             size: 8.5in 13in;
             margin: 0;
@@ -16,6 +16,28 @@
             color: #000;
             background: #fff;
         }
+
+        .health-form-print-actions {
+            text-align: right;
+            padding: 10px;
+            max-width: 8.5in;
+            margin: 0 auto;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .health-form-print-button {
+            background: #800000;
+            border: none;
+            padding: 10px 22px;
+            font-weight: bold;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .health-form-close-button { background: #64748b; }
 
         @media print {
             .no-print {
@@ -258,15 +280,23 @@
     </style>
 </head>
 <body>
-<div class="no-print" style="text-align: right; padding: 10px; max-width: 8.5in; margin: 0 auto; display: flex; justify-content: flex-end; gap: 10px;">
-    <button onclick="window.print()" style="background: #800000; border: none; padding: 10px 22px; font-weight: bold; color: white; border-radius: 5px; cursor: pointer;">
+<div class="no-print health-form-print-actions">
+    <button type="button" class="health-form-print-button" data-health-form-print>
         PRINT FORM
     </button>
-    <button onclick="window.close()" style="background: #64748b; border: none; padding: 10px 22px; font-weight: bold; color: white; border-radius: 5px; cursor: pointer;">
+    <button type="button" class="health-form-print-button health-form-close-button" data-health-form-close>
         CLOSE
     </button>
 </div>
 
 @include('admin.partials.health_form_body')
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
+    document.querySelector('[data-health-form-print]')?.addEventListener('click', function () {
+        window.print();
+    });
+    document.querySelector('[data-health-form-close]')?.addEventListener('click', function () {
+        window.close();
+    });
+</script>
 </body>
 </html>

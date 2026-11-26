@@ -3,7 +3,7 @@
 @section('title', 'Health Forms List')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .logbook-shell {
         max-width: 1480px;
         margin: 0 auto;
@@ -1206,6 +1206,12 @@
             width: 100%;
         }
     }
+
+    /* Outrank page ID rules without blocking inline CSSOM updates. */
+    :is(#reports-csp-priority#reports-csp-priority, .applicant-logbook-toolbar-actions) { display: flex; gap: 10px; }
+    :is(#reports-csp-priority#reports-csp-priority, .applicant-logbook-missing-value) { color: #94a3b8; }
+    :is(#reports-csp-priority#reports-csp-priority, .applicant-logbook-muted-value) { color: #64748b; }
+    :is(#reports-csp-priority#reports-csp-priority, .applicant-logbook-empty-hidden) { display: none; }
 </style>
 @endpush
 
@@ -1226,8 +1232,8 @@
             <h1 class="logbook-title">Health Forms</h1>
             <p class="logbook-copy">List of applicants, students, faculty, admins, and dependents with submitted health records.</p>
         </div>
-        <div style="display: flex; gap: 10px;">
-            <button type="button" class="filter-btn-open" onclick="openFilterModal()">
+        <div class="applicant-logbook-toolbar-actions">
+            <button type="button" class="filter-btn-open" data-open-logbook-filter>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
                 </svg>
@@ -1245,9 +1251,9 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="filterModal" onclick="closeFilterModal(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <button type="button" class="modal-close" onclick="closeFilterModal()" aria-label="Close filter">&times;</button>
+    <div class="modal-overlay" id="filterModal" data-logbook-filter-backdrop>
+        <div class="modal-content" data-logbook-filter-content>
+            <button type="button" class="modal-close" data-close-logbook-filter aria-label="Close filter">&times;</button>
             <div class="modal-header">
                 <span class="modal-title-icon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -1383,16 +1389,16 @@
                             @if($reviewer)
                                 <strong>{{ $reviewer->name }}</strong>
                             @else
-                                <span style="color: #94a3b8;">&mdash;</span>
+                                <span class="applicant-logbook-missing-value">&mdash;</span>
                             @endif
                         </td>
                         <td>
                             @if($isApproved && $approver)
                                 <strong>{{ $approver->name }}</strong>
                             @elseif($isApproved)
-                                <span style="color: #64748b;">Not recorded</span>
+                                <span class="applicant-logbook-muted-value">Not recorded</span>
                             @else
-                                <span style="color: #94a3b8;">&mdash;</span>
+                                <span class="applicant-logbook-missing-value">&mdash;</span>
                             @endif
                         </td>
                         <td>
@@ -1429,7 +1435,7 @@
                     </tr>
                 @endforelse
                 @if($logbookRecords->count() > 0)
-                    <tr data-logbook-empty-row style="display:none;">
+                    <tr class="applicant-logbook-empty-hidden" data-logbook-empty-row>
                         <td colspan="10" class="logbook-empty">No health form records found matching your search.</td>
                     </tr>
                 @endif
@@ -1480,7 +1486,7 @@
                         <input type="hidden" name="{{ $queryKey }}" value="{{ $queryValue }}">
                     @endif
                 @endforeach
-                <select name="per_page" class="logbook-per-page-select" onchange="this.form.submit()" aria-label="Health Forms records per page">
+                <select name="per_page" class="logbook-per-page-select" data-logbook-page-size aria-label="Health Forms records per page">
                     @foreach(['20' => '20 per page', '40' => '40 per page', '80' => '80 per page', '100' => '100 per page', 'all' => 'Show all'] as $optionValue => $optionLabel)
                         <option value="{{ $optionValue }}" @selected(($perPage ?? '20') === $optionValue)>{{ $optionLabel }}</option>
                     @endforeach
@@ -1564,7 +1570,13 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
+document.querySelector('[data-open-logbook-filter]')?.addEventListener('click', openFilterModal);
+document.querySelector('[data-close-logbook-filter]')?.addEventListener('click', function() { closeFilterModal(); });
+document.querySelector('[data-logbook-filter-backdrop]')?.addEventListener('click', closeFilterModal);
+document.querySelector('[data-logbook-filter-content]')?.addEventListener('click', function(event) { event.stopPropagation(); });
+document.querySelector('[data-logbook-page-size]')?.addEventListener('change', function() { this.form.submit(); });
+
 function openFilterModal() {
     document.getElementById('filterModal').classList.add('active');
 }
@@ -1695,7 +1707,7 @@ function filterVisibleLogbookRows() {
     });
 
     if (logbookEmptyRow) {
-        logbookEmptyRow.style.display = visibleCount === 0 ? '' : 'none';
+        logbookEmptyRow.classList.toggle('applicant-logbook-empty-hidden', visibleCount !== 0);
     }
 
     if (logbookTotalCardValue) {

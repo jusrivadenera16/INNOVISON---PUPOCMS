@@ -69,11 +69,12 @@
     <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
     <script
         src="{{ asset('js/sienna-accessibility-custom.umd.js') }}?v={{ filemtime(public_path('js/sienna-accessibility-custom.umd.js')) }}"
+        nonce="{{ request()->attributes->get('csp_nonce') }}"
         data-asw-position="bottom-right"
         data-asw-offset="24,12"
         defer
     ></script>
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         (function() {
             try {
                 var savedTheme = localStorage.getItem('admin_theme');
@@ -95,10 +96,8 @@
                     return;
                 }
 
-                var pendingTitle = String(navigationState.title || 'Opening page').trim();
                 var pendingDetail = String(navigationState.detail || 'Loading the requested page.').trim();
-                document.documentElement.style.setProperty('--admin-pending-loader-title', JSON.stringify(pendingTitle));
-                document.documentElement.style.setProperty('--admin-pending-loader-detail', JSON.stringify(pendingDetail));
+                document.documentElement.setAttribute('data-admin-pending-loader-detail', pendingDetail);
                 document.documentElement.setAttribute('data-admin-navigation-pending', 'true');
             } catch (error) {
                 document.documentElement.removeAttribute('data-admin-navigation-pending');
@@ -110,7 +109,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
 
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         @keyframes accessibilityPulseRing {
             0% {
                 transform: scale(1);
@@ -182,6 +181,26 @@
 
         :where(.admin-sienna-trigger-hidden)::after {
             display: none !important;
+        }
+
+        :where(.admin-sienna-menu-themed) {
+            background: linear-gradient(180deg, #7f1d2d 0%, #4b5563 100%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.18) !important;
+            color: #f8fafc !important;
+            box-shadow: 0 18px 38px rgba(15, 23, 42, 0.35) !important;
+            z-index: 2147483200 !important;
+        }
+
+        :where(.admin-sienna-menu-header-themed) {
+            background: linear-gradient(135deg, #8b0000 0%, #6b7280 100%) !important;
+            color: #ffffff !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.16) !important;
+        }
+
+        :where(.admin-sienna-menu-control-themed) {
+            background: rgba(255, 255, 255, 0.12) !important;
+            border-color: rgba(255, 255, 255, 0.22) !important;
+            color: #f8fafc !important;
         }
 
         :where(.asw-overlay) {
@@ -565,11 +584,14 @@
     cursor: pointer;
 }
 
-.medicine-hover-hint {
+.medicine-alert-item-link[data-hover-hint]::after {
+    content: attr(data-hover-hint);
     position: fixed;
+    left: 50%;
+    bottom: 20px;
     z-index: 500001;
+    transform: translate(-50%, 6px);
     pointer-events: none;
-    transform: translate(14px, 14px);
     background: rgba(17, 24, 39, 0.92);
     color: #f8fafc;
     padding: 6px 10px;
@@ -583,12 +605,14 @@
     box-shadow: 0 10px 22px rgba(15, 23, 42, 0.22);
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.15s ease;
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
 }
 
-.medicine-hover-hint.is-visible {
+.medicine-alert-item-link[data-hover-hint]:hover::after,
+.medicine-alert-item-link[data-hover-hint]:focus-visible::after {
     opacity: 1;
     visibility: visible;
+    transform: translate(-50%, 0);
 }
 
         .medicine-alert-item.is-near-expiry {
@@ -1553,6 +1577,11 @@
             line-height: 1;
         }
 
+        .quick-action-badge.is-hidden,
+        .medicine-alert-badge.is-hidden {
+            display: none !important;
+        }
+
         .quick-actions-toggle > .quick-action-badge {
             top: 1px;
             right: 1px;
@@ -1760,6 +1789,10 @@
             border: 1px solid rgba(255, 255, 255, 0.12);
             overflow: hidden;
             z-index: 1000;
+        }
+
+        .profile-dropdown.is-open {
+            display: block;
         }
 
         .profile-dropdown a {
@@ -3852,16 +3885,6 @@
             display: block;
         }
 
-        html[data-admin-navigation-pending="true"] .admin-action-loader [data-admin-loader-detail] {
-            font-size: 0;
-        }
-
-        html[data-admin-navigation-pending="true"] .admin-action-loader [data-admin-loader-detail]::before {
-            display: block;
-            content: var(--admin-pending-loader-detail, "Loading the requested page.");
-            font-size: 13px;
-        }
-
         .admin-action-loader .loading {
             min-width: min(90vw, 440px);
             min-height: 0;
@@ -4363,7 +4386,7 @@
 
     @stack('styles')
 
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         /* Global Admin Theme Overrides */
         .main :where(.card, .panel, .stat-card-mini, .modal-box) {
             background: var(--admin-card-bg) !important;
@@ -6357,6 +6380,10 @@
     flex: 0 0 auto;
 }
 
+.medicine-alert-back-icon {
+    transform: rotate(180deg);
+}
+
 .medicine-alert-section.is-hidden {
     display: none;
 }
@@ -6439,6 +6466,10 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     white-space: normal;
     overflow-wrap: anywhere;
     word-break: break-word;
+}
+
+.medicine-alert-chip--read {
+    margin-left: 8px;
 }
 
         @media (max-width: 860px) {
@@ -7418,7 +7449,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     </div>
 
     <div class="header-right">
-        <button type="button" class="sidebar-toggle" aria-label="Open navigation menu" aria-expanded="false" onclick="toggleSidebar()">
+        <button type="button" class="sidebar-toggle" aria-label="Open navigation menu" aria-expanded="false" id="adminSidebarToggle">
             <span class="sidebar-toggle-bars" aria-hidden="true">
                 <span></span>
                 <span></span>
@@ -7434,7 +7465,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             </div>
             <div id="globalSearchResults" class="global-search-results" role="status" aria-live="polite"></div>
         </form>
-        <button type="button" class="assistant-launch" id="assistantLaunchBtn" onclick="toggleAssistantPanel()">
+        <button type="button" class="assistant-launch" id="assistantLaunchBtn">
             <x-outline-icon name="sparkles" />
             <span>AI Assistant</span>
         </button>
@@ -7490,7 +7521,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         </div>
 
         <div class="profile-wrap" id="profileWrap">
-            <button type="button" class="admin-user" onclick="toggleProfileMenu()" aria-expanded="false" aria-controls="profileDropdown" aria-label="Account menu">
+            <button type="button" class="admin-user" id="adminProfileMenuToggle" aria-expanded="false" aria-controls="profileDropdown" aria-label="Account menu">
                 <div class="admin-user-meta">
                     <div class="admin-user-name">{{ $displayName }}</div>
                     <div class="admin-user-role">{{ $displayRole }}</div>
@@ -7808,7 +7839,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     </section>
 </div>
 
-<form id="layoutLogoutForm" method="POST" action="{{ route('logout') }}" style="display:none;">
+<form id="layoutLogoutForm" method="POST" action="{{ route('logout') }}" hidden>
     @csrf
     <input type="hidden" name="portal_guard" value="admin">
     <input type="hidden" name="logout_all" value="1">
@@ -7850,7 +7881,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         </div>
         <div class="medicine-alert-actions">
             <button type="button" class="medicine-alert-mode-btn" id="medicineAlertBackBtn" aria-label="Back to new notifications">
-                <x-outline-icon name="chevron-right" style="transform: rotate(180deg);" />
+                <x-outline-icon name="chevron-right" class="medicine-alert-back-icon" />
                 Back
             </button>
             <button type="button" class="medicine-alert-actions-toggle" id="medicineAlertActionsToggle" aria-label="Notification actions" aria-expanded="false">
@@ -7889,7 +7920,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 data-admin-notification-target="{{ $notification['link'] }}"
                 data-hover-hint="{{ $notification['hover_hint'] }}"
             >
-            <div class="medicine-alert-content" style="width: 100%;">
+            <div class="medicine-alert-content">
                 <div class="medicine-alert-name-row">
                     <p class="medicine-alert-item-name">{{ $notification['title'] }}</p>
                 </div>
@@ -7921,7 +7952,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 data-admin-notification-target="{{ $notification['link'] }}"
                 data-hover-hint="{{ $notification['hover_hint'] }}"
             >
-            <div class="medicine-alert-content" style="width: 100%;">
+            <div class="medicine-alert-content">
                 <div class="medicine-alert-name-row">
                     <p class="medicine-alert-item-name">{{ $notification['title'] }}</p>
                 </div>
@@ -7957,12 +7988,12 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                         data-admin-notification-target="{{ $notification['link'] }}"
                         data-hover-hint="{{ $notification['hover_hint'] }}"
                     >
-                    <div class="medicine-alert-content" style="width: 100%;">
+                    <div class="medicine-alert-content">
                         <div class="medicine-alert-name-row">
                             <p class="medicine-alert-item-name">
                                 {{ $notification['title'] }}
                                 @if(!($notification['is_unread'] ?? false))
-                                    <span class="medicine-alert-chip" style="margin-left:8px;">Read</span>
+                                    <span class="medicine-alert-chip medicine-alert-chip--read">Read</span>
                                 @endif
                             </p>
                         </div>
@@ -7985,15 +8016,13 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     </div>
 </section>
 
-<form method="POST" action="{{ $adminMarkAllReadUrl }}" id="adminNotificationOpenForm" style="display:none;">
+<form method="POST" action="{{ $adminMarkAllReadUrl }}" id="adminNotificationOpenForm" hidden>
     @csrf
     @foreach($adminUnreadNotifications as $notification)
         <input type="hidden" name="notification_ids[]" value="{{ $notification['id'] }}">
     @endforeach
     <input type="hidden" name="redirect_to" id="adminNotificationRedirectTo" value="">
 </form>
-
-<div id="medicineHoverHint" class="medicine-hover-hint" aria-hidden="true">Press to enter</div>
 
 <script id="adminActivityInitialIds" type="application/json">@json($adminActivityInitialIds)</script>
 <script id="adminActivityFeedUrl" type="application/json">@json($adminNotificationsFeedUrl)</script>
@@ -8012,7 +8041,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         </div>
         <div class="assistant-head-actions">
             <span class="assistant-status-pill"><span class="assistant-status-dot" aria-hidden="true"></span>Ready</span>
-            <button type="button" class="assistant-close" aria-label="Close assistant" onclick="closeAssistantPanel()">
+            <button type="button" class="assistant-close" id="assistantCloseBtn" aria-label="Close assistant">
                 <x-outline-icon name="x-mark" />
             </button>
         </div>
@@ -8046,9 +8075,11 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 @include('partials.student_voice_input_support')
 @endif
 
+<script src="{{ asset('js/admin-csp-controls.js') }}?v={{ filemtime(public_path('js/admin-csp-controls.js')) }}"></script>
 @stack('scripts')
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
+    const cspNonce = document.currentScript?.nonce || '';
     const assistantEndpoint = @json($assistantEndpoint);
     const globalSearchEndpoint = @json(route('admin.global-search'));
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -8211,6 +8242,10 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             pendingNavigationHandoff = null;
         }
 
+        const contentLoaderBoundsStyle = document.createElement('style');
+        contentLoaderBoundsStyle.nonce = cspNonce;
+        document.head.appendChild(contentLoaderBoundsStyle);
+
         const syncContentLoaderBounds = function () {
             const rect = content.getBoundingClientRect();
             const top = Math.max(0, rect.top);
@@ -8218,10 +8253,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             const right = Math.min(window.innerWidth, rect.right);
             const bottom = Math.min(window.innerHeight, rect.bottom);
 
-            contentLoader.style.setProperty('--admin-loader-top', `${Math.round(top)}px`);
-            contentLoader.style.setProperty('--admin-loader-left', `${Math.round(left)}px`);
-            contentLoader.style.setProperty('--admin-loader-width', `${Math.max(0, Math.round(right - left))}px`);
-            contentLoader.style.setProperty('--admin-loader-height', `${Math.max(0, Math.round(bottom - top))}px`);
+            contentLoaderBoundsStyle.textContent = `#adminMainContent > .admin-content-loader { --admin-loader-top: ${Math.round(top)}px; --admin-loader-left: ${Math.round(left)}px; --admin-loader-width: ${Math.max(0, Math.round(right - left))}px; --admin-loader-height: ${Math.max(0, Math.round(bottom - top))}px; }`;
         };
 
         const clearLoadingState = function () {
@@ -8235,8 +8267,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             actionLoader.setAttribute('aria-label', 'Processing action');
             document.body.removeAttribute('aria-busy');
             document.documentElement.removeAttribute('data-admin-navigation-pending');
-            document.documentElement.style.removeProperty('--admin-pending-loader-title');
-            document.documentElement.style.removeProperty('--admin-pending-loader-detail');
+            document.documentElement.removeAttribute('data-admin-pending-loader-detail');
         };
 
         const showContentLoading = function () {
@@ -8586,10 +8617,15 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 pendingNavigationHandoff.detail,
                 pendingNavigationHandoff.skeletonKind
             );
+        } else {
+            const pendingDetail = document.documentElement.getAttribute('data-admin-pending-loader-detail');
+            const detailText = actionLoader.querySelector('[data-admin-loader-detail]');
+            if (pendingDetail && detailText) {
+                detailText.textContent = pendingDetail;
+            }
         }
         document.documentElement.removeAttribute('data-admin-navigation-pending');
-        document.documentElement.style.removeProperty('--admin-pending-loader-title');
-        document.documentElement.style.removeProperty('--admin-pending-loader-detail');
+        document.documentElement.removeAttribute('data-admin-pending-loader-detail');
 
         window.AdminLoading = {
             showContent: showContentLoading,
@@ -8817,8 +8853,6 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         const openForm = document.getElementById('adminNotificationOpenForm');
         const redirectInput = document.getElementById('adminNotificationRedirectTo');
         const hiddenItems = Array.from(document.querySelectorAll('[data-medicine-alert-extra="true"]'));
-        const hoverHint = document.getElementById('medicineHoverHint');
-        const hintTargets = Array.from(document.querySelectorAll('.medicine-alert-item-link[data-hover-hint]'));
         const notificationLinks = Array.from(document.querySelectorAll('.medicine-alert-item-link[data-admin-notification-link="true"]'));
         let closeTimer = null;
 
@@ -8998,27 +9032,6 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             });
         }
 
-        if (hoverHint && hintTargets.length > 0) {
-            const moveHint = function (event) {
-                hoverHint.style.left = event.clientX + 'px';
-                hoverHint.style.top = event.clientY + 'px';
-            };
-
-            hintTargets.forEach(function (target) {
-                target.addEventListener('mouseenter', function (event) {
-                    hoverHint.textContent = target.dataset.hoverHint || 'Press to enter';
-                    hoverHint.classList.add('is-visible');
-                    moveHint(event);
-                });
-
-                target.addEventListener('mousemove', moveHint);
-
-                target.addEventListener('mouseleave', function () {
-                    hoverHint.classList.remove('is-visible');
-                });
-            });
-        }
-
         if (openForm && redirectInput && notificationLinks.length > 0) {
             notificationLinks.forEach(function (link) {
                 link.addEventListener('click', function (event) {
@@ -9072,7 +9085,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         const updateBadges = (count) => {
             badgeNodes.forEach((badge) => {
                 badge.textContent = count > 0 ? String(count) : '';
-                badge.style.display = count > 0 ? 'inline-flex' : 'none';
+                badge.classList.toggle('is-hidden', count <= 0);
             });
         };
 
@@ -9125,7 +9138,6 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
     function initAccessibilityLaunch() {
         const launchButton = document.getElementById('adminAccessibilityLaunch');
-        forceAccessibilityButtonTheme();
         if (!launchButton) {
             return;
         }
@@ -9176,27 +9188,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 return;
             }
 
-            const alreadyHidden =
-                trigger.classList.contains('admin-sienna-trigger-hidden') &&
-                trigger.style.getPropertyValue('left') === '-9999px' &&
-                trigger.style.getPropertyValue('visibility') === 'hidden';
-
-            if (alreadyHidden) {
-                trigger.setAttribute('aria-hidden', 'true');
-                return;
-            }
-
             trigger.classList.add('admin-sienna-trigger-hidden');
-            trigger.style.setProperty('position', 'fixed', 'important');
-            trigger.style.setProperty('left', '-9999px', 'important');
-            trigger.style.setProperty('right', 'auto', 'important');
-            trigger.style.setProperty('bottom', 'auto', 'important');
-            trigger.style.setProperty('top', 'auto', 'important');
-            trigger.style.setProperty('opacity', '0', 'important');
-            trigger.style.setProperty('visibility', 'hidden', 'important');
-            trigger.style.setProperty('pointer-events', 'none', 'important');
-            trigger.style.setProperty('transform', 'none', 'important');
-            trigger.style.setProperty('z-index', '-1', 'important');
             trigger.setAttribute('aria-hidden', 'true');
         }
 
@@ -9218,23 +9210,15 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                     return;
                 }
 
-                element.style.background = 'linear-gradient(180deg, #7f1d2d 0%, #4b5563 100%)';
-                element.style.border = '1px solid rgba(255,255,255,0.18)';
-                element.style.color = '#f8fafc';
-                element.style.boxShadow = '0 18px 38px rgba(15, 23, 42, 0.35)';
-                element.style.zIndex = '2147483200';
+                element.classList.add('admin-sienna-menu-themed');
 
                 const header = element.querySelector('header, [class*="header"], [class*="title"], [class*="top"]');
                 if (header) {
-                    header.style.background = 'linear-gradient(135deg, #8b0000 0%, #6b7280 100%)';
-                    header.style.color = '#ffffff';
-                    header.style.borderBottom = '1px solid rgba(255,255,255,0.16)';
+                    header.classList.add('admin-sienna-menu-header-themed');
                 }
 
                 element.querySelectorAll('button, [role="button"], input, select').forEach((control) => {
-                    control.style.background = 'rgba(255,255,255,0.12)';
-                    control.style.borderColor = 'rgba(255,255,255,0.22)';
-                    control.style.color = '#f8fafc';
+                    control.classList.add('admin-sienna-menu-control-themed');
                 });
             });
         }
@@ -9257,6 +9241,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
                 const style = document.createElement('style');
                 style.id = 'customSiennaTheme';
+                style.nonce = cspNonce;
                 style.textContent = `
                     :host {
                         z-index: 2147483200 !important;
@@ -9311,13 +9296,11 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         hideSiennaTrigger();
         themeSiennaMenu();
         injectSiennaShadowStyles();
-        forceAccessibilityButtonTheme();
 
         const observer = new MutationObserver(function () {
             hideSiennaTrigger();
             themeSiennaMenu();
             injectSiennaShadowStyles();
-            forceAccessibilityButtonTheme();
         });
 
         observer.observe(document.body, {
@@ -9343,7 +9326,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         const shouldOpen = !wrap.classList.contains('is-expanded');
         wrap.classList.toggle('is-click-collapsed', !shouldOpen);
         wrap.classList.toggle('is-expanded', shouldOpen);
-        menu.style.display = shouldOpen ? 'block' : 'none';
+        menu.classList.toggle('is-open', shouldOpen);
         button?.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
     }
 
@@ -9978,28 +9961,6 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
     }
 
-    function forceAccessibilityButtonTheme() {
-        document.querySelectorAll('.asw-menu-btn').forEach(function (button) {
-            button.style.setProperty('background', '#800000', 'important');
-            button.style.setProperty('background-image', 'none', 'important');
-            button.style.setProperty('border', '2px solid #5f0012', 'important');
-            button.style.setProperty('outline', 'none', 'important');
-            button.style.setProperty('box-shadow', '0 10px 24px rgba(128, 0, 0, 0.28)', 'important');
-            button.querySelectorAll('svg').forEach(function (icon) {
-                icon.style.setProperty('fill', '#ffffff', 'important');
-                icon.style.setProperty('stroke', 'none', 'important');
-                icon.style.setProperty('background', 'transparent', 'important');
-            });
-            button.querySelectorAll('svg path:not([fill="none"])').forEach(function (path) {
-                path.style.setProperty('fill', '#ffffff', 'important');
-                path.style.setProperty('stroke', 'none', 'important');
-            });
-            button.querySelectorAll('svg path[fill="none"]').forEach(function (path) {
-                path.style.setProperty('stroke', 'none', 'important');
-            });
-        });
-    }
-
     function initAdminLogoutConfirm() {
         const modal = document.getElementById('adminLogoutConfirm');
         const form = document.getElementById('layoutLogoutForm');
@@ -10019,7 +9980,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             const wrap = document.getElementById('profileWrap');
             const button = wrap ? wrap.querySelector('.admin-user') : null;
             if (menu) {
-                menu.style.display = 'none';
+                menu.classList.remove('is-open');
             }
             wrap?.classList.remove('is-expanded');
             button?.setAttribute('aria-expanded', 'false');
@@ -10092,8 +10053,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         const quickActions = document.getElementById('headerQuickActions');
         const quickScan = document.getElementById('headerQuickScan');
 
-        if (menu.style.display === 'block' && trigger && !menu.contains(event.target) && !trigger.contains(event.target)) {
-            menu.style.display = 'none';
+        if (menu.classList.contains('is-open') && trigger && !menu.contains(event.target) && !trigger.contains(event.target)) {
+            menu.classList.remove('is-open');
             profileWrap?.classList.remove('is-expanded');
             trigger?.setAttribute('aria-expanded', 'false');
         }
@@ -10147,6 +10108,11 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     });
 
     document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('adminSidebarToggle')?.addEventListener('click', toggleSidebar);
+        document.getElementById('assistantLaunchBtn')?.addEventListener('click', toggleAssistantPanel);
+        document.getElementById('adminProfileMenuToggle')?.addEventListener('click', toggleProfileMenu);
+        document.getElementById('assistantCloseBtn')?.addEventListener('click', closeAssistantPanel);
+
         document.querySelectorAll('.doctor-availability-form').forEach(function (form) {
             const toggle = form.querySelector('.doctor-availability-toggle');
             const availableInput = form.querySelector('input[name="available"]');
@@ -10200,7 +10166,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     });
 </script>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     (function () {
         const toasts = Array.from(document.querySelectorAll('[data-admin-flash-toast]'));
         const normalize = (value) => value.replace(/\s+/g, ' ').trim().toLowerCase();

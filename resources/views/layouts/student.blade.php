@@ -6,12 +6,13 @@
     <title>@yield('title') - PUP Taguig Clinic</title>
     <script
         src="{{ asset('js/sienna-accessibility-custom.umd.js') }}?v={{ filemtime(public_path('js/sienna-accessibility-custom.umd.js')) }}"
+        nonce="{{ request()->attributes->get('csp_nonce') }}"
         data-asw-position="bottom-right"
         data-asw-offset="24,12"
         data-asw-size="small"
         defer
     ></script>
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         document.addEventListener('DOMContentLoaded', function () {
             const banner = document.getElementById('clinicAvailabilityBanner');
             const dismiss = document.getElementById('clinicAvailabilityBannerDismiss');
@@ -68,7 +69,7 @@
     </script>
     <link rel="stylesheet" href="{{ asset('css/booking.css') }}">
     
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         @keyframes accessibilityPulseRing {
             0% {
                 transform: scale(1);
@@ -2253,10 +2254,19 @@
                 padding-right: 14px;
             }
         }
-    </style>
+
+    .layouts-student-csp-1 { display: none; }
+    .layouts-student-csp-2 { transform: rotate(180deg); }
+    #healthFormModal.layouts-student-csp-3 { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; z-index: 999999 !important; }
+    .layouts-student-csp-4 { background: #fff; border-radius: 24px; padding: 40px; max-width: 580px; width: 92%; text-align: center; box-shadow: 0 25px 80px rgba(0,0,0,0.4); margin: auto; position: relative; border-top: 2px solid #ffc107; border-bottom: 2px solid #ffc107; }
+    .layouts-student-csp-5 { color: #1f2937; font-size: 24px; font-weight: 800; margin: 0 0 16px; }
+    .layouts-student-csp-6 { color: #4b5563; font-size: 13px; line-height: 1.45; margin: -8px 0 12px; }
+    .layouts-student-csp-7 { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; }
+    .layouts-student-csp-8 { display: inline-block; background: #e5e7eb; color: #1f2937; border: none; padding: 14px 30px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; }
+</style>
 
     @stack('styles')
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         html[data-theme="dark"] {
             color-scheme: dark;
             --primary: #a31b1b;
@@ -3019,7 +3029,7 @@
                             <span>Logout</span>
                         </a>
 
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                        <form class="layouts-student-csp-1" id="logout-form" action="{{ route('logout') }}" method="POST">
                             @csrf
                             <input type="hidden" name="portal_guard" value="student">
                         </form>
@@ -3168,7 +3178,7 @@
             </div>
         </div>
 
-        <script>
+        <script nonce="{{ request()->attributes->get('csp_nonce') }}">
             (function () {
                 const loader = document.getElementById('studentLogoutLoader');
                 const logoutForms = [
@@ -3269,7 +3279,7 @@
                 </div>
                 <div class="student-notif-actions">
                     <button type="button" class="student-notif-back-btn" id="studentNotifBackBtn" aria-label="Back to new notifications">
-                        <x-outline-icon name="chevron-right" style="transform: rotate(180deg);" />
+                        <x-outline-icon class="layouts-student-csp-2" name="chevron-right" />
                         Back
                     </button>
                     <button type="button" class="student-notif-actions-toggle" id="studentNotifActionsToggle" aria-label="Notification actions" aria-expanded="false">
@@ -3363,9 +3373,10 @@
         @include('partials.student_voice_input_support')
     @endif
 
+    <script src="{{ asset('js/student-csp-controls.js') }}?v={{ filemtime(public_path('js/student-csp-controls.js')) }}"></script>
     @stack('scripts')
     
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         (function() {
             const navToggle = document.querySelector('.nav-toggle');
             const navList = document.querySelector('.nav-list');
@@ -3960,6 +3971,7 @@
 
                         const style = document.createElement('style');
                         style.id = 'customSiennaTheme';
+                        style.nonce = document.querySelector('script[nonce]')?.nonce || '';
                         style.textContent = `
                             :host, * {
                                 --sienna-primary: #7f1d2d !important;
@@ -4199,8 +4211,8 @@
     @endphp
 
     @if($showHealthFormModal)
-    <div id="healthFormModal" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; z-index: 999999 !important;">
-        <div class="health-profile-prompt-card{{ $studentUsesDependentProfile ? ' is-dependent-prompt' : '' }}" style="background: #fff; border-radius: 24px; padding: 40px; max-width: 580px; width: 92%; text-align: center; box-shadow: 0 25px 80px rgba(0,0,0,0.4); margin: auto; position: relative; border-top: 2px solid #ffc107; border-bottom: 2px solid #ffc107;">
+    <div class="layouts-student-csp-3" id="healthFormModal">
+        <div class="health-profile-prompt-card{{ $studentUsesDependentProfile ? ' is-dependent-prompt' : '' }} layouts-student-csp-4">
             <div class="health-profile-orb" aria-hidden="true">
                 <div class="health-profile-orb-inner">
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -4215,11 +4227,11 @@
                 <span aria-hidden="true">▣</span>
                 {{ $studentHealthFormTitle }}
             </div>
-            <h2 class="health-profile-prompt-title" style="color: #1f2937; font-size: 24px; font-weight: 800; margin: 0 0 16px;">
+            <h2 class="health-profile-prompt-title layouts-student-csp-5">
                 {{ $studentUsesDependentProfile ? 'Complete Your Information' : 'Complete Your Health Profile' }}
                 <span class="health-profile-required">Required</span>
             </h2>
-            <p class="health-profile-prompt-copy" style="color: #4b5563; font-size: 13px; line-height: 1.45; margin: -8px 0 12px;">
+            <p class="health-profile-prompt-copy layouts-student-csp-6">
                 Welcome, <strong>{{ $studentUser->first_name ?? 'Student' }}!</strong> 👋<br>
                 Let’s complete your <strong>{{ $studentHealthFormTitle }}</strong><br>
                 to complete your clinic record.
@@ -4323,7 +4335,7 @@
                     <small>Takes only a few minutes to finish</small>
                 </div>
             </div>
-            <div class="health-profile-prompt-actions" style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;">
+            <div class="health-profile-prompt-actions layouts-student-csp-7">
                 <a class="health-profile-fill-button" href="{{ $studentHealthFormStartRoute }}" data-health-role-selector-trigger>
                     <span>Get Started</span>
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -4332,14 +4344,14 @@
                     </svg>
                 </a>
                 @env('local')
-                    <button type="button" onclick="document.getElementById('healthFormModal').style.display='none'" style="display: inline-block; background: #e5e7eb; color: #1f2937; border: none; padding: 14px 30px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer;">
+                    <button class="layouts-student-csp-8" type="button" data-student-action="dismiss-health-form">
                         Skip for Now
                     </button>
                 @endenv
             </div>
         </div>
     </div>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         #healthFormModal {
             background: rgba(0, 0, 0, 0.75) !important;
             backdrop-filter: blur(8px);
@@ -4746,7 +4758,7 @@
         </section>
     </div>
 
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         #healthFormActionModal [hidden] { display: none !important; }
         #healthFormActionModal .health-form-information-choices { min-width: 0; width: 100%; box-sizing: border-box; margin: 16px 0 0; padding: 0; border: 0; }
         #healthFormActionModal .health-form-information-choices legend { margin: 0; padding: 0; font-size: 13px; font-weight: 800; color: #70131b; }
@@ -5080,7 +5092,7 @@
         }
     </style>
 
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         (function () {
             const modal = document.getElementById('healthFormActionModal');
             if (!modal) {
@@ -5179,7 +5191,7 @@
     @if($showGlobalResubmissionModal)
     <div id="globalResubmissionModal" class="global-resubmission-modal" role="dialog" aria-modal="true" aria-labelledby="globalResubmissionTitle">
         <div class="global-resubmission-card">
-            <button type="button" class="global-resubmission-close" aria-label="Close upload required files modal" onclick="closeGlobalResubmissionModal()">
+            <button type="button" class="global-resubmission-close" aria-label="Close upload required files modal" data-student-action="close-resubmission">
                 <x-outline-icon name="x-mark" />
             </button>
             <div class="global-resubmission-head">
@@ -5304,7 +5316,7 @@
                         </div>
                     </div>
                     <div class="global-resubmission-actions">
-                        <button type="button" class="global-resubmission-cancel" onclick="closeGlobalResubmissionModal()">Cancel</button>
+                        <button type="button" class="global-resubmission-cancel" data-student-action="close-resubmission">Cancel</button>
                         <button type="submit" class="global-resubmission-submit" data-global-resubmission-submit disabled>Submit Replacement Files</button>
                     </div>
                 </div>
@@ -5317,7 +5329,7 @@
             </form>
         </div>
     </div>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         .global-resubmission-modal {
             position: fixed !important;
             inset: 0 !important;
@@ -5983,7 +5995,7 @@
             }
         }
     </style>
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         function closeGlobalResubmissionModal() {
             const modal = document.getElementById('globalResubmissionModal');
             if (!modal || modal.querySelector('.global-resubmission-form')?.dataset.submitting === 'true') {

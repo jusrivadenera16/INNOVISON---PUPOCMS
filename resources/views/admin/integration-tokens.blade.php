@@ -81,7 +81,7 @@
     });
 @endphp
 
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .integration-page {
         display: grid;
         gap: 18px;
@@ -1414,7 +1414,7 @@
                     <option value="no-token">No Token</option>
                     <option value="inactive">Inactive</option>
                 </select>
-                <button type="button" class="integration-primary" onclick="openCreateClientModal()">
+                <button type="button" class="integration-primary" data-integration-action="open-create-client">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 5v14M5 12h14"/>
                     </svg>
@@ -1470,7 +1470,7 @@
                 </span>
                 <div>
                     <span class="stat-label">Last Generated</span>
-                    <span class="stat-value" style="font-size:1rem;">
+                    <span class="stat-value integration-stat-date">
                         {{ $latestToken ? optional($latestToken['token']->created_at)->format('M d, h:i A') : 'N/A' }}
                     </span>
                     <span class="stat-sub">{{ $latestToken['client']->system_name ?? 'No tokens yet' }}</span>
@@ -1504,7 +1504,7 @@
                             data-client-id="{{ $client->id }}"
                             data-name="{{ strtolower($client->system_name . ' ' . $client->system_key) }}"
                             data-status="{{ $status }}"
-                            onclick="selectIntegration('{{ $client->id }}')"
+                            data-integration-action="select-integration"
                         >
                             <span class="system-avatar">{{ $initial }}</span>
                             <span class="system-item-details">
@@ -1541,7 +1541,7 @@
                                     <h2>{{ $client->system_name }}</h2>
                                     <div class="system-key-line">
                                         System Key: <strong>{{ $client->system_key }}</strong>
-                                        <button type="button" class="detail-menu" style="width:30px;height:30px;" onclick="copyText('{{ $client->system_key }}')" title="Copy system key">
+                                        <button type="button" class="detail-menu integration-copy-key" data-integration-action="copy-system-key" data-system-key="{{ $client->system_key }}" title="Copy system key">
                                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
                                             </svg>
@@ -1561,12 +1561,12 @@
                                         </svg>
                                     </summary>
                                     <div class="token-action-dropdown">
-                                        <button type="button" onclick="this.closest('details').open = false; const card = this.closest('.detail-card'); generateToken(card.dataset.clientId, card.dataset.systemName, true)">Rotate Token</button>
-                                        <button type="button" onclick="this.closest('details').open = false; const card = this.closest('.detail-card'); revokeToken(card.dataset.clientId, card.dataset.systemName, card.dataset.tokenId)">Revoke Token</button>
-                                        <button type="button" onclick="this.closest('details').open = false; openIntegrationLogs(this.closest('.detail-card').dataset.clientId)">View Logs</button>
+                                        <button type="button" data-integration-action="rotate-token">Rotate Token</button>
+                                        <button type="button" data-integration-action="revoke-token">Revoke Token</button>
+                                        <button type="button" data-integration-action="view-logs">View Logs</button>
                                     </div>
                                 </details>
-                                <button type="button" class="solid-btn generate-token-btn head-generate-token-btn" {{ $hasToken ? 'hidden' : '' }} onclick="const card = this.closest('.detail-card'); generateToken(card.dataset.clientId, card.dataset.systemName, false)">Generate Token</button>
+                                <button type="button" class="solid-btn generate-token-btn head-generate-token-btn" {{ $hasToken ? 'hidden' : '' }} data-integration-action="generate-token">Generate Token</button>
                             </div>
                         </div>
 
@@ -1647,9 +1647,9 @@
 
     <div class="lower-grid">
         <section class="integration-panel">
-            <div class="detail-head" style="margin-bottom:12px;">
-                <h2 class="panel-title" style="margin:0;">Recent Activity</h2>
-                <a href="{{ route('admin.integration-tokens.activity') }}" class="outline-btn" style="min-height:34px; display: inline-flex; align-items: center;">View All</a>
+            <div class="detail-head integration-activity-head">
+                <h2 class="panel-title integration-panel-heading">Recent Activity</h2>
+                <a href="{{ route('admin.integration-tokens.activity') }}" class="outline-btn integration-activity-link">View All</a>
             </div>
             <div class="activity-list">
                 @forelse($recentActivity as $item)
@@ -1684,12 +1684,12 @@
         </section>
 
         <section class="integration-panel usage-card">
-            <div class="detail-head" style="margin:0;">
+            <div class="detail-head integration-usage-head">
                 <div>
-                    <h2 class="panel-title" style="margin:0;">API Usage</h2>
+                    <h2 class="panel-title integration-panel-heading">API Usage</h2>
                     <p class="stat-sub">Last used timestamps are stored per token.</p>
                 </div>
-                <strong style="color:#8a1220;">{{ $totalTokens }} tokens</strong>
+                <strong class="integration-usage-total">{{ $totalTokens }} tokens</strong>
             </div>
             <svg class="usage-svg" viewBox="0 0 520 140" preserveAspectRatio="none">
                 <defs>
@@ -1729,7 +1729,7 @@
             </span>
             <span><strong>Rotation Ready</strong><span>Generate, test, revoke</span></span>
         </div>
-        <button type="button" class="security-card docs-card" onclick="window.location.href='{{ route('admin.integration-tokens.docs') }}';">
+        <button type="button" class="security-card docs-card" data-integration-action="open-docs" data-integration-url="{{ route('admin.integration-tokens.docs') }}">
             <span class="security-icon">
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4v15.5A2.5 2.5 0 0 0 6.5 22H20V6a2 2 0 0 0-2-2H4Z"/>
@@ -1747,7 +1747,7 @@
                 <h3 id="integrationLogsTitle">Integration Logs</h3>
                 <p id="integrationLogsSubtitle">Recent token activity, external API requests, and errors.</p>
             </div>
-            <button type="button" class="integration-log-close" onclick="closeIntegrationLogs()" aria-label="Close integration logs">&times;</button>
+            <button type="button" class="integration-log-close" data-integration-action="close-logs" aria-label="Close integration logs">&times;</button>
         </div>
         <div class="integration-log-body">
             <div id="integrationLogsList" class="integration-log-list"></div>
@@ -1755,10 +1755,10 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     let latestGeneratedToken = '';
     let selectedClientId = document.querySelector('.system-item')?.dataset.clientId || null;
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    const integrationCsrfToken = document.querySelector('meta[name="csrf-token"]').content;
     const integrationLogData = @json($clientLogPayload);
 
     async function readJsonResponse(response) {
@@ -2023,7 +2023,7 @@
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
+                'X-CSRF-TOKEN': integrationCsrfToken
             },
             body: JSON.stringify({ client_id: clientId, rotate })
         })
@@ -2065,7 +2065,7 @@
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
+                'X-CSRF-TOKEN': integrationCsrfToken
             },
             body: JSON.stringify({ client_id: clientId, token_id: tokenId })
         })
@@ -2167,7 +2167,7 @@
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
+                'X-CSRF-TOKEN': integrationCsrfToken
             },
             body: JSON.stringify({ system_key: systemKey, system_name: systemName })
         })
@@ -2187,17 +2187,59 @@
     }
 
     document.addEventListener('click', (e) => {
+        const button = e.target.closest('[data-integration-action]');
+        if (button) {
+            const action = button.dataset.integrationAction;
+            const card = button.closest('.detail-card');
+            const menu = button.closest('details');
+            if (menu) menu.open = false;
+
+            switch (action) {
+                case 'open-create-client': openCreateClientModal(); break;
+                case 'close-create-client': closeCreateClientModal(); break;
+                case 'select-integration': selectIntegration(button.dataset.clientId); break;
+                case 'copy-system-key': copyText(button.dataset.systemKey); break;
+                case 'rotate-token': generateToken(card.dataset.clientId, card.dataset.systemName, true); break;
+                case 'generate-token': generateToken(card.dataset.clientId, card.dataset.systemName, false); break;
+                case 'revoke-token': revokeToken(card.dataset.clientId, card.dataset.systemName, card.dataset.tokenId); break;
+                case 'view-logs': openIntegrationLogs(card.dataset.clientId); break;
+                case 'close-logs': closeIntegrationLogs(); break;
+                case 'open-docs': window.location.href = button.dataset.integrationUrl; break;
+                case 'toggle-token': toggleTokenVisibility(); break;
+                case 'copy-token': copyGeneratedToken(); break;
+                case 'close-token': closeGeneratedTokenModal(); break;
+            }
+        }
+
         document.querySelectorAll('.token-action-menu[open]').forEach((menu) => {
             if (!menu.contains(e.target)) menu.open = false;
         });
-    });
 
-    // Close modal when clicking outside
-    document.getElementById('createClientModal')?.addEventListener('click', (e) => {
         if (e.target.id === 'createClientModal') {
             closeCreateClientModal();
         }
     });
+
+    document.addEventListener('submit', (event) => {
+        if (event.target.matches('[data-integration-form="create-client"]')) {
+            event.preventDefault();
+            createClient();
+        }
+    });
+
+    document.addEventListener('focus', (event) => {
+        if (event.target.matches('[data-integration-input]')) {
+            event.target.style.borderColor = '#7f1d2d';
+            event.target.style.background = '#fff';
+        }
+    }, true);
+
+    document.addEventListener('blur', (event) => {
+        if (event.target.matches('[data-integration-input]')) {
+            event.target.style.borderColor = '#e5e7eb';
+            event.target.style.background = '#f9fafb';
+        }
+    }, true);
 
     document.getElementById('integrationLogsModal')?.addEventListener('click', (e) => {
         if (e.target.id === 'integrationLogsModal') {
@@ -2216,70 +2258,68 @@
 </script>
 
 <!-- Create Client Modal -->
-<div id="createClientModal" class="modal-overlay" style="display:none;">
-    <div class="modal-content" style="background: white; border-radius: 16px; overflow: hidden; max-width: 500px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);">
+<div id="createClientModal" class="modal-overlay">
+    <div class="modal-content integration-modal-content">
         <!-- Header with Icon and Maroon Background -->
-        <div style="background: linear-gradient(135deg, #8a1220, #6a0e18); padding: 24px; display: flex; align-items: center; gap: 16px;">
-            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <div class="integration-modal-header">
+            <div class="integration-modal-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                 </svg>
             </div>
             <div>
-                <h2 style="margin: 0; color: white; font-size: 1.3rem; font-weight: 900;">Create Integration Client</h2>
-                <p style="margin: 4px 0 0; color: rgba(255, 255, 255, 0.85); font-size: 0.9rem;">Add a new external system to manage API tokens</p>
+                <h2 class="integration-modal-title">Create Integration Client</h2>
+                <p class="integration-modal-notice">Add a new external system to manage API tokens</p>
             </div>
         </div>
 
         <!-- Form Content -->
-        <div style="padding: 28px;">
-            <form id="createClientForm" onsubmit="event.preventDefault(); createClient();">
+        <div class="integration-modal-body">
+            <form id="createClientForm" data-integration-form="create-client">
                 <!-- System Key Field -->
-                <div style="margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7f1d2d" stroke-width="2" style="flex-shrink: 0;">
+                <div class="integration-modal-field">
+                    <div class="integration-modal-label-row">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7f1d2d" stroke-width="2" class="integration-modal-label-icon">
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/><path d="M9 17l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8"/>
                         </svg>
-                        <label for="systemKeyInput" style="color: #111827; font-size: 0.9rem; font-weight: 700;">System Key</label>
+                        <label for="systemKeyInput" class="integration-modal-label">System Key</label>
                     </div>
                     <input
                         type="text"
                         id="systemKeyInput"
                         placeholder="e.g., ris, ims, pupt_website"
-                        style="width: 100%; border-radius: 8px; border: 1px solid #e5e7eb; padding: 12px 14px; font-size: 0.95rem; color: #111827; background: #f9fafb; transition: all 0.2s ease;"
-                        onfocus="this.style.borderColor='#7f1d2d'; this.style.background='#fff';"
-                        onblur="this.style.borderColor='#e5e7eb'; this.style.background='#f9fafb';"
+                        class="integration-modal-input"
+                        data-integration-input
                         required
                     >
-                    <small style="display: block; margin-top: 6px; color: #9ca3af; font-size: 0.85rem;">Unique identifier for the system (lowercase, no spaces)</small>
+                    <small class="integration-modal-hint">Unique identifier for the system (lowercase, no spaces)</small>
                 </div>
 
                 <!-- System Name Field -->
-                <div style="margin-bottom: 28px;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7f1d2d" stroke-width="2" style="flex-shrink: 0;">
+                <div class="integration-modal-field integration-modal-field-last">
+                    <div class="integration-modal-label-row">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7f1d2d" stroke-width="2" class="integration-modal-label-icon">
                             <circle cx="12" cy="12" r="1"/><path d="M12 1v6m0 6v6"/><path d="M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24"/><path d="M1 12h6m6 0h6"/><path d="M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"/>
                         </svg>
-                        <label for="systemNameInput" style="color: #111827; font-size: 0.9rem; font-weight: 700;">System Name</label>
+                        <label for="systemNameInput" class="integration-modal-label">System Name</label>
                     </div>
                     <input
                         type="text"
                         id="systemNameInput"
                         placeholder="e.g., RIS, IMS, PUPT Website"
-                        style="width: 100%; border-radius: 8px; border: 1px solid #e5e7eb; padding: 12px 14px; font-size: 0.95rem; color: #111827; background: #f9fafb; transition: all 0.2s ease;"
-                        onfocus="this.style.borderColor='#7f1d2d'; this.style.background='#fff';"
-                        onblur="this.style.borderColor='#e5e7eb'; this.style.background='#f9fafb';"
+                        class="integration-modal-input"
+                        data-integration-input
                         required
                     >
-                    <small style="display: block; margin-top: 6px; color: #9ca3af; font-size: 0.85rem;">Display name for the system</small>
+                    <small class="integration-modal-hint">Display name for the system</small>
                 </div>
 
                 <!-- Buttons -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <button type="button" onclick="closeCreateClientModal()" style="border: 1.5px solid #d1d5db; border-radius: 8px; padding: 12px 18px; background: white; color: #7f1d2d; font-weight: 700; cursor: pointer; transition: all 0.2s ease; font-size: 0.95rem;">
+                <div class="integration-modal-actions">
+                    <button type="button" data-integration-action="close-create-client" class="integration-modal-cancel">
                         Cancel
                     </button>
-                    <button type="submit" style="border: none; border-radius: 8px; padding: 12px 18px; background: linear-gradient(135deg, #8a1220, #6a0e18); color: white; font-weight: 700; cursor: pointer; transition: all 0.2s ease; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(138, 18, 32, 0.24);">
+                    <button type="submit" class="integration-modal-submit">
                         Create Client
                     </button>
                 </div>
@@ -2289,40 +2329,40 @@
 </div>
 
 <!-- Generated Token Modal -->
-<div id="generatedTokenModal" class="modal-overlay" style="display:none;">
-    <div class="modal-content" style="background: white; border-radius: 16px; overflow: hidden; max-width: 550px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);">
+<div id="generatedTokenModal" class="modal-overlay">
+    <div class="modal-content integration-modal-content integration-token-modal-content">
         <!-- Header - Maroon -->
-        <div style="background: linear-gradient(135deg, #8a1220, #6a0e18); padding: 24px; display: flex; align-items: center; gap: 16px;">
-            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <div class="integration-modal-header">
+            <div class="integration-modal-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>
                 </svg>
             </div>
             <div>
-                <h2 id="generatedTokenTitle" style="margin: 0; color: white; font-size: 1.3rem; font-weight: 900;">Token Generated!</h2>
-                <p id="generatedTokenNotice" style="margin: 4px 0 0; color: rgba(255, 255, 255, 0.85); font-size: 0.9rem;">Copy and save this token now. It cannot be retrieved later.</p>
+                <h2 id="generatedTokenTitle" class="integration-modal-title">Token Generated!</h2>
+                <p id="generatedTokenNotice" class="integration-modal-notice">Copy and save this token now. It cannot be retrieved later.</p>
             </div>
         </div>
 
         <!-- Token Display -->
-        <div style="padding: 28px;">
+        <div class="integration-modal-body">
             <!-- Token Value -->
-            <div style="margin-bottom: 20px;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+            <div class="integration-modal-field">
+                <div class="integration-modal-label-row integration-token-label-row">
                     <!-- Key Icon -->
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 18px; height: 18px; color: #7f1d2d; flex-shrink: 0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="integration-token-key-icon">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
                     </svg>
-                    <label style="color: #111827; font-size: 0.9rem; font-weight: 700;">API Token</label>
-                    <button id="toggleTokenVisibilityButton" type="button" onclick="toggleTokenVisibility()" aria-label="Show or hide generated token" style="border: none; background: none; cursor: pointer; color: #7f1d2d; padding: 4px; display: flex; align-items: center; margin-left: auto;">
+                    <label class="integration-modal-label">API Token</label>
+                    <button id="toggleTokenVisibilityButton" type="button" data-integration-action="toggle-token" aria-label="Show or hide generated token" class="integration-token-visibility">
                         <svg id="tokenEyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
                         </svg>
                     </button>
                 </div>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <div id="generatedTokenValue" style="flex: 1; border-radius: 8px; border: 1px solid #e5e7eb; padding: 12px 14px; font-family: 'Courier New', monospace; font-size: 0.9rem; color: #111827; background: #f9fafb; word-break: break-all; max-height: 100px; overflow-y: auto;"></div>
-                    <button id="copyButton" type="button" onclick="copyGeneratedToken()" class="token-copy-btn" title="Copy token">
+                <div class="integration-token-value-row">
+                    <div id="generatedTokenValue" class="integration-token-value"></div>
+                    <button id="copyButton" type="button" data-integration-action="copy-token" class="token-copy-btn" title="Copy token">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
                         </svg>
@@ -2332,12 +2372,12 @@
             </div>
 
             <!-- Token Meta -->
-            <div id="generatedTokenMeta" style="padding: 12px; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #8a1220; color: #7f1d2d; font-size: 0.85rem; line-height: 1.5;"></div>
+            <div id="generatedTokenMeta" class="integration-token-meta"></div>
 
             <!-- Continue Button with Sweep Animation -->
-            <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
-                <button type="button" onclick="closeGeneratedTokenModal()" class="token-continue-btn">
-                    <span style="display: flex; align-items: center; gap: 8px;">
+            <div class="integration-token-footer">
+                <button type="button" data-integration-action="close-token" class="token-continue-btn">
+                    <span class="integration-token-continue-label">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
@@ -2349,7 +2389,7 @@
     </div>
 </div>
 
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .modal-overlay {
         position: fixed;
         inset: 0;
@@ -2475,6 +2515,120 @@
     .token-continue-btn:active {
         transform: scale(0.98);
     }
+
+    .integration-page .integration-stat-date { font-size: 1rem; }
+    .integration-page .integration-copy-key { width: 30px; height: 30px; }
+    .integration-page .integration-activity-head { margin-bottom: 12px; }
+    .integration-page .integration-panel-heading { margin: 0; }
+    .integration-page .integration-activity-link { min-height: 34px; display: inline-flex; align-items: center; }
+    .integration-page .integration-usage-head { margin: 0; }
+    .integration-page .integration-usage-total { color: #8a1220; }
+
+    :is(#createClientModal, #generatedTokenModal) .integration-modal-content {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        max-width: 500px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    #generatedTokenModal .integration-token-modal-content { max-width: 550px; }
+    :is(#createClientModal, #generatedTokenModal) .integration-modal-header {
+        background: linear-gradient(135deg, #8a1220, #6a0e18);
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    :is(#createClientModal, #generatedTokenModal) .integration-modal-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    :is(#createClientModal, #generatedTokenModal) .integration-modal-title { margin: 0; color: white; font-size: 1.3rem; font-weight: 900; }
+    :is(#createClientModal, #generatedTokenModal) .integration-modal-notice { margin: 4px 0 0; color: rgba(255, 255, 255, 0.85); font-size: 0.9rem; }
+    :is(#createClientModal, #generatedTokenModal) .integration-modal-body { padding: 28px; }
+    :is(#createClientModal, #generatedTokenModal) .integration-modal-field { margin-bottom: 20px; }
+    #createClientModal .integration-modal-field-last { margin-bottom: 28px; }
+    :is(#createClientModal, #generatedTokenModal) .integration-modal-label-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    #createClientModal .integration-modal-label-icon { flex-shrink: 0; }
+    :is(#createClientModal, #generatedTokenModal) .integration-modal-label { color: #111827; font-size: 0.9rem; font-weight: 700; }
+    #createClientModal .integration-modal-input {
+        width: 100%;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        padding: 12px 14px;
+        font-size: 0.95rem;
+        color: #111827;
+        background: #f9fafb;
+        transition: all 0.2s ease;
+    }
+    #createClientModal .integration-modal-hint { display: block; margin-top: 6px; color: #9ca3af; font-size: 0.85rem; }
+    #createClientModal .integration-modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    #createClientModal .integration-modal-cancel {
+        border: 1.5px solid #d1d5db;
+        border-radius: 8px;
+        padding: 12px 18px;
+        background: white;
+        color: #7f1d2d;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
+    }
+    #createClientModal .integration-modal-submit {
+        border: none;
+        border-radius: 8px;
+        padding: 12px 18px;
+        background: linear-gradient(135deg, #8a1220, #6a0e18);
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
+        box-shadow: 0 4px 12px rgba(138, 18, 32, 0.24);
+    }
+    #generatedTokenModal .integration-token-label-row { margin-bottom: 12px; }
+    #generatedTokenModal .integration-token-key-icon { width: 18px; height: 18px; color: #7f1d2d; flex-shrink: 0; }
+    #generatedTokenModal .integration-token-visibility {
+        border: none;
+        background: none;
+        cursor: pointer;
+        color: #7f1d2d;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        margin-left: auto;
+    }
+    #generatedTokenModal .integration-token-value-row { display: flex; gap: 8px; align-items: center; }
+    #generatedTokenModal .integration-token-value {
+        flex: 1;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        padding: 12px 14px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        color: #111827;
+        background: #f9fafb;
+        word-break: break-all;
+        max-height: 100px;
+        overflow-y: auto;
+    }
+    #generatedTokenModal .integration-token-meta {
+        padding: 12px;
+        background: #f0fdf4;
+        border-radius: 8px;
+        border-left: 4px solid #8a1220;
+        color: #7f1d2d;
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+    #generatedTokenModal .integration-token-footer { margin-top: 24px; padding-top: 24px; border-top: 1px solid #e5e7eb; }
+    #generatedTokenModal .integration-token-continue-label { display: flex; align-items: center; gap: 8px; }
 </style>
 
 @endsection

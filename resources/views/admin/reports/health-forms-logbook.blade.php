@@ -3,7 +3,7 @@
 @section('title', 'Health Form Logbook')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .logbook-shell {
         max-width: 1480px;
         margin: 0 auto;
@@ -496,6 +496,12 @@
             width: 100%;
         }
     }
+
+    /* Outrank page ID rules without blocking inline CSSOM updates. */
+    :is(#reports-csp-priority#reports-csp-priority, .health-logbook-toolbar-actions) { display: flex; gap: 10px; }
+    :is(#reports-csp-priority#reports-csp-priority, .health-logbook-missing-value) { color: #94a3b8; }
+    :is(#reports-csp-priority#reports-csp-priority, .health-logbook-muted-value) { color: #64748b; }
+    :is(#reports-csp-priority#reports-csp-priority, .health-logbook-empty-hidden) { display: none; }
 </style>
 @endpush
 
@@ -514,8 +520,8 @@
             <h1 class="logbook-title">Health Form Record Logs</h1>
             <p class="logbook-copy">Track applicant health form visits from Final Review time-in to approval time-out.</p>
         </div>
-        <div style="display: flex; gap: 10px;">
-            <button class="filter-btn-open" onclick="openFilterModal()">🔍 Filter</button>
+        <div class="health-logbook-toolbar-actions">
+            <button class="filter-btn-open" data-open-logbook-filter>🔍 Filter</button>
             <a href="{{ $reportsUrl }}" class="logbook-back">&larr; Back</a>
         </div>
     </div>
@@ -532,9 +538,9 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="filterModal" onclick="closeFilterModal(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <button class="modal-close" onclick="closeFilterModal()">×</button>
+    <div class="modal-overlay" id="filterModal" data-logbook-filter-backdrop>
+        <div class="modal-content" data-logbook-filter-content>
+            <button class="modal-close" data-close-logbook-filter>×</button>
             <div class="modal-header">
                 <h2>Filter Records</h2>
             </div>
@@ -663,16 +669,16 @@
                             @if($reviewer)
                                 <strong>{{ $reviewer->name }}</strong>
                             @else
-                                <span style="color: #94a3b8;">&mdash;</span>
+                                <span class="health-logbook-missing-value">&mdash;</span>
                             @endif
                         </td>
                         <td>
                             @if($isApproved && $approver)
                                 <strong>{{ $approver->name }}</strong>
                             @elseif($isApproved)
-                                <span style="color: #64748b;">Not recorded</span>
+                                <span class="health-logbook-muted-value">Not recorded</span>
                             @else
-                                <span style="color: #94a3b8;">&mdash;</span>
+                                <span class="health-logbook-missing-value">&mdash;</span>
                             @endif
                         </td>
                         <td>
@@ -706,7 +712,7 @@
                     </tr>
                 @endforelse
                 @if($logbookRecords->count() > 0)
-                    <tr data-logbook-empty-row style="display:none;">
+                    <tr class="health-logbook-empty-hidden" data-logbook-empty-row>
                         <td colspan="9" class="logbook-empty">No health form records found matching your search.</td>
                     </tr>
                 @endif
@@ -758,7 +764,12 @@
     @endif
 </div>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
+document.querySelector('[data-open-logbook-filter]')?.addEventListener('click', openFilterModal);
+document.querySelector('[data-close-logbook-filter]')?.addEventListener('click', function() { closeFilterModal(); });
+document.querySelector('[data-logbook-filter-backdrop]')?.addEventListener('click', closeFilterModal);
+document.querySelector('[data-logbook-filter-content]')?.addEventListener('click', function(event) { event.stopPropagation(); });
+
 function openFilterModal() {
     document.getElementById('filterModal').classList.add('active');
 }
@@ -785,7 +796,7 @@ function filterVisibleLogbookRows() {
     });
 
     if (logbookEmptyRow) {
-        logbookEmptyRow.style.display = visibleCount === 0 ? '' : 'none';
+        logbookEmptyRow.classList.toggle('health-logbook-empty-hidden', visibleCount !== 0);
     }
 
     if (logbookTotalCardValue) {

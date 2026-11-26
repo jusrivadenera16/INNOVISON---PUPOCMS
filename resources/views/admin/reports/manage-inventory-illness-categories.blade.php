@@ -3,7 +3,7 @@
 @section('title', 'Manage Inventory Illness Categories')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; margin-bottom: 24px; }
     h3 { color: #334155; font-size: 18px; margin-top: 10px; }
     .mar-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -25,6 +25,13 @@
     .linked-medicine-list { margin: 16px 0 0; padding-left: 18px; color: #334155; }
     .linked-medicine-list li + li { margin-top: 8px; }
     .linked-medicine-empty { margin-top: 14px; color: #64748b; font-size: 14px; }
+
+    /* Outrank page ID rules without blocking inline CSSOM updates. */
+    :is(#reports-csp-priority#reports-csp-priority, .illness-categories-back) { margin-bottom: 20px; }
+    :is(#reports-csp-priority#reports-csp-priority, .illness-categories-back-link) { text-decoration: none; color: #64748b; font-size: 14px; }
+    :is(#reports-csp-priority#reports-csp-priority, .illness-categories-centered) { text-align: center; }
+    :is(#reports-csp-priority#reports-csp-priority, .illness-categories-empty-hidden) { display: none; }
+    :is(#reports-csp-priority#reports-csp-priority, .illness-categories-modal-actions) { margin-top:20px; text-align:right; }
 </style>
 @endpush
 
@@ -36,8 +43,8 @@
         : url('/admin/reports/inventory-summary?month=' . $month);
 @endphp
 
-<div style="margin-bottom: 20px;">
-    <a href="{{ $backUrl }}" style="text-decoration: none; color: #64748b; font-size: 14px;">
+<div class="illness-categories-back">
+    <a class="illness-categories-back-link" href="{{ $backUrl }}">
         &larr; Back to Inventory Summary
     </a>
 </div>
@@ -56,7 +63,7 @@
             <tr>
                 <th>Illness Category</th>
                 <th>Linked Medicines</th>
-                <th style="text-align: center;">Action</th>
+                <th class="illness-categories-centered">Action</th>
             </tr>
         </thead>
         <tbody>
@@ -66,13 +73,10 @@
                 <td>{{ $category->items_count }}</td>
                 <td class="table-action-cell">
                     <div class="table-action-wrap">
-                        <button type="button" class="btn-view" onclick='openViewModal(@json([
-                            "name" => $category->name,
-                            "items" => $category->items->pluck("name")->values(),
-                        ]))'>
+                        <button type="button" class="btn-view" data-view-illness-category data-category-name="{{ $category->name }}" data-category-items="{{ json_encode($category->items->pluck('name')->values()) }}">
                             View
                         </button>
-                        <form action="{{ route('inventory-illness-categories.destroy', $category->id) }}" method="POST" onsubmit="return confirmDelete(event)">
+                        <form action="{{ route('inventory-illness-categories.destroy', $category->id) }}" method="POST" data-delete-illness-category>
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn-remove">Remove</button>
@@ -82,7 +86,7 @@
             </tr>
         @empty
             <tr>
-                <td colspan="3" style="text-align:center;">No illness categories found</td>
+                <td class="illness-categories-centered" colspan="3">No illness categories found</td>
             </tr>
         @endforelse
         </tbody>
@@ -94,17 +98,27 @@
         <h3>Linked Medicines</h3>
         <p id="categoryDisplayName"></p>
         <ul id="linkedMedicineList" class="linked-medicine-list"></ul>
-        <p id="linkedMedicineEmpty" class="linked-medicine-empty" style="display:none;">No medicines are linked to this illness category yet.</p>
+        <p id="linkedMedicineEmpty" class="linked-medicine-empty illness-categories-empty-hidden">No medicines are linked to this illness category yet.</p>
 
-        <div style="margin-top:20px; text-align:right;">
-            <button type="button" class="btn-cancel" onclick="closeViewModal()">Close</button>
+        <div class="illness-categories-modal-actions">
+            <button type="button" class="btn-cancel" data-close-illness-category>Close</button>
         </div>
     </div>
 </div>
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
+document.querySelectorAll('[data-view-illness-category]').forEach(function(button) {
+    button.addEventListener('click', function() {
+        openViewModal({ name: button.dataset.categoryName, items: JSON.parse(button.dataset.categoryItems || '[]') });
+    });
+});
+document.querySelector('[data-close-illness-category]')?.addEventListener('click', closeViewModal);
+document.querySelectorAll('[data-delete-illness-category]').forEach(function(form) {
+    form.addEventListener('submit', confirmDelete);
+});
+
 function openViewModal(category) {
     const listNode = document.getElementById('linkedMedicineList');
     const emptyNode = document.getElementById('linkedMedicineEmpty');
@@ -142,9 +156,9 @@ function confirmDelete(e) {
     return true;
 }
 
-window.onclick = function(e) {
+window.addEventListener('click', function(e) {
     let modal = document.getElementById('viewModal');
     if (e.target === modal) closeViewModal();
-};
+});
 </script>
 @endpush

@@ -3,7 +3,7 @@
 @section('title', 'Clinic Records')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .digital-logbook-shell {
         width: min(1120px, calc(100% - 32px));
         margin: 28px auto;

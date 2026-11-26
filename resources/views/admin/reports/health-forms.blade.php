@@ -3,7 +3,7 @@
 @section('title', 'Health Forms Report')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .health-forms-shell {
         max-width: 1380px;
         margin: 0 auto;
@@ -785,6 +785,9 @@
             grid-template-columns: 1fr !important;
         }
     }
+
+    /* Outrank page ID rules without blocking inline CSSOM updates. */
+    :is(#reports-csp-priority#reports-csp-priority, .health-forms-toolbar-actions) { display: flex; gap: 10px; }
 </style>
 @endpush
 
@@ -810,8 +813,8 @@
             <h1 class="health-forms-title">Health Forms</h1>
             <p class="health-forms-copy">Health form records summarized by user type for the selected date range.</p>
         </div>
-        <div style="display: flex; gap: 10px;">
-            <button type="button" class="health-forms-filter-trigger" onclick="openHealthFormsFilter()">
+        <div class="health-forms-toolbar-actions">
+            <button type="button" class="health-forms-filter-trigger" data-open-health-forms-filter>
                 <span class="health-forms-filter-icon" aria-hidden="true"></span>
                 <span>Filter</span>
             </button>
@@ -839,9 +842,9 @@
     </div>
 
     <div class="health-forms-layout">
-        <div class="health-forms-filter-backdrop" id="healthFormsFilterModal" onclick="closeHealthFormsFilter(event)">
+        <div class="health-forms-filter-backdrop" id="healthFormsFilterModal" data-health-forms-filter-backdrop>
         <aside class="health-forms-panel">
-            <button type="button" class="health-forms-filter-close" onclick="closeHealthFormsFilter()" aria-label="Close filter">&times;</button>
+            <button type="button" class="health-forms-filter-close" data-close-health-forms-filter aria-label="Close filter">&times;</button>
             <h3>Filter Health Forms</h3>
             <p class="health-forms-panel-copy">Narrow the health form list by user type and date range.</p>
             <form class="health-forms-filter-form" method="GET">
@@ -909,7 +912,15 @@
         </div>
     </div>
 </div>
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
+document.querySelectorAll('[data-open-health-forms-filter]').forEach(function(button) {
+    button.addEventListener('click', openHealthFormsFilter);
+});
+document.querySelectorAll('[data-close-health-forms-filter]').forEach(function(button) {
+    button.addEventListener('click', function() { closeHealthFormsFilter(); });
+});
+document.querySelector('[data-health-forms-filter-backdrop]')?.addEventListener('click', closeHealthFormsFilter);
+
 function openHealthFormsFilter() {
     document.getElementById('healthFormsFilterModal')?.classList.add('is-open');
 }

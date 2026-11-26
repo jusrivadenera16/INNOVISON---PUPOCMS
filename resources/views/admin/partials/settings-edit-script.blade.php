@@ -1,4 +1,4 @@
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.settings-editable-form').forEach(function (form) {
         const fields = Array.from(form.querySelectorAll('[data-edit-field]'));

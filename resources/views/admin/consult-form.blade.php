@@ -3,7 +3,7 @@
 @section('title', 'Clinical Consultation')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .consultation-workspace {
         display: flex;
         flex-wrap: nowrap;
@@ -305,7 +305,8 @@
         font-weight: 500;
         display: none;
     }
-    .form-error.show {
+    .form-error.show,
+    .form-error.form-error-server {
         display: block;
     }
     .form-success {
@@ -2758,7 +2759,7 @@
         margin: 0 10px 6px 18px;
         font-size: .7rem;
     }
-    .physical-assessment-card > .form-grid-2 > .form-group > .form-error[style*="display: block"] {
+    .physical-assessment-card > .form-grid-2 > .form-group > .form-error.form-error-server {
         grid-row: 4;
     }
     .physical-assessment-card > .physical-covid-group {
@@ -5325,7 +5326,7 @@
                         <div class="form-error" id="heightError"></div>
                         <div class="form-success" id="heightSuccess">✓ Valid height</div>
                         @error('height')
-                            <div class="form-error" style="display: block;">{{ $message }}</div>
+                            <div class="form-error form-error-server">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="form-group">
@@ -5334,7 +5335,7 @@
                         <div class="form-error" id="weightError"></div>
                         <div class="form-success" id="weightSuccess">✓ Valid weight</div>
                         @error('weight')
-                            <div class="form-error" style="display: block;">{{ $message }}</div>
+                            <div class="form-error form-error-server">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="form-group">
@@ -5343,7 +5344,7 @@
                         <div class="form-error" id="tempError"></div>
                         <div class="form-success" id="tempSuccess">✓ Valid temperature</div>
                         @error('temp')
-                            <div class="form-error" style="display: block;">{{ $message }}</div>
+                            <div class="form-error form-error-server">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="form-group">
@@ -5352,7 +5353,7 @@
                         <div class="form-error" id="bpError"></div>
                         <div class="form-success" id="bpSuccess">✓ Valid blood pressure</div>
                         @error('bp')
-                            <div class="form-error" style="display: block;">{{ $message }}</div>
+                            <div class="form-error form-error-server">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="form-group">
@@ -5361,7 +5362,7 @@
                         <div class="form-error" id="pulseError"></div>
                         <div class="form-success" id="pulseSuccess">✓ Valid pulse rate</div>
                         @error('pulse_rate')
-                            <div class="form-error" style="display: block;">{{ $message }}</div>
+                            <div class="form-error form-error-server">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="form-group">
@@ -5370,7 +5371,7 @@
                         <div class="form-error" id="respiratoryError"></div>
                         <div class="form-success" id="respiratorySuccess">✓ Valid respiratory rate</div>
                         @error('respiratory_rate')
-                            <div class="form-error" style="display: block;">{{ $message }}</div>
+                            <div class="form-error form-error-server">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
@@ -5398,7 +5399,7 @@
                             {{ $draftValue('covid_status', 'No') === 'Yes' ? 'required' : 'disabled' }}
                         >
                         @error('covid_positive_date')
-                            <div class="form-error" style="display: block;">{{ $message }}</div>
+                            <div class="form-error form-error-server">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
@@ -5691,7 +5692,7 @@
                     <label for="consultReferralDetails">Referral Details</label>
                     <input type="text" name="referral_details" id="consultReferralDetails" class="form-control" value="{{ $draftValue('referral_details') }}" maxlength="500" placeholder="Specify the referral destination or reason">
                     @error('referral_details')
-                        <div class="form-error" style="display: block;">{{ $message }}</div>
+                        <div class="form-error form-error-server">{{ $message }}</div>
                     @enderror
                 </div>
                 <div class="form-group">
@@ -6126,7 +6127,7 @@
 
 </aside>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     (function () {
         const medicineEntries = Array.from(document.querySelectorAll('[data-medicine-entry]'));
         const addMedicineButton = document.getElementById('addMedicineButton');

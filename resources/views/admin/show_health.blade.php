@@ -3,7 +3,7 @@
 @section('title', 'Student Health Profile')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .health-profile-wrap {
         width: 100%;
         max-width: 1120px;
@@ -3017,7 +3017,7 @@
 @endpush
 
 @push('late-styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .main .profile-tab {
         position: relative;
         isolation: isolate;
@@ -3151,6 +3151,35 @@
     html[data-theme="dark"] .pullout-confirm-actions button:last-child { border-color: #9f1239; background: #9f1239; color: #ffffff; }
     html[data-theme="dark"] .pullout-confirm-actions button:hover,
     html[data-theme="dark"] .pullout-confirm-actions button:focus-visible { border-color: #facc15; background: #facc15; color: #70131b; }
+
+    .main .profile-sync-message.profile-sync-timestamp { margin-top: 8px; }
+    .main .profile-sync-resync-form { margin-top: 10px; }
+    .main .health-record-correction-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        border: 1px solid #f0b179;
+        border-radius: 14px;
+        background: #fff6ee;
+        padding: 1rem 1.25rem;
+        margin: 0 0 1rem;
+        color: #7a3b11;
+    }
+    .main .health-record-correction-banner-content { display: flex; align-items: flex-start; gap: 0.75rem; }
+    .main .health-record-correction-banner-icon { width: 20px; height: 20px; flex: 0 0 auto; }
+    .main .health-record-correction-banner-title { font-weight: 700; font-size: 0.92rem; line-height: 1.35; }
+    .main .health-record-correction-banner-message { font-size: 0.84rem; line-height: 1.45; }
+    .main .health-record-correction-banner-action {
+        border: 1px solid #d07a4d;
+        background: #fff;
+        border-radius: 10px;
+        padding: 0.7rem 1rem;
+        font-weight: 600;
+        color: #7a3b11;
+        cursor: pointer;
+    }
+    .main .doc-missing.doc-correction-notice { margin-bottom: 10px; }
 </style>
 @endpush
 
@@ -3417,10 +3446,10 @@
                         {{ $puptasSyncLabel }}
                     </span>
                     @if($profile->puptas_synced_at && !$profileIsLocalOnly)
-                        <p class="profile-sync-message" style="margin-top:8px;">Last synced: {{ $profile->puptas_synced_at->format('M d, Y h:i A') }}</p>
+                        <p class="profile-sync-message profile-sync-timestamp">Last synced: {{ $profile->puptas_synced_at->format('M d, Y h:i A') }}</p>
                     @endif
                     @if($canResyncPuptas)
-                        <form method="POST" action="{{ route('admin.health_profile.resync_puptas', $profile->id) }}" style="margin-top:10px;">
+                        <form method="POST" action="{{ route('admin.health_profile.resync_puptas', $profile->id) }}" class="profile-sync-resync-form">
                             @csrf
                             <button type="submit" class="profile-sync-button">Resync to PUPTAS</button>
                         </form>
@@ -3787,18 +3816,18 @@
 
     <div class="profile-panel" id="docsPanel">
         @if($hasCorrectionRequest && $correctionStatusLabel === 'Pending')
-            <div class="health-record-correction-banner" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;border:1px solid #f0b179;border-radius:14px;background:#fff6ee;padding:1rem 1.25rem;margin:0 0 1rem;color:#7a3b11;">
-                <div style="display:flex;align-items:flex-start;gap:0.75rem;">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" style="width:20px;height:20px;flex:0 0 auto;">
+            <div class="health-record-correction-banner">
+                <div class="health-record-correction-banner-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" class="health-record-correction-banner-icon">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
                     </svg>
                     <div>
-                        <div style="font-weight:700;font-size:0.92rem;line-height:1.35;">File correction requested</div>
-                        <div style="font-size:0.84rem;line-height:1.45;">The approved clearance remains intact. Review the uploaded documents and wait for the corrected files.</div>
+                        <div class="health-record-correction-banner-title">File correction requested</div>
+                        <div class="health-record-correction-banner-message">The approved clearance remains intact. Review the uploaded documents and wait for the corrected files.</div>
                     </div>
                 </div>
                 @if($canRequestFileCorrection)
-                    <button type="button" class="health-record-correction-banner-action" id="openCorrectionStatus" style="border:1px solid #d07a4d;background:#fff;border-radius:10px;padding:0.7rem 1rem;font-weight:600;color:#7a3b11;cursor:pointer;">
+                    <button type="button" class="health-record-correction-banner-action" id="openCorrectionStatus">
                         View details
                     </button>
                 @endif
@@ -3871,7 +3900,7 @@
                     $healthInformationFormUrl = route('walkin.healthForm', ['healthProfile' => $profile->id]);
                 @endphp
                 @if(!empty($pendingHealthFormRequest))
-                    <div class="doc-missing" style="margin-bottom:10px;">
+                    <div class="doc-missing doc-correction-notice">
                         New form requested: {{ $pendingHealthFormRequest->category }}{{ $pendingHealthFormRequest->requested_at ? ' on ' . $pendingHealthFormRequest->requested_at->format('M d, Y h:i A') : '' }}
                     </div>
                 @endif
@@ -4526,7 +4555,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     const profileContentCard = document.querySelector('.profile-content-card');
     const profileStickyBar = document.querySelector('.profile-switch-sticky');
 

@@ -3,7 +3,7 @@
 @section('title', 'Daily Treatment Record')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .treatment-record-shell {
         max-width: 1600px;
         margin: 0 auto;
@@ -884,7 +884,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     document.addEventListener('DOMContentLoaded', function () {
         const searchInput = document.getElementById('treatmentRecordSearch');
         const rows = Array.from(document.querySelectorAll('.treatment-record-row'));

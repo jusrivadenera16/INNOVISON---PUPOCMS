@@ -3,7 +3,7 @@
 @section('title', 'Appointments')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .public-appt-shell {
         position: relative;
         isolation: isolate;

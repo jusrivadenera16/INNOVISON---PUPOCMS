@@ -109,7 +109,7 @@
         </section>
     </div>
 </div>
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .health-role-selector-modal[hidden] { display: none !important; }
     .health-role-selector-modal {
         position: fixed;
@@ -446,7 +446,7 @@
         .health-role-continue { width: 100%; }
     }
 </style>
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     (function () {
         const promptModal = document.getElementById('healthFormModal');
         const roleModal = document.getElementById('healthRoleSelectorModal');

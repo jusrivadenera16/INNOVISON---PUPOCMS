@@ -3,7 +3,7 @@
 @section('title', 'MAR Report')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; margin-bottom: 24px; }
     h2 { color: #8B0000; font-size: 22px; margin-bottom: 20px; border-bottom: 2px solid #8B0000; padding-bottom: 10px; }
     h3 { color: #334155; font-size: 18px; margin-top: 30px; }
@@ -369,16 +369,16 @@
         background: rgba(59, 24, 33, 0.5) !important;
     }
 
-    html[data-theme="dark"] table tbody tr[style*="background-color: #f8f9fa"] {
+    html[data-theme="dark"] table tbody tr.mar-category-heading {
         background-color: rgba(35, 17, 25, 0.96) !important;
         color: #f3d6da !important;
     }
 
-    html[data-theme="dark"] table tbody tr[style*="background-color: #f8f9fa"] td {
+    html[data-theme="dark"] table tbody tr.mar-category-heading td {
         color: #f3d6da !important;
     }
 
-    html[data-theme="dark"] table tbody tr[style*="background-color: #f8f9fa"]:hover {
+    html[data-theme="dark"] table tbody tr.mar-category-heading:hover {
         background-color: rgba(45, 22, 32, 0.98) !important;
     }
 
@@ -428,8 +428,8 @@
         border-bottom-color: rgba(148, 163, 184, 0.14) !important;
     }
     html[data-theme="dark"] .detail-row td,
-    html[data-theme="dark"] .mar-table tbody tr[style*="background-color: #f8f9fa"] td,
-    html[data-theme="dark"] .gad-table tbody tr[style*="background-color: #f8f9fa"] td {
+    html[data-theme="dark"] .mar-table tbody tr.mar-category-heading td,
+    html[data-theme="dark"] .gad-table tbody tr.mar-category-heading td {
         background: #1e293b !important;
         color: #f8fafc !important;
     }
@@ -494,6 +494,12 @@
     .mar-back-button:focus::after {
         left: 125%;
     }
+
+    /* Outrank page ID rules without blocking inline CSSOM updates. */
+    :is(#reports-csp-priority#reports-csp-priority, .mar-centered-heading) { text-align: center; }
+    :is(#reports-csp-priority#reports-csp-priority, .mar-category-heading) { background-color: #f8f9fa; font-weight: bold; }
+    :is(#reports-csp-priority#reports-csp-priority, .mar-condition-indent) { padding-left: 30px; }
+    :is(#reports-csp-priority#reports-csp-priority, .mar-detail-indent) { padding-left: 42px; }
 </style>
 @endpush
 
@@ -646,11 +652,11 @@
         <thead>
             <tr>
                 <th>Service Category / Conditions</th>
-                <th style="text-align: center;">Student</th>
-                <th style="text-align: center;">Faculty</th>
-                <th style="text-align: center;">Admin</th>
-                <th style="text-align: center;">Dependent</th>
-                <th style="text-align: center;">Total</th>
+                <th class="mar-centered-heading">Student</th>
+                <th class="mar-centered-heading">Faculty</th>
+                <th class="mar-centered-heading">Admin</th>
+                <th class="mar-centered-heading">Dependent</th>
+                <th class="mar-centered-heading">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -658,7 +664,7 @@
                 <td colspan="6">i. Consultation / Treatment</td>
             </tr>
             @foreach($categories as $cat)
-    <tr style="background-color: #f8f9fa; font-weight: bold;">
+    <tr class="mar-category-heading">
         <td colspan="6">Category {{ $cat->code }} - {{ $cat->name }}</td>
     </tr>
 
@@ -671,7 +677,7 @@
             $total = $stu + $fac + $adm + $dep;
         @endphp
         <tr>
-            <td style="padding-left: 30px;">{{ $condition->name }}</td>
+            <td class="mar-condition-indent">{{ $condition->name }}</td>
             <td class="text-center">{{ $displayServiceCount($stu) }}</td>
             <td class="text-center">{{ $displayServiceCount($fac) }}</td>
             <td class="text-center">{{ $displayServiceCount($adm) }}</td>
@@ -705,7 +711,7 @@
                 </tr>
                 @foreach($parentRow['details'] as $detailRow)
                     <tr class="nested-row deep-nested-row">
-                        <td style="padding-left: 42px;">- {{ $detailRow['name'] }}</td>
+                        <td class="mar-detail-indent">- {{ $detailRow['name'] }}</td>
                         <td class="text-center">{{ $detailRow['student'] ?: '' }}</td>
                         <td class="text-center">{{ $detailRow['faculty'] ?: '' }}</td>
                         <td class="text-center">{{ $detailRow['admin'] ?: '' }}</td>
@@ -724,7 +730,7 @@
                     </tr>
                     @foreach($subcategoryRow['details'] as $detailRow)
                         <tr class="nested-row deep-nested-row">
-                            <td style="padding-left: 42px;">- {{ $detailRow['name'] }}</td>
+                            <td class="mar-detail-indent">- {{ $detailRow['name'] }}</td>
                             <td class="text-center">{{ $detailRow['student'] ?: '' }}</td>
                             <td class="text-center">{{ $detailRow['faculty'] ?: '' }}</td>
                             <td class="text-center">{{ $detailRow['admin'] ?: '' }}</td>
@@ -775,11 +781,11 @@
         <thead>
             <tr>
                 <th>GAD (Consultation)</th>
-                <th style="text-align: center;">Students</th>
-                <th style="text-align: center;">Faculty</th>
-                <th style="text-align: center;">Admin</th>
-                <th style="text-align: center;">Dependent</th>
-                <th style="text-align: center;">Total</th>
+                <th class="mar-centered-heading">Students</th>
+                <th class="mar-centered-heading">Faculty</th>
+                <th class="mar-centered-heading">Admin</th>
+                <th class="mar-centered-heading">Dependent</th>
+                <th class="mar-centered-heading">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -787,11 +793,11 @@
             <tr><td>Female</td><td class="text-center">{{ $displayGadCount($consultationGad['female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['female']['total'] ?? null) }}</td></tr>
             <tr><td>Male</td><td class="text-center">{{ $displayGadCount($consultationGad['male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['male']['total'] ?? null) }}</td></tr>
             <tr class="subsection-row"><td colspan="6">PWD</td></tr>
-            <tr><td style="padding-left: 30px;">Male</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_male']['total'] ?? null) }}</td></tr>
-            <tr><td style="padding-left: 30px;">Female</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_female']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Male</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_male']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Female</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['pwd_female']['total'] ?? null) }}</td></tr>
             <tr class="subsection-row"><td colspan="6">Senior</td></tr>
-            <tr><td style="padding-left: 30px;">Male</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_male']['total'] ?? null) }}</td></tr>
-            <tr><td style="padding-left: 30px;">Female</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_female']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Male</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_male']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Female</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['senior_female']['total'] ?? null) }}</td></tr>
             <tr class="subsection-row"><td>Total</td><td class="text-center">{{ $displayGadCount($consultationGad['total']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['total']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['total']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['total']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($consultationGad['total']['total'] ?? null) }}</td></tr>
         </tbody>
     </table>
@@ -803,11 +809,11 @@
         <thead>
             <tr>
                 <th>GAD (OJT/Medical Compliance/Medical for Promotion/Excused Letter)</th>
-                <th style="text-align: center;">Students</th>
-                <th style="text-align: center;">Faculty</th>
-                <th style="text-align: center;">Admin</th>
-                <th style="text-align: center;">Dependent</th>
-                <th style="text-align: center;">Total</th>
+                <th class="mar-centered-heading">Students</th>
+                <th class="mar-centered-heading">Faculty</th>
+                <th class="mar-centered-heading">Admin</th>
+                <th class="mar-centered-heading">Dependent</th>
+                <th class="mar-centered-heading">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -815,11 +821,11 @@
             <tr><td>Female</td><td class="text-center">{{ $displayGadCount($certificateGad['female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['female']['total'] ?? null) }}</td></tr>
             <tr><td>Male</td><td class="text-center">{{ $displayGadCount($certificateGad['male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['male']['total'] ?? null) }}</td></tr>
             <tr class="subsection-row"><td colspan="6">PWD</td></tr>
-            <tr><td style="padding-left: 30px;">Male</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_male']['total'] ?? null) }}</td></tr>
-            <tr><td style="padding-left: 30px;">Female</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_female']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Male</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_male']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Female</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['pwd_female']['total'] ?? null) }}</td></tr>
             <tr class="subsection-row"><td colspan="6">Senior</td></tr>
-            <tr><td style="padding-left: 30px;">Male</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_male']['total'] ?? null) }}</td></tr>
-            <tr><td style="padding-left: 30px;">Female</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_female']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Male</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_male']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Female</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['senior_female']['total'] ?? null) }}</td></tr>
             <tr class="subsection-row"><td>Total</td><td class="text-center">{{ $displayGadCount($certificateGad['total']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['total']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['total']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['total']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($certificateGad['total']['total'] ?? null) }}</td></tr>
         </tbody>
     </table>
@@ -831,11 +837,11 @@
         <thead>
             <tr>
                 <th>GAD (Triage Online)</th>
-                <th style="text-align: center;">Students</th>
-                <th style="text-align: center;">Faculty</th>
-                <th style="text-align: center;">Admin</th>
-                <th style="text-align: center;">Dependent</th>
-                <th style="text-align: center;">Total</th>
+                <th class="mar-centered-heading">Students</th>
+                <th class="mar-centered-heading">Faculty</th>
+                <th class="mar-centered-heading">Admin</th>
+                <th class="mar-centered-heading">Dependent</th>
+                <th class="mar-centered-heading">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -843,11 +849,11 @@
             <tr><td>Female</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['female']['total'] ?? null) }}</td></tr>
             <tr><td>Male</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['male']['total'] ?? null) }}</td></tr>
             <tr class="subsection-row"><td colspan="6">PWD</td></tr>
-            <tr><td style="padding-left: 30px;">Male</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_male']['total'] ?? null) }}</td></tr>
-            <tr><td style="padding-left: 30px;">Female</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_female']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Male</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_male']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Female</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['pwd_female']['total'] ?? null) }}</td></tr>
             <tr class="subsection-row"><td colspan="6">Senior</td></tr>
-            <tr><td style="padding-left: 30px;">Male</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_male']['total'] ?? null) }}</td></tr>
-            <tr><td style="padding-left: 30px;">Female</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_female']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Male</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_male']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Female</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['senior_female']['total'] ?? null) }}</td></tr>
             <tr class="subsection-row"><td>Total</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['total']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['total']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['total']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['total']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($triageOnlineGad['total']['total'] ?? null) }}</td></tr>
         </tbody>
     </table>
@@ -859,11 +865,11 @@
         <thead>
             <tr>
                 <th>GAD (Consultation + OJT/Medical Compliance/Medical for Promotion + Triage)</th>
-                <th style="text-align: center;">Students</th>
-                <th style="text-align: center;">Faculty</th>
-                <th style="text-align: center;">Admin</th>
-                <th style="text-align: center;">Dependent</th>
-                <th style="text-align: center;">Total</th>
+                <th class="mar-centered-heading">Students</th>
+                <th class="mar-centered-heading">Faculty</th>
+                <th class="mar-centered-heading">Admin</th>
+                <th class="mar-centered-heading">Dependent</th>
+                <th class="mar-centered-heading">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -871,11 +877,11 @@
             <tr><td>Female</td><td class="text-center">{{ $displayGadCount($combinedGad['female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['female']['total'] ?? null) }}</td></tr>
             <tr><td>Male</td><td class="text-center">{{ $displayGadCount($combinedGad['male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['male']['total'] ?? null) }}</td></tr>
             <tr class="subsection-row"><td colspan="6">PWD</td></tr>
-            <tr><td style="padding-left: 30px;">Male</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_male']['total'] ?? null) }}</td></tr>
-            <tr><td style="padding-left: 30px;">Female</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_female']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Male</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_male']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Female</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['pwd_female']['total'] ?? null) }}</td></tr>
             <tr class="subsection-row"><td colspan="6">Senior</td></tr>
-            <tr><td style="padding-left: 30px;">Male</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_male']['total'] ?? null) }}</td></tr>
-            <tr><td style="padding-left: 30px;">Female</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_female']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Male</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_male']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Female</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['senior_female']['total'] ?? null) }}</td></tr>
             <tr class="subsection-row"><td>Total</td><td class="text-center">{{ $displayGadCount($combinedGad['total']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['total']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['total']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['total']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($combinedGad['total']['total'] ?? null) }}</td></tr>
         </tbody>
     </table>
@@ -887,11 +893,11 @@
         <thead>
             <tr>
                 <th>GAD (Medical Clearance for Freshmen)</th>
-                <th style="text-align: center;">Students</th>
-                <th style="text-align: center;">Faculty</th>
-                <th style="text-align: center;">Admin</th>
-                <th style="text-align: center;">Dependent</th>
-                <th style="text-align: center;">Total</th>
+                <th class="mar-centered-heading">Students</th>
+                <th class="mar-centered-heading">Faculty</th>
+                <th class="mar-centered-heading">Admin</th>
+                <th class="mar-centered-heading">Dependent</th>
+                <th class="mar-centered-heading">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -899,11 +905,11 @@
             <tr><td>Female</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['female']['total'] ?? null) }}</td></tr>
             <tr><td>Male</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['male']['total'] ?? null) }}</td></tr>
             <tr class="subsection-row"><td colspan="6">PWD</td></tr>
-            <tr><td style="padding-left: 30px;">Male</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_male']['total'] ?? null) }}</td></tr>
-            <tr><td style="padding-left: 30px;">Female</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_female']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Male</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_male']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Female</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['pwd_female']['total'] ?? null) }}</td></tr>
             <tr class="subsection-row"><td colspan="6">Senior</td></tr>
-            <tr><td style="padding-left: 30px;">Male</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_male']['total'] ?? null) }}</td></tr>
-            <tr><td style="padding-left: 30px;">Female</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_female']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Male</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_male']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_male']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_male']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_male']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_male']['total'] ?? null) }}</td></tr>
+            <tr><td class="mar-condition-indent">Female</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_female']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_female']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_female']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_female']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['senior_female']['total'] ?? null) }}</td></tr>
             <tr class="subsection-row"><td>Total</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['total']['student'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['total']['faculty'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['total']['admin'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['total']['dependent'] ?? null) }}</td><td class="text-center">{{ $displayGadCount($freshmenClearanceGad['total']['total'] ?? null) }}</td></tr>
         </tbody>
     </table>
@@ -915,7 +921,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 document.addEventListener('DOMContentLoaded', function () {
     const switcher = document.getElementById('marReportSwitcher');
     if (!switcher) return;

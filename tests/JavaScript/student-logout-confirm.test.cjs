@@ -4,12 +4,39 @@ const path = require('node:path');
 const test = require('node:test');
 const vm = require('node:vm');
 
+function executableInlineScripts(source) {
+    const scripts = /<script(?=[\t\n\f\r >])((?:[^"'<>]|"[^"]*"|'[^']*')*)>([\s\S]*?)<\/script\s*>/gi;
+    return [...source.matchAll(scripts)].filter(([, attributes]) => {
+        const attributePattern = /(?:^|[\t\n\f\r ])([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+        const parsed = new Map([...attributes.matchAll(attributePattern)].map(([, name, doubleQuoted, singleQuoted, unquoted]) => [
+            name.toLowerCase(), doubleQuoted ?? singleQuoted ?? unquoted ?? '',
+        ]));
+        const type = (parsed.get('type') || '').trim().toLowerCase();
+        return !parsed.has('src') && (!type || /^(?:module|(?:text|application)\/(?:java|ecma)script)$/.test(type));
+    }).map(([, , script]) => script);
+}
+
+test('script extraction accepts nonce attributes and ignores external and data scripts', () => {
+    const source = `<script src="/external.js">external();</script>
+        <script src>emptySource();</script><script src="">blankSource();</script>
+        <script type="application/json">{"data":true}</script>
+        <script type=application/ld+json>{"data":true}</script>
+        <script data-src="/not-external.js" title="src='/ignored.js' type='application/json'"
+            nonce="{{ request()->attributes->get('csp_nonce') }}">classic();</script>
+        <SCRIPT nonce='nonce>value' TYPE=" Text/JavaScript ">javascript();</SCRIPT>
+        <script type="module">export const value = 1;</script>`;
+    assert.deepEqual(executableInlineScripts(source), ['classic();', 'javascript();', 'export const value = 1;']);
+});
+
 const partial = fs.readFileSync(path.join(__dirname, '../../resources/views/partials/student-logout-confirm.blade.php'), 'utf8');
 const layout = fs.readFileSync(path.join(__dirname, '../../resources/views/layouts/student.blade.php'), 'utf8');
-const confirmationSource = partial.slice(partial.indexOf('<script>') + '<script>'.length, partial.indexOf('</script>'));
-const loaderMarker = layout.indexOf("const loader = document.getElementById('studentLogoutLoader');");
-const loaderStart = layout.lastIndexOf('(function () {', loaderMarker);
-const loaderSource = layout.slice(loaderStart, layout.indexOf('</script>', loaderMarker)).trim();
+const confirmationSource = executableInlineScripts(partial)[0];
+assert.ok(confirmationSource, 'Student logout confirmation script should exist');
+const loaderScript = executableInlineScripts(layout).find(script => script.includes("const loader = document.getElementById('studentLogoutLoader');"));
+assert.ok(loaderScript, 'Student logout loader script should exist');
+const loaderMarker = loaderScript.indexOf("const loader = document.getElementById('studentLogoutLoader');");
+const loaderStart = loaderScript.lastIndexOf('(function () {', loaderMarker);
+const loaderSource = loaderScript.slice(loaderStart).trim();
 assert.ok(confirmationSource.includes('function initStudentLogoutConfirm()'));
 assert.ok(loaderMarker >= 0 && loaderStart >= 0);
 

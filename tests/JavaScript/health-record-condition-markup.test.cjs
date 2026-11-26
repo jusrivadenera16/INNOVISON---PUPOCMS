@@ -17,5 +17,5 @@ test('condition details are built on open without losing or interpreting medical
     assert.match(context.window.healthRecordConditionMarkup({}), /No Medical Condition/);
     assert.ok(!source.includes('<template data-review-documents-template>'));
     assert.ok(!source.includes('<template data-review-condition-template>'));
-    assert.ok(source.includes("collect($readonlyUploadDocs)->map"));
+    assert.match(source, /'documents'\s*=>\s*collect\(\$readonlyUploadDocs\)\s*->filter\([\s\S]*?\)\s*->map\(/);
 });

@@ -3,7 +3,7 @@
 @section('title', 'FAQs')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .faq-admin {
         width: min(1480px, 100%);
         margin: 0 auto;
@@ -857,6 +857,8 @@
         background: rgba(112, 19, 27, 0.1) !important;
         color: #70131b !important;
     }
+    .csp-settings-faqs-1.csp-settings-faqs-1.csp-settings-faqs-1 { display:none; }
+    .csp-settings-faqs-2.csp-settings-faqs-2.csp-settings-faqs-2 { font-size:22px; }
 </style>
 @endpush
 
@@ -937,7 +939,7 @@
             <span class="faq-stat-icon is-updated"><x-outline-icon name="calendar-days" /></span>
             <span>
                 <span class="faq-stat-label">Last Updated</span>
-                <strong class="faq-stat-number" style="font-size:22px;">{{ $lastUpdated ? $lastUpdated->format('F j, Y') : 'No FAQs' }}</strong>
+                <strong class="faq-stat-number csp-settings-faqs-2">{{ $lastUpdated ? $lastUpdated->format('F j, Y') : 'No FAQs' }}</strong>
                 <span class="faq-stat-help">Latest content update</span>
             </span>
         </article>
@@ -1056,7 +1058,7 @@
                             <button type="button" class="faq-row-btn" data-edit-faq-id="{{ $faq->id }}" aria-label="Edit FAQ" title="Edit FAQ">
                                 <x-outline-icon name="pencil-square" />
                             </button>
-                            <form method="POST" action="{{ route('admin.settings.faqs.destroy', $faq) }}" onsubmit="return confirm('Delete this FAQ?');">
+                            <form method="POST" action="{{ route('admin.settings.faqs.destroy', $faq) }}" data-confirm-submit="Delete this FAQ?">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="faq-delete-btn" aria-label="Delete FAQ" title="Delete FAQ">
@@ -1071,7 +1073,7 @@
             </div>
 
             @if($faqs->isNotEmpty())
-                <div class="faq-empty" id="faqNoResults" style="display:none;">No FAQs match the current search or filter.</div>
+                <div class="faq-empty csp-settings-faqs-1" id="faqNoResults">No FAQs match the current search or filter.</div>
                 <div class="faq-pagination">
                     <span></span>
                     <div class="faq-pages" id="faqPages"></div>
@@ -1106,7 +1108,7 @@
                     <option value="__new__" {{ old('category') === '__new__' ? 'selected' : '' }}>New category...</option>
                 </select>
             </div>
-            <div class="faq-field" id="newFaqCategoryField" style="display:none;">
+            <div class="faq-field csp-settings-faqs-1" id="newFaqCategoryField">
                 <label for="faqCategoryNew">New Category Name</label>
                 <input id="faqCategoryNew" name="category_new" type="text" maxlength="120" value="{{ old('category_new') }}" placeholder="e.g., Appointments and Request">
             </div>
@@ -1118,7 +1120,7 @@
                 <label for="faqAnswer">Answer</label>
                 <textarea id="faqAnswer" name="answer" maxlength="10000" required>{{ old('answer') }}</textarea>
             </div>
-            <label class="faq-toggle-row" id="faqPublishRow" style="display:none;">
+            <label class="faq-toggle-row csp-settings-faqs-1" id="faqPublishRow">
                 <input id="faqIsActive" name="is_active" type="checkbox" value="1" checked>
                 <span>Publish to student portal</span>
             </label>
@@ -1174,7 +1176,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     (() => {
         const createUrl = @json(route('admin.settings.faqs.store'));
         const faqData = @json($faqData);

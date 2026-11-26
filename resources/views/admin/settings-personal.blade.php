@@ -4,7 +4,7 @@
 
 @push('styles')
 @include('admin.partials.settings-section-style')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .personal-settings-page {
         --personal-maroon: #7f0010;
         --personal-text: #172033;
@@ -494,6 +494,7 @@
             border-top: 1px solid var(--personal-line);
         }
     }
+    .csp-settings-personal-1.csp-settings-personal-1.csp-settings-personal-1 { margin:0; padding-left:18px; }
 </style>
 @endpush
 
@@ -532,7 +533,7 @@
 
     @if ($errors->any())
         <div class="alert alert-error">
-            <ul style="margin:0; padding-left:18px;">
+            <ul class="csp-settings-personal-1">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -656,7 +657,7 @@
                             <option value="Nurse" @selected(old('clinic_position', $reportPositionChoice) === 'Nurse')>Nurse</option>
                             <option value="Other" @selected(old('clinic_position', $reportPositionChoice) === 'Other')>Other</option>
                         </select>
-                        <div id="personalPositionOtherWrap" style="{{ old('clinic_position', $reportPositionChoice) === 'Other' ? '' : 'display:none;' }}">
+                        <div id="personalPositionOtherWrap" @if(old('clinic_position', $reportPositionChoice) !== 'Other') hidden @endif>
                             <label for="report_position_other">Other Position</label>
                             <input id="report_position_other" name="clinic_position_other" value="{{ old('clinic_position_other', $reportPositionOther) }}" placeholder="e.g., Nurse II" maxlength="255" disabled data-edit-field>
                         </div>
@@ -689,7 +690,7 @@
 </div>
 
 @if($canEditReportPosition)
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         document.addEventListener('DOMContentLoaded', function () {
             const position = document.getElementById('report_position');
             const otherWrap = document.getElementById('personalPositionOtherWrap');
@@ -698,7 +699,7 @@
 
             const syncOtherPosition = () => {
                 const isOther = position.value === 'Other';
-                otherWrap.style.display = isOther ? '' : 'none';
+                otherWrap.hidden = !isOther;
                 otherPosition.required = isOther;
             };
 

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Clinic temporarily unavailable</title>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         :root { color-scheme: light; font-family: Arial, sans-serif; color: #202938; background: #f4f6f8; }
         * { box-sizing: border-box; }
         body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; }

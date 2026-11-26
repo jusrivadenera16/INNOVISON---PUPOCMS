@@ -3,7 +3,7 @@
 @section('title', 'Manage Medicine Types')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .medicine-types-page,
     .medicine-modal-overlay {
         --clinic-maroon: #8f1024;
@@ -719,7 +719,7 @@
             <input type="search" id="medicineTypeSearch" placeholder="Search medicine types..." autocomplete="off">
         </label>
 
-        <button type="button" class="medicine-types-action" onclick="openAddMedicineTypeModal()">
+        <button type="button" class="medicine-types-action" data-add-medicine-type>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
             <span>Add Medicine Type</span>
         </button>
@@ -745,7 +745,7 @@
                         <span class="medicine-type-name">{{ $medicineType->name }}</span>
                     </button>
                     <span class="medicine-type-count">{{ $medicineType->items_count }} {{ $medicineType->items_count === 1 ? 'linked medicine' : 'linked medicines' }}</span>
-                    <form class="medicine-type-remove-form" action="{{ route('medicine-types.destroy', $medicineType->id) }}" method="POST" onsubmit="return confirmMedicineTypeDelete(event)">
+                    <form class="medicine-type-remove-form" action="{{ route('medicine-types.destroy', $medicineType->id) }}" method="POST" data-delete-medicine-type>
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="medicine-type-btn medicine-type-btn--delete medicine-type-btn--icon" title="Remove medicine type" aria-label="Remove medicine type">
@@ -783,7 +783,7 @@
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
                                     <span>Edit</span>
                                 </button>
-                                <form action="{{ route('admin.inventory.delete', $item->id) }}" method="POST" onsubmit="return confirmItemDelete(event)">
+                                <form action="{{ route('admin.inventory.delete', $item->id) }}" method="POST" data-delete-medicine>
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="medicine-type-btn medicine-type-btn--delete">
@@ -820,7 +820,7 @@
                     <p>Create a new medicine type reference.</p>
                 </div>
             </div>
-            <button type="button" class="standard-modal-close" onclick="closeAddMedicineTypeModal()" aria-label="Close add medicine type modal">
+            <button type="button" class="standard-modal-close" data-close-add-medicine-type aria-label="Close add medicine type modal">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
             </button>
         </div>
@@ -836,7 +836,7 @@
                 </label>
 
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeAddMedicineTypeModal()"><span>Cancel</span></button>
+                    <button type="button" class="btn-cancel" data-close-add-medicine-type><span>Cancel</span></button>
                     <button type="submit" class="btn-save"><span>Save Medicine Type</span></button>
                 </div>
             </form>
@@ -856,7 +856,7 @@
                     <p>Update the linked medicine name.</p>
                 </div>
             </div>
-            <button type="button" class="standard-modal-close" onclick="closeEditMedicineModal()" aria-label="Close edit medicine modal">
+            <button type="button" class="standard-modal-close" data-close-edit-medicine aria-label="Close edit medicine modal">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
             </button>
         </div>
@@ -886,7 +886,7 @@
                 <input type="hidden" name="expiration_date" id="editMedicineExpirationDate">
 
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeEditMedicineModal()"><span>Cancel</span></button>
+                    <button type="button" class="btn-cancel" data-close-edit-medicine><span>Cancel</span></button>
                     <button type="submit" class="btn-save"><span>Save Changes</span></button>
                 </div>
             </form>
@@ -896,7 +896,21 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
+document.querySelector('[data-add-medicine-type]')?.addEventListener('click', openAddMedicineTypeModal);
+document.querySelectorAll('[data-close-add-medicine-type]').forEach(function(button) {
+    button.addEventListener('click', closeAddMedicineTypeModal);
+});
+document.querySelectorAll('[data-close-edit-medicine]').forEach(function(button) {
+    button.addEventListener('click', closeEditMedicineModal);
+});
+document.querySelectorAll('[data-delete-medicine-type]').forEach(function(form) {
+    form.addEventListener('submit', confirmMedicineTypeDelete);
+});
+document.querySelectorAll('[data-delete-medicine]').forEach(function(form) {
+    form.addEventListener('submit', confirmItemDelete);
+});
+
 const medicineTypeSearch = document.getElementById('medicineTypeSearch');
 const medicineTypesCount = document.getElementById('medicineTypesCount');
 const medicineTypesEmpty = document.getElementById('medicineTypesEmpty');

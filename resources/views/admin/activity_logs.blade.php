@@ -3,7 +3,7 @@
 @section('title', 'Audit Trail')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     body:has(.audit-wrap) .main {
         background:
             linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.84)),
@@ -1825,6 +1825,11 @@
     html[data-theme="dark"] .audit-pagination .premium-select-option::before {
         z-index: -1;
     }
+    .csp-activity-logs-1.csp-activity-logs-1.csp-activity-logs-1 { margin-top:4px; font-size:11px; }
+    .csp-activity-logs-2.csp-activity-logs-2.csp-activity-logs-2 { min-width:250px; }
+    .csp-activity-logs-3.csp-activity-logs-3.csp-activity-logs-3 { font-size:11px; }
+    .csp-activity-logs-4.csp-activity-logs-4.csp-activity-logs-4 { font-weight:700; }
+    .csp-activity-logs-5.csp-activity-logs-5.csp-activity-logs-5 { font-size:12px; }
 </style>
 @endpush
 
@@ -2089,14 +2094,14 @@
                         <tr>
                             <td>
                                 <div>{{ optional($log->created_at)->format('M d, Y') }}</div>
-                                <div class="audit-muted" style="font-size:12px;">{{ optional($log->created_at)->format('g:i:s A') }}</div>
+                                <div class="audit-muted csp-activity-logs-5">{{ optional($log->created_at)->format('g:i:s A') }}</div>
                             </td>
                             <td>
                                 <div class="audit-user">
                                     <span class="audit-avatar">{{ strtoupper(substr((string) ($log->user_name ?? 'U'), 0, 1)) }}</span>
                                     <div>
-                                        <div style="font-weight:700;">{{ $log->user_name ?? 'Unknown User' }}</div>
-                                        <div class="audit-muted" style="font-size:11px;">UID: {{ $log->user_id ?? 'N/A' }}</div>
+                                        <div class="csp-activity-logs-4">{{ $log->user_name ?? 'Unknown User' }}</div>
+                                        <div class="audit-muted csp-activity-logs-3">UID: {{ $log->user_id ?? 'N/A' }}</div>
                                     </div>
                                 </div>
                             </td>
@@ -2123,10 +2128,10 @@
                                 </span>
                             </td>
                             <td class="audit-mono">{{ $log->ip_address ?? '-' }}</td>
-                            <td style="min-width:250px;">
+                            <td class="csp-activity-logs-2">
                                 <div>{{ $log->description }}</div>
                                 @if($log->route_name)
-                                    <div class="audit-muted" style="margin-top:4px; font-size:11px;">Route: {{ $log->route_name }}</div>
+                                    <div class="audit-muted csp-activity-logs-1">Route: {{ $log->route_name }}</div>
                                 @endif
                             </td>
                         </tr>
@@ -2182,7 +2187,7 @@
                             <input type="hidden" name="{{ $queryKey }}" value="{{ $queryValue }}">
                         @endif
                     @endforeach
-                    <select name="per_page" class="audit-select audit-pagination-per-page-select" onchange="this.form.submit()" aria-label="Audit records per page">
+                    <select name="per_page" class="audit-select audit-pagination-per-page-select" data-submit-on-change aria-label="Audit records per page">
                         @foreach(['25' => '25 per page', '50' => '50 per page', '100' => '100 per page', 'all' => 'Show all'] as $optionValue => $optionLabel)
                             <option value="{{ $optionValue }}" @selected(($perPageInput ?? '25') === $optionValue)>{{ $optionLabel }}</option>
                         @endforeach
@@ -2192,7 +2197,7 @@
         @endif
     </section>
 </div>
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 (function initAuditPremiumSelects() {
     const shells = [];
 

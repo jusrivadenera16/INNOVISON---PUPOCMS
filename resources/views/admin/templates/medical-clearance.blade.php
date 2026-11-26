@@ -15,7 +15,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Medical Clearance{{ $templatePreview ? ' - Template' : '' }}</title>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         @page { size: letter portrait; margin: 0.35in 0.95in; }
         * { box-sizing: border-box; }
         body { margin: 0; color: #000; background: #fff; font-family: Arial, Helvetica, sans-serif; font-size: 11.5pt; line-height: 1.4; }

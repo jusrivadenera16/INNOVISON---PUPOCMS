@@ -4,7 +4,7 @@
 
 @push('styles')
 @include('admin.partials.settings-section-style')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .settings-schedule-note {
         grid-column: 1 / -1;
         display: flex;
@@ -1222,7 +1222,7 @@
     }
 </style>
 @include('admin.partials.preferences-card-styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .preferences-settings-page .preferences-settings-shell-card,
     .preferences-settings-page .preferences-category--alerts,
     .preferences-settings-page .preferences-category--student-reminders,
@@ -1360,6 +1360,7 @@
         .preferences-settings-page .preferences-action-grid .preferences-settings-shell-header { padding: 13px 14px 12px; }
         .preferences-settings-page .preferences-action-grid .preferences-settings-shell-body { padding: 12px 14px 14px; }
     }
+    .csp-settings-preferences-1.csp-settings-preferences-1.csp-settings-preferences-1 { margin:0; padding-left:18px; }
 </style>
 @endpush
 
@@ -1389,7 +1390,7 @@
 
     @if ($errors->any())
         <div class="alert alert-error">
-            <ul style="margin:0; padding-left:18px;">
+            <ul class="csp-settings-preferences-1">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -1664,7 +1665,7 @@
     </div>
 </div>
 @include('admin.partials.settings-edit-script')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 document.addEventListener('DOMContentLoaded', function () {
     const generalPreferencesForm = document.querySelector('#systemPreferencesForm');
     const closurePreferencesForm = document.querySelector('#temporaryClosureForm');

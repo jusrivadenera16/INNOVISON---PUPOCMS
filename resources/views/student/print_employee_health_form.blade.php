@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Health Examination Record</title>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         @page { size: 8.5in 13in; margin: 0; }
         * { box-sizing: border-box; }
         body { margin: 0; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; }
@@ -80,8 +80,8 @@
 <body>
 @unless($pdfMode ?? false)
     <div class="print-action-bar no-print">
-        <button class="print-action-button is-download" type="button" onclick="window.print()">Print</button>
-        <button class="print-action-button" type="button" onclick="window.close()">Close View</button>
+        <button class="print-action-button is-download" type="button" data-student-action="print">Print</button>
+        <button class="print-action-button" type="button" data-student-action="close-window">Close View</button>
     </div>
 @endunless
 @php
@@ -215,5 +215,8 @@
         </table>
     </div>
 </div>
+@unless($pdfMode ?? false)
+    <script src="{{ asset('js/student-csp-controls.js') }}?v={{ filemtime(public_path('js/student-csp-controls.js')) }}" defer></script>
+@endunless
 </body>
 </html>

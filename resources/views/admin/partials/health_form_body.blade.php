@@ -15,6 +15,16 @@
         $printedHomeAddress = implode(', ', $splitHomeAddress);
     }
 @endphp
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
+    .print-container .official-photo-cell .health-form-student-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .print-container .health-form-label-column { width: 9%; }
+    .print-container .health-form-name-column { width: 53%; }
+    .print-container .health-form-student-number-label-column { width: 13%; }
+    .print-container .health-form-student-number-value-column { width: 25%; }
+    .print-container .health-form-signature-side-column { width: 28%; }
+    .print-container .health-form-signature-name-column { width: 44%; }
+    .print-container .health-form-physician-heading { text-align: center; font-weight: bold; margin-bottom: 2px; font-size: 14px; text-transform: uppercase; }
+</style>
 <div class="print-container">
     <div class="print-page">
     <div class="document-code">
@@ -36,7 +46,7 @@
             <td class="official-photo-cell">
                 <div class="photo-box">
                     @if($healthFormStudentPhotoSrc !== '')
-                        <img src="{{ $healthFormStudentPhotoSrc }}" alt="2x2 Student Photo" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;">
+                        <img src="{{ $healthFormStudentPhotoSrc }}" alt="2x2 Student Photo" class="health-form-student-photo">
                     @else
                         2x2 or passport-sized<br>current colored ID photo
                     @endif
@@ -123,10 +133,10 @@
     @endphp
     <table class="student-information-table">
         <colgroup>
-            <col style="width: 9%;">
-            <col style="width: 53%;">
-            <col style="width: 13%;">
-            <col style="width: 25%;">
+            <col class="health-form-label-column">
+            <col class="health-form-name-column">
+            <col class="health-form-student-number-label-column">
+            <col class="health-form-student-number-value-column">
         </colgroup>
         <tr>
             <td class="student-name-cell" colspan="2">
@@ -326,13 +336,20 @@ for the improvement of healthcare services.
             11,
             max(7, floor((260 / $studentSignatureNameLength) * 2) / 2)
         );
+        $studentSignatureNameFontSize = is_numeric($studentSignatureNameFontSize) && is_finite((float) $studentSignatureNameFontSize)
+            ? max(7, min(11, (float) $studentSignatureNameFontSize))
+            : 11;
+        $studentSignatureNameSizeClass = 'health-form-signature-size-' . str_replace('.', '-', (string) $studentSignatureNameFontSize);
     @endphp
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
+        .print-container .student-signature-name.{{ $studentSignatureNameSizeClass }} { font-size: {{ $studentSignatureNameFontSize }}px !important; }
+    </style>
     <div class="signature-physician-block">
         <table class="signature-table">
             <colgroup>
-                <col style="width: 28%;">
-                <col style="width: 44%;">
-                <col style="width: 28%;">
+                <col class="health-form-signature-side-column">
+                <col class="health-form-signature-name-column">
+                <col class="health-form-signature-side-column">
             </colgroup>
             <tr>
                 <td>
@@ -346,7 +363,7 @@ for the improvement of healthcare services.
                     @else
                         <div class="signature-space"></div>
                     @endif
-                    <div class="sig-line student-signature-name" style="font-size: {{ $studentSignatureNameFontSize }}px !important;">{{ strtoupper($printedStudentSignatureName) }}</div>
+                    <div class="sig-line student-signature-name {{ $studentSignatureNameSizeClass }}">{{ strtoupper($printedStudentSignatureName) }}</div>
                     <div class="signature-caption">(Printed name and signature of student)</div>
                 </td>
                 <td>
@@ -359,7 +376,7 @@ for the improvement of healthcare services.
         </table>
 
         <div class="physician-section">
-            <p style="text-align: center; font-weight: bold; margin-bottom: 2px; font-size: 14px; text-transform: uppercase;">FOR PHYSICIAN ONLY</p>
+            <p class="health-form-physician-heading">FOR PHYSICIAN ONLY</p>
             <p class="physician-check-instruction">Please Check</p>
             
             <table class="physician-clearance-table">

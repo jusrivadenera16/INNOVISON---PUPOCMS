@@ -3,7 +3,7 @@
 @section('title', 'All Feedback')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .feedback-page {
         max-width: 1080px;
         margin: 0 auto;
@@ -129,11 +129,13 @@
     @media (max-width: 600px) {
         .feedback-grid { grid-template-columns: 1fr; }
     }
+
+    .student-feedback-index-csp-1 { display:none; }
 </style>
 @endpush
 
 @section('content')
-<svg style="display:none;">
+<svg class="student-feedback-index-csp-1">
   <symbol id="feedback-avatar-placeholder" viewBox="0 0 24 24">
     <circle cx="12" cy="12" r="12" fill="#e2e8f0"/>
     <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z" fill="#cbd5e0"/>

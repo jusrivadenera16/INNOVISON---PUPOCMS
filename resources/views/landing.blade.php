@@ -15,7 +15,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>PUP Taguig Medical Clinic</title>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         :root {
             --maroon: #70131B;
             --maroon-strong: #8f2230;
@@ -713,6 +713,10 @@
             display: grid;
             gap: 10px;
             text-align: center;
+        }
+
+        .login-copy--workspace {
+            margin-bottom: 8px;
         }
 
         .login-copy h2 {
@@ -1566,6 +1570,157 @@
             outline: none;
         }
 
+        .workspace-btn[aria-disabled="true"] {
+            cursor: not-allowed;
+            opacity: .58;
+        }
+
+        .workspace-btn[aria-disabled="true"]:hover,
+        .workspace-btn[aria-disabled="true"]:focus-visible {
+            transform: none;
+            background: linear-gradient(135deg, var(--maroon), var(--maroon-strong));
+            border-color: var(--maroon);
+            color: #ffffff;
+            box-shadow: 0 12px 24px rgba(112, 19, 27, 0.08);
+        }
+
+        .sa-gateway-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, .6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            animation: fadeIn .3s ease both;
+        }
+
+        .sa-gateway-modal {
+            width: min(480px, 100%);
+            padding: 48px 40px;
+            border: 1px solid rgba(112, 19, 27, .1);
+            border-radius: 24px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, .98), rgba(255, 248, 230, .95));
+            box-shadow: 0 28px 68px rgba(15, 23, 42, .34), inset 0 1px 0 rgba(255, 255, 255, .6);
+            color: var(--maroon);
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            animation: preloaderContentIn .4s cubic-bezier(.22, 1, .36, 1) both;
+        }
+
+        .sa-gateway-heading {
+            margin-bottom: 28px;
+        }
+
+        .sa-gateway-kicker {
+            margin: 0 0 8px;
+            color: #70131b;
+            font-size: 12px;
+            font-weight: 950;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+        }
+
+        .sa-gateway-title {
+            margin: 0 0 12px;
+            color: #70131b;
+            font-size: 32px;
+            line-height: 1.08;
+            font-weight: 950;
+        }
+
+        .sa-gateway-description {
+            margin: 0;
+            color: #64748b;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .sa-gateway-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            width: 100%;
+            min-height: 60px;
+            margin-bottom: 14px;
+            padding: 16px 24px;
+            border: 1.5px solid #70131b;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #70131b, #8f2230);
+            box-shadow: 0 12px 28px rgba(112, 19, 27, .18);
+            color: #ffffff;
+            font: inherit;
+            font-size: 16px;
+            font-weight: 950;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+        }
+
+        .sa-gateway-button:hover,
+        .sa-gateway-button:focus-visible {
+            transform: translateY(-1px);
+            border-color: #facc15;
+            background: linear-gradient(135deg, #facc15, #fff1a8);
+            box-shadow: 0 16px 36px rgba(112, 19, 27, .22);
+            color: #70131b;
+        }
+
+        .sa-gateway-button:focus-visible {
+            outline: 3px solid rgba(250, 204, 21, .7);
+            outline-offset: 3px;
+        }
+
+        .sa-gateway-button:disabled,
+        .sa-gateway-button:disabled:hover {
+            transform: none;
+            border-color: #70131b;
+            background: linear-gradient(135deg, #70131b, #8f2230);
+            box-shadow: 0 12px 28px rgba(112, 19, 27, .18);
+            color: #ffffff;
+            cursor: not-allowed;
+            opacity: .58;
+        }
+
+        .sa-gateway-icon {
+            width: 22px;
+            height: 22px;
+            flex: 0 0 auto;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 2;
+        }
+
+        .sa-gateway-footer {
+            margin: 0;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 520px) {
+            .sa-gateway-modal {
+                padding: 34px 22px;
+                border-radius: 20px;
+            }
+
+            .sa-gateway-title {
+                font-size: 28px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .sa-gateway-overlay,
+            .sa-gateway-modal {
+                animation: none;
+            }
+        }
+
         .workspace-badge {
             display: inline-flex;
             align-items: center;
@@ -1715,7 +1870,7 @@
             position: absolute;
             top: -8px;
             right: -8px;
-            display: inline-flex;
+            display: none;
             align-items: center;
             justify-content: center;
             min-width: 24px;
@@ -1729,6 +1884,10 @@
             border: 2px solid rgba(20, 16, 20, 0.96);
             box-shadow: 0 2px 8px rgba(250, 204, 21, 0.4);
             animation: badge-pulse 2s ease-in-out infinite;
+        }
+
+        .announcement-badge.is-visible {
+            display: inline-flex;
         }
 
         @keyframes badge-pulse {
@@ -3624,6 +3783,23 @@
             scroll-snap-type: x proximity;
             scrollbar-width: thin;
             scrollbar-color: rgba(250, 204, 21, .48) transparent;
+        }
+
+        .announcement-overview-card[data-announcement-filter="all"],
+        .announcement-overview-card[data-announcement-filter="info"] {
+            --announcement-accent: #facc15;
+        }
+
+        .announcement-overview-card[data-announcement-filter="latest"] {
+            --announcement-accent: #38bdf8;
+        }
+
+        .announcement-overview-card[data-announcement-filter="urgent"] {
+            --announcement-accent: #ef4444;
+        }
+
+        .announcement-overview-card[data-announcement-filter="event"] {
+            --announcement-accent: #a78bfa;
         }
 
         .announcement-overview-card {
@@ -8862,7 +9038,7 @@
         <nav class="landing-nav" id="landingNavMenu" aria-label="Main navigation">
             <button type="button" class="landing-nav-item landing-announcement-btn" id="announcementBtn" aria-label="Announcements" title="Announcements">
                 <x-outline-icon name="megaphone" />
-                <span class="announcement-badge" id="announcementBadge" style="display: none;">1</span>
+                <span class="announcement-badge" id="announcementBadge">1</span>
                 <span class="landing-nav-label">Announcements</span>
             </button>
 
@@ -8896,7 +9072,6 @@
                         tabindex="-1"
                         loading="eager"
                         referrerpolicy="no-referrer"
-                        onload="this.parentElement.classList.add('is-embed-ready')"
                     ></iframe>
                     <svg class="landing-weather-lightning" viewBox="0 0 32 44" aria-hidden="true">
                         <path d="M18.5 1 5 24h10l-2 19 14-26H17.5l1-16Z" fill="#facc15" stroke="#fff7b2" stroke-linejoin="round" stroke-width="1.25" />
@@ -9073,31 +9248,31 @@
                     @endphp
 
                     <div class="announcement-overview-grid">
-                        <button type="button" class="announcement-overview-card is-active" style="--announcement-accent:#facc15" data-announcement-filter="all" aria-pressed="true">
+                        <button type="button" class="announcement-overview-card is-active" data-announcement-filter="all" aria-pressed="true">
                             <span class="announcement-overview-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16v10H4z"/><path d="m4 8 8 5 8-5"/></svg>
                             </span>
                             <span class="announcement-overview-copy"><span>All</span><strong>{{ $landingTotalAnnouncements }}</strong><small>updates</small></span>
                         </button>
-                        <button type="button" class="announcement-overview-card" style="--announcement-accent:#38bdf8" data-announcement-filter="latest" aria-pressed="false">
+                        <button type="button" class="announcement-overview-card" data-announcement-filter="latest" aria-pressed="false">
                             <span class="announcement-overview-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16v-4"/><path d="M12 8h.01"/><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/></svg>
                             </span>
                             <span class="announcement-overview-copy"><span>Latest</span><strong>{{ $landingLatestCount }}</strong><small>new posts</small></span>
                         </button>
-                        <button type="button" class="announcement-overview-card" style="--announcement-accent:#ef4444" data-announcement-filter="urgent" aria-pressed="false">
+                        <button type="button" class="announcement-overview-card" data-announcement-filter="urgent" aria-pressed="false">
                             <span class="announcement-overview-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 9 16H3L12 3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
                             </span>
                             <span class="announcement-overview-copy"><span>Urgent</span><strong>{{ $landingUrgentCount }}</strong><small>alerts</small></span>
                         </button>
-                        <button type="button" class="announcement-overview-card" style="--announcement-accent:#facc15" data-announcement-filter="info" aria-pressed="false">
+                        <button type="button" class="announcement-overview-card" data-announcement-filter="info" aria-pressed="false">
                             <span class="announcement-overview-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16v-4"/><path d="M12 8h.01"/><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/></svg>
                             </span>
                             <span class="announcement-overview-copy"><span>Info</span><strong>{{ $landingInfoCount }}</strong><small>updates</small></span>
                         </button>
-                        <button type="button" class="announcement-overview-card" style="--announcement-accent:#a78bfa" data-announcement-filter="event" aria-pressed="false">
+                        <button type="button" class="announcement-overview-card" data-announcement-filter="event" aria-pressed="false">
                             <span class="announcement-overview-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3v3M17 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v13H4V7a2 2 0 0 1 2-2z"/><path d="M8 13h3M8 17h6"/></svg>
                             </span>
@@ -9394,7 +9569,7 @@
 
                        
                         <div id="saWorkspaceSelector" class="sa-workspace-selector">
-                            <div class="login-copy" style="margin-bottom: 8px;">
+                            <div class="login-copy login-copy--workspace">
                                 <h2>Choose Your Workspace</h2>
                                 <p>Select where you want to continue today.</p>
                             </div>
@@ -9407,8 +9582,7 @@
                                 href="{{ $saAdminWorkspaceAvailable ? route('assistant.enter-admin') : '#' }}"
                                 @unless($saAdminWorkspaceAvailable)
                                     aria-disabled="true"
-                                    onclick="event.preventDefault();"
-                                    style="cursor: not-allowed; opacity: .58;"
+                                    data-workspace-disabled
                                 @endunless
                             >
                                 <span class="workspace-badge">⚙️</span>
@@ -9661,7 +9835,7 @@
             </div>
         </section>
     </footer>
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
 
         const preloader = document.getElementById('preloader');
         const saSelector = document.getElementById('saWorkspaceSelector');
@@ -9679,6 +9853,9 @@
         const landingWeatherIconSlot = document.getElementById('landingWeatherIconSlot');
         const landingWeatherTriggerIcon = landingWeatherTrigger?.querySelector('.landing-weather-trigger__icon');
         const landingWeatherAnimatedEmbed = document.getElementById('landingWeatherAnimatedEmbed');
+        landingWeatherAnimatedEmbed?.addEventListener('load', function () {
+            landingWeatherTriggerIcon?.classList.add('is-embed-ready');
+        }, { once: true });
         const landingWeatherMiniSummary = document.getElementById('landingWeatherMiniSummary');
         const landingWeatherMiniTemperature = document.getElementById('landingWeatherMiniTemperature');
         const landingWeatherMiniCondition = document.getElementById('landingWeatherMiniCondition');
@@ -11174,6 +11351,12 @@
                 preloader.classList.remove('hidden');
             }
 
+            document.querySelectorAll('[data-workspace-disabled]').forEach(function (workspaceLink) {
+                workspaceLink.addEventListener('click', function (event) {
+                    event.preventDefault();
+                });
+            });
+
             initializeLandingDoctorAvailability();
             initializeLandingEarpiece();
             initializeLandingChestpiece();
@@ -11249,180 +11432,66 @@
             const adminWorkspaceAvailable = @json($saAdminWorkspaceAvailable);
             const adminWorkspaceHoursLabel = @json($saAdminWorkspaceHoursLabel);
 
-            // Create modal overlay
             const modal = document.createElement('div');
             modal.id = 'saWorkspaceSelectorModal';
-            modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(15, 23, 42, 0.6);
-                backdrop-filter: blur(4px);
-                -webkit-backdrop-filter: blur(4px);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 10000;
-                animation: fadeInOverlay 0.3s ease;
-            `;
+            modal.className = 'sa-gateway-overlay';
 
             const modalBox = document.createElement('div');
-            modalBox.style.cssText = `
-                background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 230, 0.95));
-                border-radius: 24px;
-                padding: 48px 40px;
-                max-width: 480px;
-                width: 90%;
-                box-shadow: 0 28px 68px rgba(15, 23, 42, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-                border: 1px solid rgba(112, 19, 27, 0.10);
-                text-align: center;
-                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-                animation: slideInUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-            `;
+            modalBox.className = 'sa-gateway-modal';
+            modalBox.setAttribute('role', 'dialog');
+            modalBox.setAttribute('aria-modal', 'true');
+            modalBox.setAttribute('aria-labelledby', 'saWorkspaceSelectorTitle');
 
-            const headingHTML = `
-                <div style="margin-bottom: 28px;">
-                    <p style="margin: 0 0 8px 0; color: #70131b; font-size: 12px; font-weight: 950; letter-spacing: 0.18em; text-transform: uppercase;">Choose Your Portal</p>
-                    <h2 style="margin: 0 0 12px 0; color: #70131b; font-size: 32px; line-height: 1.08; font-weight: 950;">Workspace Selection</h2>
-                    <p style="margin: 0; color: #64748b; font-size: 15px; line-height: 1.6;">Select which side you want to access today.</p>
-                </div>
+            const heading = document.createElement('div');
+            heading.className = 'sa-gateway-heading';
+            heading.innerHTML = `
+                <p class="sa-gateway-kicker">Choose Your Portal</p>
+                <h2 class="sa-gateway-title" id="saWorkspaceSelectorTitle">Workspace Selection</h2>
+                <p class="sa-gateway-description">Select which side you want to access today.</p>
             `;
 
             const studentsideButton = document.createElement('a');
             studentsideButton.href = '/student/home';
-            studentsideButton.style.cssText = `
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 14px;
-                width: 100%;
-                padding: 18px 24px;
-                margin-bottom: 14px;
-                border-radius: 18px;
-                border: 1.5px solid #70131b;
-                background: linear-gradient(135deg, #70131b, #8f2230);
-                color: white;
-                font-size: 16px;
-                font-weight: 950;
-                text-decoration: none;
-                cursor: pointer;
-                transition: all 0.18s ease;
-                box-shadow: 0 12px 28px rgba(112, 19, 27, 0.18);
-            `;
+            studentsideButton.className = 'sa-gateway-button';
             studentsideButton.innerHTML = `
-                <svg viewBox="0 0 24 24" fill="none" style="width: 22px; height: 22px; flex: 0 0 auto; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;">
+                <svg class="sa-gateway-icon" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                     <circle cx="12" cy="7" r="4"/>
                 </svg>
                 <span>Go to Student Side</span>
             `;
-            studentsideButton.addEventListener('mouseover', function() {
-                this.style.background = 'linear-gradient(135deg, #facc15, #fff1a8)';
-                this.style.color = '#70131b';
-                this.style.borderColor = '#facc15';
-                this.style.boxShadow = '0 16px 36px rgba(112, 19, 27, 0.22)';
-            });
-            studentsideButton.addEventListener('mouseout', function() {
-                this.style.background = 'linear-gradient(135deg, #70131b, #8f2230)';
-                this.style.color = 'white';
-                this.style.borderColor = '#70131b';
-                this.style.boxShadow = '0 12px 28px rgba(112, 19, 27, 0.18)';
-            });
 
             const adminButton = document.createElement(adminWorkspaceAvailable ? 'a' : 'button');
+            adminButton.className = 'sa-gateway-button';
             if (adminWorkspaceAvailable) {
-                adminButton.href = '{{ route('assistant.enter-admin') }}';
+                adminButton.href = @json(route('assistant.enter-admin'));
             } else {
                 adminButton.type = 'button';
                 adminButton.disabled = true;
-                adminButton.setAttribute('aria-disabled', 'true');
+                adminButton.classList.add('is-disabled');
             }
-            adminButton.style.cssText = `
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 14px;
-                width: 100%;
-                padding: 18px 24px;
-                margin-bottom: 24px;
-                border-radius: 18px;
-                border: 1.5px solid #70131b;
-                background: linear-gradient(135deg, #70131b, #8f2230);
-                color: white;
-                font-size: 16px;
-                font-weight: 950;
-                text-decoration: none;
-                cursor: ${adminWorkspaceAvailable ? 'pointer' : 'not-allowed'};
-                transition: all 0.18s ease;
-                box-shadow: 0 12px 28px rgba(112, 19, 27, 0.18);
-                opacity: ${adminWorkspaceAvailable ? '1' : '.58'};
-            `;
             adminButton.innerHTML = `
-                <svg viewBox="0 0 24 24" fill="none" style="width: 22px; height: 22px; flex: 0 0 auto; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;">
+                <svg class="sa-gateway-icon" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M12 2L2 7v10a8 8 0 0 0 8 8 8 8 0 0 0 8-8V7l-10-5z"/>
                     <path d="M12 11v5M9 14h6"/>
                 </svg>
-                <span>${adminWorkspaceAvailable ? 'Go to Admin/SA Side' : `Admin Side: Available ${adminWorkspaceHoursLabel}`}</span>
+                <span></span>
             `;
-            if (adminWorkspaceAvailable) {
-                adminButton.addEventListener('mouseover', function() {
-                    this.style.background = 'linear-gradient(135deg, #facc15, #fff1a8)';
-                    this.style.color = '#70131b';
-                    this.style.borderColor = '#facc15';
-                    this.style.boxShadow = '0 16px 36px rgba(112, 19, 27, 0.22)';
-                });
-                adminButton.addEventListener('mouseout', function() {
-                    this.style.background = 'linear-gradient(135deg, #70131b, #8f2230)';
-                    this.style.color = 'white';
-                    this.style.borderColor = '#70131b';
-                    this.style.boxShadow = '0 12px 28px rgba(112, 19, 27, 0.18)';
-                });
-            }
+            adminButton.querySelector('span').textContent = adminWorkspaceAvailable
+                ? 'Go to Admin/SA Side'
+                : `Admin Side: Available ${adminWorkspaceHoursLabel}`;
 
-            const footerHTML = `
-                <p style="margin: 0; color: #94a3b8; font-size: 12px; line-height: 1.6;">PUP Taguig Clinic Management System</p>
-            `;
+            const footer = document.createElement('p');
+            footer.className = 'sa-gateway-footer';
+            footer.textContent = 'PUP Taguig Clinic Management System';
 
-            modalBox.innerHTML = headingHTML;
-            modalBox.appendChild(studentsideButton);
-            modalBox.appendChild(adminButton);
-            modalBox.innerHTML += footerHTML;
+            modalBox.append(heading, studentsideButton, adminButton, footer);
 
             modal.appendChild(modalBox);
             document.body.appendChild(modal);
 
-     
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes fadeInOverlay {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                @keyframes slideInUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(20px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
-                }
-            `;
-            if (!document.head.querySelector('style[data-landing-animations]')) {
-                style.setAttribute('data-landing-animations', 'true');
-                document.head.appendChild(style);
-            }
-
-            // Close modal on overlay click (but not on the box)
             modal.addEventListener('click', function(e) {
                 if (e.target === modal) {
-                    console.log('[LANDING] Closing SA workspace selector');
                     modal.remove();
                 }
             });
@@ -11721,11 +11790,14 @@
         }
 
         function updateAnnouncementBadge(count) {
-            if (count > 0) {
+            if (!announcementBadge) {
+                return;
+            }
+
+            const hasAnnouncements = count > 0;
+            announcementBadge.classList.toggle('is-visible', hasAnnouncements);
+            if (hasAnnouncements) {
                 announcementBadge.textContent = count > 99 ? '99+' : count;
-                announcementBadge.style.display = 'flex';
-            } else {
-                announcementBadge.style.display = 'none';
             }
         }
 

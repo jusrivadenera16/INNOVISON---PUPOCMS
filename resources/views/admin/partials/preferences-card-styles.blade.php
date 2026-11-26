@@ -1,4 +1,4 @@
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .preferences-settings-page .settings-section-hero,
     .preferences-settings-page .preferences-workflow-content > .preferences-category,
     .preferences-settings-page .preferences-workflow-content > .preferences-category:last-child,

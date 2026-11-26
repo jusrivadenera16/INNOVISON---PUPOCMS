@@ -1,7 +1,7 @@
 @section('title', $title ?? 'Export Report')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .export-page-shell {
         width: min(1180px, calc(100% - 32px));
         margin: 24px auto;
@@ -1171,7 +1171,7 @@
                     </span>
                 </div>
 
-                <button type="button" class="export-action-card is-filter" onclick="openExportFilterModal()">
+                <button type="button" class="export-action-card is-filter" data-open-export-filter>
                     <span class="export-card-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
@@ -1269,7 +1269,7 @@
                 </div>
             @endif
 
-            <button type="button" class="export-action-card is-filter" onclick="openExportFilterModal()">
+            <button type="button" class="export-action-card is-filter" data-open-export-filter>
                 <span class="export-card-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
@@ -1345,7 +1345,7 @@
     </section>
 </div>
 
-<div class="export-filter-backdrop" id="exportFilterModal" onclick="closeExportFilterModal(event)">
+<div class="export-filter-backdrop" id="exportFilterModal" data-export-filter-backdrop>
     <section class="export-filter-modal" role="dialog" aria-modal="true" aria-labelledby="exportFilterTitle">
         <header class="export-filter-modal-head">
             <span class="export-filter-modal-icon">
@@ -1357,7 +1357,7 @@
                 <h2 class="export-filter-modal-title" id="exportFilterTitle">Filter {{ $title }}</h2>
                 <p class="export-filter-modal-copy">Set the date range for the preview and generated export.</p>
             </div>
-            <button type="button" class="export-filter-modal-close" onclick="closeExportFilterModal()" aria-label="Close filter"><span aria-hidden="true">&times;</span></button>
+            <button type="button" class="export-filter-modal-close" data-close-export-filter aria-label="Close filter"><span aria-hidden="true">&times;</span></button>
         </header>
         <form method="GET" action="{{ $filterActionUrl }}" class="export-filter-form">
             <div class="export-filter-field">
@@ -1510,7 +1510,7 @@
                 </div>
             @endif
             <div class="export-filter-actions">
-                <button type="button" class="export-filter-cancel" onclick="closeExportFilterModal()">Cancel</button>
+                <button type="button" class="export-filter-cancel" data-close-export-filter>Cancel</button>
                 <button type="submit" class="export-filter-submit">Apply Filter</button>
             </div>
         </form>
@@ -1518,7 +1518,15 @@
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
+    document.querySelectorAll('[data-open-export-filter]').forEach(function(button) {
+        button.addEventListener('click', openExportFilterModal);
+    });
+    document.querySelectorAll('[data-close-export-filter]').forEach(function(button) {
+        button.addEventListener('click', function() { closeExportFilterModal(); });
+    });
+    document.querySelector('[data-export-filter-backdrop]')?.addEventListener('click', closeExportFilterModal);
+
     function openExportFilterModal() {
         document.getElementById('exportFilterModal')?.classList.add('is-open');
     }

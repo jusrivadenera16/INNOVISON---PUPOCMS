@@ -4,7 +4,7 @@
 @section('disable_voice_inputs', 'true')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .dev-shell {
         max-width: 1120px;
         margin: 0 auto;
@@ -2896,7 +2896,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     document.addEventListener('DOMContentLoaded', function () {
         const openButton = document.getElementById('openDeveloperOptionsPanel');
         const closeButton = document.getElementById('closeDeveloperOptionsPanel');

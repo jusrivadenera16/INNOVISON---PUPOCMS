@@ -3,7 +3,7 @@
 @section('title', 'Pulled Out Records')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .pullout-report-shell {
         --por-maroon: #7f1d2d;
         --por-yellow: #facc15;
@@ -564,7 +564,7 @@
 @endpush
 
 @push('late-styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .main .pullout-report-back {
         border-color: #7f1d2d !important;
         background-color: #7f1d2d !important;
@@ -812,7 +812,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     (function () {
         const shell = document.getElementById('pulloutFilterShell');
         const toggle = document.getElementById('pulloutFilterToggle');

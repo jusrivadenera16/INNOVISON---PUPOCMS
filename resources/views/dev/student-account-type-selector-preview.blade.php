@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Account Type Selector Preview</title>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         :root {
             --preview-bg: #0b1020;
             --preview-panel: #111827;
@@ -341,7 +341,7 @@
         <p class="preview-caption">Preview only. No account type is saved and no live API request is made.</p>
     </main>
 
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         (function () {
             const root = document.documentElement;
             const stateButtons = Array.from(document.querySelectorAll('[data-state]'));

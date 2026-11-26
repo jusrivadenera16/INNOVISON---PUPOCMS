@@ -3,7 +3,7 @@
 @section('title', 'Manage Medical Conditions')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .conditions-page,
     .modal-overlay {
         --clinic-maroon: #8f1024;
@@ -892,7 +892,7 @@
             <input type="search" id="conditionSearch" placeholder="Search conditions..." autocomplete="off">
         </label>
 
-        <button type="button" class="conditions-action" onclick="openAddConditionModal()">
+        <button type="button" class="conditions-action" data-add-condition>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
             <span>Add Condition</span>
         </button>
@@ -928,11 +928,11 @@
                         <div class="condition-row" data-condition-row data-condition-name="{{ strtolower($cond->name) }}">
                             <div class="condition-name">{{ $cond->name }}</div>
                             <div class="condition-actions">
-                                <button type="button" class="condition-btn condition-btn--edit" onclick="openChangeModal('{{ $cond->id }}', '{{ $cond->category_id }}', @js($cond->name))">
+                                <button type="button" class="condition-btn condition-btn--edit" data-edit-condition data-condition-id="{{ $cond->id }}" data-category-id="{{ $cond->category_id }}" data-condition-name="{{ $cond->name }}">
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
                                     <span>Edit</span>
                                 </button>
-                                <form action="{{ route('conditions.destroy', $cond->id) }}" method="POST" onsubmit="return confirmDelete(event)">
+                                <form action="{{ route('conditions.destroy', $cond->id) }}" method="POST" data-delete-condition>
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="condition-btn condition-btn--delete">
@@ -970,7 +970,7 @@
                     <p>Assign a new condition to a MAR category.</p>
                 </div>
             </div>
-            <button type="button" class="standard-modal-close" onclick="closeAddConditionModal()" aria-label="Close add condition modal">
+            <button type="button" class="standard-modal-close" data-close-add-condition aria-label="Close add condition modal">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
             </button>
         </div>
@@ -1001,7 +1001,7 @@
                 </label>
 
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeAddConditionModal()">Cancel</button>
+                    <button type="button" class="btn-cancel" data-close-add-condition>Cancel</button>
                     <button type="submit" class="btn-save">Save Condition</button>
                 </div>
             </form>
@@ -1021,7 +1021,7 @@
                     <p>Update the condition name or MAR category.</p>
                 </div>
             </div>
-            <button type="button" class="standard-modal-close" onclick="closeChangeModal()" aria-label="Close edit condition modal">
+            <button type="button" class="standard-modal-close" data-close-edit-condition aria-label="Close edit condition modal">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
             </button>
         </div>
@@ -1053,7 +1053,7 @@
                 </div>
 
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeChangeModal()">Cancel</button>
+                    <button type="button" class="btn-cancel" data-close-edit-condition>Cancel</button>
                     <button type="submit" class="btn-save">Save Changes</button>
                 </div>
             </form>
@@ -1063,7 +1063,25 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
+document.querySelectorAll('[data-add-condition]').forEach(function(button) {
+    button.addEventListener('click', openAddConditionModal);
+});
+document.querySelectorAll('[data-edit-condition]').forEach(function(button) {
+    button.addEventListener('click', function() {
+        openChangeModal(button.dataset.conditionId, button.dataset.categoryId, button.dataset.conditionName);
+    });
+});
+document.querySelectorAll('[data-close-add-condition]').forEach(function(button) {
+    button.addEventListener('click', closeAddConditionModal);
+});
+document.querySelectorAll('[data-close-edit-condition]').forEach(function(button) {
+    button.addEventListener('click', closeChangeModal);
+});
+document.querySelectorAll('[data-delete-condition]').forEach(function(form) {
+    form.addEventListener('submit', confirmDelete);
+});
+
 const conditionSearch = document.getElementById('conditionSearch');
 const conditionsList = document.getElementById('conditionsList');
 const conditionsCount = document.getElementById('conditionsCount');

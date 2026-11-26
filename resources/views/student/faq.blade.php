@@ -3,7 +3,7 @@
 @section('title', 'FAQ')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     :root {
         --faq-maroon: #940515;
         --faq-maroon-dark: #65000d;
@@ -984,6 +984,15 @@
     .faq-page .btn-action:is(:hover, :focus-visible) { background: #facc15 !important; color: #70131b !important; border-color: #facc15 !important; }
     .faq-page .faq-filter:is(:hover, :focus-visible, .is-active) .faq-filter-icon { color: #70131b !important; background: transparent !important; }
     .faq-page .faq-question[open] { border-color: rgba(250, 204, 21, .6) !important; }
+
+    .student-faq-csp-1 { color:#b45309; }
+    .student-faq-csp-2 { color:#15803d; }
+    .student-faq-csp-3 { color:#64748b; }
+    .student-faq-csp-4 { color:#b91c1c; }
+    .student-faq-csp-5 { background: #20343a; color: white; border: none; }
+    .student-faq-csp-6 { color: white; }
+    .student-faq-csp-7 { font-size: 13px; opacity: 0.8; margin-bottom: 15px; }
+    .student-faq-csp-8 { font-size: 14px; font-weight: 600; }
 </style>
 @endpush
 
@@ -1135,11 +1144,11 @@
                         <span class="portal-icon" aria-hidden="true"><x-outline-icon name="user-circle" /></span>
                         <h4 class="widget-title">Student Portal</h4>
                     </div>
-                    <div class="stat-row"><span>Pending Requests</span><span class="stat-val" style="color:#b45309;">{{ $pendingCount ?? 0 }}</span></div>
-                    <div class="stat-row"><span>Upcoming</span><span class="stat-val" style="color:#15803d;">{{ $upcomingCount ?? 0 }}</span></div>
+                    <div class="stat-row"><span>Pending Requests</span><span class="stat-val student-faq-csp-1">{{ $pendingCount ?? 0 }}</span></div>
+                    <div class="stat-row"><span>Upcoming</span><span class="stat-val student-faq-csp-2">{{ $upcomingCount ?? 0 }}</span></div>
                     <div class="stat-row"><span>Completed</span><span class="stat-val">{{ $completedCount ?? 0 }}</span></div>
-                    <div class="stat-row"><span>Cancelled</span><span class="stat-val" style="color:#64748b;">{{ $cancelledCount ?? 0 }}</span></div>
-                    <div class="stat-row"><span>Rejected</span><span class="stat-val" style="color:#b91c1c;">{{ $rejectedCount ?? 0 }}</span></div>
+                    <div class="stat-row"><span>Cancelled</span><span class="stat-val student-faq-csp-3">{{ $cancelledCount ?? 0 }}</span></div>
+                    <div class="stat-row"><span>Rejected</span><span class="stat-val student-faq-csp-4">{{ $rejectedCount ?? 0 }}</span></div>
                     <a href="{{ url('/student/history') }}" class="btn-action">
                         View Full History
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1179,10 +1188,10 @@
                 </div>
                 @endauth
 
-                <div class="sidebar-widget" id="contact" style="background: #20343a; color: white; border: none;">
-                    <h4 class="widget-title" style="color: white;">Contact Us</h4>
-                    <p style="font-size: 13px; opacity: 0.8; margin-bottom: 15px;">Need urgent help?</p>
-                    <div style="font-size: 14px; font-weight: 600;">(02) 8837-5858<br>puptclinic@gmail.com</div>
+                <div class="sidebar-widget student-faq-csp-5" id="contact">
+                    <h4 class="widget-title student-faq-csp-6">Contact Us</h4>
+                    <p class="student-faq-csp-7">Need urgent help?</p>
+                    <div class="student-faq-csp-8">(02) 8837-5858<br>puptclinic@gmail.com</div>
                 </div>
             </div>
         </aside>
@@ -1191,7 +1200,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     document.addEventListener('DOMContentLoaded', function () {
         const search = document.getElementById('faqSearch');
         const groups = Array.from(document.querySelectorAll('[data-faq-category]'));

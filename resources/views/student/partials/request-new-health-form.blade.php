@@ -4,7 +4,7 @@
             @csrf
             <div class="profile-edit-modal-head">
                 <div><span class="profile-edit-modal-kicker">Health Form Request</span><h2 id="studentNewCycleTitle">Request New Health Form</h2></div>
-                <button type="button" class="profile-edit-close" onclick="this.closest('dialog').close()" aria-label="Close request"><x-outline-icon name="x-mark" /></button>
+                <button type="button" class="profile-edit-close" data-student-action="close-dialog" aria-label="Close request"><x-outline-icon name="x-mark" /></button>
             </div>
             <div class="profile-edit-modal-body">
                 <p>Your submitted form will go to the clinic for assessment and final approval.</p>
@@ -20,7 +20,7 @@
             <div class="profile-edit-modal-footer"><button type="submit" class="profile-action-btn save" data-student-cycle-submit>Submit Existing Information</button></div>
         </form>
     </dialog>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         .health-doc-history-request > span { flex-wrap: wrap; }
         .health-doc-history-request .health-doc-request-link { display: inline; padding: 0; border: 0; background: transparent; color: #801b2d; font: inherit; font-size: 14px; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
         .health-doc-history-request .health-doc-request-link:hover,
@@ -40,7 +40,7 @@
         html[data-theme="dark"] .student-new-cycle-dialog { background: #111827; color: #f8fafc; }
         html[data-theme="dark"] .student-cycle-choices label:has(input:checked) { background: #391520; border-color: #facc15; }
     </style>
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         (function () {
             const dialog = document.getElementById('studentNewCycleDialog');
             const button = dialog.querySelector('[data-student-cycle-submit]');

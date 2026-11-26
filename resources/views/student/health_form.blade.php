@@ -6,13 +6,14 @@
     <title>Fill Up - Health Profile</title>
     <script
         src="{{ asset('js/sienna-accessibility-custom.umd.js') }}?v={{ filemtime(public_path('js/sienna-accessibility-custom.umd.js')) }}"
+        nonce="{{ request()->attributes->get('csp_nonce') }}"
         data-asw-position="bottom-right"
         data-asw-offset="24,12"
         data-asw-size="small"
         defer
     ></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         :root {
             --clinic-maroon: #7f1d2d;
             --clinic-maroon-dark: #5f0012;
@@ -3143,7 +3144,10 @@
                 height: 190px;
             }
         }
-    </style>
+
+    .form-intro p.student-health-form-csp-1 { margin-top:10px;color:#7f1d2d;font-weight:900; }
+    .student-health-form-csp-2 { background-color: #ffc107; color: #000; }
+</style>
 </head>
 <body class="health-form-page">
     @php
@@ -3280,7 +3284,8 @@
                             <span id="currentStepName">{{ $healthFormSteps[$startStep] ?? 'Admission Reference' }}</span>
                         </div>
                         <div class="step-progress-track" aria-hidden="true">
-                            <div class="step-progress-fill" id="stepProgressFill" style="width: {{ round(($startStep / count($healthFormSteps)) * 100) }}%;"></div>
+                            <style nonce="{{ request()->attributes->get('csp_nonce') }}">#stepProgressFill { width: {{ round(($startStep / count($healthFormSteps)) * 100) }}%; }</style>
+                            <div class="step-progress-fill" id="stepProgressFill"></div>
                         </div>
                         <div class="step-progress-percent" id="stepProgressPercent">{{ round(($startStep / count($healthFormSteps)) * 100) }}% Complete</div>
                     </div>
@@ -3305,7 +3310,7 @@
                         <h1 data-title-letter="C">{{ $stepOneTitle }}</h1>
                         <p>{{ $stepOneDescription }}</p>
                         @if(!empty($pendingHealthFormRequest))
-                            <p style="margin-top:10px;color:#7f1d2d;font-weight:900;">
+                            <p class="student-health-form-csp-1">
                                 New Health Form Request: {{ $pendingHealthFormRequest->category }}{{ $pendingHealthFormRequest->remarks ? ' - ' . $pendingHealthFormRequest->remarks : '' }}
                             </p>
                         @endif
@@ -3422,7 +3427,7 @@
                             >
                                 Skip to Print (Testing)
                             </button>
-                            <button type="button" class="btn btn-health" data-step-next="2" style="background-color: #ffc107; color: #000;">
+                            <button type="button" class="btn btn-health student-health-form-csp-2" data-step-next="2">
                                 <span>Skip Step 1</span>
                             </button>
                         @endenv
@@ -3433,7 +3438,7 @@
                             </svg>
                         </button>
                         @if($referenceVerificationUnavailable)
-                            <button type="button" class="btn btn-health btn-health-next" onclick="window.location.reload()">
+                            <button type="button" class="btn btn-health btn-health-next" data-student-action="reload">
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M20 11a8 8 0 1 0-2.34 5.66"></path>
                                     <path d="M20 4v7h-7"></path>
@@ -4570,8 +4575,9 @@
         </div>
     </div>
 
+    <script src="{{ asset('js/student-csp-controls.js') }}?v={{ filemtime(public_path('js/student-csp-controls.js')) }}" defer></script>
     <script src="{{ asset('js/clinic-address-lookup.js') }}"></script>
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         (function () {
             document.querySelectorAll('[data-student-toast]').forEach((toast) => {
                 const closeButton = toast.querySelector('[data-student-toast-close]');

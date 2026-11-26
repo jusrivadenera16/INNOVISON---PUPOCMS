@@ -1,5 +1,5 @@
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .record-evaluation-modal {
         position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
         width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 18px;

@@ -3,7 +3,7 @@
 @section('title', 'My History')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
       body:has(.history-hero-icon),
       body:has(.history-modern-page) {
           background:
@@ -1657,7 +1657,9 @@
       @media (max-width: 420px) {
           .history-modern-stat-grid { grid-template-columns: 1fr; }
       }
-    </style>
+
+    .student-history-csp-1 { padding-top: 5px; padding-bottom: 60px; }
+</style>
 @endpush
 
 @section('content')
@@ -1671,7 +1673,7 @@
         $completedAppointments = $appointments->filter(fn ($appt) => strtolower((string) $appt->status) === 'completed')->count();
         $missedAppointments = $appointments->filter(fn ($appt) => strtolower((string) $appt->status) === 'missed')->count();
     @endphp
-    <div class="container" style="padding-top: 5px; padding-bottom: 60px;">
+    <div class="container student-history-csp-1">
       <div class="page-header">
         <div class="history-hero-icon" aria-hidden="true">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1871,7 +1873,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 document.addEventListener('DOMContentLoaded', function () {
     const emptyState = document.getElementById('emptyHistoryState');
     const cta = document.getElementById('emptyHistoryCta');

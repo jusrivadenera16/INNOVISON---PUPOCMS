@@ -4,7 +4,7 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/private-document-thumbnail.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .notification-toast {
         position: fixed; top: 25px; right: 25px;
         background: linear-gradient(135deg, #15803d, #166534); color: #ffffff; padding: 15px 20px;
@@ -1899,7 +1899,7 @@
     .assisted-panel-body > .assisted-field-card,
     .assisted-panel-body > input.form-control,
     .assisted-panel-body > .assisted-callout,
-    .assisted-panel-body > div[style*="background:#fff7ed"] {
+    .assisted-panel-body > div.assisted-registration-note {
         margin-bottom: 14px !important;
         padding: 14px;
         border-radius: 18px;
@@ -2000,8 +2000,8 @@
     .assisted-intake-shell .assisted-gender-display,
     .assisted-intake-shell .assisted-role-option,
     .assisted-intake-shell .assisted-gender-option,
-    .assisted-intake-shell > .assisted-panel > .assisted-panel-body > div[style*="background:#fff7ed"] strong,
-    .assisted-intake-shell > .assisted-panel > .assisted-panel-body > div[style*="background:#fff7ed"] p,
+    .assisted-intake-shell > .assisted-panel > .assisted-panel-body > div.assisted-registration-note strong,
+    .assisted-intake-shell > .assisted-panel > .assisted-panel-body > div.assisted-registration-note p,
     #registerForm .text-center.mt-3 a {
         color: #000000 !important;
     }
@@ -2059,8 +2059,8 @@
     html[data-theme="dark"] .assisted-intake-shell .assisted-gender-display,
     html[data-theme="dark"] .assisted-intake-shell .assisted-role-option,
     html[data-theme="dark"] .assisted-intake-shell .assisted-gender-option,
-    html[data-theme="dark"] .assisted-intake-shell > .assisted-panel > .assisted-panel-body > div[style*="background:#fff7ed"] strong,
-    html[data-theme="dark"] .assisted-intake-shell > .assisted-panel > .assisted-panel-body > div[style*="background:#fff7ed"] p,
+    html[data-theme="dark"] .assisted-intake-shell > .assisted-panel > .assisted-panel-body > div.assisted-registration-note strong,
+    html[data-theme="dark"] .assisted-intake-shell > .assisted-panel > .assisted-panel-body > div.assisted-registration-note p,
     html[data-theme="dark"] #registerForm .text-center.mt-3 a {
         color: #f8fafc !important;
     }
@@ -2078,7 +2078,7 @@
     html[data-theme="dark"] .assisted-panel-body > .assisted-field-card,
     html[data-theme="dark"] .assisted-panel-body > input.form-control,
     html[data-theme="dark"] .assisted-panel-body > .assisted-callout,
-    html[data-theme="dark"] .assisted-panel-body > div[style*="background:#fff7ed"] {
+    html[data-theme="dark"] .assisted-panel-body > div.assisted-registration-note {
         border-color: rgba(250, 204, 21, 0.14);
         background:
             radial-gradient(circle at top right, rgba(250, 204, 21, 0.08), transparent 34%),
@@ -2556,7 +2556,7 @@
     .assisted-intake-shell > .assisted-panel > .assisted-panel-body > .mb-2,
     .assisted-intake-shell > .assisted-panel > .assisted-panel-body > .d-flex.gap-2,
     .assisted-intake-shell > .assisted-panel > .assisted-panel-body > input.form-control,
-    .assisted-intake-shell > .assisted-panel > .assisted-panel-body > div[style*="background:#fff7ed"] {
+    .assisted-intake-shell > .assisted-panel > .assisted-panel-body > div.assisted-registration-note {
         margin-bottom: 16px !important;
     }
 
@@ -2564,7 +2564,7 @@
     .assisted-intake-shell > .assisted-panel > .assisted-panel-body > .mb-2,
     .assisted-intake-shell > .assisted-panel > .assisted-panel-body > .d-flex.gap-2,
     .assisted-intake-shell > .assisted-panel > .assisted-panel-body > input.form-control,
-    .assisted-intake-shell > .assisted-panel > .assisted-panel-body > div[style*="background:#fff7ed"] {
+    .assisted-intake-shell > .assisted-panel > .assisted-panel-body > div.assisted-registration-note {
         padding: 16px;
     }
 
@@ -2578,7 +2578,7 @@
     html[data-theme="dark"] .assisted-intake-shell > .assisted-panel > .assisted-panel-body > .assisted-pair-row,
     html[data-theme="dark"] .assisted-intake-shell > .assisted-panel > .assisted-panel-body > .assisted-field-card,
     html[data-theme="dark"] .assisted-intake-shell > .assisted-panel > .assisted-panel-body > input.form-control,
-    html[data-theme="dark"] .assisted-intake-shell > .assisted-panel > .assisted-panel-body > div[style*="background:#fff7ed"] {
+    html[data-theme="dark"] .assisted-intake-shell > .assisted-panel > .assisted-panel-body > div.assisted-registration-note {
         border-color: rgba(250, 204, 21, 0.14) !important;
         background:
             radial-gradient(circle at top right, rgba(250, 204, 21, 0.08), transparent 34%),
@@ -6654,9 +6654,9 @@
         background: #fff8f8;
     }
 
-    #applicantRefModal .applicant-modal-shell.is-student-lookup .applicant-vitals-grid label span[style*="#dc2626"],
-    #applicantRefModal .applicant-modal-shell.is-student-lookup .applicant-findings-label span[style*="#dc2626"],
-    #applicantRefModal .applicant-modal-shell.is-student-lookup .employee-physical-assessment-panel label > span[style*="color:#dc2626"] {
+    #applicantRefModal .applicant-modal-shell.is-student-lookup .applicant-vitals-grid label span.walkin-required-marker,
+    #applicantRefModal .applicant-modal-shell.is-student-lookup .applicant-findings-label span.walkin-required-marker,
+    #applicantRefModal .applicant-modal-shell.is-student-lookup .employee-physical-assessment-panel label > span.walkin-required-marker {
         display: none !important;
     }
 
@@ -7348,8 +7348,7 @@
         grid-column: auto;
     }
 
-    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-vitals-grid:has(#applicantCovidDateField[style*="display:none"]) .applicant-condition-field:nth-child(9),
-    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-vitals-grid:has(#applicantCovidDateField[style*="display: none"]) .applicant-condition-field:nth-child(9) {
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-vitals-grid:has(#applicantCovidDateField.walkin-initially-hidden) .applicant-condition-field:nth-child(9) {
         grid-row: 2 / span 4;
     }
 
@@ -11548,6 +11547,355 @@
     html[data-theme="dark"] .applicant-final-review-error-person > strong {
         color: #f8fafc;
     }
+
+    .patient-intake-entry-shell {
+        max-width: 980px;
+        margin: 20px auto;
+    }
+
+    .walkin-options-card {
+        border-radius: 18px;
+        border: none;
+        margin-bottom: 20px;
+    }
+
+    .walkin-options-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 18px;
+        flex-wrap: wrap;
+    }
+
+    #applicantRefModal .applicant-modal-shell .applicant-modal-body.applicant-reference-body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 220px;
+        gap: 18px;
+    }
+
+    .walkin-initially-hidden,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-line.walkin-initially-hidden,
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-vitals-grid .applicant-condition-field.walkin-initially-hidden {
+        display: none;
+    }
+
+    .walkin-required-marker {
+        color: #dc2626;
+    }
+
+    .walkin-optional-marker {
+        color: #94a3b8;
+    }
+
+    .walkin-scan-contents {
+        display: contents;
+    }
+
+    .walkin-scan-surface {
+        position: relative;
+    }
+
+    .walkin-scan-verifying {
+        margin-top: 10px;
+        color: #8B0000;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    #btnRunAiOcr.walkin-ocr-reading-button {
+        background: linear-gradient(135deg, #1d4ed8, #2563eb 55%, #3b82f6);
+        box-shadow: 0 12px 24px rgba(37,99,235,0.22);
+    }
+
+    .ocr-detected-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .ocr-detected-heading-main {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .ocr-detected-heading-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg,#7f1d1d,#991b1b 58%,#b91c1c);
+        color: #ffffff;
+        box-shadow: 0 12px 24px rgba(127,29,29,0.18);
+        flex-shrink: 0;
+    }
+
+    .ocr-detected-heading-glyph {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+        stroke-width: 1.9;
+    }
+
+    .ocr-detected-data-kicker {
+        margin: 0;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #8b0000;
+    }
+
+    .ocr-detected-description {
+        margin: 4px 0 0;
+        font-size: 12px;
+        color: #64748b;
+        line-height: 1.5;
+    }
+
+    .ocr-detected-result-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        color: #047857;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .walkin-ocr-result-grid {
+        display: grid;
+        gap: 12px;
+    }
+
+    #applicantScanModal .ocr-result-row.ocr-detected-result-row {
+        display: grid;
+        grid-template-columns: 120px minmax(0,1fr);
+        gap: 12px;
+        align-items: center;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: linear-gradient(180deg,#fdfefe,#f8fafc);
+        border: 1px solid #e2e8f0;
+    }
+
+    #applicantScanModal .ocr-result-label.ocr-detected-result-label {
+        margin: 0;
+        color: #334155;
+    }
+
+    #applicantScanModal .form-control.ocr-detected-result-input {
+        margin-bottom: 0;
+        background: #ffffff;
+        color: #0f172a;
+        border: 1px solid #cbd5e1;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.95);
+        font-weight: 700;
+        cursor: default;
+    }
+
+    #ocrStatus.walkin-ocr-status-visible {
+        display: block;
+    }
+
+    .walkin-ocr-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .walkin-ocr-confirm-actions {
+        margin-top: 14px;
+    }
+
+    .registration-hub.walkin-registration-card {
+        border-radius: 16px;
+        border: none;
+        margin: 20px auto;
+    }
+
+    #dynamicHeader #headerTitle.walkin-mode-title {
+        margin: 0;
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 1rem;
+        letter-spacing: 1px;
+    }
+
+    .walkin-ocr-result-row {
+        display: grid;
+        grid-template-columns: 120px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+    }
+
+    .walkin-ocr-result-label {
+        margin: 0;
+    }
+
+    .form-control.walkin-input-flush {
+        margin-bottom: 0;
+    }
+
+    .walkin-manual-toggle {
+        background: none;
+        border: none;
+        color: #8B0000;
+        text-decoration: underline;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .walkin-scan-navigation {
+        border-top: 1px dashed #cbd5e1;
+    }
+
+    .walkin-scan-navigation-links {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .walkin-back-intake-link {
+        flex: 1 1 180px;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        color: #475569;
+        font-weight: 700;
+        font-size: 0.8rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .walkin-back-appointments-link {
+        flex: 1 1 180px;
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.8rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .assisted-registration-status {
+        margin-bottom: 10px;
+    }
+
+    .assisted-registration-id-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #475569;
+        text-transform: uppercase;
+    }
+
+    .assisted-registration-role-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #475569;
+    }
+
+    .assisted-intake-shell > .assisted-panel > .assisted-panel-body > div.assisted-registration-note {
+        background: #fff7ed;
+        border: 1px dashed #fdba74;
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+    }
+
+    .assisted-intake-shell .assisted-registration-note > strong.assisted-registration-note-title {
+        display: block;
+        font-size: 12px;
+        color: #9a3412;
+        margin-bottom: 4px;
+    }
+
+    .assisted-intake-shell .assisted-registration-note > p.assisted-registration-note-copy {
+        margin: 0;
+        font-size: 12px;
+        color: #7c2d12;
+        line-height: 1.5;
+    }
+
+    .walkin-notification {
+        margin: 10px 0;
+    }
+
+    .assisted-registration-back-link {
+        font-size: 12px;
+        color: #64748b;
+        text-decoration: none;
+    }
+
+    .walkin-lookup-failure {
+        color: #991b1b;
+        font-size: 12px;
+        font-weight: 700;
+        background: #fff1f2;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #fecdd3;
+        margin-bottom: 12px;
+    }
+
+    .walkin-registration-failure {
+        color: #991b1b;
+        font-size: 12px;
+        font-weight: bold;
+        background: #fee2e2;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #fecaca;
+    }
+
+    .applicant-reference-toggle {
+        max-width: 360px;
+    }
+
+    .walkin-field-error {
+        color: #dc2626;
+    }
+
+    .walkin-assisted-container {
+        max-width: 1180px;
+        margin: 20px auto;
+        padding: 0;
+        background: transparent;
+        box-shadow: none;
+        border: none;
+    }
+
+    .walkin-scan-card {
+        border-radius: 15px;
+        border: none;
+        max-width: 550px;
+        margin: 20px auto;
+    }
+
 </style>
 @endpush
 
@@ -11575,10 +11923,10 @@
     $idpRegistrationLink = 'https://identity-provider.isaxbsit2027.com/register?client_id=7112646b-c785-4306-b00f-87d29ad54fb2';
 @endphp
 
-<div class="patient-intake-entry-shell" style="max-width: 980px; margin: 20px auto;">
+<div class="patient-intake-entry-shell">
     @if($currentMode === '')
-    <div class="card p-4 shadow-sm walkin-strip-card" style="border-radius: 18px; border: none; margin-bottom: 20px;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:18px; flex-wrap:wrap;">
+    <div class="card p-4 shadow-sm walkin-strip-card walkin-options-card">
+        <div class="walkin-options-heading">
             <div>
                 <p class="intake-heading-kicker">Patient Intake</p>
                 <h2 class="intake-heading-title">Choose how you want to begin the clinic intake flow</h2>
@@ -11692,7 +12040,7 @@
                 </div>
             </div>
 
-            <div class="applicant-modal-body" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:220px; gap:18px;">
+            <div class="applicant-modal-body applicant-reference-body">
                 <div class="applicant-ref-mode" id="applicantRefDefault">
                     <div class="applicant-ref-copy">
                         <p class="applicant-ref-kicker">Proceed</p>
@@ -11733,7 +12081,7 @@
                         @endif
                     </div>
 
-                    <div class="applicant-workflow-grid employee-management-grid" id="employeeManagementChoices" style="display:none;">
+                    <div class="applicant-workflow-grid employee-management-grid walkin-initially-hidden" id="employeeManagementChoices">
                         <button type="button" class="applicant-workflow-card" id="btnStartEmployeeIdLookup">
                             <span class="applicant-workflow-icon"><x-outline-icon name="magnifying-glass" /></span>
                             <span class="applicant-workflow-copy">
@@ -11752,7 +12100,7 @@
                         </button>
                     </div>
 
-                    <button type="button" id="btnShowApplicantRefInput" class="applicant-ref-toggle-btn" style="max-width:360px; display:none;">
+                    <button type="button" id="btnShowApplicantRefInput" class="applicant-ref-toggle-btn applicant-reference-toggle walkin-initially-hidden">
                         <x-outline-icon name="magnifying-glass" />
                         <span id="lookupModalEntryButtonText">Input Reference Number</span>
                     </button>
@@ -12141,7 +12489,7 @@
                                 </div>
                             </div>
                             <div class="applicant-findings-review">
-                                <div class="applicant-findings-label">Review Result <span style="color:#dc2626;">*</span></div>
+                                <div class="applicant-findings-label">Review Result <span class="walkin-required-marker">*</span></div>
                                 <div class="applicant-findings-options">
                                     <label class="applicant-findings-option">
                                         <input type="radio" name="applicant_findings_status" value="No Findings / Normal">
@@ -12153,8 +12501,8 @@
                                     </label>
                                 </div>
                             </div>
-                            <div id="applicantClearanceDecisionFields" class="applicant-findings-review" style="display: none;">
-                                <div class="applicant-findings-label">Clearance Decision <span style="color:#dc2626;">*</span></div>
+                            <div id="applicantClearanceDecisionFields" class="applicant-findings-review walkin-initially-hidden">
+                                <div class="applicant-findings-label">Clearance Decision <span class="walkin-required-marker">*</span></div>
                                 <div class="applicant-findings-options">
                                     <label class="applicant-findings-option">
                                         <input type="radio" name="applicant_clearance_decision" value="approve">
@@ -12166,13 +12514,13 @@
                                     </label>
                                 </div>
                             </div>
-                            <div id="applicantNormalRemarksFields" class="applicant-condition-fields" style="display: none;">
+                            <div id="applicantNormalRemarksFields" class="applicant-condition-fields walkin-initially-hidden">
                                 <div class="applicant-condition-field">
-                                    <label for="applicantNormalRemarks">Remarks <span style="color: #94a3b8;">(Optional)</span></label>
+                                    <label for="applicantNormalRemarks">Remarks <span class="walkin-optional-marker">(Optional)</span></label>
                                     <textarea id="applicantNormalRemarks" name="normal_remarks" placeholder="Optional notes for a normal review..." class="applicant-condition-textarea" rows="3"></textarea>
                                 </div>
                             </div>
-                            <div id="applicantConditionFields" class="applicant-condition-fields" style="display: none;">
+                            <div id="applicantConditionFields" class="applicant-condition-fields walkin-initially-hidden">
                                 <div class="applicant-condition-field">
                                     <label>Finding Details</label>
                                     <div class="applicant-pending-reasons">
@@ -12186,24 +12534,24 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div id="applicantMedicalConditionField" class="applicant-condition-field" style="display: none;">
-                                    <label for="applicantMedicalCondition">Medical Condition <span style="color: #dc2626;">*</span></label>
+                                <div id="applicantMedicalConditionField" class="applicant-condition-field walkin-initially-hidden">
+                                    <label for="applicantMedicalCondition">Medical Condition <span class="walkin-required-marker">*</span></label>
                                     <input type="text" id="applicantMedicalCondition" name="medical_condition" placeholder="e.g., Asthma, Diabetes, Hypertension..." class="applicant-condition-input">
                                 </div>
-                                <div id="applicantReferralFields" class="applicant-condition-field" style="display: none;">
-                                    <label for="applicantReferralTo">Referral Destination <span style="color: #dc2626;">*</span></label>
+                                <div id="applicantReferralFields" class="applicant-condition-field walkin-initially-hidden">
+                                    <label for="applicantReferralTo">Referral Destination <span class="walkin-required-marker">*</span></label>
                                     <input type="text" id="applicantReferralTo" name="referral_to" placeholder="e.g., Physician, specialist, or clinic" class="applicant-condition-input" maxlength="255">
-                                    <label for="applicantReferralNotes">Referral Notes <span style="color: #94a3b8;">(Optional)</span></label>
+                                    <label for="applicantReferralNotes">Referral Notes <span class="walkin-optional-marker">(Optional)</span></label>
                                     <textarea id="applicantReferralNotes" name="referral_notes" placeholder="Reason or follow-up instructions..." class="applicant-condition-textarea" rows="2" maxlength="2000"></textarea>
                                 </div>
                                 <div id="applicantFindingRemarksField" class="applicant-condition-field">
-                                    <label for="applicantFindingRemarks">Remarks <span style="color: #94a3b8;">(Optional)</span></label>
+                                    <label for="applicantFindingRemarks">Remarks <span class="walkin-optional-marker">(Optional)</span></label>
                                     <textarea id="applicantFindingRemarks" name="med_assessment_remarks" placeholder="Additional notes about the findings..." class="applicant-condition-textarea" rows="3"></textarea>
                                 </div>
                             </div>
-                            <div id="applicantPendingDecisionFields" class="applicant-condition-fields" style="display: none;">
+                            <div id="applicantPendingDecisionFields" class="applicant-condition-fields walkin-initially-hidden">
                                 <div class="applicant-condition-field">
-                                    <label>Pending Reason <span style="color: #dc2626;">*</span></label>
+                                    <label>Pending Reason <span class="walkin-required-marker">*</span></label>
                                     <div class="applicant-pending-reasons">
                                         <label class="applicant-pending-reason-option">
                                             <input type="checkbox" id="applicantIncompleteRequirements" name="incomplete_requirements" value="1">
@@ -12227,16 +12575,16 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div id="applicantOtherPendingReasonField" class="applicant-condition-field" style="display: none;">
-                                    <label for="applicantOtherPendingReasonText">Other Pending Reason <span style="color: #dc2626;">*</span></label>
+                                <div id="applicantOtherPendingReasonField" class="applicant-condition-field walkin-initially-hidden">
+                                    <label for="applicantOtherPendingReasonText">Other Pending Reason <span class="walkin-required-marker">*</span></label>
                                     <input type="text" id="applicantOtherPendingReasonText" name="other_pending_reason" placeholder="Enter other pending reason..." class="applicant-condition-input">
                                 </div>
                                 <div class="applicant-condition-field">
-                                    <label for="applicantConditionRemarks">Remarks <span style="color: #94a3b8;">(Optional)</span></label>
+                                    <label for="applicantConditionRemarks">Remarks <span class="walkin-optional-marker">(Optional)</span></label>
                                     <textarea id="applicantConditionRemarks" name="condition_remarks" placeholder="Additional notes about the pending decision..." class="applicant-condition-textarea" rows="3"></textarea>
                                 </div>
-                                <div id="applicantResubmissionDocsField" class="applicant-condition-field" style="display: none;">
-                                    <label>Documents to Resubmit <span style="color: #dc2626;">*</span></label>
+                                <div id="applicantResubmissionDocsField" class="applicant-condition-field walkin-initially-hidden">
+                                    <label>Documents to Resubmit <span class="walkin-required-marker">*</span></label>
                                     <div class="applicant-pending-reasons">
                                         <label class="applicant-pending-reason-option">
                                             <input type="checkbox" name="resubmission_required_documents[]" value="student_photo">
@@ -12403,7 +12751,7 @@
                                             <option value="Others">Others</option>
                                         </select>
                                     </label>
-                                    <label class="employee-exam-line" id="employeeExamFitOtherWrap" style="display:none;">Other Fit Status: <input type="text" name="employee_exam_fit_other" id="employeeExamFitOther"></label>
+                                    <label class="employee-exam-line walkin-initially-hidden" id="employeeExamFitOtherWrap">Other Fit Status: <input type="text" name="employee_exam_fit_other" id="employeeExamFitOther"></label>
                                     <label class="employee-exam-line"><strong>For Work-Up:</strong> <input type="text" name="employee_exam_for_work_up"></label>
                                     <strong>Referred to:</strong>
                                     <div class="employee-exam-options">
@@ -12419,43 +12767,43 @@
                                 </div>
                                 <div class="applicant-vitals-grid">
                                 <div class="applicant-condition-field">
-                                    <label for="applicantHeight">Height <span style="color:#dc2626;">*</span></label>
+                                    <label for="applicantHeight">Height <span class="walkin-required-marker">*</span></label>
                                     <input type="text" id="applicantHeight" name="height" class="applicant-condition-input vital-input" placeholder="e.g., 5'6&quot;" inputmode="text" required>
                                     <span class="vital-status is-muted" id="heightStatus">Pending</span>
-                                    <small style="color:#dc2626; display:none;" id="heightError">Height must use feet and inches, e.g., 5'6&quot;. Valid range: 1'0&quot;-10'0&quot;.</small>
+                                    <small id="heightError" class="walkin-field-error walkin-initially-hidden">Height must use feet and inches, e.g., 5'6&quot;. Valid range: 1'0&quot;-10'0&quot;.</small>
                                 </div>
                                 <div class="applicant-condition-field">
-                                    <label for="applicantWeight">Weight (lbs) <span style="color:#dc2626;">*</span></label>
+                                    <label for="applicantWeight">Weight (lbs) <span class="walkin-required-marker">*</span></label>
                                     <input type="number" id="applicantWeight" name="weight" class="applicant-condition-input vital-input" placeholder="e.g., 143" step="0.01" min="1" max="1100" required>
                                     <span class="vital-status is-muted" id="weightStatus">BMI pending</span>
-                                    <small style="color:#dc2626; display:none;" id="weightError">Weight is required. Valid range: 1-1100 lbs.</small>
+                                    <small id="weightError" class="walkin-field-error walkin-initially-hidden">Weight is required. Valid range: 1-1100 lbs.</small>
                                 </div>
                                 <div class="applicant-condition-field">
-                                    <label for="applicantBloodPressure">Blood Pressure <span style="color:#dc2626;">*</span></label>
+                                    <label for="applicantBloodPressure">Blood Pressure <span class="walkin-required-marker">*</span></label>
                                     <input type="text" id="applicantBloodPressure" name="blood_pressure" class="applicant-condition-input vital-input" placeholder="e.g., 120/80" inputmode="text" autocomplete="off" required>
                                     <span class="vital-status is-muted" id="bpStatus">Pending</span>
-                                    <small style="color:#dc2626; display:none;" id="bpError">Blood pressure must be in format: ###/## (e.g., 120/80). Normal range: 90-120 systolic, 60-80 diastolic.</small>
+                                    <small id="bpError" class="walkin-field-error walkin-initially-hidden">Blood pressure must be in format: ###/## (e.g., 120/80). Normal range: 90-120 systolic, 60-80 diastolic.</small>
                                 </div>
                                 <div class="applicant-condition-field">
-                                    <label for="applicantPulseRate">Pulse Rate (bpm) <span style="color:#dc2626;">*</span></label>
+                                    <label for="applicantPulseRate">Pulse Rate (bpm) <span class="walkin-required-marker">*</span></label>
                                     <input type="number" id="applicantPulseRate" name="pulse_rate" class="applicant-condition-input vital-input" placeholder="e.g., 72" min="1" max="300" required>
                                     <span class="vital-status is-muted" id="pulseStatus">Pending</span>
-                                    <small style="color:#dc2626; display:none;" id="prError">Pulse rate is required. Normal range: 60-100 bpm.</small>
+                                    <small id="prError" class="walkin-field-error walkin-initially-hidden">Pulse rate is required. Normal range: 60-100 bpm.</small>
                                 </div>
                                 <div class="applicant-condition-field">
-                                    <label for="applicantRespiratoryRate">Respiratory Rate (cpm) <span style="color:#dc2626;">*</span></label>
+                                    <label for="applicantRespiratoryRate">Respiratory Rate (cpm) <span class="walkin-required-marker">*</span></label>
                                     <input type="number" id="applicantRespiratoryRate" name="respiratory_rate" class="applicant-condition-input vital-input" placeholder="e.g., 18" min="1" max="120" required>
                                     <span class="vital-status is-muted" id="respiratoryStatus">Pending</span>
-                                    <small style="color:#dc2626; display:none;" id="rrError">Respiratory rate is required. Normal range: 12-20 cpm.</small>
+                                    <small id="rrError" class="walkin-field-error walkin-initially-hidden">Respiratory rate is required. Normal range: 12-20 cpm.</small>
                                 </div>
                                 <div class="applicant-condition-field">
-                                    <label for="applicantTemperature">Temperature (&deg;C) <span style="color:#dc2626;">*</span></label>
+                                    <label for="applicantTemperature">Temperature (&deg;C) <span class="walkin-required-marker">*</span></label>
                                     <input type="number" id="applicantTemperature" name="temperature" class="applicant-condition-input vital-input" placeholder="e.g., 36.5" min="30" max="45" step="0.1" required>
                                     <span class="vital-status is-muted" id="temperatureStatus">Pending</span>
-                                    <small style="color:#dc2626; display:none;" id="tempError">Temperature is required. Normal range: 36.5-37.5°C. High fever if > 38.5°C.</small>
+                                    <small id="tempError" class="walkin-field-error walkin-initially-hidden">Temperature is required. Normal range: 36.5-37.5°C. High fever if > 38.5°C.</small>
                                 </div>
                                 <div class="applicant-condition-field">
-                                    <label>COVID Positive? <span style="color:#dc2626;">*</span></label>
+                                    <label>COVID Positive? <span class="walkin-required-marker">*</span></label>
                                     <div class="applicant-findings-options">
                                         <label class="applicant-findings-option">
                                             <input type="radio" name="applicant_covid_positive" value="No" required>
@@ -12468,13 +12816,13 @@
                                     </div>
                                     <span class="vital-status is-muted" id="covidStatus">Pending</span>
                                 </div>
-                                <div class="applicant-condition-field" id="applicantCovidDateField" style="display:none;">
-                                    <label for="applicantCovidPositiveDate">COVID Positive Date <span style="color:#dc2626;">*</span></label>
+                                <div class="applicant-condition-field walkin-initially-hidden" id="applicantCovidDateField">
+                                    <label for="applicantCovidPositiveDate">COVID Positive Date <span class="walkin-required-marker">*</span></label>
                                     <input type="date" id="applicantCovidPositiveDate" name="covid_positive_date" class="applicant-condition-input">
-                                    <small style="color:#dc2626; display:none;" id="covidDateError">Date cannot be in the future. Please select today or an earlier date.</small>
+                                    <small id="covidDateError" class="walkin-field-error walkin-initially-hidden">Date cannot be in the future. Please select today or an earlier date.</small>
                                 </div>
                                 <div class="applicant-condition-field is-full" id="applicantEncodeRemarksField">
-                                    <label for="applicantEncodeRemarks">Assessment Remarks <span style="color:#94a3b8;">(Optional)</span></label>
+                                    <label for="applicantEncodeRemarks">Assessment Remarks <span class="walkin-optional-marker">(Optional)</span></label>
                                     <textarea id="applicantEncodeRemarks" name="encode_remarks" placeholder="Optional assessment notes from the encoding station..." class="applicant-condition-textarea" rows="3"></textarea>
                                 </div>
                                 </div>
@@ -12564,8 +12912,8 @@
                                             <span>Edit</span>
                                         </button>
                                     @endif
-                                    <button type="button" id="healthInfoCancelBtn" class="health-info-cancel-btn" style="display: none;">Cancel</button>
-                                    <button type="button" id="healthInfoSaveBtn" class="health-info-save-btn" style="display: none;">Save</button>
+                                    <button type="button" id="healthInfoCancelBtn" class="health-info-cancel-btn walkin-initially-hidden">Cancel</button>
+                                    <button type="button" id="healthInfoSaveBtn" class="health-info-save-btn walkin-initially-hidden">Save</button>
                                 </div>
                             </div>
                             <div class="health-info-fields" id="healthInfoFields"></div>
@@ -12786,7 +13134,7 @@
                         <p id="headerSubtitle">Use OCR or manual Patient ID Number lookup to open a consultation record.</p>
                     </div>
                 </div>
-                <div class="applicant-modal-head-actions" style="display:none;">
+                <div class="applicant-modal-head-actions walkin-initially-hidden">
                     <button type="button" id="btnSwitchScanMode" class="btn-scan-switch">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
@@ -12801,14 +13149,14 @@
             <div class="applicant-modal-body">
                 <div class="applicant-modal-grid">
                     {{-- Left Column: Scanner (No Frame) --}}
-                    <div id="scanForm" style="display: contents;">
+                    <div id="scanForm" class="walkin-scan-contents">
                         <div id="scanStage" class="scan-stage">
-                            <div id="scanner-container-scan" class="scan-surface" style="position:relative;">
+                            <div id="scanner-container-scan" class="scan-surface walkin-scan-surface">
                                 <p id="scanInlineNote" class="scan-inline-note">OCR mode is active. Align the physical ID inside the frame and continue once the Patient ID Number and name are matched locally.</p>
                                 <div id="barcodeScanPanel">
                                     <div id="scan-loading">
                                         <div class="spinner"></div>
-                                        <p style="margin-top:10px;color:#8B0000;font-weight:bold;font-size:12px;">Verifying...</p>
+                                        <p class="walkin-scan-verifying">Verifying...</p>
                                     </div>
                                     <div class="ocr-camera-shell">
                                         <div id="readerScan" class="scanner-box">
@@ -12822,8 +13170,8 @@
                                         <button type="button" id="btnStartOcrCamera" class="btn-ocr btn-ocr-primary">Start Camera</button>
                                         <button type="button" id="btnCloseOcrCamera" class="btn-ocr btn-ocr-secondary" disabled>Close Camera</button>
                                     </div>
-                                    <div class="ocr-actions" id="ocrScanActions" style="display:none;">
-                                        <button type="button" id="btnRunAiOcr" class="btn-ocr btn-ocr-primary" style="background:linear-gradient(135deg,#1d4ed8,#2563eb 55%,#3b82f6);box-shadow:0 12px 24px rgba(37,99,235,0.22);">Reading Patient ID</button>
+                                    <div class="ocr-actions walkin-initially-hidden" id="ocrScanActions">
+                                        <button type="button" id="btnRunAiOcr" class="btn-ocr btn-ocr-primary walkin-ocr-reading-button">Reading Patient ID</button>
                                         <button type="button" id="btnRetryOcr" class="btn-ocr btn-ocr-secondary">Clear OCR Result</button>
                                     </div>
                                 </div>
@@ -12834,37 +13182,37 @@
                     {{-- Right Column: Detected Data & Manual Entry --}}
                     <div class="applicant-modal-panel">
                         <div id="applicantOcrReviewPanel">
-                            <div id="applicantOcrDetectedContent" style="display:none;">
-                            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e2e8f0;">
-                                <div style="display:flex;align-items:flex-start;gap:12px;">
-                                    <span style="width:42px;height:42px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#7f1d1d,#991b1b 58%,#b91c1c);color:#ffffff;box-shadow:0 12px 24px rgba(127,29,29,0.18);flex-shrink:0;">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" style="width:20px;height:20px;stroke:currentColor;stroke-width:1.9;">
+                            <div id="applicantOcrDetectedContent" class="walkin-initially-hidden">
+                            <div class="ocr-detected-heading">
+                                <div class="ocr-detected-heading-main">
+                                    <span class="ocr-detected-heading-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="ocr-detected-heading-glyph">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 7.5h16.5m-16.5 4.5h10.5m-10.5 4.5h7.5M17.25 5.25h2.25A1.5 1.5 0 0 1 21 6.75v10.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.25V6.75a1.5 1.5 0 0 1 1.5-1.5h2.25"/>
                                         </svg>
                                     </span>
                                     <div>
-                                        <p class="ocr-detected-data-kicker" style="margin:0;font-size:11px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;color:#8b0000;">Detected Data</p>
-                                        <p style="margin:4px 0 0;font-size:12px;color:#64748b;line-height:1.5;">Captured from OCR scan and arranged for final review.</p>
+                                        <p class="ocr-detected-data-kicker">Detected Data</p>
+                                        <p class="ocr-detected-description">Captured from OCR scan and arranged for final review.</p>
                                     </div>
                                 </div>
-                                <span style="display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;font-size:11px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;white-space:nowrap;">OCR Result</span>
+                                <span class="ocr-detected-result-badge">OCR Result</span>
                             </div>
-                            <div style="display:grid;gap:12px;">
-                                <div class="ocr-result-row" style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,#fdfefe,#f8fafc);border:1px solid #e2e8f0;">
-                                    <p class="ocr-result-label" style="margin:0;color:#334155;">Full Name</p>
-                                    <input type="text" id="ocr_student_name" class="form-control" readonly style="margin-bottom:0;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;box-shadow:inset 0 1px 0 rgba(255,255,255,0.95);font-weight:700;cursor:default;">
+                            <div class="walkin-ocr-result-grid">
+                                <div class="ocr-result-row ocr-detected-result-row">
+                                    <p class="ocr-result-label ocr-detected-result-label">Full Name</p>
+                                    <input type="text" id="ocr_student_name" class="form-control ocr-detected-result-input" readonly>
                                 </div>
-                                <div class="ocr-result-row" style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,#fdfefe,#f8fafc);border:1px solid #e2e8f0;">
-                                    <p class="ocr-result-label" style="margin:0;color:#334155;">Patient ID Number</p>
-                                    <input type="text" id="ocr_student_number" class="form-control" readonly style="margin-bottom:0;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;box-shadow:inset 0 1px 0 rgba(255,255,255,0.95);font-weight:700;cursor:default;">
+                                <div class="ocr-result-row ocr-detected-result-row">
+                                    <p class="ocr-result-label ocr-detected-result-label">Patient ID Number</p>
+                                    <input type="text" id="ocr_student_number" class="form-control ocr-detected-result-input" readonly>
                                 </div>
                             </div>
-                            <div id="ocrStatus" class="ocr-status info" style="display:block;">AI verification could not finish right now.</div>
-                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <div id="ocrStatus" class="ocr-status info walkin-ocr-status-visible">AI verification could not finish right now.</div>
+                            <div class="walkin-ocr-meta-row">
                             <div id="ocrConfidenceText" class="ocr-meta">Patient ID confidence: 10%</div>
-                                <div id="ocrLockBadge" class="ocr-lock-badge" style="display:none;">Locked on ID</div>
+                                <div id="ocrLockBadge" class="ocr-lock-badge walkin-initially-hidden">Locked on ID</div>
                             </div>
-                            <div class="ocr-actions" style="margin-top:14px;">
+                            <div class="ocr-actions walkin-ocr-confirm-actions">
                                 <button type="button" id="btnConfirmOcr" class="btn-ocr btn-ocr-secondary" disabled>Confirm &amp; Continue</button>
                             </div>
                             </div>
@@ -12896,7 +13244,7 @@
                                     </button>
                             </section>
                         </div>
-                        <canvas id="ocrCanvas" style="display:none;"></canvas>
+                        <canvas id="ocrCanvas" class="walkin-initially-hidden"></canvas>
                     </div>
                 </div>
             </div>
@@ -12936,7 +13284,7 @@
     @endif
 
 @if($currentMode === 'registration')
-<div class="card p-4 shadow-sm walkin-strip-card registration-hub" style="border-radius: 16px; border: none; margin: 20px auto;">
+<div class="card p-4 shadow-sm walkin-strip-card registration-hub walkin-registration-card">
     <div class="registration-head">
         <div class="registration-head-main">
             <div class="registration-head-copy">
@@ -12978,13 +13326,13 @@
 
 
 @if(in_array($currentMode, ['scan', 'assisted', 'applicant'], true))
-<div class="{{ $currentMode === 'assisted' ? '' : 'card p-4 shadow-sm walkin-strip-card' }}" style="{{ $currentMode === 'assisted' ? 'max-width: 1180px; margin: 20px auto; padding: 0; background: transparent; box-shadow: none; border: none;' : 'border-radius: 15px; border: none; max-width: 550px; margin: 20px auto;' }}">
+<div class="{{ $currentMode === 'assisted' ? 'walkin-assisted-container' : 'card p-4 shadow-sm walkin-strip-card walkin-scan-card' }}">
     
     @if($currentMode !== 'assisted')
     <div id="dynamicHeader" class="mode-header bg-scan">
         <div id="headerIcon" class="mode-header-badge">{{ $currentMode === 'applicant' ? 'AP' : 'SB' }}</div>
         <div class="mode-header-copy">
-            <h3 id="headerTitle" style="margin: 0; font-weight: 800; text-transform: uppercase; font-size: 1rem; letter-spacing: 1px;">
+            <h3 id="headerTitle" class="walkin-mode-title">
                 {{ $currentMode === 'applicant' ? 'Applicant Scan Ready' : 'Consultation' }}
             </h3>
             <p id="headerSubtitle">
@@ -12994,22 +13342,22 @@
     </div>
     @endif
 
-    <div id="scanForm" style="{{ $currentMode === 'assisted' ? 'display:none;' : '' }}">
+    <div id="scanForm" class="{{ $currentMode === 'assisted' ? 'walkin-initially-hidden' : '' }}">
         <div id="scanStage" class="scan-stage">
             <div class="scan-method-bar">
                 <div>
                 <p id="scanMethodTitle" class="scan-method-title">OCR Patient ID Scan</p>
                 <p id="scanMethodNote" class="scan-method-note">Use the camera to extract the Patient ID Number from the physical ID card, or enter it manually.</p>
                 </div>
-                <button type="button" id="btnSwitchScanMode" class="btn-scan-switch" style="display:none;">OCR Scan Active</button>
+                <button type="button" id="btnSwitchScanMode" class="btn-scan-switch walkin-initially-hidden">OCR Scan Active</button>
             </div>
 
-            <div id="scanner-container-scan" class="scan-surface" style="position: relative;">
+            <div id="scanner-container-scan" class="scan-surface walkin-scan-surface">
                 <p id="scanInlineNote" class="scan-inline-note">OCR mode is active. Align the physical ID inside the frame, or type the Patient ID Number manually.</p>
                 <div id="barcodeScanPanel">
                     <div id="scan-loading">
                         <div class="spinner"></div>
-                        <p style="margin-top:10px; color:#8B0000; font-weight:bold; font-size: 12px;">Verifying...</p>
+                        <p class="walkin-scan-verifying">Verifying...</p>
                     </div>
                     <div id="readerScan" class="scanner-box">
                         <div class="scan-line-overlay"></div>
@@ -13018,47 +13366,47 @@
                     </div>
 
                     <div class="ocr-actions">
-                        <button type="button" id="btnRunAiOcr" class="btn-ocr btn-ocr-primary" style="background:linear-gradient(135deg, #1d4ed8, #2563eb 55%, #3b82f6); box-shadow:0 12px 24px rgba(37,99,235,0.22);">Reading Patient ID</button>
+                        <button type="button" id="btnRunAiOcr" class="btn-ocr btn-ocr-primary walkin-ocr-reading-button">Reading Patient ID</button>
                         <button type="button" id="btnRetryOcr" class="btn-ocr btn-ocr-secondary">Clear OCR Result</button>
                     </div>
 
-                    <div id="ocrResultPanel" class="ocr-result-panel" style="display:none;">
-                        <div style="display:grid; gap:12px;">
-                            <div class="ocr-result-row" style="display:grid; grid-template-columns: 120px minmax(0, 1fr); gap:12px; align-items:center;">
-                                <p class="ocr-result-label" style="margin:0;">Full Name</p>
-                                <input type="text" id="ocr_student_name" class="form-control" placeholder="Enter full name" style="margin-bottom:0;">
+                    <div id="ocrResultPanel" class="ocr-result-panel walkin-initially-hidden">
+                        <div class="walkin-ocr-result-grid">
+                            <div class="ocr-result-row walkin-ocr-result-row">
+                                <p class="ocr-result-label walkin-ocr-result-label">Full Name</p>
+                                <input type="text" id="ocr_student_name" class="form-control walkin-input-flush" placeholder="Enter full name">
                             </div>
-                            <div class="ocr-result-row" style="display:grid; grid-template-columns: 120px minmax(0, 1fr); gap:12px; align-items:center;">
-                                <p class="ocr-result-label" style="margin:0;">Patient ID Number</p>
-                                <input type="text" id="ocr_student_number" class="form-control" placeholder="Enter Patient ID Number" style="margin-bottom:0;">
+                            <div class="ocr-result-row walkin-ocr-result-row">
+                                <p class="ocr-result-label walkin-ocr-result-label">Patient ID Number</p>
+                                <input type="text" id="ocr_student_number" class="form-control walkin-input-flush" placeholder="Enter Patient ID Number">
                             </div>
                         </div>
 
-                        <div id="ocrStatus" class="ocr-status info" style="display:block;">Live OCR is ready. Hold the ID steady inside the frame so we can detect the Patient ID Number and fill the saved name from records.</div>
-                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <div id="ocrStatus" class="ocr-status info walkin-ocr-status-visible">Live OCR is ready. Hold the ID steady inside the frame so we can detect the Patient ID Number and fill the saved name from records.</div>
+                        <div class="walkin-ocr-meta-row">
                             <div id="ocrConfidenceText" class="ocr-meta">OCR confidence will appear here after analysis.</div>
-                            <div id="ocrLockBadge" class="ocr-lock-badge" style="display:none;">Locked on ID</div>
+                            <div id="ocrLockBadge" class="ocr-lock-badge walkin-initially-hidden">Locked on ID</div>
                         </div>
 
-                        <div class="ocr-actions" style="margin-top:14px;">
+                        <div class="ocr-actions walkin-ocr-confirm-actions">
                             <button type="button" id="btnConfirmOcr" class="btn-ocr btn-ocr-secondary" disabled>Confirm & Continue</button>
                         </div>
                     </div>
 
-                    <canvas id="ocrCanvas" style="display:none;"></canvas>
+                    <canvas id="ocrCanvas" class="walkin-initially-hidden"></canvas>
                 </div>
 
             </div>
         
             <div class="text-center mt-3">
-                <button type="button" id="btnShowManual" style="background:none; border:none; color:#8B0000; text-decoration:underline; cursor:pointer; font-weight:600; font-size: 0.85rem;">
+                <button type="button" id="btnShowManual" class="walkin-manual-toggle">
                     Type Patient ID Number Manually
                 </button>
             </div>
 
-            <div id="manualInputArea" style="display:none;" class="mt-3">
+            <div id="manualInputArea" class="mt-3 walkin-initially-hidden">
                 <form id="walkinFormManual" class="d-flex gap-2">
-                    <input type="text" id="student_id_manual" placeholder="Enter Patient ID Number" class="form-control" style="margin-bottom:0;" required>
+                    <input type="text" id="student_id_manual" placeholder="Enter Patient ID Number" class="form-control walkin-input-flush" required>
                     <button type="submit" id="manualFindBtn" class="manual-find-btn" disabled aria-label="Find record" title="Find record">
                         <x-outline-icon name="magnifying-glass" />
                     </button>
@@ -13066,12 +13414,12 @@
                 <div id="manualLookupStatus" class="manual-lookup-status" role="status" aria-live="polite"></div>
             </div>
 
-            <div class="mt-4 pt-3" style="border-top: 1px dashed #cbd5e1;">
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <a href="{{ url($basePrefix . '/walkin') }}" class="btn w-100 py-2" style="flex:1 1 180px; background: #ffffff; border: 1px solid #cbd5e1; color: #475569; font-weight: 700; font-size: 0.8rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;">
+            <div class="mt-4 pt-3 walkin-scan-navigation">
+                <div class="walkin-scan-navigation-links">
+                <a href="{{ url($basePrefix . '/walkin') }}" class="btn w-100 py-2 walkin-back-intake-link">
                      BACK TO INTAKE OPTIONS
                 </a>
-                <a href="{{ url($basePrefix . '/appointments') }}" class="btn w-100 py-2" style="flex:1 1 180px; background: #f8fafc; border: 1px solid #cbd5e1; color: #475569; font-weight: 600; font-size: 0.8rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;">
+                <a href="{{ url($basePrefix . '/appointments') }}" class="btn w-100 py-2 walkin-back-appointments-link">
                  BACK TO APPOINTMENTS LIST
                 </a>
                 </div>
@@ -13079,7 +13427,7 @@
         </div>
     </div>
 
-    <div id="registerForm" style="{{ $currentMode === 'assisted' ? '' : 'display:none;' }}">
+    <div id="registerForm" class="{{ $currentMode === 'assisted' ? '' : 'walkin-initially-hidden' }}">
         <form id="formRegisterStudent">
             @csrf
 
@@ -13094,7 +13442,7 @@
                             </div>
                             <div class="assisted-hero-copy">
                                 <h3>Clinic Patient Registration</h3>
-                                <div class="assisted-status-row" style="margin-bottom:10px;">
+                                <div class="assisted-status-row assisted-registration-status">
                                     <span class="assisted-status-chip pending">Temporary Record</span>
                                     <span class="assisted-status-chip ready">Ready for Consultation</span>
                                 </div>
@@ -13103,13 +13451,13 @@
                         </div>
 
             <div class="mb-3 assisted-highlight-card">
-                <label style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Patient ID Number / Reference ID</label>
+                <label class="assisted-registration-id-label">Patient ID Number / Reference ID</label>
                 <input type="text" id="reg_student_id" class="form-control mb-0" placeholder="Enter Patient ID Number or reference ID" required>
                 <input type="hidden" id="reg_barcode">
             </div>
             
             <div class="mb-2">
-                <label style="font-size: 11px; font-weight: 700; color: #475569;">PATIENT ROLE</label>
+                <label class="assisted-registration-role-label">PATIENT ROLE</label>
                 <div class="assisted-role-wrap" id="assistedRoleWrap">
                     <select id="reg_user_type" class="form-control assisted-role-select" required>
                         <option value="" disabled selected>-- Choose Patient Role --</option>
@@ -13197,22 +13545,22 @@
                 <input type="email" id="reg_email" placeholder="Enter email address" class="form-control" required>
             </div>
 
-            <div style="background:#fff7ed; border:1px dashed #fdba74; border-radius:10px; padding:12px 14px; margin-bottom:10px;">
-                <strong style="display:block; font-size:12px; color:#9a3412; margin-bottom:4px;">No password needed for assisted intake</strong>
-                <p style="margin:0; font-size:12px; color:#7c2d12; line-height:1.5;">A valid email address is required for assisted intake before proceeding to consultation.</p>
+            <div class="assisted-registration-note">
+                <strong class="assisted-registration-note-title">No password needed for assisted intake</strong>
+                <p class="assisted-registration-note-copy">A valid email address is required for assisted intake before proceeding to consultation.</p>
             </div>
             
                     </div>
                 </section>
 
-            <div id="notification" style="margin: 10px 0;"></div>
+            <div id="notification" class="walkin-notification"></div>
             
             <button type="button" id="confirmBtn" class="assisted-submit-btn mt-2">
                 SAVE ASSISTED INTAKE
             </button>
             
             <div class="text-center mt-3">
-                <a href="{{ url($basePrefix . '/walkin') }}" style="font-size: 12px; color: #64748b; text-decoration: none;">Back to intake options</a>
+                <a href="{{ url($basePrefix . '/walkin') }}" class="assisted-registration-back-link">Back to intake options</a>
             </div>
             </div>
         </form>
@@ -13224,10 +13572,10 @@
 @endsection
 
 @push('scripts')
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script type="text/javascript">
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" type="text/javascript" nonce="{{ request()->attributes->get('csp_nonce') }}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" nonce="{{ request()->attributes->get('csp_nonce') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js" nonce="{{ request()->attributes->get('csp_nonce') }}"></script>
+<script type="text/javascript" nonce="{{ request()->attributes->get('csp_nonce') }}">
     let mainScanner;
     let ocrWorkerPromise = null;
     let currentVideoTrack = null;
@@ -13859,7 +14207,11 @@
         async function getOcrWorker() {
             if (!ocrWorkerPromise) {
                 ocrWorkerPromise = (async () => {
-                    const worker = await Tesseract.createWorker('eng');
+                    const worker = await Tesseract.createWorker('eng', 1, {
+                        workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+                        corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',
+                        langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng/4.0.0_best_int',
+                    });
 
                     if (typeof worker.setParameters === 'function') {
                         await worker.setParameters({
@@ -13868,7 +14220,10 @@
                     }
 
                     return worker;
-                })();
+                })().catch((error) => {
+                    ocrWorkerPromise = null;
+                    throw error;
+                });
             }
 
             return ocrWorkerPromise;
@@ -14222,7 +14577,7 @@
                         return;
                     }
 
-                    $('#notification').html(`<p style="color:#991b1b; font-size:12px; font-weight:700; background:#fff1f2; padding:10px 12px; border-radius:10px; border:1px solid #fecdd3; margin-bottom:12px;">${failureMessage}</p>`);
+                    $('#notification').html(`<p class="walkin-lookup-failure">${failureMessage}</p>`);
 
                     if(mainScanner) {
                         mainScanner.stop().then(() => {
@@ -14536,7 +14891,7 @@
                 } else if (xhr.status === 409) {
                     errorMsg = "This account already exists.";
                 }
-                $('#notification').html(`<p style="color:#991b1b; font-size:12px; font-weight:bold; background:#fee2e2; padding:10px; border-radius:8px; border:1px solid #fecaca;">${$('<div>').text(errorMsg).html()}</p>`);
+                $('#notification').html(`<p class="walkin-registration-failure">${$('<div>').text(errorMsg).html()}</p>`);
             });
         });
     });
@@ -18800,6 +19155,7 @@
             const shouldRequireCovidDate = isPositive && !isStudentLookupResult();
 
             if (covidPositiveDateField) {
+                covidPositiveDateField.classList.toggle('walkin-initially-hidden', !isPositive);
                 covidPositiveDateField.style.display = isPositive ? 'flex' : 'none';
             }
             if (covidPositiveDateInput) {

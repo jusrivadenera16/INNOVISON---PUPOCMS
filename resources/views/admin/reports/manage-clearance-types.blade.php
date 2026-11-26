@@ -3,7 +3,7 @@
 @section('title', 'Manage Clearance / Certificate Types')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .clearance-page,
     .clearance-modal-overlay {
         --clinic-maroon: #8f1024;
@@ -873,7 +873,7 @@
             <input type="search" id="clearanceSearch" placeholder="Search clearance types..." autocomplete="off">
         </label>
 
-        <button type="button" class="clearance-action" onclick="openAddClearanceModal()">
+        <button type="button" class="clearance-action" data-add-clearance>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
             <span>Add Clearance Type</span>
         </button>
@@ -908,16 +908,16 @@
 
                     <div class="clearance-parent-actions">
                         @if($typeCountPlacement === 'subcategories')
-                            <button type="button" class="clearance-btn clearance-btn--edit" onclick="openAddSubcategoryModal('{{ $clearanceType->id }}', @js($clearanceType->name))">
+                            <button type="button" class="clearance-btn clearance-btn--edit" data-add-clearance-subcategory data-clearance-type-id="{{ $clearanceType->id }}" data-clearance-type-name="{{ $clearanceType->name }}">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
                                 <span>Add</span>
                             </button>
                         @endif
-                        <button type="button" class="clearance-btn clearance-btn--edit" onclick="openEditClearanceModal('{{ $clearanceType->id }}', @js($clearanceType->name), @js($typeCountPlacement), @js($typeSourcePayload))">
+                        <button type="button" class="clearance-btn clearance-btn--edit" data-edit-clearance data-clearance-type-id="{{ $clearanceType->id }}" data-clearance-type-name="{{ $clearanceType->name }}" data-clearance-count-placement="{{ $typeCountPlacement }}" data-source-mapping="{{ json_encode($typeSourcePayload) }}">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
                             <span>Edit</span>
                         </button>
-                        <form action="{{ route('mar-clearance-types.destroy', $clearanceType) }}" method="POST" onsubmit="return confirmClearanceDelete(event)">
+                        <form action="{{ route('mar-clearance-types.destroy', $clearanceType) }}" method="POST" data-delete-clearance>
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="clearance-btn clearance-btn--delete">
@@ -1000,11 +1000,11 @@
                                 </div>
                             </div>
                             <div class="clearance-subcategory-actions">
-                                <button type="button" class="clearance-btn clearance-btn--edit" onclick="openEditSubcategoryModal('{{ $subcategory->id }}', @js($subcategory->name), @js($clearanceType->name), @js($subcategorySourcePayload))">
+                                <button type="button" class="clearance-btn clearance-btn--edit" data-edit-clearance-subcategory data-subcategory-id="{{ $subcategory->id }}" data-subcategory-name="{{ $subcategory->name }}" data-clearance-type-name="{{ $clearanceType->name }}" data-source-mapping="{{ json_encode($subcategorySourcePayload) }}">
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
                                     <span>Edit</span>
                                 </button>
-                                <form action="{{ route('mar-clearance-subcategories.destroy', $subcategory) }}" method="POST" onsubmit="return confirmClearanceSubcategoryDelete(event)">
+                                <form action="{{ route('mar-clearance-subcategories.destroy', $subcategory) }}" method="POST" data-delete-clearance-subcategory>
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="clearance-btn clearance-btn--delete">
@@ -1041,7 +1041,7 @@
                     <p>Create a new entry for Part II of the MAR.</p>
                 </div>
             </div>
-            <button type="button" class="clearance-modal-close" onclick="closeAddClearanceModal()" aria-label="Close add clearance type modal">
+            <button type="button" class="clearance-modal-close" data-close-add-clearance aria-label="Close add clearance type modal">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
             </button>
         </div>
@@ -1090,7 +1090,7 @@
                 </fieldset>
 
                 <div class="clearance-modal-actions">
-                    <button type="button" class="clearance-btn-cancel" onclick="closeAddClearanceModal()">Cancel</button>
+                    <button type="button" class="clearance-btn-cancel" data-close-add-clearance>Cancel</button>
                     <button type="submit" class="clearance-btn-save">Save Type</button>
                 </div>
             </form>
@@ -1110,7 +1110,7 @@
                     <p>Update the name shown in the report.</p>
                 </div>
             </div>
-            <button type="button" class="clearance-modal-close" onclick="closeEditClearanceModal()" aria-label="Close edit clearance type modal">
+            <button type="button" class="clearance-modal-close" data-close-edit-clearance aria-label="Close edit clearance type modal">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
             </button>
         </div>
@@ -1161,7 +1161,7 @@
                 </fieldset>
 
                 <div class="clearance-modal-actions">
-                    <button type="button" class="clearance-btn-cancel" onclick="closeEditClearanceModal()">Cancel</button>
+                    <button type="button" class="clearance-btn-cancel" data-close-edit-clearance>Cancel</button>
                     <button type="submit" class="clearance-btn-save">Save Changes</button>
                 </div>
             </form>
@@ -1181,7 +1181,7 @@
                     <p>Create a numbered entry under the selected clearance type.</p>
                 </div>
             </div>
-            <button type="button" class="clearance-modal-close" onclick="closeAddSubcategoryModal()" aria-label="Close add subcategory modal">
+            <button type="button" class="clearance-modal-close" data-close-add-clearance-subcategory aria-label="Close add subcategory modal">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
             </button>
         </div>
@@ -1218,7 +1218,7 @@
                 </fieldset>
 
                 <div class="clearance-modal-actions">
-                    <button type="button" class="clearance-btn-cancel" onclick="closeAddSubcategoryModal()">Cancel</button>
+                    <button type="button" class="clearance-btn-cancel" data-close-add-clearance-subcategory>Cancel</button>
                     <button type="submit" class="clearance-btn-save">Save Subcategory</button>
                 </div>
             </form>
@@ -1238,7 +1238,7 @@
                     <p>Update the numbered entry shown under its clearance type.</p>
                 </div>
             </div>
-            <button type="button" class="clearance-modal-close" onclick="closeEditSubcategoryModal()" aria-label="Close edit subcategory modal">
+            <button type="button" class="clearance-modal-close" data-close-edit-clearance-subcategory aria-label="Close edit subcategory modal">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
             </button>
         </div>
@@ -1276,7 +1276,7 @@
                 </fieldset>
 
                 <div class="clearance-modal-actions">
-                    <button type="button" class="clearance-btn-cancel" onclick="closeEditSubcategoryModal()">Cancel</button>
+                    <button type="button" class="clearance-btn-cancel" data-close-edit-clearance-subcategory>Cancel</button>
                     <button type="submit" class="clearance-btn-save">Save Changes</button>
                 </div>
             </form>
@@ -1286,7 +1286,44 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
+document.querySelector('[data-add-clearance]')?.addEventListener('click', openAddClearanceModal);
+document.querySelectorAll('[data-add-clearance-subcategory]').forEach(function(button) {
+    button.addEventListener('click', function() {
+        openAddSubcategoryModal(button.dataset.clearanceTypeId, button.dataset.clearanceTypeName);
+    });
+});
+document.querySelectorAll('[data-edit-clearance]').forEach(function(button) {
+    button.addEventListener('click', function() {
+        openEditClearanceModal(button.dataset.clearanceTypeId, button.dataset.clearanceTypeName,
+            button.dataset.clearanceCountPlacement, JSON.parse(button.dataset.sourceMapping || 'null'));
+    });
+});
+document.querySelectorAll('[data-edit-clearance-subcategory]').forEach(function(button) {
+    button.addEventListener('click', function() {
+        openEditSubcategoryModal(button.dataset.subcategoryId, button.dataset.subcategoryName,
+            button.dataset.clearanceTypeName, JSON.parse(button.dataset.sourceMapping || 'null'));
+    });
+});
+document.querySelectorAll('[data-close-add-clearance]').forEach(function(button) {
+    button.addEventListener('click', closeAddClearanceModal);
+});
+document.querySelectorAll('[data-close-edit-clearance]').forEach(function(button) {
+    button.addEventListener('click', closeEditClearanceModal);
+});
+document.querySelectorAll('[data-close-add-clearance-subcategory]').forEach(function(button) {
+    button.addEventListener('click', closeAddSubcategoryModal);
+});
+document.querySelectorAll('[data-close-edit-clearance-subcategory]').forEach(function(button) {
+    button.addEventListener('click', closeEditSubcategoryModal);
+});
+document.querySelectorAll('[data-delete-clearance]').forEach(function(form) {
+    form.addEventListener('submit', confirmClearanceDelete);
+});
+document.querySelectorAll('[data-delete-clearance-subcategory]').forEach(function(form) {
+    form.addEventListener('submit', confirmClearanceSubcategoryDelete);
+});
+
 const clearanceSearch = document.getElementById('clearanceSearch');
 const clearanceCount = document.getElementById('clearanceCount');
 const clearanceEmpty = document.getElementById('clearanceEmpty');

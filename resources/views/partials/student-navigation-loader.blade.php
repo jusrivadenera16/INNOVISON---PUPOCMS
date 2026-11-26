@@ -13,7 +13,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     (function () {
         const loader = document.getElementById('studentNavigationLoader');
         if (!loader) return;

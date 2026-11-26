@@ -6,13 +6,14 @@
     <title>Fill Up - Health Profile</title>
     <script
         src="{{ asset('js/sienna-accessibility-custom.umd.js') }}?v={{ filemtime(public_path('js/sienna-accessibility-custom.umd.js')) }}"
+        nonce="{{ request()->attributes->get('csp_nonce') }}"
         data-asw-position="bottom-right"
         data-asw-offset="24,12"
         data-asw-size="small"
         defer
     ></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         :root {
             --clinic-maroon: #7f1d2d;
             --clinic-maroon-dark: #5f0012;
@@ -3054,7 +3055,12 @@
         }
 
         @include('student.partials.health_form_upload_ui_styles')
-    </style>
+
+    .step-panel h3.section-title.student-health-form-employee-csp-1 { font-size:1rem;margin-bottom:10px; }
+    .student-health-form-employee-csp-2 { margin: 0 0 16px; }
+    .student-health-form-employee-csp-3 { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 800; color: #7f1d2d; text-transform: uppercase; }
+    .student-health-form-employee-csp-4 { font-weight: 700; }
+</style>
 </head>
 <body class="health-form-page">
     @php
@@ -3122,7 +3128,8 @@
                             <span id="currentStepName">{{ $healthFormSteps[$startStep] ?? 'Personal Information' }}</span>
                         </div>
                         <div class="step-progress-track" aria-hidden="true">
-                            <div class="step-progress-fill" id="stepProgressFill" style="width: {{ round(($startStep / count($healthFormSteps)) * 100) }}%;"></div>
+                            <style nonce="{{ request()->attributes->get('csp_nonce') }}">#stepProgressFill { width: {{ round(($startStep / count($healthFormSteps)) * 100) }}%; }</style>
+                            <div class="step-progress-fill" id="stepProgressFill"></div>
                         </div>
                         <div class="step-progress-percent" id="stepProgressPercent">{{ round(($startStep / count($healthFormSteps)) * 100) }}% Complete</div>
                     </div>
@@ -3564,7 +3571,7 @@
                 <div class="step-panel {{ $startStep === 2 ? '' : 'is-hidden' }}" id="stepPanel2">
                     <h2 class="section-title step-page-title" data-title-letter="M">Past Medical History</h2>
                     <p class="step-fill-note">Select all conditions that apply and provide details where needed.</p>
-                    <h3 class="section-title" style="font-size:1rem;margin-bottom:10px;">Childhood Illness</h3>
+                    <h3 class="section-title student-health-form-employee-csp-1">Childhood Illness</h3>
                     @php
                         $pastMedicalItems = ['Asthma', 'Heart Disease', 'Seizure Disorder', 'Others', 'Chicken Pox', 'Measles', 'Hypertension'];
                     @endphp
@@ -3610,7 +3617,7 @@
                         </div>
                     </div>
 
-                    <h3 class="section-title mt-4" style="font-size:1rem;margin-bottom:10px;">Current Medications</h3>
+                    <h3 class="section-title mt-4 student-health-form-employee-csp-1">Current Medications</h3>
                     <div class="form-grid personal-form-grid">
                         <div class="form-field">
                             <label class="form-label" for="allergies">Allergies</label>
@@ -3633,14 +3640,14 @@
                             $initialEmployeePurpose = $employeeConsentPurpose['purpose'] ?? 'Administrative personnel';
                             $initialEmployeeEndorsement = $employeeConsentPurpose['endorsement'] ?? 'fitness for administrative duties';
                         @endphp
-                        <div class="student-consent-purpose-wrap" style="margin: 0 0 16px;">
-                            <span style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 800; color: #7f1d2d; text-transform: uppercase;">Purpose of Medical Clearance</span>
+                        <div class="student-consent-purpose-wrap student-health-form-employee-csp-2">
+                            <span class="student-health-form-employee-csp-3">Purpose of Medical Clearance</span>
                             <strong>{{ $initialEmployeePurpose }}</strong>
                         </div>
 
                         <div class="student-consent-copy">
                             <p>
-                                I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my on-site consultation for the issuance of medical clearance for <u id="employeeConsentDynamicPurpose" style="font-weight: 700;">{{ $initialEmployeePurpose }}</u> are true, correct and complete to the best of my knowledge. I have fully disclosed all the medical condition that may affect in the assessment to endorse my <u id="employeeConsentDynamicEndorsement" style="font-weight: 700;">{{ $initialEmployeeEndorsement }}</u> of PUP Taguig Campus.
+                                I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my on-site consultation for the issuance of medical clearance for <u class="student-health-form-employee-csp-4" id="employeeConsentDynamicPurpose">{{ $initialEmployeePurpose }}</u> are true, correct and complete to the best of my knowledge. I have fully disclosed all the medical condition that may affect in the assessment to endorse my <u class="student-health-form-employee-csp-4" id="employeeConsentDynamicEndorsement">{{ $initialEmployeeEndorsement }}</u> of PUP Taguig Campus.
                             </p>
                             <p>I also understand that the PUP Medical Services and University will not be liable for any untoward incident that may arise due to my failure to disclose accurate information or intentionally providing false and deceptive information.</p>
                             <p>{{ config('health_form_privacy.consent_statement') }}</p>
@@ -3709,7 +3716,7 @@
                             </div>
                         </div>
                     </div>
-                    <h3 class="section-title mt-4" style="font-size:1rem;margin-bottom:10px;">PWD</h3>
+                    <h3 class="section-title mt-4 student-health-form-employee-csp-1">PWD</h3>
                     <div class="form-grid personal-form-grid">
                         <div class="form-field">
                             <label class="form-label">Do you have a disability? <span class="required">*</span></label>
@@ -3893,8 +3900,9 @@
         </div>
     </div>
 
+    <script src="{{ asset('js/student-csp-controls.js') }}?v={{ filemtime(public_path('js/student-csp-controls.js')) }}" defer></script>
     <script src="{{ asset('js/clinic-address-lookup.js') }}"></script>
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         (function () {
             document.querySelectorAll('[data-student-toast]').forEach((toast) => {
                 const closeButton = toast.querySelector('[data-student-toast-close]');

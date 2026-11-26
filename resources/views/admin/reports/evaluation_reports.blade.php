@@ -3,7 +3,7 @@
 @section('title', 'Service Evaluation Reports')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .evaluation-report-shell {
         max-width: 1380px;
         margin: 0 auto;

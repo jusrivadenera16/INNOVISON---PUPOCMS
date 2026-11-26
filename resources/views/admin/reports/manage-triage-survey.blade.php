@@ -3,7 +3,7 @@
 @section('title', 'Triage Survey')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .triage-survey-page {
         --clinic-maroon: #8f1024;
         --clinic-deep: #6d0718;

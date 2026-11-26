@@ -34,7 +34,7 @@
         Declaration of Medical Information and Data Subject Consent Form
     </title>
 
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         @page {
             size: 8.5in 11in;
             margin: 0.55in 0.42in 0.90in 0.42in;

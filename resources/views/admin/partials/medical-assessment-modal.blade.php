@@ -514,7 +514,7 @@
 
     @once
         @push('styles')
-            <style>
+            <style nonce="{{ request()->attributes->get('csp_nonce') }}">
                 #medicalInformationModal {
                     --medical-edit-background: #162536;
                     --medical-edit-text: #f8fafc;
@@ -1534,7 +1534,7 @@
 
     @once
         @push('scripts')
-            <script>
+            <script nonce="{{ request()->attributes->get('csp_nonce') }}">
                 document.addEventListener('DOMContentLoaded', function () {
                     const modal = document.getElementById('medicalInformationModal');
                     if (!modal) return;

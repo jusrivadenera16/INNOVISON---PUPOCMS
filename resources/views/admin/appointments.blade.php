@@ -3,7 +3,7 @@
 @section('title', 'Manage Appointments')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     body:has(.appointments-summary-card) .main {
         background:
             linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.84)),
@@ -5142,7 +5142,7 @@
 @endpush
 
 @push('late-styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .appointments-summary-card {
         min-width: 0 !important;
     }
@@ -5783,6 +5783,26 @@
     #statusActionModal #statusActionConfirm.dialog-btn-reject:focus-visible::before {
         transform: translateX(125%) !important;
     }
+
+    #apptTable .student-name {
+        font-weight: 700;
+    }
+
+    #apptTable .appointment-id-number {
+        font-size: 12px;
+        color: #111827;
+    }
+
+    #apptTable .appointment-schedule-time {
+        font-size: 12px;
+        color: #94a3b8;
+    }
+
+    #apptTable .appointments-empty-cell {
+        text-align: center;
+        padding: 40px;
+        color: #94a3b8;
+    }
 </style>
 @endpush
 
@@ -5962,7 +5982,7 @@
                     <span>Current records</span>
                 </div>
             </div>
-            <button type="button" class="appointments-modern-card is-workflow is-consultation" onclick="openAppointmentQueueModal('consultationQueueModal')">
+            <button type="button" class="appointments-modern-card is-workflow is-consultation" data-appointment-open-queue="consultationQueueModal">
                 <span class="appointments-modern-icon"><x-outline-icon name="clipboard-document-list" /></span>
                 <div class="appointments-modern-copy">
                     <span class="appointments-modern-label">For Consultations</span>
@@ -5971,7 +5991,7 @@
                 </div>
                 <span class="appointments-modern-arrow" aria-hidden="true">&rarr;</span>
             </button>
-            <button type="button" class="appointments-modern-card is-workflow is-review" onclick="openAppointmentQueueModal('reviewQueueModal')">
+            <button type="button" class="appointments-modern-card is-workflow is-review" data-appointment-open-queue="reviewQueueModal">
                 <span class="appointments-modern-icon"><x-outline-icon name="exclamation-triangle" /></span>
                 <div class="appointments-modern-copy">
                     <span class="appointments-modern-label">For Review</span>
@@ -6085,8 +6105,8 @@
                         ])) }}"
                     >
                         <td>
-                            <div style="font-weight: 700;" class="student-name">{{ $appointmentMeta['display_name'] }}</div>
-                            <div style="font-size: 12px; color: #111827;">{{ $appointmentIdNumber ?: 'N/A' }}</div>
+                            <div class="student-name">{{ $appointmentMeta['display_name'] }}</div>
+                            <div class="appointment-id-number">{{ $appointmentIdNumber ?: 'N/A' }}</div>
                         </td>
                         <td>{{ $appt->apt_id ?: 'N/A' }}</td>
                        <td>
@@ -6099,7 +6119,7 @@
                         <td>{{ $appt->service }}</td>
                         <td>
                             <div>{{ \Carbon\Carbon::parse($appt->date)->format('M d, Y') }}</div>
-                            <div style="font-size: 12px; color: #94a3b8;">{{ \Carbon\Carbon::parse($appt->time)->format('g:i A') }}</div>
+                            <div class="appointment-schedule-time">{{ \Carbon\Carbon::parse($appt->time)->format('g:i A') }}</div>
                         </td>
                         <td>
                             <span class="status {{ strtolower($appt->status) }}">{{ $appt->status }}</span>
@@ -6144,7 +6164,7 @@
                                     data-submitted-at="{{ optional($appt->created_at)->format('M d, Y g:i A') }}"
                                     data-updated="{{ optional($appt->updated_at)->format('M d, Y g:i A') }}"
                                     data-approved-at="{{ optional($appt->approved_at_display)->format('M d, Y g:i A') }}"
-                                    onclick="openInfoModal(this)">
+                                    data-appointment-open-info>
                                     <x-outline-icon name="eye" />
                                     View
                                 </button>
@@ -6169,7 +6189,7 @@
                                             data-email="{{ $appt->email }}"
                                             data-status="{{ $appt->status }}"
                                             data-appointment-id="{{ $appt->id }}"
-                                            onclick="openInfoModal(this)">
+                                            data-appointment-open-info>
                                             <x-outline-icon name="eye" />
                                             View
                                         </button>
@@ -6201,7 +6221,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">No appointments found.</td>
+                        <td colspan="7" class="appointments-empty-cell">No appointments found.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -6249,7 +6269,7 @@
             'empty' => 'No appointment requests are currently waiting for review.',
         ],
     ] as $queue)
-        <div id="{{ $queue['id'] }}" class="modal-overlay appointment-queue-modal" onclick="if(event.target === this) closeAppointmentQueueModal('{{ $queue['id'] }}')">
+        <div id="{{ $queue['id'] }}" class="modal-overlay appointment-queue-modal" data-appointment-queue-backdrop>
             <div class="appointment-queue-shell" role="dialog" aria-modal="true" aria-labelledby="{{ $queue['id'] }}Title">
                 <div class="appointment-queue-header">
                     <div class="appointment-queue-header-main">
@@ -6259,7 +6279,7 @@
                             <p>{{ $queue['description'] }}</p>
                         </div>
                     </div>
-                    <button type="button" class="modal-header-close" onclick="closeAppointmentQueueModal('{{ $queue['id'] }}')" aria-label="Close {{ strtolower($queue['title']) }} modal">
+                    <button type="button" class="modal-header-close" data-appointment-close-queue="{{ $queue['id'] }}" aria-label="Close {{ strtolower($queue['title']) }} modal">
                         <x-outline-icon name="x-mark" />
                     </button>
                 </div>
@@ -6320,7 +6340,7 @@
                                     data-submitted-at="{{ optional($queueAppointment->created_at)->format('M d, Y g:i A') }}"
                                     data-approved-at="{{ optional($queueAppointment->approved_at_display)->format('M d, Y g:i A') }}"
                                     data-consultation="{{ $queueAppointment->consultation_details_payload ? json_encode($queueAppointment->consultation_details_payload, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP) : '' }}"
-                                    onclick="openAppointmentFromQueue(this)"
+                                    data-appointment-open-from-queue
                                 >
                                     <span>View Info</span>
                                 </button>
@@ -6378,7 +6398,7 @@
                     <span id="mStatusText">N/A</span>
                     <small id="mStatusHint">Appointment status</small>
                 </span>
-                <button type="button" class="modal-header-close" onclick="closeInfoModal()" aria-label="Close appointment details modal">
+                <button type="button" class="modal-header-close" data-appointment-close-info aria-label="Close appointment details modal">
                     <x-outline-icon name="x-mark" />
                 </button>
             </div>
@@ -6475,7 +6495,7 @@
                 </section>
             </div>
             <div class="appointment-detail-actions" id="appointmentDetailActions" hidden>
-                <button type="button" class="dialog-btn dialog-btn-secondary" onclick="closeInfoModal()"><span>Cancel</span></button>
+                <button type="button" class="dialog-btn dialog-btn-secondary" data-appointment-close-info><span>Cancel</span></button>
                 @if($canRejectAppointments)
                 <a id="mRejectAction" href="#" class="dialog-btn dialog-btn-reject btn-reject btn-cancel" data-status-target="Rejected">
                     <x-outline-icon name="x-mark" />
@@ -6514,7 +6534,7 @@
                         <strong id="sAppointmentId">N/A</strong>
                     </p>
                 </div>
-                <button type="button" class="modal-header-close" onclick="closeStatusActionModal()" aria-label="Close action modal">
+                <button type="button" class="modal-header-close" data-appointment-close-status aria-label="Close action modal">
                     <x-outline-icon name="x-mark" />
                 </button>
             </div>
@@ -6573,7 +6593,7 @@
                     <small id="statusReasonError" hidden>Please enter a reason for rejection.</small>
                 </div>
                 <div class="dialog-actions">
-                    <button type="button" class="dialog-btn dialog-btn-secondary" onclick="closeStatusActionModal()"><span>Cancel</span></button>
+                    <button type="button" class="dialog-btn dialog-btn-secondary" data-appointment-close-status><span>Cancel</span></button>
                     <a id="statusActionConfirm" href="#" class="dialog-btn dialog-btn-confirm" data-loader-scope="screen">
                         <x-outline-icon name="check" />
                         <span>Confirm</span>
@@ -6595,7 +6615,7 @@
                             <strong id="rAppointmentId">N/A</strong>
                         </p>
                     </div>
-                    <button type="button" class="modal-header-close" onclick="closeRescheduleModal()" aria-label="Close reschedule modal">
+                    <button type="button" class="modal-header-close" data-appointment-close-reschedule aria-label="Close reschedule modal">
                         <x-outline-icon name="x-mark" />
                     </button>
                 </div>
@@ -6641,7 +6661,7 @@
                         </div>
                     </div>
                     <div class="dialog-actions">
-                        <button type="button" class="dialog-btn dialog-btn-secondary" onclick="closeRescheduleModal()"><span>Cancel</span></button>
+                        <button type="button" class="dialog-btn dialog-btn-secondary" data-appointment-close-reschedule><span>Cancel</span></button>
                         <button type="submit" class="dialog-btn dialog-btn-approve">
                             <x-outline-icon name="calendar-days" />
                             <span>Confirm New Schedule</span>
@@ -6655,7 +6675,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     const appointmentsBaseUrl = @json(url($basePrefix . '/appointments'));
     const highlightedAppointmentId = @json($highlightAppointmentId);
 
@@ -7382,7 +7402,11 @@
         const infoModal = document.getElementById('infoModal');
         const statusModal = document.getElementById('statusActionModal');
         const rescheduleModal = document.getElementById('rescheduleModal');
+        const queueModal = event.target.closest('[data-appointment-queue-backdrop]');
 
+        if (event.target === queueModal) {
+            closeAppointmentQueueModal(queueModal.id);
+        }
         if (event.target === infoModal) {
             closeInfoModal();
         }
@@ -7430,6 +7454,36 @@
     });
 
     document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('[data-appointment-open-queue]').forEach((button) => {
+            button.addEventListener('click', function() {
+                openAppointmentQueueModal(this.dataset.appointmentOpenQueue);
+            });
+        });
+        document.querySelectorAll('[data-appointment-close-queue]').forEach((button) => {
+            button.addEventListener('click', function() {
+                closeAppointmentQueueModal(this.dataset.appointmentCloseQueue);
+            });
+        });
+        document.querySelectorAll('[data-appointment-open-info]').forEach((button) => {
+            button.addEventListener('click', function() {
+                openInfoModal(this);
+            });
+        });
+        document.querySelectorAll('[data-appointment-open-from-queue]').forEach((button) => {
+            button.addEventListener('click', function() {
+                openAppointmentFromQueue(this);
+            });
+        });
+        document.querySelectorAll('[data-appointment-close-info]').forEach((button) => {
+            button.addEventListener('click', closeInfoModal);
+        });
+        document.querySelectorAll('[data-appointment-close-status]').forEach((button) => {
+            button.addEventListener('click', closeStatusActionModal);
+        });
+        document.querySelectorAll('[data-appointment-close-reschedule]').forEach((button) => {
+            button.addEventListener('click', closeRescheduleModal);
+        });
+
         initializeAppointmentReasonDropdown('sApprovalReason', 'sApprovalReasonDropdown', 'sApprovalReasonToggle', 'sApprovalReasonMenu');
         initializeAppointmentReasonDropdown('rReasonType', 'rReasonTypeDropdown', 'rReasonTypeToggle', 'rReasonTypeMenu');
         document.querySelectorAll('.appointment-queue-modal').forEach(initializeAppointmentQueue);
@@ -7947,7 +8001,6 @@
         });
 
         document.querySelectorAll('a.btn-approve, a.btn-cancel, a.btn-missed, button.btn-reject').forEach((el) => {
-            el.removeAttribute('onclick');
             el.addEventListener('click', function(event) {
                 event.preventDefault();
                 openStatusActionModal(this);
@@ -7955,23 +8008,12 @@
         });
 
         document.querySelectorAll('button.btn-reschedule').forEach((el) => {
-            const inlineHandler = el.getAttribute('onclick') || '';
-            if (!el.dataset.id) {
-                const matches = inlineHandler.match(/openRescheduleModal\('([^']+)'\s*,\s*'([^']+)'\s*,\s*'([^']+)'\)/);
-                if (matches) {
-                    el.dataset.id = matches[1];
-                    el.dataset.date = matches[2];
-                    el.dataset.time = matches[3];
-                }
-            }
-
             if (!el.dataset.name || !el.dataset.service) {
                 const fallback = getRowDataFromElement(el);
                 el.dataset.name = el.dataset.name || fallback.name;
                 el.dataset.service = el.dataset.service || fallback.service;
             }
 
-            el.removeAttribute('onclick');
             el.addEventListener('click', function() {
                 openRescheduleModal(this);
             });

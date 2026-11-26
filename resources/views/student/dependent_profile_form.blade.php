@@ -6,13 +6,14 @@
     <title>Information Form</title>
     <script
         src="{{ asset('js/sienna-accessibility-custom.umd.js') }}?v={{ filemtime(public_path('js/sienna-accessibility-custom.umd.js')) }}"
+        nonce="{{ request()->attributes->get('csp_nonce') }}"
         data-asw-position="bottom-right"
         data-asw-offset="24,12"
         data-asw-size="small"
         defer
     ></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         :root {
             --clinic-maroon: #7f1d2d;
             --clinic-maroon-dark: #5f0012;
@@ -1246,7 +1247,7 @@
 
     @include('partials.system_footer')
 
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         (function () {
             document.documentElement.classList.add('dependent-select-js');
 

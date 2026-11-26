@@ -1,4 +1,4 @@
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .school-year-reminder-dialog {
         width: min(100%, 420px);
         max-height: calc(100vh - 40px);
@@ -127,7 +127,7 @@
     </section>
 </div>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 (function () {
     const overlay = document.getElementById('schoolYearReminderOverlay');
     const noticePanel = overlay?.querySelector('[data-school-year-reminder-notice]');

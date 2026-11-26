@@ -1,5 +1,5 @@
 @push('late-styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .health-record-history-overlay[hidden], .health-record-history-item[hidden] { display: none !important; }
     .health-record-history-overlay {
         position: fixed; inset: 0; z-index: 2147483000; display: grid; place-items: center;
@@ -216,7 +216,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     document.addEventListener('DOMContentLoaded', function () {
         const overlay = document.getElementById('healthRecordHistoryModal');
         if (!overlay) return;

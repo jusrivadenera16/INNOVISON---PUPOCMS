@@ -1,6 +1,6 @@
 @once
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .record-confirmation-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 18px; border: 0; box-sizing: border-box; background: rgba(15,23,42,.68); backdrop-filter: blur(5px); overflow: auto; }
     .record-confirmation-modal[open] { display: flex; }
     .record-confirmation-modal::backdrop { background: transparent; }

@@ -1,5 +1,5 @@
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .clinic-options-page {
         --clinic-maroon: #8f1024;
         --clinic-deep: #6d0718;
@@ -608,7 +608,7 @@
                         <x-outline-icon name="pencil-square" />
                         <span>Edit</span>
                     </button>
-                    <form method="POST" action="{{ route('clinic-service-options.destroy', ['optionGroup' => $optionGroup, 'option' => $option]) }}" onsubmit="return confirm('Remove or archive this option?');">
+                    <form method="POST" action="{{ route('clinic-service-options.destroy', ['optionGroup' => $optionGroup, 'option' => $option]) }}" data-delete-clinic-option>
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="clinic-option-button clinic-option-button--delete" aria-label="Remove {{ $option->name }}">
@@ -664,8 +664,14 @@
     </div>
 </div>
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 (() => {
+    document.querySelectorAll('[data-delete-clinic-option]').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            if (!confirm('Remove or archive this option?')) event.preventDefault();
+        });
+    });
+
     const modal = document.getElementById('clinicOptionModal');
     const form = document.getElementById('clinicOptionForm');
     const methodInput = document.getElementById('clinicOptionMethod');

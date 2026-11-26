@@ -3,7 +3,7 @@
 @section('title', 'My Account')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     body:has(.account-layout) {
         background:
             linear-gradient(180deg, rgba(255, 250, 250, 0.70), rgba(255, 255, 255, 0.58) 42%, rgba(245, 248, 247, 0.72) 100%),
@@ -7973,6 +7973,9 @@
         .health-doc-file-preview { width: 46px; height: 46px; }
         .health-doc-file-card > a { grid-column: 2; }
     }
+
+    .student-account-csp-1 { padding: 0 20px 40px; }
+    .student-account-csp-2 { background-color: #f8fafc; }
 </style>
 @endpush
 
@@ -8150,7 +8153,7 @@
     $profileModalSection = $displaySection !== '' ? $displaySection : $guisisPendingText;
     $profileModalEmail = $guisisValue($accountProfileData['email'] ?? optional($linkedAdminProfile)->email ?? $user->email ?? '');
 @endphp
-<div class="container" style="padding: 0 20px 40px;">
+<div class="container student-account-csp-1">
 
     @if(session('show_health_print_reminder'))
         <div class="health-print-reminder" id="healthPrintReminder" aria-hidden="true">
@@ -8209,7 +8212,7 @@
             </div>
             @if($isEnrolled)
                 @if(!empty($heroAcademicParts))
-                    <div class="hero-course" @if($linkedRoleLabel) style="display: none;" @endif>
+                    <div class="hero-course" @if($linkedRoleLabel) hidden @endif>
                         {{ implode(' • ', $heroAcademicParts) }}
                     </div>
                 @endif
@@ -8228,7 +8231,7 @@
                         <h1 class="profile-card-title">Personal Information</h1>
                         <p class="profile-card-description">Review your personal account details and keep your clinic information up to date.</p>
                     </div>
-                    <button type="button" id="editBtn" class="profile-edit-btn" onclick="openProfileEditModal({{ $canOpenProfileEditModal ? 'true' : 'false' }})">
+                    <button type="button" id="editBtn" class="profile-edit-btn" data-student-action="edit-profile" data-profile-edit-allowed="{{ $canOpenProfileEditModal ? 'true' : 'false' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                         </svg>
@@ -8270,7 +8273,7 @@
 
     <div class="account-layout {{ in_array($accountView, ['health-record', 'notifications'], true) ? 'health-record-layout' : '' }}">
         @if(session('health_profile_submitted'))
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 document.addEventListener('DOMContentLoaded', function () {
     const printReminder = document.getElementById('healthPrintReminder');
     if (!printReminder) return;
@@ -8332,11 +8335,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="profile-grid-2">
                             <div>
                                 <label class="input-label">Gender</label>
-                                <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['sex'] ?? '') }}" value="{{ $guisisValue($accountProfileData['sex'] ?? '') }}" readonly style="background-color: #f8fafc;">
+                                <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['sex'] ?? '') }} student-account-csp-2" value="{{ $guisisValue($accountProfileData['sex'] ?? '') }}" readonly>
                             </div>
                             <div>
                                 <label class="input-label">Birthday (DOB)</label>
-                                <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['birthday'] ?? '') }}" value="{{ $guisisValue($accountProfileData['birthday'] ?? '') }}" readonly style="background-color: #f8fafc;">
+                                <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['birthday'] ?? '') }} student-account-csp-2" value="{{ $guisisValue($accountProfileData['birthday'] ?? '') }}" readonly>
                             </div>
                         </div>
                         <div class="profile-grid-2">
@@ -9218,7 +9221,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             data-action="{{ $documentModalUsesClinicReplacement ? route('student.health_record.resubmit') : route('student.health_record.documents') }}"
                         >View</button>
                     @elseif($requiresMissingESign)
-                        <button type="button" class="missing-requirement-action" onclick="openMissingESignModal()">View</button>
+                        <button type="button" class="missing-requirement-action" data-student-action="open-signature">View</button>
                     @endif
                 </div>
             </div>
@@ -9334,7 +9337,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 @endif
 
                 <div class="health-status-actions">
-                    <button type="button" class="health-record-action-card is-view" onclick="openHealthRecordModal()">
+                    <button type="button" class="health-record-action-card is-view" data-student-action="open-health-record">
                         <span class="health-record-action-icon" aria-hidden="true"><x-outline-icon name="eye" /></span>
                         <span class="health-record-action-copy">
                             <span class="health-record-action-title">View Record Details</span>
@@ -9409,7 +9412,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 @endif
 
                 <div class="health-status-actions">
-                    <button type="button" class="health-record-action-card is-view" onclick="openHealthRecordModal()">
+                    <button type="button" class="health-record-action-card is-view" data-student-action="open-health-record">
                         <span class="health-record-action-icon" aria-hidden="true"><x-outline-icon name="eye" /></span>
                         <span class="health-record-action-copy">
                             <span class="health-record-action-title">View Record Details</span>
@@ -9515,7 +9518,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <span class="health-record-details-head-icon" aria-hidden="true">
                         <x-outline-icon name="clipboard-document-list" />
                     </span>
-                    <button type="button" class="record-modal-close" aria-label="Close record details" onclick="closeHealthRecordModal()">
+                    <button type="button" class="record-modal-close" aria-label="Close record details" data-student-action="close-health-record">
                         <x-outline-icon name="x-mark" />
                     </button>
                     <div class="record-modal-head-main">
@@ -9715,7 +9718,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <span class="missing-document-head-icon" aria-hidden="true">
                         <x-outline-icon name="exclamation-triangle" />
                     </span>
-                    <button type="button" class="record-modal-close" aria-label="Close missing document modal" onclick="closeMissingDocumentModal()">
+                    <button type="button" class="record-modal-close" aria-label="Close missing document modal" data-student-action="close-document">
                         <x-outline-icon name="x-mark" />
                     </button>
                     <div class="record-modal-head-main">
@@ -9832,13 +9835,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                                 <span>Ready for PDF use</span>
                                             </span>
                                             <span class="missing-document-preview-actions">
-                                                <button type="button" onclick="closeMissingDocumentModal(); openMissingESignModal()">Replace</button>
+                                                <button type="button" data-student-action="replace-signature">Replace</button>
                                                 <button type="submit" form="removeESignForm">Remove</button>
                                             </span>
                                         </span>
                                     </div>
                                 @else
-                                    <button type="button" class="missing-document-esign-action" onclick="closeMissingDocumentModal(); openMissingESignModal()">Add E-sign</button>
+                                    <button type="button" class="missing-document-esign-action" data-student-action="replace-signature">Add E-sign</button>
                                 @endif
                             </div>
                         @endif
@@ -9863,7 +9866,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                         </div>
                         <div class="missing-upload-actions">
-                            <button type="button" class="missing-esign-secondary" onclick="closeMissingDocumentModal()">Cancel</button>
+                            <button type="button" class="missing-esign-secondary" data-student-action="close-document">Cancel</button>
                             <button type="submit" class="missing-esign-submit">
                                 <x-outline-icon name="document-text" />
                                 Submit
@@ -9886,7 +9889,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="record-modal-overlay" id="missingESignModal" aria-hidden="true">
             <div class="record-modal missing-esign-modal" role="dialog" aria-modal="true" aria-labelledby="missingESignTitle">
                 <div class="record-modal-head">
-                    <button type="button" class="record-modal-close" aria-label="Close missing e-sign modal" onclick="closeMissingESignModal()">
+                    <button type="button" class="record-modal-close" aria-label="Close missing e-sign modal" data-student-action="close-signature">
                         <x-outline-icon name="x-mark" />
                     </button>
                     <div class="record-modal-head-main">
@@ -10227,7 +10230,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <h2 class="record-modal-title" id="notificationSettingsTitle">Notification Settings</h2>
                     <p class="record-modal-subtitle">Choose how you receive future clinic updates.</p>
                 </div>
-                <button type="button" class="record-modal-close" aria-label="Close notification settings" onclick="closeNotificationSettingsModal()">
+                <button type="button" class="record-modal-close" aria-label="Close notification settings" data-student-action="close-notification-settings">
                     <x-outline-icon name="x-mark" />
                 </button>
             </div>
@@ -10254,7 +10257,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </label>
                 </div>
                 <div class="notification-settings-actions">
-                    <button type="button" class="notification-settings-cancel" onclick="closeNotificationSettingsModal()">Cancel</button>
+                    <button type="button" class="notification-settings-cancel" data-student-action="close-notification-settings">Cancel</button>
                     <button type="submit" class="notification-settings-save">Save Preferences</button>
                 </div>
             </form>
@@ -10268,7 +10271,7 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
 </div>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 function openHealthRecordModal() {
     const modal = document.getElementById('healthRecordModal');
     if (!modal) {

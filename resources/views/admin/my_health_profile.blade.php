@@ -20,7 +20,7 @@
 @endphp
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     body:has(.my-health-profile-page) .main {
         padding: 10px;
         background:
@@ -1161,7 +1161,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     (() => {
         const page = document.querySelector('.my-health-profile-page');
         if (!page) {

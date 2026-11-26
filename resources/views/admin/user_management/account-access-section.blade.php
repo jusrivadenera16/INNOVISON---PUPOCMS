@@ -1,3 +1,11 @@
+@once
+@push('styles')
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
+    .csp-user-management-account-access-section-1.csp-user-management-account-access-section-1.csp-user-management-account-access-section-1 { margin-left: 6px; }
+    .csp-user-management-account-access-section-2.csp-user-management-account-access-section-2.csp-user-management-account-access-section-2 { display:none; }
+</style>
+@endpush
+@endonce
 <div class="um-section-block account-access" id="accountAccessSection">
     <h4 class="um-section-title"><x-outline-icon name="shield-check" />{{ ($managementView ?? '') === 'admin-hub' ? 'Admin Hub Access' : 'Account Access' }}</h4>
     <p class="um-section-copy">
@@ -19,7 +27,7 @@
     </div>
     @if(($managementView ?? '') !== 'admin-hub')
         <div class="um-field">
-            <label for="clinicPositionChoice">Position <span style="margin-left: 6px;">(Optional)</span></label>
+            <label for="clinicPositionChoice">Position <span class="csp-user-management-account-access-section-1">(Optional)</span></label>
             <select name="clinic_position" id="clinicPositionChoice">
                 <option value="">Not specified</option>
                 <option value="Doctor">Doctor</option>
@@ -27,12 +35,12 @@
                 <option value="Other">Other</option>
             </select>
         </div>
-        <div class="um-field" id="clinicPositionOtherWrap" style="display:none;">
+        <div class="um-field csp-user-management-account-access-section-2" id="clinicPositionOtherWrap">
             <label for="clinicPositionOther">Other Position</label>
             <input type="text" name="clinic_position_other" id="clinicPositionOther" maxlength="255" placeholder="Enter position">
         </div>
         <div class="um-field">
-            <label for="clinicCredentials">Credentials <span style="margin-left: 6px;">(Optional)</span></label>
+            <label for="clinicCredentials">Credentials <span class="csp-user-management-account-access-section-1">(Optional)</span></label>
             <input type="text" name="clinic_credentials" id="clinicCredentials" maxlength="255" placeholder="e.g., MD, RN, PhD">
         </div>
         <section class="um-module-access-preview" id="moduleAccessPreview" hidden aria-labelledby="moduleAccessTitle">

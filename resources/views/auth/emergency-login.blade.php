@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Emergency Backup Login | PUP Taguig Clinic</title>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         :root {
             --accent: #8B0000;
             --accent-deep: #5e0000;
@@ -1204,7 +1204,7 @@
         PUP Taguig Clinic Management System
     </footer>
     @include('partials.system_footer')
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         document.getElementById('passwordToggle')?.addEventListener('click', function () {
             const passwordInput = document.getElementById('password');
             const showIcon = this.querySelector('[data-password-show]');

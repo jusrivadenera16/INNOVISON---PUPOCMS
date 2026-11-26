@@ -4,8 +4,33 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
+function executableInlineScripts(source) {
+    const scripts = /<script(?=[\t\n\f\r >])((?:[^"'<>]|"[^"]*"|'[^']*')*)>([\s\S]*?)<\/script\s*>/gi;
+    return [...source.matchAll(scripts)].filter(([, attributes]) => {
+        const attributePattern = /(?:^|[\t\n\f\r ])([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+        const parsed = new Map([...attributes.matchAll(attributePattern)].map(([, name, doubleQuoted, singleQuoted, unquoted]) => [
+            name.toLowerCase(), doubleQuoted ?? singleQuoted ?? unquoted ?? '',
+        ]));
+        const type = (parsed.get('type') || '').trim().toLowerCase();
+        return !parsed.has('src') && (!type || /^(?:module|(?:text|application)\/(?:java|ecma)script)$/.test(type));
+    }).map(([, , script]) => script);
+}
+
+test('script extraction accepts nonce attributes and ignores external and data scripts', () => {
+    const source = `<script src="/external.js">external();</script>
+        <script src>emptySource();</script><script src="">blankSource();</script>
+        <script type="application/json">{"data":true}</script>
+        <script type=application/ld+json>{"data":true}</script>
+        <script data-src="/not-external.js" title="src='/ignored.js' type='application/json'"
+            nonce="{{ request()->attributes->get('csp_nonce') }}">classic();</script>
+        <SCRIPT nonce='nonce>value' TYPE=" Text/JavaScript ">javascript();</SCRIPT>
+        <script type="module">export const value = 1;</script>`;
+    assert.deepEqual(executableInlineScripts(source), ['classic();', 'javascript();', 'export const value = 1;']);
+});
+
 const source = fs.readFileSync(path.join(__dirname, '../../resources/views/admin/partials/record-consult-modal.blade.php'), 'utf8');
-const script = source.match(/<script>([\s\S]*?)<\/script>/)[1];
+const script = executableInlineScripts(source)[0];
+assert.ok(script, 'Record consult script should exist');
 
 function setup() {
     const element = () => ({

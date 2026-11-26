@@ -3,7 +3,7 @@
 @section('title', 'Feedback Reports')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .feedback-report-shell {
         max-width: 1380px;
         margin: 0 auto;

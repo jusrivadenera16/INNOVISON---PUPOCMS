@@ -3,7 +3,9 @@
 @section('title', 'Verify Health Uploads')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
+    .verify-spaced-row { margin-bottom: 14px; }
+    .verify-back-link { text-decoration: none; color: #64748b; font-size: 14px; }
     .verify-wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 18px; }
     .verify-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06); }
     .verify-head h2 { margin: 0; font-size: 20px; color: #0f172a; font-weight: 800; }
@@ -51,8 +53,8 @@
     $documentRouteName = request()->routeIs('assistant.*') ? 'assistant.walkin.document' : 'walkin.document';
     $hasMedicalCondition = $record->hasMedicalCondition();
 @endphp
-<div style="margin-bottom: 14px;">
-    <a href="{{ route('admin.health_records') }}" style="text-decoration: none; color: #64748b; font-size: 14px;">&larr; Back to Health Records</a>
+<div class="verify-spaced-row">
+    <a href="{{ route('admin.health_records') }}" class="verify-back-link">&larr; Back to Health Records</a>
 </div>
 
 <div class="verify-wrap">
@@ -173,7 +175,7 @@
             @csrf
             @method('PUT')
 
-            <div style="margin-bottom: 14px;">
+            <div class="verify-spaced-row">
                 <label class="verify-label" for="pending_reason">Verification Notes / Reason</label>
                 <textarea id="pending_reason" name="pending_reason" class="verify-control" rows="3" placeholder="Add notes if still for verification or rejected...">{{ $record->pending_reason }}</textarea>
             </div>

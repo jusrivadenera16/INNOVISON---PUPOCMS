@@ -2,7 +2,7 @@
     $consultServiceLabels = app(\App\Services\ConsultationServiceOptions::class)->labels();
 @endphp
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     #recordConsultDialog { width: min(480px, calc(100% - 32px)); padding: 0; border: 1px solid #eccdd0; border-radius: 18px; color: #0f172a; background: #ffffff; box-shadow: 0 24px 60px #0f172a47; }
     #recordConsultDialog::backdrop { background: #0f172a99; }
     #recordConsultDialog form { padding: 24px; }
@@ -63,7 +63,7 @@
     </form>
 </dialog>
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 (() => {
     const dialog = document.getElementById('recordConsultDialog');
     const trigger = document.querySelector('[data-record-consult-open]');

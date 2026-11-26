@@ -3,7 +3,7 @@
 @section('title', 'Book Appointment')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     /* --- PAGE LAYOUT --- */
     .booking-page-shell {
         position: relative;
@@ -2422,6 +2422,12 @@
     .booking-page-shell .booking-form-section .service-select-display.is-open {
         border-color: rgba(250, 204, 21, .65) !important;
     }
+
+    .student-booking-csp-1 { font-weight:normal; font-size:13px; color:#777; }
+    .student-booking-csp-2 { margin-top: 5px; }
+    .student-booking-csp-3 { background: #dcfce7; color: #15803d; }
+    .student-booking-csp-4 { background: #fff3cd; color: #b45309; }
+    .student-booking-csp-5 { margin: 0; }
 </style>
 @endpush
 
@@ -2718,18 +2724,18 @@
                             <div class="appt-service">{{ $appt->service }}</div>
                             <div class="appt-time">
                                 {{ \Carbon\Carbon::parse($appt->date)->format('M d, Y') }} <br> 
-                                <span style="font-weight:normal; font-size:13px; color:#777;">
+                                <span class="student-booking-csp-1">
                                     {{ \Carbon\Carbon::parse($appt->time)->format('g:i A') }}
                                 </span>
                             </div>
                             
-                            <div style="margin-top: 5px;">
+                            <div class="student-booking-csp-2">
                                 @if($appt->status == 'Approved')
-                                    <span class="appt-status" style="background: #dcfce7; color: #15803d;">
+                                    <span class="appt-status student-booking-csp-3">
                                         ● Approved
                                     </span>
                                 @else
-                                    <span class="appt-status" style="background: #fff3cd; color: #b45309;">
+                                    <span class="appt-status student-booking-csp-4">
                                         ● Pending
                                     </span>
                                 @endif
@@ -2756,18 +2762,18 @@
                                     <div class="appt-service">{{ $appt->service }}</div>
                                     <div class="appt-time">
                                         {{ \Carbon\Carbon::parse($appt->date)->format('M d, Y') }} <br>
-                                        <span style="font-weight:normal; font-size:13px; color:#777;">
+                                        <span class="student-booking-csp-1">
                                             {{ \Carbon\Carbon::parse($appt->time)->format('g:i A') }}
                                         </span>
                                     </div>
 
-                                    <div style="margin-top: 5px;">
+                                    <div class="student-booking-csp-2">
                                         @if($appt->status == 'Approved')
-                                            <span class="appt-status" style="background: #dcfce7; color: #15803d;">
+                                            <span class="appt-status student-booking-csp-3">
                                                 ● Approved
                                             </span>
                                         @else
-                                            <span class="appt-status" style="background: #fff3cd; color: #b45309;">
+                                            <span class="appt-status student-booking-csp-4">
                                                 ● Pending
                                             </span>
                                         @endif
@@ -2818,7 +2824,7 @@
                 <div class="note-header">
                     <span>⚠️</span> Important Reminder
                 </div>
-                <p style="margin: 0;">
+                <p class="student-booking-csp-5">
                     Clinic hours are <strong>8:00 AM - 7:00 PM</strong>, Mondays to Fridays. 
                     <br><br>
                     Please ensure your selected time falls within this range.
@@ -2942,7 +2948,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     document.addEventListener('DOMContentLoaded', function () {
         const bookingForm = document.getElementById('bookingForm');
         const dateInput = document.getElementById('preferredDate');

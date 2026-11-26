@@ -1,4 +1,4 @@
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
         .student-logout-confirm {
             position: fixed;
             inset: 0;
@@ -266,7 +266,7 @@
     </section>
 </div>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     (function initStudentLogoutConfirm() {
         const modal = document.getElementById('studentLogoutConfirm');
         const form = document.getElementById('logout-form');

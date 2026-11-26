@@ -4,7 +4,7 @@
 @section('disable_voice_inputs', 'true')
 
 @section('content')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .docs-container {
         max-width: 1200px;
         margin: 0 auto;
@@ -625,7 +625,7 @@ curl -X GET "https://clinic.domain.com/api/external/admin/profile" \
     </div>
 </div>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     document.querySelectorAll('.docs-nav a').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();

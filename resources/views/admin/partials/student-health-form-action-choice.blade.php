@@ -6,7 +6,7 @@
     </div>
     <footer><button type="button" data-clinic-choice-close>Cancel</button></footer>
 </dialog>
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .clinic-student-form-choice { width: min(620px, calc(100% - 28px)); max-height: calc(100dvh - 28px); margin: auto; padding: 0; border: 1px solid #facc15; border-radius: 16px; background: #fff; color: #172033; overflow: auto; }
     .clinic-student-form-choice::backdrop { background: rgba(15, 23, 42, .7); backdrop-filter: blur(5px); }
     .clinic-student-form-choice header { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px 20px; background: linear-gradient(135deg, #70131b, #8f2230); color: #fff; }
@@ -34,7 +34,7 @@
     .clinic-student-form-options > button:is(:hover, :focus-visible) small { color: #70131b; }
     @media (prefers-reduced-motion: reduce) { .clinic-student-form-choice button, .clinic-student-form-choice button::after { transition: none; } .clinic-student-form-choice button:is(:hover, :focus-visible) { transform: none; } }
 </style>
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     (function () {
         const dialog = document.getElementById('clinicStudentFormChoice');
         document.body.appendChild(dialog);

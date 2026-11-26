@@ -61,7 +61,9 @@ class ClinicStartedStudentHealthFormTest extends TestCase
         $correction = HealthProfileCorrectionRequest::where('health_form_submission_id', $pending->id)->sole();
         $this->assertSame('submitted', $correction->status);
         $this->assertFalse(data_get($correction->metadata, 'student_login_required'));
-        $stats = app(AdminController::class)->healthRecordStats(Request::create('/health-records/stats', 'GET', ['q' => $profile->user->email]))->getData(true)['stats'];
+        $statsRequest = Request::create('/health-records/stats', 'GET', ['q' => $profile->user->email]);
+        app()->instance('request', $statsRequest);
+        $stats = app(AdminController::class)->healthRecordStats($statsRequest)->getData(true)['stats'];
         $this->assertSame(1, $stats['pending_approval']);
         app(AdminController::class)->requestNewHealthForm($request, $profile->id);
         $this->assertSame(2, HealthFormSubmission::where('health_profile_id', $profile->id)->count());

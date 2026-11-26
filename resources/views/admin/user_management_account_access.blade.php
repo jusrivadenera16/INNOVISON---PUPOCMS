@@ -3,7 +3,7 @@
 @section('title', 'Account Access')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .user-management-shell {
         max-width: 1480px;
         margin: 0 auto;
@@ -1283,10 +1283,16 @@
 @endpush
 @push('styles')
     @include('admin.user_management.access-console-styles')
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         .user-management-shell > .um-hero,
         #account-access-panel { display: none; }
-    </style>
+        .csp-user-management-account-access-1.csp-user-management-account-access-1.csp-user-management-account-access-1 { display:none; }
+    .csp-user-management-account-access-2.csp-user-management-account-access-2.csp-user-management-account-access-2 { margin-top: 10px; }
+    .csp-user-management-account-access-3.csp-user-management-account-access-3.csp-user-management-account-access-3 { display:none; margin-top: 6px; }
+    .csp-user-management-account-access-4.csp-user-management-account-access-4.csp-user-management-account-access-4 { min-width: 900px; }
+    .csp-user-management-account-access-5.csp-user-management-account-access-5.csp-user-management-account-access-5 { margin-top: 16px; }
+    .csp-user-management-account-access-6.csp-user-management-account-access-6.csp-user-management-account-access-6 { display:flex; gap:10px; flex-wrap:wrap; }
+</style>
 @endpush
 
 @section('content')
@@ -1460,7 +1466,7 @@
                 <div>
                     <h2>Account Access</h2>
                 </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <div class="csp-user-management-account-access-6">
                     <a href="{{ route('admin.user-management') }}" class="um-btn um-btn-ghost">Back</a>
                     <button type="button" class="um-btn um-btn-primary" data-open-lookup="account-access">
                         <span>+</span> Add User Roles
@@ -1584,9 +1590,9 @@
                 </select>
             </div>
             <div class="access-onboard-count"><span data-lookup-result-count>{{ count($lookupRecords) }} result{{ count($lookupRecords) === 1 ? '' : 's' }} found</span><span>Student or employee number shown when available</span></div>
-            <div style="margin-top: 16px;" class="um-directory-panel {{ $lookupSearch !== '' ? 'is-open' : '' }}" id="lookupDirectoryPanel">
+            <div class="um-directory-panel {{ $lookupSearch !== '' ? 'is-open' : '' }} csp-user-management-account-access-5" id="lookupDirectoryPanel">
             <div class="um-table-wrap">
-                <table class="um-table" style="min-width: 900px;">
+                <table class="um-table csp-user-management-account-access-4">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -1747,7 +1753,7 @@
                         <input type="hidden" name="full_name" id="detailFullName" value="">
                         <input type="hidden" name="employee_number" id="detailEmployeeNumber" value="">
                         @include('admin.user_management.account-access-section')
-                        <div class="um-note" id="externalNote" style="display:none; margin-top: 6px;">
+                        <div class="um-note csp-user-management-account-access-3" id="externalNote">
                             This faculty profile comes from the external source. Saving here will add a clinic-side user and admin hub record without changing the source system.
                         </div>
                         <div class="um-module-save-warning" id="moduleAccessSaveWarning" hidden>
@@ -1756,20 +1762,20 @@
                         </div>
                     </form>
 
-                    <form method="POST" id="deleteForm" style="margin-top: 10px;">
+                    <form method="POST" id="deleteForm" class="csp-user-management-account-access-2">
                         @csrf
                         @method('DELETE')
                         <input type="hidden" name="management_view" id="deleteManagementView" value="account-access">
                         <input type="hidden" name="admin_profile_id" id="deleteAdminProfileId">
                     </form>
 
-                    <form method="POST" id="deleteAccountForm" style="display:none;">
+                    <form method="POST" id="deleteAccountForm" class="csp-user-management-account-access-1">
                         @csrf
                         @method('DELETE')
                         <input type="hidden" name="management_view" id="deleteAccountManagementView" value="account-access">
                     </form>
 
-                    <form method="POST" id="deleteAdminHubForm" style="display:none;">
+                    <form method="POST" id="deleteAdminHubForm" class="csp-user-management-account-access-1">
                         @csrf
                         @method('DELETE')
                         <input type="hidden" name="management_view" id="deleteAdminHubManagementView" value="account-access">
@@ -1802,9 +1808,8 @@
                         <button
                             type="submit"
                             form="deleteAdminHubForm"
-                            class="um-settings-action um-action-danger"
+                            class="um-settings-action um-action-danger csp-user-management-account-access-1"
                             id="deleteAdminHubBtn"
-                            style="display:none;"
                             data-um-confirm-title="Delete Admin Record"
                             data-um-confirm-message="Delete this Admin Hub record from the admins table? This cannot be undone."
                             data-um-confirm-label="Delete Record"
@@ -1822,7 +1827,7 @@
 @include('admin.user_management.confirmation-modal')
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     const lookupModal = document.getElementById('lookupModal');
     const settingsModal = document.getElementById('settingsModal');
     const settingsForm = document.getElementById('settingsForm');
@@ -1921,7 +1926,7 @@
         }
 
         const isOther = clinicPositionChoice.value === 'Other';
-        clinicPositionOtherWrap.style.display = isOther ? '' : 'none';
+        clinicPositionOtherWrap.style.display = isOther ? 'block' : 'none';
         clinicPositionOther.required = isOther;
         if (!isOther) {
             clinicPositionOther.value = '';
@@ -2397,7 +2402,7 @@
         }
         if (deleteAdminHubBtn) {
             const showDeleteAdminHub = managementView === 'admin-hub' && canEdit && adminProfileId;
-            deleteAdminHubBtn.style.display = showDeleteAdminHub ? '' : 'none';
+            deleteAdminHubBtn.style.display = showDeleteAdminHub ? 'inline-flex' : 'none';
             deleteAdminHubBtn.disabled = !showDeleteAdminHub;
         }
         if (deleteAdminHubForm) {

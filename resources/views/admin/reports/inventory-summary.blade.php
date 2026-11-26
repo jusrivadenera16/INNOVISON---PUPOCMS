@@ -3,7 +3,7 @@
 @section('title', 'Inventory Summary')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .summary-container {
         padding: 10px 4px;
     }
@@ -855,6 +855,11 @@
     .summary-header .summary-back:focus-visible::after {
         left: 125%;
     }
+
+    /* Outrank page ID rules without blocking inline CSSOM updates. */
+    :is(#reports-csp-priority#reports-csp-priority, .inventory-summary-item-name) { font-weight: 700; }
+    :is(#reports-csp-priority#reports-csp-priority, .inventory-summary-item-detail) { font-size: 12px; color: #6b7280; }
+    :is(#reports-csp-priority#reports-csp-priority, .inventory-summary-balance-value) { font-weight: 800; }
 </style>
 @endpush
 
@@ -946,23 +951,23 @@
                     @forelse($itemPerformancePage as $item)
                         <tr>
                             <td>
-                                <div style="font-weight: 700;">{{ $item->name }}</div>
-                                <div style="font-size: 12px; color: #6b7280;">{{ $item->report_category }}</div>
+                                <div class="inventory-summary-item-name">{{ $item->name }}</div>
+                                <div class="inventory-summary-item-detail">{{ $item->report_category }}</div>
                             </td>
                             <td>
                                 {{ $item->unit }}
                                 @if($item->hasDispensingConversion())
-                                    <div style="font-size: 12px; color: #6b7280;">{{ $item->dispensing_unit }} ({{ $item->units_per_stock_unit }} per {{ $item->unit }})</div>
+                                    <div class="inventory-summary-item-detail">{{ $item->dispensing_unit }} ({{ $item->units_per_stock_unit }} per {{ $item->unit }})</div>
                                 @endif
                             </td>
                             <td>{{ rtrim(rtrim(number_format((float) $item->starting_stock, 2, '.', ''), '0'), '.') }}</td>
                             <td>
                                 {{ rtrim(rtrim(number_format((float) $item->consumed, 2, '.', ''), '0'), '.') }}
                                 @if($item->hasDispensingConversion())
-                                    <div style="font-size: 12px; color: #6b7280;">{{ rtrim(rtrim(number_format((float) $item->consumed_display, 2, '.', ''), '0'), '.') }} {{ $item->dispensing_unit }} dispensed</div>
+                                    <div class="inventory-summary-item-detail">{{ rtrim(rtrim(number_format((float) $item->consumed_display, 2, '.', ''), '0'), '.') }} {{ $item->dispensing_unit }} dispensed</div>
                                 @endif
                             </td>
-                            <td style="font-weight: 800;">{{ rtrim(rtrim(number_format((float) $item->current_balance, 2, '.', ''), '0'), '.') }}</td>
+                            <td class="inventory-summary-balance-value">{{ rtrim(rtrim(number_format((float) $item->current_balance, 2, '.', ''), '0'), '.') }}</td>
                         </tr>
                     @empty
                         <tr>
@@ -1011,7 +1016,7 @@
                     <tbody>
                         @foreach($lowStockItemsPage as $item)
                             <tr>
-                                <td style="font-weight: 700;">{{ $item->name }}</td>
+                                <td class="inventory-summary-item-name">{{ $item->name }}</td>
                                 <td>{{ rtrim(rtrim(number_format((float) $item->current_balance, 2, '.', ''), '0'), '.') }} {{ $item->unit }}</td>
                                 <td><span class="summary-chip low">Low Stock</span></td>
                             </tr>
@@ -1057,7 +1062,7 @@
                     <tbody>
                         @foreach($nearExpiryItemsPage as $item)
                             <tr>
-                                <td style="font-weight: 700;">{{ $item->name }}</td>
+                                <td class="inventory-summary-item-name">{{ $item->name }}</td>
                                 <td>{{ optional($item->expiration_date)->format('M d, Y') }}</td>
                                 <td>{{ rtrim(rtrim(number_format((float) $item->current_balance, 2, '.', ''), '0'), '.') }} {{ $item->unit }}</td>
                             </tr>
@@ -1102,7 +1107,7 @@
             <tbody>
                 @forelse($categorySummary as $cat)
                 <tr>
-                    <td style="font-weight: 700;">{{ $cat->category }}</td>
+                    <td class="inventory-summary-item-name">{{ $cat->category }}</td>
                     <td>{{ $cat->count }}</td>
                     <td>{{ $cat->starting_qty }}</td>
                     <td>{{ rtrim(rtrim(number_format((float) $cat->consumed_qty, 2, '.', ''), '0'), '.') }}</td>
@@ -1121,7 +1126,7 @@
 
 </div>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 document.addEventListener('DOMContentLoaded', function () {
     const shell = document.getElementById('summaryFilterShell');
     const toggle = document.getElementById('summaryFilterToggle');

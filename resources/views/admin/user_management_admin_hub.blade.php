@@ -3,7 +3,7 @@
 @section('title', 'Admin Hub Management')
 
 @push('styles')
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .user-management-shell {
         max-width: 1480px;
         margin: 0 auto;
@@ -1047,10 +1047,17 @@
 @endpush
 @push('styles')
     @include('admin.user_management.access-console-styles')
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         .user-management-shell > .um-hero,
         #admin-hub-panel { display: none; }
-    </style>
+        .csp-user-management-admin-hub-1.csp-user-management-admin-hub-1.csp-user-management-admin-hub-1 { display:none; }
+    .csp-user-management-admin-hub-2.csp-user-management-admin-hub-2.csp-user-management-admin-hub-2 { margin-top: 10px; }
+    .csp-user-management-admin-hub-3.csp-user-management-admin-hub-3.csp-user-management-admin-hub-3 { display:none; margin-top: 6px; }
+    .csp-user-management-admin-hub-4.csp-user-management-admin-hub-4.csp-user-management-admin-hub-4 { min-width: 900px; }
+    .csp-user-management-admin-hub-5.csp-user-management-admin-hub-5.csp-user-management-admin-hub-5 { margin-top: 16px; }
+    .csp-user-management-admin-hub-6.csp-user-management-admin-hub-6.csp-user-management-admin-hub-6 { display:flex; gap:10px; flex-wrap:wrap; }
+    .csp-user-management-admin-hub-7.csp-user-management-admin-hub-7.csp-user-management-admin-hub-7 { font-size:.9rem; color:#12733d; }
+</style>
 @endpush
 
 @section('content')
@@ -1103,7 +1110,7 @@
             </article>
             <article class="access-console__stat access-console__summary-card" data-summary-popup data-summary-title="API Sync Status" data-summary-value="Connected" data-summary-copy="The shared directory connection is available for Admin Hub profile synchronization.">
                 <span class="access-console__stat-icon"><x-outline-icon name="arrow-long-right" /></span>
-                <span><span class="access-console__stat-label">API Sync Status</span><strong class="access-console__stat-value" style="font-size:.9rem; color:#12733d;">Connected</strong><small class="access-console__stat-note">Shared records up to date</small></span>
+                <span><span class="access-console__stat-label">API Sync Status</span><strong class="access-console__stat-value csp-user-management-admin-hub-7">Connected</strong><small class="access-console__stat-note">Shared records up to date</small></span>
             </article>
         </section>
 
@@ -1218,7 +1225,7 @@
                 <div>
                     <h2>Admin Hub Management</h2>
                 </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <div class="csp-user-management-admin-hub-6">
                     <a href="{{ route('admin.user-management') }}" class="um-btn um-btn-ghost">Back</a>
                     <button type="button" class="um-btn um-btn-primary" data-open-lookup="admin-hub">
                         <span>+</span> Add User Roles
@@ -1330,9 +1337,9 @@
                 <select id="lookupStatusFilter" aria-label="Filter lookup status"><option value="">All Status</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
             </div>
             <div class="access-onboard-count"><span data-lookup-result-count>{{ count($lookupRecords) }} result{{ count($lookupRecords) === 1 ? '' : 's' }} found</span><span>Employee number shown when available</span></div>
-            <div style="margin-top: 16px;" class="um-directory-panel {{ $lookupSearch !== '' ? 'is-open' : '' }}" id="lookupDirectoryPanel">
+            <div class="um-directory-panel {{ $lookupSearch !== '' ? 'is-open' : '' }} csp-user-management-admin-hub-5" id="lookupDirectoryPanel">
             <div class="um-table-wrap">
-                <table class="um-table" style="min-width: 900px;">
+                <table class="um-table csp-user-management-admin-hub-4">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -1470,19 +1477,19 @@
                         <input type="hidden" name="emergency_contact_person" id="detailEmergencyContactPerson" value="">
                         <input type="hidden" name="emergency_contact_no" id="detailEmergencyContactNo" value="">
                         @include('admin.user_management.account-access-section')
-                        <div class="um-note" id="externalNote" style="display:none; margin-top: 6px;">
+                        <div class="um-note csp-user-management-admin-hub-3" id="externalNote">
                             This profile comes from an external source. Saving here adds it to the Admin Hub and links an existing clinic account when available without changing the source system.
                         </div>
                     </form>
 
-                    <form method="POST" id="deleteForm" style="margin-top: 10px;">
+                    <form method="POST" id="deleteForm" class="csp-user-management-admin-hub-2">
                         @csrf
                         @method('DELETE')
                         <input type="hidden" name="management_view" id="deleteManagementView" value="admin-hub">
                         <input type="hidden" name="admin_profile_id" id="deleteAdminProfileId">
                     </form>
 
-                    <form method="POST" id="deleteAdminHubForm" style="display:none;">
+                    <form method="POST" id="deleteAdminHubForm" class="csp-user-management-admin-hub-1">
                         @csrf
                         @method('DELETE')
                         <input type="hidden" name="management_view" id="deleteAdminHubManagementView" value="admin-hub">
@@ -1504,9 +1511,8 @@
                         <button
                             type="submit"
                             form="deleteAdminHubForm"
-                            class="um-settings-action um-action-danger"
+                            class="um-settings-action um-action-danger csp-user-management-admin-hub-1"
                             id="deleteAdminHubBtn"
-                            style="display:none;"
                             data-um-confirm-title="Delete Directory Account"
                             data-um-confirm-message="Delete this Admin Hub directory account? The local account, clinic access, and records will be preserved."
                             data-um-confirm-label="Delete Account"
@@ -1524,7 +1530,7 @@
 @include('admin.user_management.confirmation-modal')
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     const lookupModal = document.getElementById('lookupModal');
     const settingsModal = document.getElementById('settingsModal');
     const settingsForm = document.getElementById('settingsForm');
@@ -1851,7 +1857,7 @@
         deleteForm.style.display = canEdit ? 'block' : 'none';
         if (deleteAdminHubBtn) {
             const showDeleteAdminHub = managementView === 'admin-hub' && canEdit && adminHubProfileId;
-            deleteAdminHubBtn.style.display = showDeleteAdminHub ? '' : 'none';
+            deleteAdminHubBtn.style.display = showDeleteAdminHub ? 'inline-flex' : 'none';
             deleteAdminHubBtn.disabled = !showDeleteAdminHub;
         }
         if (deleteAdminHubForm) {

@@ -1,4 +1,4 @@
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     (function () {
         const handoffKey = 'pup_student_navigation_loader_handoff';
 
@@ -31,7 +31,7 @@
     })();
 </script>
 
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     @keyframes studentNavigationHeartbeat {
         to { stroke-dashoffset: 0; }
     }

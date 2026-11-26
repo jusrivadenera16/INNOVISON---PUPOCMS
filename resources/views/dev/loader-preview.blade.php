@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Post Login Loader Preview</title>
     <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         :root {
             color-scheme: dark;
             --preview-bg: #160911;
@@ -663,7 +663,18 @@
                 min-height: 500px;
             }
         }
-    </style>
+
+    .dev-loader-preview-csp-1 { --letter-index: 0; }
+    .dev-loader-preview-csp-2 { --letter-index: 1; }
+    .dev-loader-preview-csp-3 { --letter-index: 2; }
+    .dev-loader-preview-csp-4 { --letter-index: 3; }
+    .dev-loader-preview-csp-5 { --letter-index: 4; }
+    .dev-loader-preview-csp-6 { --letter-index: 5; }
+    .dev-loader-preview-csp-7 { --letter-index: 6; }
+    .dev-loader-preview-csp-8 { --letter-index: 7; }
+    .dev-loader-preview-csp-9 { --letter-index: 8; }
+    .dev-loader-preview-csp-10 { --letter-index: 9; }
+</style>
 </head>
 <body>
     <main class="preview-shell">
@@ -753,16 +764,16 @@
                     <div class="loader-bottom-brand">
                         <img src="{{ \App\Support\ClinicBranding::logoUrl() }}" alt="Clinic Logo" class="loader-bottom-logo">
                         <div class="post-login-loader-text" aria-label="Loading">
-                            <span style="--letter-index: 0;">L</span>
-                            <span style="--letter-index: 1;">o</span>
-                            <span style="--letter-index: 2;">a</span>
-                            <span style="--letter-index: 3;">d</span>
-                            <span style="--letter-index: 4;">i</span>
-                            <span style="--letter-index: 5;">n</span>
-                            <span style="--letter-index: 6;">g</span>
-                            <span style="--letter-index: 7;">.</span>
-                            <span style="--letter-index: 8;">.</span>
-                            <span style="--letter-index: 9;">.</span>
+                            <span class="dev-loader-preview-csp-1">L</span>
+                            <span class="dev-loader-preview-csp-2">o</span>
+                            <span class="dev-loader-preview-csp-3">a</span>
+                            <span class="dev-loader-preview-csp-4">d</span>
+                            <span class="dev-loader-preview-csp-5">i</span>
+                            <span class="dev-loader-preview-csp-6">n</span>
+                            <span class="dev-loader-preview-csp-7">g</span>
+                            <span class="dev-loader-preview-csp-8">.</span>
+                            <span class="dev-loader-preview-csp-9">.</span>
+                            <span class="dev-loader-preview-csp-10">.</span>
                         </div>
                     </div>
                 </div>
@@ -770,7 +781,7 @@
         </section>
     </main>
 
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         (function () {
             const loader = document.getElementById('postLoginLoaderPreview');
             const terms = document.getElementById('termsPreview');

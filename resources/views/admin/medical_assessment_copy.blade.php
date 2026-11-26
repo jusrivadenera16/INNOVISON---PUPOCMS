@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Medical Assessment Copy</title>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         @page { size: 8.5in 11in; margin: 0.55in; }
         * { box-sizing: border-box; }
         body {
@@ -29,6 +29,11 @@
             border-spacing: 0 10px;
             table-layout: fixed;
         }
+        .assessment-col-date-label { width: 18%; }
+        .assessment-col-date-value { width: 16%; }
+        .assessment-col-vital-label { width: 8%; }
+        .assessment-col-vital-value { width: 15%; }
+        .assessment-col-temperature-value { width: 12%; }
         .assessment-table td {
             padding: 0 5px;
             border: 0;
@@ -86,14 +91,14 @@
 
         <table class="assessment-table">
             <colgroup>
-                <col style="width: 18%;">
-                <col style="width: 16%;">
-                <col style="width: 8%;">
-                <col style="width: 15%;">
-                <col style="width: 8%;">
-                <col style="width: 15%;">
-                <col style="width: 8%;">
-                <col style="width: 12%;">
+                <col class="assessment-col-date-label">
+                <col class="assessment-col-date-value">
+                <col class="assessment-col-vital-label">
+                <col class="assessment-col-vital-value">
+                <col class="assessment-col-vital-label">
+                <col class="assessment-col-vital-value">
+                <col class="assessment-col-vital-label">
+                <col class="assessment-col-temperature-value">
             </colgroup>
             <tr>
                 <td class="label">Date:</td>

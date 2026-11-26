@@ -1,4 +1,4 @@
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .access-console {
         max-width: 1420px;
         margin: 0 auto;

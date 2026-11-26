@@ -348,7 +348,7 @@
 
                 <div class="health-doc-actions">
                     @if($canViewHealthFiles)
-                        <button type="button" class="health-doc-action is-primary" onclick="openHealthRecordModal()">
+                        <button type="button" class="health-doc-action is-primary" data-student-action="open-health-record">
                             <x-outline-icon name="eye" />
                             View Files
                         </button>
@@ -383,14 +383,14 @@
                                 data-action="{{ $documentModalUsesClinicReplacement ? route('student.health_record.resubmit') : route('student.health_record.documents') }}"
                             ><x-outline-icon name="document-text" /> Upload Files</button>
                         @elseif($requiresMissingESign)
-                            <button type="button" class="health-doc-action is-primary health-doc-upload-button" onclick="openMissingESignModal()"><x-outline-icon name="pencil-square" /> Attach E-sign</button>
+                            <button type="button" class="health-doc-action is-primary health-doc-upload-button" data-student-action="open-signature"><x-outline-icon name="pencil-square" /> Attach E-sign</button>
                         @endif
                         @if($activeHealthCorrectionRequest?->type === \App\Models\HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION
                             && $activeHealthCorrectionRequest?->status === \App\Models\HealthProfileCorrectionRequest::STATUS_PENDING
                             && (is_array(data_get($activeHealthCorrectionRequest?->metadata, 'previous_profile_state'))
                                 || (((bool) data_get($activeHealthCorrectionRequest?->metadata, 'was_already_issued') || $isIssuedStatus)
                                     && !(bool) data_get($activeHealthCorrectionRequest?->metadata, 'cleared_document_references'))))
-                            <form method="POST" action="{{ route('student.health_record.correction_requests.cancel', $activeHealthCorrectionRequest->id) }}" class="health-doc-cancel-form" onsubmit="return confirm('Cancel this document resubmission request? Your existing approved files and clearance will be restored.');">
+                            <form method="POST" action="{{ route('student.health_record.correction_requests.cancel', $activeHealthCorrectionRequest->id) }}" class="health-doc-cancel-form" data-student-confirm-submit="Cancel this document resubmission request? Your existing approved files and clearance will be restored.">
                                 @csrf
                                 <button type="submit" class="health-doc-action is-cancel"><x-outline-icon name="x-mark" /> Cancel Request</button>
                             </form>
@@ -501,7 +501,7 @@
                 <div class="health-doc-history-request">
                     <span><x-outline-icon name="information-circle" /> Need to submit a new Health Form?
                     @if($studentRequestPurposes->isNotEmpty())
-                        <button type="button" class="health-doc-request-link" onclick="document.getElementById('studentNewCycleDialog').showModal()">Click here</button>
+                        <button type="button" class="health-doc-request-link" data-student-action="request-health-form">Click here</button>
                     @endif
                     </span>
                     @if($studentRequestPurposes->isEmpty())
@@ -563,7 +563,7 @@
         <div class="record-modal health-record-details-modal health-doc-files-modal" role="dialog" aria-modal="true" aria-labelledby="healthRecordModalTitle">
             <div class="record-modal-head">
                 <span class="health-record-details-head-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span>
-                <button type="button" class="record-modal-close" aria-label="Close uploaded files" onclick="closeHealthRecordModal()"><x-outline-icon name="x-mark" /></button>
+                <button type="button" class="record-modal-close" aria-label="Close uploaded files" data-student-action="close-health-record"><x-outline-icon name="x-mark" /></button>
                 <div class="record-modal-head-main">
                     <h2 class="record-modal-title" id="healthRecordModalTitle">Uploaded Documents</h2>
                     <p class="record-modal-subtitle">View uploaded files for each Health Form record, newest first.</p>

@@ -136,7 +136,9 @@ class StudentInitiatedHealthFormRequestTest extends TestCase
         $this->assertNotNull($submission->submitted_at);
         $this->assertSame('Saved address', data_get($submission->profile_snapshot, 'profile.home_address'));
         $this->assertStringContainsString('view=health-record', $response->getTargetUrl());
-        $stats = app(AdminController::class)->healthRecordStats(Request::create('/admin/health-records/stats', 'GET', ['q' => $student->email]))->getData(true)['stats'];
+        $statsRequest = Request::create('/admin/health-records/stats', 'GET', ['q' => $student->email]);
+        app()->instance('request', $statsRequest);
+        $stats = app(AdminController::class)->healthRecordStats($statsRequest)->getData(true)['stats'];
         $this->assertSame(1, $stats['pending_approval']);
     }
 

@@ -70,7 +70,7 @@
     </form>
     </section>
 </div>
-<style>
+<style nonce="{{ request()->attributes->get('csp_nonce') }}">
     .student-request-settings > .settings-panel-body > .preferences-closure-open { position: relative; overflow: hidden; isolation: isolate; }
     .student-request-settings > .settings-panel-body > .preferences-closure-open::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(110deg, transparent, #fff7bd, transparent); transform: translateX(-110%); pointer-events: none; }
     .student-request-settings > .settings-panel-body > .preferences-closure-open:hover,
@@ -150,7 +150,7 @@
     html[data-theme="dark"] #studentRequestRulesModal .student-request-course-table td { border-color: #334155; }
     @media (max-width: 540px) { #studentRequestRulesModal .student-request-period-grid { grid-template-columns: 1fr; } }
 </style>
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('studentRequestRulesModal');
     const cells = Array.from(modal.querySelectorAll('[data-request-course-year]'));
@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @if(collect(array_keys($errors->getMessages()))->contains(fn ($field) => str_starts_with($field, 'student_request_')))
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('studentRequestRulesModal').hidden = false;
     document.body.classList.add('modal-open');
