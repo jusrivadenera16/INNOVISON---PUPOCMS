@@ -1616,7 +1616,7 @@ function closeEditSubcategoryModal() {
 }
 
 function confirmClearanceDelete(event) {
-    if (!confirm('Remove this clearance or certificate type? Types with linked consultations will be archived instead.')) {
+    if (!confirm('Remove this clearance type from new selections? Existing issued records and MAR history will be kept.')) {
         event.preventDefault();
         return false;
     }
@@ -1624,7 +1624,7 @@ function confirmClearanceDelete(event) {
 }
 
 function confirmClearanceSubcategoryDelete(event) {
-    if (!confirm('Remove this clearance subcategory?')) {
+    if (!confirm('Remove this subcategory from new selections? Existing issued records and MAR history will be kept.')) {
         event.preventDefault();
         return false;
     }

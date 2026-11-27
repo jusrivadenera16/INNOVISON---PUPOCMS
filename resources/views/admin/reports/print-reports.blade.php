@@ -2037,19 +2037,6 @@
                         })->count();
                     };
 
-                    $alphaLabel = function (int $index) {
-                        $label = '';
-                        $value = $index + 1;
-
-                        while ($value > 0) {
-                            $value--;
-                            $label = chr(65 + ($value % 26)) . $label;
-                            $value = intdiv($value, 26);
-                        }
-
-                        return $label;
-                    };
-
                     $displayCount = fn ($value) => (int) $value > 0 ? $value : '';
 
                     $roman = function (int $value) {
@@ -2070,55 +2057,9 @@
                     };
 
                     $consultationTotals = ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0];
-                    $resolveIssuancePatientType = function ($issuance) use ($marPatientTypeNormalizer) {
-                        return $marPatientTypeNormalizer->normalize($issuance->user_type ?? '');
-                    };
                     $marExcusedLetterBreakdown = $marExcusedLetterBreakdown ?? [];
 
-                    $countIssuancesBySubcategory = function ($issuances, int $subcategoryId, string $patientType) use ($resolveIssuancePatientType) {
-                        return $issuances->filter(function ($issuance) use ($subcategoryId, $resolveIssuancePatientType, $patientType) {
-                            return (int) $issuance->clearance_subcategory_id === $subcategoryId
-                                && $resolveIssuancePatientType($issuance) === $patientType;
-                        })->count();
-                    };
-                    $countIssuancesByParent = function ($issuances, int $clearanceTypeId, string $patientType) use ($resolveIssuancePatientType) {
-                        return $issuances->filter(function ($issuance) use ($clearanceTypeId, $resolveIssuancePatientType, $patientType) {
-                            return (int) $issuance->clearance_type_id === $clearanceTypeId
-                                && $issuance->clearance_subcategory_id === null
-                                && $resolveIssuancePatientType($issuance) === $patientType;
-                        })->count();
-                    };
-
-                    $clearanceGroups = collect($marClearanceTypes ?? [])->values()->map(function ($clearanceType, $index) use ($marClearanceIssuances, $marExcusedLetterBreakdown, $countIssuancesBySubcategory, $countIssuancesByParent, $alphaLabel) {
-                        $parentRow = [
-                            'student' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'student'),
-                            'faculty' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'faculty'),
-                            'admin' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'admin'),
-                            'dependent' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'dependent'),
-                            'details' => $marExcusedLetterBreakdown['type:' . $clearanceType->id] ?? [],
-                        ];
-                        $buildRow = function (string $name, int $subcategoryId) use ($marClearanceIssuances, $marExcusedLetterBreakdown, $countIssuancesBySubcategory) {
-                            return [
-                                'name' => $name,
-                                'student' => $countIssuancesBySubcategory($marClearanceIssuances, $subcategoryId, 'student'),
-                                'faculty' => $countIssuancesBySubcategory($marClearanceIssuances, $subcategoryId, 'faculty'),
-                                'admin' => $countIssuancesBySubcategory($marClearanceIssuances, $subcategoryId, 'admin'),
-                                'dependent' => $countIssuancesBySubcategory($marClearanceIssuances, $subcategoryId, 'dependent'),
-                                'details' => $marExcusedLetterBreakdown['subcategory:' . $subcategoryId] ?? [],
-                            ];
-                        };
-
-                        $rows = $clearanceType->subcategories->values()->map(function ($subcategory) use ($buildRow) {
-                            return $buildRow($subcategory->name, (int) $subcategory->id);
-                        });
-
-                        return [
-                            'label' => $alphaLabel($index) . '. ' . $clearanceType->name,
-                            'allow_direct_use' => (bool) $clearanceType->allow_direct_use,
-                            'parent' => $parentRow,
-                            'rows' => $rows->values(),
-                        ];
-                    });
+                    $clearanceGroups = app(\App\Services\MarClearanceReportRows::class)->build($marClearanceTypes ?? [], $marClearanceIssuances, $marExcusedLetterBreakdown);
                     $marServiceSummary = $marServiceSummary ?? [
                         'referrals' => [],
                         'clinic_document_services' => ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0],
@@ -2229,8 +2170,10 @@
                     <tr><td class="text-left report-label-indent">{{ chr(65 + $referralIndex) }}. {{ $referralRow['label'] }}</td><td>{{ $displayCount($referralRow['counts']['student']) }}</td><td>{{ $displayCount($referralRow['counts']['faculty']) }}</td><td>{{ $displayCount($referralRow['counts']['admin']) }}</td><td>{{ $displayCount($referralRow['counts']['dependent']) }}</td><td>{{ $displayCount(array_sum($referralRow['counts'])) }}</td></tr>
                 @endforeach
                 <tr class="bg-category"><td colspan="6">{{ $roman(5) }}. OTHERS</td></tr>
-                <tr><td class="text-left report-label-indent">A. Clinic Document Services</td><td>{{ $displayCount($marServiceSummary['clinic_document_services']['student']) }}</td><td>{{ $displayCount($marServiceSummary['clinic_document_services']['faculty']) }}</td><td>{{ $displayCount($marServiceSummary['clinic_document_services']['admin']) }}</td><td>{{ $displayCount($marServiceSummary['clinic_document_services']['dependent']) }}</td><td>{{ $displayCount(array_sum($marServiceSummary['clinic_document_services'])) }}</td></tr>
-                <tr><td class="text-left report-label-indent">B. Other Services</td><td>{{ $displayCount($marServiceSummary['other_services']['student']) }}</td><td>{{ $displayCount($marServiceSummary['other_services']['faculty']) }}</td><td>{{ $displayCount($marServiceSummary['other_services']['admin']) }}</td><td>{{ $displayCount($marServiceSummary['other_services']['dependent']) }}</td><td>{{ $displayCount(array_sum($marServiceSummary['other_services'])) }}</td></tr>
+                @if(array_sum($marServiceSummary['clinic_document_services']) > 0)
+                    <tr><td class="text-left report-label-indent">A. Clinic Document Services</td><td>{{ $displayCount($marServiceSummary['clinic_document_services']['student']) }}</td><td>{{ $displayCount($marServiceSummary['clinic_document_services']['faculty']) }}</td><td>{{ $displayCount($marServiceSummary['clinic_document_services']['admin']) }}</td><td>{{ $displayCount($marServiceSummary['clinic_document_services']['dependent']) }}</td><td>{{ $displayCount(array_sum($marServiceSummary['clinic_document_services'])) }}</td></tr>
+                @endif
+                <tr><td class="text-left report-label-indent">{{ array_sum($marServiceSummary['clinic_document_services']) > 0 ? 'B' : 'A' }}. Other Services</td><td>{{ $displayCount($marServiceSummary['other_services']['student']) }}</td><td>{{ $displayCount($marServiceSummary['other_services']['faculty']) }}</td><td>{{ $displayCount($marServiceSummary['other_services']['admin']) }}</td><td>{{ $displayCount($marServiceSummary['other_services']['dependent']) }}</td><td>{{ $displayCount(array_sum($marServiceSummary['other_services'])) }}</td></tr>
                 <tr class="bg-category"><td colspan="6">{{ $roman(6) }}. ON-LINE CONSULTATION</td></tr>
                 @foreach($marServiceSummary['online_consultations'] as $onlineIndex => $onlineRow)
                     <tr><td class="text-left report-label-indent">{{ chr(65 + $onlineIndex) }}. {{ $onlineRow['label'] }}</td><td>{{ $displayCount($onlineRow['counts']['student']) }}</td><td>{{ $displayCount($onlineRow['counts']['faculty']) }}</td><td>{{ $displayCount($onlineRow['counts']['admin']) }}</td><td>{{ $displayCount($onlineRow['counts']['dependent']) }}</td><td>{{ $displayCount(array_sum($onlineRow['counts'])) }}</td></tr>

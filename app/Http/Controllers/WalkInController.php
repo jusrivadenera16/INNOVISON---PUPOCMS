@@ -3744,7 +3744,7 @@ PROMPT;
         }
 
         $clearanceSubcategoryCodes = MarClearanceSubcategory::query()
-            ->whereHas('clearanceType', fn ($query) => $query->where('is_active', true))
+            ->whereHas('clearanceType', fn ($query) => $query->where('is_active', true)->whereNull('mar_clearance_types.deleted_at'))
             ->whereHas('sources', fn ($query) => $query->where(
                 'source',
                 MarClearanceSubcategorySource::CONSULTATION

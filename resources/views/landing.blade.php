@@ -12330,8 +12330,8 @@
             initializeLanding();
         }
     </script>
-    <script src="https://cdn.botpress.cloud/desk/webchat/v4.1/inject.js"></script>
-    <script src="https://files.bpcontent.cloud/2026/07/21/04/20260721040029-YLMY6KM6.js" defer></script>
+    <script src="https://cdn.botpress.cloud/webchat/v3.7/inject.js"></script>
+    <script src="https://files.bpcontent.cloud/2026/11/27/02/20261127024032-7PIHSBQS.js" defer></script>
 </body>
 </html>
 

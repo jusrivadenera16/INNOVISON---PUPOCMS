@@ -5,6 +5,13 @@ const test = require('node:test');
 const vm = require('node:vm');
 
 const source = fs.readFileSync(path.join(__dirname, '../../resources/views/landing.blade.php'), 'utf8');
+test('landing embeds the replacement bot using its supplied Webchat v3.7 scripts', () => {
+    assert.ok(source.includes('src="https://cdn.botpress.cloud/webchat/v3.7/inject.js"'));
+    assert.ok(source.includes('src="https://files.bpcontent.cloud/2026/11/27/02/20261127024032-7PIHSBQS.js" defer'));
+    assert.ok(!source.includes('20260721040029-YLMY6KM6.js'));
+    assert.ok(!source.includes('/desk/webchat/v4.1/inject.js'));
+});
+
 const navigationStart = source.indexOf('function initializeLandingMobileNavigation()');
 const navigationEnd = source.indexOf('initializeLandingMobileNavigation();', navigationStart);
 const navigationSource = source.slice(navigationStart, navigationEnd) + 'initializeLandingMobileNavigation();';

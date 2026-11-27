@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Consultation;
 use App\Models\HealthFormCategory;
-use App\Models\MarClearanceIssuance;
 use App\Models\MarClearanceSubcategory;
 use App\Models\MarClearanceSubcategorySource;
 use App\Models\MarClearanceType;
@@ -162,7 +160,7 @@ class MarClearanceTypeController extends Controller
             ->whereRaw('LOWER(TRIM(name)) = ?', [mb_strtolower($name)])
             ->first();
         if ($existingType?->is_active) {
-            return back()->withInput()->withErrors(['name' => 'This clearance type already exists.']);
+            throw \Illuminate\Validation\ValidationException::withMessages(['name' => 'This clearance type already exists.']);
         }
 
         $parentReceivesCount = $validated['count_placement'] === 'parent';
@@ -182,17 +180,20 @@ class MarClearanceTypeController extends Controller
                 $this->syncTypeSourceMapping($existingType, $parentReceivesCount ? $validated : null);
             });
 
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Clearance type restored.', 'purpose_value' => 'mapping:' . $existingType->sourceMappings()->value('id')], 201);
+            }
             return back()->with('success', 'Archived clearance type restored.');
         }
 
         $baseCode = Str::snake(Str::limit($name, 45, '')) ?: 'clearance_type';
         $code = $baseCode;
         $suffix = 2;
-        while (MarClearanceType::query()->where('code', $code)->exists()) {
+        while (MarClearanceType::withTrashed()->where('code', $code)->exists()) {
             $code = $baseCode . '_' . $suffix++;
         }
 
-        DB::transaction(function () use ($code, $name, $parentReceivesCount, $sources, $validated) {
+        $clearanceType = DB::transaction(function () use ($code, $name, $parentReceivesCount, $sources, $validated) {
             $clearanceType = MarClearanceType::create([
                 'code' => $code,
                 'name' => $name,
@@ -203,8 +204,12 @@ class MarClearanceTypeController extends Controller
 
             $this->syncTypeSources($clearanceType, $parentReceivesCount ? $sources : []);
             $this->syncTypeSourceMapping($clearanceType, $parentReceivesCount ? $validated : null);
+            return $clearanceType;
         });
 
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Clearance type added.', 'type' => ['id' => $clearanceType->id, 'name' => $clearanceType->name], 'purpose_value' => 'mapping:' . $clearanceType->sourceMappings()->value('id')], 201);
+        }
         return back()->with('success', 'Clearance type added.');
     }
 
@@ -247,25 +252,9 @@ class MarClearanceTypeController extends Controller
 
     public function destroy(MarClearanceType $marClearanceType)
     {
-        $subcategoryIds = $marClearanceType->subcategories()->pluck('id');
-        $linkedCodes = $marClearanceType->subcategories()->pluck('code')->push($marClearanceType->code);
-        if ($marClearanceType->code === 'ojt') {
-            $linkedCodes->push('coc_ijt');
-        }
-
-        $hasLinkedIssuances = MarClearanceIssuance::query()
-            ->where(function ($query) use ($marClearanceType, $subcategoryIds) {
-                $query->where('clearance_type_id', $marClearanceType->id)
-                    ->orWhereIn('clearance_subcategory_id', $subcategoryIds);
-            })
-            ->exists();
-
-        if ($hasLinkedIssuances || Consultation::query()->whereIn('certificate_type', $linkedCodes)->exists()) {
-            return back()->with('error', 'This clearance type cannot be deleted because existing records are linked to it.');
-        }
-
+        // Remove the selection, retaining its identity and mappings for historical reports.
         $marClearanceType->delete();
-        return back()->with('success', 'Clearance type removed.');
+        return back()->with('success', 'Clearance type removed from new selections. Issued records and MAR history are preserved.');
     }
 
     public function storeSubcategory(Request $request, MarClearanceType $marClearanceType)
@@ -328,7 +317,7 @@ class MarClearanceTypeController extends Controller
         $baseCode = Str::snake(Str::limit($marClearanceType->code . '_' . $name, 90, '')) ?: 'clearance_subcategory';
         $code = $baseCode;
         $suffix = 2;
-        while (MarClearanceSubcategory::query()->where('code', $code)->exists()) {
+        while (MarClearanceSubcategory::withTrashed()->where('code', $code)->exists()) {
             $code = $baseCode . '_' . $suffix++;
         }
 
@@ -380,35 +369,27 @@ class MarClearanceTypeController extends Controller
 
     public function destroySubcategory(MarClearanceSubcategory $marClearanceSubcategory)
     {
-        $legacyCertificateTypes = $this->legacyCertificateTypesFor($marClearanceSubcategory);
-
-        if (MarClearanceIssuance::query()->where('clearance_subcategory_id', $marClearanceSubcategory->id)->exists()
-            || Consultation::query()->whereIn('certificate_type', $legacyCertificateTypes)->exists()) {
-            return back()->with('error', 'This subcategory cannot be removed because it has linked records.');
-        }
-
         $marClearanceSubcategory->delete();
 
-        return back()->with('success', 'Clearance subcategory removed.');
+        return back()->with('success', 'Clearance subcategory removed from new selections. Issued records and MAR history are preserved.');
     }
 
-    private function legacyCertificateTypesFor(MarClearanceSubcategory $subcategory): array
+    public function reportNames(Request $request)
     {
-        $normalized = strtolower(trim((string) $subcategory->code . ' ' . (string) $subcategory->name));
-        $normalized = trim(preg_replace('/[^a-z0-9]+/', ' ', $normalized) ?? $normalized);
-        $codes = [$subcategory->code];
-
-        if (str_contains($normalized, 'ojt')
-            || str_contains($normalized, 'ijt')
-            || str_contains($normalized, 'on the job')) {
-            $codes[] = 'coc_ijt';
-        }
-
-        if (str_contains($normalized, 'ladderized')) {
-            $codes[] = 'coc_ladderized';
-        }
-
-        return array_values(array_unique($codes));
+        $data = $request->validate([
+            'types' => ['sometimes', 'array'],
+            'types.*' => ['nullable', 'string', 'max:160'],
+            'subcategories' => ['sometimes', 'array'],
+            'subcategories.*' => ['nullable', 'string', 'max:160'],
+        ]);
+        DB::transaction(function () use ($data) {
+            foreach (['types' => MarClearanceType::class, 'subcategories' => MarClearanceSubcategory::class] as $key => $model) {
+                foreach ($data[$key] ?? [] as $id => $name) {
+                    $model::withTrashed()->findOrFail($id)->update(['report_name' => trim((string) $name) ?: null]);
+                }
+            }
+        });
+        return back()->with('success', 'MAR display names saved.');
     }
 
     private function syncSubcategorySources(MarClearanceSubcategory $subcategory, array $sources): void

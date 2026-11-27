@@ -60,9 +60,9 @@ class SecurityHeadersTest extends TestCase
         preg_match('/(?:^|; )style-src-attr ([^;]+)/', $policy, $attributes);
 
         foreach ([
-            'oiLYcAg0EjF+m1EXCSd2pSwjU2PNoJ9uTolI0559Ncg=',
-            'JvsjI3eIYQJtzBSap01PAk+kk7a+g4EOx96d3g3sN/k=',
-            '3S10SDmyzdDbj+am5Vc2gJgpydr3HBh7Fu3HCLwXkSg=',
+            'vNVqbO2I6xQA1MkNuBtHYeaq2yK2RBaK+PaWflH6DiY=',
+            'fekiPGlxr3o+AqFuyPctA0ie/UXl/bBRD0nv9gu1AYI=',
+            'vTnrYvOn4J5yXGO8qSjlIpmdMlOS+gZpPgQ9MWgZT28=',
         ] as $hash) {
             self::assertStringContainsString("'sha256-{$hash}'", $style[1]);
         }

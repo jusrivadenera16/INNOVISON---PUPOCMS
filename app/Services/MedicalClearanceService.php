@@ -87,6 +87,13 @@ class MedicalClearanceService
             ->map(fn ($option) => ['value' => $option['value'], 'label' => $option['label']])->values()->all();
     }
 
+    public function defaultPurposeValue(string $type, HealthProfile|EmployeeHealthProfile $profile, ?string $category): string
+    {
+        $matches = app(MedicalClearancePurposeCatalog::class)->options($type, $profile)
+            ->filter(fn ($option) => $option['category'] === $category && mb_strtolower($option['name']) !== 'others');
+        return $matches->count() === 1 ? $matches->first()['value'] : '';
+    }
+
     /** Normal form approval replaces only the latest certificate on that exact form. */
     public function issueForApproval(string $type, int $id, array $input, User $actor): IssuedMedicalClearance
     {

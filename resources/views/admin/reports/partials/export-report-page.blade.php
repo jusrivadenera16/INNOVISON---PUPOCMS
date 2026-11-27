@@ -1159,6 +1159,9 @@
                 <h1 class="export-page-title">{{ $title }}</h1>
                 <p class="export-page-copy">{{ $subtitle }}</p>
             </div>
+            @if(($reportType ?? '') === 'mar' && optional(auth()->user())->canAccessPermission('settings.medical'))
+                <a class="export-page-back" href="{{ route('mar-clearance-types.index') }}">Manage Clearance Types</a>
+            @endif
         </header>
 
         <div class="export-action-grid export-action-grid-{{ $reportType }}">
@@ -1315,6 +1318,9 @@
         </div>
     </section>
 
+    @if(($reportType ?? '') === 'mar')
+        @include('admin.reports.partials.mar-clearance-settings')
+    @endif
     <section class="export-preview-panel">
         <h2 class="export-preview-title">Export Preview</h2>
         <p class="export-preview-copy">{{ number_format($previewCount) }} record{{ $previewCount === 1 ? '' : 's' }} matched. Showing up to 10 rows so you can confirm what information will be exported.</p>

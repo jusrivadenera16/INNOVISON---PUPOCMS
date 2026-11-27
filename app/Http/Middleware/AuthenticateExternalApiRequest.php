@@ -98,7 +98,10 @@ class AuthenticateExternalApiRequest
             return $response;
         }
 
-    
+        if (!$this->allowsLegacyStaticKeys()) {
+            return $this->rejectAccess($request, 403, 'Invalid or revoked integration token.', 'credential-rejected');
+        }
+
         $expectedKey = trim((string) config(
             'services.external_admin_profile.api_key',
             ''
@@ -196,6 +199,12 @@ class AuthenticateExternalApiRequest
         ]);
 
         return $response;
+    }
+
+    protected function allowsLegacyStaticKeys(): bool
+    {
+        // Preserve the existing policy for consumers such as the medical-status API.
+        return true;
     }
 
     private function rejectAccess(

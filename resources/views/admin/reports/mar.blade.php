@@ -527,6 +527,9 @@
 <div class="card">
     <div class="mar-header-bar">
         <h2>Medical Accomplishment Report</h2>
+        @if(optional(auth()->user())->canAccessPermission('settings.medical'))
+            <a class="mar-generate-btn" href="{{ route('mar-clearance-types.index') }}">Manage Clearance Types</a>
+        @endif
     </div>
 
     <form method="GET" class="mar-filter-bar">
@@ -572,59 +575,8 @@
             })->count();
         };
 
-        $resolveIssuancePatientType = function ($issuance) use ($marPatientTypeNormalizer) {
-            return $marPatientTypeNormalizer->normalize($issuance->user_type ?? '');
-        };
         $marExcusedLetterBreakdown = $marExcusedLetterBreakdown ?? [];
-        $countIssuancesBySubcategory = function ($issuances, int $subcategoryId, string $patientType) use ($resolveIssuancePatientType) {
-            return $issuances->filter(function ($issuance) use ($subcategoryId, $resolveIssuancePatientType, $patientType) {
-                return (int) $issuance->clearance_subcategory_id === $subcategoryId
-                    && $resolveIssuancePatientType($issuance) === $patientType;
-            })->count();
-        };
-        $countIssuancesByParent = function ($issuances, int $clearanceTypeId, string $patientType) use ($resolveIssuancePatientType) {
-            return $issuances->filter(function ($issuance) use ($clearanceTypeId, $resolveIssuancePatientType, $patientType) {
-                return (int) $issuance->clearance_type_id === $clearanceTypeId
-                    && $issuance->clearance_subcategory_id === null
-                    && $resolveIssuancePatientType($issuance) === $patientType;
-            })->count();
-        };
-        $alphaLabel = function (int $index) {
-            $label = '';
-            $value = $index + 1;
-            while ($value > 0) {
-                $value--;
-                $label = chr(65 + ($value % 26)) . $label;
-                $value = intdiv($value, 26);
-            }
-            return $label;
-        };
-        $clearanceGroups = collect($marClearanceTypes ?? [])->values()->map(function ($clearanceType, $index) use ($marClearanceIssuances, $marExcusedLetterBreakdown, $countIssuancesBySubcategory, $countIssuancesByParent, $alphaLabel) {
-            $parentRow = [
-                'student' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'student'),
-                'faculty' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'faculty'),
-                'admin' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'admin'),
-                'dependent' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'dependent'),
-                'details' => $marExcusedLetterBreakdown['type:' . $clearanceType->id] ?? [],
-            ];
-            $rows = $clearanceType->subcategories->values()->map(function ($subcategory) use ($marClearanceIssuances, $marExcusedLetterBreakdown, $countIssuancesBySubcategory) {
-                return [
-                    'name' => $subcategory->name,
-                    'student' => $countIssuancesBySubcategory($marClearanceIssuances, (int) $subcategory->id, 'student'),
-                    'faculty' => $countIssuancesBySubcategory($marClearanceIssuances, (int) $subcategory->id, 'faculty'),
-                    'admin' => $countIssuancesBySubcategory($marClearanceIssuances, (int) $subcategory->id, 'admin'),
-                    'dependent' => $countIssuancesBySubcategory($marClearanceIssuances, (int) $subcategory->id, 'dependent'),
-                    'details' => $marExcusedLetterBreakdown['subcategory:' . $subcategory->id] ?? [],
-                ];
-            });
-
-            return [
-                'label' => $alphaLabel($index) . '. ' . $clearanceType->name,
-                'allow_direct_use' => (bool) $clearanceType->allow_direct_use,
-                'parent' => $parentRow,
-                'rows' => $rows,
-            ];
-        });
+        $clearanceGroups = app(\App\Services\MarClearanceReportRows::class)->build($marClearanceTypes ?? [], $marClearanceIssuances, $marExcusedLetterBreakdown);
 
         $consultationTotals = ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0];
         foreach ($categories as $cat) {
@@ -719,7 +671,7 @@
                         <td class="text-center">{{ array_sum(array_intersect_key($detailRow, array_flip(['student', 'faculty', 'admin', 'dependent']))) ?: '' }}</td>
                     </tr>
                 @endforeach
-                @forelse($clearanceGroup['rows'] as $subcategoryIndex => $subcategoryRow)
+                @foreach($clearanceGroup['rows'] as $subcategoryIndex => $subcategoryRow)
                     <tr class="nested-row deep-nested-row">
                         <td>{{ $subcategoryIndex + 1 }}. {{ $subcategoryRow['name'] }}</td>
                         <td class="text-center">{{ $subcategoryRow['student'] ?: '' }}</td>
@@ -738,9 +690,7 @@
                             <td class="text-center">{{ array_sum(array_intersect_key($detailRow, array_flip(['student', 'faculty', 'admin', 'dependent']))) ?: '' }}</td>
                         </tr>
                     @endforeach
-                @empty
-                    <tr class="nested-row deep-nested-row"><td>&nbsp;</td><td class="text-center"></td><td class="text-center"></td><td class="text-center"></td><td class="text-center"></td><td class="text-center"></td></tr>
-                @endforelse
+                @endforeach
             @empty
                 <tr class="nested-row deep-nested-row"><td>&nbsp;</td><td class="text-center"></td><td class="text-center"></td><td class="text-center"></td><td class="text-center"></td><td class="text-center"></td></tr>
             @endforelse
@@ -756,7 +706,9 @@
 
             <tr class="section-row"><td colspan="6">v. Others</td></tr>
             @php $clinicDocumentServicesTotal = array_sum($marServiceSummary['clinic_document_services']); @endphp
+            @if($clinicDocumentServicesTotal > 0)
             <tr><td class="nested-row">Clinic Document Services</td><td class="text-center">{{ $displayServiceCount($marServiceSummary['clinic_document_services']['student']) }}</td><td class="text-center">{{ $displayServiceCount($marServiceSummary['clinic_document_services']['faculty']) }}</td><td class="text-center">{{ $displayServiceCount($marServiceSummary['clinic_document_services']['admin']) }}</td><td class="text-center">{{ $displayServiceCount($marServiceSummary['clinic_document_services']['dependent']) }}</td><td class="text-center">{{ $displayServiceCount($clinicDocumentServicesTotal) }}</td></tr>
+            @endif
             @php $otherServicesTotal = array_sum($marServiceSummary['other_services']); @endphp
             <tr><td class="nested-row">Other Services</td><td class="text-center">{{ $displayServiceCount($marServiceSummary['other_services']['student']) }}</td><td class="text-center">{{ $displayServiceCount($marServiceSummary['other_services']['faculty']) }}</td><td class="text-center">{{ $displayServiceCount($marServiceSummary['other_services']['admin']) }}</td><td class="text-center">{{ $displayServiceCount($marServiceSummary['other_services']['dependent']) }}</td><td class="text-center">{{ $displayServiceCount($otherServicesTotal) }}</td></tr>
 

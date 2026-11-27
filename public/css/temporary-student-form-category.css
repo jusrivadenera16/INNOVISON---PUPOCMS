@@ -1,4 +1,11 @@
 .temp-student-category-menu-wrap { display: inline-flex; }
+#approvedClearanceCategoryBubble { max-height: calc(100dvh - 24px); overflow-y: auto; }
+#approvedClearanceCategoryBubble .clearance-quick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+#approvedClearanceCategoryBubble .clearance-quick-actions button { padding: 7px 9px; border: 1px solid #b66c77; border-radius: 8px; background: #fff5f6; color: #70131b; font-size: 11px; cursor: pointer; }
+#approvedClearanceCategoryBubble .clearance-quick-editor { border-top: 1px solid #dfb9bf; margin-top: 12px; }
+#approvedClearanceCategoryBubble .clearance-quick-editor input { box-sizing: border-box; width: 100%; padding: 9px; border: 1px solid #dfb9bf; border-radius: 8px; background: #fff; color: #172033; }
+html[data-theme=dark] #approvedClearanceCategoryBubble .clearance-quick-actions button,
+html[data-theme=dark] #approvedClearanceCategoryBubble .clearance-quick-editor input { background: #111827; color: #f8fafc; }
 .temp-category-bubble { position: fixed; inset: auto; margin: 0; width: min(350px, calc(100vw - 24px)); box-sizing: border-box; padding: 17px; border: 1px solid #e7c5c8; border-radius: 15px; background: #fff; color: #172033; box-shadow: 0 12px 36px #17030b30; z-index: 100000; text-align: left; }
 .temp-category-bubble::after { content: ''; position: absolute; bottom: -7px; left: 26px; width: 12px; height: 12px; background: inherit; border-right: 1px solid #e7c5c8; border-bottom: 1px solid #e7c5c8; transform: rotate(45deg); }
 .temp-category-bubble[data-below]::after { top: -7px; bottom: auto; transform: rotate(225deg); }

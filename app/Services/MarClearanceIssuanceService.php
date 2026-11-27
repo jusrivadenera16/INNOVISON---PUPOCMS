@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\{DB, Schema};
 class MarClearanceIssuanceService
 {
     private ?Collection $activeSourceMappings = null;
+    private bool $includeRemovedTypes = false;
 
     public function resolveSubcategoryForWorkflow(
         ?string $category,
@@ -37,7 +38,9 @@ class MarClearanceIssuanceService
         }
 
         $subcategories = MarClearanceSubcategory::query()
-            ->whereHas('clearanceType', fn ($query) => $query->where('is_active', true))
+            ->when($this->includeRemovedTypes, fn ($query) => $query->withTrashed())
+            ->whereHas('clearanceType', fn ($query) => $query->where('is_active', true)
+                ->when(!$this->includeRemovedTypes, fn ($query) => $query->whereNull('mar_clearance_types.deleted_at')))
             ->whereHas('sources', fn ($query) => $query->where('source', $sourceWorkflow))
             ->with('clearanceType')
             ->get();
@@ -74,6 +77,7 @@ class MarClearanceIssuanceService
         }
 
         $clearanceType = MarClearanceType::query()
+            ->when($this->includeRemovedTypes, fn ($query) => $query->withTrashed())
             ->where('is_active', true)
             ->where('allow_direct_use', true)
             ->whereHas('sources', fn ($query) => $query->where('source', $sourceWorkflow))
@@ -100,8 +104,10 @@ class MarClearanceIssuanceService
         }
 
         $subcategory = MarClearanceSubcategory::query()
+            ->when($this->includeRemovedTypes, fn ($query) => $query->withTrashed())
             ->where('code', $code)
-            ->whereHas('clearanceType', fn ($query) => $query->where('is_active', true))
+            ->whereHas('clearanceType', fn ($query) => $query->where('is_active', true)
+                ->when(!$this->includeRemovedTypes, fn ($query) => $query->whereNull('mar_clearance_types.deleted_at')))
             ->whereHas('sources', fn ($query) => $query->where('source', $sourceWorkflow))
             ->with('clearanceType')
             ->first();
@@ -113,6 +119,7 @@ class MarClearanceIssuanceService
         }
 
         $clearanceType = MarClearanceType::query()
+            ->when($this->includeRemovedTypes, fn ($query) => $query->withTrashed())
             ->where('code', $code)
             ->where('is_active', true)
             ->where('allow_direct_use', true)
@@ -352,6 +359,20 @@ class MarClearanceIssuanceService
      * can immediately include historical records without a write-side backfill.
      */
     public function issuancesForReportPeriod(
+        CarbonInterface|string $from,
+        CarbonInterface|string $to
+    ): Collection {
+        $this->includeRemovedTypes = true;
+        $this->activeSourceMappings = null;
+        try {
+            return $this->collectIssuancesForReportPeriod($from, $to);
+        } finally {
+            $this->includeRemovedTypes = false;
+            $this->activeSourceMappings = null;
+        }
+    }
+
+    private function collectIssuancesForReportPeriod(
         CarbonInterface|string $from,
         CarbonInterface|string $to
     ): Collection {
@@ -635,7 +656,7 @@ class MarClearanceIssuanceService
                 $profile = ($document->record_type === 'student' ? HealthProfile::query() : EmployeeHealthProfile::query())
                     ->with('user')->find($document->profile_id);
                 if (!$profile?->user) continue;
-                $matches = app(MedicalClearancePurposeCatalog::class)->options($document->record_type, $profile, $document->issued_on->toDateString())
+                $matches = app(MedicalClearancePurposeCatalog::class)->options($document->record_type, $profile, $document->issued_on->toDateString(), true)
                     ->filter(fn ($option) => mb_strtolower(trim($option['name'])) === mb_strtolower(trim($document->purpose)));
                 if ($matches->count() !== 1) continue;
                 $this->addReportIssuanceSnapshot($historical, $knownSourceKeys, $profile->user, $matches->first(), $workflow,
@@ -1050,7 +1071,8 @@ class MarClearanceIssuanceService
         $subcategory = $mapping->subcategory;
         $clearanceType = $subcategory?->clearanceType ?: $mapping->clearanceType;
 
-        if (!$clearanceType || !$clearanceType->is_active) {
+        if (!$clearanceType || !$clearanceType->is_active
+            || (!$this->includeRemovedTypes && ($clearanceType->trashed() || $subcategory?->trashed()))) {
             return null;
         }
 

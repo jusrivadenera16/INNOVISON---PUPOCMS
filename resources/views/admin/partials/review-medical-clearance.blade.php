@@ -1,5 +1,5 @@
 @if(optional(auth()->user())->canAccessPermission('health_records.update_assessment'))
-<section class="review-medical-clearance" data-review-clearance data-options-base="{{ url('/admin/medical-clearances') }}" hidden>
+<section class="review-medical-clearance" data-review-clearance data-options-base="{{ url('/admin/medical-clearances') }}" data-preferred-clearance="{{ json_encode(session('preferred_clearance')) }}" hidden>
     <div data-review-clearance-fields>
         <p class="medical-clearance-status" data-review-clearance-status role="status" hidden></p>
         <div class="review-clearance-full review-clearance-issue-choice" data-review-clearance-issue-choice role="group" aria-labelledby="reviewClearanceIssueLabel">

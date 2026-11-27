@@ -2471,12 +2471,7 @@ class AdminController extends Controller
                 ->pluck('system_key');
         }
 
-        $legacySystems = collect(
-            config('services.external_admin_profile.system_keys', [])
-        )->keys();
-
         return $databaseSystems
-            ->merge($legacySystems)
             ->map(fn ($system) => strtolower(trim((string) $system)))
             ->filter()
             ->unique()
@@ -2496,11 +2491,8 @@ class AdminController extends Controller
                 ->first();
         }
 
-        $systemKeys = collect(config('services.external_admin_profile.system_keys', []))
-            ->mapWithKeys(fn ($value, $key) => [strtolower(trim((string) $key)) => trim((string) $value)]);
-
         if ($system === '') {
-            return [false, null, 'Choose an external system first to test the API key configuration.'];
+            return [false, null, 'Choose an external system first to test the Admin Hub integration token configuration.'];
         }
 
         if ($client) {
@@ -2514,18 +2506,7 @@ class AdminController extends Controller
             ], null];
         }
 
-        $apiKey = (string) $systemKeys->get($system, '');
-        if ($apiKey === '') {
-            return [false, null, 'No active integration client or legacy API key is configured for the selected external system.'];
-        }
-
-        return [true, [
-            'system' => $system,
-            'header_name' => trim((string) config('services.external_admin_profile.header', 'X-External-Api-Key')),
-            'system_header_name' => trim((string) config('services.external_admin_profile.system_header', 'X-External-System')),
-            'auth_mode' => 'legacy-static-key',
-            'api_key_preview' => 'Configured (value hidden)',
-        ], null];
+        return [false, null, 'No active integration client is configured for the selected external system. Admin Hub requires a generated integration token; static keys are not accepted.'];
     }
 
     private function searchDatabaseInfoRecords(string $table, string $search): array
@@ -5213,6 +5194,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'clinic_action' => ['nullable', Rule::in(['start', 'send'])],
             'review_after_start' => ['nullable', 'boolean'],
+            'clearance_purpose' => ['nullable', 'string', 'max:180'],
             'category' => [
                 'required',
                 'string',
@@ -5279,7 +5261,7 @@ class AdminController extends Controller
 
         if ($startInClinic) {
             if ($request->boolean('review_after_start') && ($reviewRedirect = $this->clinicStartedFinalReviewRedirect($profile, $adminUser))) {
-                return $reviewRedirect;
+                return $reviewRedirect->with('preferred_clearance', ['type' => 'student', 'profile_id' => $profile->id, 'purpose' => $validated['clearance_purpose'] ?? '']);
             }
             return redirect()->route('admin.health_records', ['tab' => 'pending_approval', 'user_type' => 'student'])
                 ->with('open_student_health_form', $profile->id)
@@ -5458,6 +5440,7 @@ class AdminController extends Controller
         $employeeHealthFormAudience = $this->employeeHealthFormCategoryAudience($employeeProfile->user);
         $validated = $request->validate([
             'review_after_start' => ['nullable', 'boolean'],
+            'clearance_purpose' => ['nullable', 'string', 'max:180'],
             'category' => [
                 'required',
                 'string',
@@ -5492,7 +5475,7 @@ class AdminController extends Controller
         }
 
         if ($request->boolean('review_after_start') && ($reviewRedirect = $this->clinicStartedFinalReviewRedirect($employeeProfile, $adminUser))) {
-            return $reviewRedirect;
+            return $reviewRedirect->with('preferred_clearance', ['type' => 'employee', 'profile_id' => $employeeProfile->id, 'purpose' => $validated['clearance_purpose'] ?? '']);
         }
 
         return redirect()->route('admin.health_records', [
@@ -11228,12 +11211,18 @@ public function inventorySummary()
         $user = Auth::user();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
 
-        $externalAdminSystemKeys = config('services.external_admin_profile.system_keys', []);
-        if (is_string($externalAdminSystemKeys)) {
-            $externalAdminSystemKeys = json_decode($externalAdminSystemKeys, true) ?: [];
-        }
-        if (!is_array($externalAdminSystemKeys)) {
-            $externalAdminSystemKeys = [];
+        $externalAdminSystems = [];
+        if (Schema::hasTable('integration_clients') && Schema::hasTable('personal_access_tokens')) {
+            $externalAdminSystems = IntegrationClient::query()
+                ->where('is_active', true)
+                ->with('tokens')
+                ->get()
+                ->filter(fn ($client) => $client->tokens->contains(
+                    fn ($token) => $token->can('external-admin:read') || $token->can('external-admin:update')
+                ))
+                ->pluck('system_key')
+                ->values()
+                ->all();
         }
 
         $systems = [
@@ -11266,9 +11255,10 @@ public function inventorySummary()
             ],
             'external_admin' => [
                 'name' => 'External Admin APIs',
-                'configured' => !!config('services.external_admin_profile.system_keys'),
-                'systems' => array_keys($externalAdminSystemKeys),
-                'header' => config('services.external_admin_profile.header'),
+                'configured' => !empty($externalAdminSystems),
+                'systems' => $externalAdminSystems,
+                'header' => 'Authorization',
+                'auth_mode' => 'sanctum-bearer-token',
                 'system_header' => config('services.external_admin_profile.system_header'),
             ],
         ];
@@ -11650,6 +11640,56 @@ public function inventorySummary()
                 'success' => false,
                 'message' => 'Failed to revoke tokens: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    public function deleteIntegrationClient(Request $request, int $clientId)
+    {
+        $user = $this->currentAdminUser();
+        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+        $validated = $request->validate(['system_key' => 'required|string|max:255']);
+
+        try {
+            $result = DB::transaction(function () use ($clientId, $validated): string {
+                // Match token generation's client lock so deletion cannot leave newly issued tokens behind.
+                $client = IntegrationClient::query()->lockForUpdate()->find($clientId);
+                if (!$client) {
+                    return 'not_found';
+                }
+                if (!hash_equals((string) $client->system_key, $validated['system_key'])) {
+                    return 'mismatch';
+                }
+
+                $client->tokens()->delete();
+                if (Schema::hasTable('integration_request_logs')) {
+                    // Keep historical system names, keys, and request results after removing the client.
+                    DB::table('integration_request_logs')->where('integration_client_id', $client->id)
+                        ->update(['integration_client_id' => null]);
+                }
+                $client->delete();
+
+                return 'deleted';
+            });
+
+            if ($result === 'not_found') {
+                return response()->json(['success' => false, 'message' => 'Integration client not found.'], 404);
+            }
+            if ($result === 'mismatch') {
+                return response()->json(['success' => false, 'message' => 'The selected client does not match. Refresh the page and try again.'], 422);
+            }
+
+            \Illuminate\Support\Facades\Log::notice('Integration client deleted.', [
+                'client_id' => $clientId, 'system_key' => $validated['system_key'], 'deleted_by_user_id' => $user->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Integration client deleted and all of its generated tokens revoked.',
+            ]);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return response()->json(['success' => false, 'message' => 'Unable to delete the integration client. Please try again.'], 500);
         }
     }
 

@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MarClearanceType extends Model
 {
-    protected $fillable = ['code', 'name', 'sort_order', 'is_active', 'allow_direct_use'];
+    use SoftDeletes;
+
+    protected $fillable = ['code', 'name', 'report_name', 'sort_order', 'is_active', 'allow_direct_use'];
 
     protected $casts = [
         'sort_order' => 'integer',

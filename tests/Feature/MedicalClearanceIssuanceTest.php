@@ -83,11 +83,11 @@ class MedicalClearanceIssuanceTest extends TestCase
         Schema::create('mar_clearance_types', function (Blueprint $table) {
             $table->id(); $table->string('code'); $table->string('name');
             $table->boolean('is_active')->default(true); $table->boolean('allow_direct_use')->default(true);
-            $table->integer('sort_order')->default(0); $table->timestamps();
+            $table->integer('sort_order')->default(0); $table->timestamps(); $table->softDeletes(); $table->string('report_name')->nullable();
         });
         Schema::create('mar_clearance_subcategories', function (Blueprint $table) {
             $table->id(); $table->unsignedBigInteger('mar_clearance_type_id'); $table->string('code');
-            $table->string('name'); $table->integer('sort_order')->default(0); $table->timestamps();
+            $table->string('name'); $table->integer('sort_order')->default(0); $table->timestamps(); $table->softDeletes(); $table->string('report_name')->nullable();
         });
         foreach (['mar_clearance_type_sources' => 'mar_clearance_type_id', 'mar_clearance_subcategory_sources' => 'mar_clearance_subcategory_id'] as $tableName => $key) {
             Schema::create($tableName, function (Blueprint $table) use ($key) {
@@ -902,6 +902,132 @@ class MedicalClearanceIssuanceTest extends TestCase
         $this->assertNull($submission->fresh()->approved_at);
         $this->assertSame(0, IssuedMedicalClearance::count());
         $this->assertFalse((bool) $profile->user->fresh()->is_health_profile_completed);
+    }
+
+    public function test_removed_clearance_choice_preserves_certificate_and_filtered_mar_history(): void
+    {
+        $profile = $this->patient();
+        $document = $this->service()->issue('student', $profile->id, $this->input(), $this->actor());
+        $type = MarClearanceType::first();
+        $this->prepareReportSchema();
+        app(\App\Http\Controllers\MarClearanceTypeController::class)->destroy($type);
+        $this->assertNull(MarClearanceType::find($type->id));
+        $this->assertTrue(MarClearanceType::withTrashed()->find($type->id)->trashed());
+        $this->assertSame('On the Job Training', $document->fresh()->purpose);
+        $this->assertSame([], $this->service()->purposeOptions('student', $profile));
+        $reportService = app(\App\Services\MarClearanceIssuanceService::class);
+        $report = $reportService->issuancesForReportPeriod('2026-11-01', '2026-11-30');
+        $this->assertCount(1, $report);
+        $this->assertSame('On the Job Training', $report->first()->clearance_name_snapshot);
+        $this->assertCount(0, $reportService->issuancesForReportPeriod('2026-12-01', '2026-12-31'));
+        $this->assertNull($reportService->resolveClearanceTargetForWorkflow('On the Job Training', 'student_nurse_review'));
+        // Reusing the label creates a different selection; historical identities are retained.
+        $request = Request::create('/', 'POST', ['name' => 'On the Job Training', 'count_placement' => 'parent',
+            'source_key' => 'student_health_form_category', 'source_category_id' => HealthFormCategory::first()->id], [], [], ['HTTP_ACCEPT' => 'application/json']);
+        $response = app(\App\Http\Controllers\MarClearanceTypeController::class)->store($request);
+        $this->assertSame(201, $response->getStatusCode());
+        $this->assertNotSame($type->id, $response->getData(true)['type']['id']);
+        $this->assertSame($type->id, MarClearanceIssuance::first()->clearance_type_id);
+    }
+
+    public function test_removed_subcategory_keeps_its_counts_and_parent_and_report_names_are_independent(): void
+    {
+        $profile = $this->patient();
+        $parent = MarClearanceType::create(['name' => 'Teaching Certificates', 'code' => 'teaching', 'allow_direct_use' => false, 'is_active' => true]);
+        $target = $this->configurePurpose('Practice Teaching', 'student', 'On the Job Training', $parent);
+        $document = $this->service()->issue('student', $profile->id, $this->input(['purpose' => 'mapping:' . $target['mapping']->id]), $this->actor());
+        app(\App\Http\Controllers\MarClearanceTypeController::class)->destroySubcategory($target['subcategory']);
+        $this->assertNotContains('Practice Teaching', $this->service()->purposes('student', $profile));
+        $parent->update(['report_name' => 'Teaching Documents']);
+        $target['subcategory']->update(['report_name' => 'Internship Clearance']);
+        $this->prepareReportSchema();
+        $report = app(\App\Services\MarClearanceIssuanceService::class)->issuancesForReportPeriod('2026-11-01', '2026-11-30');
+        $types = MarClearanceType::withTrashed()->with(['subcategories' => fn ($q) => $q->withTrashed()])->get();
+        $rows = app(\App\Services\MarClearanceReportRows::class)->build($types, $report);
+        $this->assertCount(1, $rows);
+        $this->assertSame('A. Teaching Documents', $rows->first()['label']);
+        $this->assertSame('Internship Clearance', $rows->first()['rows']->first()['name']);
+        $this->assertSame(1, $rows->first()['rows']->first()['student']);
+        $this->assertSame('Practice Teaching', $document->fresh()->purpose);
+        $this->assertCount(0, app(\App\Services\MarClearanceReportRows::class)->build($types, collect()));
+    }
+
+    public function test_consultation_counts_survive_choice_removal_and_zero_subcategories_are_omitted(): void
+    {
+        $profile = $this->patient(); $this->prepareReportSchema();
+        $type = MarClearanceType::create(['code' => 'consultation_docs', 'name' => 'Consultation Documents', 'is_active' => true, 'allow_direct_use' => false]);
+        $controller = app(\App\Http\Controllers\MarClearanceTypeController::class);
+        $controller->storeConsultationSubcategory(Request::create('/', 'POST', ['name' => 'Fever']), $type);
+        $controller->storeConsultationSubcategory(Request::create('/', 'POST', ['name' => 'Unused']), $type);
+        $child = $type->subcategories()->where('name', 'Fever')->first();
+        DB::table('consultations')->insert(['id' => 99, 'user_id' => $profile->user_id, 'certificate_type' => $child->code,
+            'service' => 'Medical Consultation', 'consultation_date' => '2026-11-10']);
+        DB::table('appointments')->insert(['user_id' => $profile->user_id, 'service' => 'Medical Consultation', 'date' => '2026-11-10', 'status' => 'Completed']);
+        $controller->destroy($type);
+        // Includes older completed consultations without needing a write-side backfill.
+        $report = app(\App\Services\MarClearanceIssuanceService::class)->issuancesForReportPeriod('2026-11-01', '2026-11-30');
+        $rows = app(\App\Services\MarClearanceReportRows::class)->build(MarClearanceType::withTrashed()->with('subcategories')->get(), $report);
+        $this->assertCount(1, $rows);
+        $this->assertCount(1, $rows->first()['rows']);
+        $this->assertSame('Fever', $rows->first()['rows']->first()['name']);
+        $this->assertSame(1, $rows->first()['rows']->first()['student']);
+    }
+
+    public function test_quick_add_category_and_type_return_choices_with_a_default_and_keep_settings_permission(): void
+    {
+        $profile = $this->patient(); $actor = $this->actor();
+        $categoryResponse = app(\App\Http\Controllers\HealthFormCategoryController::class)->store(
+            Request::create('/', 'POST', ['name' => 'Practice Teaching', 'audiences' => ['student']], [], [], ['HTTP_ACCEPT' => 'application/json'])
+        );
+        $this->assertSame(201, $categoryResponse->getStatusCode());
+        $id = $categoryResponse->getData(true)['category']['id'];
+        $response = app(\App\Http\Controllers\MarClearanceTypeController::class)->store(
+            Request::create('/', 'POST', ['name' => 'Teaching Clearance', 'count_placement' => 'parent',
+                'source_key' => 'student_health_form_category', 'source_category_id' => $id], [], [], ['HTTP_ACCEPT' => 'application/json'])
+        );
+        $this->assertSame(201, $response->getStatusCode());
+        $this->assertSame($response->getData(true)['purpose_value'], $this->service()->defaultPurposeValue('student', $profile, 'Practice Teaching'));
+        $this->assertContains('Teaching Clearance', $this->service()->purposes('student', $profile));
+        foreach (['mar-clearance-types.store', 'health-form-categories.store', 'mar-clearance-types.report-names'] as $name) {
+            $this->assertContains('module.permission:settings.medical', app('router')->getRoutes()->getByName($name)->gatherMiddleware());
+        }
+    }
+
+    public function test_mar_pdf_template_hides_empty_rows_and_clinic_document_services(): void
+    {
+        $type = MarClearanceType::create(['code' => 'pdf_ojt', 'name' => 'On the Job Training', 'report_name' => 'OJT Clearance', 'is_active' => true]);
+        $blank = MarClearanceType::create(['code' => 'pdf_empty', 'name' => 'Empty Annual Clearance', 'is_active' => true]);
+        $record = new MarClearanceIssuance(['clearance_type_id' => $type->id, 'user_type' => 'Student']);
+        $counts = ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0];
+        $summary = ['referrals' => [], 'clinic_document_services' => $counts, 'other_services' => $counts, 'online_consultations' => []];
+        $payload = ['type' => 'mar', 'title' => 'MAR Test', 'monthFilter' => '2026-11', 'dateTo' => '2026-11-30',
+            'isPdf' => true, 'data' => collect(), 'marClearanceTypes' => MarClearanceType::with('subcategories')->get(),
+            'marClearanceIssuances' => collect([$record]), 'marServiceSummary' => $summary];
+        $html = view('admin.reports.print-reports', $payload)->render();
+        $this->assertStringContainsString('A. OJT Clearance', $html);
+        $this->assertStringNotContainsString('Empty Annual Clearance', $html);
+        $this->assertStringNotContainsString('Clinic Document Services', $html);
+        $payload['marServiceSummary']['clinic_document_services']['faculty'] = 1;
+        $html = view('admin.reports.print-reports', $payload)->render();
+        $this->assertStringContainsString('A. Clinic Document Services', $html);
+        $this->assertStringContainsString('B. Other Services', $html);
+        $pdf = Pdf::loadView('admin.reports.print-reports', $payload)->setPaper('a4', 'portrait');
+        $this->assertStringStartsWith('%PDF-', $pdf->output());
+        $this->assertGreaterThan(0, $pdf->getDomPDF()->getCanvas()->get_page_count());
+    }
+
+    public function test_clearance_history_migration_can_add_and_rollback_columns_in_isolated_database(): void
+    {
+        foreach (['mar_clearance_types', 'mar_clearance_subcategories'] as $name) {
+            Schema::table($name, fn (Blueprint $table) => $table->dropColumn(['deleted_at', 'report_name']));
+        }
+        $migration = require base_path('database/migrations/2026_11_27_000001_preserve_removed_clearance_types.php');
+        $migration->up();
+        foreach (['mar_clearance_types', 'mar_clearance_subcategories'] as $name) {
+            $this->assertTrue(Schema::hasColumns($name, ['deleted_at', 'report_name']));
+        }
+        $migration->down();
+        $this->assertFalse(Schema::hasColumn('mar_clearance_types', 'deleted_at'));
     }
 
     public function test_employee_doctor_review_approval_saves_its_certificate_with_the_employee_category(): void

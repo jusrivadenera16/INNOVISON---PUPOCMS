@@ -558,6 +558,7 @@ Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->gr
             Route::post('/admin/integration-tokens/generate', [AdminController::class, 'generateIntegrationToken'])->name('admin.integration-tokens.generate');
             Route::post('/admin/integration-tokens/revoke', [AdminController::class, 'revokeIntegrationToken'])->name('admin.integration-tokens.revoke');
             Route::post('/admin/integration-clients/store', [AdminController::class, 'createIntegrationClient'])->name('admin.integration-clients.store');
+            Route::delete('/admin/integration-clients/{clientId}', [AdminController::class, 'deleteIntegrationClient'])->whereNumber('clientId')->name('admin.integration-clients.destroy');
         });
         Route::get('/admin/activity-logs', [AdminController::class, 'indexLogs'])
             ->middleware('role:superadmin')
@@ -647,6 +648,7 @@ Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->gr
         Route::post('/admin/medical-conditions', [MedicalConditionController::class, 'store'])->name('conditions.store');
         Route::delete('/admin/medical-conditions/{id}', [MedicalConditionController::class, 'destroy'])->name('conditions.destroy');
         Route::post('/admin/mar-clearance-types', [MarClearanceTypeController::class, 'store'])->name('mar-clearance-types.store');
+        Route::put('/admin/mar-report-display-names', [MarClearanceTypeController::class, 'reportNames'])->name('mar-clearance-types.report-names');
         Route::get('/admin/mar-clearance-types', [MarClearanceTypeController::class, 'index'])->name('mar-clearance-types.index');
         Route::put('/admin/mar-clearance-types/{marClearanceType}', [MarClearanceTypeController::class, 'update'])->name('mar-clearance-types.update');
         Route::delete('/admin/mar-clearance-types/{marClearanceType}', [MarClearanceTypeController::class, 'destroy'])->name('mar-clearance-types.destroy');

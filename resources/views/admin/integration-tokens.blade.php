@@ -626,6 +626,9 @@
 
     .token-action-control {
         flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
     .token-action-menu {
@@ -633,6 +636,7 @@
     }
 
     .token-action-menu[hidden],
+    .token-action-dropdown button[hidden],
     .head-generate-token-btn[hidden] {
         display: none !important;
     }
@@ -695,6 +699,26 @@
     .token-action-dropdown button:focus-visible {
         background: #facc15;
         color: #8a1220;
+    }
+
+    .token-action-dropdown .delete-client-action,
+    html[data-theme="dark"] .token-action-dropdown .delete-client-action {
+        margin-top: 4px;
+        background: #7f1d2d;
+        color: #fff;
+    }
+
+    .token-action-dropdown .delete-client-action:hover,
+    .token-action-dropdown .delete-client-action:focus-visible,
+    html[data-theme="dark"] .token-action-dropdown .delete-client-action:hover,
+    html[data-theme="dark"] .token-action-dropdown .delete-client-action:focus-visible {
+        background: #651522;
+        color: #fff;
+    }
+
+    .token-action-dropdown .delete-client-action:disabled {
+        opacity: .6;
+        cursor: wait;
     }
 
     .token-row {
@@ -1532,6 +1556,7 @@
                         id="integrationDetail-{{ $client->id }}"
                         data-client-id="{{ $client->id }}"
                         data-system-name="{{ $client->system_name }}"
+                        data-system-key="{{ $client->system_key }}"
                         data-token-id="{{ $latest ? $latest->id : '' }}"
                     >
                         <div class="detail-head">
@@ -1554,16 +1579,17 @@
                                 </div>
                             </div>
                             <div class="token-action-control">
-                                <details class="token-action-menu" {{ $hasToken ? '' : 'hidden' }}>
-                                    <summary class="detail-menu" aria-label="Token actions" title="Token actions">
+                                <details class="token-action-menu">
+                                    <summary class="detail-menu" aria-label="Client actions" title="Client actions">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                             <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
                                         </svg>
                                     </summary>
                                     <div class="token-action-dropdown">
-                                        <button type="button" data-integration-action="rotate-token">Rotate Token</button>
-                                        <button type="button" data-integration-action="revoke-token">Revoke Token</button>
+                                        <button type="button" data-integration-action="rotate-token" data-token-required {{ $hasToken ? '' : 'hidden' }}>Rotate Token</button>
+                                        <button type="button" data-integration-action="revoke-token" data-token-required {{ $hasToken ? '' : 'hidden' }}>Revoke Token</button>
                                         <button type="button" data-integration-action="view-logs">View Logs</button>
+                                        <button type="button" class="delete-client-action" data-integration-action="delete-client" data-delete-url="{{ route('admin.integration-clients.destroy', $client->id) }}">Delete Client</button>
                                     </div>
                                 </details>
                                 <button type="button" class="solid-btn generate-token-btn head-generate-token-btn" {{ $hasToken ? 'hidden' : '' }} data-integration-action="generate-token">Generate Token</button>
@@ -1930,6 +1956,7 @@
             if (tokenStateText) tokenStateText.textContent = 'Token Generated';
             detail.dataset.tokenId = String(tokenId);
             if (tokenMenu) tokenMenu.hidden = false;
+            detail.querySelectorAll('[data-token-required]').forEach((button) => { button.hidden = false; });
             if (generateButton) generateButton.hidden = true;
             if (createdDateEl) createdDateEl.textContent = createdDate;
             if (createdTimeEl) createdTimeEl.textContent = createdTime;
@@ -2083,6 +2110,41 @@
         });
     }
 
+    async function deleteIntegrationClient(button) {
+        const card = button.closest('.detail-card');
+        if (!card || button.disabled) return;
+        const systemName = card.dataset.systemName;
+        const systemKey = card.dataset.systemKey;
+        if (!confirm(`Delete integration client "${systemName}" (${systemKey})? All of its generated tokens will be revoked and systems using those tokens will lose API access. Admin Hub records and historical request logs will not be deleted. This cannot be undone.`)) return;
+
+        button.disabled = true;
+        let deleted = false;
+        try {
+            const response = await fetch(button.dataset.deleteUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': integrationCsrfToken
+                },
+                body: JSON.stringify({ system_key: systemKey })
+            });
+            const data = await readJsonResponse(response);
+            if (!response.ok || !data.success) {
+                showAlert(data.message || 'Unable to delete this integration client.', true);
+                return;
+            }
+            deleted = true;
+            clearGeneratedToken();
+            showAlert(data.message || 'Integration client deleted.');
+            setTimeout(() => location.reload(), 1200);
+        } catch (error) {
+            showAlert('Unable to delete this integration client. Please try again.', true);
+        } finally {
+            if (!deleted) button.disabled = false;
+        }
+    }
+
     async function copyGeneratedToken() {
         if (!latestGeneratedToken) {
             showAlert('No newly generated token to copy.', true);
@@ -2202,6 +2264,7 @@
                 case 'rotate-token': generateToken(card.dataset.clientId, card.dataset.systemName, true); break;
                 case 'generate-token': generateToken(card.dataset.clientId, card.dataset.systemName, false); break;
                 case 'revoke-token': revokeToken(card.dataset.clientId, card.dataset.systemName, card.dataset.tokenId); break;
+                case 'delete-client': deleteIntegrationClient(button); break;
                 case 'view-logs': openIntegrationLogs(card.dataset.clientId); break;
                 case 'close-logs': closeIntegrationLogs(); break;
                 case 'open-docs': window.location.href = button.dataset.integrationUrl; break;

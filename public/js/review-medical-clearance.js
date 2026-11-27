@@ -46,7 +46,7 @@
         for (const [value, label] of [['', 'Select a purpose'], ...choices.map(option => [option.value, option.label]), ...(data.allow_other === false ? [] : [['__other__', 'Others']])]) {
             const option = document.createElement('option'); option.value = value; option.textContent = label; node('purpose').append(option);
         }
-        node('purpose').value = '';
+        node('purpose').value = choices.some(option => option.value === data.default_purpose_value) ? data.default_purpose_value : '';
         sync();
         if (!choices.length && data.allow_other === false) status('No certificate purposes are configured for this patient type. Check Medical Configuration > Clearance / Certificate Types.');
     }
@@ -91,6 +91,11 @@
                 if (token !== loading) return;
                 if (!response.ok) throw new Error(data.message || 'Unable to load Medical Clearance options.');
                 populate(data);
+                let preferred = null;
+                try { preferred = JSON.parse(root.dataset.preferredClearance || 'null'); } catch (_) { /* No saved selection. */ }
+                if (preferred?.type === type && Number(preferred.profile_id) === Number(id)
+                    && [...node('purpose').children].some(option => option.value === preferred.purpose)) node('purpose').value = preferred.purpose;
+                sync();
                 this.restoreDraft(draft);
             } catch (error) { if (token === loading) status(error.message); }
         },

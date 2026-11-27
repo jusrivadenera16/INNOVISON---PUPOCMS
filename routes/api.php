@@ -16,14 +16,14 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::middleware('external.api:external-admin:read')->group(function () {
+Route::middleware('adminhub.api:external-admin:read')->group(function () {
     Route::get('/external/admins', [AdminProfileController::class, 'index']);
     Route::get('/external/admins/options', [AdminProfileController::class, 'options']);
     Route::get('/external/admins/{admin_uuid}', [AdminProfileController::class, 'externalShow']);
     Route::get('/external/admin-profile', [AdminProfileController::class, 'lookup']);
 });
 
-Route::middleware('external.api:external-admin:update')->group(function () {
+Route::middleware('adminhub.api:external-admin:update')->group(function () {
     Route::put('/external/admins/{admin_uuid}', [AdminProfileController::class, 'externalUpdate']);
 });
 

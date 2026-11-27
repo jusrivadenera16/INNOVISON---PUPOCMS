@@ -2623,9 +2623,9 @@ class ReportsController extends Controller
         $query->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()]);
     }])->get();
 
-    $marClearanceTypes = MarClearanceType::query()
+    $marClearanceTypes = MarClearanceType::withTrashed()
         ->where('is_active', true)
-        ->with('subcategories')
+        ->with(['subcategories' => fn ($query) => $query->withTrashed()])
         ->orderBy('sort_order')
         ->orderBy('name')
         ->get();
@@ -4097,9 +4097,9 @@ public function printReport(Request $request)
                 );
             });
         });
-        $marClearanceTypes = MarClearanceType::query()
+        $marClearanceTypes = MarClearanceType::withTrashed()
             ->where('is_active', true)
-            ->with('subcategories')
+            ->with(['subcategories' => fn ($query) => $query->withTrashed()])
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();

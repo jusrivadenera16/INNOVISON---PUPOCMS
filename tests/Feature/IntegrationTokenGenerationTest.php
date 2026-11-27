@@ -150,18 +150,71 @@ class IntegrationTokenGenerationTest extends TestCase
         $this->assertDatabaseCount('personal_access_tokens', 1);
     }
 
-    public function test_api_dashboard_never_previews_legacy_key_characters(): void
+    public function test_admin_hub_dashboard_does_not_accept_or_list_legacy_static_key_systems(): void
     {
         config()->set('services.external_admin_profile.system_keys', [
             'legacy' => 'short-key',
         ]);
 
         $method = new \ReflectionMethod(\App\Http\Controllers\AdminController::class, 'resolveExternalApiTestingSystemMeta');
-        [$isValid, $meta] = $method->invoke(new \App\Http\Controllers\AdminController(), 'legacy');
+        [$isValid, $meta, $error] = $method->invoke(new \App\Http\Controllers\AdminController(), 'legacy');
 
-        $this->assertTrue($isValid);
-        $this->assertSame('Configured (value hidden)', $meta['api_key_preview']);
-        $this->assertStringNotContainsString('short-key', json_encode($meta));
+        $this->assertFalse($isValid);
+        $this->assertNull($meta);
+        $this->assertStringContainsString('static keys are not accepted', $error);
+        $systemsMethod = new \ReflectionMethod(\App\Http\Controllers\AdminController::class, 'externalApiTestingSystems');
+        $this->assertSame([], $systemsMethod->invoke(new \App\Http\Controllers\AdminController()));
+    }
+
+    public function test_a_token_generated_in_developer_tools_authenticates_admin_hub_and_revocation_removes_access(): void
+    {
+        $client = IntegrationClient::create([
+            'system_key' => 'ims', 'system_name' => 'IMS', 'is_active' => true,
+        ]);
+        $generated = $this->postJson(route('admin.integration-tokens.generate'), [
+            'client_id' => $client->id, 'abilities' => ['external-admin:read', 'external-admin:update'],
+        ])->assertOk();
+        $middleware = new \App\Http\Middleware\AuthenticateAdminHubApiRequest();
+        foreach (['external-admin:read', 'external-admin:update'] as $ability) {
+            $request = Request::create('/api/external/admins', 'GET');
+            $request->headers->set('Authorization', 'Bearer '.$generated->json('token'));
+            $response = $middleware->handle($request, fn () => response()->json(['ok' => true]), $ability);
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertSame('sanctum', $request->attributes->get('external_api_auth_method'));
+        }
+        $this->assertDatabaseHas('integration_request_logs', [
+            'integration_client_id' => $client->id, 'token_id' => $generated->json('token_id'),
+            'auth_method' => 'sanctum', 'status_code' => 200,
+        ]);
+        $client->tokens()->delete();
+        $request = Request::create('/api/external/admins', 'GET');
+        $request->headers->set('Authorization', 'Bearer '.$generated->json('token'));
+        $response = $middleware->handle($request, fn () => response()->json(['ok' => true]), 'external-admin:read');
+        $this->assertSame(403, $response->getStatusCode());
+        $this->assertDatabaseHas('integration_request_logs', [
+            'auth_method' => 'credential-rejected', 'status_code' => 403,
+        ]);
+    }
+
+    public function test_admin_hub_dashboard_uses_generated_integration_tokens_not_static_key_configuration(): void
+    {
+        config()->set('services.external_admin_profile.system_keys', ['legacy' => 'short-key']);
+        $client = IntegrationClient::create([
+            'system_key' => 'ims', 'system_name' => 'IMS', 'is_active' => true,
+        ]);
+        $controller = new \App\Http\Controllers\AdminController();
+        $method = new \ReflectionMethod($controller, 'resolveExternalApiTestingSystemMeta');
+        [$valid, $meta] = $method->invoke($controller, 'ims');
+        $this->assertTrue($valid);
+        $this->assertSame('Authorization', $meta['header_name']);
+        $this->assertSame('sanctum-bearer-token', $meta['auth_mode']);
+        $this->assertFalse($controller->apiSystemStatus(Request::create('/'))->getData(true)['external_admin']['configured']);
+        $client->createToken('admin-hub', ['external-admin:read']);
+        $status = $controller->apiSystemStatus(Request::create('/'))->getData(true)['external_admin'];
+        $this->assertTrue($status['configured']);
+        $this->assertSame(['ims'], $status['systems']);
+        $this->assertSame('Authorization', $status['header']);
+        $this->assertSame('sanctum-bearer-token', $status['auth_mode']);
     }
 
     public function test_client_is_connected_only_after_its_token_has_been_used(): void
@@ -216,6 +269,90 @@ class IntegrationTokenGenerationTest extends TestCase
             'status_code' => 401,
             'auth_method' => 'authentication-missing',
         ]);
+    }
+
+    public function test_delete_client_removes_only_its_tokens_and_preserves_records_and_history(): void
+    {
+        $client = IntegrationClient::create(['system_key' => 'ims', 'system_name' => 'IMS', 'is_active' => true]);
+        $other = IntegrationClient::create(['system_key' => 'ris', 'system_name' => 'RIS', 'is_active' => true]);
+        $token = $client->createToken('first', ['external-admin:read'])->plainTextToken;
+        $client->createToken('second');
+        $otherToken = $other->createToken('other')->accessToken;
+        config()->set('services.external_admin_profile.system_keys', ['medical' => 'unchanged-static-key']);
+        Schema::create('admin_hub', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+        });
+        DB::table('admin_hub')->insert(['name' => 'Keep this admin record']);
+        $logId = DB::table('integration_request_logs')->insertGetId([
+            'integration_client_id' => $client->id, 'system_key' => 'ims', 'system_name' => 'IMS',
+            'http_method' => 'GET', 'endpoint' => '/api/external/admins', 'status_code' => 200, 'created_at' => now(),
+        ]);
+        DB::table('api_error_logs')->insert(['system_name' => 'IMS', 'error_message' => 'Keep history', 'created_at' => now()]);
+
+        $this->deleteJson(route('admin.integration-clients.destroy', $client->id), ['system_key' => 'ims'])
+            ->assertOk()->assertJsonPath('success', true);
+
+        $this->assertDatabaseMissing('integration_clients', ['id' => $client->id]);
+        $this->assertSame(0, $client->tokens()->count());
+        $this->assertDatabaseHas('integration_clients', ['id' => $other->id]);
+        $this->assertDatabaseHas('personal_access_tokens', ['id' => $otherToken->id]);
+        $this->assertDatabaseHas('admin_hub', ['name' => 'Keep this admin record']);
+        $this->assertDatabaseHas('integration_request_logs', [
+            'id' => $logId, 'integration_client_id' => null, 'system_key' => 'ims', 'status_code' => 200,
+        ]);
+        $this->assertDatabaseCount('api_error_logs', 1);
+        $this->assertSame(['medical' => 'unchanged-static-key'], config('services.external_admin_profile.system_keys'));
+        $request = Request::create('/api/external/admins');
+        $request->headers->set('Authorization', 'Bearer '.$token);
+        $response = (new \App\Http\Middleware\AuthenticateAdminHubApiRequest())
+            ->handle($request, fn () => response()->json([]), 'external-admin:read');
+        $this->assertSame(403, $response->getStatusCode());
+    }
+
+    public function test_client_without_tokens_can_be_deleted(): void
+    {
+        $client = IntegrationClient::create(['system_key' => 'unused', 'system_name' => 'Unused', 'is_active' => false]);
+        $this->deleteJson(route('admin.integration-clients.destroy', $client->id), ['system_key' => 'unused'])
+            ->assertOk()->assertJsonPath('success', true);
+        $this->assertDatabaseMissing('integration_clients', ['id' => $client->id]);
+    }
+
+    public function test_delete_client_requires_matching_identity_and_handles_an_already_deleted_client(): void
+    {
+        $client = IntegrationClient::create(['system_key' => 'ims', 'system_name' => 'IMS', 'is_active' => true]);
+        $client->createToken('keep');
+        $url = route('admin.integration-clients.destroy', $client->id);
+        $this->deleteJson($url, [])->assertUnprocessable();
+        $this->deleteJson($url, ['system_key' => 'different-client'])->assertUnprocessable();
+        $this->assertDatabaseHas('integration_clients', ['id' => $client->id]);
+        $this->assertSame(1, $client->tokens()->count());
+        $this->deleteJson(route('admin.integration-clients.destroy', 99999), ['system_key' => 'missing'])
+            ->assertNotFound();
+    }
+
+    public function test_non_developer_cannot_delete_an_integration_client(): void
+    {
+        $client = IntegrationClient::create(['system_key' => 'ims', 'system_name' => 'IMS', 'is_active' => true]);
+        $client->createToken('keep');
+        $this->actingAs(User::forceCreate([
+            'name' => 'Other Admin', 'email' => 'other@example.test', 'user_role' => User::ROLE_SUPERADMIN, 'status' => 'active',
+        ]), 'admin');
+        $this->deleteJson(route('admin.integration-clients.destroy', $client->id), ['system_key' => 'ims'])
+            ->assertForbidden();
+        $this->assertDatabaseHas('integration_clients', ['id' => $client->id]);
+        $this->assertSame(1, $client->tokens()->count());
+    }
+
+    public function test_delete_client_rolls_back_token_deletion_if_client_deletion_fails(): void
+    {
+        $client = IntegrationClient::create(['system_key' => 'ims', 'system_name' => 'IMS', 'is_active' => true]);
+        $client->createToken('keep');
+        DB::unprepared("CREATE TRIGGER fail_client_delete BEFORE DELETE ON integration_clients BEGIN SELECT RAISE(ABORT, 'test deletion failure'); END");
+        $this->deleteJson(route('admin.integration-clients.destroy', $client->id), ['system_key' => 'ims'])
+            ->assertStatus(500)->assertJsonPath('success', false);
+        $this->assertDatabaseHas('integration_clients', ['id' => $client->id]);
+        $this->assertSame(1, $client->tokens()->count());
     }
 
     public function test_activity_query_combines_tokens_api_requests_and_external_errors(): void

@@ -18,9 +18,10 @@ const data = { can_issue: true, can_start_review: true, start_review_url: '/heal
 const response = (data, ok = true) => ({ ok, json: async () => data });
 function harness(fetcher = () => response(data)) {
     const root = element(), result = element(), document = element(), title = element();
-    const keys = ['bubble', 'form', 'open', 'prompt', 'category', 'category-trigger', 'category-menu', 'continue', 'bubble-status', 'close', 'patient', 'selected', 'date', 'findings', 'decision', 'purpose', 'other-label', 'other', 'remarks', 'status', 'back', 'issue', 'document'];
+    const keys = ['bubble', 'form', 'open', 'prompt', 'category', 'category-trigger', 'category-menu', 'continue', 'bubble-status', 'close', 'patient', 'selected', 'date', 'findings', 'decision', 'purpose', 'other-label', 'other', 'remarks', 'status', 'back', 'issue', 'document', 'type', 'editor', 'editor-name', 'editor-label', 'editor-help', 'editor-save', 'editor-cancel', 'add-type', 'add-category'];
     const nodes = Object.fromEntries(keys.map(key => [key, element()]));
     root.dataset.base = '/admin/medical-clearances';
+    root.dataset.typeStore = '/admin/mar-clearance-types'; root.dataset.categoryStore = '/admin/health-form-categories';
     nodes['category-trigger'].querySelector = () => nodes['category-trigger'].label ||= element();
     root.querySelector = selector => nodes[selector.slice('[data-approved-clearance-'.length, -1)]; root.closest = () => result;
     nodes.form.reportValidity = () => true; nodes.form.reset = () => { for (const key of ['other', 'remarks', 'decision']) nodes[key].value = ''; nodes.findings.value = 'No Findings / Normal'; };
@@ -80,4 +81,54 @@ test('category bubble stays centered in the lookup modal when its dropdown opens
     assert.equal(h.nodes.bubble.style.left,'275px');assert.equal(h.nodes.bubble.style.top,'255px');
     h.nodes['category-trigger'].emit('click');
     assert.equal(h.nodes.bubble.style.left,'275px');assert.equal(h.nodes.bubble.style.top,'255px');
+});
+
+test('quick add category saves its audience and selects the refreshed permanent choice', async () => {
+    let saved = false;
+    const original = {...data, can_manage_configuration: true, category_audience: 'student'};
+    const h = harness((url, options) => {
+        if (options.method === 'POST') { saved = true; return response({message: 'Category added.', category: {id: 9, name: 'Practice Teaching'}}); }
+        return response(saved ? {...original, health_form_categories: [...data.health_form_categories, 'Practice Teaching']} : original);
+    });
+    h.configure('student', 5); await h.nodes.open.emit('click');
+    h.nodes['add-category'].emit('click'); h.nodes['editor-name'].value = 'Practice Teaching';
+    await h.nodes['editor-save'].emit('click');
+    assert.equal(h.calls[1][0], '/admin/health-form-categories');
+    assert.deepEqual(JSON.parse(h.calls[1][1].body), {name: 'Practice Teaching', audiences: ['student']});
+    assert.equal(h.nodes.category.value, 'Practice Teaching'); assert.equal(h.nodes.editor.hidden, true);
+    assert.equal(h.submitted.length, 0);
+});
+
+test('quick add type links the selected category and carries its selection to final review', async () => {
+    let saved = false;
+    const original = {...data, can_manage_configuration: true, category_audience: 'student', health_form_category_catalog: [{id: 4, name: 'On the Job Training'}]};
+    const h = harness((url, options) => {
+        if (options.method === 'POST') { saved = true; return response({message: 'Type added.', purpose_value: 'mapping:30'}); }
+        return response(saved ? {...original, purpose_options: [{value: 'mapping:30', label: 'Practice Teaching'}]} : original);
+    });
+    h.configure('student', 5); await h.nodes.open.emit('click');
+    h.nodes['category-menu'].children[1].emit('click'); h.nodes['add-type'].emit('click');
+    h.nodes['editor-name'].value = 'Practice Teaching'; await h.nodes['editor-save'].emit('click');
+    assert.equal(h.calls[1][0], '/admin/mar-clearance-types');
+    assert.equal(JSON.parse(h.calls[1][1].body).source_category_id, 4);
+    assert.equal(h.nodes.type.value, 'mapping:30');
+    h.nodes.continue.emit('click'); assert.equal(h.submitted[0].fields.clearance_purpose, 'mapping:30');
+});
+
+test('category defaults follow custom dropdown changes and configuration errors keep the editor open', async () => {
+    const original = {...data, can_manage_configuration: true, category_audience: 'student',
+        purpose_options: [{value: 'mapping:1', label: 'OJT'}], purpose_categories: [{value: 'mapping:1', category: 'On the Job Training'}]};
+    const h = harness((url, options) => options.method === 'POST' ? response({errors: {name: ['Already exists.']}}, false) : response(original));
+    h.configure('student', 5); await h.nodes.open.emit('click');
+    h.nodes['category-menu'].children[1].emit('click'); assert.equal(h.nodes.type.value, 'mapping:1');
+    h.nodes['add-category'].emit('click'); h.nodes['editor-name'].value = 'Duplicate';
+    await h.nodes['editor-save'].emit('click');
+    assert.equal(h.nodes['bubble-status'].textContent, 'Already exists.'); assert.equal(h.nodes.editor.hidden, false);
+    assert.equal(h.nodes['editor-save'].disabled, false);
+});
+
+test('configuration permission is required for the quick-add editor', async () => {
+    const h = harness(); h.configure('employee', 5); await h.nodes.open.emit('click');
+    h.nodes['add-type'].emit('click'); h.nodes['add-category'].emit('click');
+    assert.equal(h.nodes.editor.hidden, true); assert.equal(h.calls.length, 1);
 });

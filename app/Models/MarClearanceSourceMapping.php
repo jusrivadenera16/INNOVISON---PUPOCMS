@@ -29,12 +29,12 @@ class MarClearanceSourceMapping extends Model
 
     public function clearanceType(): BelongsTo
     {
-        return $this->belongsTo(MarClearanceType::class, 'mar_clearance_type_id');
+        return $this->belongsTo(MarClearanceType::class, 'mar_clearance_type_id')->withTrashed();
     }
 
     public function subcategory(): BelongsTo
     {
-        return $this->belongsTo(MarClearanceSubcategory::class, 'mar_clearance_subcategory_id');
+        return $this->belongsTo(MarClearanceSubcategory::class, 'mar_clearance_subcategory_id')->withTrashed();
     }
 
     public function sourceCategory(): BelongsTo

@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MarClearanceSubcategory extends Model
 {
-    protected $fillable = ['mar_clearance_type_id', 'code', 'name', 'sort_order'];
+    use SoftDeletes;
+
+    protected $fillable = ['mar_clearance_type_id', 'code', 'name', 'report_name', 'sort_order'];
 
     protected $casts = [
         'sort_order' => 'integer',
@@ -16,7 +19,7 @@ class MarClearanceSubcategory extends Model
 
     public function clearanceType(): BelongsTo
     {
-        return $this->belongsTo(MarClearanceType::class, 'mar_clearance_type_id');
+        return $this->belongsTo(MarClearanceType::class, 'mar_clearance_type_id')->withTrashed();
     }
 
     public function sources(): HasMany

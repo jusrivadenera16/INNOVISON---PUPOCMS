@@ -64,7 +64,9 @@ test('the published landing Botpress styles and toggle work with enforced strict
             await page.waitForFunction(() => window.botpress.state === 'opened');
             await page.locator('.bpContainer').waitFor({ state: 'visible' });
             await page.waitForFunction(viewportWidth => {
-                const bounds = document.getElementById('fab-root')?.shadowRoot?.querySelector('.bpContainer')?.getBoundingClientRect();
+                const container = document.getElementById('webchat-root')?.shadowRoot?.querySelector('.bpContainer')
+                    ?? document.getElementById('fab-root')?.shadowRoot?.querySelector('.bpContainer');
+                const bounds = container?.getBoundingClientRect();
                 return bounds && bounds.x >= -1 && bounds.right <= viewportWidth + 1;
             }, width);
             const bounds = await page.locator('.bpContainer').boundingBox();

@@ -10,7 +10,7 @@ class MedicalClearancePurposeCatalog
 {
     public const SOURCES = ['student_health_form_category', 'employee_health_form_category'];
 
-    public function options(string $type, HealthProfile|EmployeeHealthProfile $profile, ?string $date = null): Collection
+    public function options(string $type, HealthProfile|EmployeeHealthProfile $profile, ?string $date = null, bool $includeRemoved = false): Collection
     {
         $audience = $type === 'student' ? 'student' : ($profile->user?->clinicAccountTypeKey() === 'faculty' ? 'faculty' : 'admin');
         $workflow = $type === 'student' ? MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW : MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW;
@@ -19,11 +19,11 @@ class MedicalClearancePurposeCatalog
         return MarClearanceSourceMapping::query()->where('is_active', true)
             ->where('source_key', $type === 'student' ? self::SOURCES[0] : self::SOURCES[1])
             ->with(['sourceCategory', 'clearanceType.sources', 'subcategory.clearanceType.sources', 'subcategory.sources'])
-            ->orderBy('id')->get()->filter(function ($mapping) use ($audience, $workflow, $day, $type) {
+            ->orderBy('id')->get()->filter(function ($mapping) use ($audience, $workflow, $day, $type, $includeRemoved) {
                 $parent = $mapping->subcategory?->clearanceType ?: $mapping->clearanceType;
                 $category = $mapping->sourceCategory;
                 $sources = $mapping->subcategory ? $mapping->subcategory->sources : $parent?->sources;
-                if (!$parent?->is_active || (!$mapping->subcategory && !$parent->allow_direct_use)
+                if (!$parent?->is_active || (!$includeRemoved && ($parent->trashed() || $mapping->subcategory?->trashed())) || (!$mapping->subcategory && !$parent->allow_direct_use)
                     || !$category?->is_active || !in_array($audience, $category->available_for ?: [], true)
                     || !$sources?->contains('source', $workflow)) return false;
                 if ($mapping->effective_from && $day->lt($mapping->effective_from->startOfDay())) return false;
@@ -33,7 +33,7 @@ class MedicalClearancePurposeCatalog
             })->map(function ($mapping) use ($workflow) {
                 $parent = $mapping->subcategory?->clearanceType ?: $mapping->clearanceType;
                 $name = $mapping->subcategory?->name ?: $parent->name;
-                return ['value' => 'mapping:' . $mapping->id, 'label' => $name, 'name' => $name,
+                return ['value' => 'mapping:' . $mapping->id, 'label' => $name, 'name' => $name, 'category' => $mapping->sourceCategory?->name,
                     'clearanceType' => $parent, 'subcategory' => $mapping->subcategory, 'workflow' => $workflow];
             })->values()->pipe(function ($options) {
                 return $options->map(function ($option) use ($options) {

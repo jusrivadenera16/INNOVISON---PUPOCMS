@@ -38,16 +38,19 @@ class HealthFormCategoryController extends Controller
             ->exists();
 
         if ($duplicateExists) {
-            return back()->withInput()->withErrors(['name' => 'This Health Form category already exists.']);
+            throw \Illuminate\Validation\ValidationException::withMessages(['name' => 'This Health Form category already exists.']);
         }
 
-        HealthFormCategory::create([
+        $category = HealthFormCategory::create([
             'name' => $name,
             'is_active' => true,
             'available_for' => $audiences,
             'student_types' => [],
         ]);
 
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Health Form category added.', 'category' => ['id' => $category->id, 'name' => $category->name]], 201);
+        }
         return back()->with('success', 'Health Form category added.');
     }
 

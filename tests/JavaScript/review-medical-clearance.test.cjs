@@ -203,3 +203,19 @@ test('fresh student and employee reviews start blank but resume a saved purpose 
         assert.equal(h.nodes.purpose.value,'');
     }
 });
+
+test('a category default and a record-scoped Issue Another choice refresh the visible purpose label', async () => {
+    const data = {...info, default_purpose_value: 'mapping:12', purpose_options: [
+        {value: 'mapping:12', label: 'On the Job Training'}, {value: 'mapping:13', label: 'Practice Teaching'},
+    ]};
+    const h = harness(() => ({ok: true, json: async () => data}));
+    await h.api.configure('student', 1, true);
+    assert.equal(h.nodes.purpose.value, 'mapping:12');
+    h.root.dataset.preferredClearance = JSON.stringify({type: 'student', profile_id: 1, purpose: 'mapping:13'});
+    await h.api.configure('student', 1, true);
+    assert.equal(h.nodes.purpose.value, 'mapping:13');
+    assert.equal(h.nodes.purposeValue.textContent, 'Practice Teaching');
+    await h.api.configure('student', 2, true);
+    assert.equal(h.nodes.purpose.value, 'mapping:12');
+    assert.equal(h.nodes.purposeValue.textContent, 'On the Job Training');
+});

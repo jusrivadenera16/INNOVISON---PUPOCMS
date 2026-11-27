@@ -68,6 +68,7 @@ class Kernel extends HttpKernel
         'role' => \App\Http\Middleware\RoleMiddleware::class,
         'audit' => \App\Http\Middleware\AuditTrailMiddleware::class,
         'external.api' => \App\Http\Middleware\AuthenticateExternalApiRequest::class,
+        'adminhub.api' => \App\Http\Middleware\AuthenticateAdminHubApiRequest::class,
         'idp.session' => \App\Http\Middleware\EnsureIdpSessionIsActive::class,
         'student.idle' => \App\Http\Middleware\EnsureStudentSessionIdle::class,
         'account.active' => \App\Http\Middleware\EnsureAccountIsActive::class,

@@ -1,5 +1,5 @@
 @if(optional(auth()->user())->canAccessPermission('health_records.update_assessment'))
-<section class="approved-clearance-review" data-approved-clearance data-base="{{ url('/admin/medical-clearances') }}" hidden>
+<section class="approved-clearance-review" data-approved-clearance data-base="{{ url('/admin/medical-clearances') }}" data-type-store="{{ route('mar-clearance-types.store') }}" data-category-store="{{ route('health-form-categories.store') }}" hidden>
     <p data-approved-clearance-prompt>Issue another Medical Clearance? <button type="button" class="approved-clearance-link" data-approved-clearance-open aria-expanded="false" aria-controls="approvedClearanceCategoryBubble">Click here</button></p>
     <div id="approvedClearanceCategoryBubble" class="temp-category-bubble" popover="manual" role="dialog" aria-label="Select Health Form Category" data-approved-clearance-bubble hidden>
         <header><button type="button" data-approved-clearance-close aria-label="Close">&times;</button></header>
@@ -7,6 +7,23 @@
         <select id="approvedClearanceCategory" data-approved-clearance-category></select>
         <button type="button" class="category-bubble-trigger" data-approved-clearance-category-trigger aria-labelledby="approvedClearanceCategoryLabel approvedClearanceCategoryValue" aria-haspopup="listbox" aria-controls="approvedClearanceCategoryOptions" aria-expanded="false" hidden><span id="approvedClearanceCategoryValue">Select a category</span></button>
         <div id="approvedClearanceCategoryOptions" class="category-bubble-options" data-approved-clearance-category-menu role="listbox" aria-labelledby="approvedClearanceCategoryLabel" hidden></div>
+        <label for="approvedClearanceType">Clearance to Issue</label>
+        <select id="approvedClearanceType" data-approved-clearance-type><option value="">Use category default</option></select>
+        @if(optional(auth()->user())->canAccessPermission('settings.medical'))
+            <div class="clearance-quick-actions">
+                <button type="button" data-approved-clearance-add-type>+ Add Clearance Type</button>
+                <button type="button" data-approved-clearance-add-category>+ Add Health Form Category</button>
+            </div>
+            <div class="clearance-quick-editor" data-approved-clearance-editor hidden>
+                <label for="clearanceQuickName" data-approved-clearance-editor-label>Name</label>
+                <input id="clearanceQuickName" data-approved-clearance-editor-name maxlength="120" autocomplete="off">
+                <p data-approved-clearance-editor-help></p>
+                <div class="clearance-quick-actions">
+                    <button type="button" data-approved-clearance-editor-save>Save</button>
+                    <button type="button" data-approved-clearance-editor-cancel>Cancel</button>
+                </div>
+            </div>
+        @endif
         <p data-approved-clearance-bubble-status role="status" hidden></p>
         <button type="submit" data-approved-clearance-continue disabled>Continue</button>
     </div>
@@ -17,5 +34,5 @@
 @endpush
 @include('admin.partials.category-bubble-select-assets')
 @push('scripts')
-    <script src="{{ asset('js/approved-clearance-review.js') }}" defer></script>
+    <script src="{{ asset('js/approved-clearance-review.js') }}?v={{ filemtime(public_path('js/approved-clearance-review.js')) }}" defer></script>
 @endpush
