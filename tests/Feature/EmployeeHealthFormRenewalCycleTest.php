@@ -140,6 +140,39 @@ class EmployeeHealthFormRenewalCycleTest extends TestCase
         }
     }
 
+    public function test_dependent_repeat_clearance_starts_its_own_pending_form_and_opens_its_own_id(): void
+    {
+        $actor = User::factory()->create(['user_role' => User::ROLE_SUPERADMIN]);
+        $this->actingAs($actor, 'admin');
+        $profile = $this->approvedEmployee('Dependent');
+        $profile->forceFill(['id_number' => 'DEP-'.$profile->id, 'employee_number' => 'PARENT-'.$profile->id])->save();
+        $category = HealthFormCategory::create([
+            'name' => 'Dependent Assessment '.$profile->id, 'available_for' => ['dependent'], 'is_active' => true,
+        ]);
+        $type = \App\Models\MarClearanceType::create(['name' => 'Dependent Certificate '.$profile->id, 'code' => 'DEP-CERT-'.$profile->id,
+            'is_active' => true, 'allow_direct_use' => true]);
+        $type->sources()->create(['source' => 'employee_nurse_review']);
+        $mapping = \App\Models\MarClearanceSourceMapping::create(['mar_clearance_type_id' => $type->id,
+            'source_key' => 'employee_health_form_category', 'source_category_id' => $category->id, 'is_active' => true]);
+        $request = Request::create('/', 'POST', ['category' => $category->name, 'review_after_start' => '1', 'clearance_purpose' => 'mapping:'.$mapping->id]);
+        $response = app(AdminController::class)->requestNewEmployeeHealthForm($request, $profile);
+        $this->assertSame(route('walkin.index', [
+            'review_reference' => 'DEP-'.$profile->id, 'review_type' => 'employee', 'review_workflow' => 'final_review',
+        ]), $response->getTargetUrl());
+        $this->assertSame('For Verification', $profile->fresh()->clearance_status);
+        $this->assertSame('submitted', $profile->fresh()->submission_status);
+        $submissions = HealthFormSubmission::where('employee_health_profile_id', $profile->id)->orderBy('id')->get();
+        $this->assertCount(2, $submissions);
+        $this->assertSame('approved', $submissions[0]->status);
+        $this->assertSame('submitted', $submissions[1]->status);
+        $this->assertSame($profile->user_id, $submissions[1]->user_id);
+        $this->assertNull($submissions[1]->health_profile_id);
+        $this->assertSame($type->name, data_get($submissions[1]->profile_snapshot, 'medical_certificate_request.label'));
+        $duplicate = app(AdminController::class)->requestNewEmployeeHealthForm($request, $profile->fresh());
+        $this->assertStringContainsString('already active', $duplicate->getSession()->get('info'));
+        $this->assertSame(2, HealthFormSubmission::where('employee_health_profile_id', $profile->id)->count());
+    }
+
     public function test_bulk_endpoint_starts_employee_assessments_in_pending_approval(): void
     {
         $admin = User::factory()->create(['user_role' => User::ROLE_SUPERADMIN]);

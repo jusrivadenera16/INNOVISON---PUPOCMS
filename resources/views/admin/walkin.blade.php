@@ -3983,6 +3983,28 @@
         display: none !important;
     }
 
+    .certificate-request-grid[hidden],
+    .certificate-request-identity[hidden],
+    .applicant-reference-verification.is-certificate-request .applicant-reference-verification-person .applicant-reference-record-found,
+    .applicant-reference-verification.is-certificate-request .applicant-reference-verification-person .applicant-reference-status-badge,
+    .applicant-reference-verification.is-certificate-request .applicant-reference-verification-grid:not(.certificate-request-grid),
+    .applicant-reference-verification.is-certificate-request .approved-clearance-review {
+        display: none !important;
+    }
+
+    .certificate-request-identity,
+    .certificate-request-date {
+        color: #52647d;
+        font-size: 12px;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    html[data-theme="dark"] .certificate-request-identity,
+    html[data-theme="dark"] .certificate-request-date {
+        color: #cbd5e1;
+    }
+
     .applicant-reference-verification-person {
         display: flex;
         align-items: center;
@@ -4221,6 +4243,10 @@
         height: 17px;
     }
 
+    .applicant-reference-verification-actions button[hidden] {
+        display: none !important;
+    }
+
     @media (max-width: 600px) {
         .applicant-reference-verification {
             padding: 13px;
@@ -4236,82 +4262,82 @@
         }
     }
 
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-verification {
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-verification {
         border-color: rgba(250, 204, 21, .2);
         background: #111827;
         box-shadow: 0 14px 32px rgba(0, 0, 0, .28);
         color: #f8fafc;
     }
 
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-verification-person-copy strong,
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-verification-item-copy strong {
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-verification-person-copy strong,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-verification-item-copy strong {
         color: #f8fafc;
     }
 
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-verification-avatar {
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-verification-avatar {
         background: rgba(112, 19, 27, .55);
         color: #fda4af;
     }
 
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-record-found {
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-record-found {
         border: 1px solid rgba(52, 211, 153, .28);
         background: rgba(6, 95, 70, .34);
         color: #bbf7d0;
     }
 
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-status-badge {
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-status-badge {
         border-color: rgba(250, 204, 21, .28);
         background: rgba(120, 82, 0, .22);
         color: #fde68a;
     }
 
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-type-badge {
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-type-badge {
         border-color: rgba(251, 113, 133, .28);
         background: rgba(136, 19, 55, .28);
         color: #fecdd3;
     }
 
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-verification-grid {
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-verification-grid {
         border-color: rgba(148, 163, 184, .2);
         background: #0f172a;
     }
 
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-verification-item {
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-verification-item {
         border-color: rgba(148, 163, 184, .2);
         background: #1e293b;
     }
 
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-verification-item-icon {
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-verification-item-icon {
         background: rgba(112, 19, 27, .5);
         color: #fda4af;
     }
 
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-verification-item-copy small {
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-verification-item-copy small {
         color: #94a3b8;
     }
 
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-form-status.is-ready {
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-form-status.is-ready {
         color: #86efac;
     }
 
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-form-status.is-missing {
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-form-status.is-missing {
         color: #fdba74;
     }
 
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-form-warning {
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-form-warning {
         border-color: rgba(248, 113, 113, .35);
         background: rgba(127, 29, 29, .28);
         color: #fecaca;
     }
 
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-verification-actions button:not(.applicant-reference-continue) {
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-verification-actions button:not(.applicant-reference-continue) {
         border-color: rgba(148, 163, 184, .3);
         background: #1e293b;
         color: #f8fafc;
     }
 
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-verification-actions button:not(.applicant-reference-continue):hover,
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-applicant-lookup .applicant-reference-verification-actions button:not(.applicant-reference-continue):focus-visible {
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-verification-actions button:not(.applicant-reference-continue):hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell .applicant-reference-verification-actions button:not(.applicant-reference-continue):focus-visible {
         border-color: #facc15;
         background: #facc15;
         color: #70131b;
@@ -10145,6 +10171,12 @@
         box-shadow: 0 18px 34px rgba(0, 0, 0, .28);
     }
 
+    html[data-theme="dark"] #applicantRefModal #clinicLookupApprovedSlot .applicant-approved-result.is-visible {
+        border: 0;
+        background: none !important;
+        box-shadow: none;
+    }
+
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-approved-result-only,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-modal-body,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-ref-panel {
@@ -12264,6 +12296,7 @@
                             </span>
                             <div class="applicant-reference-verification-person-copy">
                                 <strong id="applicantReferenceVerificationName">Applicant Name</strong>
+                                <span class="certificate-request-identity" id="certificateRequestIdentity" hidden></span>
                                 <div class="applicant-reference-verification-badges">
                                     <span class="applicant-reference-record-found">
                                         <x-outline-icon name="check" />
@@ -12304,6 +12337,38 @@
                                     <small>Health Information Form</small>
                                     <strong class="applicant-reference-form-status" id="applicantReferenceVerificationFormStatus">Not Yet Submitted</strong>
                                     <span id="applicantReferenceVerificationApprovedAt" hidden></span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="applicant-reference-verification-grid certificate-request-grid" id="certificateRequestSummary" hidden>
+                            <div class="applicant-reference-verification-item">
+                                <span class="applicant-reference-verification-item-icon"><x-outline-icon name="document-text" /></span>
+                                <span class="applicant-reference-verification-item-copy">
+                                    <small>Certificate Type</small>
+                                    <strong id="certificateRequestType">-</strong>
+                                </span>
+                            </div>
+                            <div class="applicant-reference-verification-item">
+                                <span class="applicant-reference-verification-item-icon"><x-outline-icon name="academic-cap" /></span>
+                                <span class="applicant-reference-verification-item-copy">
+                                    <small>Health Form Category</small>
+                                    <strong id="certificateRequestCategory">-</strong>
+                                </span>
+                            </div>
+                            <div class="applicant-reference-verification-item">
+                                <span class="applicant-reference-verification-item-icon"><x-outline-icon name="check" /></span>
+                                <span class="applicant-reference-verification-item-copy">
+                                    <small>Previous Record</small>
+                                    <strong class="applicant-reference-form-status is-ready">Approved</strong>
+                                    <span class="certificate-request-date" id="certificateRequestPreviousDate"></span>
+                                </span>
+                            </div>
+                            <div class="applicant-reference-verification-item">
+                                <span class="applicant-reference-verification-item-icon"><x-outline-icon name="medical-clearance-issued" /></span>
+                                <span class="applicant-reference-verification-item-copy">
+                                    <small>New Request</small>
+                                    <strong>Pending Review</strong>
                                 </span>
                             </div>
                         </div>
@@ -14943,6 +15008,11 @@
         const referenceVerificationInitials = document.getElementById('applicantReferenceVerificationInitials');
         const referenceVerificationPhoto = document.getElementById('applicantReferenceVerificationPhoto');
         const referenceVerificationName = document.getElementById('applicantReferenceVerificationName');
+        const certificateRequestIdentity = document.getElementById('certificateRequestIdentity');
+        const certificateRequestSummary = document.getElementById('certificateRequestSummary');
+        const certificateRequestType = document.getElementById('certificateRequestType');
+        const certificateRequestCategory = document.getElementById('certificateRequestCategory');
+        const certificateRequestPreviousDate = document.getElementById('certificateRequestPreviousDate');
         const referenceVerificationApplicantStatus = document.getElementById('applicantReferenceVerificationApplicantStatus');
         const referenceVerificationApplicantType = document.getElementById('applicantReferenceVerificationApplicantType');
         const referenceVerificationRef = document.getElementById('applicantReferenceVerificationRef');
@@ -15077,6 +15147,7 @@
         let currentLookupMode = 'applicant';
         let currentApplicantWorkflow = 'select';
         let pendingReferenceLookup = null;
+        let referenceLookupRequestId = 0;
         let finalReviewPage = 1;
         let currentLookupRedirect = '';
         let currentAssessmentReview = {};
@@ -15528,15 +15599,25 @@
             modalShell?.classList.remove('is-approved-result-only');
         }
 
+        function clinicClearanceRecord(data) {
+            const type = data?.record_type === 'dependent' ? 'employee' : data?.record_type;
+            // Dependents use their own employee-form record, never the student shadow record.
+            const id = data?.record_type === 'dependent'
+                ? data.review_timing_profile_id || data.employee_profile_id
+                : data?.review_timing_profile_id || data?.health_form_information?.profile_id || data?.health_profile_id;
+            return { type: ['student', 'employee'].includes(type) ? type : null, id };
+        }
+
         function showAlreadyApprovedResult(data) {
+            const record = clinicClearanceRecord(data);
             window.ApprovedClearanceReview?.configure(
-                isClinicLookupMode() ? data.record_type : null,
-                data.health_form_information?.profile_id || data.health_profile_id
+                isClinicLookupMode() ? record.type : null,
+                record.id
             );
             window.ClinicMedicalClearance?.loadRecord(
                 document.querySelector('#applicantAlreadyApprovedResult [data-clearance-panel]'),
-                isClinicLookupMode() ? data.record_type : null,
-                data.health_form_information?.profile_id || data.health_profile_id
+                isClinicLookupMode() ? record.type : null,
+                record.id
             );
             const approvedDate = data.approved_at
                 || data.verified_at
@@ -15709,6 +15790,7 @@
         }
 
         function resetLookupState() {
+            referenceLookupRequestId++;
             if (repeatClearanceReview || isClinicLookupMode()) modalShell?.classList.remove('is-final-review-workflow', 'is-final-review-toolbar-stuck', 'is-clinic-final-review');
             repeatClearanceReview = null;
             currentClinicLookupData = null;
@@ -17649,8 +17731,9 @@
 
         function openExistingFinalReview(context) {
             const data = currentClinicLookupData;
-            const profileId = Number(data?.health_form_information?.profile_id || data?.health_profile_id);
-            if (!isClinicLookupMode() || !data || context.type !== data.record_type || Number(context.id) !== profileId
+            const record = clinicClearanceRecord(data);
+            const profileId = Number(record.id);
+            if (!isClinicLookupMode() || !data || context.type !== record.type || Number(context.id) !== profileId
                 || !['student', 'employee'].includes(context.type) || !context.options?.can_issue || !window.ReviewMedicalClearance) return false;
             const savedDraft = context.type === 'student' ? data.student_assessment_draft_data : data.employee_draft_data;
             if (!context.draft && savedDraft?.medical_clearance_review?.category === context.category
@@ -17784,8 +17867,9 @@
             if (isFinalReviewWorkflow() || (isClinicLookupMode() && [true, 1, '1'].includes(data.has_reviewable_health_form))) {
                 finalReviewTimeInRequest = markFinalReviewTimeIn(referenceNumber, data);
             }
-            window.ReviewMedicalClearance?.configure(isClinicLookupMode() ? currentRecordType : null,
-                data.health_form_information?.profile_id || data.health_profile_id,
+            const clearanceRecord = clinicClearanceRecord(data);
+            window.ReviewMedicalClearance?.configure(isClinicLookupMode() ? clearanceRecord.type : null,
+                clearanceRecord.id,
                 data.has_reviewable_health_form === true || data.has_reviewable_health_form === 1 || data.has_reviewable_health_form === '1',
                 (currentRecordType === 'student' ? data.student_assessment_draft_data : data.employee_draft_data)?.medical_clearance);
             const isStudentRecord = isStudentLookupResult();
@@ -17967,9 +18051,21 @@
                 || ['fully cleared', 'issued', 'approved', 'cleared'].includes(String(data.clinic_status || data.clearance_status || '').toLowerCase());
             const approved = clinic && formComplete && !reviewable && cleared && (!preview || preview.status === 'approved');
             const canContinue = clinic ? formComplete && reviewable : formComplete;
+            const certificateRequest = clinic && canContinue ? preview?.certificate_request : null;
             hideAlreadyApprovedResult();
-            if (clinic && lookupModalTitle) lookupModalTitle.textContent = 'ID Lookup';
-            if (clinic && lookupModalSubtitle) lookupModalSubtitle.textContent = 'Check the record and Health Form category before continuing.';
+            referenceVerification?.classList.toggle('is-certificate-request', Boolean(certificateRequest));
+            if (certificateRequestSummary) certificateRequestSummary.hidden = !certificateRequest;
+            if (certificateRequestIdentity) {
+                certificateRequestIdentity.hidden = !certificateRequest;
+                certificateRequestIdentity.textContent = certificateRequest ? reference || '-' : '';
+            }
+            if (certificateRequestType) certificateRequestType.textContent = certificateRequest?.type || '';
+            if (certificateRequestCategory) certificateRequestCategory.textContent = certificateRequest ? preview.category : '';
+            if (certificateRequestPreviousDate) certificateRequestPreviousDate.textContent = certificateRequest?.previous_approved_at || '';
+            if (clinic && lookupModalTitle) lookupModalTitle.textContent = certificateRequest ? 'New Medical Certificate Request' : 'ID Lookup';
+            if (clinic && lookupModalSubtitle) lookupModalSubtitle.textContent = certificateRequest
+                ? 'Review the certificate request for this existing patient record.'
+                : 'Check the record and Health Form category before continuing.';
 
             pendingReferenceLookup = {
                 data,
@@ -18039,15 +18135,17 @@
                     : 'The Health Information Form has not been submitted yet. Lookup is available, but review and approval are unavailable until the form is submitted.';
             }
             if (referenceVerificationContinue) { referenceVerificationContinue.disabled = !canContinue; referenceVerificationContinue.hidden = approved; }
-            if (approved && alreadyApprovedResult && clinicLookupApprovedSlot) {
+            if ((approved || certificateRequest) && alreadyApprovedResult && clinicLookupApprovedSlot) {
                 if (!approvedResultHome) { approvedResultHome = alreadyApprovedResult.parentElement; approvedResultNext = alreadyApprovedResult.nextSibling; }
                 clinicLookupApprovedSlot.append(alreadyApprovedResult);
                 alreadyApprovedResult.classList.add('is-visible');
                 if (alreadyApprovedMessage) alreadyApprovedMessage.textContent = 'This Health Form has already been approved.';
                 if (alreadyApprovedMeta) alreadyApprovedMeta.textContent = `Approved at: ${preview?.approved_at || data.approved_at || data.verified_at || '-'}`;
-                const profileId = data.health_form_information?.profile_id || data.health_profile_id;
-                window.ApprovedClearanceReview?.configure(data.record_type, profileId);
-                window.ClinicMedicalClearance?.loadRecord(alreadyApprovedResult.querySelector('[data-clearance-panel]'), data.record_type, profileId);
+                const record = clinicClearanceRecord(data);
+                window.ApprovedClearanceReview?.configure(approved ? record.type : null, record.id);
+                const history = alreadyApprovedResult.querySelector('[data-clearance-panel]');
+                if (history) history.dataset.clearanceKeepHistory = String(Boolean(certificateRequest));
+                window.ClinicMedicalClearance?.loadRecord(history, record.type, record.id);
             }
             setStatus('', '');
             if (referenceVerification) referenceVerification.hidden = false;
@@ -18068,6 +18166,7 @@
         }
 
         function returnToApplicantReferenceSearch() {
+            referenceLookupRequestId++;
             hideAlreadyApprovedResult();
             if (referenceVerification) referenceVerification.hidden = true;
             if (entryPane) entryPane.classList.remove('is-reference-verification');
@@ -18099,6 +18198,7 @@
         }
 
         function doLookup(cachedLookupData = null, openSubmittedReview = false) {
+            const requestId = ++referenceLookupRequestId;
             // Click handlers pass an Event, not a cached API response.
             if (!['preview', 'found'].includes(cachedLookupData?.status)) {
                 cachedLookupData = null;
@@ -18137,6 +18237,7 @@
 
             lookupRequest
             .then(data => {
+                if (requestId !== referenceLookupRequestId) return;
                 if (data.status === 'preview' || data.status === 'found') {
                     // Try multiple field name variations for applicant name
                     let applicantName = data.student_name || data.name || data.full_name || '';
@@ -18175,7 +18276,8 @@
                     // Resume and explicit review links already identify a submitted record.
                     // Reuse the normal Final Review, but do not stop at the ID Lookup preview.
                     if (isClinicLookupMode() && openSubmittedReview === true && hasCompletedHealthForm
-                        && [true, 1, '1'].includes(data.has_reviewable_health_form) && !isAlreadyApproved) {
+                        && [true, 1, '1'].includes(data.has_reviewable_health_form) && !isAlreadyApproved
+                        && !data.health_form_preview?.certificate_request) {
                         cachedLookupData = data;
                         enterClinicFinalReview();
                     }
@@ -18310,7 +18412,10 @@
                         : 'No applicant found with that reference number.'));
                 }
             })
-            .catch(() => setReferenceLookupMessage('error', 'Unable to look up right now. Please try again.'));
+            .catch(() => {
+                if (requestId !== referenceLookupRequestId) return;
+                setReferenceLookupMessage('error', 'Unable to look up right now. Please try again.');
+            });
         }
 
         function enterClinicFinalReview() {

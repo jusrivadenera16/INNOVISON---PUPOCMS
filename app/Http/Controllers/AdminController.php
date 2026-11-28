@@ -280,6 +280,34 @@ class AdminController extends Controller
         });
     }
 
+    private function healthRecordCourseChoices(\App\Services\HealthRecordCourseFilter $filter): array
+    {
+        $choices = [];
+        foreach (['', 'student', 'applicant', 'faculty', 'admin', 'dependent'] as $type) {
+            if ($type === '' || $type === 'dependent') {
+                $options = $filter->options();
+            } else {
+                $health = HealthProfile::query()->notPulledOut();
+                $this->applyHealthProfileUserTypeFilter($health, $type);
+                $employees = null;
+                if ($filter::isOfficeAudience($type)) {
+                    $employees = EmployeeHealthProfile::query();
+                    $this->applyStaffHealthProfileUserTypeFilter($employees, $type);
+                }
+                $options = $filter->scopedOptions($health, $employees, $type);
+            }
+            $choices[$type] = [
+                'label' => $filter::fieldLabel($type),
+                'placeholder' => $filter::placeholder($type),
+                'options' => $options->map(fn ($value) => [
+                    'value' => $value, 'label' => $filter::optionLabel($value, $type),
+                ])->all(),
+            ];
+        }
+
+        return $choices;
+    }
+
     private function adminHubEmailSubquery()
     {
         if (!Schema::hasTable('admin_hub') || !AdminHub::hasColumn('email')) {
@@ -343,6 +371,10 @@ class AdminController extends Controller
 
     private function employeeHealthFormCategoryAudience(?User $user): string
     {
+        if ($user?->clinicAccountTypeKey() === 'dependent') {
+            return 'dependent';
+        }
+
         $markers = strtolower(trim(implode(' ', array_filter([
             (string) ($user?->user_type ?? ''),
             (string) ($user?->user_role ?? ''),
@@ -3638,10 +3670,15 @@ class AdminController extends Controller
         $categoryFilterService = app(\App\Services\HealthRecordCategoryFilter::class);
         $formCategoryOptions = $categoryFilterService->options();
         $search = trim((string) $request->query('q', ''));
+        $courseFilterService = app(\App\Services\HealthRecordCourseFilter::class);
         $courseFilter = trim((string) $request->query('course', ''));
         $dateFilter = trim((string) $request->query('date', ''));
         $yearFilter = trim((string) $request->query('year', ''));
         $userTypeFilter = strtolower(trim((string) $request->query('user_type', '')));
+        $officeCourseFilter = $courseFilterService::isOfficeAudience($userTypeFilter);
+        if (!$officeCourseFilter) {
+            $courseFilter = $courseFilterService->canonicalValue($courseFilter);
+        }
         $studentTypeFilter = strtolower(trim((string) $request->query('student_type', '')));
         $studentTypeOptions = HealthFormCategory::STUDENT_TYPE_LABELS;
         if ($userTypeFilter !== 'student' || !array_key_exists($studentTypeFilter, $studentTypeOptions)) {
@@ -3688,18 +3725,7 @@ class AdminController extends Controller
         }
 
         if ($courseFilter !== '') {
-            $query->where(function ($builder) use ($courseFilter) {
-                $builder->where('course_college', $courseFilter)
-                    ->orWhere(function ($innerBuilder) use ($courseFilter) {
-                        $innerBuilder->where(function ($profileBuilder) {
-                            $profileBuilder->whereNull('course_college')
-                                ->orWhere('course_college', '');
-                        })
-                            ->whereHas('user', function ($userQuery) use ($courseFilter) {
-                                $userQuery->where('course', $courseFilter);
-                            });
-                    });
-            });
+            $courseFilterService->apply($query, $courseFilter, false, $officeCourseFilter);
         }
 
         $this->applyHealthProfileUserTypeFilter($query, $userTypeFilter);
@@ -3770,13 +3796,7 @@ class AdminController extends Controller
         }
 
         if ($courseFilter !== '') {
-            $employeeQuery->where(function ($builder) use ($courseFilter) {
-                $builder->where('course_college', $courseFilter)
-                    ->orWhere('office', $courseFilter)
-                    ->orWhereHas('user', function ($userQuery) use ($courseFilter) {
-                        $userQuery->where('course', $courseFilter);
-                    });
-            });
+            $courseFilterService->apply($employeeQuery, $courseFilter, true, $officeCourseFilter);
         }
 
         $this->applyStaffHealthProfileUserTypeFilter($employeeQuery, $userTypeFilter);
@@ -4028,25 +4048,8 @@ class AdminController extends Controller
             ->latest('submitted_at')->latest('id')->get(['health_profile_id', 'category'])
             ->unique('health_profile_id')->pluck('category', 'health_profile_id');
 
-        $courseOptions = HealthProfile::query()
-            ->notPulledOut()
-            ->with('user:id,course')
-            ->get(['id', 'user_id', 'course_college'])
-            ->map(function (HealthProfile $profile) {
-                return trim((string) ($profile->course_college ?: optional($profile->user)->course ?: ''));
-            })
-            ->merge(
-                EmployeeHealthProfile::query()
-                    ->with('user:id,course')
-                    ->get(['id', 'user_id', 'course_college', 'office'])
-                    ->map(function (EmployeeHealthProfile $profile) {
-                        return trim((string) ($profile->course_college ?: $profile->office ?: optional($profile->user)->course ?: ''));
-                    })
-            )
-            ->filter(fn ($course) => $course !== '')
-            ->unique()
-            ->sort()
-            ->values();
+        $courseFilterChoices = $this->healthRecordCourseChoices($courseFilterService);
+        $courseOptions = collect($courseFilterChoices[$userTypeFilter]['options'] ?? $courseFilterChoices['']['options'])->pluck('value');
 
         $yearOptions = collect(['1', '2', '3', '4']);
         $categoryFilterService->preloadReviewCategories($records->merge($healthProfileSummaryRecords->getCollection()));
@@ -4063,6 +4066,7 @@ class AdminController extends Controller
         ));
 
         return view('admin.health_records', compact(
+            'courseFilterChoices',
             'formCategoryFilter',
             'formCategoryOptions',
             'records',
@@ -4200,10 +4204,15 @@ class AdminController extends Controller
         $formCategoryFilter = trim((string) $request->query('form_category', ''));
         $categoryFilterService = app(\App\Services\HealthRecordCategoryFilter::class);
         $search = trim((string) $request->query('q', ''));
+        $courseFilterService = app(\App\Services\HealthRecordCourseFilter::class);
         $courseFilter = trim((string) $request->query('course', ''));
         $dateFilter = trim((string) $request->query('date', ''));
         $yearFilter = trim((string) $request->query('year', ''));
         $userTypeFilter = strtolower(trim((string) $request->query('user_type', '')));
+        $officeCourseFilter = $courseFilterService::isOfficeAudience($userTypeFilter);
+        if (!$officeCourseFilter) {
+            $courseFilter = $courseFilterService->canonicalValue($courseFilter);
+        }
         $studentTypeFilter = strtolower(trim((string) $request->query('student_type', '')));
         $studentTypeOptions = HealthFormCategory::STUDENT_TYPE_LABELS;
         if ($userTypeFilter !== 'student' || !array_key_exists($studentTypeFilter, $studentTypeOptions)) {
@@ -4240,18 +4249,7 @@ class AdminController extends Controller
         }
 
         if ($courseFilter !== '') {
-            $query->where(function ($builder) use ($courseFilter) {
-                $builder->where('course_college', $courseFilter)
-                    ->orWhere(function ($innerBuilder) use ($courseFilter) {
-                        $innerBuilder->where(function ($profileBuilder) {
-                            $profileBuilder->whereNull('course_college')
-                                ->orWhere('course_college', '');
-                        })
-                            ->whereHas('user', function ($userQuery) use ($courseFilter) {
-                                $userQuery->where('course', $courseFilter);
-                            });
-                    });
-            });
+            $courseFilterService->apply($query, $courseFilter, false, $officeCourseFilter);
         }
 
         $this->applyHealthProfileUserTypeFilter($query, $userTypeFilter);
@@ -4316,13 +4314,7 @@ class AdminController extends Controller
         }
 
         if ($courseFilter !== '') {
-            $employeeQuery->where(function ($builder) use ($courseFilter) {
-                $builder->where('course_college', $courseFilter)
-                    ->orWhere('office', $courseFilter)
-                    ->orWhereHas('user', function ($userQuery) use ($courseFilter) {
-                        $userQuery->where('course', $courseFilter);
-                    });
-            });
+            $courseFilterService->apply($employeeQuery, $courseFilter, true, $officeCourseFilter);
         }
 
         $this->applyStaffHealthProfileUserTypeFilter($employeeQuery, $userTypeFilter);
@@ -5054,7 +5046,8 @@ class AdminController extends Controller
         string $remarks,
         string $informationHandling,
         string $audience,
-        bool $bulk
+        bool $bulk,
+        string $certificatePurpose = ''
     ): ?HealthProfileCorrectionRequest {
         return DB::transaction(function () use (
             $request,
@@ -5064,7 +5057,8 @@ class AdminController extends Controller
             $remarks,
             $informationHandling,
             $audience,
-            $bulk
+            $bulk,
+            $certificatePurpose
         ): ?HealthProfileCorrectionRequest {
             User::query()->whereKey($employeeProfile->user_id)->lockForUpdate()->firstOrFail();
             $profile = EmployeeHealthProfile::query()->lockForUpdate()->findOrFail($employeeProfile->id);
@@ -5133,6 +5127,7 @@ class AdminController extends Controller
                 $profile->fresh(['user', 'approvedBy']),
                 $correctionRequest
             );
+            app(\App\Services\MedicalClearanceService::class)->rememberCertificateRequest($profile, $submission, $certificatePurpose);
             $metadata = is_array($correctionRequest->metadata) ? $correctionRequest->metadata : [];
             $metadata['health_form_submission_id'] = $submission->id;
             $correctionRequest->forceFill([
@@ -5250,7 +5245,10 @@ class AdminController extends Controller
                 ],
             ]);
 
-            if ($startInClinic) $submission = $this->submitClinicStartedStudentForm($profile, $submission, $adminUser);
+            if ($startInClinic) {
+                $submission = $this->submitClinicStartedStudentForm($profile, $submission, $adminUser);
+                app(\App\Services\MedicalClearanceService::class)->rememberCertificateRequest($profile, $submission, (string) ($validated['clearance_purpose'] ?? ''));
+            }
             return $submission;
         });
 
@@ -5287,7 +5285,9 @@ class AdminController extends Controller
     {
         $reference = $profile instanceof HealthProfile
             ? trim((string) ($profile->student_number ?: $profile->user?->student_number))
-            : trim((string) ($profile->employee_number ?: $profile->user?->employee_number ?: $profile->user?->student_number ?: $profile->user?->reference_number));
+            : ($profile->user?->clinicAccountTypeKey() === 'dependent'
+                ? trim((string) ($profile->id_number ?: $profile->user?->dependentProfile?->id_number ?: $profile->user?->reference_number))
+                : trim((string) ($profile->employee_number ?: $profile->user?->employee_number ?: $profile->user?->student_number ?: $profile->user?->reference_number)));
         if ($reference === '' || !$actor->canAccessPermission('walkin.view') || !$actor->canAccessPermission('walkin.employee_lookup')) {
             return null;
         }
@@ -5466,7 +5466,8 @@ class AdminController extends Controller
             $remarks,
             'existing',
             $employeeHealthFormAudience,
-            false
+            false,
+            (string) ($validated['clearance_purpose'] ?? '')
         );
 
         if (!$correctionRequest) {

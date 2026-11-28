@@ -36,7 +36,10 @@
             row.append(description, link);
             list.append(row);
         }
-        panel.querySelector('[data-clearance-documents]').hidden = documents.length === 0;
+        const keepHistory = panel.dataset.clearanceKeepHistory === 'true';
+        panel.querySelector('[data-clearance-documents]').hidden = documents.length === 0 && !keepHistory;
+        const empty = panel.querySelector('[data-clearance-empty]');
+        if (empty) empty.hidden = !keepHistory || documents.length > 0;
     }
     async function load(panel, url) {
         if (!panel) return;
@@ -44,19 +47,26 @@
         states.set(panel, { token, url });
         panel.dataset.clearanceUrl = url || '';
         const documentsOnly = panel.dataset.clearanceDocumentsOnly === 'true';
-        panel.hidden = !url || documentsOnly;
+        const keepHistory = panel.dataset.clearanceKeepHistory === 'true';
+        panel.hidden = !url || (documentsOnly && !keepHistory);
         panel.querySelector('[data-clearance-open]').hidden = true;
         renderDocuments(panel, []);
         const panelStatus = panel.querySelector('[data-clearance-panel-status]');
         setStatus(panelStatus, '');
         if (!url) return;
+        if (keepHistory) {
+            const empty = panel.querySelector('[data-clearance-empty]');
+            if (empty) empty.hidden = true;
+            setStatus(panelStatus, 'Loading certificate history...');
+        }
         try {
             const data = await json(url);
             if (states.get(panel)?.token !== token) return;
             states.set(panel, { token, url, data });
+            setStatus(panelStatus, '');
             panel.querySelector('[data-clearance-open]').hidden = documentsOnly || !data.can_issue;
             renderDocuments(panel, data.documents || []);
-            panel.hidden = (documentsOnly || !data.can_issue) && !data.documents?.length;
+            panel.hidden = !keepHistory && (documentsOnly || !data.can_issue) && !data.documents?.length;
         } catch (error) {
             if (states.get(panel)?.token === token) setStatus(panelStatus, error.message);
         }

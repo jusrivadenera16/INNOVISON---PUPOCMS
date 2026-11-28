@@ -12,7 +12,9 @@ class MedicalClearancePurposeCatalog
 
     public function options(string $type, HealthProfile|EmployeeHealthProfile $profile, ?string $date = null, bool $includeRemoved = false): Collection
     {
-        $audience = $type === 'student' ? 'student' : ($profile->user?->clinicAccountTypeKey() === 'faculty' ? 'faculty' : 'admin');
+        $audience = $type === 'student' ? 'student' : match ($profile->user?->clinicAccountTypeKey()) {
+            'faculty' => 'faculty', 'dependent' => 'dependent', default => 'admin',
+        };
         $workflow = $type === 'student' ? MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW : MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW;
         $day = Carbon::parse($date ?: now()->toDateString())->startOfDay();
 

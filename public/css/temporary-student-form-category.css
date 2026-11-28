@@ -4,6 +4,11 @@
 #approvedClearanceCategoryBubble .clearance-quick-actions button { padding: 7px 9px; border: 1px solid #b66c77; border-radius: 8px; background: #fff5f6; color: #70131b; font-size: 11px; cursor: pointer; }
 #approvedClearanceCategoryBubble .clearance-quick-editor { border-top: 1px solid #dfb9bf; margin-top: 12px; }
 #approvedClearanceCategoryBubble .clearance-quick-editor input { box-sizing: border-box; width: 100%; padding: 9px; border: 1px solid #dfb9bf; border-radius: 8px; background: #fff; color: #172033; }
+#approvedClearanceCategoryBubble .clearance-category-editor { margin-top: 10px; padding-top: 10px; border-top: 1px solid #dfb9bf; }
+#approvedClearanceCategoryBubble .clearance-quick-editor > label { display: block; margin: 12px 0 6px; }
+#approvedClearanceCategoryBubble .clearance-quick-editor input { min-height: 42px; font: inherit; font-size: 12px; }
+#approvedClearanceCategoryBubble .category-bubble-trigger span,
+#approvedClearanceCategoryBubble .category-bubble-option { overflow-wrap: anywhere; white-space: normal; }
 html[data-theme=dark] #approvedClearanceCategoryBubble .clearance-quick-actions button,
 html[data-theme=dark] #approvedClearanceCategoryBubble .clearance-quick-editor input { background: #111827; color: #f8fafc; }
 .temp-category-bubble { position: fixed; inset: auto; margin: 0; width: min(350px, calc(100vw - 24px)); box-sizing: border-box; padding: 17px; border: 1px solid #e7c5c8; border-radius: 15px; background: #fff; color: #172033; box-shadow: 0 12px 36px #17030b30; z-index: 100000; text-align: left; }

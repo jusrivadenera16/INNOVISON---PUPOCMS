@@ -32,6 +32,45 @@ class MedicalClearanceIssuanceTest extends TestCase
         $emptyProfile = new HealthProfile();
         $emptyProfile->setRelation('user', new User());
         $this->assertNull($redirect->invoke($controller, $emptyProfile, $actor));
+        $dependent = new EmployeeHealthProfile(['id_number' => 'DEP-123', 'employee_number' => 'PARENT-123']);
+        $dependent->setRelation('user', new User(['user_type' => 'Dependent', 'employee_number' => 'PARENT-123']));
+        $this->assertSame(route('walkin.index', [
+            'review_reference' => 'DEP-123', 'review_type' => 'employee', 'review_workflow' => 'final_review',
+        ]), $redirect->invoke($controller, $dependent, $actor)->getTargetUrl());
+    }
+
+    public function test_dependent_clearance_uses_its_own_employee_form_and_dependent_categories_only(): void
+    {
+        $profile = $this->patient('employee', 'Dependent School Clearance');
+        $profile->user->update(['user_type' => 'Dependent']);
+        $profile->unsetRelation('user');
+        HealthFormCategory::where('name', 'Dependent School Clearance')->update(['available_for' => ['dependent']]);
+        $this->configurePurpose('Employee Only', 'employee', 'Employee Only');
+        $actor = $this->actor();
+        $request = Request::create('/', 'GET'); $request->setUserResolver(fn () => $actor);
+        $options = app(MedicalClearanceController::class)->index($request, 'employee', $profile->id, $this->service())->getData(true);
+        $this->assertTrue($options['can_start_review']);
+        $this->assertSame('dependent', $options['category_audience']);
+        $this->assertSame(['Dependent School Clearance'], $options['health_form_categories']);
+        $this->assertSame(['Dependent School Clearance'], array_column($options['purpose_options'], 'label'));
+        $this->assertSame(route('admin.employee_health_profile.request_health_form', $profile->id), $options['start_review_url']);
+        $audience = new \ReflectionMethod(\App\Http\Controllers\AdminController::class, 'employeeHealthFormCategoryAudience');
+        $this->assertSame('dependent', $audience->invoke(app(\App\Http\Controllers\AdminController::class), $profile->user));
+        $input = $this->input(['purpose' => 'Dependent School Clearance']);
+        $document = $this->service()->issue('employee', $profile->id, $input, $actor);
+        $this->assertSame('employee', $document->record_type);
+        $this->assertSame($profile->id, $document->profile_id);
+        $this->assertSame($profile->user_id, $document->user_id);
+        $this->assertSame($document->id, $this->service()->issue('employee', $profile->id, $input, $actor)->id);
+        $this->assertSame('dependent', MarClearanceIssuance::first()->user_type);
+        $this->assertStringStartsWith('%PDF-', app(HealthFileEncryption::class)->decrypt(Storage::disk('health_private')->get($document->pdf_path)));
+        $pending = HealthFormSubmission::create(['user_id' => $profile->user_id, 'employee_health_profile_id' => $profile->id,
+            'category' => 'Dependent School Clearance', 'status' => 'submitted', 'submitted_at' => now()]);
+        $options = app(MedicalClearanceController::class)->index($request, 'employee', $profile->id, $this->service())->getData(true);
+        $this->assertFalse($options['can_start_review']);
+        $pending->update(['status' => 'cancelled']);
+        $options = app(MedicalClearanceController::class)->index($request, 'employee', $profile->id, $this->service())->getData(true);
+        $this->assertTrue($options['can_start_review']);
     }
 
     protected function setUp(): void
@@ -181,6 +220,41 @@ class MedicalClearanceIssuanceTest extends TestCase
             $this->assertSame('Fully Cleared', $profile->fresh()->clearance_status);
         }
         $this->assertNull($method->invoke(app(\App\Http\Controllers\WalkInController::class), null));
+    }
+
+    public function test_certificate_request_preview_preserves_selection_and_uses_only_the_same_records_prior_approval(): void
+    {
+        Schema::table('health_form_submissions', fn (Blueprint $table) => $table->json('profile_snapshot')->nullable());
+        $preview = new \ReflectionMethod(\App\Http\Controllers\WalkInController::class, 'clinicHealthFormPreview');
+        foreach (['student', 'employee', 'dependent'] as $audience) {
+            $type = $audience === 'student' ? 'student' : 'employee';
+            $category = $audience === 'student' ? 'On the Job Training' : ucfirst($audience).' Annual';
+            $profile = $this->patient($type, $category);
+            if ($audience === 'dependent') {
+                $profile->user->update(['user_type' => 'Dependent']); $profile->unsetRelation('user');
+                HealthFormCategory::where('name', $category)->update(['available_for' => ['dependent']]);
+            }
+            $key = $type === 'student' ? 'health_profile_id' : 'employee_health_profile_id';
+            $approved = HealthFormSubmission::where($key, $profile->id)->sole();
+            $pending = HealthFormSubmission::create(['user_id' => $profile->user_id, $key => $profile->id, 'category' => $category,
+                'status' => 'submitted', 'submitted_at' => now(), 'profile_snapshot' => ['review_timing' => ['opened_at' => 'kept']]]);
+            $purpose = $this->service()->purposeOptions($type, $profile)[0];
+            $this->service()->rememberCertificateRequest($profile, $pending, $purpose['value']);
+            $data = $preview->invoke(app(\App\Http\Controllers\WalkInController::class), $profile);
+            $this->assertSame($purpose['label'], $data['certificate_request']['type']);
+            $options = app(MedicalClearanceController::class)->reviewOptions($type, $profile->id, $this->service())->getData(true);
+            $this->assertSame($purpose['value'], $options['requested_purpose_value']);
+            $this->assertSame($approved->approved_at->format('M d, Y, g:i A'), $data['certificate_request']['previous_approved_at']);
+            $this->assertSame('kept', data_get($pending->fresh()->profile_snapshot, 'review_timing.opened_at'));
+            $this->assertSame('submitted', $pending->fresh()->status);
+            $this->assertSame('approved', $approved->fresh()->status);
+            $this->assertSame(0, IssuedMedicalClearance::count());
+            $approved->update(['status' => 'revoked']);
+            $this->assertNull($preview->invoke(app(\App\Http\Controllers\WalkInController::class), $profile)['certificate_request']);
+            $before = $pending->fresh()->profile_snapshot;
+            $this->service()->rememberCertificateRequest($profile, $pending, 'unknown-mapping');
+            $this->assertSame($before, $pending->fresh()->profile_snapshot);
+        }
     }
 
     public function test_existing_draft_endpoints_save_repeat_review_without_changing_approval_and_clear_it_on_issue(): void
@@ -723,7 +797,7 @@ class MedicalClearanceIssuanceTest extends TestCase
         }
     }
 
-    public function test_applicants_dependents_and_cross_record_document_access_are_rejected(): void
+    public function test_applicant_and_dependent_student_shadow_records_and_cross_record_document_access_are_rejected(): void
     {
         $profile = $this->patient();
         $document = $this->service()->issue('student', $profile->id, $this->input(), $this->actor());
@@ -782,7 +856,7 @@ class MedicalClearanceIssuanceTest extends TestCase
         $this->assertSame(0, IssuedMedicalClearance::count());
     }
 
-    public function test_applicants_and_dependents_cannot_request_a_certificate_with_approval(): void
+    public function test_ineligible_accounts_cannot_request_a_certificate_with_approval(): void
     {
         $this->expectException(ValidationException::class);
         $this->service()->approvalInput(Request::create('/', 'POST', ['issue_medical_clearance' => true]), true, false);
@@ -856,6 +930,53 @@ class MedicalClearanceIssuanceTest extends TestCase
         $this->assertSame('Updated Student', $document->fresh()->patient_name);
         $this->assertNotSame($originalPath, $document->fresh()->pdf_path);
         $this->assertSame($submission->id, $document->fresh()->health_form_submission_id);
+    }
+
+    public function test_dependent_final_review_issues_against_its_own_form_and_closes_only_that_request(): void
+    {
+        [$shadow, , $actor] = $this->prepareStudentReview();
+        $shadow->user->update(['user_type' => 'Dependent']);
+        $shadow->unsetRelation('user');
+        $columns = array_diff((new EmployeeHealthProfile())->getFillable(), Schema::getColumnListing('health_profile_emp'));
+        Schema::table('health_profile_emp', function (Blueprint $table) use ($columns) {
+            foreach ($columns as $column) $table->text($column)->nullable();
+        });
+        Schema::create('health_profile_correction_requests', function (Blueprint $table) {
+            $table->id();
+            foreach (['user_id', 'employee_health_profile_id', 'health_form_submission_id', 'reviewed_by_user_id'] as $column) $table->unsignedBigInteger($column)->nullable();
+            $table->string('type'); $table->string('status'); $table->timestamp('reviewed_at')->nullable(); $table->timestamps();
+        });
+        $category = 'Dependent School Clearance';
+        HealthFormCategory::create(['name' => $category, 'is_active' => true, 'available_for' => ['dependent']]);
+        $this->configurePurpose($category, 'employee', $category);
+        $profile = EmployeeHealthProfile::forceCreate(['id' => 19, 'user_id' => $shadow->user_id, 'id_number' => 'DEP-123',
+            'clearance_status' => 'For Verification', 'health_form_category' => $category]);
+        $submission = HealthFormSubmission::create(['user_id' => $profile->user_id, 'employee_health_profile_id' => $profile->id,
+            'category' => $category, 'status' => 'submitted', 'submitted_at' => now(),
+            'profile_snapshot' => ['review_timing' => ['opened_at' => '2026-11-28T08:00:00+08:00']]]);
+        $correction = \App\Models\HealthProfileCorrectionRequest::forceCreate(['user_id' => $profile->user_id,
+            'employee_health_profile_id' => $profile->id, 'health_form_submission_id' => $submission->id,
+            'type' => 'new_health_form', 'status' => 'submitted']);
+        $other = $correction->replicate(); $other->health_form_submission_id = 9999; $other->save();
+        $this->mock(\App\Services\EmployeeHealthFormPdfService::class)->shouldReceive('generate')->once()->andReturn('dependent-final-form.pdf');
+        $request = Request::create('/', 'POST', ['reference_number' => '2026-00001-TG-1', 'clearance_decision' => 'approve',
+            'employee_exam_height' => '170', 'employee_exam_weight' => 65, 'employee_exam_bp' => '120/80',
+            'employee_exam_hr' => 75, 'employee_exam_rr' => 18, 'employee_exam_temperature' => 36.5,
+            'medical_clearance' => $this->input(['purpose' => $category])]);
+        $request->setUserResolver(fn () => $actor);
+        $response = app(\App\Http\Controllers\WalkInController::class)->saveStudentAssessment($request);
+        $this->assertSame(200, $response->getStatusCode(), $response->getContent());
+        $document = IssuedMedicalClearance::sole();
+        $this->assertSame('employee', $document->record_type);
+        $this->assertSame(19, $document->profile_id);
+        $this->assertSame($submission->id, $document->health_form_submission_id);
+        $this->assertSame('approved', $submission->fresh()->status);
+        $this->assertSame('2026-11-28T08:00:00+08:00', data_get($submission->fresh()->profile_snapshot, 'review_timing.opened_at'));
+        $this->assertSame('submitted', HealthFormSubmission::where('health_profile_id', $shadow->id)->first()->status);
+        $this->assertSame('approved', $correction->fresh()->status);
+        $this->assertSame('submitted', $other->fresh()->status);
+        $this->assertSame('Fully Cleared', $profile->fresh()->clearance_status);
+        $this->assertStringContainsString('/employee/19/', $response->getData(true)['medical_clearance_url']);
     }
 
     public function test_student_health_form_can_be_approved_without_issuing_a_medical_certificate(): void

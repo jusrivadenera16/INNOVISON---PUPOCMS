@@ -9919,7 +9919,7 @@
                 </span>
                 <div>
                     <h3 class="health-filter-modal-title">Health Records Filter</h3>
-                    <p class="health-filter-modal-copy">Narrow and arrange the records by user type, Health Form category, course, year level, approval date, or sort order.</p>
+                    <p class="health-filter-modal-copy">Narrow and arrange the records by user type, Health Form category, course / department / office, year level, approval date, or sort order.</p>
                 </div>
             </div>
             <button type="button" class="health-filter-modal-close" id="healthFilterCloseBtn" aria-label="Close filter popup">
@@ -9964,16 +9964,13 @@
                 </div>
             </div>
             <div class="health-filter-field">
-                <label for="courseFilter">Course</label>
+                <label for="courseFilter">{{ \App\Services\HealthRecordCourseFilter::fieldLabel($userTypeFilter ?? '') }}</label>
                 <div class="health-filter-select-wrap">
-                    <select id="courseFilter" name="course" class="health-filter-select health-filter-custom-source">
-                        <option value="">All Courses</option>
+                    <select id="courseFilter" name="course" class="health-filter-select health-filter-custom-source" data-course-choices="{{ json_encode($courseFilterChoices ?? []) }}">
+                        <option value="">{{ \App\Services\HealthRecordCourseFilter::placeholder($userTypeFilter ?? '') }}</option>
                         @foreach(($courseOptions ?? collect()) as $courseOption)
-                            @php
-                                $courseOptionCode = $formatHealthCourseCode($courseOption);
-                            @endphp
                             <option value="{{ $courseOption }}" {{ ($courseFilter ?? '') === $courseOption ? 'selected' : '' }}>
-                                {{ $courseOptionCode !== '' && $courseOptionCode !== $courseOption ? $courseOptionCode . ' - ' . $courseOption : $courseOption }}
+                                {{ \App\Services\HealthRecordCourseFilter::optionLabel($courseOption, $userTypeFilter ?? '') }}
                             </option>
                         @endforeach
                     </select>
@@ -10928,24 +10925,28 @@
             });
         }
 
-        Array.prototype.forEach.call(select.options, function (option) {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'health-filter-custom-option';
-            button.dataset.value = option.value;
-            const buttonLabel = document.createElement('span');
-            buttonLabel.textContent = option.textContent.trim();
-            button.appendChild(buttonLabel);
-            button.setAttribute('role', 'option');
-            button.addEventListener('click', function () {
-                select.value = option.value;
-                select.dispatchEvent(new Event('change', { bubbles: true }));
-                syncTrigger();
-                wrap.classList.remove('is-open');
-                trigger.setAttribute('aria-expanded', 'false');
+        function renderOptions() {
+            menu.replaceChildren();
+            Array.prototype.forEach.call(select.options, function (option) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'health-filter-custom-option';
+                button.dataset.value = option.value;
+                const buttonLabel = document.createElement('span');
+                buttonLabel.textContent = option.textContent.trim();
+                button.appendChild(buttonLabel);
+                button.setAttribute('role', 'option');
+                button.addEventListener('click', function () {
+                    select.value = option.value;
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                    syncTrigger();
+                    wrap.classList.remove('is-open');
+                    trigger.setAttribute('aria-expanded', 'false');
+                });
+                menu.appendChild(button);
             });
-            menu.appendChild(button);
-        });
+        }
+        renderOptions();
 
         trigger.addEventListener('click', function () {
             const willOpen = !wrap.classList.contains('is-open');
@@ -10961,6 +10962,12 @@
         });
 
         select.addEventListener('change', syncTrigger);
+        select.addEventListener('health-options-updated', function () {
+            renderOptions();
+            syncTrigger();
+            wrap.classList.remove('is-open');
+            trigger.setAttribute('aria-expanded', 'false');
+        });
         wrap.appendChild(trigger);
         wrap.appendChild(menu);
         syncTrigger();
@@ -10979,6 +10986,26 @@
 
     healthUserTypeFilter?.addEventListener('change', syncHealthStudentTypeFilterVisibility);
     syncHealthStudentTypeFilterVisibility();
+
+    function syncHealthCourseFilter() {
+        const select = document.getElementById('courseFilter');
+        if (!select || !healthUserTypeFilter) return;
+        const choices = JSON.parse(select.dataset.courseChoices || '{}');
+        const config = choices[healthUserTypeFilter.value] || choices[''];
+        if (!config) return;
+
+        const previous = select.value;
+        const label = document.querySelector('label[for="courseFilter"]');
+        if (label) label.textContent = config.label;
+        select.replaceChildren(new Option(config.placeholder, ''), ...config.options.map(function (option) {
+            return new Option(option.label, option.value);
+        }));
+        select.value = config.options.some(option => option.value === previous) ? previous : '';
+        select.dispatchEvent(new Event('health-options-updated'));
+    }
+
+    healthUserTypeFilter?.addEventListener('change', syncHealthCourseFilter);
+    syncHealthCourseFilter();
 
     document.addEventListener('click', function (event) {
         if (event.target.closest('.health-filter-select-wrap')) return;

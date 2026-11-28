@@ -61,12 +61,39 @@ class ClinicStartedStudentHealthFormTest extends TestCase
         $correction = HealthProfileCorrectionRequest::where('health_form_submission_id', $pending->id)->sole();
         $this->assertSame('submitted', $correction->status);
         $this->assertFalse(data_get($correction->metadata, 'student_login_required'));
+        $preview = (new \ReflectionMethod(\App\Http\Controllers\WalkInController::class, 'clinicHealthFormPreview'))
+            ->invoke(app(\App\Http\Controllers\WalkInController::class), $profile);
+        $this->assertSame('Not selected', $preview['certificate_request']['type']);
+        $this->assertSame($approved->approved_at->format('M d, Y, g:i A'), $preview['certificate_request']['previous_approved_at']);
         $statsRequest = Request::create('/health-records/stats', 'GET', ['q' => $profile->user->email]);
         app()->instance('request', $statsRequest);
         $stats = app(AdminController::class)->healthRecordStats($statsRequest)->getData(true)['stats'];
         $this->assertSame(1, $stats['pending_approval']);
         app(AdminController::class)->requestNewHealthForm($request, $profile->id);
         $this->assertSame(2, HealthFormSubmission::where('health_profile_id', $profile->id)->count());
+    }
+
+    public function test_certificate_selection_is_saved_on_the_new_request_and_shown_before_final_review(): void
+    {
+        $this->clinic();
+        [$profile, $approved, $category] = $this->student();
+        $type = \App\Models\MarClearanceType::create(['name' => 'Certificate '.$profile->id, 'code' => 'CERT-'.$profile->id,
+            'is_active' => true, 'allow_direct_use' => true]);
+        $type->sources()->create(['source' => 'student_nurse_review']);
+        $mapping = \App\Models\MarClearanceSourceMapping::create(['mar_clearance_type_id' => $type->id,
+            'source_key' => 'student_health_form_category', 'source_category_id' => $category->id, 'is_active' => true]);
+        $response = app(AdminController::class)->requestNewHealthForm(Request::create('/', 'POST', [
+            'category' => $category->name, 'clinic_action' => 'start', 'review_after_start' => '1',
+            'clearance_purpose' => 'mapping:'.$mapping->id,
+        ]), $profile->id);
+        $pending = HealthFormSubmission::where('health_profile_id', $profile->id)->where('status', 'submitted')->sole();
+        $this->assertSame('mapping:'.$mapping->id, data_get($pending->profile_snapshot, 'medical_certificate_request.purpose'));
+        $preview = (new \ReflectionMethod(\App\Http\Controllers\WalkInController::class, 'clinicHealthFormPreview'))
+            ->invoke(app(\App\Http\Controllers\WalkInController::class), $profile);
+        $this->assertSame($type->name, $preview['certificate_request']['type']);
+        $this->assertSame($approved->approved_at->format('M d, Y, g:i A'), $preview['certificate_request']['previous_approved_at']);
+        $this->assertStringContainsString('review_reference=', $response->getTargetUrl());
+        $this->assertSame('approved', $approved->fresh()->status);
     }
 
     public function test_send_request_keeps_old_student_submission_and_email_flow(): void

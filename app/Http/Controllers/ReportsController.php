@@ -3127,13 +3127,69 @@ private function exportHealthFormsPreviewColumns(Request $request): array
     ];
 }
 
-private function exportHealthFormsPreviewRecords(Request $request, Carbon $dateFrom, Carbon $dateTo): Collection
+private function healthFormsPdfSourceQuery(Request $request, Carbon $dateFrom, Carbon $dateTo)
 {
-    $courseFilter = trim((string) $request->query('course', ''));
+    $query = HealthProfile::query()->with('user')->whereNotNull('clearance_status')
+        ->where(function ($builder) use ($dateFrom, $dateTo) {
+            $builder->whereBetween('verified_at', [$dateFrom->copy()->startOfDay(), $dateTo->copy()->endOfDay()])
+                ->orWhere(fn ($fallback) => $fallback->whereNull('verified_at')
+                    ->whereBetween('created_at', [$dateFrom->copy()->startOfDay(), $dateTo->copy()->endOfDay()]));
+        });
+    $course = trim((string) $request->query('course', ''));
+    if ($course !== '') {
+        $query->where(fn ($builder) => $builder->where('course_college', 'like', "%{$course}%")
+            ->orWhereHas('user', fn ($user) => $user->where('course', 'like', "%{$course}%")));
+    }
+    match (strtolower(trim((string) $request->query('status', '')))) {
+        'approved' => $query->whereIn('clearance_status', ['Issued', 'Fully Cleared']),
+        'pending' => $query->whereNotIn('clearance_status', ['Issued', 'Fully Cleared', 'Rejected']),
+        'rejected' => $query->where('clearance_status', 'Rejected'),
+        default => null,
+    };
+
+    return $query;
+}
+
+// The worker uses the exact same selection rules and row formatter as the existing export.
+// Only a bounded page of Eloquent models is hydrated, never the complete date range.
+public function healthFormsPdfSourceBounds(array $filters): array
+{
+    $request = Request::create('/', 'GET', $filters);
+    $query = $this->healthFormsPdfSourceQuery($request, Carbon::parse($filters['date_from']), Carbon::parse($filters['date_to']));
+
+    return ['max_id' => (int) (clone $query)->max('health_profiles.id'), 'total' => (clone $query)->count()];
+}
+
+public function healthFormsPdfScan(array $filters, int $afterId, int $maxId): array
+{
+    $request = Request::create('/', 'GET', $filters);
+    $from = Carbon::parse($filters['date_from']);
+    $to = Carbon::parse($filters['date_to']);
+    $limit = max(1, min(500, (int) config('health_pdf_exports.scan_size', 100)));
+    $source = $this->healthFormsPdfSourceQuery($request, $from, $to)
+        ->where('health_profiles.id', '>', $afterId)->where('health_profiles.id', '<=', $maxId)
+        ->orderBy('health_profiles.id')->limit($limit)->get();
+    $records = $this->exportHealthFormsPreviewRecords($request, $from, $to, $source, false);
+    $rows = $this->healthFormsPdfRows($records);
+    $entries = $records->values()->map(function (HealthProfile $record, int $index) use ($rows) {
+        return [
+            'id' => $record->id, 'name_key' => $this->healthFormsPatientNameSortKey($record),
+            'date_key' => $this->healthFormsRecordDateSortKey($record), 'row' => $rows[$index],
+            'course' => trim((string) ($record->course_college ?: optional($record->user)->course)),
+            'school_year' => trim((string) $record->school_year),
+            'level' => trim(implode('-', array_filter([trim((string) optional($record->user)->year), trim((string) optional($record->user)->section)]))),
+        ];
+    })->all();
+
+    return ['entries' => $entries, 'scanned' => $source->count(), 'cursor' => (int) ($source->last()?->id ?? $maxId),
+        'done' => $source->count() < $limit || (int) $source->last()?->id >= $maxId];
+}
+
+private function exportHealthFormsPreviewRecords(Request $request, Carbon $dateFrom, Carbon $dateTo, ?Collection $sourceRecords = null, bool $sort = true): Collection
+{
     $userTypeFilter = strtolower(trim((string) $request->query('user_type', '')));
     $genderFilter = strtolower(trim((string) $request->query('gender', '')));
     $conditionFilter = strtolower(trim((string) $request->query('condition', '')));
-    $statusFilter = strtolower(trim((string) $request->query('status', '')));
     $yearLevelFilter = $this->normalizeHealthFormsYearLevel((string) $request->query('year_level', ''));
     $identifierTypeFilter = $this->normalizeHealthFormsIdentifierType((string) $request->query('identifier_type', ''));
     $sortMode = $this->normalizeHealthFormsExportSort((string) $request->query('sort', 'name_asc'));
@@ -3155,35 +3211,8 @@ private function exportHealthFormsPreviewRecords(Request $request, Carbon $dateF
         $conditionMatch = 'any';
     }
 
-    $query = HealthProfile::query()
-        ->with('user')
-        ->whereNotNull('clearance_status')
-        ->where(function ($builder) use ($dateFrom, $dateTo) {
-            $builder->whereBetween('verified_at', [$dateFrom->copy()->startOfDay(), $dateTo->copy()->endOfDay()])
-                ->orWhere(function ($fallback) use ($dateFrom, $dateTo) {
-                    $fallback->whereNull('verified_at')
-                        ->whereBetween('created_at', [$dateFrom->copy()->startOfDay(), $dateTo->copy()->endOfDay()]);
-                });
-        });
-
-    if ($courseFilter !== '') {
-        $query->where(function ($builder) use ($courseFilter) {
-            $builder->where('course_college', 'like', "%{$courseFilter}%")
-                ->orWhereHas('user', function ($userQuery) use ($courseFilter) {
-                    $userQuery->where('course', 'like', "%{$courseFilter}%");
-                });
-        });
-    }
-
-    if ($statusFilter === 'approved') {
-        $query->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
-    } elseif ($statusFilter === 'pending') {
-        $query->whereNotIn('clearance_status', ['Issued', 'Fully Cleared', 'Rejected']);
-    } elseif ($statusFilter === 'rejected') {
-        $query->where('clearance_status', 'Rejected');
-    }
-
-    $records = $query->orderByDesc(DB::raw('COALESCE(verified_at, created_at)'))->get();
+    $records = $sourceRecords ?? $this->healthFormsPdfSourceQuery($request, $dateFrom, $dateTo)
+        ->orderByDesc(DB::raw('COALESCE(verified_at, created_at)'))->get();
 
     if ($yearLevelFilter !== '') {
         $records = $records->filter(fn (HealthProfile $record) =>
@@ -3250,11 +3279,14 @@ private function exportHealthFormsPreviewRecords(Request $request, Carbon $dateF
         })->values();
     }
 
-    return $this->sortHealthFormsExportRecords($records, $sortMode);
+    return $sort ? $this->sortHealthFormsExportRecords($records, $sortMode) : $records->values();
 }
 
 public function exportHealthForms(Request $request)
 {
+    if (strtolower(trim((string) $request->query('output', 'csv'))) === 'pdf') {
+        return app(HealthFormsPdfExportController::class)->page($request);
+    }
     $dateFromInput = trim((string) $request->query('date_from', now()->startOfMonth()->toDateString()));
     $dateToInput = trim((string) $request->query('date_to', now()->toDateString()));
     $courseFilter = trim((string) $request->query('course', ''));
@@ -3391,10 +3423,6 @@ public function exportHealthForms(Request $request)
 
     $records = $this->sortHealthFormsExportRecords($records, $sortMode);
 
-    if (strtolower(trim((string) $request->query('output', 'csv'))) === 'pdf') {
-        return $this->streamHealthFormsPdf($records, $dateFrom, $dateTo, $courseFilter);
-    }
-
     if ($request->boolean('course_sheets')) {
         return $this->exportHealthFormsCourseSheets($records, $dateFrom, $dateTo, $sortMode);
     }
@@ -3450,7 +3478,7 @@ public function exportHealthForms(Request $request)
     ]);
 }
 
-private function streamHealthFormsPdf(Collection $records, Carbon $dateFrom, Carbon $dateTo, string $courseFilter)
+public function healthFormsPdfRows(Collection $records): Collection
 {
     $formatDose = function (array $dose, string $label): ?string {
         $brand = trim((string) ($dose['brand'] ?? ''));
@@ -3474,7 +3502,7 @@ private function streamHealthFormsPdf(Collection $records, Carbon $dateFrom, Car
         return $label . ($details !== '' ? ': ' . $details : '');
     };
 
-    $pdfRows = $records->map(function (HealthProfile $record) use ($formatDose) {
+    return $records->map(function (HealthProfile $record) use ($formatDose) {
         $user = $record->user;
         $vaccineHistory = is_array($record->vaccine_history) ? $record->vaccine_history : [];
         $firstDose = $formatDose((array) ($vaccineHistory['first_dose'] ?? []), '1st Dose');
@@ -3496,6 +3524,12 @@ private function streamHealthFormsPdf(Collection $records, Carbon $dateFrom, Car
         ];
     })->values();
 
+}
+
+// Legacy one-shot renderer retained only for the synthetic regression benchmark, not HTTP exports.
+private function streamHealthFormsPdf(Collection $records, Carbon $dateFrom, Carbon $dateTo, string $courseFilter)
+{
+    $pdfRows = $this->healthFormsPdfRows($records);
     $courseNames = $records
         ->map(fn (HealthProfile $record) => trim((string) ($record->course_college ?: optional($record->user)->course)))
         ->filter()

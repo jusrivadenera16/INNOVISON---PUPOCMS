@@ -1365,7 +1365,9 @@
             </div>
             <button type="button" class="export-filter-modal-close" data-close-export-filter aria-label="Close filter"><span aria-hidden="true">&times;</span></button>
         </header>
-        <form method="GET" action="{{ $filterActionUrl }}" class="export-filter-form">
+        <form method="GET" action="{{ $filterActionUrl }}" class="export-filter-form"
+              data-loader-scope="screen" data-loader-message="Applying report filters"
+              data-loader-detail="Updating the {{ $exportBreadcrumbLabel }} export preview for your selected filters.">
             <div class="export-filter-field">
                 <label for="exportDateFrom">From Date</label>
                 <input class="export-date-input" id="exportDateFrom" type="date" name="date_from" value="{{ $dateFrom->toDateString() }}">

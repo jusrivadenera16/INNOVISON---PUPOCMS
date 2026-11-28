@@ -24,7 +24,7 @@
             'position' => $position !== '' ? $position : $fallbackPosition,
         ];
     };
-    $preparedByIdentity = $resolveReportIdentity($preparedBy ?? null);
+    $preparedByIdentity = $preparedByIdentityOverride ?? $resolveReportIdentity($preparedBy ?? null);
     $preparedByName = $preparedByIdentity['name'];
     $preparedByPosition = $preparedByIdentity['position'];
 @endphp
@@ -324,6 +324,7 @@
 </style>
 </head>
 <body>
+    @if($showLetterhead ?? true)
     <header class="official-header">
         @if($hasPupLogo)
             <img class="official-logo" src="{{ $pupLogo }}" alt="PUP Logo">
@@ -369,6 +370,9 @@
         </table>
     </footer>
 
+    @endif
+
+    @unless($letterheadOnly ?? false)
     <main>
         <div class="report-heading">
             <h1>{{ $reportCourse }}</h1>
@@ -443,6 +447,7 @@
             </tbody>
         </table>
 
+        @if($showSignatures ?? true)
         <table class="health-export-signatures">
             <tr>
                 <td>Prepared by:</td>
@@ -462,6 +467,8 @@
                 </td>
             </tr>
         </table>
+        @endif
     </main>
+    @endunless
 </body>
 </html>

@@ -93,8 +93,8 @@
                 populate(data);
                 let preferred = null;
                 try { preferred = JSON.parse(root.dataset.preferredClearance || 'null'); } catch (_) { /* No saved selection. */ }
-                if (preferred?.type === type && Number(preferred.profile_id) === Number(id)
-                    && [...node('purpose').children].some(option => option.value === preferred.purpose)) node('purpose').value = preferred.purpose;
+                const requestedPurpose = data.requested_purpose_value || (preferred?.type === type && Number(preferred.profile_id) === Number(id) ? preferred.purpose : null);
+                if ([...node('purpose').children].some(option => option.value === requestedPurpose)) node('purpose').value = requestedPurpose;
                 sync();
                 this.restoreDraft(draft);
             } catch (error) { if (token === loading) status(error.message); }

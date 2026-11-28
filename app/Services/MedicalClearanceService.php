@@ -11,13 +11,27 @@ use Illuminate\Http\Request;
 
 class MedicalClearanceService
 {
+    public function rememberCertificateRequest(HealthProfile|EmployeeHealthProfile $profile, HealthFormSubmission $submission, string $purpose): void
+    {
+        if ($purpose === '') return;
+        $type = $profile instanceof EmployeeHealthProfile ? 'employee' : 'student';
+        $key = $type === 'employee' ? 'employee_health_profile_id' : 'health_profile_id';
+        if ((int) $submission->{$key} !== (int) $profile->id || (int) $submission->user_id !== (int) $profile->user_id) return;
+        $choice = app(MedicalClearancePurposeCatalog::class)->resolve($type, $profile, $purpose);
+        if (!$choice || $choice['category'] !== $submission->category) return;
+
+        $submission->forceFill(['profile_snapshot' => array_merge($submission->profile_snapshot ?? [], [
+            'medical_certificate_request' => ['purpose' => $choice['value'], 'label' => $choice['label']],
+        ])])->save();
+    }
+
     public function profile(string $type, int $id, bool $lock = false): HealthProfile|EmployeeHealthProfile
     {
         abort_unless(in_array($type, ['student', 'employee'], true), 404);
         $profile = ($type === 'student' ? HealthProfile::query() : EmployeeHealthProfile::query())
             ->when($lock, fn ($query) => $query->lockForUpdate())->with('user')->findOrFail($id);
         $accountType = $profile->user?->clinicAccountTypeKey();
-        abort_unless($type === 'student' ? $accountType === 'student' : in_array($accountType, ['faculty', 'non_teaching_staff'], true), 404);
+        abort_unless($type === 'student' ? $accountType === 'student' : in_array($accountType, ['faculty', 'non_teaching_staff', 'dependent'], true), 404);
 
         return $profile;
     }
@@ -69,7 +83,9 @@ class MedicalClearanceService
 
     public function healthFormCategoryOptions(string $type, HealthProfile|EmployeeHealthProfile $profile): array
     {
-        $audience = $type === 'student' ? 'student' : ($profile->user?->clinicAccountTypeKey() === 'faculty' ? 'faculty' : 'admin');
+        $audience = $type === 'student' ? 'student' : match ($profile->user?->clinicAccountTypeKey()) {
+            'faculty' => 'faculty', 'dependent' => 'dependent', default => 'admin',
+        };
         $categories = HealthFormCategory::query()->where('is_active', true)->availableFor($audience)->orderBy('name')->pluck('name')->all();
         if ($type === 'employee') $categories = array_filter($categories, fn ($category) => !preg_match('/\b(ojt|on[ -]the[ -]job)\b/i', $category));
         return array_values(array_map(fn ($category) => ['value' => $category, 'label' => app(HealthRecordCategoryFilter::class)->label($category)], $categories));
@@ -112,7 +128,7 @@ class MedicalClearanceService
                     return $existing;
                 }
                 $submission = $this->approvedSubmission($profile);
-                if (!$submission) throw ValidationException::withMessages(['record' => 'Only a currently approved student or employee Health Form can receive a Medical Clearance.']);
+                if (!$submission) throw ValidationException::withMessages(['record' => 'Only a currently approved student, employee or dependent Health Form can receive a Medical Clearance.']);
                 if (isset($input['doctor_review'])) {
                     if ((int) ($input['submission_id'] ?? 0) !== (int) $submission->id) {
                         throw ValidationException::withMessages(['record' => 'The current Health Form has changed. Look up the record again.']);

@@ -81,6 +81,19 @@ test('approved status documents-only panel stays hidden without documents and sh
     assert.equal(h.list.children.length, 1);
 });
 
+test('a certificate request keeps history visible even when no certificates have been issued',async()=>{
+    const h=harness(()=>response(info({can_issue:false,documents:[]})));
+    h.panel.dataset.clearanceDocumentsOnly='true';
+    h.panel.dataset.clearanceKeepHistory='true';
+    await h.load('/record');
+    assert.equal(h.panel.hidden,false);
+    assert.equal(h.docs.hidden,false);
+    assert.equal(h.trigger.hidden,true);
+    assert.equal(h.list.children.length,0);
+    assert.equal(h.calls.length,1);
+    await h.load(null); assert.equal(h.panel.hidden,true);
+});
+
 test('Others requires custom text and changing the date updates the displayed age', async () => {
     const h = harness(() => response(info()));
     await h.load('/record');

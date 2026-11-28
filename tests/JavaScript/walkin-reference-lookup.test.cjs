@@ -13,6 +13,7 @@ const bindingStart = blade.indexOf("        if (findBtn) findBtn.addEventListene
 const bindingEnd = blade.indexOf('        if (initialWalkinReviewReference', bindingStart);
 assert.ok(bindingStart >= 0 && bindingEnd > bindingStart, 'The actual Search and Enter handlers must be present.');
 const bindingSource = blade.slice(bindingStart, bindingEnd);
+const recordSource = blade.slice(blade.indexOf('        function clinicClearanceRecord('), blade.indexOf('        function showAlreadyApprovedResult('));
 
 class Button extends EventTarget {
     disabled = false;
@@ -40,6 +41,7 @@ function harness(response, functionSource = lookupSource) {
         getStudentUrl: '/admin/walkin/get-student',
         currentApplicantWorkflow: 'reference_lookup',
         pendingReferenceLookup: {},
+        referenceLookupRequestId: 0,
         isClinicLookupMode: () => false,
         isFinalReviewWorkflow: () => false,
         formatApplicantReferenceInput: value => value,
@@ -266,7 +268,7 @@ test('a genuinely new submitted form can still be reviewed after a previous appr
 test('the shared applicant verification card disables Continue and shows Not Yet Submitted for clinic users too', () => {
     const start = blade.indexOf('        function showApplicantReferenceVerification(');
     const end = blade.indexOf('        function returnToApplicantReferenceSearch(', start);
-    for (const type of ['applicant', 'employee', 'student']) {
+    for (const type of ['applicant', 'employee', 'student', 'dependent']) {
         const node = () => ({ hidden: true, disabled: false, textContent: '',
             classList: { toggle() {}, add() {} }, setAttribute() {}, removeAttribute() {}, focus() {},
         });
@@ -275,6 +277,8 @@ test('the shared applicant verification card disables Continue and shows Not Yet
             window: { location: { origin: 'http://localhost', href: 'http://localhost/admin/walkin' } },
             getApplicantInitials: () => 'RP', setStatus() {}, hideAlreadyApprovedResult() {},
             lookupModalTitle: node(),lookupModalSubtitle: node(),referenceVerificationCourseLabel:node(),
+            certificateRequestIdentity:node(),certificateRequestSummary:node(),certificateRequestType:node(),
+            certificateRequestCategory:node(),certificateRequestPreviousDate:node(),
             referenceVerificationApprovedAt:node(),referenceFormDocumentIcon:node(),referenceFormApprovedIcon:node(),
             isClinicLookupMode: () => type !== 'applicant',
             currentApplicantWorkflow: type === 'applicant' ? 'reference_lookup' : 'review',
@@ -286,7 +290,7 @@ test('the shared applicant verification card disables Continue and shows Not Yet
         }
         context.referenceVerification = node();
         vm.createContext(context);
-        vm.runInContext(blade.slice(start, end), context);
+        vm.runInContext(recordSource + blade.slice(start, end), context);
         context.showApplicantReferenceVerification({ record_type: type }, 'ID-123', 'Record Patient', false);
         assert.equal(context.referenceVerification.hidden, false);
         assert.equal(context.referenceVerificationFormStatus.textContent, 'Not Yet Submitted');
@@ -307,7 +311,7 @@ test('the shared applicant verification card disables Continue and shows Not Yet
             context.clinicLookupApprovedSlot={append:card=>actions.push(card)};
             context.approvedResultHome=null;context.approvedResultNext=null;
             context.window.ApprovedClearanceReview={configure:(...args)=>actions.push(args)};
-            context.showApplicantReferenceVerification({record_type:type,health_profile_id:7,approved:true,
+            context.showApplicantReferenceVerification({record_type:type,health_profile_id:7,review_timing_profile_id: type === 'dependent' ? 19 : 7,approved:true,
                 health_form_preview:{status:'approved',submitted:true,category:'Annual',approved_at:'Nov 12, 2026'}},'ID-123','Record Patient',true);
             assert.equal(context.referenceVerificationContinue.hidden,true);
             assert.equal(context.referenceVerificationApplicantStatus.textContent,'Approved');
@@ -317,7 +321,77 @@ test('the shared applicant verification card disables Continue and shows Not Yet
             assert.equal(context.referenceFormApprovedIcon.hidden,false);
             assert.equal(context.referenceFormDocumentIcon.hidden,true);
             assert.equal(actions[0],context.alreadyApprovedResult);
-            assert.deepEqual(actions[1],[type,7]);
+            assert.deepEqual(actions[1],type === 'dependent' ? ['employee',19] : [type,7]);
+            context.showApplicantReferenceVerification({record_type:type,health_profile_id:7,review_timing_profile_id:type==='dependent'?19:7,
+                has_reviewable_health_form:true,health_form_preview:{status:'submitted',submitted:true,category:'Ladderized',
+                    certificate_request:{type:'School Certificate',previous_approved_at:'Nov 12, 2026'}}},'ID-123','Record Patient',true);
+            assert.equal(context.lookupModalTitle.textContent,'New Medical Certificate Request');
+            assert.equal(context.certificateRequestSummary.hidden,false);
+            assert.equal(context.certificateRequestIdentity.textContent,'ID-123');
+            assert.equal(context.certificateRequestType.textContent,'School Certificate');
+            assert.equal(context.certificateRequestCategory.textContent,'Ladderized');
+            assert.equal(context.certificateRequestPreviousDate.textContent,'Nov 12, 2026');
+            assert.equal(context.referenceVerificationContinue.hidden,false);
+            assert.equal(context.referenceVerificationContinue.disabled,false);
+            assert.deepEqual(actions.at(-1),[null,type==='dependent'?19:7]);
+            context.showApplicantReferenceVerification({record_type:type},'ID-123','Record Patient',false);
+            assert.equal(context.lookupModalTitle.textContent,'ID Lookup');
+            assert.equal(context.certificateRequestSummary.hidden,true);
+            assert.equal(context.certificateRequestIdentity.hidden,true);
         }
+    }
+});
+
+test('a selected certificate request stays at summary even for an explicit review link',async()=>{
+    const data={status:'preview',record_type:'student',has_completed_health_form:true,has_reviewable_health_form:true,
+        health_form_preview:{status:'submitted',submitted:true,certificate_request:{type:'School Certificate'}}};
+    const h=harness(data); h.findBtn.style={};
+    Object.assign(h.context,{
+        isClinicLookupMode:()=>true,currentApplicantWorkflow:'review',
+        foundName:{textContent:''},getApplicantInitials:()=>'SP',
+        isEncodeWorkflow:()=>false,canApproveFinalReview:true,currentRecordType:'student',canLookupEmployeeRecords:true,
+        defaultPane:null,syncFindingsReviewFields(){},saveStudentAssessment(){},doApprove(){},saveApplicantEncoding(){},enterSavedReviewEditMode(){},
+    });
+    h.context.doLookup(null,true); await settle();
+    assert.equal(h.calls.verification.length,1); assert.equal(h.calls.details.length,0);
+    h.context.doLookup(data); await settle();
+    assert.equal(h.calls.details.length,1);
+    assert.equal(h.calls.errors.length,0);
+});
+
+test('a dependent never falls back to a student shadow record for clearance', () => {
+    const context = vm.createContext({});
+    vm.runInContext(recordSource, context);
+    const missing = context.clinicClearanceRecord({record_type:'dependent',health_profile_id:77,health_form_information:{profile_id:77}});
+    assert.equal(missing.type,'employee');
+    assert.equal(missing.id,undefined);
+    assert.equal(context.clinicClearanceRecord({record_type:'guest',health_profile_id:77}).type,null);
+});
+
+test('out-of-order lookup responses cannot replace the most recent record', async () => {
+    const h = harness(null), pending = [];
+    h.context.fetch = () => new Promise((resolve,reject) => pending.push({resolve,reject}));
+    h.refInput.value = 'FIRST'; h.findBtn.click();
+    h.refInput.value = 'SECOND'; h.findBtn.click();
+    const current = {status:'preview',student_name:'Current record',reference_number:'SECOND'};
+    pending[1].resolve({json:async()=>current}); await settle();
+    pending[0].resolve({json:async()=>({status:'preview',student_name:'Stale record',reference_number:'FIRST'})}); await settle();
+    assert.equal(h.calls.verification.length,1);
+    assert.equal(h.calls.verification[0][0],current);
+    assert.equal(h.context.currentLookupRef,'SECOND');
+});
+
+test('cancelled lookup responses and stale request errors cannot reopen or overwrite the card', async () => {
+    const h = harness(null), pending = [];
+    h.context.fetch = () => new Promise((resolve,reject) => pending.push({resolve,reject}));
+    h.findBtn.click(); h.findBtn.click();
+    pending[0].reject(new Error('stale failure')); await settle();
+    assert.equal(h.calls.errors.length,0);
+    h.context.referenceLookupRequestId++;
+    pending[1].resolve({json:async()=>({status:'preview',student_name:'Cancelled record'})}); await settle();
+    assert.equal(h.calls.verification.length,0);
+    assert.equal(h.calls.details.length,0);
+    for (const name of ['resetLookupState','returnToApplicantReferenceSearch']) {
+        assert.match(blade,new RegExp('function '+name+'\\(\\) \\{\\s*referenceLookupRequestId\\+\\+;'));
     }
 });

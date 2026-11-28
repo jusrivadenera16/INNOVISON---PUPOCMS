@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const blade=fs.readFileSync(require('node:path').join(__dirname,'../../resources/views/admin/walkin.blade.php'),'utf8');
-const source=blade.slice(blade.indexOf('        function openExistingFinalReview(context) {'),blade.indexOf('        function renderApplicantReviewSource('));
+const source=blade.slice(blade.indexOf('        function clinicClearanceRecord('),blade.indexOf('        function showAlreadyApprovedResult(')) + blade.slice(blade.indexOf('        function openExistingFinalReview(context) {'),blade.indexOf('        function renderApplicantReviewSource('));
 function element(value='') {return {value,checked:false,disabled:false,textContent:'',hidden:true,style:{},classList:{add(){},remove(){}},addEventListener(){},removeEventListener(){}};}
 function harness(type='student',fetcher=()=>({ok:true,json:async()=>({document:{url:'/saved.pdf'}})})) {
     const decision=element('approve'),findings=element('No Findings / Normal'),button=element(),link=element(); findings.checked=true;

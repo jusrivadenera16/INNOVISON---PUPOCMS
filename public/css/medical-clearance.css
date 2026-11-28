@@ -5,6 +5,9 @@
 .medical-clearance-panel li span { min-width: 0; overflow-wrap: anywhere; }
 .medical-clearance-panel a { flex-shrink: 0; color: #70131b; font-weight: 700; text-decoration: underline; }
 .medical-clearance-hint { margin: 7px 0 12px; font-size: 12px; line-height: 1.6; color: #52647d; }
+#applicantRefModal .medical-clearance-panel h3 { font-size: 14px; }
+#applicantRefModal .medical-clearance-panel .medical-clearance-hint,
+#applicantRefModal .medical-clearance-panel li { font-size: 12px; }
 .medical-clearance-modal { width: min(620px, calc(100vw - 28px)); max-height: calc(100dvh - 40px); padding: 0; border: 1px solid #e6cf84; border-radius: 20px; background: #fff; color: #172033; box-shadow: 0 25px 70px #0005; overflow: auto; }
 .medical-clearance-modal::backdrop { background: #10182899; backdrop-filter: blur(4px); }
 .medical-clearance-header { display: flex; align-items: center; gap: 13px; padding: 22px; background: linear-gradient(110deg,#70131b,#8b1d2b); color: #fff; }

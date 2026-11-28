@@ -204,6 +204,20 @@ test('fresh student and employee reviews start blank but resume a saved purpose 
     }
 });
 
+test('a saved certificate request restores its selected type after refresh without a session preference',async()=>{
+    const data={...info,requested_purpose_value:'mapping:13',purpose_options:[
+        {value:'mapping:12',label:'On the Job Training'},{value:'mapping:13',label:'Practice Teaching'},
+    ]};
+    const h=harness(()=>({ok:true,json:async()=>data}));
+    await h.api.configure('student',7,true); h.chooseIssue(true);
+    assert.equal(h.nodes.purpose.value,'mapping:13');
+    assert.equal(h.nodes.purposeValue.textContent,'Practice Teaching');
+    assert.equal(h.api.collect(true).medical_clearance.purpose,'mapping:13');
+    data.requested_purpose_value='mapping:deleted';
+    await h.api.configure('student',8,true);
+    assert.equal(h.nodes.purpose.value,'');
+});
+
 test('a category default and a record-scoped Issue Another choice refresh the visible purpose label', async () => {
     const data = {...info, default_purpose_value: 'mapping:12', purpose_options: [
         {value: 'mapping:12', label: 'On the Job Training'}, {value: 'mapping:13', label: 'Practice Teaching'},

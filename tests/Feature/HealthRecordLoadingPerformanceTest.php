@@ -19,6 +19,8 @@ class HealthRecordLoadingPerformanceTest extends TestCase
         config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:', 'health_data_encryption.enabled' => false, 'cache.default' => 'array']);
         Cache::flush();
         DB::purge('sqlite');
+        DB::connection()->getPdo()->sqliteCreateFunction('regexp',
+            fn ($pattern, $value) => preg_match('/'.$pattern.'/i', (string) $value) ?: 0, 2);
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             foreach (['name', 'first_name', 'middle_name', 'last_name', 'email', 'user_type', 'user_role', 'idp_role', 'student_number', 'student_id', 'employee_number', 'course', 'year', 'section', 'student_type', 'account_type', 'applicant_type', 'status'] as $column) $table->string($column)->nullable();
@@ -54,6 +56,104 @@ class HealthRecordLoadingPerformanceTest extends TestCase
         Schema::create('health_form_categories', function (Blueprint $table) {
             $table->id(); $table->string('name'); $table->boolean('is_active')->default(true); $table->json('available_for')->nullable();
         });
+    }
+
+    public function test_course_aliases_share_one_dropdown_option_and_page_and_live_stats_match(): void
+    {
+        $marketing = \App\Services\StudentHealthFormRequestService::COURSES['BSBA-MM'];
+        $savedProfiles = [];
+        foreach (['Bachelor of Science in Business Administration - Marketing Management', 'BSBA-MM', 'BSBA-HRM'] as $index => $course) {
+            $user = User::forceCreate(['name' => 'Course Student '.$index, 'user_type' => 'student', 'course' => $course]);
+            $savedProfiles[] = HealthProfile::create([
+                'user_id' => $user->id, 'course_college' => $course, 'clearance_status' => 'Fully Cleared', 'verified_at' => now(),
+            ]);
+        }
+        $employee = User::forceCreate(['name' => 'Department Employee', 'user_type' => 'faculty', 'employee_number' => 'EMP-1']);
+        EmployeeHealthProfile::create([
+            'user_id' => $employee->id, 'office' => 'Admin', 'clearance_status' => 'Issued', 'verified_at' => now(),
+        ]);
+        $before = DB::table('health_profiles')->get()->toJson();
+        foreach ([$marketing, 'BSBA-MM', 'Bachelor of Science in Business Administration - Marketing Management'] as $course) {
+            $request = Request::create('/health-records', 'GET', ['course' => $course]);
+            app()->instance('request', $request);
+            $data = app(AdminController::class)->viewHealth($request)->getData();
+            $this->assertSame($marketing, $data['courseFilter']);
+            $this->assertSame(2, $data['healthProfileSummaryRecords']->total());
+            $this->assertSame(1, $data['courseOptions']->filter(fn ($value) => $value === $marketing)->count());
+            $this->assertContains('Admin', $data['courseOptions']->all());
+            $this->assertContains(\App\Services\StudentHealthFormRequestService::COURSES['BSBA-HRM'], $data['courseOptions']->all());
+            Cache::flush();
+            $stats = app(AdminController::class)->healthRecordStats($request)->getData(true)['stats'];
+            $this->assertSame(2, $stats['total_approved']);
+        }
+        $request = Request::create('/health-records', 'GET', ['course' => 'Admin']);
+        app()->instance('request', $request);
+        $data = app(AdminController::class)->viewHealth($request)->getData();
+        $this->assertSame(1, $data['healthProfileSummaryRecords']->total());
+        $this->assertSame('Department Employee', $data['healthProfileSummaryRecords']->first()->user->name);
+        $this->assertSame($before, DB::table('health_profiles')->get()->toJson());
+
+        // Render the actual dropdown without unrelated layout/database dependencies.
+        $source = file_get_contents(resource_path('views/admin/health_records.blade.php'));
+        $start = strpos($source, '<select id="courseFilter"');
+        $end = strpos($source, '</select>', $start) + strlen('</select>');
+        $html = \Illuminate\Support\Facades\Blade::render(substr($source, $start, $end - $start), [
+            'courseOptions' => $data['courseOptions'], 'courseFilter' => $marketing,
+            'formatHealthCourseCode' => fn ($value) => $value,
+        ]);
+        $this->assertSame(1, substr_count($html, 'BSBA-MM - '.$marketing));
+        $this->assertStringContainsString('BSBA-HRM - ', $html);
+        $this->assertStringNotContainsString('BSBAMM - ', $html);
+    }
+
+    public function test_course_and_office_choices_follow_the_selected_audience_and_live_counts(): void
+    {
+        $courses = \App\Services\StudentHealthFormRequestService::COURSES;
+        foreach (['BSBA-MM', 'Bachelor of Science in Business Administration - Marketing Management'] as $index => $course) {
+            $user = User::forceCreate(['name' => 'Enrolled '.$index, 'user_type' => 'student', 'student_number' => '2026-0000'.($index + 1).'-TG-0']);
+            HealthProfile::create(['user_id' => $user->id, 'course_college' => $course, 'clearance_status' => 'Fully Cleared']);
+        }
+        $applicant = User::forceCreate(['name' => 'Applicant', 'user_type' => 'student', 'course' => 'BSBA-HRM']);
+        HealthProfile::create(['user_id' => $applicant->id, 'reference_number' => '2026-0101-1234', 'clearance_status' => 'Fully Cleared']);
+        foreach ([['faculty', 'Engineering Department', 'BSIT'], ['admin', 'Registrar Office', 'BSBA-MM'], ['faculty', 'BSIT', 'BSBA-HRM']] as $index => [$type, $office, $course]) {
+            $user = User::forceCreate(['name' => 'Employee '.$index, 'user_type' => $type, 'employee_number' => 'E'.$index, 'course' => $course]);
+            EmployeeHealthProfile::create(['user_id' => $user->id, 'office' => $office, 'course_college' => $course, 'clearance_status' => 'Issued']);
+        }
+        $legacy = User::forceCreate(['name' => 'Legacy Faculty', 'user_type' => 'faculty']);
+        HealthProfile::create(['user_id' => $legacy->id, 'course_college' => 'Legacy Department', 'clearance_status' => 'Fully Cleared']);
+        $before = DB::table('health_profile_emp')->get()->toJson();
+        foreach ([
+            'student' => [$courses['BSBA-MM']], 'applicant' => [$courses['BSBA-HRM']],
+            'faculty' => ['Engineering Department', 'BSIT', 'Legacy Department'], 'admin' => ['Registrar Office'],
+        ] as $type => $expected) {
+            $request = Request::create('/health-records', 'GET', ['user_type' => $type]);
+            app()->instance('request', $request);
+            $data = app(AdminController::class)->viewHealth($request)->getData();
+            $this->assertEqualsCanonicalizing($expected, $data['courseOptions']->all(), $type);
+            $office = in_array($type, ['faculty', 'admin'], true);
+            $this->assertSame($office ? 'Department / Office' : 'Course', $data['courseFilterChoices'][$type]['label']);
+            $this->assertContains('Engineering Department', array_column($data['courseFilterChoices']['']['options'], 'value'));
+            $this->assertSame('Course / Department / Office', $data['courseFilterChoices']['']['label']);
+            $source = file_get_contents(resource_path('views/admin/health_records.blade.php'));
+            $start = strpos($source, '<label for="courseFilter">');
+            $end = strpos($source, '</select>', $start) + strlen('</select>');
+            $html = \Illuminate\Support\Facades\Blade::render(substr($source, $start, $end - $start), [
+                'courseOptions' => $data['courseOptions'], 'userTypeFilter' => $type,
+            ]);
+            $this->assertStringContainsString($office ? 'All Departments / Offices' : 'All Courses', $html);
+            $this->assertStringNotContainsString('A - Admin', $html);
+            if ($office) $this->assertStringNotContainsString('Bachelor of', $html);
+        }
+        foreach ([['student', 'BSBA-MM', 2], ['applicant', 'BSBA-HRM', 1], ['faculty', 'Engineering Department', 1], ['faculty', 'BSIT', 1], ['admin', 'Registrar Office', 1], ['admin', 'Engineering Department', 0]] as [$type, $course, $total]) {
+            $request = Request::create('/health-records', 'GET', ['user_type' => $type, 'course' => $course]);
+            app()->instance('request', $request);
+            $data = app(AdminController::class)->viewHealth($request)->getData();
+            $this->assertSame($total, $data['healthProfileSummaryRecords']->total(), $type.' / '.$course);
+            Cache::flush();
+            $stats = app(AdminController::class)->healthRecordStats($request)->getData(true)['stats'];
+            $this->assertSame($total, $stats['total_approved']);
+        }
+        $this->assertSame($before, DB::table('health_profile_emp')->get()->toJson());
     }
 
     private function queriesFor(string $table): array

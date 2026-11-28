@@ -493,6 +493,11 @@ Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->gr
         Route::get('/admin/reports/health-forms/export', [ReportsController::class, 'exportHealthForms'])
             ->middleware(['module.permission:reports.export_reports', 'superadmin.export'])
             ->name('reports.health-forms.export');
+        Route::middleware(['module.permission:reports.export_reports', 'superadmin.export', 'throttle:60,1,health-pdf'])->group(function () {
+            Route::post('/admin/reports/health-forms/pdf', [\App\Http\Controllers\HealthFormsPdfExportController::class, 'store'])->name('reports.health-forms.pdf.store');
+            Route::get('/admin/reports/health-forms/pdf/{exportId}', [\App\Http\Controllers\HealthFormsPdfExportController::class, 'status'])->whereUuid('exportId')->name('reports.health-forms.pdf.status');
+            Route::get('/admin/reports/health-forms/pdf/{exportId}/download', [\App\Http\Controllers\HealthFormsPdfExportController::class, 'download'])->whereUuid('exportId')->name('reports.health-forms.pdf.download');
+        });
         Route::get('/admin/reports/health-forms-logbook', [ReportsController::class, 'healthFormsLogbook'])->middleware('module.permission:reports.health_forms')->name('reports.health-forms-logbook');
         Route::get('/admin/reports/health-forms-logbook/export', [ReportsController::class, 'exportHealthFormsLogbook'])
             ->middleware(['module.permission:reports.export_reports', 'superadmin.export'])
@@ -715,6 +720,11 @@ Route::middleware(['admin.guard', 'account.active', 'idp.session', 'audit'])->gr
         Route::get('/reports/health-forms/export', [ReportsController::class, 'exportHealthForms'])
             ->middleware(['module.permission:reports.export_reports', 'superadmin.export'])
             ->name('reports.health-forms.export');
+        Route::middleware(['module.permission:reports.export_reports', 'superadmin.export', 'throttle:60,1,health-pdf'])->group(function () {
+            Route::post('/reports/health-forms/pdf', [\App\Http\Controllers\HealthFormsPdfExportController::class, 'store'])->name('reports.health-forms.pdf.store');
+            Route::get('/reports/health-forms/pdf/{exportId}', [\App\Http\Controllers\HealthFormsPdfExportController::class, 'status'])->whereUuid('exportId')->name('reports.health-forms.pdf.status');
+            Route::get('/reports/health-forms/pdf/{exportId}/download', [\App\Http\Controllers\HealthFormsPdfExportController::class, 'download'])->whereUuid('exportId')->name('reports.health-forms.pdf.download');
+        });
         Route::get('/reports/health-forms-logbook', [ReportsController::class, 'healthFormsLogbook'])->middleware('module.permission:reports.health_forms')->name('reports.health-forms-logbook');
         Route::get('/reports/health-forms-logbook/export', [ReportsController::class, 'exportHealthFormsLogbook'])
             ->middleware(['module.permission:reports.export_reports', 'superadmin.export'])

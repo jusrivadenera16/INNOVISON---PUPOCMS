@@ -30,6 +30,14 @@ return [
 
     'connections' => [
 
+        'health_pdf' => [
+            'driver' => 'database',
+            'table' => 'health_pdf_jobs',
+            'queue' => 'health-pdf',
+            'retry_after' => 180,
+            'after_commit' => true,
+        ],
+
         'sync' => [
             'driver' => 'sync',
         ],

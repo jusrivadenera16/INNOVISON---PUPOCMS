@@ -22,6 +22,7 @@ class MedicalClearanceController extends Controller
             'purposes' => $purposes, 'default_purpose' => in_array($default, $purposes, true) ? $default : '',
             'default_purpose_value' => $service->defaultPurposeValue($type, $record, $submission->category ?: $record->health_form_category),
             'purpose_options' => $service->purposeOptions($type, $record),
+            'requested_purpose_value' => data_get($submission->profile_snapshot, 'medical_certificate_request.purpose'),
             'allow_other' => collect($purposes)->contains(fn ($purpose) => mb_strtolower($purpose) === 'others'),
         ])->withHeaders(HealthFileStorage::NO_STORE_HEADERS);
     }
@@ -37,7 +38,9 @@ class MedicalClearanceController extends Controller
         return response()->json([
             'can_issue' => (bool) $submission && app(ModulePermissionService::class)->can($request->user(), 'health_records.update_assessment'),
             'can_manage_configuration' => app(ModulePermissionService::class)->can($request->user(), 'settings.medical'),
-            'category_audience' => $type === 'student' ? 'student' : ($record->user?->clinicAccountTypeKey() === 'faculty' ? 'faculty' : 'admin'),
+            'category_audience' => $type === 'student' ? 'student' : match ($record->user?->clinicAccountTypeKey()) {
+                'faculty' => 'faculty', 'dependent' => 'dependent', default => 'admin',
+            },
             'health_form_category_catalog' => \App\Models\HealthFormCategory::where('is_active', true)->get(['id', 'name', 'available_for']),
             'can_start_review' => (bool) $submission && app(ModulePermissionService::class)->can($request->user(), 'health_records.request_health_form'),
             'start_review_url' => $type === 'student'

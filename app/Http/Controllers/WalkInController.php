@@ -190,9 +190,33 @@ class WalkInController extends Controller
         $submission = HealthFormSubmission::query()->where($key, $profile->id)
             ->whereNotIn('status', ['cancelled', 'canceled', 'rejected'])->latest('id')->first();
         if (!$submission) return null;
+        $certificateRequest = null;
+        $selection = data_get($submission->profile_snapshot, 'medical_certificate_request');
+        if (!$submission->approved_at && $submission->submitted_at
+            && in_array(strtolower((string) $submission->status), ['submitted', 'under_review'], true)) {
+            $previous = HealthFormSubmission::query()->where($key, $profile->id)->where('user_id', $profile->user_id)
+                ->where('id', '<', $submission->id)->whereIn('status', ['approved', 'Approved'])
+                ->whereNotNull('approved_at')->latest('id')->first();
+            // Older clinic-started requests predate the saved certificate selection.
+            if ($previous && !$selection && \Schema::hasTable('health_profile_correction_requests')) {
+                $request = HealthProfileCorrectionRequest::query()->where($key, $profile->id)->where('user_id', $profile->user_id)
+                    ->where('health_form_submission_id', $submission->id)->latest('id')->first();
+                $clinicStarted = data_get($request?->metadata, 'request_source') === 'clinic'
+                    || data_get($request?->metadata, 'employee_login_required') === false;
+                if ($clinicStarted) {
+                    $type = $profile instanceof EmployeeHealthProfile ? 'employee' : 'student';
+                    $choices = app(\App\Services\MedicalClearancePurposeCatalog::class)->options($type, $profile)
+                        ->where('category', $submission->category);
+                    $selection = ['label' => $choices->count() === 1 ? $choices->first()['label'] : 'Not selected'];
+                }
+            }
+            if ($previous && is_array($selection) && is_string($selection['label'] ?? null) && $selection['label'] !== '') $certificateRequest = [
+                'type' => $selection['label'], 'previous_approved_at' => $previous->approved_at->format('M d, Y, g:i A'),
+            ];
+        }
         return ['category' => $submission->category ? app(\App\Services\HealthRecordCategoryFilter::class)->label($submission->category) : 'Not specified',
             'status' => strtolower((string) $submission->status), 'submitted' => (bool) $submission->submitted_at,
-            'approved_at' => $submission->approved_at?->format('M d, Y, g:i A')];
+            'approved_at' => $submission->approved_at?->format('M d, Y, g:i A'), 'certificate_request' => $certificateRequest];
     }
 
     private function requireReviewableClinicSubmission(HealthProfile|EmployeeHealthProfile $profile): HealthFormSubmission
@@ -5422,7 +5446,7 @@ PROMPT;
             }
             $this->requireReviewableClinicSubmission($isDependentAssessment ? $employeeHealthProfile : ($healthProfile ?: $student->healthProfile));
             $clearanceInput = app(\App\Services\MedicalClearanceService::class)->approvalInput($request,
-                ($validated['clearance_decision'] ?? '') === 'approve', !$isDependentAssessment && $student->clinicAccountTypeKey() === 'student');
+                ($validated['clearance_decision'] ?? '') === 'approve', $isDependentAssessment || $student->clinicAccountTypeKey() === 'student');
             $issuedMedicalClearance = null;
 
             $dependentExam = [];
@@ -5588,25 +5612,6 @@ PROMPT;
 
                     $student->is_health_profile_completed = 1;
                     $student->save();
-
-                    if ($isDependentAssessment) {
-                        HealthFormSubmission::query()
-                            ->where(function ($query) use ($profile) {
-                                $query->where('health_profile_id', $profile->id)
-                                    ->orWhere('user_id', $profile->user_id);
-                            })
-                            ->whereIn('status', [
-                                HealthFormSubmission::STATUS_SUBMITTED,
-                                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
-                            ])
-                            ->update([
-                                'status' => HealthFormSubmission::STATUS_APPROVED,
-                                'approved_at' => $profile->verified_at ?: now(),
-                                'approved_by_user_id' => auth()->id(),
-                                'status_changed_by_user_id' => auth()->id(),
-                                'updated_at' => now(),
-                            ]);
-                    }
                 } elseif ($clearanceDecision === 'pending') {
                     $profile->clearance_status = 'Pending/Conditional';
                     $profile->clearance_revoked_at = null;
@@ -5681,10 +5686,30 @@ PROMPT;
                     $employeeHealthProfile->referred_to_others = trim((string) ($dependentExam['employee_exam_referred_to_others'] ?? '')) ?: null;
                     $employeeHealthProfile->follow_up_on = $dependentExam['employee_exam_follow_up_on'] ?? null;
                     $employeeHealthProfile->save();
+
+                    if ($clearanceDecision === 'approve') {
+                        $this->generateEmployeeHealthFormPdf($employeeHealthProfile);
+                        app(EmployeeHealthFormHistoryService::class)->finalizeLatestSubmission($employeeHealthProfile->fresh(['user', 'approvedBy']));
+                        HealthProfileCorrectionRequest::query()
+                            ->where('employee_health_profile_id', $employeeHealthProfile->id)
+                            ->where('health_form_submission_id', $reviewSubmission->id)
+                            ->whereIn('status', [
+                                HealthProfileCorrectionRequest::STATUS_PENDING,
+                                HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+                                HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW,
+                            ])->update([
+                                'status' => HealthProfileCorrectionRequest::STATUS_APPROVED,
+                                'reviewed_at' => now(), 'reviewed_by_user_id' => auth()->id(),
+                            ]);
+                    }
                 }
 
                 if ($clearanceInput) {
-                    $issuedMedicalClearance = app(\App\Services\MedicalClearanceService::class)->issueForApproval('student', $profile->id, $clearanceInput, auth()->user());
+                    $issuedMedicalClearance = app(\App\Services\MedicalClearanceService::class)->issueForApproval(
+                        $isDependentAssessment ? 'employee' : 'student',
+                        $isDependentAssessment ? $employeeHealthProfile->id : $profile->id,
+                        $clearanceInput, auth()->user()
+                    );
                 }
 
                 return $profile;
@@ -5743,7 +5768,11 @@ PROMPT;
                             : 'Student/OJT Health Form approved. No Medical Certificate was issued.')
                         : 'Student/OJT assessment saved.'),
                 'medical_clearance_issued' => (bool) $issuedMedicalClearance,
-                'medical_clearance_url' => $issuedMedicalClearance ? route('admin.medical_clearances.show', ['student', $profile->id, $issuedMedicalClearance->id]) : null,
+                'medical_clearance_url' => $issuedMedicalClearance ? route('admin.medical_clearances.show', [
+                    $isDependentAssessment ? 'employee' : 'student',
+                    $isDependentAssessment ? $employeeHealthProfile->id : $profile->id,
+                    $issuedMedicalClearance->id,
+                ]) : null,
                 'status' => $profile->clearance_status,
                 'health_profile_id' => $profile->id,
                 'evaluation_source_type' => !$isDependentAssessment && $clearanceDecision === 'approve' ? 'student_approval' : null,
